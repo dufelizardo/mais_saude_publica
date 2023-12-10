@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.edufelizardo</groupId>
-	<artifactId>API-Mais-Saude-Publica</artifactId>
+	<artifactId>API_Mais_Saude_Publica</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>API-Mais-Saude-Publica</name>
+	<name>API_Mais_Saude_Publica</name>
 	<description>Mais Saúde Pública API é uma plataforma dedicada a fornecer acesso fácil e rápido a dados essenciais relacionados à saúde pública.</description>
 	<properties>
 		<java.version>17</java.version>

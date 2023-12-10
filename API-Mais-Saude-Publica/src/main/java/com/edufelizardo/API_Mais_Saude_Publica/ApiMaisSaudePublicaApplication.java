@@ -1,4 +1,4 @@
-package com.edufelizardo.API.Mais.Saude.Publica;
+package com.edufelizardo.API_Mais_Saude_Publica;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
