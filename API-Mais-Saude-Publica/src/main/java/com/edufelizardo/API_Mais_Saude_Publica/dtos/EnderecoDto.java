@@ -8,7 +8,9 @@ public record EnderecoDto(
         String bairro,
         String cidade,
         String estado,
-        Integer ddd
+        long ibge,
+        long gia,
+        Integer ddd,
+        Integer siafi
 ) {
-
 }
