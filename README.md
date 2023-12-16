@@ -19,15 +19,16 @@ Bem-vindo à documentação oficial da API Mais Saúde Pública. Esta API foi de
    - Descrição: Acesse detalhes sobre campanhas de vacinação em andamento e planejadas.
 
 4. **Cadastro de organizações:**
-   - Endpoint: `/api/miniterio-da-saude`
-   - Verbos: GET e POST
-   - Descrição: Acesse detalhes sobre o Ministério da Saúde.
-   - Endpoint: `/api/miniterio-da-saude/{name}`
-   - Verbos: PUT
-   - Descrição: Altere as informações de Endereço e ou Horario de Funcionamento e ou Atendimento.
-   - Endpoint: `/api/miniterio-da-saude/{nomeInstitucional}`
-   - Verbos: PUT
-   - Descrição: Altere o Nome Institucional caso o tenha cadastrado erroneamente.
+   - **MINISTÉRIO DA SAÚDE**
+      - Endpoint: `/api/miniterio-da-saude`
+         - Verbos: GET e POST
+         - Descrição: Acesse detalhes sobre o Ministério da Saúde.
+      - Endpoint: `/api/miniterio-da-saude/{name}`
+         - Verbos: PUT
+         - Descrição: Altere as informações de Endereço e ou Horario de Funcionamento e ou Atendimento.
+      - Endpoint: `/api/miniterio-da-saude/{nomeInstitucional}`
+         - Verbos: PUT
+         - Descrição: Altere o Nome Institucional caso o tenha cadastrado erroneamente.
 
 ## Instruções de Autenticação
 
