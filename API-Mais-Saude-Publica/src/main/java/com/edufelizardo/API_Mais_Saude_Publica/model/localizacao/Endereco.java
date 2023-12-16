@@ -1,5 +1,6 @@
 package com.edufelizardo.API_Mais_Saude_Publica.model.localizacao;
 
+//import com.edufelizardo.API_Mais_Saude_Publica.dtos.EnderecoDto;
 import com.edufelizardo.API_Mais_Saude_Publica.dtos.EnderecoDto;
 import jakarta.persistence.Embeddable;
 import lombok.*;
@@ -39,6 +40,9 @@ public class Endereco {
         this.bairro = dto.bairro();
         this.cidade = dto.cidade();
         this.estado = dto.estado();
+        this.ibge = dto.ibge();
+        this.gia = dto.gia();
         this.ddd = dto.ddd();
+        this.siafi = dto.siafi();
     }
 }
