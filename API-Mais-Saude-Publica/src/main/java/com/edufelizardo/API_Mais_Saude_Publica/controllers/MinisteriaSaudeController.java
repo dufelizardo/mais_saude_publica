@@ -25,14 +25,14 @@ public class MinisteriaSaudeController {
         MinisterioSaudeResponseDto responseDto = saudeService.createMinisterioSaude(dto);
         return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
-    @PutMapping("/{name}")
+    @PutMapping("/dados/{nomeInstitucional}")
     public ResponseEntity<MinisterioSaudeResponseDto> updateMinisterioSaude(@PathVariable String nomeInstitucional,
                                                                             @RequestBody MinisterioSaudeDto dto){
         MinisterioSaudeResponseDto responseDto = saudeService.updateMinisterioSaude(nomeInstitucional, dto);
         if (responseDto != null) {
             return ResponseEntity.ok(responseDto);
         }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.noContent().build();
     }
     @PutMapping("/{nomeInstitucional}")
     public ResponseEntity<MinisterioSaudeResponseDto> updateMinisterioSaudenomeInstitucional(@PathVariable String nomeInstitucional,
@@ -41,6 +41,6 @@ public class MinisteriaSaudeController {
         if (responseDto != null) {
             return ResponseEntity.ok(responseDto);
         }
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.noContent().build();
     }
 }
