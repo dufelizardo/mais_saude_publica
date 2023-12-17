@@ -22,15 +22,12 @@ import lombok.*;
 public class Endereco {
     private String cep;
     private String logradouro;
-    private Integer numeroLogradouro;
+    private String numeroLogradouro;
     private String complemento;
     private String bairro;
     private String cidade;
     private String estado;
-    private long ibge;
-    private long gia;
-    private Integer ddd;
-    private Integer siafi;
+    private String ddd;
 
     public Endereco(EnderecoDto dto) {
         this.cep = dto.cep();
@@ -40,9 +37,6 @@ public class Endereco {
         this.bairro = dto.bairro();
         this.cidade = dto.cidade();
         this.estado = dto.estado();
-        this.ibge = dto.ibge();
-        this.gia = dto.gia();
         this.ddd = dto.ddd();
-        this.siafi = dto.siafi();
     }
 }
