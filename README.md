@@ -23,7 +23,43 @@ Bem-vindo à documentação oficial da API Mais Saúde Pública. Esta API foi de
       - Endpoint: `/api/miniterio-da-saude`
          - Verbos: GET e POST
          - Descrição: Acesse detalhes sobre o Ministério da Saúde.
-      - Endpoint: `/api/miniterio-da-saude/{name}`
+         - **Exemplo de Body e Response**
+            ```bash
+            [
+                {
+                    "nomeInstitucional": "Ministério da Saúde",
+                    "endereco": {
+                        "cep": "70058-900",
+                        "logradouro": "Esplanada dos Ministérios Bloco G",
+                        "numeroLogradouro": "S/N",
+                        "complemento": "",
+                        "bairro": "Zona Cívico-Administrativa",
+                        "cidade": "Brasília",
+                        "estado": "DF",
+                        "ddd": "61"
+                    },
+                    "horarioFuncionamento": {
+                        "WEDNESDAY": "08:00 - 21:00",
+                        "SATURDAY": "Closed",
+                        "MONDAY": "08:00 - 21:00",
+                        "TUESDAY": "08:00 - 21:00",
+                        "THURSDAY": "08:00 - 21:00",
+                        "SUNDAY": "Closed",
+                        "FRIDAY": "08:00 - 21:00"
+                    },
+                    "horarioAtendimento": {
+                        "WEDNESDAY": "08:00 - 18:00",
+                        "SATURDAY": "Closed",
+                        "MONDAY": "08:00 - 18:00",
+                        "TUESDAY": "08:00 - 18:00",
+                        "THURSDAY": "08:00 - 18:00",
+                        "SUNDAY": "Closed",
+                        "FRIDAY": "08:00 - 18:00"
+                    }
+                }
+            ]
+            ```
+      - Endpoint: `/dados/{nomeInstitucional}`
          - Verbos: PUT
          - Descrição: Altere as informações de Endereço e ou Horario de Funcionamento e ou Atendimento.
       - Endpoint: `/api/miniterio-da-saude/{nomeInstitucional}`
