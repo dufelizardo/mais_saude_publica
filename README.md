@@ -20,7 +20,7 @@ Bem-vindo à documentação oficial da API Mais Saúde Pública. Esta API foi de
 
 4. **Cadastro de organizações:**
    - **MINISTÉRIO DA SAÚDE**
-      - Endpoint: `/api/miniterio-da-saude`
+      - Endpoint: `/api/primeiro-grupo-medical`
          - Verbos: GET e POST
          - Descrição: Acesse detalhes sobre o Ministério da Saúde.
          - **Exemplo de Body e Response**
@@ -59,10 +59,10 @@ Bem-vindo à documentação oficial da API Mais Saúde Pública. Esta API foi de
                 }
             ]
             ```
-      - Endpoint: `/dados/{nomeInstitucional}`
+      - Endpoint: `/api/primeiro-grupo-medical/dados/{nomeInstitucional}`
          - Verbos: PUT
          - Descrição: Altere as informações de Endereço e ou Horario de Funcionamento e ou Atendimento.
-      - Endpoint: `/api/miniterio-da-saude/{nomeInstitucional}`
+      - Endpoint: `/api/primeiro-grupo-medical/{nomeInstitucional}`
          - Verbos: PUT
          - Descrição: Altere o Nome Institucional caso o tenha cadastrado erroneamente.
 
