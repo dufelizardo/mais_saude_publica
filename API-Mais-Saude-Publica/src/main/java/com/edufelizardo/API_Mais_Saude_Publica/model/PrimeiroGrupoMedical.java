@@ -2,7 +2,7 @@ package com.edufelizardo.API_Mais_Saude_Publica.model;
 
 //import com.edufelizardo.API_Mais_Saude_Publica.dtos.MinisterioSaudeDto;
 
-import com.edufelizardo.API_Mais_Saude_Publica.dtos.MinisterioSaudeDto;
+import com.edufelizardo.API_Mais_Saude_Publica.dtos.PrimeiroGrupoMedicalDto;
 import com.edufelizardo.API_Mais_Saude_Publica.model.localizacao.Endereco;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,14 +19,14 @@ import java.util.UUID;
  * @apiNote Mais Saúde Pública 12/2023
  */
 @Entity
-@Table(name = "tb_Ministerio_da_Saude")
+@Table(name = "tb_Primeiro_Grupo_Medical")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class MinisterioSaude implements Serializable {
+public class PrimeiroGrupoMedical implements Serializable {
     @Serial
     private static final long serialVersionUID = -7237337837935448377L;
     @Id
@@ -46,7 +46,7 @@ public class MinisterioSaude implements Serializable {
     @Column(name = "horario_atendimento")
     private Map<DayOfWeek, String> horarioAtendimento;
 
-    public MinisterioSaude(MinisterioSaudeDto dto) {
+    public PrimeiroGrupoMedical(PrimeiroGrupoMedicalDto dto) {
         this.nomeInstitucional = dto.nomeInstitucional();
         this.endereco = new Endereco(dto.endereco());
         this.horarioFuncionamento = dto.horarioFuncionamento();
