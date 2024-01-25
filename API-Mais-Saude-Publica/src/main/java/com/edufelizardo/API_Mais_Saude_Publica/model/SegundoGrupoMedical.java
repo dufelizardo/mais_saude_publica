@@ -1,8 +1,6 @@
 package com.edufelizardo.API_Mais_Saude_Publica.model;
 
-//import com.edufelizardo.API_Mais_Saude_Publica.dtos.MinisterioSaudeDto;
-
-import com.edufelizardo.API_Mais_Saude_Publica.dtos.PrimeiroGrupoMedicalDto;
+import com.edufelizardo.API_Mais_Saude_Publica.dtos.SegundoGrupoMedicalDto;
 import com.edufelizardo.API_Mais_Saude_Publica.model.localizacao.Endereco;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,58 +8,56 @@ import lombok.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.DayOfWeek;
-import java.util.*;
-
-/**
- * @author Eduardo Felizardo Cândido
- * @version 0.00.00
- * @apiNote Mais Saúde Pública 12/2023
- */
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 @Entity
-@Table(name = "tb_Primeiro_Grupo_Medical")
+@Table(name = "tb_Segundo_Grupo_Medical")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class PrimeiroGrupoMedical implements Serializable {
+public class SegundoGrupoMedical implements Serializable {
     @Serial
-    private static final long serialVersionUID = -7237337837935448377L;
+    private static final long serialVersionUID = -2812362626857335166L;
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID uuid;
 
-    private String nomeInstitucional;
+    @ManyToOne
+    @JoinColumn(name = "primeiro_grupo_medical_id")
+    private PrimeiroGrupoMedical primeiroGrupoMedical;
+
+    private String nome;
 
     @Embedded
     private Endereco endereco;
 
     @ElementCollection
-    @CollectionTable(name = "tb_primeiro_grupo_medical_telefones")
-    private Set<String> telefones;
+    @CollectionTable(name = "tb_segundo_grupo_medical_telefones")
+    private Set<String> Telefones;
 
     private String email;
 
     @ElementCollection
-    @CollectionTable(name = "facility_horario_funcionamento")
+    @CollectionTable(name = "facility_horario_funcionamento_sgm")
     @MapKeyColumn(name = "day_of_week")
     @Column(name = "horario_funcionamento")
     private Map<DayOfWeek, String> horarioFuncionamento;
 
     @ElementCollection
-    @CollectionTable(name = "facility_horario_atendimento")
+    @CollectionTable(name = "facility_horario_atendimento_smg")
     @MapKeyColumn(name = "day_of_week")
     @Column(name = "horario_atendimento")
     private Map<DayOfWeek, String> horarioAtendimento;
 
-    @OneToMany(mappedBy = "primeiroGrupoMedical")
-    private List<SegundoGrupoMedical> segundoGrupoMedicalList = new ArrayList<>();
-
-    public PrimeiroGrupoMedical(PrimeiroGrupoMedicalDto dto) {
-        this.nomeInstitucional = dto.nomeInstitucional();
+    public SegundoGrupoMedical(SegundoGrupoMedicalDto dto, PrimeiroGrupoMedical medical) {
+        this.primeiroGrupoMedical = medical;
+        this.nome = dto.nome();
         this.endereco = new Endereco(dto.endereco());
-        this.telefones = dto.telefones();
+        Telefones = dto.telefones();
         this.email = dto.email();
         this.horarioFuncionamento = dto.horarioFuncionamento();
         this.horarioAtendimento = dto.horarioAtendimento();

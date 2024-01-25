@@ -35,6 +35,8 @@ public class PrimeiroGrupoMedicalService {
         if (saudeOptional.isPresent()){
             PrimeiroGrupoMedical saude = saudeOptional.get();
             saude.setEndereco(endereco);
+            saude.setTelefones(dto.telefones());
+            saude.setEmail(dto.email());
             saude.setHorarioFuncionamento(dto.horarioFuncionamento());
             saude.setHorarioAtendimento(dto.horarioAtendimento());
             saude = medicalRepository.save(saude);
