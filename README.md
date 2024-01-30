@@ -19,7 +19,7 @@ Bem-vindo à documentação oficial da API Mais Saúde Pública. Esta API foi de
    - Descrição: Acesse detalhes sobre campanhas de vacinação em andamento e planejadas.
 
 4. **Cadastro de organizações:**
-   - **MINISTÉRIO DA SAÚDE**
+   - **PRIMEIRO GRUPO MEDICAL**
       - Endpoint: `/api/primeiro-grupo-medical`
          - Verbos: GET e POST
          - Descrição: Acesse detalhes sobre o Ministério da Saúde.
