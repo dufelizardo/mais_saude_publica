@@ -1,104 +1,115 @@
-# Documentação da API Mais Saúde Pública
+# Public Health Plus API Documentation
 ## ![visitors](https://visitor-badge.laobi.icu/badge?page_id=dufelizardo.visitor-mais_saude_publica) ![GitHub followers](https://img.shields.io/github/followers/edufelizardo1.visitor-mais_saude_publica?style=social) <img src="https://img.shields.io/badge/Completed-0%25-red"/>  <img src="https://img.shields.io/badge/public-Yes-green"/>
-Mais Saúde Pública API é uma plataforma dedicada a fornecer acesso fácil e rápido a dados essenciais relacionados à saúde pública. Oferecendo uma variedade de endpoints, nossa API permite a recuperação de informações atualizadas sobre estatísticas de saúde, serviços médicos, campanhas de vacinação, e outros dados cruciais para promover o bem-estar e a conscientização na esfera da saúde pública. Desenvolvida para facilitar integrações em aplicativos, sistemas de informação e serviços online, a API Mais Saúde Pública visa fortalecer a disponibilidade de informações relevantes e contribuir para a tomada de decisões informadas na gestão da saúde pública.
+The Public Health Plus API is a platform designed to provide quick and easy access to critical public health data. Offering a variety of endpoints, the API allows for the retrieval of up-to-date information on health statistics, medical services, vaccination campaigns, and other essential data to promote well-being and awareness in the public health sector. Developed to facilitate integration into applications, information systems, and online services, the Public Health Plus API aims to enhance the availability of relevant information, aiding in informed decision-making in public health management.
 
-## Visão Geral
-Bem-vindo à documentação oficial da API Mais Saúde Pública. Esta API foi desenvolvida para fornecer acesso fácil e confiável a dados relacionados à saúde pública. Abaixo estão os principais recursos, instruções de autenticação e diretrizes para usar efetivamente a API.
+## Overview
 
-## Recursos Principais
-1. **Estatísticas de Saúde:**
-   - Endpoint: `/health-statistics`
-   - Descrição: Recupere estatísticas atualizadas sobre diversos indicadores de saúde pública.
+Welcome to the official documentation for the Public Health Plus API. This API has been developed to provide reliable access to public health data. Below are the main features, authentication instructions, and guidelines for effectively using the API.
 
-2. **Serviços Médicos:**
-   - Endpoint: `/medical-services`
-   - Descrição: Explore informações sobre serviços médicos disponíveis, incluindo localização e especialidades.
+## Main Features
 
-3. **Campanhas de Vacinação:**
-   - Endpoint: `/vaccination-campaigns`
-   - Descrição: Acesse detalhes sobre campanhas de vacinação em andamento e planejadas.
+1. **Health Statistics**
+   - **Endpoint:** `/health-statistics`
+   - **Description:** Retrieve up-to-date statistics on various public health indicators.
 
-4. **Cadastro de organizações:**
-   - **PRIMEIRO GRUPO MEDICAL**
-      - Endpoint: `/api/primeiro-grupo-medical`
-         - Verbos: GET e POST
-         - Descrição: Acesse detalhes sobre o Ministério da Saúde.
-         - **Exemplo de Body e Response**
-            ```bash
-            [
-                {
-                    "nomeInstitucional": "Ministério da Saúde",
-                    "endereco": {
-                        "cep": "70058-900",
-                        "logradouro": "Esplanada dos Ministérios Bloco G",
-                        "numeroLogradouro": "S/N",
-                        "complemento": "",
-                        "bairro": "Zona Cívico-Administrativa",
-                        "cidade": "Brasília",
-                        "estado": "DF",
-                        "ddd": "61"
-                    },
-                    "horarioFuncionamento": {
-                        "WEDNESDAY": "08:00 - 21:00",
-                        "SATURDAY": "Closed",
-                        "MONDAY": "08:00 - 21:00",
-                        "TUESDAY": "08:00 - 21:00",
-                        "THURSDAY": "08:00 - 21:00",
-                        "SUNDAY": "Closed",
-                        "FRIDAY": "08:00 - 21:00"
-                    },
-                    "horarioAtendimento": {
-                        "WEDNESDAY": "08:00 - 18:00",
-                        "SATURDAY": "Closed",
-                        "MONDAY": "08:00 - 18:00",
-                        "TUESDAY": "08:00 - 18:00",
-                        "THURSDAY": "08:00 - 18:00",
-                        "SUNDAY": "Closed",
-                        "FRIDAY": "08:00 - 18:00"
-                    }
-                }
-            ]
-            ```
-      - Endpoint: `/api/primeiro-grupo-medical/dados/{nomeInstitucional}`
-         - Verbos: PUT
-         - Descrição: Altere as informações de Endereço e ou Horario de Funcionamento e ou Atendimento.
-      - Endpoint: `/api/primeiro-grupo-medical/{nomeInstitucional}`
-         - Verbos: PUT
-         - Descrição: Altere o Nome Institucional caso o tenha cadastrado erroneamente.
+2. **Medical Services**
+   - **Endpoint:** `/medical-services`
+   - **Description:** Access information about available medical services, including location and specialties.
 
-## Instruções de Autenticação
+3. **Vaccination Campaigns**
+   - **Endpoint:** `/vaccination-campaigns`
+   - **Description:** Obtain details about ongoing and planned vaccination campaigns.
 
-Para acessar os recursos da API, é necessário autenticação. Siga as instruções abaixo para obter as credenciais necessárias:
+4. **Organization Registration**
+   - **Primeiro Grupo Medical**
+     - **Endpoint:** `/api/primeiro-grupo-medical`
+       - **Methods:** GET, POST
+       - **Description:** Access details about the Ministry of Health.
+       - **Example Body and Response:**
+         ```json
+         [
+             {
+                 "nomeInstitucional": "Ministério da Saúde",
+                 "endereco": {
+                     "cep": "70058-900",
+                     "logradouro": "Esplanada dos Ministérios Bloco G",
+                     "numeroLogradouro": "S/N",
+                     "complemento": "",
+                     "bairro": "Zona Cívico-Administrativa",
+                     "cidade": "Brasília",
+                     "estado": "DF",
+                     "ddd": "61"
+                 },
+                 "horarioFuncionamento": {
+                     "MONDAY": "08:00 - 21:00",
+                     "TUESDAY": "08:00 - 21:00",
+                     "WEDNESDAY": "08:00 - 21:00",
+                     "THURSDAY": "08:00 - 21:00",
+                     "FRIDAY": "08:00 - 21:00",
+                     "SATURDAY": "Closed",
+                     "SUNDAY": "Closed"
+                 },
+                 "horarioAtendimento": {
+                     "MONDAY": "08:00 - 18:00",
+                     "TUESDAY": "08:00 - 18:00",
+                     "WEDNESDAY": "08:00 - 18:00",
+                     "THURSDAY": "08:00 - 18:00",
+                     "FRIDAY": "08:00 - 18:00",
+                     "SATURDAY": "Closed",
+                     "SUNDAY": "Closed"
+                 }
+             }
+         ]
+         ```
+     - **Endpoint:** `/api/primeiro-grupo-medical/dados/{nomeInstitucional}`
+       - **Method:** PUT
+       - **Description:** Update Address, Operating Hours, or Service Hours information.
+     - **Endpoint:** `/api/primeiro-grupo-medical/{nomeInstitucional}`
+       - **Method:** PUT
+       - **Description:** Update the Institutional Name if it was registered incorrectly.
 
-- Endpoint de Autenticação: `/auth`
-- Método: `POST`
-- Parâmetros:
-  - `username`: Seu nome de usuário
-  - `password`: Sua senha
+## Authentication Instructions
 
-## Uso da API
+To access the API's resources, authentication is required. Follow the instructions below to obtain the necessary credentials:
 
-Para fazer uma solicitação à API, utilize o método HTTP apropriado para o recurso desejado. Certifique-se de incluir as credenciais de autenticação no cabeçalho da solicitação.
+- **Authentication Endpoint:** `/auth`
+- **Method:** POST
+- **Parameters:**
+  - `username`: Your username
+  - `password`: Your password
 
-Exemplo de solicitação usando cURL:
+## Using the API
+
+To make a request to the API, use the appropriate HTTP method for the desired resource. Be sure to include the authentication credentials in the request header.
+
+**Example request using cURL:**
 
 ```bash
-curl -X GET -H "Authorization: Bearer SEU_TOKEN" https://api.mais-saude-publica.com/health-statistics 
+curl -X GET -H "Authorization: Bearer YOUR_TOKEN" https://api.mais-saude-publica.com/health-statistics 
 ```
-## Exemplos
 
-### Recuperar Estatísticas de Saúde
+## Examples
+
+### Retrieve Health Statistics
+
 ```bash
-curl -X GET -H "Authorization: Bearer SEU_TOKEN" https://api.mais-saude-publica.com/health-statistics 
+curl -X GET -H "Authorization: Bearer YOUR_TOKEN" https://api.mais-saude-publica.com/health-statistics 
 ```
 
-## Explorar Serviços Médicos
+### Explore Medical Services
+
 ```bash
-curl -X GET -H "Authorization: Bearer SEU_TOKEN" https://api.mais-saude-publica.com/medical-services 
+curl -X GET -H "Authorization: Bearer YOUR_TOKEN" https://api.mais-saude-publica.com/medical-services 
 ```
-## Considerações Finais
-Agradecemos por escolher a API Mais Saúde Pública. Em caso de dúvidas ou problemas, entre em contato conosco em meugit.edufelizardo@gmail.com.
 
-Esperamos que essa estrutura ajude na criação da documentação para a sua API "Mais Saúde Pública". Personalize conforme necessário para atender às especificidades da sua API.
+## Final Considerations
 
-## OBSERVAÇÂO: Está é apenas a documentação inicial
+Thank you for using the Public Health Plus API. If you have any questions or issues, please contact us at [meugit.edufelizardo@gmail.com](mailto:meugit.edufelizardo@gmail.com).
+
+## Note
+
+This is just the initial documentation. We plan to update and expand it as new features and improvements are implemented.
+
+---
+
+This translation should ensure the documentation is clear and accessible to English-speaking users. Let me know if you need further adjustments!
