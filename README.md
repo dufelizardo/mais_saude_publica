@@ -1,5 +1,5 @@
 # Public Health Plus API Documentation
-## ![visitors](https://visitor-badge.laobi.icu/badge?page_id=dufelizardo.visitor-mais_saude_publica) ![GitHub followers](https://img.shields.io/github/followers/edufelizardo1.visitor-mais_saude_publica?style=social) <img src="https://img.shields.io/badge/Completed-0%25-red"/>  <img src="https://img.shields.io/badge/public-Yes-green"/>
+## ![visitors](https://visitor-badge.laobi.icu/badge?page_id=dufelizardo.visitor-mais_saude_publica) ![GitHub followers](https://img.shields.io/github/followers/dufelizardo.visitor-mais_saude_publica?style=social) <img src="https://img.shields.io/badge/Completed-0%25-red"/>  <img src="https://img.shields.io/badge/public-Yes-green"/>
 The Public Health Plus API is a platform designed to provide quick and easy access to critical public health data. Offering a variety of endpoints, the API allows for the retrieval of up-to-date information on health statistics, medical services, vaccination campaigns, and other essential data to promote well-being and awareness in the public health sector. Developed to facilitate integration into applications, information systems, and online services, the Public Health Plus API aims to enhance the availability of relevant information, aiding in informed decision-making in public health management.
 
 ## Overview
