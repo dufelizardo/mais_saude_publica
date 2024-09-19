@@ -1,26 +1,28 @@
-# Etapa de build
 FROM ubuntu:latest AS build
 
-# Instalar JDK e Maven em uma única etapa para reduzir camadas
-RUN apt-get update && apt-get install -y openjdk-17-jdk maven
+# Atualiza o repositório e instala o JDK 17
+RUN apt-get update && apt-get install openjdk-17-jdk -y
 
-# Copiar o código fonte do projeto para a imagem
+# Instala Maven
+RUN apt-get install maven -y
+
+# Copia o projeto para o container
 COPY . .
 
-# Rodar o build do Maven para gerar o arquivo .jar
+# Faz o build do projeto com Maven
 RUN mvn clean install
 
-# Etapa de execução
+# Cria a imagem final com o JDK
 FROM openjdk:17-jdk-slim
 
-# Expor a porta 8080
+# Exponha a porta 8080
 EXPOSE 8080
 
-# Definir o perfil ativo como "prod" (perfil de produção)
+# Define o profile ativo como produção
 ENV SPRING_PROFILES_ACTIVE=prod
 
-# Copiar o JAR gerado da etapa de build para a etapa de execução
+# Copia o JAR gerado para o ambiente de produção
 COPY --from=build /target/maissaudepublica-0.0.1-SNAPSHOT.jar app.jar
 
-# Definir o comando de inicialização da aplicação
+# Executa o JAR da aplicação
 ENTRYPOINT ["java", "-jar", "app.jar"]
