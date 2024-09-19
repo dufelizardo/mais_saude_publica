@@ -23,6 +23,7 @@ jobs:
     - name: Set up JDK 17
       uses: actions/setup-java@v2
       with:
+        distribution: 'temurin' # Define a distribuição do JDK
         java-version: '17'
 
     # Passo 3: Instalar dependências e compilar o projeto
