@@ -1,0 +1,39 @@
+name: CI/CD Pipeline
+
+# Define os eventos que irão disparar a pipeline
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Definindo o ambiente onde a pipeline será executada
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Passo 1: Checkout do código do repositório
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Passo 2: Configurar o JDK
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
+      with:
+        java-version: '17'
+
+    # Passo 3: Instalar dependências e compilar o projeto
+    - name: Build with Maven
+      run: mvn clean install
+
+    # Passo 4: Executar testes
+    - name: Run tests
+      run: mvn test
+
+    # Passo 5: Deploy para o ambiente de produção (Render.com)
+    - name: Deploy to Render.com
+      run: |
+        curl -X POST ${{ secrets.RENDER_DEPLOY_URL }}
