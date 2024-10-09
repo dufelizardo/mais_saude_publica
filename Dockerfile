@@ -6,14 +6,11 @@ RUN apt-get update && apt-get install openjdk-17-jdk -y
 # Instala Maven
 RUN apt-get install maven -y
 
-# Define o diretório de trabalho
-WORKDIR /app
-
 # Copia o projeto para o container
 COPY . .
 
 # Faz o build do projeto com Maven
-RUN mvn clean install -DskipTests
+RUN mvn clean install
 
 # Cria a imagem final com o JDK
 FROM openjdk:17-jdk-slim
