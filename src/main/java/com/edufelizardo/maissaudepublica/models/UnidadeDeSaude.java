@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.models;
 
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoUmRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoZeroRequestDto;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -30,15 +31,15 @@ public class UnidadeDeSaude implements Serializable {
 
     @NotBlank
     @Column(unique = true)
-    public String nome;
-    public String tipo;
+    private String nome;
+    private int tipo;
 
-    @ManyToOne
-    @JoinColumn(name = "unidade_superior_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unidade_superior_id", referencedColumnName = "uuid", nullable = true)
     private UnidadeDeSaude unidadeSuperior;
-    public String regiao;
-    public String municipio;
-    public String estados;
+    private String regiao;
+    private String municipio;
+    private String estados;
 
     @Embedded
     private Endereco endereco;
@@ -65,6 +66,19 @@ public class UnidadeDeSaude implements Serializable {
         this.ativo = true;
         this.nome = dto.getNome();
         this.tipo = dto.getTipo();
+        this.endereco = new Endereco(dto.getEndereco());
+        this.saudeTelefones = dto.getTelefones();
+        this.email = dto.getEmail();
+        this.horarioFuncionamento = dto.getHorarioFuncionamento();
+        this.horarioAtendimento = dto.getHorarioAtendimento();
+    }
+
+    public UnidadeDeSaude(HierarquicoUmRequestDto dto) {
+        this.ativo = true;
+        this.nome = dto.getNome();
+        this.tipo = dto.getTipo();
+        this.municipio = dto.getMunicipio();
+        this.estados = dto.getEstados();
         this.endereco = new Endereco(dto.getEndereco());
         this.saudeTelefones = dto.getTelefones();
         this.email = dto.getEmail();

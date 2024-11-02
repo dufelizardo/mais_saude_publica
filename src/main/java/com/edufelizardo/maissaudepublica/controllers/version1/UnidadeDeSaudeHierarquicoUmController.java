@@ -2,12 +2,13 @@ package com.edufelizardo.maissaudepublica.controllers.version1;
 
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.request.*;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.datautilexception.ErrorExcepitionResponse;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.*;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.HierarquicoUmResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.HierarquicoZeroResponseDto;
-import com.edufelizardo.maissaudepublica.services.version1.HierarquicoZeroService;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
+import com.edufelizardo.maissaudepublica.services.version1.HierarquicoUmService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,24 +28,24 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v1/hierarquico-zero/")
-@Tag(name = "Hierarquico 0", description = "Endpoints para Gerenciar Hierárquia Nível 0.")
-public class UnidadeDeSaudeHierarquicoZeroController {
+@RequestMapping(value = "/api/v1/hierarquico-um/")
+@Tag(name = "Hierarquico 1", description = "Endpoints para Gerenciar Hierárquia Nível 1.")
+public class UnidadeDeSaudeHierarquicoUmController {
 
     @Autowired
-    private HierarquicoZeroService service;
+    private HierarquicoUmService service;
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Busca uma Instituição Hierárquica Nível Zero de Saúde",
-            description = "Verifica a existencia de Instituções Hierárquica Nível 0.",
-            tags = "Hierarquico 0")
+    @Operation(summary = "Busca uma Instituição Hierárquica Nível Um de Saúde",
+            description = "Verifica a existencia de Instituções Hierárquica Nível 1.",
+            tags = "Hierarquico 1")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
-                            schema = @Schema(implementation = HierarquicoZeroResponseDto.class)
+                            schema = @Schema(implementation = HierarquicoUmResponseDto.class)
                     ), examples = @ExampleObject(name = "Success",
-                            summary = "HierarquicoZeroResponse",
-                            value = ExampleConstants.HIERARQUICO_ZERO_RESPONSE_EXAMPLE,
+                            summary = "HierarquicoUmResponse",
+                            value = ExampleConstants.HIERARQUICO_UM_RESPONSE_EXAMPLE,
                             description = "O servidor consegue processar a requisição, e retorna no corpo da resposta as informações encontradas"))
             }),
             @ApiResponse(responseCode = "400", description = "Bad Request", content = {
@@ -96,8 +97,8 @@ public class UnidadeDeSaudeHierarquicoZeroController {
                             description = "O servidor que atua como gateway ou proxy não recebeu uma resposta a tempo de outro servidor upstream."))
             })
     })
-    public ResponseEntity<List<HierarquicoZeroResponseDto>>  getAllHierarquiasZero() {
-        List<HierarquicoZeroResponseDto> responseDtos = service.getAllHierarquiasZeroService();
+    public ResponseEntity<List<HierarquicoUmResponseDto>> getAllHierarquiasUm() {
+        List<HierarquicoUmResponseDto> responseDtos = service.getAllHierarquiasUmService();
         if (responseDtos.isEmpty()) {
             throw new ResourceNotFoundException("Nenhum item foi encontrado.");
         }
@@ -105,16 +106,16 @@ public class UnidadeDeSaudeHierarquicoZeroController {
     }
 
     @GetMapping(value = "{nome}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Busca uma Instituição Hierárquica Nível Zero de Saúde pelo seu Nome.",
-            description = "Verifica a existencia de Instituções Hierárquica Nível 0.",
-            tags = "Hierarquico 0")
+    @Operation(summary = "Busca uma Instituição Hierárquica Nível Um de Saúde pelo seu Nome.",
+            description = "Verifica a existencia de Instituções Hierárquica Nível 1.",
+            tags = "Hierarquico 1")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
-                            schema = @Schema(implementation = HierarquicoZeroResponseDto.class)
+                            schema = @Schema(implementation = HierarquicoUmResponseDto.class)
                     ), examples = @ExampleObject(name = "Success",
                             summary = "HierarquicoZeroResponse",
-                            value = ExampleConstants.HIERARQUICO_ZERO_RESPONSE_FIND_EXAMPLE,
+                            value = ExampleConstants.HIERARQUICO_UM_RESPONSE_FIND_EXAMPLE,
                             description = "O servidor consegue processar a requisição, e retorna no corpo da resposta as informações encontradas."))
             }),
             @ApiResponse(responseCode = "400", description = "Bad Request:", content = {
@@ -158,15 +159,15 @@ public class UnidadeDeSaudeHierarquicoZeroController {
                             description = "Ocorre um erro no servidor ao processar a requisição, como um problema de conexão com o banco de dados ou uma exceção inesperada."))
             })
     })
-    public ResponseEntity<HierarquicoZeroResponseDto> findByHierarquiasZero(@PathVariable String nome) {
-        HierarquicoZeroResponseDto responseDto = service.findByNomeHierarquicoZeroService(nome);
+    public ResponseEntity<HierarquicoUmResponseDto> findByHierarquiasUm(@PathVariable String nome) {
+        HierarquicoUmResponseDto responseDto = service.findByNomeHierarquicoUmService(nome);
         return ResponseEntity.ok(responseDto);
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Cria uma Instituição Hierárquica Nível Zero de Saúde.",
-            description = "Cria uma Instituções Hierárquica Nível 0.",
-            tags = "Hierarquico 0")
+    @Operation(summary = "Cria uma Instituição Hierárquica Nível Um de Saúde.",
+            description = "Cria uma Instituções Hierárquica Nível 1.",
+            tags = "Hierarquico 1")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
@@ -233,10 +234,9 @@ public class UnidadeDeSaudeHierarquicoZeroController {
                             description = "Um erro inesperado no servidor ao processar a criação do recurso."))
             })
     })
-    public ResponseEntity<SuccessResponseDto> createHierarquiasZero(@Valid @RequestBody HierarquicoZeroRequestDto dto) {
-
+    public ResponseEntity<SuccessResponseDto> createHierarquicoUm (@Valid @RequestBody HierarquicoUmRequestDto dto) {
         try {
-            HierarquicoZeroResponseDto responseDto = service.createHierarquicoZeroService(dto);
+            HierarquicoUmResponseDto responseDto = service.createHierarquicoUmService(dto);
 
             String successMessage = "Unidade de Saúde criada com sucesso!";
             String details = "Nome: " + responseDto.getNome() + ", Tipo: " + responseDto.getTipo();
@@ -254,9 +254,9 @@ public class UnidadeDeSaudeHierarquicoZeroController {
     }
 
     @PatchMapping(value = "{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza o nome de uma Instituição Hierárquica Nível Zero de Saúde.",
-            description = "Atualiza o nome de uma Instituções Hierárquica Nível 0.",
-            tags = "Hierarquico 0")
+    @Operation(summary = "Atualiza o nome de uma Instituição Hierárquica Nível Um de Saúde.",
+            description = "Atualiza o nome de uma Instituções Hierárquica Nível 1.",
+            tags = "Hierarquico 1")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
@@ -323,9 +323,9 @@ public class UnidadeDeSaudeHierarquicoZeroController {
                             description = "Um erro inesperado no servidor ao processar a criação do recurso."))
             })
     })
-    public ResponseEntity<SuccessResponseDto> updateNomeHierarquiasZero(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeNomeUpdateRequestDto dto) {
-        // Chama o serviço para realizar a atualização
-        HierarquicoZeroResponseDto responseDto = service.updateHierarquicoZeroNomeService(nome, dto);
+    public ResponseEntity<SuccessResponseDto> updateNomeHierarquiaUm(@PathVariable String nome,
+                                                                     @Valid @RequestBody UnidadeDeSaudeNomeUpdateRequestDto dto) {
+        HierarquicoUmResponseDto responseDto = service.updateHierarquicoUmNomeService(nome, dto);
 
         // Monta a mensagem de sucesso
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
@@ -338,11 +338,10 @@ public class UnidadeDeSaudeHierarquicoZeroController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
-
     @PatchMapping(value = "contato/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza os contatos de uma Instituição Hierárquica Nível Zero de Saúde.",
-            description = "Atualiza os contatos de uma Instituções Hierárquica Nível 0.",
-            tags = "Hierarquico 0")
+    @Operation(summary = "Atualiza os contatos de uma Instituição Hierárquica Nível Um de Saúde.",
+            description = "Atualiza os contatos de uma Instituções Hierárquica Nível 1",
+            tags = "Hierarquico 1")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
@@ -409,25 +408,21 @@ public class UnidadeDeSaudeHierarquicoZeroController {
                             description = "Um erro inesperado no servidor ao processar a criação do recurso."))
             })
     })
-    public ResponseEntity<SuccessResponseDto> updateContatoHierarquiasZero(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeEnderecoRequestDto dto) {
-        // Chama o serviço para realizar a atualização
-        HierarquicoZeroResponseDto responseDto = service.updateHierarquicoZeroContatoService(nome, dto);
+    public ResponseEntity<SuccessResponseDto> updateContatoHierarquiasUm(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeEnderecoRequestDto dto) {
+        HierarquicoUmResponseDto responseDto = service.updateHierarquicoUmContatoService(nome, dto);
 
-        // Monta a mensagem de sucesso
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
         String details = "Nome: " + responseDto.getNome();
 
-        // Cria a resposta de sucesso
         SuccessResponseDto successResponseDto = new SuccessResponseDto(successMessage, details);
 
-        // Retorna a resposta com status 200 OK
         return ResponseEntity.ok().body(successResponseDto);
     }
 
     @PatchMapping(value = "horario-de-funcionamento/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza o Horariode de funcionamento de uma Instituição Hierárquica Nível Zero de Saúde.",
-            description = "Atualiza o Horariode de funcionamento de uma Instituções Hierárquica Nível 0.",
-            tags = "Hierarquico 0")
+    @Operation(summary = "Atualiza o Horariode de funcionamento de uma Instituição Hierárquica Nível Um de Saúde.",
+            description = "Atualiza o Horariode de funcionamento de uma Instituções Hierárquica Nível 1.",
+            tags = "Hierarquico 1")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
@@ -494,10 +489,10 @@ public class UnidadeDeSaudeHierarquicoZeroController {
                             description = "Um erro inesperado no servidor ao processar a criação do recurso."))
             })
     })
-    public ResponseEntity<SuccessResponseDto> updateHoraDeFuncionamentoHierarquiasZero(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeHorarioDeFuncionamentoRequestDto dto) {
+    public ResponseEntity<SuccessResponseDto> updateHoraDeFuncionamentoHierarquiasZero(@PathVariable String nome,
+                                                                                       @Valid @RequestBody UnidadeDeSaudeHorarioDeFuncionamentoRequestDto dto) {
         // Chama o serviço para realizar a atualização
-        HierarquicoZeroResponseDto responseDto = service.updateHierarquicoZeroHorarioFuncionamentoService(nome, dto);
-
+        HierarquicoUmResponseDto responseDto = service.updateHierarquicoUmHorarioFuncionamentoService(nome, dto);
         // Monta a mensagem de sucesso
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
         String details = "Nome: " + responseDto.getNome();
@@ -510,9 +505,9 @@ public class UnidadeDeSaudeHierarquicoZeroController {
     }
 
     @PatchMapping(value = "horario-de-atendimento/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza o Horario de atendimento de uma Instituição Hierárquica Nível Zero de Saúde.",
-            description = "Atualiza o Horario de atendimento de uma Instituções Hierárquica Nível 0.",
-            tags = "Hierarquico 0")
+    @Operation(summary = "Atualiza o Horario de atendimento de uma Instituição Hierárquica Nível Um de Saúde.",
+            description = "Atualiza o Horario de atendimento de uma Instituções Hierárquica Nível 1.",
+            tags = "Hierarquico 1")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
@@ -579,10 +574,10 @@ public class UnidadeDeSaudeHierarquicoZeroController {
                             description = "Um erro inesperado no servidor ao processar a criação do recurso."))
             })
     })
-    public ResponseEntity<SuccessResponseDto> updateHoraDeAtendimentoHierarquiasZero(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeHorarioDeAtendimentoRequestDto dto) {
+    public ResponseEntity<SuccessResponseDto> updateHoraDeAtendimentoHierarquiasZero(@PathVariable String nome,
+                                                                                     @Valid @RequestBody UnidadeDeSaudeHorarioDeAtendimentoRequestDto dto) {
         // Chama o serviço para realizar a atualização
-        HierarquicoZeroResponseDto responseDto = service.updateHierarquicoZeroHorarioAtendimentoService(nome, dto);
-
+        HierarquicoUmResponseDto responseDto = service.updateHierarquicoUmHorarioAtendimentoService(nome, dto);
         // Monta a mensagem de sucesso
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
         String details = "Nome: " + responseDto.getNome();
@@ -595,9 +590,9 @@ public class UnidadeDeSaudeHierarquicoZeroController {
     }
 
     @DeleteMapping(value = "des-habilitar/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Desabilita ou Habilita uma Instituição Hierárquica Nível Zero de Saúde.",
-            description = "Desabilita ou Habilita  uma Instituções Hierárquica Nível 0.",
-            tags = "Hierarquico 0")
+    @Operation(summary = "Desabilita ou Habilita uma Instituição Hierárquica Nível Um de Saúde.",
+            description = "Desabilita ou Habilita  uma Instituções Hierárquica Nível 1.",
+            tags = "Hierarquico 1")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
@@ -666,7 +661,7 @@ public class UnidadeDeSaudeHierarquicoZeroController {
     })
     public ResponseEntity<SuccessResponseDto> deleteHierarquiasZero(@PathVariable String nome, UnidadeDeSaudeAtivoRequestDto dto) {
         // Chama o serviço para realizar a atualização
-        HierarquicoZeroResponseDto responseDto = service.deletHierarquicoZeroService(nome, dto);
+        HierarquicoUmResponseDto responseDto = service.deletHierarquicoUmService(nome, dto);
 
         // Monta a mensagem de sucesso
         String successMessage = "Unidade de Saúde atualizada com sucesso!";

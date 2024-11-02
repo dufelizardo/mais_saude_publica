@@ -1,11 +1,11 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
-import com.edufelizardo.maissaudepublica.models.Endereco;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.request.*;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
+import com.edufelizardo.maissaudepublica.models.Endereco;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.response.HierarquicoZeroResponseDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.*;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.HierarquicoUmResponseDto;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import jakarta.validation.Valid;
@@ -19,52 +19,51 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class HierarquicoZeroService {
-
+public class HierarquicoUmService {
     @Autowired
     private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
 
-
-    public List<HierarquicoZeroResponseDto> getAllHierarquiasZeroService() {
-        return unidadeDeSaudeRepository.findByTipo(TipoUnidadeDeSaude.ADMINISTRACAO1.getTipo())
+    public List<HierarquicoUmResponseDto> getAllHierarquiasUmService() {
+        return unidadeDeSaudeRepository.findByTipo(TipoUnidadeDeSaude.ADMINISTRACAO2.getTipo())
                 .stream()
-                .map(HierarquicoZeroResponseDto::fromHierarquicoResponseDto)
+                .map(HierarquicoUmResponseDto::fromHierarquicoResponseDto)
                 .collect(Collectors.toList());
     }
 
-    public HierarquicoZeroResponseDto findByNomeHierarquicoZeroService(String nome) {
-        UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeRepository.findByNomeAndTipo(nome, TipoUnidadeDeSaude.ADMINISTRACAO1.getTipo())
+    public HierarquicoUmResponseDto findByNomeHierarquicoUmService(String nome) {
+        UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeRepository.findByNomeAndTipo(nome, TipoUnidadeDeSaude.ADMINISTRACAO2.getTipo())
                 .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar " + nome + " em nossos registros."));
-        return HierarquicoZeroResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
+        return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
     }
 
     @Transactional
-    public HierarquicoZeroResponseDto createHierarquicoZeroService(HierarquicoZeroRequestDto dto) {
+    public HierarquicoUmResponseDto createHierarquicoUmService(HierarquicoUmRequestDto dto) {
         UnidadeDeSaude unidadeDeSaude = new UnidadeDeSaude(dto);
+        if (dto.getAdministracaoSuperior() != null && !dto.getAdministracaoSuperior().isEmpty()){
+            UnidadeDeSaude saude = unidadeDeSaudeRepository.findByNome(dto.getAdministracaoSuperior())
+                    .orElseThrow(() -> new ResourceNotFoundException("Unidade superior com o nome " + dto.getAdministracaoSuperior() + " não foi encontrada."));
+
+            unidadeDeSaude.setUnidadeSuperior(saude);
+        }
         unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
-        return HierarquicoZeroResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
+        return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
     }
 
-    public HierarquicoZeroResponseDto updateHierarquicoZeroNomeService(@Valid String nome, UnidadeDeSaudeNomeUpdateRequestDto dto) {
+    @Transactional
+    public HierarquicoUmResponseDto updateHierarquicoUmNomeService(@Valid String nome, UnidadeDeSaudeNomeUpdateRequestDto dto) {
         try {
-            // Procura a unidade de saúde pelo nome
             Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
 
-            // Verifica se o Optional está vazio
             if (unidadeDeSaudeOpt.isEmpty()) {
-                throw new ResourceNotFoundException("Instituição com nome '" + nome + "' não foi encontrada.");
+                throw new ResourceBadRequestException("Instituição com nome '" + nome + "' não foi encontrada.");
             }
 
-            // Atualiza o nome da unidade de saúde
             UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeOpt.get();
             unidadeDeSaude.setNome(dto.getNome());
 
-            // Salva a unidade atualizada no banco de dados
             unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
 
-            // Retorna o DTO de resposta
-            return HierarquicoZeroResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
-
+            return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
         } catch (DataIntegrityViolationException e) {
             // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade
             throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
@@ -78,7 +77,7 @@ public class HierarquicoZeroService {
     }
 
     @Transactional
-    public HierarquicoZeroResponseDto updateHierarquicoZeroContatoService(@Valid String nome, UnidadeDeSaudeEnderecoRequestDto dto) {
+    public HierarquicoUmResponseDto updateHierarquicoUmContatoService(@Valid String nome, UnidadeDeSaudeEnderecoRequestDto dto) {
         try {
             // Procura a unidade de saúde pelo nome
             Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
@@ -98,7 +97,7 @@ public class HierarquicoZeroService {
             unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
 
             // Retorna o DTO de resposta
-            return HierarquicoZeroResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
+            return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
 
         } catch (DataIntegrityViolationException e) {
             // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade
@@ -111,8 +110,9 @@ public class HierarquicoZeroService {
             throw new RuntimeException("Erro interno ao processar a solicitação", e);
         }
     }
+
     @Transactional
-    public HierarquicoZeroResponseDto updateHierarquicoZeroHorarioFuncionamentoService(@Valid String nome, UnidadeDeSaudeHorarioDeFuncionamentoRequestDto dto) {
+    public HierarquicoUmResponseDto updateHierarquicoUmHorarioFuncionamentoService(@Valid String nome, UnidadeDeSaudeHorarioDeFuncionamentoRequestDto dto) {
         try {
             // Procura a unidade de saúde pelo nome
             Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
@@ -130,8 +130,7 @@ public class HierarquicoZeroService {
             unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
 
             // Retorna o DTO de resposta
-            return HierarquicoZeroResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
-
+            return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
         } catch (DataIntegrityViolationException e) {
             // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade
             throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
@@ -145,7 +144,7 @@ public class HierarquicoZeroService {
     }
 
     @Transactional
-    public HierarquicoZeroResponseDto updateHierarquicoZeroHorarioAtendimentoService(@Valid String nome, UnidadeDeSaudeHorarioDeAtendimentoRequestDto dto) {
+    public HierarquicoUmResponseDto updateHierarquicoUmHorarioAtendimentoService(@Valid String nome, UnidadeDeSaudeHorarioDeAtendimentoRequestDto dto) {
         try {
             // Procura a unidade de saúde pelo nome
             Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
@@ -163,8 +162,7 @@ public class HierarquicoZeroService {
             unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
 
             // Retorna o DTO de resposta
-            return HierarquicoZeroResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
-
+            return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
         } catch (DataIntegrityViolationException e) {
             // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade
             throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
@@ -177,7 +175,7 @@ public class HierarquicoZeroService {
         }
     }
 
-    public HierarquicoZeroResponseDto deletHierarquicoZeroService(String nome, UnidadeDeSaudeAtivoRequestDto dto) {
+    public HierarquicoUmResponseDto deletHierarquicoUmService(String nome, UnidadeDeSaudeAtivoRequestDto dto) {
         try {
             // Procura a unidade de saúde pelo nome
             Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
@@ -195,7 +193,7 @@ public class HierarquicoZeroService {
             unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
 
             // Retorna o DTO de resposta
-            return HierarquicoZeroResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
+            return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
 
         } catch (DataIntegrityViolationException e) {
             // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade

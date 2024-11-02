@@ -20,8 +20,8 @@ public class HierarquicoZeroResponseDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 3410068205127200223L;
 
-    public String nome;
-    public String tipo;
+    private String nome;
+    private int tipo;
     private EnderecoRequestDto endereco;
     private Set<String> saudeTelefones;
     private String email;
