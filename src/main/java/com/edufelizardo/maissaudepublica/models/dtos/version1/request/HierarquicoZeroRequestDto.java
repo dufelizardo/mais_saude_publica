@@ -1,7 +1,9 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.request;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.io.Serial;
@@ -22,8 +24,9 @@ public class HierarquicoZeroRequestDto implements Serializable {
 
     @NotBlank(message = "Nome da Instituição precisa ser preenchido")
     private String nome;
-    @NotBlank(message = "Tipo da Instituição precisa ser preenchido")
-    private String tipo;
+    @NotNull(message = "Tipo da Instituição precisa ser preenchido")
+    @Min(value = 0, message = "O tipo precisa ser maior que 0")
+    private int tipo;
     @Valid
     private EnderecoRequestDto endereco;
     private Set<String> telefones;

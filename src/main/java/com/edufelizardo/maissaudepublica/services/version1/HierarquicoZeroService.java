@@ -6,6 +6,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.*;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.HierarquicoZeroResponseDto;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +26,14 @@ public class HierarquicoZeroService {
 
 
     public List<HierarquicoZeroResponseDto> getAllHierarquiasZeroService() {
-        return unidadeDeSaudeRepository.findAll()
+        return unidadeDeSaudeRepository.findByTipo(TipoUnidadeDeSaude.ADMINISTRACAO1.getTipo())
                 .stream()
                 .map(HierarquicoZeroResponseDto::fromHierarquicoResponseDto)
                 .collect(Collectors.toList());
     }
 
     public HierarquicoZeroResponseDto findByNomeHierarquicoZeroService(String nome) {
-        UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeRepository.findByNome(nome)
+        UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeRepository.findByNomeAndTipo(nome, TipoUnidadeDeSaude.ADMINISTRACAO1.getTipo())
                 .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar " + nome + " em nossos registros."));
         return HierarquicoZeroResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
     }

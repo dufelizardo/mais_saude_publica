@@ -594,7 +594,7 @@ public class UnidadeDeSaudeHierarquicoZeroController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
-    @PatchMapping(value = "des-habilitar/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "des-habilitar/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Desabilita ou Habilita uma Instituição Hierárquica Nível Zero de Saúde.",
             description = "Desabilita ou Habilita  uma Instituções Hierárquica Nível 0.",
             tags = "Hierarquico 0")
