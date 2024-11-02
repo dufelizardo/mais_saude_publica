@@ -46,4 +46,17 @@ public class EnderecoRequestDto implements Serializable {
                 endereco.getDdd()
         );
     }
+
+    public static EnderecoRequestDto fromEndereco(EnderecoRequestDto endereco) {
+        return new EnderecoRequestDto(
+                endereco.getCep(),
+                endereco.getLogradouro(),
+                endereco.getNumeroLogradouro(),
+                endereco.getComplemento(),
+                endereco.getBairro(),
+                endereco.getCidade(),
+                endereco.getEstado(),
+                endereco.getDdd()
+        );
+    }
 }

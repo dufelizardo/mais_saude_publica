@@ -132,4 +132,73 @@ public class ExampleConstants {
                   "details": "Gateway Timeout"
                 }
             """;
+    public static final String HIERARQUICO_UM_RESPONSE_EXAMPLE = """
+                [
+                     {
+                         "nome": "Ministério da Saúde",
+                         "tipo": 0,
+                         "endereco": {
+                             "cep": "70058-900",
+                             "logradouro": "Esplanada dos Ministérios",
+                             "numeroLogradouro": "Bloco G",
+                             "complemento": "Edifício Sede",
+                             "bairro": "Aviao",
+                             "cidade": "Brasília",
+                             "estado": "DF",
+                             "ddd": ""
+                         },
+                         "saudeTelefones": [],
+                         "email": "nao_informado@gov.br",
+                         "horarioFuncionamento": {
+                             "TUESDAY": "8:00 AM - 9:00 PM",
+                             "MONDAY": "8:00 AM - 9:00 PM",
+                             "WEDNESDAY": "8:00 AM - 9:00 PM",
+                             "THURSDAY": "8:00 AM - 9:00 PM",
+                             "FRIDAY": "8:00 AM - 9:00 PM"
+                         },
+                         "horarioAtendimento": {
+                             "TUESDAY": "8:00 AM - 6:00 PM",
+                             "MONDAY": "8:00 AM - 6:00 PM",
+                             "WEDNESDAY": "8:00 AM - 6:00 PM",
+                             "THURSDAY": "8:00 AM - 6:00 PM",
+                             "FRIDAY": "8:00 AM - 6:00 PM"
+                         }
+                     }
+                 ]
+            """;
+    public static final String HIERARQUICO_UM_RESPONSE_FIND_EXAMPLE = """
+                {
+                    "nome": "SES-DRS I-Grande São Paulo",
+                    "tipo": 1,
+                    "municipio": "São Paulo",
+                    "estados": "SP",
+                    "administracaoSuperior": "Ministério da Saúde",
+                    "endereco": {
+                        "cep": "01037-000",
+                        "logradouro": "Rua Conselheiro Crispiniano",
+                        "numeroLogradouro": "20",
+                        "complemento": "1º andar",
+                        "bairro": "Aviao",
+                        "cidade": "Centro",
+                        "estado": "SP",
+                        "ddd": ""
+                    },
+                    "saudeTelefones": [],
+                    "email": "drs1@saude.sp.gov.br",
+                    "horarioFuncionamento": {
+                        "TUESDAY": "8:00 AM - 9:00 PM",
+                        "MONDAY": "8:00 AM - 9:00 PM",
+                        "WEDNESDAY": "8:00 AM - 9:00 PM",
+                        "THURSDAY": "8:00 AM - 9:00 PM",
+                        "FRIDAY": "8:00 AM - 9:00 PM"
+                    },
+                    "horarioAtendimento": {
+                        "TUESDAY": "8:00 AM - 6:00 PM",
+                        "MONDAY": "8:00 AM - 6:00 PM",
+                        "WEDNESDAY": "8:00 AM - 6:00 PM",
+                        "THURSDAY": "8:00 AM - 6:00 PM",
+                        "FRIDAY": "8:00 AM - 6:00 PM"
+                    }
+                }
+            """;
 }
