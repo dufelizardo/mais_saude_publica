@@ -267,4 +267,68 @@ public class ExampleConstants {
                    }
                  }
             """;
+    public static final String HIERARQUICO_TRES_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "nome": "string",
+                    "tipo": 0,
+                    "administracaoSuperior": "string",
+                    "endereco": {
+                      "cep": "string",
+                      "logradouro": "string",
+                      "numeroLogradouro": "string",
+                      "complemento": "string",
+                      "bairro": "string",
+                      "cidade": "string",
+                      "estado": "string",
+                      "ddd": "string"
+                    },
+                    "saudeTelefones": [
+                      "string"
+                    ],
+                    "email": "string",
+                    "horarioFuncionamento": {
+                      "additionalProp1": "string",
+                      "additionalProp2": "string",
+                      "additionalProp3": "string"
+                    },
+                    "horarioAtendimento": {
+                      "additionalProp1": "string",
+                      "additionalProp2": "string",
+                      "additionalProp3": "string"
+                    }
+                  }
+                ]
+            """;
+    public static final String HIERARQUICO_TRES_RESPONSE_FIND_EXAMPLE = """
+                {
+                  "nome": "string",
+                  "tipo": 0,
+                  "administracaoSuperior": "string",
+                  "endereco": {
+                    "cep": "string",
+                    "logradouro": "string",
+                    "numeroLogradouro": "string",
+                    "complemento": "string",
+                    "bairro": "string",
+                    "cidade": "string",
+                    "estado": "string",
+                    "ddd": "string"
+                  },
+                  "saudeTelefones": [
+                    "string"
+                  ],
+                  "email": "string",
+                  "horarioFuncionamento": {
+                    "additionalProp1": "string",
+                    "additionalProp2": "string",
+                    "additionalProp3": "string"
+                  },
+                  "horarioAtendimento": {
+                    "additionalProp1": "string",
+                    "additionalProp2": "string",
+                    "additionalProp3": "string"
+                  }
+                }
+            """;
 }
