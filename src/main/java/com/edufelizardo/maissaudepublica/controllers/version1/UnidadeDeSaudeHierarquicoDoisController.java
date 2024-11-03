@@ -6,7 +6,6 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.datautilexception.ErrorExcepitionResponse;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.*;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.HierarquicoDoisResponseDto;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.response.HierarquicoUmResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
 import com.edufelizardo.maissaudepublica.services.version1.HierarquicoDoisService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,7 +40,7 @@ public class UnidadeDeSaudeHierarquicoDoisController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
-                            schema = @Schema(implementation = HierarquicoUmResponseDto.class)
+                            schema = @Schema(implementation = HierarquicoDoisResponseDto.class)
                     ), examples = @ExampleObject(name = "Success",
                             summary = "HierarquicoUmResponse",
                             value = ExampleConstants.HIERARQUICO_DOIS_RESPONSE_EXAMPLE,
@@ -111,7 +110,7 @@ public class UnidadeDeSaudeHierarquicoDoisController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success:", content = {
                     @Content(mediaType = "application/json", array = @ArraySchema(
-                            schema = @Schema(implementation = HierarquicoUmResponseDto.class)
+                            schema = @Schema(implementation = HierarquicoDoisResponseDto.class)
                     ), examples = @ExampleObject(name = "Success",
                             summary = "HierarquicoZeroResponse",
                             value = ExampleConstants.HIERARQUICO_DOIS_RESPONSE_FIND_EXAMPLE,
