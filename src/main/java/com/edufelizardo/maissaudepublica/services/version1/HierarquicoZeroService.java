@@ -45,19 +45,21 @@ public class HierarquicoZeroService {
         return HierarquicoZeroResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
     }
 
+    @Transactional
     public HierarquicoZeroResponseDto updateHierarquicoZeroNomeService(@Valid String nome, UnidadeDeSaudeNomeUpdateRequestDto dto) {
+        // Procura a unidade de saúde pelo nome
+        Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
+
+        // Verifica se o Optional está vazio
+        if (unidadeDeSaudeOpt.isEmpty()) {
+            throw new ResourceNotFoundException("Instituição com nome '" + nome + "' não foi encontrada.");
+        }
+
+        // Atualiza o nome da unidade de saúde
+        UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeOpt.get();
+        unidadeDeSaude.setNome(dto.getNome());
+
         try {
-            // Procura a unidade de saúde pelo nome
-            Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
-
-            // Verifica se o Optional está vazio
-            if (unidadeDeSaudeOpt.isEmpty()) {
-                throw new ResourceNotFoundException("Instituição com nome '" + nome + "' não foi encontrada.");
-            }
-
-            // Atualiza o nome da unidade de saúde
-            UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeOpt.get();
-            unidadeDeSaude.setNome(dto.getNome());
 
             // Salva a unidade atualizada no banco de dados
             unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
