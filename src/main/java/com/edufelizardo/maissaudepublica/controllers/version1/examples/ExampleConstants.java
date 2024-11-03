@@ -201,4 +201,70 @@ public class ExampleConstants {
                     }
                 }
             """;
+    public static final String HIERARQUICO_DOIS_RESPONSE_EXAMPLE = """
+                [
+                    {
+                      "nome": "string",
+                      "tipo": 0,
+                      "regiao": "string",
+                      "administracaoSuperior": "string",
+                      "endereco": {
+                        "cep": "string",
+                        "logradouro": "string",
+                        "numeroLogradouro": "string",
+                        "complemento": "string",
+                        "bairro": "string",
+                        "cidade": "string",
+                        "estado": "string",
+                        "ddd": "string"
+                      },
+                      "saudeTelefones": [
+                        "string"
+                      ],
+                      "email": "string",
+                      "horarioFuncionamento": {
+                        "additionalProp1": "string",
+                        "additionalProp2": "string",
+                        "additionalProp3": "string"
+                      },
+                      "horarioAtendimento": {
+                        "additionalProp1": "string",
+                        "additionalProp2": "string",
+                        "additionalProp3": "string"
+                      }
+                    }
+                ]
+            """;
+    public static final String HIERARQUICO_DOIS_RESPONSE_FIND_EXAMPLE = """
+                {
+                   "nome": "string",
+                   "tipo": 0,
+                   "regiao": "string",
+                   "administracaoSuperior": "string",
+                   "endereco": {
+                     "cep": "string",
+                     "logradouro": "string",
+                     "numeroLogradouro": "string",
+                     "complemento": "string",
+                     "bairro": "string",
+                     "cidade": "string",
+                     "estado": "string",
+                     "ddd": "string"
+                   },
+                   "saudeTelefones": [
+                     "string"
+                   ],
+                   "email": "string",
+                   "horarioFuncionamento": {
+                     "additionalProp1": "string",
+                     "additionalProp2": "string",
+                     "additionalProp3": "string"
+                   },
+                   "horarioAtendimento": {
+                     "additionalProp1": "string",
+                     "additionalProp2": "string",
+                     "additionalProp3": "string"
+                   }
+                 }
+            """;
 }
