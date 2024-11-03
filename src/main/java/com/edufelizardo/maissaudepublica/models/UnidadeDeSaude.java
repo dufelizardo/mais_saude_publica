@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.models;
 
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoDoisRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoUmRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoZeroRequestDto;
 import jakarta.persistence.*;
@@ -79,6 +80,18 @@ public class UnidadeDeSaude implements Serializable {
         this.tipo = dto.getTipo();
         this.municipio = dto.getMunicipio();
         this.estados = dto.getEstados();
+        this.endereco = new Endereco(dto.getEndereco());
+        this.saudeTelefones = dto.getTelefones();
+        this.email = dto.getEmail();
+        this.horarioFuncionamento = dto.getHorarioFuncionamento();
+        this.horarioAtendimento = dto.getHorarioAtendimento();
+    }
+
+    public UnidadeDeSaude(HierarquicoDoisRequestDto dto) {
+        this.ativo = true;
+        this.nome = dto.getNome();
+        this.tipo = dto.getTipo();
+        this.municipio = dto.getRegiao();
         this.endereco = new Endereco(dto.getEndereco());
         this.saudeTelefones = dto.getTelefones();
         this.email = dto.getEmail();
