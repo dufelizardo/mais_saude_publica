@@ -29,7 +29,8 @@ public class HierarquicoDoisResponseDto implements Serializable {
 
     public HierarquicoDoisResponseDto(String nome, int tipo, String unidadeSuperior, String regiao,
                                       EnderecoResponseDto dto,
-                                      Set<String> saudeTelefones, String email,
+                                      Set<String> saudeTelefones,
+                                      String email,
                                       Map<DayOfWeek, String> horarioFuncionamento,
                                       Map<DayOfWeek, String> horarioAtendimento) {
         this.nome = nome;

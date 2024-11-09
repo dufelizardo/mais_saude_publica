@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,8 +30,7 @@ public class HierarquicoUmService {
     }
 
     public HierarquicoUmResponseDto findByNomeHierarquicoUmService(String nome) {
-        UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeRepository.findByNomeAndTipo(nome, TipoUnidadeDeSaude.ADMINISTRACAO2.getTipo())
-                .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar " + nome + " em nossos registros."));
+        UnidadeDeSaude unidadeDeSaude = buscarUnidadeDeSaudePorNome(nome);
         return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
     }
 
@@ -52,27 +50,19 @@ public class HierarquicoUmService {
     @Transactional
     public HierarquicoUmResponseDto updateHierarquicoUmNomeService(@Valid String nome, UnidadeDeSaudeNomeUpdateRequestDto dto) {
         try {
-            Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
+            UnidadeDeSaude unidadeDeSaude = buscarUnidadeDeSaudePorNome(nome);
 
-            if (unidadeDeSaudeOpt.isEmpty()) {
-                throw new ResourceBadRequestException("Instituição com nome '" + nome + "' não foi encontrada.");
+            if (unidadeDeSaudeRepository.findByNome(dto.getNome()).isPresent()) {
+                throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.");
             }
 
-            UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeOpt.get();
             unidadeDeSaude.setNome(dto.getNome());
-
             unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
 
             return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
-        } catch (DataIntegrityViolationException e) {
-            // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade
-            throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
-        } catch (ResourceBadRequestException e) {
-            // Captura uma exceção customizada e lança a mesma mensagem
-            throw new ResourceBadRequestException("Não foi possível efetivar a atualização.", e);
         } catch (Exception e) {
-            // Lança uma exceção para erros inesperados
-            throw new RuntimeException("Erro interno ao processar a solicitação", e);
+            tratarExcecao(e);
+            return null;
         }
     }
 
@@ -80,15 +70,14 @@ public class HierarquicoUmService {
     public HierarquicoUmResponseDto updateHierarquicoUmContatoService(@Valid String nome, UnidadeDeSaudeEnderecoRequestDto dto) {
         try {
             // Procura a unidade de saúde pelo nome
-            Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
+            UnidadeDeSaude unidadeDeSaude = buscarUnidadeDeSaudePorNome(nome);
 
             // Verifica se o Optional está vazio
-            if (unidadeDeSaudeOpt.isEmpty()) {
+            if (unidadeDeSaude.getNome().isEmpty()) {
                 throw new ResourceNotFoundException("Instituição com nome '" + nome + "' não foi encontrada.");
             }
 
             // Atualiza o nome da unidade de saúde
-            UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeOpt.get();
             unidadeDeSaude.setEndereco(new Endereco(dto.getEndereco()));
             unidadeDeSaude.setSaudeTelefones(dto.getTelefones());
             unidadeDeSaude.setEmail(dto.getEmail());
@@ -99,15 +88,9 @@ public class HierarquicoUmService {
             // Retorna o DTO de resposta
             return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
 
-        } catch (DataIntegrityViolationException e) {
-            // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade
-            throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
-        } catch (ResourceBadRequestException e) {
-            // Captura uma exceção customizada e lança a mesma mensagem
-            throw new ResourceBadRequestException("Não foi possível efetivar a atualização.", e);
         } catch (Exception e) {
-            // Lança uma exceção para erros inesperados
-            throw new RuntimeException("Erro interno ao processar a solicitação", e);
+            tratarExcecao(e);
+            return null;
         }
     }
 
@@ -115,15 +98,14 @@ public class HierarquicoUmService {
     public HierarquicoUmResponseDto updateHierarquicoUmHorarioFuncionamentoService(@Valid String nome, UnidadeDeSaudeHorarioDeFuncionamentoRequestDto dto) {
         try {
             // Procura a unidade de saúde pelo nome
-            Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
+            UnidadeDeSaude unidadeDeSaude = buscarUnidadeDeSaudePorNome(nome);
 
             // Verifica se o Optional está vazio
-            if (unidadeDeSaudeOpt.isEmpty()) {
+            if (unidadeDeSaude.getNome().isEmpty()) {
                 throw new ResourceNotFoundException("Instituição com nome '" + nome + "' não foi encontrada.");
             }
 
             // Atualiza o nome da unidade de saúde
-            UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeOpt.get();
             unidadeDeSaude.setHorarioFuncionamento(dto.getHorarioFuncionamento());
 
             // Salva a unidade atualizada no banco de dados
@@ -131,15 +113,9 @@ public class HierarquicoUmService {
 
             // Retorna o DTO de resposta
             return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
-        } catch (DataIntegrityViolationException e) {
-            // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade
-            throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
-        } catch (ResourceBadRequestException e) {
-            // Captura uma exceção customizada e lança a mesma mensagem
-            throw new ResourceBadRequestException("Não foi possível efetivar a atualização.", e);
         } catch (Exception e) {
-            // Lança uma exceção para erros inesperados
-            throw new RuntimeException("Erro interno ao processar a solicitação", e);
+            tratarExcecao(e);
+            return null;
         }
     }
 
@@ -147,15 +123,14 @@ public class HierarquicoUmService {
     public HierarquicoUmResponseDto updateHierarquicoUmHorarioAtendimentoService(@Valid String nome, UnidadeDeSaudeHorarioDeAtendimentoRequestDto dto) {
         try {
             // Procura a unidade de saúde pelo nome
-            Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
+            UnidadeDeSaude unidadeDeSaude = buscarUnidadeDeSaudePorNome(nome);
 
             // Verifica se o Optional está vazio
-            if (unidadeDeSaudeOpt.isEmpty()) {
+            if (unidadeDeSaude.getNome().isEmpty()) {
                 throw new ResourceNotFoundException("Instituição com nome '" + nome + "' não foi encontrada.");
             }
 
             // Atualiza o nome da unidade de saúde
-            UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeOpt.get();
             unidadeDeSaude.setHorarioAtendimento(dto.getHorarioAtendimento());
 
             // Salva a unidade atualizada no banco de dados
@@ -163,31 +138,24 @@ public class HierarquicoUmService {
 
             // Retorna o DTO de resposta
             return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
-        } catch (DataIntegrityViolationException e) {
-            // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade
-            throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
-        } catch (ResourceBadRequestException e) {
-            // Captura uma exceção customizada e lança a mesma mensagem
-            throw new ResourceBadRequestException("Não foi possível efetivar a atualização.", e);
         } catch (Exception e) {
-            // Lança uma exceção para erros inesperados
-            throw new RuntimeException("Erro interno ao processar a solicitação", e);
+            tratarExcecao(e);
+            return null;
         }
     }
 
     @Transactional
-    public HierarquicoUmResponseDto deletHierarquicoUmService(String nome, UnidadeDeSaudeAtivoRequestDto dto) {
+    public HierarquicoUmResponseDto desableHierarquicoUmService(String nome, UnidadeDeSaudeAtivoRequestDto dto) {
         try {
             // Procura a unidade de saúde pelo nome
-            Optional<UnidadeDeSaude> unidadeDeSaudeOpt = unidadeDeSaudeRepository.findByNome(nome);
+            UnidadeDeSaude unidadeDeSaude = buscarUnidadeDeSaudePorNome(nome);
 
             // Verifica se o Optional está vazio
-            if (unidadeDeSaudeOpt.isEmpty()) {
+            if (unidadeDeSaude.getNome().isEmpty()) {
                 throw new ResourceNotFoundException("Instituição com nome '" + nome + "' não foi encontrada.");
             }
 
             // Atualiza o nome da unidade de saúde
-            UnidadeDeSaude unidadeDeSaude = unidadeDeSaudeOpt.get();
             unidadeDeSaude.setAtivo(dto.isAtivo());
 
             // Salva a unidade atualizada no banco de dados
@@ -196,14 +164,25 @@ public class HierarquicoUmService {
             // Retorna o DTO de resposta
             return HierarquicoUmResponseDto.fromHierarquicoResponseDto(unidadeDeSaude);
 
-        } catch (DataIntegrityViolationException e) {
-            // Captura a exceção se o novo nome violar uma regra de integridade, como duplicidade
-            throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
-        } catch (ResourceBadRequestException e) {
-            // Captura uma exceção customizada e lança a mesma mensagem
-            throw new ResourceBadRequestException("Não foi possível efetivar a atualização.", e);
         } catch (Exception e) {
-            // Lança uma exceção para erros inesperados
+            tratarExcecao(e);
+            return null;
+        }
+    }
+
+    private UnidadeDeSaude buscarUnidadeDeSaudePorNome(String nome) {
+        return unidadeDeSaudeRepository.findByNomeAndTipo(nome, TipoUnidadeDeSaude.ADMINISTRACAO2.getTipo())
+                .stream()
+                .findAny()
+                .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar " + nome + " em nossos registros."));
+    }
+
+    private void tratarExcecao(Exception e) {
+        if (e instanceof DataIntegrityViolationException) {
+            throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
+        } else if (e instanceof ResourceBadRequestException) {
+            throw new ResourceBadRequestException("Não foi possível efetivar a atualização.", e);
+        } else {
             throw new RuntimeException("Erro interno ao processar a solicitação", e);
         }
     }

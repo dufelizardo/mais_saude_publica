@@ -92,7 +92,7 @@ public class UnidadeDeSaude implements Serializable {
         this.ativo = true;
         this.nome = dto.getNome();
         this.tipo = dto.getTipo();
-        this.municipio = dto.getRegiao();
+        this.regiao = dto.getRegiao();
         this.endereco = new Endereco(dto.getEndereco());
         this.saudeTelefones = dto.getTelefones();
         this.email = dto.getEmail();

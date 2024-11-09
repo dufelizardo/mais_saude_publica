@@ -660,7 +660,7 @@ public class UnidadeDeSaudeHierarquicoUmController {
     })
     public ResponseEntity<SuccessResponseDto> deleteHierarquiasZero(@PathVariable String nome, UnidadeDeSaudeAtivoRequestDto dto) {
         // Chama o serviço para realizar a atualização
-        HierarquicoUmResponseDto responseDto = service.deletHierarquicoUmService(nome, dto);
+        HierarquicoUmResponseDto responseDto = service.desableHierarquicoUmService(nome, dto);
 
         // Monta a mensagem de sucesso
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
