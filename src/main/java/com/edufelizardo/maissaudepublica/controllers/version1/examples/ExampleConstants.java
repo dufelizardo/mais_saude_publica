@@ -204,68 +204,72 @@ public class ExampleConstants {
     public static final String HIERARQUICO_DOIS_RESPONSE_EXAMPLE = """
                 [
                     {
-                      "nome": "string",
-                      "tipo": 0,
-                      "regiao": "string",
-                      "administracaoSuperior": "string",
-                      "endereco": {
-                        "cep": "string",
-                        "logradouro": "string",
-                        "numeroLogradouro": "string",
-                        "complemento": "string",
-                        "bairro": "string",
-                        "cidade": "string",
-                        "estado": "string",
-                        "ddd": "string"
-                      },
-                      "saudeTelefones": [
-                        "string"
-                      ],
-                      "email": "string",
-                      "horarioFuncionamento": {
-                        "additionalProp1": "string",
-                        "additionalProp2": "string",
-                        "additionalProp3": "string"
-                      },
-                      "horarioAtendimento": {
-                        "additionalProp1": "string",
-                        "additionalProp2": "string",
-                        "additionalProp3": "string"
-                      }
+                        "nome": "Coordenadoria Regional de Saúde Sudeste I",
+                        "tipo": "2",
+                        "administracaoSuperior": "SES-DRS I-Grande São Paulo",
+                        "regiao": "Sudeste",
+                        "endereco": {
+                            "cep": "02012-040",
+                            "logradouro": "Rua Padre Marchetti",
+                            "numeroLogradouro": "557",
+                            "complemento": "",
+                            "bairro": "Ipiranga",
+                            "cidade": "São Paulo",
+                            "estado": "SP",
+                            "ddd": ""
+                        },
+                        "saudeTelefones": ["(11)2063-7185"],
+                        "email": "crssudeste@prefeituras.sp.gov.br",
+                        "horarioFuncionamento": {
+                            "THURSDAY": "8:00 AM - 9:00 PM",
+                            "TUESDAY": "8:00 AM - 9:00 PM",
+                            "WEDNESDAY": "8:00 AM - 9:00 PM",
+                            "FRIDAY": "8:00 AM - 9:00 PM",
+                            "MONDAY": "8:00 AM - 9:00 PM"
+                        },
+                        "horarioAtendimento": {
+                            "THURSDAY": "8:00 AM - 6:00 PM",
+                            "TUESDAY": "8:00 AM - 6:00 PM",
+                            "WEDNESDAY": "8:00 AM - 6:00 PM",
+                            "FRIDAY": "8:00 AM - 6:00 PM",
+                            "MONDAY": "8:00 AM - 6:00 PM"
+                        }
                     }
                 ]
             """;
     public static final String HIERARQUICO_DOIS_RESPONSE_FIND_EXAMPLE = """
                 {
-                   "nome": "string",
-                   "tipo": 0,
-                   "regiao": "string",
-                   "administracaoSuperior": "string",
-                   "endereco": {
-                     "cep": "string",
-                     "logradouro": "string",
-                     "numeroLogradouro": "string",
-                     "complemento": "string",
-                     "bairro": "string",
-                     "cidade": "string",
-                     "estado": "string",
-                     "ddd": "string"
-                   },
-                   "saudeTelefones": [
-                     "string"
-                   ],
-                   "email": "string",
-                   "horarioFuncionamento": {
-                     "additionalProp1": "string",
-                     "additionalProp2": "string",
-                     "additionalProp3": "string"
-                   },
-                   "horarioAtendimento": {
-                     "additionalProp1": "string",
-                     "additionalProp2": "string",
-                     "additionalProp3": "string"
-                   }
-                 }
+                    "nome": "Coordenadoria Regional de Saúde Sudeste I",
+                    "tipo": "2",
+                    "administracaoSuperior": "SES-DRS I-Grande São Paulo",
+                    "regiao": "Sudeste",
+                    "endereco": {
+                        "cep": "02012-040",
+                        "logradouro": "Rua Padre Marchetti",
+                        "numeroLogradouro": "557",
+                        "complemento": "",
+                        "bairro": "Ipiranga",
+                        "cidade": "São Paulo",
+                        "estado": "SP",
+                        "ddd": ""
+                    },
+                    "saudeTelefones": ["(11)2063-7185"],
+                    "email": "crssudeste@prefeituras.sp.gov.br",
+                    "horarioFuncionamento": {
+                        "THURSDAY": "8:00 AM - 9:00 PM",
+                        "TUESDAY": "8:00 AM - 9:00 PM",
+                        "WEDNESDAY": "8:00 AM - 9:00 PM",
+                        "FRIDAY": "8:00 AM - 9:00 PM",
+                        "MONDAY": "8:00 AM - 9:00 PM"
+                    },
+                    "horarioAtendimento": {
+                        "THURSDAY": "8:00 AM - 6:00 PM",
+                        "TUESDAY": "8:00 AM - 6:00 PM",
+                        "WEDNESDAY": "8:00 AM - 6:00 PM",
+                        "FRIDAY": "8:00 AM - 6:00 PM",
+                        "MONDAY": "8:00 AM - 6:00 PM"
+                    }
+                }
             """;
     public static final String HIERARQUICO_TRES_RESPONSE_EXAMPLE = """
                 [
