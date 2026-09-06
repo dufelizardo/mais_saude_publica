@@ -22,6 +22,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(ResourceBadRequestException.class)
+    public ResponseEntity<ErrorExcepitionResponse> handleResourceBadRequest(ResourceBadRequestException ex) {
+        ErrorExcepitionResponse error = new ErrorExcepitionResponse("Bad Request", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ResourceUnauthorizedException.class)
+    public ResponseEntity<ErrorExcepitionResponse> handleResourceUnauthorized(ResourceUnauthorizedException ex) {
+        ErrorExcepitionResponse error = new ErrorExcepitionResponse("Unauthorized", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ResourceUnprocessableEntityException.class)
+    public ResponseEntity<ErrorExcepitionResponse> handleResourceUnprocessableEntity(ResourceUnprocessableEntityException ex) {
+        ErrorExcepitionResponse error = new ErrorExcepitionResponse("Unprocessable Entity", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorExcepitionResponse> handleGenericException(Exception ex) {
         ErrorExcepitionResponse error = new ErrorExcepitionResponse("Internal Server Error", ex.getMessage());
