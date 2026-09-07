@@ -17,7 +17,7 @@ import java.util.Set;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class HierarquicoZeroResponseDto implements Serializable {
+public class FederalResponseDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 3410068205127200223L;
 
@@ -29,9 +29,9 @@ public class HierarquicoZeroResponseDto implements Serializable {
     private Map<DayOfWeek, String> horarioFuncionamento;
     private Map<DayOfWeek, String> horarioAtendimento;
 
-    public static HierarquicoZeroResponseDto fromHierarquicoResponseDto(UnidadeDeSaude unidadeDeSaude) {
+    public static FederalResponseDto fromHierarquicoResponseDto(UnidadeDeSaude unidadeDeSaude) {
         EnderecoRequestDto dto = EnderecoRequestDto.fromEndereco(unidadeDeSaude.getEndereco());
-        return new HierarquicoZeroResponseDto(
+        return new FederalResponseDto(
                 unidadeDeSaude.getNome(),
                 unidadeDeSaude.getTipo(),
                 dto,

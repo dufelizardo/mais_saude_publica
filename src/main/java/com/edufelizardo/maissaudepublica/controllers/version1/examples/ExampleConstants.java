@@ -2,7 +2,7 @@ package com.edufelizardo.maissaudepublica.controllers.version1.examples;
 
 public class ExampleConstants {
 
-    public static final String HIERARQUICO_ZERO_RESPONSE_EXAMPLE = """
+    public static final String FEDERAL_RESPONSE_EXAMPLE = """
                 [
                     {
                         "nome": "Ministério da Saúde",
@@ -38,7 +38,7 @@ public class ExampleConstants {
                     }
                 ]
             """;
-    public static final String HIERARQUICO_ZERO_RESPONSE_FIND_EXAMPLE = """
+    public static final String FEDERAL_RESPONSE_FIND_EXAMPLE = """
                 {
                     "nome": "Ministério da Saúde",
                     "tipo": "FEDERAL",

@@ -18,7 +18,7 @@ import java.util.Set;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class HierarquicoZeroRequestDto implements Serializable {
+public class FederalRequestDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 

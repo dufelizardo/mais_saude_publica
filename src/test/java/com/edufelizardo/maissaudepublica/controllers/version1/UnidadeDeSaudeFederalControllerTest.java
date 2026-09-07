@@ -26,9 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Testes de caracterização do HierarquicoZero ATUAL (nomes/endpoint antigos), escritos
- * antes do rename para Federal (AQUAQE-158 / ADR-0009) — servem de rede de segurança para
- * garantir que o rename não muda o comportamento observável da API. Ver AQUAQE-209.
+ * Testes do UnidadeDeSaudeFederalController (renomeado de HierarquicoZero pela AQUAQE-158,
+ * ADR-0009) — mesmas asserções de antes do rename, só nomes/endpoint atualizados. Ver AQUAQE-209.
  *
  * Propositalmente SEM {@code @Transactional} na classe: cada chamada HTTP via MockMvc precisa
  * rodar (e efetivamente commitar) sua própria transação, igual ao comportamento real em
@@ -39,9 +38,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class UnidadeDeSaudeHierarquicoZeroControllerTest {
+class UnidadeDeSaudeFederalControllerTest {
 
-    private static final String BASE_URL = "/api/v1/hierarquico-zero/";
+    private static final String BASE_URL = "/api/v1/federal/";
     private static final String PREFIXO_NOME_TESTE = "Ministério da Saúde - ";
 
     @Autowired
@@ -58,7 +57,7 @@ class UnidadeDeSaudeHierarquicoZeroControllerTest {
         unidadeDeSaudeRepository.deleteAll(criadosNoTeste);
     }
 
-    private void criarUnidadeZero(String nome) throws Exception {
+    private void criarUnidadeFederal(String nome) throws Exception {
         String body = """
                 {
                   "nome": "%s",
@@ -118,7 +117,7 @@ class UnidadeDeSaudeHierarquicoZeroControllerTest {
     @Test
     void deveRetornarBadRequestAoCriarComNomeDuplicado() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Duplicado";
-        criarUnidadeZero(nome);
+        criarUnidadeFederal(nome);
 
         String body = """
                 {
@@ -146,7 +145,7 @@ class UnidadeDeSaudeHierarquicoZeroControllerTest {
     @Test
     void deveListarTodasAsUnidades() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Listagem";
-        criarUnidadeZero(nome);
+        criarUnidadeFederal(nome);
 
         mockMvc.perform(get(BASE_URL))
                 .andExpect(status().isOk())
@@ -156,7 +155,7 @@ class UnidadeDeSaudeHierarquicoZeroControllerTest {
     @Test
     void deveBuscarPorNome() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Busca";
-        criarUnidadeZero(nome);
+        criarUnidadeFederal(nome);
 
         mockMvc.perform(get(BASE_URL + nome))
                 .andExpect(status().isOk())
@@ -174,7 +173,7 @@ class UnidadeDeSaudeHierarquicoZeroControllerTest {
     void deveAtualizarNome() throws Exception {
         String nomeOriginal = PREFIXO_NOME_TESTE + "Antes";
         String nomeNovo = PREFIXO_NOME_TESTE + "Depois";
-        criarUnidadeZero(nomeOriginal);
+        criarUnidadeFederal(nomeOriginal);
 
         mockMvc.perform(patch(BASE_URL + nomeOriginal)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -188,7 +187,7 @@ class UnidadeDeSaudeHierarquicoZeroControllerTest {
     @Test
     void deveAtualizarContato() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Contato";
-        criarUnidadeZero(nome);
+        criarUnidadeFederal(nome);
 
         String body = """
                 {
@@ -224,7 +223,7 @@ class UnidadeDeSaudeHierarquicoZeroControllerTest {
     // operações concorrentes de escrita dependendo de constraint do banco.
     void deveAtualizarHorarioDeFuncionamento() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Horario Funcionamento";
-        criarUnidadeZero(nome);
+        criarUnidadeFederal(nome);
 
         mockMvc.perform(patch(BASE_URL + "horario-de-funcionamento/" + nome)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -239,7 +238,7 @@ class UnidadeDeSaudeHierarquicoZeroControllerTest {
     @Transactional
     void deveAtualizarHorarioDeAtendimento() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Horario Atendimento";
-        criarUnidadeZero(nome);
+        criarUnidadeFederal(nome);
 
         mockMvc.perform(patch(BASE_URL + "horario-de-atendimento/" + nome)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -253,7 +252,7 @@ class UnidadeDeSaudeHierarquicoZeroControllerTest {
     @Test
     void deveDesabilitar_ComportamentoAtual_CorpoDaRequisicaoEIgnorado() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Desabilitar";
-        criarUnidadeZero(nome);
+        criarUnidadeFederal(nome);
         assertThat(unidadeDeSaudeRepository.findByNome(nome).orElseThrow().isAtivo()).isTrue();
 
         // Nota (característico, confirmado manualmente em 2026-09-07): o parâmetro `dto` do

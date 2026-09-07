@@ -1,9 +1,9 @@
 package com.edufelizardo.maissaudepublica.models;
 
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.FederalRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoDoisRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoTresRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoUmRequestDto;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoZeroRequestDto;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -66,7 +66,7 @@ public class UnidadeDeSaude implements Serializable {
     private Map<DayOfWeek, String> horarioAtendimento;
     private boolean ativo;
 
-    public UnidadeDeSaude(HierarquicoZeroRequestDto dto) {
+    public UnidadeDeSaude(FederalRequestDto dto) {
         this.ativo = true;
         this.nome = dto.getNome();
         this.tipo = dto.getTipo();
