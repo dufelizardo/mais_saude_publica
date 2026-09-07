@@ -12,8 +12,8 @@ COPY . .
 # Faz o build do projeto com Maven
 RUN mvn clean install
 
-# Cria a imagem final com o JDK
-FROM openjdk:17-jdk-slim
+# Cria a imagem final, so com o JRE (a imagem "openjdk" foi descontinuada no Docker Hub)
+FROM eclipse-temurin:17-jre-alpine
 
 # Exponha a porta 8080
 EXPOSE 8080
