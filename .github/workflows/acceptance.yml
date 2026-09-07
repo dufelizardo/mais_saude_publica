@@ -52,14 +52,17 @@ jobs:
       - name: Esperar a aplicação responder
         run: |
           for i in $(seq 1 60); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v1/federal/ || true)
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v1/federal/)
+            echo "Tentativa $i: HTTP $code"
             if [ "$code" = "200" ]; then
               echo "Aplicação no ar (HTTP $code)."
               exit 0
             fi
             sleep 3
           done
-          echo "Aplicação não respondeu a tempo."
+          echo "Aplicação não respondeu a tempo. Corpo da última resposta:"
+          curl -sS -i http://localhost:8080/api/v1/federal/ || true
+          echo "--- Logs do container ---"
           docker logs msp-app
           exit 1
 
