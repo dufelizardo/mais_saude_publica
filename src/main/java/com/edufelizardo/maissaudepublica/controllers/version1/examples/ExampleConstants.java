@@ -132,7 +132,7 @@ public class ExampleConstants {
                   "details": "Gateway Timeout"
                 }
             """;
-    public static final String HIERARQUICO_UM_RESPONSE_EXAMPLE = """
+    public static final String ESTADUAL_RESPONSE_EXAMPLE = """
                 [
                      {
                          "nome": "Ministério da Saúde",
@@ -166,12 +166,11 @@ public class ExampleConstants {
                      }
                  ]
             """;
-    public static final String HIERARQUICO_UM_RESPONSE_FIND_EXAMPLE = """
+    public static final String ESTADUAL_RESPONSE_FIND_EXAMPLE = """
                 {
                     "nome": "SES-DRS I-Grande São Paulo",
                     "tipo": "ESTADUAL",
-                    "municipio": "São Paulo",
-                    "estados": "SP",
+                    "estado": "SP",
                     "administracaoSuperior": "Ministério da Saúde",
                     "endereco": {
                         "cep": "01037-000",

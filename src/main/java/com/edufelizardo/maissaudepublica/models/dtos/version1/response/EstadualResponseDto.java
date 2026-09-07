@@ -1,9 +1,7 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EnderecoRequestDto;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.io.Serial;
@@ -17,14 +15,13 @@ import java.util.Set;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class HierarquicoUmResponseDto implements Serializable {
+public class EstadualResponseDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     private String nome;
     private TipoUnidadeDeSaude tipo;
-    private String municipio;
-    private String estados;
+    private String estado;
     private String administracaoSuperior;
     private EnderecoResponseDto endereco;
     private Set<String> saudeTelefones;
@@ -32,15 +29,14 @@ public class HierarquicoUmResponseDto implements Serializable {
     private Map<DayOfWeek, String> horarioFuncionamento;
     private Map<DayOfWeek, String> horarioAtendimento;
 
-    public HierarquicoUmResponseDto(String nome, TipoUnidadeDeSaude tipo, String unidadeSuperior, String municipio,
-                                    String estados, EnderecoResponseDto dto, Set<String> saudeTelefones, String email,
-                                    Map<DayOfWeek, String> horarioFuncionamento,
-                                    Map<DayOfWeek, String> horarioAtendimento) {
+    public EstadualResponseDto(String nome, TipoUnidadeDeSaude tipo, String unidadeSuperior,
+                                String estado, EnderecoResponseDto dto, Set<String> saudeTelefones, String email,
+                                Map<DayOfWeek, String> horarioFuncionamento,
+                                Map<DayOfWeek, String> horarioAtendimento) {
         this.nome = nome;
         this.tipo = tipo;
         this.administracaoSuperior = unidadeSuperior;
-        this.municipio = municipio;
-        this.estados = estados;
+        this.estado = estado;
         this.endereco = dto;
         this.saudeTelefones = saudeTelefones;
         this.email = email;
@@ -48,19 +44,17 @@ public class HierarquicoUmResponseDto implements Serializable {
         this.horarioAtendimento = horarioAtendimento;
     }
 
-
-    public static HierarquicoUmResponseDto fromHierarquicoResponseDto (UnidadeDeSaude unidadeDeSaude) {
+    public static EstadualResponseDto fromHierarquicoResponseDto(UnidadeDeSaude unidadeDeSaude) {
         EnderecoResponseDto dto = EnderecoResponseDto.fromEndereco(unidadeDeSaude.getEndereco());
         String administracaoSuperior = null;
         if (unidadeDeSaude.getUnidadeSuperior() != null) {
             administracaoSuperior = unidadeDeSaude.getUnidadeSuperior().getNome();
         }
-        return new HierarquicoUmResponseDto(
+        return new EstadualResponseDto(
                 unidadeDeSaude.getNome(),
                 unidadeDeSaude.getTipo(),
                 administracaoSuperior,
-                unidadeDeSaude.getMunicipio(),
-                unidadeDeSaude.getEstados(),
+                unidadeDeSaude.getEstado(),
                 dto,
                 unidadeDeSaude.getSaudeTelefones(),
                 unidadeDeSaude.getEmail(),

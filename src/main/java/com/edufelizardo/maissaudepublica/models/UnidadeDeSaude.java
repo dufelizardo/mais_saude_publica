@@ -1,9 +1,9 @@
 package com.edufelizardo.maissaudepublica.models;
 
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EstadualRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.FederalRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoDoisRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoTresRequestDto;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoUmRequestDto;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -43,7 +43,8 @@ public class UnidadeDeSaude implements Serializable {
     private UnidadeDeSaude unidadeSuperior;
     private String regiao;
     private String municipio;
-    private String estados;
+    @Column(name = "estado_administracao")
+    private String estado;
 
     @Embedded
     private Endereco endereco;
@@ -77,12 +78,11 @@ public class UnidadeDeSaude implements Serializable {
         this.horarioAtendimento = dto.getHorarioAtendimento();
     }
 
-    public UnidadeDeSaude(HierarquicoUmRequestDto dto) {
+    public UnidadeDeSaude(EstadualRequestDto dto) {
         this.ativo = true;
         this.nome = dto.getNome();
         this.tipo = dto.getTipo();
-        this.municipio = dto.getMunicipio();
-        this.estados = dto.getEstados();
+        this.estado = dto.getEstado();
         this.endereco = new Endereco(dto.getEndereco());
         this.saudeTelefones = dto.getTelefones();
         this.email = dto.getEmail();

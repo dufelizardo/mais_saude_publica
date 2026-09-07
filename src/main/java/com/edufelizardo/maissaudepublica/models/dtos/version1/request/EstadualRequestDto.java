@@ -18,7 +18,7 @@ import java.util.Set;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class HierarquicoUmRequestDto implements Serializable {
+public class EstadualRequestDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -28,10 +28,8 @@ public class HierarquicoUmRequestDto implements Serializable {
     private TipoUnidadeDeSaude tipo;
     @NotBlank(message = "O Nome da Administração Superior da Instituição precisa ser preenchido")
     private String administracaoSuperior;
-    @NotBlank(message = "O municipio da Instituição precisa ser preenchido")
-    public String municipio;
     @NotBlank(message = "O estado da Instituição precisa ser preenchido")
-    public String estados;
+    public String estado;
     @Valid
     private EnderecoRequestDto endereco;
     private Set<String> telefones;

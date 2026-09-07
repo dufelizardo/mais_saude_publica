@@ -27,21 +27,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Testes de caracterização do HierarquicoUm ATUAL (nomes/endpoint antigos), escritos antes
- * do rename para Estadual (AQUAQE-161 / ADR-0009) — servem de rede de segurança para garantir
- * que o rename não muda o comportamento observável da API. Ver AQUAQE-210.
+ * Testes do UnidadeDeSaudeEstadualController (renomeado de HierarquicoUm pela AQUAQE-161,
+ * ADR-0009) — mesmas asserções de antes do rename, com o campo `municipio` removido (migrou
+ * para Municipal, ver AQUAQE-164) e `estados` renomeado para `estado`. Ver AQUAQE-210.
  *
- * Mesmo padrão de engenharia de teste da AQUAQE-209 (ver UnidadeDeSaudeFederalControllerTest):
- * SEM {@code @Transactional} na classe (cada chamada HTTP roda sua própria transação real,
- * necessário para a detecção de nome duplicado funcionar), limpeza manual via
- * {@code @AfterEach}, e {@code @Transactional} só nos testes que leem coleções LAZY de volta.
+ * Mesmo padrão de engenharia de teste da AQUAQE-209: SEM {@code @Transactional} na classe,
+ * limpeza manual via {@code @AfterEach}, {@code @Transactional} só nos testes de horário.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class UnidadeDeSaudeHierarquicoUmControllerTest {
+class UnidadeDeSaudeEstadualControllerTest {
 
-    private static final String BASE_URL = "/api/v1/hierarquico-um/";
+    private static final String BASE_URL = "/api/v1/estadual/";
     private static final String PREFIXO_NOME_TESTE = "Secretaria Estadual de Saúde - ";
     private static final String NOME_SUPERIOR = PREFIXO_NOME_TESTE + "Superior";
 
@@ -83,14 +81,13 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
         unidadeDeSaudeRepository.deleteAll(criadosNoTeste);
     }
 
-    private void criarUnidadeUm(String nome) throws Exception {
+    private void criarUnidadeEstadual(String nome) throws Exception {
         String body = """
                 {
                   "nome": "%s",
                   "tipo": "ESTADUAL",
                   "administracaoSuperior": "%s",
-                  "municipio": "São Paulo",
-                  "estados": "SP",
+                  "estado": "SP",
                   "endereco": {
                     "cep": "01037-000",
                     "logradouro": "Rua Conselheiro Crispiniano",
@@ -120,8 +117,7 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
                   "nome": "%s",
                   "tipo": "ESTADUAL",
                   "administracaoSuperior": "%s",
-                  "municipio": "São Paulo",
-                  "estados": "SP",
+                  "estado": "SP",
                   "endereco": {
                     "cep": "01037-000",
                     "logradouro": "Rua Conselheiro Crispiniano",
@@ -146,15 +142,14 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
     @Test
     void deveRetornarBadRequestAoCriarComNomeDuplicado() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Duplicado";
-        criarUnidadeUm(nome);
+        criarUnidadeEstadual(nome);
 
         String body = """
                 {
                   "nome": "%s",
                   "tipo": "ESTADUAL",
                   "administracaoSuperior": "%s",
-                  "municipio": "São Paulo",
-                  "estados": "SP",
+                  "estado": "SP",
                   "endereco": {
                     "cep": "01037-000",
                     "logradouro": "Rua Conselheiro Crispiniano",
@@ -182,8 +177,7 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
                   "nome": "%sSuperiorInexistente",
                   "tipo": "ESTADUAL",
                   "administracaoSuperior": "NomeQueNaoExisteDeJeitoNenhum-AQUAQE-210",
-                  "municipio": "São Paulo",
-                  "estados": "SP",
+                  "estado": "SP",
                   "endereco": {
                     "cep": "01037-000",
                     "logradouro": "Rua Conselheiro Crispiniano",
@@ -205,7 +199,7 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
     @Test
     void deveListarTodasAsUnidades() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Listagem";
-        criarUnidadeUm(nome);
+        criarUnidadeEstadual(nome);
 
         mockMvc.perform(get(BASE_URL))
                 .andExpect(status().isOk())
@@ -215,15 +209,15 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
     @Test
     void deveBuscarPorNome() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Busca";
-        criarUnidadeUm(nome);
+        criarUnidadeEstadual(nome);
 
         mockMvc.perform(get(BASE_URL + nome))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value(nome))
                 .andExpect(jsonPath("$.tipo").value("ESTADUAL"))
-                .andExpect(jsonPath("$.municipio").value("São Paulo"))
-                .andExpect(jsonPath("$.estados").value("SP"))
-                .andExpect(jsonPath("$.administracaoSuperior").value(NOME_SUPERIOR));
+                .andExpect(jsonPath("$.estado").value("SP"))
+                .andExpect(jsonPath("$.administracaoSuperior").value(NOME_SUPERIOR))
+                .andExpect(jsonPath("$.municipio").doesNotExist());
     }
 
     @Test
@@ -236,7 +230,7 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
     void deveAtualizarNome() throws Exception {
         String nomeOriginal = PREFIXO_NOME_TESTE + "Antes";
         String nomeNovo = PREFIXO_NOME_TESTE + "Depois";
-        criarUnidadeUm(nomeOriginal);
+        criarUnidadeEstadual(nomeOriginal);
 
         mockMvc.perform(patch(BASE_URL + nomeOriginal)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -250,7 +244,7 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
     @Test
     void deveAtualizarContato() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Contato";
-        criarUnidadeUm(nome);
+        criarUnidadeEstadual(nome);
 
         String body = """
                 {
@@ -281,7 +275,7 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
     @Transactional
     void deveAtualizarHorarioDeFuncionamento() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Horario Funcionamento";
-        criarUnidadeUm(nome);
+        criarUnidadeEstadual(nome);
 
         mockMvc.perform(patch(BASE_URL + "horario-de-funcionamento/" + nome)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -296,7 +290,7 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
     @Transactional
     void deveAtualizarHorarioDeAtendimento() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Horario Atendimento";
-        criarUnidadeUm(nome);
+        criarUnidadeEstadual(nome);
 
         mockMvc.perform(patch(BASE_URL + "horario-de-atendimento/" + nome)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -310,7 +304,7 @@ class UnidadeDeSaudeHierarquicoUmControllerTest {
     @Test
     void deveDesabilitar_ComportamentoAtual_CorpoDaRequisicaoEIgnorado() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Desabilitar";
-        criarUnidadeUm(nome);
+        criarUnidadeEstadual(nome);
         assertThat(unidadeDeSaudeRepository.findByNome(nome).orElseThrow().isAtivo()).isTrue();
 
         // Mesmo comportamento característico documentado na AQUAQE-209: o parâmetro `dto` do
