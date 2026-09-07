@@ -25,6 +25,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0007](./0007-deploy-docker.md) | Estratégia de deploy com Docker e CI/CD | Proposto |
 | [0008](./0008-frontend-angular.md) | Escolha de front-end: Angular + TypeScript | Proposto |
 | [0009](./0009-renomear-hierarquia-para-esferas-de-gestao-do-sus.md) | Renomear a hierarquia genérica (Zero/Um/Dois/Três) para as esferas de gestão do SUS (Federal/Estadual/Municipal/Regional) + criar o nível Unidade de Saúde | Proposta |
+| [0010](./0010-fluxo-de-branches-e-pipeline-de-promocao.md) | Fluxo de branches (developer → qa → cert → main) com pipeline de gate no GitHub Actions + troca de MySQL para PostgreSQL | Aceita |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. Prioridade de implementação combinada: 0003 (arquitetura), 0006 (segurança) e 0007 (deploy) antes de novos domínios de negócio; 0008 (front-end) é a de menor prioridade.
 

@@ -115,6 +115,16 @@ implementação atual — antes de escrever um teste para um código, confirme s
 Verifique sempre contra a aplicação real (`curl`/Postman) antes de escrever um teste negativo —
 não confie cegamente no que o Swagger documenta.
 
+## Gate de promoção (CI)
+
+Esta suíte roda automaticamente no GitHub Actions (`.github/workflows/acceptance.yml`) em todo PR
+que promove código entre as branches `developer → qa → cert → main` (ver
+[ADR-0010](../../docs/adr/0010-fluxo-de-branches-e-pipeline-de-promocao.md)). O workflow builda a
+imagem Docker real do projeto, sobe um PostgreSQL efêmero, sobe a aplicação, espera ela responder
+e só então roda `run_tests.sh` contra ela — o resultado (`test/robot/results/`) fica disponível
+como artifact do job, mesmo em caso de falha. O merge fica bloqueado (branch protection) se a
+suíte não passar.
+
 ## Pré-requisitos
 
 ```bash

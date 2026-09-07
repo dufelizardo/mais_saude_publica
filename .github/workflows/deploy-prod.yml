@@ -1,0 +1,18 @@
+name: CD - Deploy Produção (Render)
+
+# Só dispara em push (merge) na main - nunca em pull_request, pra não fazer deploy de código
+# ainda não promovido. A promoção pra main já passou pelos gates de ci.yml + acceptance.yml
+# antes de o PR poder ser mergeado (branch protection).
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Render.com
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_URL }}
