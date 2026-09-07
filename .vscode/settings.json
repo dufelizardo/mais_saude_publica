@@ -1,0 +1,4 @@
+{
+  "robot.language-server.python": "${workspaceFolder}/test/robot/.venv/Scripts/python.exe",
+  "robot.python.executable": "${workspaceFolder}/test/robot/.venv/Scripts/python.exe"
+}
