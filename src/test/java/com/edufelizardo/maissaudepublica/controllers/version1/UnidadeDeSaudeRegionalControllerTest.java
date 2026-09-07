@@ -249,6 +249,36 @@ class UnidadeDeSaudeRegionalControllerTest {
     }
 
     @Test
+    void deveRetornarUnprocessableEntityAoCriarComSuperiorDeNivelErrado() throws Exception {
+        // AQUAQE-22: administracaoSuperior precisa ser do nível MUNICIPAL (imediatamente
+        // superior a REGIONAL) — aqui referenciamos o fixture ESTADUAL, inválido.
+        String nome = PREFIXO_NOME_TESTE + "Superior Nivel Errado";
+        String body = """
+                {
+                  "nome": "%s",
+                  "tipo": "REGIONAL",
+                  "administracaoSuperior": "%s",
+                  "regiao": "Sudeste",
+                  "endereco": {
+                    "cep": "02012-040",
+                    "logradouro": "Rua Padre Marchetti",
+                    "numeroLogradouro": "557",
+                    "bairro": "Ipiranga",
+                    "cidade": "São Paulo",
+                    "estado": "SP"
+                  },
+                  "email": "contato@saude.regional.sp.gov.br"
+                }
+                """.formatted(nome, NOME_SUPERIOR_ESTADUAL);
+
+        mockMvc.perform(post(BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.details").value("Unprocessable Entity"));
+    }
+
+    @Test
     void deveListarTodasAsUnidades() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Listagem";
         criarUnidadeRegional(nome);

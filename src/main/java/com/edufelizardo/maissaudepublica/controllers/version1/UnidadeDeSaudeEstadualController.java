@@ -8,6 +8,7 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.*;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EstadualResponseDto;
 import com.edufelizardo.maissaudepublica.services.version1.EstadualService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -102,6 +103,8 @@ public class UnidadeDeSaudeEstadualController {
         }catch (ResourceBadRequestException e) {
             throw new ResourceBadRequestException("Não foi possível efetivar o cadastro", e);
         } catch (ResourceNotFoundException e) {
+            throw e;
+        } catch (ResourceUnprocessableEntityException e) {
             throw e;
         } catch (Exception e) {
             throw new RuntimeException("Erro interno ao processar a solicitação", e);
