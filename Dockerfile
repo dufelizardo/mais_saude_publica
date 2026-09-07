@@ -9,11 +9,12 @@ RUN apt-get install maven -y
 # Copia o projeto para o container
 COPY . .
 
-# Faz o build do projeto com Maven
-RUN mvn clean install
+# Faz o build do projeto com Maven (sem rodar os testes - eles precisam de um banco de dados
+# de verdade, que nao existe durante o build da imagem; o gate de JUnit roda separado, no ci.yml)
+RUN mvn clean install -DskipTests
 
-# Cria a imagem final com o JDK
-FROM openjdk:17-jdk-slim
+# Cria a imagem final, so com o JRE (a imagem "openjdk" foi descontinuada no Docker Hub)
+FROM eclipse-temurin:17-jre-alpine
 
 # Exponha a porta 8080
 EXPOSE 8080
@@ -21,8 +22,9 @@ EXPOSE 8080
 # Define o profile ativo como produção
 ENV SPRING_PROFILES_ACTIVE=prod
 
-# Copia o JAR gerado para o ambiente de produção
-COPY --from=build /target/maissaudepublica-0.0.1-SNAPSHOT.jar app.jar
+# Copia o JAR gerado para o ambiente de produção (glob em vez do nome fixo - o artifactId do
+# pom.xml e "mais_saude_publica", com underscore, entao "maissaudepublica-..." nunca existiu)
+COPY --from=build /target/*.jar app.jar
 
 # Executa o JAR da aplicação
 ENTRYPOINT ["java", "-jar", "app.jar"]
