@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import lombok.*;
 
 import java.io.Serial;
@@ -18,7 +19,7 @@ public class HierarquicoDoisResponseDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String nome;
-    private int tipo;
+    private TipoUnidadeDeSaude tipo;
     private String regiao;
     private String administracaoSuperior;
     private EnderecoResponseDto endereco;
@@ -27,7 +28,7 @@ public class HierarquicoDoisResponseDto implements Serializable {
     private Map<DayOfWeek, String> horarioFuncionamento;
     private Map<DayOfWeek, String> horarioAtendimento;
 
-    public HierarquicoDoisResponseDto(String nome, int tipo, String unidadeSuperior, String regiao,
+    public HierarquicoDoisResponseDto(String nome, TipoUnidadeDeSaude tipo, String unidadeSuperior, String regiao,
                                       EnderecoResponseDto dto,
                                       Set<String> saudeTelefones,
                                       String email,

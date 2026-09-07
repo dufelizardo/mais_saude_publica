@@ -34,7 +34,7 @@ public abstract class AbstractHierarquicoService<RES> {
     protected abstract RES toResponseDto(UnidadeDeSaude unidadeDeSaude);
 
     public List<RES> getAll() {
-        return unidadeDeSaudeRepository.findByTipo(getTipo().getTipo())
+        return unidadeDeSaudeRepository.findByTipo(getTipo())
                 .stream()
                 .map(this::toResponseDto)
                 .collect(Collectors.toList());
@@ -104,7 +104,7 @@ public abstract class AbstractHierarquicoService<RES> {
     }
 
     protected UnidadeDeSaude buscarUnidadeDeSaudePorNome(String nome) {
-        return unidadeDeSaudeRepository.findByNomeAndTipo(nome, getTipo().getTipo())
+        return unidadeDeSaudeRepository.findByNomeAndTipo(nome, getTipo())
                 .stream()
                 .findAny()
                 .orElseThrow(() -> new ResourceNotFoundException(

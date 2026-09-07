@@ -12,7 +12,7 @@ public class HierarquicoDoisService extends AbstractHierarquicoService<Hierarqui
 
     @Override
     protected TipoUnidadeDeSaude getTipo() {
-        return TipoUnidadeDeSaude.ADMINISTRACAO3;
+        return TipoUnidadeDeSaude.MUNICIPAL;
     }
 
     @Override

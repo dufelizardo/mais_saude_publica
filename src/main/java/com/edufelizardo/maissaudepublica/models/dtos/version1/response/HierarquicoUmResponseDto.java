@@ -2,6 +2,7 @@ package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EnderecoRequestDto;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
@@ -21,7 +22,7 @@ public class HierarquicoUmResponseDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String nome;
-    private int tipo;
+    private TipoUnidadeDeSaude tipo;
     private String municipio;
     private String estados;
     private String administracaoSuperior;
@@ -31,7 +32,7 @@ public class HierarquicoUmResponseDto implements Serializable {
     private Map<DayOfWeek, String> horarioFuncionamento;
     private Map<DayOfWeek, String> horarioAtendimento;
 
-    public HierarquicoUmResponseDto(String nome, int tipo, String unidadeSuperior, String municipio,
+    public HierarquicoUmResponseDto(String nome, TipoUnidadeDeSaude tipo, String unidadeSuperior, String municipio,
                                     String estados, EnderecoResponseDto dto, Set<String> saudeTelefones, String email,
                                     Map<DayOfWeek, String> horarioFuncionamento,
                                     Map<DayOfWeek, String> horarioAtendimento) {

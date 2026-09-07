@@ -2,6 +2,7 @@ package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EnderecoRequestDto;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import lombok.*;
 
 import java.io.Serial;
@@ -21,7 +22,7 @@ public class HierarquicoZeroResponseDto implements Serializable {
     private static final long serialVersionUID = 3410068205127200223L;
 
     private String nome;
-    private int tipo;
+    private TipoUnidadeDeSaude tipo;
     private EnderecoRequestDto endereco;
     private Set<String> saudeTelefones;
     private String email;

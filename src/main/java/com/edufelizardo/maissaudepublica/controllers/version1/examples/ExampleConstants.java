@@ -6,7 +6,7 @@ public class ExampleConstants {
                 [
                     {
                         "nome": "Ministério da Saúde",
-                        "tipo": "0",
+                        "tipo": "FEDERAL",
                         "endereco": {
                             "cep": "70058-900",
                             "logradouro": "Esplanada dos Ministérios",
@@ -41,7 +41,7 @@ public class ExampleConstants {
     public static final String HIERARQUICO_ZERO_RESPONSE_FIND_EXAMPLE = """
                 {
                     "nome": "Ministério da Saúde",
-                    "tipo": "0",
+                    "tipo": "FEDERAL",
                     "endereco": {
                         "cep": "05120-020",
                         "logradouro": "Esplanada dos Ministérios",
@@ -75,7 +75,7 @@ public class ExampleConstants {
     public static final String SUCCESS_RESPONSE_EXAMPLE = """
                 {
                     "message": "Unidade de Saúde criada com sucesso!",
-                    "details": "Nome: Gerencia de Saúde, Tipo: 0"
+                    "details": "Nome: Gerencia de Saúde, Tipo: FEDERAL"
                 }
             """;
     public static final String SUCCESS_RESPONSE_UPDATE_EXAMPLE = """
@@ -136,7 +136,7 @@ public class ExampleConstants {
                 [
                      {
                          "nome": "Ministério da Saúde",
-                         "tipo": 0,
+                         "tipo": "ESTADUAL",
                          "endereco": {
                              "cep": "70058-900",
                              "logradouro": "Esplanada dos Ministérios",
@@ -169,7 +169,7 @@ public class ExampleConstants {
     public static final String HIERARQUICO_UM_RESPONSE_FIND_EXAMPLE = """
                 {
                     "nome": "SES-DRS I-Grande São Paulo",
-                    "tipo": 1,
+                    "tipo": "ESTADUAL",
                     "municipio": "São Paulo",
                     "estados": "SP",
                     "administracaoSuperior": "Ministério da Saúde",
@@ -205,7 +205,7 @@ public class ExampleConstants {
                 [
                     {
                         "nome": "Coordenadoria Regional de Saúde Sudeste I",
-                        "tipo": "2",
+                        "tipo": "MUNICIPAL",
                         "administracaoSuperior": "SES-DRS I-Grande São Paulo",
                         "regiao": "Sudeste",
                         "endereco": {
@@ -240,7 +240,7 @@ public class ExampleConstants {
     public static final String HIERARQUICO_DOIS_RESPONSE_FIND_EXAMPLE = """
                 {
                     "nome": "Coordenadoria Regional de Saúde Sudeste I",
-                    "tipo": "2",
+                    "tipo": "MUNICIPAL",
                     "administracaoSuperior": "SES-DRS I-Grande São Paulo",
                     "regiao": "Sudeste",
                     "endereco": {
@@ -275,7 +275,7 @@ public class ExampleConstants {
                 [
                   {
                     "nome": "string",
-                    "tipo": 0,
+                    "tipo": "REGIONAL",
                     "administracaoSuperior": "string",
                     "endereco": {
                       "cep": "string",
@@ -307,7 +307,7 @@ public class ExampleConstants {
     public static final String HIERARQUICO_TRES_RESPONSE_FIND_EXAMPLE = """
                 {
                   "nome": "string",
-                  "tipo": 0,
+                  "tipo": "REGIONAL",
                   "administracaoSuperior": "string",
                   "endereco": {
                     "cep": "string",

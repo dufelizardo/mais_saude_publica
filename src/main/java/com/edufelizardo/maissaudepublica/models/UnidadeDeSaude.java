@@ -4,6 +4,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Hierarquic
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoTresRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoUmRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.HierarquicoZeroRequestDto;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -34,7 +35,8 @@ public class UnidadeDeSaude implements Serializable {
     @NotBlank
     @Column(unique = true)
     private String nome;
-    private int tipo;
+    @Enumerated(EnumType.STRING)
+    private TipoUnidadeDeSaude tipo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unidade_superior_id", referencedColumnName = "uuid", nullable = true)
