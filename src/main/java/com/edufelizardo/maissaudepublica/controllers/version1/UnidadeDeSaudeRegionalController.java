@@ -8,8 +8,8 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.*;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.response.HierarquicoTresResponseDto;
-import com.edufelizardo.maissaudepublica.services.version1.HierarquicoTresService;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.RegionalResponseDto;
+import com.edufelizardo.maissaudepublica.services.version1.RegionalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,28 +28,28 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/v1/hierarquico-tres/")
-@Tag(name = "Hierarquico 3", description = "Endpoints para Gerenciar Hierárquia Nível 3.")
-public class UnidadeDeSaudeHierarquicoTresController {
+@RequestMapping(value = "/api/v1/regional/")
+@Tag(name = "Regional", description = "Endpoints para Gerenciar a Esfera Regional de Saúde.")
+public class UnidadeDeSaudeRegionalController {
 
     @Autowired
-    private HierarquicoTresService service;
+    private RegionalService service;
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Busca uma Instituição Hierárquica Nível Três de Saúde",
-            description = "Verifica a existencia de Instituções Hierárquica Nível 3.",
-            tags = "Hierarquico 3")
+    @Operation(summary = "Busca uma Instituição da Esfera Regional de Saúde",
+            description = "Verifica a existencia de Instituções da Esfera Regional.",
+            tags = "Regional")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
-                    schema = @Schema(implementation = HierarquicoTresResponseDto.class)
+                    schema = @Schema(implementation = RegionalResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
-                    summary = "HierarquicoTresResponse",
-                    value = ExampleConstants.HIERARQUICO_TRES_RESPONSE_EXAMPLE,
+                    summary = "RegionalResponse",
+                    value = ExampleConstants.REGIONAL_RESPONSE_EXAMPLE,
                     description = "O servidor consegue processar a requisição, e retorna no corpo da resposta as informações encontradas"))
     })
     @ApiErrorResponsesListagem
-    public ResponseEntity<List<HierarquicoTresResponseDto>> getAllHierarquicoTres() {
-        List<HierarquicoTresResponseDto> responseDtos = service.getAll();
+    public ResponseEntity<List<RegionalResponseDto>> getAllRegional() {
+        List<RegionalResponseDto> responseDtos = service.getAll();
         if (responseDtos.isEmpty()) {
             throw new ResourceNotFoundException("Nenhum item foi encontrado.");
         }
@@ -57,39 +57,39 @@ public class UnidadeDeSaudeHierarquicoTresController {
     }
 
     @GetMapping(value = "{nome}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Busca uma Instituição Hierárquica Nível Três de Saúde pelo seu Nome.",
-            description = "Verifica a existencia de Instituções Hierárquica Nível 3.",
-            tags = "Hierarquico 3")
+    @Operation(summary = "Busca uma Instituição da Esfera Regional de Saúde pelo seu Nome.",
+            description = "Verifica a existencia de Instituções da Esfera Regional.",
+            tags = "Regional")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
-                    schema = @Schema(implementation = HierarquicoTresResponseDto.class)
+                    schema = @Schema(implementation = RegionalResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
-                    summary = "HierarquicoTresResponse",
-                    value = ExampleConstants.HIERARQUICO_TRES_RESPONSE_FIND_EXAMPLE,
+                    summary = "RegionalResponse",
+                    value = ExampleConstants.REGIONAL_RESPONSE_FIND_EXAMPLE,
                     description = "O servidor consegue processar a requisição, e retorna no corpo da resposta as informações encontradas."))
     })
     @ApiErrorResponsesBusca
-    public ResponseEntity<HierarquicoTresResponseDto> findByHierarquicoTres(@PathVariable String nome) {
-        HierarquicoTresResponseDto responseDto = service.findByNome(nome);
+    public ResponseEntity<RegionalResponseDto> findByRegional(@PathVariable String nome) {
+        RegionalResponseDto responseDto = service.findByNome(nome);
         return ResponseEntity.ok(responseDto);
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Cria uma Instituição Hierárquica Nível Três de Saúde.",
-            description = "Cria uma Instituções Hierárquica Nível 3.",
-            tags = "Hierarquico 3")
+    @Operation(summary = "Cria uma Instituição da Esfera Regional de Saúde.",
+            description = "Cria uma Instituição da Esfera Regional.",
+            tags = "Regional")
     @ApiResponse(responseCode = "201", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
                     schema = @Schema(implementation = SuccessResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
                     summary = "SuccessResponse",
                     value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE,
-                    description = "Cria uma Unidade de Saúde Nível 3."))
+                    description = "Cria uma Unidade de Saúde da Esfera Regional."))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> createHierarquicoTres(@Valid @RequestBody HierarquicoTresRequestDto dto) {
+    public ResponseEntity<SuccessResponseDto> createRegional(@Valid @RequestBody RegionalRequestDto dto) {
         try {
-            HierarquicoTresResponseDto responseDto = service.create(dto);
+            RegionalResponseDto responseDto = service.create(dto);
 
             String successMessage = "Unidade de Saúde criada com sucesso!";
             String details = "Nome: " + responseDto.getNome() + ", Tipo: " + responseDto.getTipo();
@@ -109,20 +109,20 @@ public class UnidadeDeSaudeHierarquicoTresController {
     }
 
     @PatchMapping(value = "{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza o nome de uma Instituição Hierárquica Nível Três de Saúde.",
-            description = "Atualiza o nome de uma Instituções Hierárquica Nível 3.",
-            tags = "Hierarquico 3")
+    @Operation(summary = "Atualiza o nome de uma Instituição da Esfera Regional de Saúde.",
+            description = "Atualiza o nome de uma Instituição da Esfera Regional.",
+            tags = "Regional")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
                     schema = @Schema(implementation = SuccessResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
                     summary = "SuccessResponse",
                     value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE,
-                    description = "Atualiza uma Unidade de Saúde Nível 3."))
+                    description = "Atualiza uma Unidade de Saúde da Esfera Regional."))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> updateNomeHierarquiaTres(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeNomeUpdateRequestDto dto) {
-        HierarquicoTresResponseDto responseDto = service.updateNome(nome, dto);
+    public ResponseEntity<SuccessResponseDto> updateNomeRegional(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeNomeUpdateRequestDto dto) {
+        RegionalResponseDto responseDto = service.updateNome(nome, dto);
 
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
         String details = "Nome: " + responseDto.getNome();
@@ -133,20 +133,20 @@ public class UnidadeDeSaudeHierarquicoTresController {
     }
 
     @PatchMapping(value = "contato/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza os contatos de uma Instituição Hierárquica Nível Três de Saúde.",
-            description = "Atualiza os contatos de uma Instituções Hierárquica Nível 3.",
-            tags = "Hierarquico 3")
+    @Operation(summary = "Atualiza os contatos de uma Instituição da Esfera Regional de Saúde.",
+            description = "Atualiza os contatos de uma Instituição da Esfera Regional.",
+            tags = "Regional")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
                     schema = @Schema(implementation = SuccessResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
                     summary = "SuccessResponse",
                     value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE,
-                    description = "Atualiza uma Unidade de Saúde Nível 3."))
+                    description = "Atualiza uma Unidade de Saúde da Esfera Regional."))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> updateContatoHierarquiasTres(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeEnderecoRequestDto dto) {
-        HierarquicoTresResponseDto responseDto = service.updateContato(nome, dto);
+    public ResponseEntity<SuccessResponseDto> updateContatoRegional(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeEnderecoRequestDto dto) {
+        RegionalResponseDto responseDto = service.updateContato(nome, dto);
 
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
         String details = "Nome: " + responseDto.getNome();
@@ -157,20 +157,20 @@ public class UnidadeDeSaudeHierarquicoTresController {
     }
 
     @PatchMapping(value = "horario-de-funcionamento/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza o Horariode de funcionamento de uma Instituição Hierárquica Nível Três de Saúde.",
-            description = "Atualiza o Horariode de funcionamento de uma Instituções Hierárquica Nível 3.",
-            tags = "Hierarquico 3")
+    @Operation(summary = "Atualiza o Horariode de funcionamento de uma Instituição da Esfera Regional de Saúde.",
+            description = "Atualiza o Horariode de funcionamento de uma Instituição da Esfera Regional.",
+            tags = "Regional")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
                     schema = @Schema(implementation = SuccessResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
                     summary = "SuccessResponse",
                     value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE,
-                    description = "Atualiza uma Unidade de Saúde Nível 3."))
+                    description = "Atualiza uma Unidade de Saúde da Esfera Regional."))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> updateHoraDeFuncionamentoHierarquiaTres(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeHorarioDeFuncionamentoRequestDto dto) {
-        HierarquicoTresResponseDto responseDto = service.updateHorarioFuncionamento(nome, dto);
+    public ResponseEntity<SuccessResponseDto> updateHoraDeFuncionamentoRegional(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeHorarioDeFuncionamentoRequestDto dto) {
+        RegionalResponseDto responseDto = service.updateHorarioFuncionamento(nome, dto);
 
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
         String details = "Nome: " + responseDto.getNome();
@@ -181,20 +181,20 @@ public class UnidadeDeSaudeHierarquicoTresController {
     }
 
     @PatchMapping(value = "horario-de-atendimento/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza o Horario de atendimento de uma Instituição Hierárquica Nível Três de Saúde.",
-            description = "Atualiza o Horario de atendimento de uma Instituções Hierárquica Nível 3.",
-            tags = "Hierarquico 3")
+    @Operation(summary = "Atualiza o Horario de atendimento de uma Instituição da Esfera Regional de Saúde.",
+            description = "Atualiza o Horario de atendimento de uma Instituição da Esfera Regional.",
+            tags = "Regional")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
                     schema = @Schema(implementation = SuccessResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
                     summary = "SuccessResponse",
                     value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE,
-                    description = "Atualiza uma Unidade de Saúde Nível 3."))
+                    description = "Atualiza uma Unidade de Saúde da Esfera Regional."))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> updateHoraDeAtendimentoHierarquiaTres(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeHorarioDeAtendimentoRequestDto dto) {
-        HierarquicoTresResponseDto responseDto = service.updateHorarioAtendimento(nome, dto);
+    public ResponseEntity<SuccessResponseDto> updateHoraDeAtendimentoRegional(@PathVariable String nome, @Valid @RequestBody UnidadeDeSaudeHorarioDeAtendimentoRequestDto dto) {
+        RegionalResponseDto responseDto = service.updateHorarioAtendimento(nome, dto);
 
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
         String details = "Nome: " + responseDto.getNome();
@@ -205,20 +205,20 @@ public class UnidadeDeSaudeHierarquicoTresController {
     }
 
     @DeleteMapping(value = "des-habilitar/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Desabilita ou Habilita uma Instituição Hierárquica Nível Três de Saúde.",
-            description = "Desabilita ou Habilita  uma Instituções Hierárquica Nível 3.",
-            tags = "Hierarquico 3")
+    @Operation(summary = "Desabilita ou Habilita uma Instituição da Esfera Regional de Saúde.",
+            description = "Desabilita ou Habilita uma Instituição da Esfera Regional.",
+            tags = "Regional")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
                     schema = @Schema(implementation = SuccessResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
                     summary = "SuccessResponse",
                     value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE,
-                    description = "Atualiza uma Unidade de Saúde Nível 3."))
+                    description = "Atualiza uma Unidade de Saúde da Esfera Regional."))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> deleteHierarquiaTres(@PathVariable String nome, UnidadeDeSaudeAtivoRequestDto dto) {
-        HierarquicoTresResponseDto responseDto = service.desabilitar(nome, dto);
+    public ResponseEntity<SuccessResponseDto> deleteRegional(@PathVariable String nome, UnidadeDeSaudeAtivoRequestDto dto) {
+        RegionalResponseDto responseDto = service.desabilitar(nome, dto);
 
         String successMessage = "Unidade de Saúde atualizada com sucesso!";
         String details = "Nome: " + responseDto.getNome();

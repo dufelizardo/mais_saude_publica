@@ -270,12 +270,13 @@ public class ExampleConstants {
                     }
                 }
             """;
-    public static final String HIERARQUICO_TRES_RESPONSE_EXAMPLE = """
+    public static final String REGIONAL_RESPONSE_EXAMPLE = """
                 [
                   {
                     "nome": "string",
                     "tipo": "REGIONAL",
                     "administracaoSuperior": "string",
+                    "regiao": "string",
                     "endereco": {
                       "cep": "string",
                       "logradouro": "string",
@@ -303,11 +304,12 @@ public class ExampleConstants {
                   }
                 ]
             """;
-    public static final String HIERARQUICO_TRES_RESPONSE_FIND_EXAMPLE = """
+    public static final String REGIONAL_RESPONSE_FIND_EXAMPLE = """
                 {
                   "nome": "string",
                   "tipo": "REGIONAL",
                   "administracaoSuperior": "string",
+                  "regiao": "string",
                   "endereco": {
                     "cep": "string",
                     "logradouro": "string",

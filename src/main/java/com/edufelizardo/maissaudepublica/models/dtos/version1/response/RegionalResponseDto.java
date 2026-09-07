@@ -15,12 +15,13 @@ import java.util.Set;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class HierarquicoTresResponseDto implements Serializable {
+public class RegionalResponseDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     private String nome;
     private TipoUnidadeDeSaude tipo;
+    private String regiao;
     private String administracaoSuperior;
     private EnderecoResponseDto endereco;
     private Set<String> saudeTelefones;
@@ -28,14 +29,15 @@ public class HierarquicoTresResponseDto implements Serializable {
     private Map<DayOfWeek, String> horarioFuncionamento;
     private Map<DayOfWeek, String> horarioAtendimento;
 
-    public HierarquicoTresResponseDto(String nome, TipoUnidadeDeSaude tipo, String unidadeSuperior,
-                                      EnderecoResponseDto dto,
-                                      Set<String> saudeTelefones, String email,
-                                      Map<DayOfWeek, String> horarioFuncionamento,
-                                      Map<DayOfWeek, String> horarioAtendimento) {
+    public RegionalResponseDto(String nome, TipoUnidadeDeSaude tipo, String unidadeSuperior, String regiao,
+                                EnderecoResponseDto dto,
+                                Set<String> saudeTelefones, String email,
+                                Map<DayOfWeek, String> horarioFuncionamento,
+                                Map<DayOfWeek, String> horarioAtendimento) {
         this.nome = nome;
         this.tipo = tipo;
         this.administracaoSuperior = unidadeSuperior;
+        this.regiao = regiao;
         this.endereco = dto;
         this.saudeTelefones = saudeTelefones;
         this.email = email;
@@ -43,16 +45,17 @@ public class HierarquicoTresResponseDto implements Serializable {
         this.horarioAtendimento = horarioAtendimento;
     }
 
-    public static HierarquicoTresResponseDto fromHierarquicoResponseDto (UnidadeDeSaude unidadeDeSaude) {
+    public static RegionalResponseDto fromHierarquicoResponseDto(UnidadeDeSaude unidadeDeSaude) {
         EnderecoResponseDto dto = EnderecoResponseDto.fromEndereco(unidadeDeSaude.getEndereco());
         String administracaoSuperior = null;
         if (unidadeDeSaude.getUnidadeSuperior() != null) {
             administracaoSuperior = unidadeDeSaude.getUnidadeSuperior().getNome();
         }
-        return new HierarquicoTresResponseDto(
+        return new RegionalResponseDto(
                 unidadeDeSaude.getNome(),
                 unidadeDeSaude.getTipo(),
                 administracaoSuperior,
+                unidadeDeSaude.getRegiao(),
                 dto,
                 unidadeDeSaude.getSaudeTelefones(),
                 unidadeDeSaude.getEmail(),

@@ -27,12 +27,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Testes de caracterização do HierarquicoTres ATUAL (nomes/endpoint antigos), escritos antes
- * do rename para Regional (AQUAQE-167 / ADR-0009) — servem de rede de segurança para garantir
- * que o rename não muda o comportamento observável da API. Ver AQUAQE-212.
+ * Testes do UnidadeDeSaudeRegionalController (renomeado de HierarquicoTres pela AQUAQE-167,
+ * ADR-0009) — mesmas asserções de antes do rename, com `regiao` adicionado (migrado de
+ * Municipal, ver AQUAQE-164). Ver AQUAQE-212.
  *
- * Hoje este nível não tem nenhum campo geográfico próprio (nem regiao, nem municipio) — o
- * campo `regiao` só é adicionado depois do rename (migrado de Municipal, ver AQUAQE-164).
+ * Com esta classe, os 4 renomes (Federal/Estadual/Municipal/Regional) estão completos — a
+ * cadeia de herança é Federal → Estadual → Municipal → Regional.
  *
  * Mesmo padrão de engenharia de teste da AQUAQE-209/210/211: SEM {@code @Transactional} na
  * classe, limpeza manual via {@code @AfterEach}, {@code @Transactional} só nos testes de
@@ -41,9 +41,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class UnidadeDeSaudeHierarquicoTresControllerTest {
+class UnidadeDeSaudeRegionalControllerTest {
 
-    private static final String BASE_URL = "/api/v1/hierarquico-tres/";
+    private static final String BASE_URL = "/api/v1/regional/";
     private static final String PREFIXO_NOME_TESTE = "Coordenação Regional de Saúde - ";
     private static final String NOME_SUPERIOR_FEDERAL = PREFIXO_NOME_TESTE + "Superior Federal";
     private static final String NOME_SUPERIOR_ESTADUAL = PREFIXO_NOME_TESTE + "Superior Estadual";
@@ -133,12 +133,13 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
         unidadeDeSaudeRepository.deleteAll(criadosNoTeste);
     }
 
-    private void criarUnidadeTres(String nome) throws Exception {
+    private void criarUnidadeRegional(String nome) throws Exception {
         String body = """
                 {
                   "nome": "%s",
                   "tipo": "REGIONAL",
                   "administracaoSuperior": "%s",
+                  "regiao": "Sudeste",
                   "endereco": {
                     "cep": "02012-040",
                     "logradouro": "Rua Padre Marchetti",
@@ -168,6 +169,7 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
                   "nome": "%s",
                   "tipo": "REGIONAL",
                   "administracaoSuperior": "%s",
+                  "regiao": "Sudeste",
                   "endereco": {
                     "cep": "02012-040",
                     "logradouro": "Rua Padre Marchetti",
@@ -192,13 +194,14 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
     @Test
     void deveRetornarBadRequestAoCriarComNomeDuplicado() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Duplicado";
-        criarUnidadeTres(nome);
+        criarUnidadeRegional(nome);
 
         String body = """
                 {
                   "nome": "%s",
                   "tipo": "REGIONAL",
                   "administracaoSuperior": "%s",
+                  "regiao": "Sudeste",
                   "endereco": {
                     "cep": "02012-040",
                     "logradouro": "Rua Padre Marchetti",
@@ -220,13 +223,13 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
 
     @Test
     void deveRetornarNotFoundAoCriarReferenciandoSuperiorInexistente() throws Exception {
-        // Comportamento corrigido pela AQUAQE-13: antes retornava 500, agora 404. Como este
-        // controller é um dos 3 diretamente afetados pelo bug original, vale cobrir aqui também.
+        // Comportamento corrigido pela AQUAQE-13: antes retornava 500, agora 404.
         String body = """
                 {
                   "nome": "%sSuperiorInexistente",
                   "tipo": "REGIONAL",
                   "administracaoSuperior": "NomeQueNaoExisteDeJeitoNenhum-AQUAQE-212",
+                  "regiao": "Sudeste",
                   "endereco": {
                     "cep": "02012-040",
                     "logradouro": "Rua Padre Marchetti",
@@ -248,7 +251,7 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
     @Test
     void deveListarTodasAsUnidades() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Listagem";
-        criarUnidadeTres(nome);
+        criarUnidadeRegional(nome);
 
         mockMvc.perform(get(BASE_URL))
                 .andExpect(status().isOk())
@@ -258,14 +261,14 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
     @Test
     void deveBuscarPorNome() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Busca";
-        criarUnidadeTres(nome);
+        criarUnidadeRegional(nome);
 
         mockMvc.perform(get(BASE_URL + nome))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value(nome))
                 .andExpect(jsonPath("$.tipo").value("REGIONAL"))
+                .andExpect(jsonPath("$.regiao").value("Sudeste"))
                 .andExpect(jsonPath("$.administracaoSuperior").value(NOME_SUPERIOR_MUNICIPAL))
-                .andExpect(jsonPath("$.regiao").doesNotExist())
                 .andExpect(jsonPath("$.municipio").doesNotExist());
     }
 
@@ -279,7 +282,7 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
     void deveAtualizarNome() throws Exception {
         String nomeOriginal = PREFIXO_NOME_TESTE + "Antes";
         String nomeNovo = PREFIXO_NOME_TESTE + "Depois";
-        criarUnidadeTres(nomeOriginal);
+        criarUnidadeRegional(nomeOriginal);
 
         mockMvc.perform(patch(BASE_URL + nomeOriginal)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -293,7 +296,7 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
     @Test
     void deveAtualizarContato() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Contato";
-        criarUnidadeTres(nome);
+        criarUnidadeRegional(nome);
 
         String body = """
                 {
@@ -324,7 +327,7 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
     @Transactional
     void deveAtualizarHorarioDeFuncionamento() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Horario Funcionamento";
-        criarUnidadeTres(nome);
+        criarUnidadeRegional(nome);
 
         mockMvc.perform(patch(BASE_URL + "horario-de-funcionamento/" + nome)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -339,7 +342,7 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
     @Transactional
     void deveAtualizarHorarioDeAtendimento() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Horario Atendimento";
-        criarUnidadeTres(nome);
+        criarUnidadeRegional(nome);
 
         mockMvc.perform(patch(BASE_URL + "horario-de-atendimento/" + nome)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -353,7 +356,7 @@ class UnidadeDeSaudeHierarquicoTresControllerTest {
     @Test
     void deveDesabilitar_ComportamentoAtual_CorpoDaRequisicaoEIgnorado() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Desabilitar";
-        criarUnidadeTres(nome);
+        criarUnidadeRegional(nome);
         assertThat(unidadeDeSaudeRepository.findByNome(nome).orElseThrow().isAtivo()).isTrue();
 
         // Mesmo comportamento característico documentado na AQUAQE-209: o parâmetro `dto` do
