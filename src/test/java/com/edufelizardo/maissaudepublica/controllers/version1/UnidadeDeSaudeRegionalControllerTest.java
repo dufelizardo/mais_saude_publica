@@ -192,7 +192,7 @@ class UnidadeDeSaudeRegionalControllerTest {
     }
 
     @Test
-    void deveRetornarBadRequestAoCriarComNomeDuplicado() throws Exception {
+    void deveRetornarConflictAoCriarComNomeDuplicado() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Duplicado";
         criarUnidadeRegional(nome);
 
@@ -217,8 +217,36 @@ class UnidadeDeSaudeRegionalControllerTest {
         mockMvc.perform(post(BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details").value("Bad Request"));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details").value("Conflict"));
+    }
+
+    @Test
+    void deveRetornarUnprocessableEntityAoCriarComTipoDivergente() throws Exception {
+        String nome = PREFIXO_NOME_TESTE + "Tipo Divergente";
+        String body = """
+                {
+                  "nome": "%s",
+                  "tipo": "MUNICIPAL",
+                  "administracaoSuperior": "%s",
+                  "regiao": "Sudeste",
+                  "endereco": {
+                    "cep": "02012-040",
+                    "logradouro": "Rua Padre Marchetti",
+                    "numeroLogradouro": "557",
+                    "bairro": "Ipiranga",
+                    "cidade": "São Paulo",
+                    "estado": "SP"
+                  },
+                  "email": "contato@saude.regional.sp.gov.br"
+                }
+                """.formatted(nome, NOME_SUPERIOR_MUNICIPAL);
+
+        mockMvc.perform(post(BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.details").value("Unprocessable Entity"));
     }
 
     @Test

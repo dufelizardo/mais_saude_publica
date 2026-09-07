@@ -5,6 +5,7 @@ import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorR
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceConflictException;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.*;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
@@ -98,9 +99,9 @@ public class UnidadeDeSaudeMunicipalController {
             SuccessResponseDto successResponseDto = new SuccessResponseDto(successMessage, details);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(successResponseDto);
-        } catch (DataIntegrityViolationException e){
-            throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
-        }catch (ResourceBadRequestException e) {
+        } catch (DataIntegrityViolationException e) {
+            throw new ResourceConflictException("Já existe uma instituição registrada com este nome.", e);
+        } catch (ResourceBadRequestException e) {
             throw new ResourceBadRequestException("Não foi possível efetivar o cadastro", e);
         } catch (ResourceNotFoundException e) {
             throw e;

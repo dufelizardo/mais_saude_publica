@@ -1,6 +1,5 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
-import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.Endereco;
@@ -14,7 +13,6 @@ import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -116,13 +114,20 @@ public abstract class AbstractHierarquicoService<RES> {
         };
     }
 
+    /**
+     * Garante que a unidade sendo salva é de fato do nível hierárquico deste service — o "tipo"
+     * do payload é informado pelo cliente e não é reconciliado automaticamente com o endpoint
+     * chamado, então sem esta checagem seria possível, por exemplo, criar uma unidade com
+     * tipo=FEDERAL através do endpoint /api/v1/estadual/ (ver AQUAQE-214).
+     */
     protected RES salvar(UnidadeDeSaude unidadeDeSaude) {
-        try {
-            unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
-            return toResponseDto(unidadeDeSaude);
-        } catch (DataIntegrityViolationException e) {
-            throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
+        if (unidadeDeSaude.getTipo() != getTipo()) {
+            throw new ResourceUnprocessableEntityException(
+                    "O tipo \"" + unidadeDeSaude.getTipo() + "\" não corresponde ao nível esperado por este "
+                            + "endpoint (\"" + getTipo() + "\").");
         }
+        unidadeDeSaude = unidadeDeSaudeRepository.save(unidadeDeSaude);
+        return toResponseDto(unidadeDeSaude);
     }
 
     protected UnidadeDeSaude buscarUnidadeDeSaudePorNome(String nome) {

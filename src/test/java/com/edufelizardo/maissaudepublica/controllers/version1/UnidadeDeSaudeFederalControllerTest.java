@@ -115,7 +115,7 @@ class UnidadeDeSaudeFederalControllerTest {
     }
 
     @Test
-    void deveRetornarBadRequestAoCriarComNomeDuplicado() throws Exception {
+    void deveRetornarConflictAoCriarComNomeDuplicado() throws Exception {
         String nome = PREFIXO_NOME_TESTE + "Duplicado";
         criarUnidadeFederal(nome);
 
@@ -138,7 +138,45 @@ class UnidadeDeSaudeFederalControllerTest {
         mockMvc.perform(post(BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.details").value("Conflict"));
+    }
+
+    @Test
+    void deveRetornarUnprocessableEntityAoCriarComTipoDivergente() throws Exception {
+        String nome = PREFIXO_NOME_TESTE + "Tipo Divergente";
+        String body = """
+                {
+                  "nome": "%s",
+                  "tipo": "UBS",
+                  "endereco": {
+                    "cep": "70058-900",
+                    "logradouro": "Esplanada dos Ministérios",
+                    "numeroLogradouro": "Bloco G",
+                    "bairro": "Zona Cívico-Administrativa",
+                    "cidade": "Brasília",
+                    "estado": "DF"
+                  },
+                  "email": "contato@saude.gov.br"
+                }
+                """.formatted(nome);
+
+        mockMvc.perform(post(BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.details").value("Unprocessable Entity"));
+    }
+
+    @Test
+    void deveRetornarBadRequestComContratoPadraoParaCorpoIlegivel() throws Exception {
+        // AQUAQE-215: sem handleHttpMessageNotReadable, o Spring responde com um ProblemDetail
+        // (RFC 7807) em vez do ErrorExceptionResponse ({message, details}) usado no resto da API.
+        mockMvc.perform(post(BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{corpo-quebrado"))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.details").value("Bad Request"));
     }
 

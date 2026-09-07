@@ -1,9 +1,11 @@
 package com.edufelizardo.maissaudepublica.exceptions;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
@@ -33,6 +35,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(ResourceConflictException.class)
+    public ResponseEntity<ErrorExceptionResponse> handleResourceConflict(ResourceConflictException ex) {
+        ErrorExceptionResponse error = new ErrorExceptionResponse("Conflict", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
+    /**
+     * Traduz violação de constraint única (ex: nome duplicado) para 409 Conflict. Necessário como
+     * handler global porque o flush do Hibernate para um save() dentro de um método @Transactional
+     * costuma ser adiado até o commit da transação — ou seja, ocorre DEPOIS que o método de serviço
+     * já retornou, então um try/catch dentro do próprio service nunca chega a capturá-la.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorExceptionResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        ErrorExceptionResponse error = new ErrorExceptionResponse("Conflict", "Já existe uma instituição registrada com este nome.");
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(ResourceUnprocessableEntityException.class)
     public ResponseEntity<ErrorExceptionResponse> handleResourceUnprocessableEntity(ResourceUnprocessableEntityException ex) {
         ErrorExceptionResponse error = new ErrorExceptionResponse("Unprocessable Entity", ex.getMessage());
@@ -59,6 +79,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
         // Cria uma resposta personalizada
         ErrorExceptionResponse errorResponse = new ErrorExceptionResponse("Erro de Validação", String.join(", ", errors));
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Sem este override, o comportamento default de ResponseEntityExceptionHandler responde com
+     * um ProblemDetail (RFC 7807) para corpo de requisição ilegível (JSON quebrado, ou "null"),
+     * vazando um formato diferente do ErrorExceptionResponse usado no resto da API — ver AQUAQE-215.
+     */
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+                                                                    HttpHeaders headers,
+                                                                    HttpStatusCode status,
+                                                                    WebRequest request) {
+        ErrorExceptionResponse errorResponse = new ErrorExceptionResponse("Bad Request",
+                "O corpo da requisição está ausente ou não pôde ser interpretado como JSON válido.");
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
