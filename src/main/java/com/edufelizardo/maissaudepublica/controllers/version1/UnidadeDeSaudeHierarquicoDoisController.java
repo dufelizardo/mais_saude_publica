@@ -101,6 +101,8 @@ public class UnidadeDeSaudeHierarquicoDoisController {
             throw new ResourceBadRequestException("Já existe uma instituição registrada com este nome.", e);
         }catch (ResourceBadRequestException e) {
             throw new ResourceBadRequestException("Não foi possível efetivar o cadastro", e);
+        } catch (ResourceNotFoundException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Erro interno ao processar a solicitação", e);
         }
