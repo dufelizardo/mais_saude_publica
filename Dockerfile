@@ -9,8 +9,9 @@ RUN apt-get install maven -y
 # Copia o projeto para o container
 COPY . .
 
-# Faz o build do projeto com Maven
-RUN mvn clean install
+# Faz o build do projeto com Maven (sem rodar os testes - eles precisam de um banco de dados
+# de verdade, que nao existe durante o build da imagem; o gate de JUnit roda separado, no ci.yml)
+RUN mvn clean install -DskipTests
 
 # Cria a imagem final, so com o JRE (a imagem "openjdk" foi descontinuada no Docker Hub)
 FROM eclipse-temurin:17-jre-alpine
