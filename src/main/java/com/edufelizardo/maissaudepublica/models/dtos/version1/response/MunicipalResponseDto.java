@@ -9,18 +9,19 @@ import java.io.Serializable;
 import java.time.DayOfWeek;
 import java.util.Map;
 import java.util.Set;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class HierarquicoDoisResponseDto implements Serializable {
+public class MunicipalResponseDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     private String nome;
     private TipoUnidadeDeSaude tipo;
-    private String regiao;
+    private String municipio;
     private String administracaoSuperior;
     private EnderecoResponseDto endereco;
     private Set<String> saudeTelefones;
@@ -28,16 +29,16 @@ public class HierarquicoDoisResponseDto implements Serializable {
     private Map<DayOfWeek, String> horarioFuncionamento;
     private Map<DayOfWeek, String> horarioAtendimento;
 
-    public HierarquicoDoisResponseDto(String nome, TipoUnidadeDeSaude tipo, String unidadeSuperior, String regiao,
-                                      EnderecoResponseDto dto,
-                                      Set<String> saudeTelefones,
-                                      String email,
-                                      Map<DayOfWeek, String> horarioFuncionamento,
-                                      Map<DayOfWeek, String> horarioAtendimento) {
+    public MunicipalResponseDto(String nome, TipoUnidadeDeSaude tipo, String unidadeSuperior, String municipio,
+                                 EnderecoResponseDto dto,
+                                 Set<String> saudeTelefones,
+                                 String email,
+                                 Map<DayOfWeek, String> horarioFuncionamento,
+                                 Map<DayOfWeek, String> horarioAtendimento) {
         this.nome = nome;
         this.tipo = tipo;
         this.administracaoSuperior = unidadeSuperior;
-        this.regiao = regiao;
+        this.municipio = municipio;
         this.endereco = dto;
         this.saudeTelefones = saudeTelefones;
         this.email = email;
@@ -45,17 +46,17 @@ public class HierarquicoDoisResponseDto implements Serializable {
         this.horarioAtendimento = horarioAtendimento;
     }
 
-    public static HierarquicoDoisResponseDto fromHierarquicoResponseDto (UnidadeDeSaude unidadeDeSaude) {
+    public static MunicipalResponseDto fromHierarquicoResponseDto(UnidadeDeSaude unidadeDeSaude) {
         EnderecoResponseDto dto = EnderecoResponseDto.fromEndereco(unidadeDeSaude.getEndereco());
         String administracaoSuperior = null;
         if (unidadeDeSaude.getUnidadeSuperior() != null) {
             administracaoSuperior = unidadeDeSaude.getUnidadeSuperior().getNome();
         }
-        return new HierarquicoDoisResponseDto(
+        return new MunicipalResponseDto(
                 unidadeDeSaude.getNome(),
                 unidadeDeSaude.getTipo(),
                 administracaoSuperior,
-                unidadeDeSaude.getRegiao(),
+                unidadeDeSaude.getMunicipio(),
                 dto,
                 unidadeDeSaude.getSaudeTelefones(),
                 unidadeDeSaude.getEmail(),

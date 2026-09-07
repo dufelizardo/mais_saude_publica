@@ -11,13 +11,14 @@ import java.io.Serializable;
 import java.time.DayOfWeek;
 import java.util.Map;
 import java.util.Set;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class HierarquicoDoisRequestDto implements Serializable {
+public class MunicipalRequestDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -27,8 +28,8 @@ public class HierarquicoDoisRequestDto implements Serializable {
     private TipoUnidadeDeSaude tipo;
     @NotBlank(message = "O Nome da Administração Superior da Instituição precisa ser preenchido")
     private String administracaoSuperior;
-    @NotBlank(message = "A região da Instituição precisa ser preenchido")
-    public String regiao;
+    @NotBlank(message = "O municipio da Instituição precisa ser preenchido")
+    public String municipio;
     @Valid
     private EnderecoRequestDto endereco;
     private Set<String> telefones;

@@ -200,13 +200,13 @@ public class ExampleConstants {
                     }
                 }
             """;
-    public static final String HIERARQUICO_DOIS_RESPONSE_EXAMPLE = """
+    public static final String MUNICIPAL_RESPONSE_EXAMPLE = """
                 [
                     {
                         "nome": "Coordenadoria Regional de Saúde Sudeste I",
                         "tipo": "MUNICIPAL",
                         "administracaoSuperior": "SES-DRS I-Grande São Paulo",
-                        "regiao": "Sudeste",
+                        "municipio": "São Paulo",
                         "endereco": {
                             "cep": "02012-040",
                             "logradouro": "Rua Padre Marchetti",
@@ -236,12 +236,12 @@ public class ExampleConstants {
                     }
                 ]
             """;
-    public static final String HIERARQUICO_DOIS_RESPONSE_FIND_EXAMPLE = """
+    public static final String MUNICIPAL_RESPONSE_FIND_EXAMPLE = """
                 {
                     "nome": "Coordenadoria Regional de Saúde Sudeste I",
                     "tipo": "MUNICIPAL",
                     "administracaoSuperior": "SES-DRS I-Grande São Paulo",
-                    "regiao": "Sudeste",
+                    "municipio": "São Paulo",
                     "endereco": {
                         "cep": "02012-040",
                         "logradouro": "Rua Padre Marchetti",
