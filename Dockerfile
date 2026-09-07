@@ -22,8 +22,9 @@ EXPOSE 8080
 # Define o profile ativo como produção
 ENV SPRING_PROFILES_ACTIVE=prod
 
-# Copia o JAR gerado para o ambiente de produção
-COPY --from=build /target/maissaudepublica-0.0.1-SNAPSHOT.jar app.jar
+# Copia o JAR gerado para o ambiente de produção (glob em vez do nome fixo - o artifactId do
+# pom.xml e "mais_saude_publica", com underscore, entao "maissaudepublica-..." nunca existiu)
+COPY --from=build /target/*.jar app.jar
 
 # Executa o JAR da aplicação
 ENTRYPOINT ["java", "-jar", "app.jar"]
