@@ -1,6 +1,5 @@
 package com.edufelizardo.maissaudepublica.exceptions;
 
-import com.edufelizardo.maissaudepublica.exceptions.datautilexception.ErrorExcepitionResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -17,32 +16,32 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorExcepitionResponse> handleResourceNotFound(ResourceNotFoundException ex) {
-        ErrorExcepitionResponse error = new ErrorExcepitionResponse("Not Found", ex.getMessage());
+    public ResponseEntity<ErrorExceptionResponse> handleResourceNotFound(ResourceNotFoundException ex) {
+        ErrorExceptionResponse error = new ErrorExceptionResponse("Not Found", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(ResourceBadRequestException.class)
-    public ResponseEntity<ErrorExcepitionResponse> handleResourceBadRequest(ResourceBadRequestException ex) {
-        ErrorExcepitionResponse error = new ErrorExcepitionResponse("Bad Request", ex.getMessage());
+    public ResponseEntity<ErrorExceptionResponse> handleResourceBadRequest(ResourceBadRequestException ex) {
+        ErrorExceptionResponse error = new ErrorExceptionResponse("Bad Request", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ResourceUnauthorizedException.class)
-    public ResponseEntity<ErrorExcepitionResponse> handleResourceUnauthorized(ResourceUnauthorizedException ex) {
-        ErrorExcepitionResponse error = new ErrorExcepitionResponse("Unauthorized", ex.getMessage());
+    public ResponseEntity<ErrorExceptionResponse> handleResourceUnauthorized(ResourceUnauthorizedException ex) {
+        ErrorExceptionResponse error = new ErrorExceptionResponse("Unauthorized", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(ResourceUnprocessableEntityException.class)
-    public ResponseEntity<ErrorExcepitionResponse> handleResourceUnprocessableEntity(ResourceUnprocessableEntityException ex) {
-        ErrorExcepitionResponse error = new ErrorExcepitionResponse("Unprocessable Entity", ex.getMessage());
+    public ResponseEntity<ErrorExceptionResponse> handleResourceUnprocessableEntity(ResourceUnprocessableEntityException ex) {
+        ErrorExceptionResponse error = new ErrorExceptionResponse("Unprocessable Entity", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorExcepitionResponse> handleGenericException(Exception ex) {
-        ErrorExcepitionResponse error = new ErrorExcepitionResponse("Internal Server Error", ex.getMessage());
+    public ResponseEntity<ErrorExceptionResponse> handleGenericException(Exception ex) {
+        ErrorExceptionResponse error = new ErrorExceptionResponse("Internal Server Error", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -59,7 +58,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .collect(Collectors.toList());
 
         // Cria uma resposta personalizada
-        ErrorExcepitionResponse errorResponse = new ErrorExcepitionResponse("Erro de Validação", String.join(", ", errors));
+        ErrorExceptionResponse errorResponse = new ErrorExceptionResponse("Erro de Validação", String.join(", ", errors));
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }

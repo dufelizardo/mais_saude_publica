@@ -1,6 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1.examples;
 
-import com.edufelizardo.maissaudepublica.exceptions.datautilexception.ErrorExcepitionResponse;
+import com.edufelizardo.maissaudepublica.exceptions.ErrorExceptionResponse;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @ApiResponse(responseCode = "400", description = "Bad Request", content = {
         @Content(mediaType = "application/json", array = @ArraySchema(
-                schema = @Schema(implementation = ErrorExcepitionResponse.class)
+                schema = @Schema(implementation = ErrorExceptionResponse.class)
         ), examples = @ExampleObject(name = "Bad Request:",
                 summary = "ErrorExceptionResponse",
                 value = ExampleConstants.ERROR_EXAMPLE_400,
@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
 })
 @ApiResponse(responseCode = "401", description = "Unauthorized", content = {
         @Content(mediaType = "application/json", array = @ArraySchema(
-                schema = @Schema(implementation = ErrorExcepitionResponse.class)
+                schema = @Schema(implementation = ErrorExceptionResponse.class)
         ), examples = @ExampleObject(name = "Unauthorized",
                 summary = "ErrorExceptionResponse",
                 value = ExampleConstants.ERROR_EXAMPLE_401,
@@ -36,7 +36,7 @@ import java.lang.annotation.Target;
 })
 @ApiResponse(responseCode = "403", description = "Forbidden:", content = {
         @Content(mediaType = "application/json", array = @ArraySchema(
-                schema = @Schema(implementation = ErrorExcepitionResponse.class)
+                schema = @Schema(implementation = ErrorExceptionResponse.class)
         ), examples = @ExampleObject(name = "Forbidden",
                 summary = "ErrorExceptionResponse",
                 value = ExampleConstants.ERROR_EXAMPLE_403,
@@ -44,7 +44,7 @@ import java.lang.annotation.Target;
 })
 @ApiResponse(responseCode = "404", description = "Not Found:", content = {
         @Content(mediaType = "application/json", array = @ArraySchema(
-                schema = @Schema(implementation = ErrorExcepitionResponse.class)
+                schema = @Schema(implementation = ErrorExceptionResponse.class)
         ), examples = @ExampleObject(name = "Not Found",
                 summary = "ErrorExceptionResponse",
                 value = ExampleConstants.ERROR_EXAMPLE_404,
@@ -52,7 +52,7 @@ import java.lang.annotation.Target;
 })
 @ApiResponse(responseCode = "500", description = "Internal Server Error:", content = {
         @Content(mediaType = "application/json", array = @ArraySchema(
-                schema = @Schema(implementation = ErrorExcepitionResponse.class)
+                schema = @Schema(implementation = ErrorExceptionResponse.class)
         ), examples = @ExampleObject(name = "Internal Server Error",
                 summary = "ErrorExceptionResponse",
                 value = ExampleConstants.ERROR_EXAMPLE_500,
@@ -60,7 +60,7 @@ import java.lang.annotation.Target;
 })
 @ApiResponse(responseCode = "504", description = "Gateway Timeout:", content = {
         @Content(mediaType = "application/json", array = @ArraySchema(
-                schema = @Schema(implementation = ErrorExcepitionResponse.class)
+                schema = @Schema(implementation = ErrorExceptionResponse.class)
         ), examples = @ExampleObject(name = "Gateway Timeout",
                 summary = "ErrorExceptionResponse",
                 value = ExampleConstants.ERROR_EXAMPLE_504,
