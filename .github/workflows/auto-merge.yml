@@ -11,6 +11,13 @@ name: Auto-merge de promoção
 # obrigatorios terminarem (nada e pulado) e so entao tenta o merge administrativo, que bypassa
 # apenas a exigencia de aprovacao (bypassable), nunca os checks em si (enforce_admins: true na
 # protecao classica nao tem bypass nenhum, nem pra admin).
+#
+# Usa o secret AUTOMERGE_PAT (Personal Access Token do dono do repositorio) em vez do
+# github.token padrao: o bypass do Ruleset so reconhece a conta pessoal do dono, nao o bot
+# github-actions[bot] por tras do github.token - com o token padrao, o "--admin" falha com
+# "At least 1 approving review is required" mesmo depois dos checks passarem. Efeito colateral
+# bom: um merge feito com o PAT tambem conta como push "de verdade" pro GitHub, entao
+# deploy-prod.yml volta a disparar sozinho (antes precisava de workflow_dispatch manual).
 on:
   pull_request:
     types: [opened, reopened]
@@ -33,7 +40,7 @@ jobs:
     steps:
       - name: Esperar os checks obrigatórios e mergear com privilégio de admin
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.AUTOMERGE_PAT }}
           GH_REPO: ${{ github.repository }}
         run: |
           pr="${{ github.event.pull_request.number }}"
