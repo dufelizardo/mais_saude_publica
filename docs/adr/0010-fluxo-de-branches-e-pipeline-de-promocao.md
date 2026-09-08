@@ -90,7 +90,19 @@ Também foi ligado `allow_auto_merge` no repositório: um PR de promoção pode 
 `gh pr merge --auto` para mergear sozinho assim que os checks obrigatórios passarem, sem alguém
 precisar clicar em "Merge". A abertura do PR em si continua manual, de propósito — é o ponto onde
 alguém decide "quero promover agora"; automatizar isso também faria a promoção acontecer sozinha a
-cada commit, o que não é o comportamento desejado aqui.
+cada commit, o que não é o comportamento desejado aqui. Depois foi criado `auto-merge.yml`,
+automatizando também esse "ligar o auto-merge" nas 3 promoções reais, restrito a elas.
+
+## Atualização — branches renomeadas (`qa`→`qaa`, `cert`→`homologacao`)
+
+As branches `qa` e `cert` foram renomeadas para `qaa` e `homologacao`, pra bater com o vocabulário
+que o workflow de status do projeto no Jira (AQUAQE) já usava ("QAA", "HOMOLOGACAO" — ver
+ADR-0011). O restante do texto desta ADR usa os nomes originais (`qa`/`cert`) como registro
+histórico da decisão como foi tomada; onde aparecem hoje no repositório real, os nomes são
+`qaa`/`homologacao`. Renomeado via o endpoint oficial de rename do GitHub, que migrou automático
+os PRs abertos e a proteção de branch clássica; o Ruleset de aprovação pra terceiros (também da
+ADR-0011) precisou de atualização manual das suas condições, já que Rulesets não são migrados
+automaticamente no rename.
 
 ## Consequências
 

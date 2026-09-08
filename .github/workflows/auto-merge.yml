@@ -1,15 +1,15 @@
 name: Auto-merge de promoção
 
 # Liga o auto-merge sozinho, assim que a PR e aberta, nas 3 promocoes reais do fluxo
-# (developer -> qa -> cert -> main) - a unica acao manual que sobra e abrir a PR; o merge (e o
-# fechamento da PR) acontece sozinho quando os checks obrigatorios (test + robot-acceptance)
+# (developer -> qaa -> homologacao -> main) - a unica acao manual que sobra e abrir a PR; o merge
+# (e o fechamento da PR) acontece sozinho quando os checks obrigatorios (test + robot-acceptance)
 # passarem. Nao mexe em PRs abertas de/para qualquer outra branch.
 on:
   pull_request:
     types: [opened, reopened]
     branches:
-      - qa
-      - cert
+      - qaa
+      - homologacao
       - main
 
 permissions:
@@ -19,9 +19,9 @@ permissions:
 jobs:
   enable-auto-merge:
     if: |
-      (github.base_ref == 'qa' && github.head_ref == 'developer') ||
-      (github.base_ref == 'cert' && github.head_ref == 'qa') ||
-      (github.base_ref == 'main' && github.head_ref == 'cert')
+      (github.base_ref == 'qaa' && github.head_ref == 'developer') ||
+      (github.base_ref == 'homologacao' && github.head_ref == 'qaa') ||
+      (github.base_ref == 'main' && github.head_ref == 'homologacao')
     runs-on: ubuntu-latest
     steps:
       - name: Habilitar auto-merge na PR
