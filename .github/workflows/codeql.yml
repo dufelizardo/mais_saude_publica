@@ -1,20 +1,12 @@
-name: CodeQL
+name: CodeQL (varredura semanal)
 
-# Analise estatica de seguranca (SAST) no codigo Java. Roda a parte da pipeline.yml - nao gate de
-# promocao entre branches, e sim varredura continua de vulnerabilidades (SQL injection, etc).
-# Achados aparecem na aba Security > Code scanning do repositorio.
+# Varredura periodica de seguranca, independente de PR - roda toda semana e cobre o repo inteiro
+# (main), nao so o que mudou. O CodeQL que participa do gate de promocao (bloqueia merge) vive
+# dentro de pipeline.yml, como estagio "analyze" entre test e robot-acceptance.
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - developer
-      - qa
-      - cert
-      - main
   schedule:
     - cron: '0 6 * * 1'
+  workflow_dispatch:
 
 jobs:
   analyze:
