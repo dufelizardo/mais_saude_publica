@@ -117,13 +117,21 @@ não confie cegamente no que o Swagger documenta.
 
 ## Gate de promoção (CI)
 
-Esta suíte roda automaticamente no GitHub Actions (`.github/workflows/acceptance.yml`) em todo PR
-que promove código entre as branches `developer → qaa → homologacao → main` (ver
+Esta suíte roda automaticamente no GitHub Actions (`.github/workflows/pipeline.yml`, estágio
+`robot-acceptance`) em todo PR que promove código entre as branches
+`developer → qaa → homologacao → main` (ver
 [ADR-0010](../../docs/adr/0010-fluxo-de-branches-e-pipeline-de-promocao.md)). O workflow builda a
 imagem Docker real do projeto, sobe um PostgreSQL efêmero, sobe a aplicação, espera ela responder
 e só então roda `run_tests.sh` contra ela — o resultado (`test/robot/results/`) fica disponível
 como artifact do job, mesmo em caso de falha. O merge fica bloqueado (branch protection) se a
 suíte não passar.
+
+## Health-check agendado
+
+Além do gate de promoção, `.github/workflows/scheduled-tests.yml` roda a suíte JUnit + esta suíte
+Robot Framework periodicamente contra `developer`, `qaa` e `homologacao` (todo dia às 19:00, e
+quarta-feira também às 06:00, horário de Brasília) — não bloqueia nada, é só um alerta antecipado
+se algo quebrar fora do fluxo normal de promoção.
 
 ## Pré-requisitos
 
