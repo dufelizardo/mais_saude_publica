@@ -1,9 +1,16 @@
 name: Auto-merge de promoção
 
-# Liga o auto-merge sozinho, assim que a PR e aberta, nas 3 promocoes reais do fluxo
-# (developer -> qaa -> homologacao -> main) - a unica acao manual que sobra e abrir a PR; o merge
-# (e o fechamento da PR) acontece sozinho quando os checks obrigatorios (test + robot-acceptance)
-# passarem. Nao mexe em PRs abertas de/para qualquer outra branch.
+# Automatiza o unico passo manual que sobrava depois de abrir a PR de promocao
+# (developer -> qaa -> homologacao -> main). So dispara nas 3 promocoes reais do fluxo - nao mexe
+# em PRs abertas de/para qualquer outra branch (ex: um terceiro contribuindo direto em developer).
+#
+# Usa "gh pr merge --admin" em vez de "--auto": desde que a Ruleset de aprovacao obrigatoria pra
+# terceiros existe (ADR-0011), o merge automatico (--auto) fica preso em "aguardando aprovacao"
+# mesmo pro dono do repositorio, porque a fila de auto-merge nao aplica bypass de Ruleset sozinha
+# - so um merge explicito com privilegio de admin aplica. Por isso o job espera os checks
+# obrigatorios terminarem (nada e pulado) e so entao tenta o merge administrativo, que bypassa
+# apenas a exigencia de aprovacao (bypassable), nunca os checks em si (enforce_admins: true na
+# protecao classica nao tem bypass nenhum, nem pra admin).
 on:
   pull_request:
     types: [opened, reopened]
@@ -17,15 +24,34 @@ permissions:
   pull-requests: write
 
 jobs:
-  enable-auto-merge:
+  admin-merge:
     if: |
       (github.base_ref == 'qaa' && github.head_ref == 'developer') ||
       (github.base_ref == 'homologacao' && github.head_ref == 'qaa') ||
       (github.base_ref == 'main' && github.head_ref == 'homologacao')
     runs-on: ubuntu-latest
     steps:
-      - name: Habilitar auto-merge na PR
-        run: gh pr merge --auto --merge "${{ github.event.pull_request.number }}"
+      - name: Esperar os checks obrigatórios e mergear com privilégio de admin
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+        run: |
+          pr="${{ github.event.pull_request.number }}"
+          for i in $(seq 1 90); do
+            data=$(gh pr view "$pr" --json statusCheckRollup)
+            pending=$(echo "$data" | jq '[.statusCheckRollup[] | select(.__typename=="CheckRun" and .name != "admin-merge" and (.conclusion==null or .conclusion==""))] | length')
+            failed=$(echo "$data" | jq '[.statusCheckRollup[] | select(.__typename=="CheckRun" and .name != "admin-merge" and (.conclusion=="FAILURE" or .conclusion=="CANCELLED" or .conclusion=="TIMED_OUT" or .conclusion=="ACTION_REQUIRED"))] | length')
+            if [ "$failed" -gt 0 ]; then
+              echo "Um check obrigatório falhou - não vou mergear."
+              exit 1
+            fi
+            if [ "$pending" -eq 0 ]; then
+              echo "Todos os checks concluídos - mergeando com privilégio de admin."
+              gh pr merge "$pr" --merge --admin
+              exit 0
+            fi
+            echo "Tentativa $i: ainda esperando checks terminarem..."
+            sleep 20
+          done
+          echo "Checks não terminaram a tempo (30 min)."
+          exit 1
