@@ -76,6 +76,22 @@ Adotar um fluxo de promoção linear entre 4 branches — `developer` → `qa` �
   por outra conta, ou bypass administrativo). Os checks automatizados (`ci.yml` + `acceptance.yml`)
   são o controle de qualidade real aplicado.
 
+## Atualização — pipeline em um workflow só (sequencial) + auto-merge
+
+`ci.yml` e `acceptance.yml` eram dois workflows separados, disparados juntos pelo mesmo PR e
+rodando em paralelo — o estágio caro (build de imagem Docker + suíte Robot Framework) rodava
+mesmo quando o JUnit já tinha falhado rápido. Foram unificados em `pipeline.yml`: dois jobs no
+mesmo workflow, com `robot-acceptance` declarando `needs: test` — só começa depois do JUnit
+passar, e a aba Actions passa a mostrar os dois estágios em sequência (um grafo em linha), não
+dois workflows soltos. Os nomes dos jobs (`test`, `robot-acceptance`) foram mantidos, então a
+proteção de branch já configurada continua válida sem nenhuma mudança.
+
+Também foi ligado `allow_auto_merge` no repositório: um PR de promoção pode usar
+`gh pr merge --auto` para mergear sozinho assim que os checks obrigatórios passarem, sem alguém
+precisar clicar em "Merge". A abertura do PR em si continua manual, de propósito — é o ponto onde
+alguém decide "quero promover agora"; automatizar isso também faria a promoção acontecer sozinha a
+cada commit, o que não é o comportamento desejado aqui.
+
 ## Consequências
 
 **Positivas**
