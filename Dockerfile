@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM ubuntu:latest AS build
 
 # Atualiza o repositório e instala o JDK 17
@@ -10,8 +11,10 @@ RUN apt-get install maven -y
 COPY . .
 
 # Faz o build do projeto com Maven (sem rodar os testes - eles precisam de um banco de dados
-# de verdade, que nao existe durante o build da imagem; o gate de JUnit roda separado, no ci.yml)
-RUN mvn clean install -DskipTests
+# de verdade, que nao existe durante o build da imagem; o gate de JUnit roda separado, no
+# pipeline.yml). O cache mount do ~/.m2 evita rebaixar as mesmas dependencias a cada build -
+# nao pula nenhum passo, so reaproveita o que ja foi baixado antes.
+RUN --mount=type=cache,target=/root/.m2 mvn clean install -DskipTests
 
 # Cria a imagem final, so com o JRE (a imagem "openjdk" foi descontinuada no Docker Hub)
 FROM eclipse-temurin:17-jre-alpine
