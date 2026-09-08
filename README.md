@@ -1,115 +1,113 @@
-# Public Health Plus API Documentation
-## ![visitors](https://visitor-badge.laobi.icu/badge?page_id=dufelizardo.visitor-mais_saude_publica) ![GitHub followers](https://img.shields.io/github/followers/dufelizardo.visitor-mais_saude_publica?style=social) <img src="https://img.shields.io/badge/Completed-0%25-red"/>  <img src="https://img.shields.io/badge/public-Yes-green"/>
-The Public Health Plus API is a platform designed to provide quick and easy access to critical public health data. Offering a variety of endpoints, the API allows for the retrieval of up-to-date information on health statistics, medical services, vaccination campaigns, and other essential data to promote well-being and awareness in the public health sector. Developed to facilitate integration into applications, information systems, and online services, the Public Health Plus API aims to enhance the availability of relevant information, aiding in informed decision-making in public health management.
+# Mais Saúde Pública
 
-## Overview
+![visitors](https://visitor-badge.laobi.icu/badge?page_id=dufelizardo.visitor-mais_saude_publica) ![GitHub followers](https://img.shields.io/github/followers/dufelizardo.visitor-mais_saude_publica?style=social) <img src="https://img.shields.io/badge/public-Yes-green"/>
 
-Welcome to the official documentation for the Public Health Plus API. This API has been developed to provide reliable access to public health data. Below are the main features, authentication instructions, and guidelines for effectively using the API.
+API REST para gestão da hierarquia de unidades de saúde do SUS — Federal, Estadual, Municipal e
+Regional —, construída em Spring Boot. Cada esfera expõe CRUD completo (criação, busca, listagem,
+atualização de dados de contato/horários e desabilitação) sobre suas próprias instituições.
 
-## Main Features
+## Domínio
 
-1. **Health Statistics**
-   - **Endpoint:** `/health-statistics`
-   - **Description:** Retrieve up-to-date statistics on various public health indicators.
+A hierarquia é modelada como uma única entidade autorreferenciada (`UnidadeDeSaude`, ver
+[ADR-0002](docs/adr/0002-modelar-hierarquia-como-entidade-unica-autorreferenciada.md)), com 4
+níveis mapeados às esferas reais de gestão do SUS
+(ver [ADR-0009](docs/adr/0009-renomear-hierarquia-para-esferas-de-gestao-do-sus.md)):
 
-2. **Medical Services**
-   - **Endpoint:** `/medical-services`
-   - **Description:** Access information about available medical services, including location and specialties.
+| Esfera | Vincula-se a | Campo geográfico próprio |
+|---|---|---|
+| Federal | — (topo da hierarquia) | — |
+| Estadual | Federal | `estado` |
+| Municipal | Estadual | `municipio` |
+| Regional | Municipal | `regiao` |
 
-3. **Vaccination Campaigns**
-   - **Endpoint:** `/vaccination-campaigns`
-   - **Description:** Obtain details about ongoing and planned vaccination campaigns.
+## Endpoints
 
-4. **Organization Registration**
-   - **Primeiro Grupo Medical**
-     - **Endpoint:** `/api/primeiro-grupo-medical`
-       - **Methods:** GET, POST
-       - **Description:** Access details about the Ministry of Health.
-       - **Example Body and Response:**
-         ```json
-         [
-             {
-                 "nomeInstitucional": "Ministério da Saúde",
-                 "endereco": {
-                     "cep": "70058-900",
-                     "logradouro": "Esplanada dos Ministérios Bloco G",
-                     "numeroLogradouro": "S/N",
-                     "complemento": "",
-                     "bairro": "Zona Cívico-Administrativa",
-                     "cidade": "Brasília",
-                     "estado": "DF",
-                     "ddd": "61"
-                 },
-                 "horarioFuncionamento": {
-                     "MONDAY": "08:00 - 21:00",
-                     "TUESDAY": "08:00 - 21:00",
-                     "WEDNESDAY": "08:00 - 21:00",
-                     "THURSDAY": "08:00 - 21:00",
-                     "FRIDAY": "08:00 - 21:00",
-                     "SATURDAY": "Closed",
-                     "SUNDAY": "Closed"
-                 },
-                 "horarioAtendimento": {
-                     "MONDAY": "08:00 - 18:00",
-                     "TUESDAY": "08:00 - 18:00",
-                     "WEDNESDAY": "08:00 - 18:00",
-                     "THURSDAY": "08:00 - 18:00",
-                     "FRIDAY": "08:00 - 18:00",
-                     "SATURDAY": "Closed",
-                     "SUNDAY": "Closed"
-                 }
-             }
-         ]
-         ```
-     - **Endpoint:** `/api/primeiro-grupo-medical/dados/{nomeInstitucional}`
-       - **Method:** PUT
-       - **Description:** Update Address, Operating Hours, or Service Hours information.
-     - **Endpoint:** `/api/primeiro-grupo-medical/{nomeInstitucional}`
-       - **Method:** PUT
-       - **Description:** Update the Institutional Name if it was registered incorrectly.
+Cada domínio expõe o mesmo conjunto de 8 operações em `/api/v1/{federal,estadual,municipal,regional}/`:
 
-## Authentication Instructions
+| Método | Path | Descrição |
+|---|---|---|
+| `POST` | `/` | Cria uma instituição |
+| `GET` | `/` | Lista todas as instituições do domínio |
+| `GET` | `/{nome}` | Busca uma instituição pelo nome |
+| `PATCH` | `/{nome}` | Atualiza o nome |
+| `PATCH` | `/contato/{nome}` | Atualiza e-mail/telefones |
+| `PATCH` | `/horario-de-funcionamento/{nome}` | Atualiza horário de funcionamento |
+| `PATCH` | `/horario-de-atendimento/{nome}` | Atualiza horário de atendimento |
+| `DELETE` | `/des-habilitar/{nome}` | Desabilita a instituição |
 
-To access the API's resources, authentication is required. Follow the instructions below to obtain the necessary credentials:
+Estadual, Municipal e Regional exigem também `administracaoSuperior` (o `nome` da instituição do
+nível acima, à qual essa unidade se vincula) no corpo de criação.
 
-- **Authentication Endpoint:** `/auth`
-- **Method:** POST
-- **Parameters:**
-  - `username`: Your username
-  - `password`: Your password
+**Exemplo — `POST /api/v1/federal/`:**
 
-## Using the API
-
-To make a request to the API, use the appropriate HTTP method for the desired resource. Be sure to include the authentication credentials in the request header.
-
-**Example request using cURL:**
-
-```bash
-curl -X GET -H "Authorization: Bearer YOUR_TOKEN" https://api.mais-saude-publica.com/health-statistics 
+```json
+{
+  "nome": "Ministério da Saúde",
+  "tipo": "FEDERAL",
+  "email": "contato@saude.gov.br",
+  "telefones": ["6134451000"],
+  "endereco": {
+    "cep": "70058-900",
+    "logradouro": "Esplanada dos Ministérios Bloco G",
+    "numeroLogradouro": "S/N",
+    "bairro": "Zona Cívico-Administrativa",
+    "cidade": "Brasília",
+    "estado": "DF",
+    "ddd": "61"
+  },
+  "horarioFuncionamento": { "MONDAY": "08:00 - 18:00" },
+  "horarioAtendimento": { "MONDAY": "08:00 - 17:00" }
+}
 ```
 
-## Examples
+> **Autenticação:** não implementada nesta versão da API. Existe uma proposta em
+> [ADR-0006](docs/adr/0006-seguranca-jwt.md) (ainda não implementada) para autenticação/autorização
+> via JWT.
 
-### Retrieve Health Statistics
+## Documentação interativa (Swagger)
+
+Com a aplicação no ar: `http://localhost:8080/swagger-ui.html` (UI) e
+`http://localhost:8080/v3/api-docs` (spec OpenAPI cru).
+
+## Rodando localmente
+
+Requer PostgreSQL (ver [ADR-0010](docs/adr/0010-fluxo-de-branches-e-pipeline-de-promocao.md) —
+o projeto usa Postgres em todos os ambientes, dev incluso).
 
 ```bash
-curl -X GET -H "Authorization: Bearer YOUR_TOKEN" https://api.mais-saude-publica.com/health-statistics 
+# cria o banco local (uma vez só)
+createdb -U postgres saudepublica_dev
+
+# roda a aplicação com o profile de dev
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-### Explore Medical Services
+A aplicação sobe em `http://localhost:8080` por padrão.
+
+## Rodando com Docker
 
 ```bash
-curl -X GET -H "Authorization: Bearer YOUR_TOKEN" https://api.mais-saude-publica.com/medical-services 
+docker build -t msp-app .
+docker run -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e DATABASE_URL=jdbc:postgresql://<host>:5432/<banco> \
+  -e DATABASE_USERNAME=<usuario> \
+  -e DATABASE_PASSWORD=<senha> \
+  msp-app
 ```
 
-## Final Considerations
+## Testes
 
-Thank you for using the Public Health Plus API. If you have any questions or issues, please contact us at [meugit.edufelizardo@gmail.com](mailto:meugit.edufelizardo@gmail.com).
+- **JUnit** (`src/test/java`, roda in-process contra a aplicação): `./mvnw test`
+- **Robot Framework** (`test/robot/`, roda de fora pra dentro via HTTP contra a aplicação real —
+  118 casos de aceitação): ver [test/robot/README.md](test/robot/README.md)
 
-## Note
+## Branches e pipeline de CI/CD
 
-This is just the initial documentation. We plan to update and expand it as new features and improvements are implemented.
+Fluxo de promoção `developer → qa → cert → main` (prod), com gate automatizado (build + JUnit +
+suíte Robot Framework) antes de cada promoção — detalhes em
+[ADR-0010](docs/adr/0010-fluxo-de-branches-e-pipeline-de-promocao.md).
 
----
+## Mais documentação
 
-This translation should ensure the documentation is clear and accessible to English-speaking users. Let me know if you need further adjustments!
+Decisões de arquitetura e roadmap técnico: [docs/adr/](docs/adr/README.md).
