@@ -1,0 +1,38 @@
+name: CodeQL (varredura semanal)
+
+# Varredura periodica de seguranca, independente de PR - roda toda semana e cobre o repo inteiro
+# (main), nao so o que mudou. O CodeQL que participa do gate de promocao (bloqueia merge) vive
+# dentro de pipeline.yml, como estagio "analyze" entre test e robot-acceptance.
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java
+
+      - name: Build with Maven
+        run: ./mvnw -B clean compile -DskipTests
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
