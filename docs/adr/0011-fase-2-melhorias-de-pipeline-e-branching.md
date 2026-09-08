@@ -44,10 +44,15 @@ nesta rodada; nenhum workflow, configuração de branch protection ou arquivo de
 
 Pode virar tarefa a qualquer momento, isoladamente, sem exigir nenhuma decisão prévia:
 
-1. **PAT dedicado para `auto-merge.yml`** — trocar `github.token` por um Personal Access Token
-   salvo como secret do repositório, para que merges automáticos voltem a disparar
-   `deploy-prod.yml` via `push` normal, sem depender do `workflow_dispatch` manual. Achado desta
-   sessão, é o item mais concreto e com maior valor imediato do grupo.
+1. **PAT dedicado para `auto-merge.yml` — agora bloqueante, não só "nice to have".** Trocar
+   `github.token` por um Personal Access Token salvo como secret do repositório. Motivo original
+   (deploy não disparava via `push` do bot) segue valendo, mas ficou mais grave depois da
+   aprovação obrigatória pra terceiros (Ruleset, ver Atualização abaixo): `gh pr merge --admin`
+   rodando como `github-actions[bot]` (via `github.token`) **falha** com "Repository rule
+   violations found — At least 1 approving review is required", porque o bypass do Ruleset só
+   reconhece o papel de admin do dono do repositório, não do bot. Sem o PAT, toda promoção da
+   Fase 1 exige eu (ou o usuário) rodar `gh pr merge --admin` manualmente depois que os checks
+   terminam — a automação de auto-merge está funcionalmente quebrada até esse item ser feito.
 2. **Convenção local `feature/*` e `fix/*`**, partindo sempre de `developer` — organiza o trabalho
    individual *antes* de chegar em `developer`; não muda nada no gate automatizado de
    `qaa`/`homologacao`/`main`, que continua operando exatamente como hoje.
@@ -100,9 +105,9 @@ independente da branch protection clássica já existente, que continua intacta.
 - **Regra:** `pull_request` com `required_approving_review_count: 1` — qualquer PR precisa de 1
   aprovação antes de mergear.
 - **Bypass:** papel `RepositoryRole` (id `5` = admin) com `bypass_mode: always` — o dono do
-  repositório (Tech Lead) continua exatamente como hoje: push direto em `developer`, PRs sem
-  precisar de aprovação, auto-merge automático via `auto-merge.yml` seguindo sem mudança nenhuma.
-  Confirmado via API (`current_user_can_bypass: "always"`).
+  repositório (Tech Lead) continua com push direto em `developer` e PRs sem precisar de aprovação
+  humana, exatamente como antes. Confirmado via API (`current_user_can_bypass: "always"`) **e**
+  testado manualmente com sucesso (`gh pr merge --admin` rodando com a minha própria autenticação).
 - Em `qaa`/`homologacao`/`main`, esse Ruleset **soma** com a proteção clássica já existente (checks
   obrigatórios de `test`/`analyze`/`robot-acceptance`, sem bypass nenhum nem pro dono): um
   terceiro passa a precisar dos checks **e** de 1 aprovação; o dono continua só precisando dos
@@ -111,6 +116,14 @@ independente da branch protection clássica já existente, que continua intacta.
 Não foi necessário migrar nada da proteção clássica para Rulesets — a ideia inicial de "migração"
 registrada acima estava certa sobre o mecanismo, mas a implementação real ficou mais simples do
 que "migrar": as duas coisas coexistem, cada uma cobrindo uma regra diferente.
+
+**Efeito colateral real, descoberto ao validar:** o bypass só vale pra quem *é* o dono do
+repositório de verdade — `github-actions[bot]` (a identidade por trás de `github.token`, usada no
+`auto-merge.yml`) **não** está na lista de bypass e não herda meu papel de admin. Um
+`gh pr merge --admin` rodando dentro do workflow falha com "At least 1 approving review is
+required", mesmo depois de esperar os checks todos passarem — só um merge feito com a minha
+autenticação pessoal (ou um PAT meu) consegue de fato usar o bypass. Isso tornou o item "PAT
+dedicado" (Grupo A item 1) bloqueante, não mais opcional — ver a atualização lá.
 
 ## Trade-offs considerados
 
