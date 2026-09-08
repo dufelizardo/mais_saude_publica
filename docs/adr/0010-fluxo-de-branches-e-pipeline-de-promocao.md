@@ -104,6 +104,15 @@ os PRs abertos e a proteção de branch clássica; o Ruleset de aprovação pra 
 ADR-0011) precisou de atualização manual das suas condições, já que Rulesets não são migrados
 automaticamente no rename.
 
+Essa mesma Ruleset expôs um problema real no `auto-merge.yml`: `gh pr merge --auto` (fila de
+merge automático) não aplica bypass de Ruleset sozinho — mesmo o dono do repositório, com bypass
+`always` configurado, ficava com a PR presa em "aguardando aprovação" indefinidamente, porque a
+fila de auto-merge espera a PR se tornar mergeável por vias normais, sem invocar privilégio de
+admin. A correção: o job agora espera os checks obrigatórios terminarem (nada é pulado — só
+observa o status via `gh pr view`) e só então tenta `gh pr merge --admin`, que bypassa
+especificamente a exigência de aprovação (bypassable via Ruleset) sem tocar nos checks em si
+(`enforce_admins: true` na proteção clássica não tem bypass nenhum, nem pra admin).
+
 ## Consequências
 
 **Positivas**
