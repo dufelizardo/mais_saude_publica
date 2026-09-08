@@ -104,7 +104,7 @@ docker run -p 8080:8080 \
 
 ## Branches e pipeline de CI/CD
 
-Fluxo de promoção `developer → qa → cert → main` (prod), com gate automatizado (build + JUnit +
+Fluxo de promoção `developer → qaa → homologacao → main` (prod), com gate automatizado (build + JUnit +
 suíte Robot Framework) antes de cada promoção — detalhes em
 [ADR-0010](docs/adr/0010-fluxo-de-branches-e-pipeline-de-promocao.md).
 
