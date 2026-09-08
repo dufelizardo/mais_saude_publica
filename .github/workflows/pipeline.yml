@@ -1,18 +1,63 @@
-name: CI - Suíte de Aceitação (Robot Framework)
+name: Pipeline de Promoção
 
-# Gate de promoção: só roda nos PRs que promovem código de um ambiente para o próximo
-# (developer -> qa, qa -> cert, cert -> main). Builda a imagem Docker real do projeto, sobe ela
-# junto de um Postgres num container efêmero (só dura o job) e roda a suíte Robot Framework de
-# aceitação contra a aplicação de pé - depois derruba tudo. Não fica nada "no ar" após o job.
+# Um workflow só, com 2 estágios em sequência (job "robot-acceptance" depende do "test" via
+# needs) - assim a aba Actions mostra um pipeline em linha, e o estágio caro (build de imagem
+# Docker + suíte Robot Framework) nem começa se o JUnit já falhou.
+#
+# "test" roda em todo push na developer e em todo PR de promoção (developer -> qa -> cert -> main).
+# "robot-acceptance" só roda nos PRs que promovem de fato (para qa, cert ou main) - builda a
+# imagem Docker real do projeto, sobe ela junto de um Postgres num container efêmero (só dura o
+# job) e roda a suíte de aceitação contra a aplicação de pé. Nada fica "no ar" depois do job.
 on:
+  push:
+    branches:
+      - developer
   pull_request:
     branches:
+      - developer
       - qa
       - cert
       - main
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: saudepublica_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: ./mvnw -B clean compile
+
+      - name: Run tests
+        run: ./mvnw -B test
+
   robot-acceptance:
+    needs: test
+    if: github.event_name == 'pull_request' && contains(fromJson('["qa","cert","main"]'), github.base_ref)
     runs-on: ubuntu-latest
 
     steps:
