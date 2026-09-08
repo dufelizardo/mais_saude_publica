@@ -1,12 +1,18 @@
 name: CD - Deploy Produção (Render)
 
 # Só dispara em push (merge) na main - nunca em pull_request, pra não fazer deploy de código
-# ainda não promovido. A promoção pra main já passou pelos gates de ci.yml + acceptance.yml
-# antes de o PR poder ser mergeado (branch protection).
+# ainda não promovido. A promoção pra main já passou pelos gates da pipeline.yml antes de o PR
+# poder ser mergeado (branch protection).
+#
+# workflow_dispatch existe como via de escape manual: um push feito com o token padrão da Action
+# (caso do merge automatico do auto-merge.yml) NAO dispara outros workflows - protecao do GitHub
+# contra loop infinito. Sem isso, um merge automatico pra main deixaria de fazer deploy sem avisar
+# ninguem. Ver ADR-0010.
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
