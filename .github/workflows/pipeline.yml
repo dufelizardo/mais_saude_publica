@@ -7,10 +7,10 @@ name: Pipeline de Promoção
 # achar algo, o estágio caro do Robot Framework (build Docker + containers) nem começa.
 #
 # "test" e "analyze" rodam em todo push na developer e em todo PR de promoção
-# (developer -> qa -> cert -> main). "robot-acceptance" só roda nos PRs que promovem de fato (para
-# qa, cert ou main) - builda a imagem Docker real do projeto, sobe ela junto de um Postgres num
-# container efêmero (só dura o job) e roda a suíte de aceitação contra a aplicação de pé. Nada
-# fica "no ar" depois do job.
+# (developer -> qaa -> homologacao -> main). "robot-acceptance" só roda nos PRs que promovem de
+# fato (para qaa, homologacao ou main) - builda a imagem Docker real do projeto, sobe ela junto de
+# um Postgres num container efêmero (só dura o job) e roda a suíte de aceitação contra a aplicação
+# de pé. Nada fica "no ar" depois do job.
 #
 # Há também um CodeQL.yml à parte, com uma varredura semanal (schedule) do repo inteiro - esse não
 # é gate de promoção, é uma checagem periódica independente de PR.
@@ -21,8 +21,8 @@ on:
   pull_request:
     branches:
       - developer
-      - qa
-      - cert
+      - qaa
+      - homologacao
       - main
 
 # Cancela um run anterior do mesmo PR/branch quando chega um commit novo - nao faz sentido gastar
@@ -99,7 +99,7 @@ jobs:
 
   robot-acceptance:
     needs: analyze
-    if: github.event_name == 'pull_request' && contains(fromJson('["qa","cert","main"]'), github.base_ref)
+    if: github.event_name == 'pull_request' && contains(fromJson('["qaa","homologacao","main"]'), github.base_ref)
     runs-on: ubuntu-latest
 
     steps:

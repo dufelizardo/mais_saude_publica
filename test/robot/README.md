@@ -118,7 +118,7 @@ não confie cegamente no que o Swagger documenta.
 ## Gate de promoção (CI)
 
 Esta suíte roda automaticamente no GitHub Actions (`.github/workflows/acceptance.yml`) em todo PR
-que promove código entre as branches `developer → qa → cert → main` (ver
+que promove código entre as branches `developer → qaa → homologacao → main` (ver
 [ADR-0010](../../docs/adr/0010-fluxo-de-branches-e-pipeline-de-promocao.md)). O workflow builda a
 imagem Docker real do projeto, sobe um PostgreSQL efêmero, sobe a aplicação, espera ela responder
 e só então roda `run_tests.sh` contra ela — o resultado (`test/robot/results/`) fica disponível
