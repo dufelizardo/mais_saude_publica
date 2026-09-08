@@ -1,0 +1,136 @@
+name: Testes agendados (unitários + Robot Framework)
+
+# Health-check periodico, independente do gate de promocao (nao bloqueia merge nenhum, so roda
+# JUnit + Robot Framework contra o conteudo atual de developer/qaa/homologacao). "schedule" so e
+# lido a partir do arquivo na branch default (main) - por isso o checkout de cada job especifica
+# a ref explicitamente via matrix, em vez de depender do checkout padrao (que seria sempre main).
+#
+# Horarios (America/Sao_Paulo, UTC-3, sem horario de verao):
+# - Todo dia as 19:00 -> 22:00 UTC
+# - Quarta-feira as 06:00 (alem do run diario das 19:00) -> 09:00 UTC
+on:
+  schedule:
+    - cron: '0 22 * * *'
+    - cron: '0 9 * * 3'
+  workflow_dispatch:
+
+jobs:
+  scheduled-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [developer, qaa, homologacao]
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: saudepublica_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout ${{ matrix.branch }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: ./mvnw -B clean compile
+
+      - name: Rodar testes JUnit
+        run: ./mvnw -B test
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build da imagem da aplicação
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: msp-app:scheduled
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Criar rede Docker efêmera
+        run: docker network create msp-scheduled-net
+
+      - name: Subir PostgreSQL efêmero (Robot Framework)
+        run: |
+          docker run -d --name msp-postgres-scheduled --network msp-scheduled-net \
+            -e POSTGRES_DB=saudepublica_test \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            postgres:16
+
+      - name: Esperar PostgreSQL ficar pronto
+        run: |
+          for i in $(seq 1 30); do
+            docker exec msp-postgres-scheduled pg_isready -U postgres && break
+            sleep 2
+          done
+
+      - name: Subir a aplicação (container efêmero)
+        run: |
+          docker run -d --name msp-app-scheduled --network msp-scheduled-net -p 8080:8080 \
+            -e SPRING_PROFILES_ACTIVE=test \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://msp-postgres-scheduled:5432/saudepublica_test \
+            -e SPRING_DATASOURCE_USERNAME=postgres \
+            -e SPRING_DATASOURCE_PASSWORD=postgres \
+            msp-app:scheduled
+
+      - name: Esperar a aplicação responder
+        run: |
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/v3/api-docs || echo "000")
+            if [ "$code" = "200" ]; then
+              echo "Aplicação no ar (HTTP $code)."
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Aplicação não respondeu a tempo."
+          docker logs msp-app-scheduled
+          exit 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependências do Robot Framework
+        run: pip install -r test/robot/requirements.txt
+
+      - name: Rodar suíte Robot Framework
+        env:
+          MSP_HOST_URL: http://localhost:8080
+        run: test/robot/run_tests.sh
+
+      - name: Publicar resultados do Robot Framework
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-results-${{ matrix.branch }}
+          path: test/robot/results/
+
+      - name: Derrubar containers e rede
+        if: always()
+        run: |
+          docker rm -f msp-app-scheduled msp-postgres-scheduled || true
+          docker network rm msp-scheduled-net || true
