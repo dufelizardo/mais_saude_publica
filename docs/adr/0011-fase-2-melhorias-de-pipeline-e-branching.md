@@ -2,7 +2,12 @@
 
 ## Status
 
-Proposta — backlog, nada aqui foi implementado ainda.
+Proposta — backlog em andamento. O item "aprovação obrigatória para terceiros" (ex-Grupo B) já
+foi implementado (ver Atualização abaixo); o restante do backlog segue como registro para
+priorização futura.
+
+Rastreado no Jira: épico [AQUAQE-218](https://edufelizardo.atlassian.net/browse/AQUAQE-218),
+com uma História por item do backlog (Grupo A e B) e suas subtasks.
 
 ## Contexto
 
@@ -63,23 +68,18 @@ Pode virar tarefa a qualquer momento, isoladamente, sem exigir nenhuma decisão 
 
 ### Grupo B — contradiz decisão já tomada, precisa de resposta explícita antes de virar tarefa
 
-1. **Aprovações humanas obrigatórias — só para PRs de terceiros.** Clarificado pelo usuário: a
-   exigência de aprovação vale apenas para Pull Requests abertos por colaboradores externos; o
-   Tech Lead/dono do repositório continua exatamente como hoje (0 aprovações obrigatórias,
-   auto-merge automático via `auto-merge.yml`) — não é uma mudança de comportamento pra ele, só
-   uma trava adicional para quem não é o autor original. Isso não é mais uma pergunta em aberto de
-   *política*, mas ainda é um problema de *mecanismo*: a proteção de branch **clássica** em uso
-   hoje aplica `required_approving_review_count` igual pra qualquer autor de PR, sem distinguir
-   "é o dono do repo" de "é um terceiro". Pra implementar exatamente o que foi pedido, sem afetar
-   o autor original, é necessário migrar de branch protection clássica para **Rulesets** (recurso
-   mais novo do GitHub) com uma *bypass list* contendo o dono do repositório — aí sim, um terceiro
-   precisa de aprovação e o dono continua passando direto pelo `auto-merge.yml` como hoje. Migrar
-   pra Rulesets é uma mudança de mecanismo não-trivial (a proteção atual de `qa`/`cert`/`main`
-   precisaria ser recriada nesse novo modelo) — por isso continua no Grupo B, não no A.
+1. ~~Aprovações humanas obrigatórias — só para PRs de terceiros.~~ **Implementado — ver
+   Atualização abaixo.** Resolvido como um Ruleset novo e independente, sem tocar em nada da
+   proteção clássica já existente: complementa a ADR-0010, não a substitui.
 2. **Nome de branch `qaa`**, usado no documento de referência, não bate com a `qa` já criada, em
-   uso e com histórico real de promoções mergeadas. Muito provavelmente é um erro de digitação no
-   documento original — **precisa de confirmação explícita** antes de renomear qualquer coisa
-   (renomear uma branch remota com PRs e branch protection já associados tem custo real).
+   uso e com histórico real de promoções mergeadas. **Atualizado:** ao criar as tarefas no Jira
+   (AQUAQE-225), o próprio fluxo de status do projeto AQUAQE já usa "QAA" e "HOMOLOGACAO" como
+   nomes reais de etapa — batendo com o documento de referência. Ou seja, muito provavelmente
+   **não** é erro de digitação, é convenção já em uso no processo do time; a pergunta virou o
+   contrário: talvez as branches do GitHub devessem se chamar `qaa` (e possivelmente
+   `homologacao` em vez de `cert`) para bater com o vocabulário já estabelecido no Jira. **Precisa
+   de confirmação explícita** antes de renomear qualquer branch no GitHub (tem PRs e branch
+   protection já associados a `qa`/`cert`) — ver AQUAQE-242.
 3. **Hotfix com merge direto para `main`.** Hoje `enforce_admins: true` bloqueia até push direto
    do dono do repositório — de propósito, para que ninguém pule os checks obrigatórios, nem em
    emergência. Um fluxo de hotfix de verdade precisa de um desenho cuidadoso (por exemplo, uma
@@ -90,6 +90,29 @@ Pode virar tarefa a qualquer momento, isoladamente, sem exigir nenhuma decisão 
    que existe, mas é um processo de time — não uma peça de pipeline —, e não faz sentido impor
    isso hoje a um projeto de um único desenvolvedor. Fica registrado como ideia para quando (e se)
    o time crescer.
+
+## Atualização — aprovação obrigatória para terceiros (implementado)
+
+Resolvido na mesma conversa, complementando a ADR-0010 sem alterar nada nela: criado um
+**Ruleset** do GitHub (`Aprovação obrigatória para terceiros`, id `22536958`) — mecanismo
+independente da branch protection clássica já existente, que continua intacta.
+
+- **Alvo:** as 4 branches (`developer`, `qa`, `cert`, `main`) — clarificado com o usuário que a
+  lacuna real estava em `developer`, hoje sem proteção nenhuma (push direto permitido).
+- **Regra:** `pull_request` com `required_approving_review_count: 1` — qualquer PR precisa de 1
+  aprovação antes de mergear.
+- **Bypass:** papel `RepositoryRole` (id `5` = admin) com `bypass_mode: always` — o dono do
+  repositório (Tech Lead) continua exatamente como hoje: push direto em `developer`, PRs sem
+  precisar de aprovação, auto-merge automático via `auto-merge.yml` seguindo sem mudança nenhuma.
+  Confirmado via API (`current_user_can_bypass: "always"`).
+- Em `qa`/`cert`/`main`, esse Ruleset **soma** com a proteção clássica já existente (checks
+  obrigatórios de `test`/`analyze`/`robot-acceptance`, sem bypass nenhum nem pro dono): um
+  terceiro passa a precisar dos checks **e** de 1 aprovação; o dono continua só precisando dos
+  checks, como sempre.
+
+Não foi necessário migrar nada da proteção clássica para Rulesets — a ideia inicial de "migração"
+registrada acima estava certa sobre o mecanismo, mas a implementação real ficou mais simples do
+que "migrar": as duas coisas coexistem, cada uma cobrindo uma regra diferente.
 
 ## Trade-offs considerados
 
