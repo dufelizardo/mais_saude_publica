@@ -18,6 +18,11 @@ name: Auto-merge de promoção
 # "At least 1 approving review is required" mesmo depois dos checks passarem. Efeito colateral
 # bom: um merge feito com o PAT tambem conta como push "de verdade" pro GitHub, entao
 # deploy-prod.yml volta a disparar sozinho (antes precisava de workflow_dispatch manual).
+#
+# O PAT (fine-grained, escopo so deste repo) precisa da permissao "Administration: Read and
+# write" alem de "Contents" e "Pull requests" - sem ela, "gh pr merge --admin" falha com
+# "Resource not accessible by personal access token", porque baipassar uma regra do Ruleset e
+# uma acao administrativa de verdade, nao coberta por "Pull requests: write" sozinho.
 on:
   pull_request:
     types: [opened, reopened]
