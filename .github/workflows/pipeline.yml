@@ -19,6 +19,13 @@ on:
       - cert
       - main
 
+# Cancela um run anterior do mesmo PR/branch quando chega um commit novo - nao faz sentido gastar
+# ~3min validando um commit que ja foi substituido. O commit final antes do merge sempre roda
+# completo; so os intermediarios/superados sao cancelados cedo.
+concurrency:
+  group: pipeline-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -64,8 +71,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build da imagem da aplicação
-        run: docker build -t msp-app:ci .
+        # Cache de camadas (imagens base) e do ~/.m2 baixado dentro do Dockerfile, persistido no
+        # cache do GitHub Actions entre execuções - nao pula nenhum passo do build/teste, so evita
+        # rebaixar as mesmas dependencias quando elas nao mudaram.
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          tags: msp-app:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Criar rede Docker efêmera
         run: docker network create msp-ci-net
