@@ -2,9 +2,9 @@
 
 ## Status
 
-Proposta — não implementada. Depende de uma máquina física que ainda não existe: será formatada,
-e o sistema operacional ainda será escolhido. Este documento registra a decisão de arquitetura e o
-passo a passo de provisionamento para quando essa máquina estiver pronta.
+Proposta — não implementada. A máquina física já está definida (ver "Hardware do servidor"
+abaixo), mas ainda será formatada. Este documento registra a decisão de arquitetura e o passo a
+passo de provisionamento para quando essa formatação acontecer.
 
 ## Contexto
 
@@ -55,6 +55,41 @@ Namespace por ambiente e GitOps a partir do próprio repositório.
 > de antes do rename `cert` → `homologacao` já registrado na ADR-0010. Corrigido aqui para bater
 > com o nome de branch real.
 
+### Hardware do servidor
+
+Definido: **laptop Acer Aspire 5 A515-41G-13U1**, reaproveitado como servidor doméstico.
+
+| Componente | Especificação | Observação |
+|---|---|---|
+| CPU | AMD A12-9720P (quad-core, APU de 2017) | Sem uso de GPU planejado — a Radeon RX 540 dedicada fica ociosa num servidor headless |
+| RAM | 8 GB DDR4 de fábrica | 1 slot acessível + parte soldada, conforme o modelo — expansão além de 8 GB não é garantida pelo fabricante; confirmar a capacidade real depois de instalado o SO (`sudo dmidecode --type memory`) antes de planejar upgrade |
+| Armazenamento | HDD 1 TB 5400 RPM de fábrica | **Trocar por SSD M.2 NVMe antes de instalar o k3s** — ver justificativa abaixo |
+
+**Por que trocar o HDD por SSD é importante, não opcional:** o `etcd` (banco de dados interno do
+Kubernetes, usado pelo k3s) é sensível a latência de escrita em disco — é uma causa comum e bem
+documentada de instabilidade em clusters pequenos rodando sobre HDD mecânico. Rodar o k3s sobre um
+HDD 5400 RPM é o tipo de economia que tende a custar mais tempo depurando problemas estranhos do
+que gastaria comprando o SSD.
+
+**Orçamento de memória (estimativa, 8 GB totais):**
+
+| Consumidor | Estimativa |
+|---|---|
+| SO (Ubuntu Server headless) + k3s (control plane) | ~0,8–1 GB |
+| ArgoCD (application-controller, repo-server, server, redis, dex) | ~1–1,5 GB |
+| Traefik (Ingress embutido) + MetalLB | ~0,2–0,3 GB |
+| 4× (Spring Boot + PostgreSQL), um par por ambiente | ~2–2,8 GB (500–700 MB por ambiente) |
+| **Total estimado** | **~4–5,6 GB de 8 GB** — viável, mas com pouca folga |
+
+Recomendações para não estourar essa margem:
+- Definir `-Xmx` explícito (heap da JVM) em cada Deployment do Spring Boot, em vez de deixar a JVM
+  decidir sozinha — evita que um ambiente consuma memória além do previsto.
+- Considerar instalar a variante **ArgoCD Core** (sem Dex/SSO nem notifications-controller,
+  desnecessários para um usuário único) para reduzir o footprint do control plane.
+- Se a margem apertar na prática, considerar **1 único PostgreSQL compartilhado com 4 databases
+  lógicos** (um por ambiente) em vez de 4 pods de Postgres separados — troca isolamento total do
+  banco por memória; decisão a tomar depois de medir o consumo real.
+
 ### Sistema operacional do servidor
 
 | Opção | Vantagens | Desvantagens |
@@ -64,7 +99,9 @@ Namespace por ambiente e GitOps a partir do próprio repositório.
 
 Recomendação: **Ubuntu Server 24.04 LTS**, pelo suporte mais longo e pela quantidade de
 documentação/tutoriais de K3s que assumem Ubuntu como base — reduz atrito ao resolver problemas
-sozinho.
+sozinho. Como é um laptop servindo como servidor: desabilitar suspensão ao fechar a tampa
+(`HandleLidSwitch=ignore` em `/etc/systemd/logind.conf`) e manter sempre na energia AC — sem isso,
+fechar a tampa derruba o cluster inteiro.
 
 ### Simplificação sobre a proposta original
 
@@ -96,16 +133,21 @@ separada, fora do escopo desta ADR (que é só a decisão de arquitetura + provi
 
 ## Passo a passo de provisionamento
 
-1. Instalar o sistema operacional (Ubuntu Server 24.04 LTS recomendado).
-2. Instalar Docker (opcional — útil para testes locais de imagem antes de publicar em `ghcr.io`).
-3. Instalar k3s: `curl -sfL https://get.k3s.io | sh -` (já traz Traefik como Ingress embutido).
-4. Instalar MetalLB, com um pool de IPs da rede local reservado para ele.
-5. Instalar ArgoCD (`kubectl create namespace argocd` + manifests oficiais).
-6. Criar a estrutura `/k8s/{dev,qaa,homologacao,prod}` no repositório, com os manifests de cada
-   ambiente (tarefa futura separada — não faz parte desta ADR).
-7. Apontar o ArgoCD para o repositório e configurar sincronização automática por diretório/Namespace.
-8. Configurar o arquivo `hosts` nas máquinas da rede de casa com o IP fixo do Ingress (MetalLB) e
-   os 4 domínios da tabela acima.
+1. **Trocar o HDD pelo SSD M.2 NVMe** antes de tudo — ver justificativa na seção de hardware.
+2. Instalar o sistema operacional (Ubuntu Server 24.04 LTS recomendado).
+3. Desabilitar suspensão ao fechar a tampa e confirmar que o laptop fica sempre na energia AC.
+4. Confirmar a RAM real disponível (`sudo dmidecode --type memory`) contra o orçamento de memória
+   estimado na seção de hardware.
+5. Instalar Docker (opcional — útil para testes locais de imagem antes de publicar em `ghcr.io`).
+6. Instalar k3s: `curl -sfL https://get.k3s.io | sh -` (já traz Traefik como Ingress embutido).
+7. Instalar MetalLB, com um pool de IPs da rede local reservado para ele.
+8. Instalar ArgoCD — considerar a variante Core (ver seção de hardware) dado o orçamento de RAM.
+9. Criar a estrutura `/k8s/{dev,qaa,homologacao,prod}` no repositório, com os manifests de cada
+   ambiente, incluindo `-Xmx` explícito no Deployment do Spring Boot (tarefa futura separada — não
+   faz parte desta ADR).
+10. Apontar o ArgoCD para o repositório e configurar sincronização automática por diretório/Namespace.
+11. Configurar o arquivo `hosts` nas máquinas da rede de casa com o IP fixo do Ingress (MetalLB) e
+    os 4 domínios da tabela acima.
 
 ## Trade-offs considerados
 
@@ -135,8 +177,12 @@ separada, fora do escopo desta ADR (que é só a decisão de arquitetura + provi
 - Reaproveita o pipeline de CI já existente (build) em vez de duplicar esse processo no home-lab.
 
 **Negativas / pendências**
-- Depende de uma máquina física que ainda não existe/não foi formatada — nada aqui pode ser
-  validado até essa máquina estar pronta.
+- Máquina definida (Acer Aspire 5 A515-41G-13U1) mas ainda não formatada — nada aqui pode ser
+  validado até essa formatação acontecer, incluindo a troca de HDD por SSD.
+- Hardware modesto (APU quad-core de 2017, 8 GB RAM) deixa pouca folga de memória — o orçamento
+  estimado (~4–5,6 GB de 8 GB) é viável mas exige as mitigações já listadas (`-Xmx` explícito,
+  ArgoCD Core, possível Postgres compartilhado); precisa ser validado com medição real depois do
+  provisionamento, não só estimativa.
 - Mais peças móveis para operar e depurar sozinho do que a alternativa mais simples (Compose).
 - A solução de domínio via `hosts` não escala além de poucas máquinas — se a rede de casa crescer,
   revisar para um DNS local (Pi-hole ou similar).
