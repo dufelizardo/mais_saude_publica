@@ -1,115 +1,57 @@
 # Contribuindo para Mais Saúde Pública
 
-Obrigado por considerar contribuir para o projeto **Mais Saúde Pública**! Este documento descreve o processo de contribuição e as melhores práticas para garantir que todas as colaborações sejam feitas de forma eficiente e harmoniosa.
+Obrigado por considerar contribuir para o projeto **Mais Saúde Pública**! Este documento descreve o processo real de contribuição, alinhado com o que já está em produção — para o "porquê" por trás de cada decisão, ver os [ADRs](docs/adr/README.md) e a [wiki](https://github.com/dufelizardo/mais_saude_publica/wiki).
 
-## Sumário
-1. [Como Posso Contribuir?](#como-posso-contribuir)
-2. [Requisitos](#requisitos)
-3. [Fluxo de Trabalho](#fluxo-de-trabalho)
-4. [Estilo de Código](#estilo-de-código)
-5. [Testes](#testes)
-6. [Envio de Pull Requests](#envio-de-pull-requests)
-7. [Reporte de Issues](#reporte-de-issues)
-8. [Código de Conduta](#código-de-conduta)
+## Como posso contribuir?
 
-## Como Posso Contribuir?
-
-Existem várias maneiras de contribuir para este projeto:
-- **Reportando Bugs:** Se você encontrar algum problema, abra uma [Issue](#reporte-de-issues) com uma descrição detalhada.
-- **Sugerindo Funcionalidades:** Se tiver uma ideia para uma nova funcionalidade, compartilhe abrindo uma Issue.
-- **Corrigindo Bugs:** Veja as Issues abertas e envie um Pull Request (PR) com uma correção.
-- **Melhorando a Documentação:** Qualquer ajuda na documentação é bem-vinda! Revise, corrija ou amplie a documentação.
-- **Desenvolvendo Novas Funcionalidades:** Siga o processo descrito abaixo para implementar novas funcionalidades.
+- **Reportando bugs ou sugerindo funcionalidades:** abra uma [Issue](https://github.com/dufelizardo/mais_saude_publica/issues).
+- **Corrigindo bugs ou implementando funcionalidades:** veja as issues abertas (ou o [board do projeto](https://github.com/users/dufelizardo/projects/1)) e envie um Pull Request.
+- **Melhorando a documentação:** README, wiki, ADRs — tudo aceita revisão.
 
 ## Requisitos
 
-Antes de começar, certifique-se de que você tem:
 - [Git](https://git-scm.com/) instalado.
-- O ambiente de desenvolvimento configurado conforme descrito no [README.md](./README.md).
-- Familiaridade com a linguagem e tecnologias utilizadas no projeto.
+- Java 17+ (o `mvnw`/`mvnw.cmd` do repositório já resolve o Maven, não precisa instalar à parte).
+- PostgreSQL local, ou Docker (ver [README.md](README.md#rodando-localmente) e [README.md](README.md#rodando-com-docker)).
 
-## Fluxo de Trabalho
+## Fluxo de trabalho
 
-1. **Fork o Repositório:**
-   - Clique em "Fork" no GitHub para criar uma cópia do repositório na sua conta.
-
-2. **Clone o Repositório:**
-   - Clone o fork para sua máquina local.
+1. Parta da branch `developer` atualizada.
+2. Faça suas alterações. Rode os testes localmente antes de abrir o PR:
    ```bash
-   git clone https://github.com/seu-usuario/mais-saude-publica.git
-   cd mais-saude-publica
+   ./mvnw test
    ```
-
-3. **Crie uma Branch:**
-   - Crie uma nova branch para a sua contribuição.
+3. Commit seguindo [Conventional Commits](https://www.conventionalcommits.org/pt-br/) (ver [VERSIONING.md](VERSIONING.md#mensagens-de-commit) para os tipos usados) e referenciando a issue relacionada quando houver:
    ```bash
-   git checkout -b minha-contribuicao
+   git commit -m "fix: corrige X (Refs #123)"
    ```
+4. Envie a branch e abra um Pull Request para `developer` (ou para a branch de destino da mudança).
+5. Aguarde o gate automatizado (build + JUnit + suíte Robot Framework) passar — acompanhe na aba Actions.
+6. PRs de contribuidores externos exigem 1 aprovação antes de mergear (Ruleset de proteção — ver [ADR-0011](docs/adr/0011-fase-2-melhorias-de-pipeline-e-branching.md)).
 
-4. **Faça Suas Alterações:**
-   - Realize as mudanças desejadas no código ou na documentação.
+Detalhes completos do fluxo de branches (`developer → qaa → homologacao → main`) e do pipeline de CI/CD: [ADR-0010](docs/adr/0010-fluxo-de-branches-e-pipeline-de-promocao.md) e a página [Onboarding e Desenvolvimento](https://github.com/dufelizardo/mais_saude_publica/wiki/Onboarding-e-Desenvolvimento) da wiki.
 
-5. **Commit:**
-   - Escreva uma mensagem de commit clara e descritiva.
-   ```bash
-   git add .
-   git commit -m "Descrição clara da contribuição"
-   ```
+## Estilo de código
 
-6. **Envie para o GitHub:**
-   - Envie as alterações para o seu fork no GitHub.
-   ```bash
-   git push origin minha-contribuicao
-   ```
-
-7. **Abra um Pull Request:**
-   - No GitHub, vá até a página do repositório original e clique em "Compare & pull request".
-   - Descreva suas alterações e abra o PR.
-
-## Estilo de Código
-
-Para manter a consistência no código, siga as seguintes diretrizes:
-- **Indentação:** Use 4 espaços para indentação.
-- **Nomeação:** Use nomes de variáveis e funções descritivos e em inglês.
-- **Comentários:** Comente partes do código que não são autoexplicativas.
-
-Recomendamos o uso de linters e formatadores para garantir a qualidade do código.
+Sem linter/formatter automatizado configurado ainda no `pom.xml` — siga o estilo já presente no código (indentação, nomenclatura em português para o domínio de negócio, inglês para termos técnicos genéricos). Comentários só onde o "porquê" não é óbvio a partir do código.
 
 ## Testes
 
-Todos os novos recursos ou correções devem incluir testes automatizados. 
-- **Executando Testes Locais:**
-   - Execute os testes localmente antes de enviar o PR.
-   ```bash
-   pytest
-   ```
-- **Cobertura de Testes:** Assegure-se de que a cobertura de código não diminua.
+Todo PR passa automaticamente pelas duas suítes na pipeline — não é obrigatório rodar as duas localmente antes de abrir o PR, mas economiza um ciclo de CI:
 
-## Envio de Pull Requests
+| Suíte | Local | Como rodar |
+|---|---|---|
+| **JUnit** | `src/test/java` | `./mvnw test` |
+| **Robot Framework** (118 casos de aceitação) | `test/robot/` | ver [test/robot/README.md](test/robot/README.md) |
 
-Ao enviar um Pull Request:
-- Garanta que o PR está associado a uma Issue, se aplicável.
-- Descreva claramente a motivação e o que foi alterado.
-- Mantenha o PR pequeno e focado em um único objetivo.
+Novos recursos ou correções devem vir acompanhados de teste correspondente.
 
-## Reporte de Issues
+## Reporte de issues
 
-Encontrou um bug? Abra uma Issue!
-- **Título:** Use um título descritivo.
-- **Descrição:** Inclua detalhes como o que aconteceu, o esperado, e como reproduzir o problema.
-- **Capturas de Tela/Logs:** Inclua capturas de tela ou logs, se aplicável.
+- **Título:** descritivo.
+- **Descrição:** o que aconteceu, o esperado, como reproduzir.
+- **Label:** classifique como `bug`, `enhancement`, `documentation` etc. — isso também alimenta a geração automática de release notes (ver [VERSIONING.md](VERSIONING.md)).
 
 ## Código de Conduta
 
-Por favor, siga nosso [Código de Conduta](./CODE_OF_CONDUCT.md) em todas as interações. Respeito e inclusão são fundamentais.
-
----
-
-Agradecemos por contribuir para o **Mais Saúde Pública**!
-
-### Dicas:
-- **Seja específico e claro**: Quanto mais claro for o `CONTRIBUTING.md`, mais fácil será para outros entenderem como contribuir.
-- **Mantenha atualizado**: Se o projeto evoluir, não se esqueça de atualizar o `CONTRIBUTING.md` para refletir as novas práticas ou ferramentas.
-- **Incentive feedback**: Deixe claro que feedbacks sobre o processo de contribuição também são bem-vindos, isso ajuda a melhorar a colaboração.
-
-Se precisar de mais detalhes ou ajustes, é só avisar!
+Siga o [Código de Conduta](CODE_OF_CONDUCT.md) em todas as interações.

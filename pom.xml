@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>br.com.eduafelizardo</groupId>
 	<artifactId>mais_saude_publica</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>mais_saude_publica</name>
 	<description>Sistema exemplo de um sistema de saúde</description>
 	<url/>
@@ -112,6 +112,29 @@
 						</exclude>
 					</excludes>
 				</configuration>
+			</plugin>
+			<plugin>
+				<!-- Análise estática de estilo de código. Só gera relatório (não falha o
+				     build) até o time decidir adotar um conjunto de regras próprio -
+				     ver VERSIONING.md. -->
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.6.0</version>
+				<configuration>
+					<configLocation>google_checks.xml</configLocation>
+					<failOnViolation>false</failOnViolation>
+					<violationSeverity>warning</violationSeverity>
+					<consoleOutput>false</consoleOutput>
+				</configuration>
+				<executions>
+					<execution>
+						<id>checkstyle-report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
