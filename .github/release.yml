@@ -1,0 +1,19 @@
+changelog:
+  exclude:
+    labels:
+      - duplicate
+      - invalid
+      - wontfix
+  categories:
+    - title: 🚀 Funcionalidades
+      labels:
+        - enhancement
+    - title: 🐛 Correções
+      labels:
+        - bug
+    - title: 📚 Documentação
+      labels:
+        - documentation
+    - title: 🔧 Outros
+      labels:
+        - "*"
