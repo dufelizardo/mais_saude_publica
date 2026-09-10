@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mais-saude-qaa
+
+resources:
+  - ../../base
+
+images:
+  - name: ghcr.io/dufelizardo/mais_saude_publica
+    newTag: qaa
+
+configMapGenerator:
+  - name: app-config
+    literals:
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_TOOL_OPTIONS=-Xmx384m
+      - DATABASE_URL=jdbc:postgresql://postgres:5432/saudepublica_qaa
+      - DATABASE_USERNAME=postgres
+  - name: db-config
+    literals:
+      - POSTGRES_DB=saudepublica_qaa
+      - POSTGRES_USER=postgres
+
+patches:
+  - target:
+      kind: Ingress
+      name: app
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: qaa.mais-saude.local
