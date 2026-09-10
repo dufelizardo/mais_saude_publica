@@ -36,15 +36,23 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
+          # startupProbe segura o readiness/liveness até a app responder — sem isso, o liveness
+          # (initialDelaySeconds curto) mata o container no meio da subida do Spring Boot/Hibernate
+          # antes dele terminar de criar o schema, principalmente no CPU modesto do home-lab
+          # (ver ADR-0012). Até 36x5s = 180s pra primeira resposta antes de considerar falha real.
+          startupProbe:
+            httpGet:
+              path: /v3/api-docs
+              port: 8080
+            failureThreshold: 36
+            periodSeconds: 5
           readinessProbe:
             httpGet:
               path: /v3/api-docs
               port: 8080
-            initialDelaySeconds: 20
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /v3/api-docs
               port: 8080
-            initialDelaySeconds: 40
             periodSeconds: 20
