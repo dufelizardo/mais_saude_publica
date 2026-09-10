@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mais-saude-qaa
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dufelizardo/mais_saude_publica.git
+    targetRevision: qaa
+    path: k8s/overlays/qaa
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mais-saude-qaa
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

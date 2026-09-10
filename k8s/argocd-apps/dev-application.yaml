@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mais-saude-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dufelizardo/mais_saude_publica.git
+    targetRevision: developer
+    path: k8s/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mais-saude-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
