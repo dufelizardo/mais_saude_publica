@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app
+spec:
+  ingressClassName: traefik
+  rules:
+    # Host real definido por overlay (patch em cada k8s/overlays/*/kustomization.yaml) — este é
+    # só um placeholder, nunca usado como está.
+    - host: app.mais-saude.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app
+                port:
+                  number: 80
