@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: argocd
+spec:
+  # ArgoCD Core (instalado via core-install.yaml, ver ADR-0012) não cria o AppProject "default"
+  # sozinho como a instalação completa faz — sem isto, todo Application fica travado em Sync
+  # Status "Unknown" (erro real: "appproject.argoproj.io default not found").
+  sourceRepos:
+    - '*'
+  destinations:
+    - namespace: '*'
+      server: '*'
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
