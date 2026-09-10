@@ -2,9 +2,11 @@
 
 ## Status
 
-Proposta — não implementada. A máquina física já está definida (ver "Hardware do servidor"
-abaixo), mas ainda será formatada. Este documento registra a decisão de arquitetura e o passo a
-passo de provisionamento para quando essa formatação acontecer.
+Em implementação. Base de infraestrutura já provisionada em 2026-09-10: SO instalado, rede
+configurada, **k3s + MetalLB + ArgoCD (Core) rodando e saudáveis** no servidor real (hostname
+`projetos-server`, ver "Hardware do servidor" abaixo). Pendente: os manifests de aplicação
+(`/k8s/{dev,qaa,homologacao,prod}`) e o ajuste do `pipeline.yml` para publicar em `ghcr.io` —
+ver "Passo a passo de provisionamento" para o que já foi feito vs. o que falta.
 
 ## Contexto
 
@@ -62,8 +64,11 @@ Definido: **laptop Acer Aspire 5 A515-41G-13U1**, reaproveitado como servidor do
 | Componente | Especificação | Observação |
 |---|---|---|
 | CPU | AMD A12-9720P (quad-core, APU de 2017) | Sem uso de GPU planejado — a Radeon RX 540 dedicada fica ociosa num servidor headless |
-| RAM | 8 GB DDR4 de fábrica | 1 slot acessível + parte soldada, conforme o modelo — expansão além de 8 GB não é garantida pelo fabricante; confirmar a capacidade real depois de instalado o SO (`sudo dmidecode --type memory`) antes de planejar upgrade |
-| Armazenamento | HDD 1 TB 5400 RPM de fábrica | **Trocar por SSD M.2 NVMe antes de instalar o k3s** — ver justificativa abaixo |
+| RAM | 8 GB DDR4 nominal — **6,7 GB reais utilizáveis** (confirmado via `free -h`) | Diferença esperada (parte reservada pra GPU integrada/firmware); é o número real a usar no orçamento de memória, não os 8 GB nominais |
+| Armazenamento | ~~HDD 1 TB 5400 RPM de fábrica~~ **Trocado por SSD (465,8 GB, confirmado via `lsblk`)** | Já feito — ver justificativa abaixo |
+| Hostname | `projetos-server` | |
+| SO instalado | Ubuntu Server 26.04.1 LTS | Versão mais recente disponível no momento da instalação — supera a recomendação original de 24.04 LTS, mesma lógica de escolha se aplica |
+| Rede | Wi-Fi (`wlp2s0`), IP estático `192.168.0.50/24` via netplan | Ethernet (`enp1s0f1`) disponível mas sem cabo conectado; ver nota abaixo sobre a dificuldade prática de configurar Wi-Fi sem acesso remoto |
 
 **Por que trocar o HDD por SSD é importante, não opcional:** o `etcd` (banco de dados interno do
 Kubernetes, usado pelo k3s) é sensível a latência de escrita em disco — é uma causa comum e bem
@@ -71,21 +76,21 @@ documentada de instabilidade em clusters pequenos rodando sobre HDD mecânico. R
 HDD 5400 RPM é o tipo de economia que tende a custar mais tempo depurando problemas estranhos do
 que gastaria comprando o SSD.
 
-**Orçamento de memória (estimativa, 8 GB totais):**
+**Orçamento de memória (estimativa, 6,7 GB reais — não 8 GB nominais):**
 
-| Consumidor | Estimativa |
-|---|---|
-| SO (Ubuntu Server headless) + k3s (control plane) | ~0,8–1 GB |
-| ArgoCD (application-controller, repo-server, server, redis, dex) | ~1–1,5 GB |
-| Traefik (Ingress embutido) + MetalLB | ~0,2–0,3 GB |
-| 4× (Spring Boot + PostgreSQL), um par por ambiente | ~2–2,8 GB (500–700 MB por ambiente) |
-| **Total estimado** | **~4–5,6 GB de 8 GB** — viável, mas com pouca folga |
+| Consumidor | Estimativa | Real observado |
+|---|---|---|
+| SO (Ubuntu Server headless) idle | ~0,3–0,5 GB | 574 MB (`free -h`, antes do k3s) |
+| k3s (control plane) + MetalLB + Traefik (Ingress embutido) | ~0,5–0,8 GB | a confirmar após os 3 estarem rodando juntos |
+| ArgoCD **Core** (application-controller, applicationset-controller, repo-server, redis — sem server/Dex/notifications) | ~0,5–0,8 GB | instalado; menor que a variante completa por não ter API/UI/SSO |
+| 4× (Spring Boot + PostgreSQL), um par por ambiente | ~2–2,8 GB (500–700 MB por ambiente) | ainda não provisionado |
+| **Total estimado** | **~3,3–4,9 GB de 6,7 GB reais** | margem um pouco mais apertada que a estimativa original (que assumia 8 GB nominais), mas ArgoCD Core (já escolhido, não só recomendado) compensa parte da diferença |
 
-Recomendações para não estourar essa margem:
-- Definir `-Xmx` explícito (heap da JVM) em cada Deployment do Spring Boot, em vez de deixar a JVM
-  decidir sozinha — evita que um ambiente consuma memória além do previsto.
-- Considerar instalar a variante **ArgoCD Core** (sem Dex/SSO nem notifications-controller,
-  desnecessários para um usuário único) para reduzir o footprint do control plane.
+Mitigações:
+- ✅ **ArgoCD Core já instalado** (sem Dex/SSO/notifications-controller/server) — reduz o
+  footprint do control plane; acesso é só via `kubectl`/CLI local, sem UI web.
+- Pendente: definir `-Xmx` explícito (heap da JVM) em cada Deployment do Spring Boot, em vez de
+  deixar a JVM decidir sozinha — evita que um ambiente consuma memória além do previsto.
 - Se a margem apertar na prática, considerar **1 único PostgreSQL compartilhado com 4 databases
   lógicos** (um por ambiente) em vez de 4 pods de Postgres separados — troca isolamento total do
   banco por memória; decisão a tomar depois de medir o consumo real.
@@ -97,11 +102,40 @@ Recomendações para não estourar essa margem:
 | **Ubuntu Server 24.04 LTS (recomendado)** | Maior compatibilidade e documentação com K3s; 5 anos de suporte; facilita instalar add-ons futuros (ex.: Pi-hole) | Um pouco mais pesado que Debian por padrão |
 | Debian 12 | Footprint mais enxuto, mesma estabilidade, menos pacotes instalados por padrão | Documentação de K3s/K8s geralmente escrita pensando em Ubuntu primeiro |
 
-Recomendação: **Ubuntu Server 24.04 LTS**, pelo suporte mais longo e pela quantidade de
-documentação/tutoriais de K3s que assumem Ubuntu como base — reduz atrito ao resolver problemas
-sozinho. Como é um laptop servindo como servidor: desabilitar suspensão ao fechar a tampa
-(`HandleLidSwitch=ignore` em `/etc/systemd/logind.conf`) e manter sempre na energia AC — sem isso,
-fechar a tampa derruba o cluster inteiro.
+Recomendação original: **Ubuntu Server 24.04 LTS**, pelo suporte mais longo e pela quantidade de
+documentação/tutoriais de K3s que assumem Ubuntu como base. Na prática, **instalado Ubuntu Server
+26.04.1 LTS** (versão mais recente disponível no momento) — mesma lógica de escolha se aplica,
+LTS mais novo com mais tempo de suporte pela frente. Como é um laptop servindo como servidor:
+`HandleLidSwitch=ignore` foi configurado em `/etc/systemd/logind.conf` e o carregador fica sempre
+conectado — sem isso, fechar a tampa derruba o cluster inteiro.
+
+**Lição aprendida na configuração de rede (Wi-Fi):** o assistente de instalação do Ubuntu Server
+não persistiu a configuração de Wi-Fi feita durante a instalação (SSID/senha não ficaram salvos no
+netplan gerado). Foi necessário editar `/etc/netplan/00-installer-config.yaml` manualmente após a
+instalação, direto no console do servidor (sem copiar/colar disponível nessa etapa — só depois que
+o SSH ficou de pé). Config final que funcionou:
+
+```yaml
+network:
+  version: 2
+  wifis:
+    wlp2s0:
+      dhcp4: false
+      access-points:
+        "<SSID_DA_REDE>":
+          password: "<SENHA_DA_REDE>"
+      addresses:
+        - 192.168.0.50/24
+      routes:
+        - to: default
+          via: 192.168.0.1
+      nameservers:
+        addresses: [1.1.1.1]
+```
+
+Se for reprovisionar essa máquina (ou outra) do zero, considerar usar Ethernet só durante a
+instalação/setup inicial — evita todo esse atrito — e migrar pra Wi-Fi depois, já com SSH
+disponível para copiar/colar a config em vez de digitar cada linha manualmente no console.
 
 ### Simplificação sobre a proposta original
 
@@ -123,6 +157,11 @@ necessário para dar um IP fixo ao Ingress dentro da rede local — sem ele, o I
 mudar a cada reinício do cluster. Um servidor DNS local (ex.: Pi-hole) fica registrado como
 melhoria futura, não necessário agora para só duas máquinas.
 
+**Pool de IPs do MetalLB configurado:** `192.168.0.200-192.168.0.210` — faixa alta, escolhida pra
+minimizar risco de conflito com o DHCP do modem (Sagemcom F@ST 3895; não foi possível confirmar o
+range exato do DHCP dele, então optou-se por uma faixa improvável de colidir em vez de aguardar
+essa confirmação). Se algum conflito de IP aparecer no futuro, revisar essa faixa.
+
 ### GitOps
 
 Manifests do Kubernetes (Deployment, Service, Ingress, ConfigMap, Secret) organizados em
@@ -133,21 +172,27 @@ separada, fora do escopo desta ADR (que é só a decisão de arquitetura + provi
 
 ## Passo a passo de provisionamento
 
-1. **Trocar o HDD pelo SSD M.2 NVMe** antes de tudo — ver justificativa na seção de hardware.
-2. Instalar o sistema operacional (Ubuntu Server 24.04 LTS recomendado).
-3. Desabilitar suspensão ao fechar a tampa e confirmar que o laptop fica sempre na energia AC.
-4. Confirmar a RAM real disponível (`sudo dmidecode --type memory`) contra o orçamento de memória
-   estimado na seção de hardware.
-5. Instalar Docker (opcional — útil para testes locais de imagem antes de publicar em `ghcr.io`).
-6. Instalar k3s: `curl -sfL https://get.k3s.io | sh -` (já traz Traefik como Ingress embutido).
-7. Instalar MetalLB, com um pool de IPs da rede local reservado para ele.
-8. Instalar ArgoCD — considerar a variante Core (ver seção de hardware) dado o orçamento de RAM.
+Concluído em 2026-09-10:
+
+1. ✅ Trocar o HDD pelo SSD M.2 NVMe.
+2. ✅ Instalar o sistema operacional (Ubuntu Server 26.04.1 LTS).
+3. ✅ Configurar rede (Wi-Fi, IP estático `192.168.0.50`) — ver lição aprendida na seção de
+   hardware.
+4. ✅ Desabilitar suspensão ao fechar a tampa; laptop sempre na energia AC.
+5. ✅ Confirmar a RAM real disponível (`free -h`) contra o orçamento de memória — 6,7 GB reais,
+   registrado na seção de hardware.
+6. ✅ Instalar k3s: `curl -sfL https://get.k3s.io | sh -` (Traefik embutido confirmado).
+7. ✅ Instalar MetalLB, pool `192.168.0.200-192.168.0.210`.
+8. ✅ Instalar ArgoCD (variante Core).
+
+Pendente:
+
 9. Criar a estrutura `/k8s/{dev,qaa,homologacao,prod}` no repositório, com os manifests de cada
-   ambiente, incluindo `-Xmx` explícito no Deployment do Spring Boot (tarefa futura separada — não
-   faz parte desta ADR).
+   ambiente, incluindo `-Xmx` explícito no Deployment do Spring Boot, e ajustar o `pipeline.yml`
+   para publicar imagem em `ghcr.io` a cada promoção.
 10. Apontar o ArgoCD para o repositório e configurar sincronização automática por diretório/Namespace.
-11. Configurar o arquivo `hosts` nas máquinas da rede de casa com o IP fixo do Ingress (MetalLB) e
-    os 4 domínios da tabela acima.
+11. Configurar o arquivo `hosts` nas máquinas da rede de casa com o IP fixo do Ingress (MetalLB,
+    dentro do range `192.168.0.200-210`) e os 4 domínios da tabela acima.
 
 ## Trade-offs considerados
 
@@ -177,12 +222,10 @@ separada, fora do escopo desta ADR (que é só a decisão de arquitetura + provi
 - Reaproveita o pipeline de CI já existente (build) em vez de duplicar esse processo no home-lab.
 
 **Negativas / pendências**
-- Máquina definida (Acer Aspire 5 A515-41G-13U1) mas ainda não formatada — nada aqui pode ser
-  validado até essa formatação acontecer, incluindo a troca de HDD por SSD.
-- Hardware modesto (APU quad-core de 2017, 8 GB RAM) deixa pouca folga de memória — o orçamento
-  estimado (~4–5,6 GB de 8 GB) é viável mas exige as mitigações já listadas (`-Xmx` explícito,
-  ArgoCD Core, possível Postgres compartilhado); precisa ser validado com medição real depois do
-  provisionamento, não só estimativa.
+- Hardware modesto (APU quad-core de 2017, 6,7 GB RAM real) deixa pouca folga de memória — o
+  orçamento estimado (~3,3–4,9 GB de 6,7 GB) é mais apertado que a estimativa original baseada nos
+  8 GB nominais. ArgoCD Core (já instalado) ajuda a compensar; falta medir o consumo real com os
+  4 ambientes de aplicação rodando, e aplicar `-Xmx` explícito por ambiente.
 - Mais peças móveis para operar e depurar sozinho do que a alternativa mais simples (Compose).
 - A solução de domínio via `hosts` não escala além de poucas máquinas — se a rede de casa crescer,
   revisar para um DNS local (Pi-hole ou similar).
@@ -190,5 +233,5 @@ separada, fora do escopo desta ADR (que é só a decisão de arquitetura + provi
   autenticação de pull no cluster se ele se tornar privado no futuro.
 - Destino de deploy de produção (`main`) fica em aberto — decidir separadamente se migra para este
   home-lab ou se um novo destino em nuvem substitui o Render (hoje presumivelmente inativo).
-- A estrutura `/k8s/*` e os manifests de cada ambiente ainda precisam ser escritos — tarefa futura
-  separada desta ADR.
+- A estrutura `/k8s/*`, os manifests de cada ambiente e o ajuste do `pipeline.yml` pra `ghcr.io`
+  ainda precisam ser escritos — próxima etapa depois desta ADR.
