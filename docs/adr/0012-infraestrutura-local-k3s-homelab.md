@@ -2,11 +2,11 @@
 
 ## Status
 
-Em implementação. Base de infraestrutura já provisionada em 2026-09-10: SO instalado, rede
-configurada, **k3s + MetalLB + ArgoCD (Core) rodando e saudáveis** no servidor real (hostname
-`projetos-server`, ver "Hardware do servidor" abaixo). Pendente: os manifests de aplicação
-(`/k8s/{dev,qaa,homologacao,prod}`) e o ajuste do `pipeline.yml` para publicar em `ghcr.io` —
-ver "Passo a passo de provisionamento" para o que já foi feito vs. o que falta.
+**Implementada.** Concluída em 2026-09-10: SO instalado, rede configurada, k3s + MetalLB +
+ArgoCD (Core) no ar, os 4 ambientes (`dev`/`qaa`/`homologacao`/`prod`) publicados via GitOps e
+saudáveis, imagem publicada em `ghcr.io`, domínios locais funcionando via `hosts`. Ver "Passo a
+passo de provisionamento" para o histórico completo e "Lições aprendidas" para os dois problemas
+reais encontrados e corrigidos durante o rollout.
 
 ## Contexto
 
@@ -83,17 +83,15 @@ que gastaria comprando o SSD.
 | SO (Ubuntu Server headless) idle | ~0,3–0,5 GB | 574 MB (`free -h`, antes do k3s) |
 | k3s (control plane) + MetalLB + Traefik (Ingress embutido) | ~0,5–0,8 GB | a confirmar após os 3 estarem rodando juntos |
 | ArgoCD **Core** (application-controller, applicationset-controller, repo-server, redis — sem server/Dex/notifications) | ~0,5–0,8 GB | instalado; menor que a variante completa por não ter API/UI/SSO |
-| 4× (Spring Boot + PostgreSQL), um par por ambiente | ~2–2,8 GB (500–700 MB por ambiente) | ainda não provisionado |
-| **Total estimado** | **~3,3–4,9 GB de 6,7 GB reais** | margem um pouco mais apertada que a estimativa original (que assumia 8 GB nominais), mas ArgoCD Core (já escolhido, não só recomendado) compensa parte da diferença |
+| 4× (Spring Boot + PostgreSQL), um par por ambiente | ~2–2,8 GB (500–700 MB por ambiente) | **medido: só ~0,8 GB pros 4 juntos** — bem abaixo da estimativa |
+| **Total estimado / real** | ~3,3–4,9 GB estimado | **2,8 GB usados, 3,9 GB disponíveis com os 4 ambientes no ar** (`free -h`) — folga bem melhor que o pior caso estimado |
 
-Mitigações:
-- ✅ **ArgoCD Core já instalado** (sem Dex/SSO/notifications-controller/server) — reduz o
-  footprint do control plane; acesso é só via `kubectl`/CLI local, sem UI web.
-- Pendente: definir `-Xmx` explícito (heap da JVM) em cada Deployment do Spring Boot, em vez de
-  deixar a JVM decidir sozinha — evita que um ambiente consuma memória além do previsto.
-- Se a margem apertar na prática, considerar **1 único PostgreSQL compartilhado com 4 databases
-  lógicos** (um por ambiente) em vez de 4 pods de Postgres separados — troca isolamento total do
-  banco por memória; decisão a tomar depois de medir o consumo real.
+Mitigações efetivamente usadas:
+- ✅ **ArgoCD Core** (sem Dex/SSO/notifications-controller/server) — reduz o footprint do control
+  plane; acesso é só via `kubectl`/CLI local, sem UI web.
+- ✅ **`-Xmx384m`** (via `JAVA_TOOL_OPTIONS`) explícito em todos os Deployments do Spring Boot.
+- ❌ **Postgres compartilhado não foi necessário** — a medição real com os 4 ambientes rodando
+  mostrou folga confortável (3,9 GB disponíveis); mitigação descartada, não precisou ser aplicada.
 
 ### Sistema operacional do servidor
 
@@ -165,10 +163,30 @@ essa confirmação). Se algum conflito de IP aparecer no futuro, revisar essa fa
 ### GitOps
 
 Manifests do Kubernetes (Deployment, Service, Ingress, ConfigMap, Secret) organizados em
-`/k8s/{dev,qaa,homologacao,prod}` dentro do próprio repositório — consistente com o projeto já
-operar como repositório único. ArgoCD monitora esse diretório e sincroniza automaticamente cada
-subpasta com o Namespace correspondente. A criação efetiva desses manifests é uma tarefa futura
-separada, fora do escopo desta ADR (que é só a decisão de arquitetura + provisionamento da base).
+`/k8s/base` (genérico) + `/k8s/overlays/{dev,qaa,homologacao,prod}` (Kustomize, um overlay por
+ambiente — namespace, host, tag de imagem e nome do banco variam por overlay). Os 4
+`Application` do ArgoCD vivem em `/k8s/argocd-apps/`, cada um apontando pro `targetRevision` da
+branch correspondente, com `syncPolicy.automated: {prune: true, selfHeal: true}`. A senha do
+Postgres nunca entra no Git (repositório é público) — criada manualmente por namespace via
+`kubectl create secret`, referenciada por nome (`secretKeyRef`) nos manifests.
+
+### Lições aprendidas no rollout (2026-09-10)
+
+Dois problemas reais apareceram só com o cluster de verdade, não eram previsíveis por estimativa:
+
+1. **ArgoCD Core não cria o `AppProject` "default" sozinho** (a instalação completa cria; a Core
+   não). Sem ele, todo `Application` fica preso em Sync Status "Unknown" para sempre — erro real
+   nos logs do `application-controller`: `appproject.argoproj.io "default" not found`. Corrigido
+   criando o `AppProject` manualmente (`k8s/argocd-apps/appproject-default.yaml`, aplicado uma vez
+   no bootstrap).
+2. **Liveness probe matava o container no meio da subida** — Exit Code 143 (SIGTERM do kubelet,
+   não OOM), crash loop no primeiro deploy do ambiente `dev`. O CPU modesto do home-lab (AMD
+   A12-9720P, 2017) faz o Spring Boot + criação de schema do Hibernate demorar mais que os
+   `initialDelaySeconds` inicialmente configurados. Corrigido com um `startupProbe`
+   (`failureThreshold: 36, periodSeconds: 5` — até 180s antes de liveness/readiness passarem a
+   valer), em `k8s/base/deployment-app.yaml`.
+
+Depois dessas duas correções, `qaa`, `homologacao` e `prod` subiram de primeira, sem crash loop.
 
 ## Passo a passo de provisionamento
 
@@ -183,16 +201,14 @@ Concluído em 2026-09-10:
    registrado na seção de hardware.
 6. ✅ Instalar k3s: `curl -sfL https://get.k3s.io | sh -` (Traefik embutido confirmado).
 7. ✅ Instalar MetalLB, pool `192.168.0.200-192.168.0.210`.
-8. ✅ Instalar ArgoCD (variante Core).
-
-Pendente:
-
-9. Criar a estrutura `/k8s/{dev,qaa,homologacao,prod}` no repositório, com os manifests de cada
-   ambiente, incluindo `-Xmx` explícito no Deployment do Spring Boot, e ajustar o `pipeline.yml`
-   para publicar imagem em `ghcr.io` a cada promoção.
-10. Apontar o ArgoCD para o repositório e configurar sincronização automática por diretório/Namespace.
-11. Configurar o arquivo `hosts` nas máquinas da rede de casa com o IP fixo do Ingress (MetalLB,
-    dentro do range `192.168.0.200-210`) e os 4 domínios da tabela acima.
+8. ✅ Instalar ArgoCD (variante Core) + `AppProject` default (ver "Lições aprendidas").
+9. ✅ Escrever `/k8s/base` + overlays + `Application` CRs; `publish-image.yml` publicando
+   `ghcr.io/dufelizardo/mais_saude_publica:<branch>` a cada push nas 4 branches.
+10. ✅ Bootstrap do ArgoCD por ambiente (`kubectl create secret` + `kubectl apply` do
+    `Application`), um de cada vez, medindo RAM real a cada um — `dev` → `qaa` → `homologacao` →
+    `prod`, todos saudáveis, sem precisar da mitigação de Postgres compartilhado.
+11. ✅ Arquivo `hosts` configurado (`192.168.0.200` para os 4 domínios) — ambientes acessíveis
+    pela rede de casa.
 
 ## Trade-offs considerados
 
@@ -215,23 +231,25 @@ Pendente:
 ## Consequências
 
 **Positivas**
-- Resolve de vez a pendência registrada na ADR-0010 sobre QA/Homologação sem URL persistente.
-- Ambientes navegáveis e persistentes para os 4 estágios (`dev`/`qaa`/`homologacao`/`main`),
-  acessíveis por toda a rede de casa via domínio próprio.
-- Aprendizado real de Kubernetes como valor adicional explícito, não um efeito colateral.
-- Reaproveita o pipeline de CI já existente (build) em vez de duplicar esse processo no home-lab.
+- Resolve de vez a pendência registrada na ADR-0010 sobre QA/Homologação sem URL persistente —
+  os 4 ambientes estão no ar, saudáveis, acessíveis pela rede de casa via domínio próprio.
+- RAM sobrou mais que o esperado (2,8 GB usados / 3,9 GB disponíveis com os 4 ambientes rodando) —
+  a mitigação de Postgres compartilhado, cogitada por causa do orçamento apertado inicial, não foi
+  necessária.
+- Aprendizado real de Kubernetes como valor adicional explícito, não um efeito colateral — dois
+  problemas reais de operação (`AppProject` ausente, liveness matando container na subida) foram
+  encontrados e corrigidos ao vivo.
+- Reaproveita o pipeline de CI já existente (build) em vez de duplicar esse processo no home-lab —
+  `publish-image.yml` só adiciona o passo de publicar em `ghcr.io`.
 
 **Negativas / pendências**
-- Hardware modesto (APU quad-core de 2017, 6,7 GB RAM real) deixa pouca folga de memória — o
-  orçamento estimado (~3,3–4,9 GB de 6,7 GB) é mais apertado que a estimativa original baseada nos
-  8 GB nominais. ArgoCD Core (já instalado) ajuda a compensar; falta medir o consumo real com os
-  4 ambientes de aplicação rodando, e aplicar `-Xmx` explícito por ambiente.
-- Mais peças móveis para operar e depurar sozinho do que a alternativa mais simples (Compose).
+- Mais peças móveis para operar e depurar sozinho do que a alternativa mais simples (Compose) —
+  já se provou na prática (2 problemas reais de bootstrap do ArgoCD/probes, ambos documentados nas
+  "Lições aprendidas").
 - A solução de domínio via `hosts` não escala além de poucas máquinas — se a rede de casa crescer,
   revisar para um DNS local (Pi-hole ou similar).
 - Publicar imagens em `ghcr.io` exige que o repositório continue público, ou configurar
   autenticação de pull no cluster se ele se tornar privado no futuro.
-- Destino de deploy de produção (`main`) fica em aberto — decidir separadamente se migra para este
-  home-lab ou se um novo destino em nuvem substitui o Render (hoje presumivelmente inativo).
-- A estrutura `/k8s/*`, os manifests de cada ambiente e o ajuste do `pipeline.yml` pra `ghcr.io`
-  ainda precisam ser escritos — próxima etapa depois desta ADR.
+- Destino de deploy de produção (`main`) fica em aberto — hoje o ambiente `prod` deste home-lab
+  está no ar (`mais-saude.local`), mas o Render antigo nunca foi formalmente desativado/substituído
+  como destino de produção "real" (fora da rede de casa); decidir isso separadamente.
