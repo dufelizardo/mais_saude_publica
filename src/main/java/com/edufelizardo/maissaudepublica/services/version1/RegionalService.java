@@ -7,12 +7,14 @@ import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class RegionalService extends AbstractHierarquicoService<RegionalResponseDto> {
 
     @Override
-    protected TipoUnidadeDeSaude getTipo() {
-        return TipoUnidadeDeSaude.REGIONAL;
+    protected List<TipoUnidadeDeSaude> getTiposAceitos() {
+        return List.of(TipoUnidadeDeSaude.REGIONAL);
     }
 
     @Override

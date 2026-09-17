@@ -14,4 +14,10 @@ public interface UnidadeDeSaudeRepository extends JpaRepository<UnidadeDeSaude, 
     List<UnidadeDeSaude> findByTipo(TipoUnidadeDeSaude tipo);
 
     List<UnidadeDeSaude> findByNomeAndTipo(String nome, TipoUnidadeDeSaude tipo);
+
+    List<UnidadeDeSaude> findByTipoIn(List<TipoUnidadeDeSaude> tipos);
+
+    List<UnidadeDeSaude> findByNomeAndTipoIn(String nome, List<TipoUnidadeDeSaude> tipos);
+
+    List<UnidadeDeSaude> findByResponsavelCpfAndResponsavelIsNull(String responsavelCpf);
 }
