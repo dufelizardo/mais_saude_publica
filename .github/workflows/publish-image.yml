@@ -14,6 +14,14 @@ on:
 
 jobs:
   publish:
+    # Evita loop infinito com pin-manifests (abaixo): o commit "chore: pin ..." dispara este mesmo
+    # workflow de novo (usa um PAT, nao o GITHUB_TOKEN padrao, entao conta como push "de verdade").
+    # Sem esta guarda, rebuildaria o mesmo codigo so pra gerar um SHA novo, pinaria de novo, e
+    # disparia de novo, ad infinitum. Checar a mensagem do commit (nao "[skip ci]") e proposital:
+    # "[skip ci]" suprime QUALQUER workflow para aquele commit, inclusive checks de pull_request de
+    # PRs de promocao que tenham esse commit como head - isso travaria a propria promocao
+    # developer->qaa->homologacao->main sem nenhum check rodando.
+    if: "!startsWith(github.event.head_commit.message, 'chore: pin ')"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -89,9 +97,9 @@ jobs:
           if git diff --cached --quiet; then
             echo "Overlay já pinado nesta imagem"
           else
-            # [skip ci] e essencial aqui: como o push usa um PAT (nao o GITHUB_TOKEN padrao), ele
-            # conta como push "de verdade" e disparia este mesmo workflow de novo - sem o
-            # [skip ci], viraria um loop infinito de rebuild+pin+rebuild.
-            git commit -m "chore: pin ${{ github.ref_name }} a ${{ github.sha }} [skip ci]"
+            # Sem "[skip ci]" de propósito - ver a guarda "if" do job publish acima. "[skip ci]"
+            # suprimiria checks de PRs de promoção que tiverem este commit como head, não só este
+            # workflow.
+            git commit -m "chore: pin ${{ github.ref_name }} a ${{ github.sha }}"
             git push origin HEAD:${{ github.ref_name }}
           fi
