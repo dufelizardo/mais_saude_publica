@@ -2,7 +2,8 @@
 
 ## Status
 
-Proposta — decisão registrada, implementação ainda não feita.
+Aceita (parcialmente implementada — renomeação dos 4 níveis concluída; 5º nível formalizado e
+executado pela ADR-0013).
 
 ## Contexto
 

@@ -336,4 +336,102 @@ public class ExampleConstants {
                   }
                 }
             """;
+    public static final String UNIDADE_SAUDE_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "nome": "string",
+                    "tipo": "UBS",
+                    "administracaoSuperior": "string",
+                    "supervisaoRegional": "string",
+                    "responsavelCpf": "string",
+                    "responsavelNome": "string",
+                    "endereco": {
+                      "cep": "string",
+                      "logradouro": "string",
+                      "numeroLogradouro": "string",
+                      "complemento": "string",
+                      "bairro": "string",
+                      "cidade": "string",
+                      "estado": "string",
+                      "ddd": "string"
+                    },
+                    "saudeTelefones": [
+                      "string"
+                    ],
+                    "email": "string",
+                    "horarioFuncionamento": {
+                      "additionalProp1": "string",
+                      "additionalProp2": "string",
+                      "additionalProp3": "string"
+                    },
+                    "horarioAtendimento": {
+                      "additionalProp1": "string",
+                      "additionalProp2": "string",
+                      "additionalProp3": "string"
+                    }
+                  }
+                ]
+            """;
+    public static final String UNIDADE_SAUDE_RESPONSE_FIND_EXAMPLE = """
+                {
+                  "nome": "string",
+                  "tipo": "UBS",
+                  "administracaoSuperior": "string",
+                  "supervisaoRegional": "string",
+                  "responsavelCpf": "string",
+                  "responsavelNome": "string",
+                  "endereco": {
+                    "cep": "string",
+                    "logradouro": "string",
+                    "numeroLogradouro": "string",
+                    "complemento": "string",
+                    "bairro": "string",
+                    "cidade": "string",
+                    "estado": "string",
+                    "ddd": "string"
+                  },
+                  "saudeTelefones": [
+                    "string"
+                  ],
+                  "email": "string",
+                  "horarioFuncionamento": {
+                    "additionalProp1": "string",
+                    "additionalProp2": "string",
+                    "additionalProp3": "string"
+                  },
+                  "horarioAtendimento": {
+                    "additionalProp1": "string",
+                    "additionalProp2": "string",
+                    "additionalProp3": "string"
+                  }
+                }
+            """;
+    public static final String PROFISSIONAL_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "cpf": "string",
+                    "nome": "string",
+                    "conselhoClasse": "string",
+                    "numeroConselho": "string",
+                    "telefone": "string",
+                    "email": "string",
+                    "dataAdmissao": "2024-01-01",
+                    "dataDesligamento": null,
+                    "ativo": true
+                  }
+                ]
+            """;
+    public static final String PROFISSIONAL_RESPONSE_FIND_EXAMPLE = """
+                {
+                  "cpf": "string",
+                  "nome": "string",
+                  "conselhoClasse": "string",
+                  "numeroConselho": "string",
+                  "telefone": "string",
+                  "email": "string",
+                  "dataAdmissao": "2024-01-01",
+                  "dataDesligamento": null,
+                  "ativo": true
+                }
+            """;
 }
