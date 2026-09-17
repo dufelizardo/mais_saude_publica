@@ -9,3 +9,7 @@ Resource    ../../schema/regional/regional_schema.resource
 Resource    ../../schema/estadual/estadual_schema.resource
 # MUNICIPAL
 Resource    ../../schema/municipal/municipal_schema.resource
+# UNIDADE SAUDE
+Resource    ../../schema/unidade_saude/unidade_saude_schema.resource
+# PROFISSIONAL
+Resource    ../../schema/profissional/profissional_schema.resource
