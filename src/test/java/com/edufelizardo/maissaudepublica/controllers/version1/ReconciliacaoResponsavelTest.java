@@ -229,8 +229,11 @@ class ReconciliacaoResponsavelTest {
 
         scheduler.reconciliar();
 
-        UnidadeDeSaude depoisDoJob = unidadeDeSaudeRepository.findByNome(nomeUnidade).orElseThrow();
-        assertThat(depoisDoJob.getResponsavel()).isNotNull();
-        assertThat(depoisDoJob.getResponsavel().getNome()).isEqualTo("Responsável via Job");
+        // Verifica via a resposta da API pública, não pelo repositório: `responsavel` é
+        // @ManyToOne LAZY, então reabrir a entidade fora de uma transação/requisição HTTP lançaria
+        // LazyInitialization ao acessar o proxy.
+        mockMvc.perform(get(UNIDADE_SAUDE_URL + nomeUnidade))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.responsavelNome").value("Responsável via Job"));
     }
 }
