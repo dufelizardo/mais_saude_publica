@@ -36,6 +36,8 @@ class ReconciliacaoResponsavelTest {
 
     private static final String UNIDADE_SAUDE_URL = "/api/v1/unidade-saude/";
     private static final String PROFISSIONAL_URL = "/api/v1/profissional/";
+    private static final String FEDERAL_URL = "/api/v1/federal/";
+    private static final String ESTADUAL_URL = "/api/v1/estadual/";
     private static final String MUNICIPAL_URL = "/api/v1/municipal/";
     private static final String PREFIXO_NOME_TESTE = "Reconciliação Teste - ";
     private static final String PREFIXO_CPF_TESTE = "99977766";
@@ -65,11 +67,64 @@ class ReconciliacaoResponsavelTest {
         profissionalRepository.deleteAll(profissionais);
     }
 
-    private String criarMunicipal(String nome) throws Exception {
-        String body = """
+    /**
+     * Cria a cadeia completa Federal → Estadual → Municipal exigida por
+     * {@code administracaoSuperior} (@NotBlank em cada nível) e retorna o nome do Municipal criado.
+     */
+    private String criarMunicipal(String sufixo) throws Exception {
+        String nomeFederal = PREFIXO_NOME_TESTE + "Federal " + sufixo;
+        String nomeEstadual = PREFIXO_NOME_TESTE + "Estadual " + sufixo;
+        String nomeMunicipal = PREFIXO_NOME_TESTE + "Municipal " + sufixo;
+
+        String federalBody = """
+                {
+                  "nome": "%s",
+                  "tipo": "FEDERAL",
+                  "endereco": {
+                    "cep": "70058-900",
+                    "logradouro": "Esplanada dos Ministérios",
+                    "numeroLogradouro": "Bloco G",
+                    "bairro": "Zona Cívico-Administrativa",
+                    "cidade": "Brasília",
+                    "estado": "DF"
+                  },
+                  "email": "contato@saude.gov.br"
+                }
+                """.formatted(nomeFederal);
+
+        mockMvc.perform(post(FEDERAL_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(federalBody))
+                .andExpect(status().isCreated());
+
+        String estadualBody = """
+                {
+                  "nome": "%s",
+                  "tipo": "ESTADUAL",
+                  "administracaoSuperior": "%s",
+                  "estado": "SP",
+                  "endereco": {
+                    "cep": "01037-000",
+                    "logradouro": "Rua Conselheiro Crispiniano",
+                    "numeroLogradouro": "20",
+                    "bairro": "Centro",
+                    "cidade": "São Paulo",
+                    "estado": "SP"
+                  },
+                  "email": "contato@saude.sp.gov.br"
+                }
+                """.formatted(nomeEstadual, nomeFederal);
+
+        mockMvc.perform(post(ESTADUAL_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(estadualBody))
+                .andExpect(status().isCreated());
+
+        String municipalBody = """
                 {
                   "nome": "%s",
                   "tipo": "MUNICIPAL",
+                  "administracaoSuperior": "%s",
                   "municipio": "São Paulo",
                   "endereco": {
                     "cep": "02012-040",
@@ -81,13 +136,14 @@ class ReconciliacaoResponsavelTest {
                   },
                   "email": "contato@prefeitura.sp.gov.br"
                 }
-                """.formatted(nome);
+                """.formatted(nomeMunicipal, nomeEstadual);
 
         mockMvc.perform(post(MUNICIPAL_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
+                        .content(municipalBody))
                 .andExpect(status().isCreated());
-        return nome;
+
+        return nomeMunicipal;
     }
 
     private void criarUnidadeSaudeComResponsavelCpf(String nome, String municipal, String cpf) throws Exception {
@@ -132,7 +188,7 @@ class ReconciliacaoResponsavelTest {
 
     @Test
     void deveResolverVinculoQuandoProfissionalECadastradoDepoisDaUnidade() throws Exception {
-        String municipal = criarMunicipal(PREFIXO_NOME_TESTE + "Municipal Reconciliação 1");
+        String municipal = criarMunicipal("Reconciliação 1");
         String nomeUnidade = PREFIXO_NOME_TESTE + "Unidade Pendente";
         String cpf = PREFIXO_CPF_TESTE + "01";
         String nomeProfissional = "Responsável Reconciliado";
@@ -156,7 +212,7 @@ class ReconciliacaoResponsavelTest {
         // Simula uma condição de corrida/dado corrigido manualmente: o Profissional é inserido
         // direto no repositório (sem passar pelo ProfissionalService, que dispararia a
         // reconciliação síncrona), então só o job agendado resolve o vínculo.
-        String municipal = criarMunicipal(PREFIXO_NOME_TESTE + "Municipal Reconciliação 2");
+        String municipal = criarMunicipal("Reconciliação 2");
         String nomeUnidade = PREFIXO_NOME_TESTE + "Unidade Job Agendado";
         String cpf = PREFIXO_CPF_TESTE + "02";
 

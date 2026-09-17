@@ -489,9 +489,12 @@ class UnidadeDeSaudeUnidadeControllerTest {
                         .content(body))
                 .andExpect(status().isCreated());
 
-        UnidadeDeSaude criado = unidadeDeSaudeRepository.findByNome(nome).orElseThrow();
-        assertThat(criado.getSupervisaoRegional()).isNotNull();
-        assertThat(criado.getSupervisaoRegional().getNome()).isEqualTo(NOME_REGIONAL);
+        // Verifica via a resposta da API pública (não pelo repositório): `supervisaoRegional` é
+        // @ManyToOne LAZY, então acessar o proxy fora da transação do service lançaria
+        // LazyInitializationException — o DTO já resolve isso dentro da transação do create().
+        mockMvc.perform(get(BASE_URL + nome))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.supervisaoRegional").value(NOME_REGIONAL));
     }
 
     @Test
@@ -504,9 +507,9 @@ class UnidadeDeSaudeUnidadeControllerTest {
                         .content("{\"supervisaoRegional\": \"" + NOME_REGIONAL + "\"}"))
                 .andExpect(status().isOk());
 
-        UnidadeDeSaude atualizado = unidadeDeSaudeRepository.findByNome(nome).orElseThrow();
-        assertThat(atualizado.getSupervisaoRegional()).isNotNull();
-        assertThat(atualizado.getSupervisaoRegional().getNome()).isEqualTo(NOME_REGIONAL);
+        mockMvc.perform(get(BASE_URL + nome))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.supervisaoRegional").value(NOME_REGIONAL));
     }
 
     @Test
