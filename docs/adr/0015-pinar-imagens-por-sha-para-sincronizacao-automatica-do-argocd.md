@@ -38,10 +38,17 @@ admin nessa Ruleset.
 - O push desse commit usa o `AUTOMERGE_PAT` (mesmo secret já usado por `auto-merge.yml`) em vez do
   `GITHUB_TOKEN` padrão — só um ator com bypass de admin na Ruleset consegue empurrar direto pra
   essas branches sem passar por PR.
-- A mensagem do commit inclui `[skip ci]`: como o push com PAT conta como um push "de verdade" (ao
-  contrário do `GITHUB_TOKEN`, que o GitHub sabe que não deve redisparar workflows), sem essa marca
-  o próprio commit de pin dispararia `publish-image.yml` de novo — um rebuild do mesmo código só
-  pra gerar um SHA novo, que pinaria de novo, disparando de novo, em loop infinito.
+- O job `publish` ganha uma guarda `if: "!startsWith(github.event.head_commit.message, 'chore: pin
+  ')"`: como o push com PAT conta como um push "de verdade" (ao contrário do `GITHUB_TOKEN`, que o
+  GitHub sabe que não deve redisparar workflows), sem essa guarda o próprio commit de pin
+  dispararia `publish-image.yml` de novo — um rebuild do mesmo código só pra gerar um SHA novo, que
+  pinaria de novo, disparando de novo, em loop infinito.
+  - **Tentativa anterior, revertida**: a primeira versão usou `[skip ci]` na mensagem do commit em
+    vez dessa guarda no job. Isso quebrou a própria promoção: `[skip ci]` suprime **qualquer**
+    workflow pra aquele commit, não só `publish-image.yml` — incluindo os checks de `pull_request`
+    do PR de promoção seguinte (`developer→qaa`), que tem esse commit como head. O PR ficou aberto
+    sem nenhum check rodando, sem `auto-merge.yml` disparar. Corrigido trocando por uma condição
+    que olha só a mensagem do commit, sem suprimir workflows de outros eventos/PRs.
 
 ## Trade-offs considerados
 
