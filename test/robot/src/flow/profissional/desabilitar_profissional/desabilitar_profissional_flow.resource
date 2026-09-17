@@ -1,0 +1,60 @@
+*** Settings ***
+Resource    ../../../pom/profissional/desabilitar_profissional/desabilitar_profissional_pom.resource
+Resource    ../../profissional/create_profissional/create_profissional_flow.resource
+Resource    ../../common/schema_validation_flow.resource
+Resource    ../../../resource/config/schema/schema.resource
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Comments ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Keywords ***
+DELETE Desabilitar Profissional - Status Code 200
+    [Documentation]    Seeds a Profissional and disables it (ativo=false), expecting HTTP 200.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${cpf}=    Seed A Profissional Unit
+
+    ${response}=    DELETE Desabilitar Profissional    ${cpf}    ${False}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Validate Object Schema    ${response.json()}    ${SUCCESS_RESPONSE_SCHEMA}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+DELETE Desabilitar Profissional - Status Code 404
+    [Documentation]    Attempts to enable/disable a Profissional that does not exist, expecting HTTP 404.
+    [Arguments]    ${cpf}=${EMPTY}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    IF    '${cpf}' == '${EMPTY}'
+        ${cpf}=    Set Variable    00000000000
+    END
+
+    ${response}=    DELETE Desabilitar Profissional    ${cpf}    ${False}
+    Should Be Equal As Integers    ${response.status_code}    404
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+DELETE Desabilitar Profissional - Status Code 400 - URL Malformada
+    [Documentation]    Sends a cpf containing a raw null byte (%00), expecting the standard error contract
+    ...    instead of a raw HTML error page from Tomcat (AQUAQE-216).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${response}=    DELETE Desabilitar Profissional    teste%00    ${False}
+    Should Be Equal As Integers    ${response.status_code}    400
+    Validate Object Schema    ${response.json()}    ${ERROR_RESPONSE_SCHEMA}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Profissional - Desabilitar - DELETE - By HTTP Status Code
+    [Documentation]    Executes the appropriate Desabilitar Profissional test scenario based on the provided
+    ...    HTTP status code.
+    [Arguments]    ${meuCpf}    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Run Keyword If    '${meuHTTP}' == '200'    DELETE Desabilitar Profissional - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '404'    DELETE Desabilitar Profissional - Status Code 404    ${meuCpf}
+    ...    ELSE IF    '${meuHTTP}' == '400'    DELETE Desabilitar Profissional - Status Code 400 - URL Malformada
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Desabilitar Profissional test scenario.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
