@@ -14,6 +14,14 @@ on:
 
 jobs:
   publish:
+    # Evita loop infinito com pin-manifests (abaixo): o commit "chore: pin ..." dispara este mesmo
+    # workflow de novo (usa um PAT, nao o GITHUB_TOKEN padrao, entao conta como push "de verdade").
+    # Sem esta guarda, rebuildaria o mesmo codigo so pra gerar um SHA novo, pinaria de novo, e
+    # disparia de novo, ad infinitum. Checar a mensagem do commit (nao "[skip ci]") e proposital:
+    # "[skip ci]" suprime QUALQUER workflow para aquele commit, inclusive checks de pull_request de
+    # PRs de promocao que tenham esse commit como head - isso travaria a propria promocao
+    # developer->qaa->homologacao->main sem nenhum check rodando.
+    if: "!startsWith(github.event.head_commit.message, 'chore: pin ')"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -38,6 +46,60 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/dufelizardo/mais_saude_publica:${{ github.ref_name }}
+          tags: |
+            ghcr.io/dufelizardo/mais_saude_publica:${{ github.ref_name }}
+            ghcr.io/dufelizardo/mais_saude_publica:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # :developer/:qaa/:homologacao/:main sao mutaveis - o syncPolicy do ArgoCD so reage ao texto do
+  # manifest mudando de verdade no Git, nao a um digest novo atras de uma tag que nao mudou (ver
+  # ADR-0012, pendencia da "tag movel" - mesma lacuna ja resolvida no projeto irmao LoneWolf,
+  # ADR-0001/0003 de la). Pinar o overlay Kustomize do ambiente correspondente na tag imutavel
+  # :<sha> deste build, e commitar isso de volta na mesma branch, e o que faz o ArgoCD enxergar um
+  # diff real e sincronizar sozinho - sem SSH nem restart manual.
+  pin-manifests:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          # Push direto na branch (nao PR) - developer/qaa/homologacao/main exigem PR por padrao
+          # (Ruleset "Aprovacao obrigatoria para terceiros", ver ADR-0011), entao o commit de pin
+          # so passa com um ator que tenha bypass de admin nessa Ruleset - o mesmo AUTOMERGE_PAT ja
+          # usado pelo auto-merge.yml pra mergear com --admin.
+          token: ${{ secrets.AUTOMERGE_PAT }}
+
+      - name: Determinar overlay do ambiente
+        id: overlay
+        run: |
+          case "${{ github.ref_name }}" in
+            developer) echo "dir=k8s/overlays/dev" >> "$GITHUB_OUTPUT" ;;
+            qaa) echo "dir=k8s/overlays/qaa" >> "$GITHUB_OUTPUT" ;;
+            homologacao) echo "dir=k8s/overlays/homologacao" >> "$GITHUB_OUTPUT" ;;
+            main) echo "dir=k8s/overlays/prod" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Pinar o overlay na tag deste build
+        run: |
+          sed -i "s#newTag: .*#newTag: ${{ github.sha }}#" "${{ steps.overlay.outputs.dir }}/kustomization.yaml"
+
+      - name: Commitar e publicar se a tag pinada mudou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${{ steps.overlay.outputs.dir }}/kustomization.yaml"
+          if git diff --cached --quiet; then
+            echo "Overlay já pinado nesta imagem"
+          else
+            # Sem "[skip ci]" de propósito - ver a guarda "if" do job publish acima. "[skip ci]"
+            # suprimiria checks de PRs de promoção que tiverem este commit como head, não só este
+            # workflow.
+            git commit -m "chore: pin ${{ github.ref_name }} a ${{ github.sha }}"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
