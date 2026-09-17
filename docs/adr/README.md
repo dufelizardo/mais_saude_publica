@@ -30,6 +30,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0012](./0012-infraestrutura-local-k3s-homelab.md) | Infraestrutura local (home-lab K3s + ArgoCD) para os 4 ambientes, resolvendo a pendência de URL persistente em QA/Homologação | Proposta |
 | [0013](./0013-implementar-5-nivel-unidade-de-saude-e-supervisao-regional.md) | Implementar o 5º nível (Unidade de Saúde) e o vínculo de supervisão regional | Aceita |
 | [0014](./0014-modulo-profissional-rh-com-vinculo-fraco-por-reconciliacao.md) | Módulo Profissional/RH com vínculo fraco resolvido por reconciliação | Aceita |
+| [0015](./0015-pinar-imagens-por-sha-para-sincronizacao-automatica-do-argocd.md) | Pinar imagens por SHA para sincronização automática do ArgoCD (sem SSH/restart manual) | Aceita |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. Prioridade de implementação combinada: 0003 (arquitetura), 0006 (segurança) e 0007 (deploy) antes de novos domínios de negócio; 0008 (front-end) é a de menor prioridade.
 
