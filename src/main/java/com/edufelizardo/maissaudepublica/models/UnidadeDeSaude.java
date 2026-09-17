@@ -4,6 +4,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EstadualRe
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.FederalRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MunicipalRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RegionalRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.UnidadeSaudeRequestDto;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -41,6 +42,15 @@ public class UnidadeDeSaude implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unidade_superior_id", referencedColumnName = "uuid", nullable = true)
     private UnidadeDeSaude unidadeSuperior;
+
+    /**
+     * Vínculo lateral, não-hierárquico, de supervisão técnica — só preenchido para Unidade de
+     * Saúde (UBS/HOSPITAL), sempre apontando para uma unidade REGIONAL. Não substitui
+     * {@code unidadeSuperior} (que continua sendo Municipal, ver ADR-0009/ADR-0013).
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supervisao_regional_id", referencedColumnName = "uuid", nullable = true)
+    private UnidadeDeSaude supervisaoRegional;
     private String regiao;
     private String municipio;
     @Column(name = "estado_administracao")
@@ -66,6 +76,16 @@ public class UnidadeDeSaude implements Serializable {
     @Column(name = "HORARIO_ATENDIMENTO")
     private Map<DayOfWeek, String> horarioAtendimento;
     private boolean ativo;
+
+    /**
+     * CPF do responsável, informado no cadastro da unidade mesmo quando o {@link Profissional}
+     * correspondente ainda não existe (vínculo fraco resolvido por reconciliação, ver ADR-0014).
+     */
+    private String responsavelCpf;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsavel_id", referencedColumnName = "uuid", nullable = true)
+    private Profissional responsavel;
 
     public UnidadeDeSaude(FederalRequestDto dto) {
         this.ativo = true;
@@ -107,6 +127,18 @@ public class UnidadeDeSaude implements Serializable {
         this.nome = dto.getNome();
         this.tipo = dto.getTipo();
         this.regiao = dto.getRegiao();
+        this.endereco = new Endereco(dto.getEndereco());
+        this.saudeTelefones = dto.getTelefones();
+        this.email = dto.getEmail();
+        this.horarioFuncionamento = dto.getHorarioFuncionamento();
+        this.horarioAtendimento = dto.getHorarioAtendimento();
+    }
+
+    public UnidadeDeSaude(UnidadeSaudeRequestDto dto) {
+        this.ativo = true;
+        this.nome = dto.getNome();
+        this.tipo = dto.getTipo();
+        this.responsavelCpf = dto.getResponsavelCpf();
         this.endereco = new Endereco(dto.getEndereco());
         this.saudeTelefones = dto.getTelefones();
         this.email = dto.getEmail();
