@@ -114,3 +114,17 @@ admin nessa Ruleset.
   obrigatórios — risco aceito porque o próprio dono já tinha esse poder via `gh pr merge --admin`
   bypassando a Ruleset de aprovação; `enforce_admins` só adicionava uma segunda barreira redundante
   contra a mesma pessoa, sem proteger contra terceiros (que continuam sem bypass nenhum).
+- **Descoberta em produção, corrigida**: o commit de pin-manifests pode chegar via `push` bem no
+  meio de uma PR de promoção recém-aberta (ex.: `developer→qaa` aberta, e segundos depois o
+  `pin-manifests` do merge anterior em `developer` empurra outro commit) — isso dispara um
+  `synchronize` na PR. Nessa janela, `auto-merge.yml` (`admin-merge`) podia consultar
+  `gh pr view --json statusCheckRollup` e ver "0 checks pendentes" **antes** dos checks do commit
+  novo (pós-synchronize) sequer existirem no rollup — não porque tinham passado, mas porque ainda
+  não tinham sido criados. Isso já mergeou uma PR (`developer→qaa`, 2026-09-18) antes do pipeline
+  do commit final terminar de rodar; inofensivo nesse caso específico (o commit de pin só muda
+  `kustomization.yaml`, nunca código/teste, então o resultado seria idêntico ao já validado no
+  commit anterior), mas a falha de corrida em si era real. Corrigido em `auto-merge.yml`: em vez do
+  rollup da PR, consulta `GET /commits/{sha}/check-runs` pro SHA atual (`headRefOid`, resolvido de
+  novo a cada iteração do loop) e só considera "pronto" quando os 3 checks exigidos (`test`,
+  `analyze`, `robot-acceptance`) existem nominalmente **e** nenhum está pendente — elimina a
+  ambiguidade entre "ainda não existe" e "já terminou".
