@@ -63,7 +63,7 @@ public class UnidadeSaudeService extends AbstractHierarquicoService<UnidadeSaude
      */
     private void vincularResponsavelSeJaExistir(UnidadeDeSaude unidadeDeSaude) {
         if (unidadeDeSaude.getResponsavelCpf() != null && !unidadeDeSaude.getResponsavelCpf().isEmpty()) {
-            profissionalRepository.findByCpf(unidadeDeSaude.getResponsavelCpf())
+            profissionalRepository.findByCpfAndAtivoTrue(unidadeDeSaude.getResponsavelCpf())
                     .ifPresent(unidadeDeSaude::setResponsavel);
         }
     }

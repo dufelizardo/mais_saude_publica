@@ -29,7 +29,7 @@ public class ReconciliacaoResponsavelScheduler {
     public void reconciliar() {
         for (UnidadeDeSaude unidade : unidadeDeSaudeRepository.findAll()) {
             if (unidade.getResponsavel() == null && unidade.getResponsavelCpf() != null) {
-                profissionalRepository.findByCpf(unidade.getResponsavelCpf())
+                profissionalRepository.findByCpfAndAtivoTrue(unidade.getResponsavelCpf())
                         .ifPresent(unidade::setResponsavel);
             }
         }

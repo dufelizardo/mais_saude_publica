@@ -24,12 +24,13 @@ CT-001 - Validate POST Create Profissional - HTTP 201 CREATED
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-CT-002 - Validate POST Create Profissional - HTTP 409 CONFLICT
-    [Documentation]    Test case to validate the POST create Profissional endpoint with HTTP 409 CONFLICT
-    ...    response, when the cpf is already registered.
-    [Tags]    POST    CreateProfissional    HTTP409
+CT-002 - Validate POST Create Profissional - HTTP 201 CREATED (Cpf Repetido)
+    [Documentation]    Test case to validate the POST create Profissional endpoint with HTTP 201 CREATED
+    ...    response even when the cpf is already registered in another ficha — cpf não é mais único, a
+    ...    matrícula gerada automaticamente é a chave única de verdade (ver ADR-0017).
+    [Tags]    POST    CreateProfissional    HTTP201
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    PROFISSIONAL - CREATE - POST    409
+    PROFISSIONAL - CREATE - POST - Cpf Repetido
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

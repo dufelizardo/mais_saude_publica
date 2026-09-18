@@ -13,6 +13,14 @@ PROFISSIONAL - CREATE - POST
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+PROFISSIONAL - CREATE - POST - Cpf Repetido
+    [Documentation]    Test scenario for creating two Profissional fichas with the same cpf (different
+    ...    matrícula each time), expecting HTTP 201 both times — cpf não é mais único (ver ADR-0017).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    POST Create Profissional - Status Code 201 - Cpf Repetido
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 PROFISSIONAL - CREATE - POST - Campos Obrigatorios Em Branco
     [Documentation]    Test scenario for creating a Profissional with blank required fields (cpf, nome, email),
     ...    expecting the field-validation HTTP 400 (as opposed to the duplicate-cpf HTTP 400).

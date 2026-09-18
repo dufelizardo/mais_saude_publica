@@ -409,11 +409,24 @@ public class ExampleConstants {
     public static final String PROFISSIONAL_RESPONSE_EXAMPLE = """
                 [
                   {
+                    "matricula": "11111111111111-11",
                     "cpf": "string",
                     "nome": "string",
                     "conselhoClasse": "string",
                     "numeroConselho": "string",
-                    "telefone": "string",
+                    "endereco": {
+                      "cep": "string",
+                      "logradouro": "string",
+                      "numeroLogradouro": "string",
+                      "complemento": "string",
+                      "bairro": "string",
+                      "cidade": "string",
+                      "estado": "string",
+                      "ddd": "string"
+                    },
+                    "telefones": [
+                      "string"
+                    ],
                     "email": "string",
                     "dataAdmissao": "2024-01-01",
                     "dataDesligamento": null,
@@ -423,11 +436,24 @@ public class ExampleConstants {
             """;
     public static final String PROFISSIONAL_RESPONSE_FIND_EXAMPLE = """
                 {
+                  "matricula": "11111111111111-11",
                   "cpf": "string",
                   "nome": "string",
                   "conselhoClasse": "string",
                   "numeroConselho": "string",
-                  "telefone": "string",
+                  "endereco": {
+                    "cep": "string",
+                    "logradouro": "string",
+                    "numeroLogradouro": "string",
+                    "complemento": "string",
+                    "bairro": "string",
+                    "cidade": "string",
+                    "estado": "string",
+                    "ddd": "string"
+                  },
+                  "telefones": [
+                    "string"
+                  ],
                   "email": "string",
                   "dataAdmissao": "2024-01-01",
                   "dataDesligamento": null,
