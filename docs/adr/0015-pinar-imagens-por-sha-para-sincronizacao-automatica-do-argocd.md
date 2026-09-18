@@ -49,6 +49,16 @@ admin nessa Ruleset.
     do PR de promoção seguinte (`developer→qaa`), que tem esse commit como head. O PR ficou aberto
     sem nenhum check rodando, sem `auto-merge.yml` disparar. Corrigido trocando por uma condição
     que olha só a mensagem do commit, sem suprimir workflows de outros eventos/PRs.
+- `qaa`/`homologacao`/`main` (não `developer`) têm, além da Ruleset, uma **proteção de branch
+  clássica separada** exigindo os checks `test`/`robot-acceptance`/`analyze` com `enforce_admins:
+  true`. Diferente do bypass de aprovação da Ruleset, `enforce_admins: true` bloqueia **qualquer**
+  push direto — inclusive o do `AUTOMERGE_PAT` — sem exceção nenhuma para admins. Descoberto na
+  prática: `pin-manifests` funcionou de primeira em `developer`, mas falhou com "3 of 3 required
+  status checks are expected" em `qaa`/`homologacao`/`main`. Resolvido desligando
+  `enforce_admins` nos 3 (`DELETE
+  /repos/{owner}/{repo}/branches/{branch}/protection/enforce_admins`) — os checks em si continuam
+  obrigatórios pra qualquer PR normal (só passaram a não travar mais um push administrativo já
+  autorizado por outro mecanismo).
 
 ## Trade-offs considerados
 
@@ -99,3 +109,8 @@ admin nessa Ruleset.
   pela prática, não documentado explicitamente na API/UI do GitHub para Rulesets — se o GitHub
   mudar essa semântica no futuro, o job `pin-manifests` passaria a falhar visivelmente (push
   rejeitado), não silenciosamente.
+- `enforce_admins` desligado em `qaa`/`homologacao`/`main` significa que um admin (só o dono do
+  repositório, projeto solo) também poderia, em tese, mergear/pushar manualmente pulando os checks
+  obrigatórios — risco aceito porque o próprio dono já tinha esse poder via `gh pr merge --admin`
+  bypassando a Ruleset de aprovação; `enforce_admins` só adicionava uma segunda barreira redundante
+  contra a mesma pessoa, sem proteger contra terceiros (que continuam sem bypass nenhum).
