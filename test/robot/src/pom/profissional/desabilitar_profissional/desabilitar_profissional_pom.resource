@@ -4,8 +4,8 @@ Resource    ../../common/mais_saude_publica_common.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Same quirk as the des-habilitar endpoints on every hierarchy level: consumes=application/json but no
-    @RequestBody — Spring binds "ativo" as a query param, and still 415s without a Content-Type header if
-    none is sent.
+    @RequestBody — Spring binds "dataDesligamento" as a query param, and still 415s without a Content-Type
+    header if none is sent.
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Variables ***
 ${PROFISSIONAL_ENDPOINT}        /profissional
@@ -13,9 +13,10 @@ ${CONTENT_TYPE}    application/json
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 DELETE Desabilitar Profissional
-    [Documentation]    Sends a DELETE request to enable/disable a Profissional (ativo and dataDesligamento as
-    ...    query params, see ADR-0017) and returns the response.
-    [Arguments]    ${cpf}    ${ativo}    ${dataDesligamento}=${EMPTY}
+    [Documentation]    Sends a DELETE request to enable/disable a Profissional. dataDesligamento (query param,
+    ...    see ADR-0017) alone decides the status: informed → disables and records the date; absent → re-enables
+    ...    and clears the date.
+    [Arguments]    ${cpf}    ${dataDesligamento}=${EMPTY}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Get Mais Saude Publica Session
 
@@ -23,7 +24,6 @@ DELETE Desabilitar Profissional
     ...    Content-Type=${CONTENT_TYPE}
 
     ${params}=    Create Dictionary
-    ...    ativo=${ativo}
     IF    '${dataDesligamento}' != '${EMPTY}'
         Set To Dictionary    ${params}    dataDesligamento=${dataDesligamento}
     END
