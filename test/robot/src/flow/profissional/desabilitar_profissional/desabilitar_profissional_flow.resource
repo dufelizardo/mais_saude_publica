@@ -9,11 +9,11 @@ Resource    ../../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 DELETE Desabilitar Profissional - Status Code 200
-    [Documentation]    Seeds a Profissional and disables it (ativo=false), expecting HTTP 200.
+    [Documentation]    Seeds a Profissional and disables it (informs dataDesligamento), expecting HTTP 200.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${cpf}=    Seed A Profissional Unit
 
-    ${response}=    DELETE Desabilitar Profissional    ${cpf}    ${False}
+    ${response}=    DELETE Desabilitar Profissional    ${cpf}    2026-09-18
     Should Be Equal As Integers    ${response.status_code}    200
     Validate Object Schema    ${response.json()}    ${SUCCESS_RESPONSE_SCHEMA}
 
@@ -27,7 +27,7 @@ DELETE Desabilitar Profissional - Grava E Limpa Data De Desligamento
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${cpf}=    Seed A Profissional Unit
 
-    ${response}=    DELETE Desabilitar Profissional    ${cpf}    ${False}    2026-09-18
+    ${response}=    DELETE Desabilitar Profissional    ${cpf}    2026-09-18
     Should Be Equal As Integers    ${response.status_code}    200
 
     ${buscaDesligado}=    Call GET Get Profissional By Cpf    ${cpf}
@@ -36,7 +36,7 @@ DELETE Desabilitar Profissional - Grava E Limpa Data De Desligamento
     # GET por esse cpf não acha mais nada, então a confirmação da data fica só pelo lado do
     # repositório (fora do alcance do Robot); aqui validamos que reabilitar funciona por cima.
 
-    ${response}=    DELETE Desabilitar Profissional    ${cpf}    ${True}
+    ${response}=    DELETE Desabilitar Profissional    ${cpf}
     Should Be Equal As Integers    ${response.status_code}    200
 
     ${buscaReabilitado}=    Call GET Get Profissional By Cpf    ${cpf}
@@ -53,7 +53,7 @@ DELETE Desabilitar Profissional - Status Code 404
         ${cpf}=    Set Variable    00000000000
     END
 
-    ${response}=    DELETE Desabilitar Profissional    ${cpf}    ${False}
+    ${response}=    DELETE Desabilitar Profissional    ${cpf}
     Should Be Equal As Integers    ${response.status_code}    404
 
     RETURN    ${response}
@@ -64,7 +64,7 @@ DELETE Desabilitar Profissional - Status Code 400 - URL Malformada
     [Documentation]    Sends a cpf containing a raw null byte (%00), expecting the standard error contract
     ...    instead of a raw HTML error page from Tomcat (AQUAQE-216).
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${response}=    DELETE Desabilitar Profissional    teste%00    ${False}
+    ${response}=    DELETE Desabilitar Profissional    teste%00
     Should Be Equal As Integers    ${response.status_code}    400
     Validate Object Schema    ${response.json()}    ${ERROR_RESPONSE_SCHEMA}
 

@@ -4,7 +4,7 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.Endereco;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalAtivoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalDesligamentoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalContatoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProfissionalResponseDto;
@@ -66,17 +66,20 @@ public class ProfissionalService {
     }
 
     /**
-     * Desliga (ativo=false, grava dataDesligamento se informada) ou reabilita (ativo=true) uma
-     * ficha com este CPF. Reabilitar limpa dataDesligamento — decisão do usuário: uma
+     * Desliga ou reabilita uma ficha com este CPF, derivando o status da presença de
+     * dataDesligamento (ver ADR-0017): informada → ativo=false, grava a data; ausente →
+     * ativo=true, limpa a data. Não existe mais um parâmetro "ativo" separado — a data sozinha
+     * já expressa a intenção. Reabilitar limpa dataDesligamento — decisão do usuário: uma
      * recontratação cria uma ficha nova (com matrícula nova), então "reabilitar" aqui é só o
      * caso raro de desligamento revertido na mesma ficha, sem sentido carregar uma data de saída
-     * antiga (ver ADR-0017).
+     * antiga.
      */
     @Transactional
-    public ProfissionalResponseDto desabilitar(String cpf, ProfissionalAtivoRequestDto dto) {
+    public ProfissionalResponseDto desabilitar(String cpf, ProfissionalDesligamentoRequestDto dto) {
         Profissional profissional = buscarProfissionalParaAlterarStatus(cpf);
-        profissional.setAtivo(dto.isAtivo());
-        profissional.setDataDesligamento(dto.isAtivo() ? null : dto.getDataDesligamento());
+        boolean ativo = dto.getDataDesligamento() == null;
+        profissional.setAtivo(ativo);
+        profissional.setDataDesligamento(dto.getDataDesligamento());
         profissional = profissionalRepository.save(profissional);
         return ProfissionalResponseDto.fromProfissional(profissional);
     }
