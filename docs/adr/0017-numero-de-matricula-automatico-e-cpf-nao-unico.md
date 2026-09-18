@@ -34,9 +34,12 @@ ficha antiga. Isso implica que a mesma pessoa (mesmo CPF) pode ter mais de um re
 - **`dataDesligamento` agora é escrito de verdade**: `DELETE des-habilitar/{cpf}` ganha um novo
   parâmetro opcional `dataDesligamento` (mesma técnica de binding via query param que o resto do
   des-habilitar já usa, sem `@RequestBody` — ver comentário histórico no `pom` do Robot). Ao
-  desabilitar (`ativo=false`), grava a data informada. Ao reabilitar (`ativo=true`), **limpa**
-  `dataDesligamento` — decisão explícita do usuário: reabilitar não devia carregar uma data de
-  saída antiga junto.
+  desabilitar, grava a data informada. Ao reabilitar, **limpa** `dataDesligamento` — decisão
+  explícita do usuário: reabilitar não devia carregar uma data de saída antiga junto.
+  **Refinamento**: o parâmetro `ativo` foi removido do contrato — `dataDesligamento` sozinha decide
+  o status (informada → desabilita e grava a data; ausente → reabilita e limpa a data), já que o
+  par `ativo`+`dataDesligamento` era redundante (a intenção já está implícita em ter ou não uma
+  data).
 - **Colisão de matrícula**: com 14 dígitos aleatórios (10¹⁴ combinações), a chance de colisão é
   desprezível mesmo em milhões de registros, mas `create()` ainda tem um retry limitado (até 5
   tentativas) gerando uma matrícula nova se o `save()` falhar por violação de unicidade — defesa

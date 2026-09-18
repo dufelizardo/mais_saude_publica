@@ -8,7 +8,7 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceConflictException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalAtivoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalDesligamentoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalContatoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProfissionalResponseDto;
@@ -140,7 +140,8 @@ public class ProfissionalController {
 
     @DeleteMapping(value = "des-habilitar/{cpf}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Desabilita ou Habilita um Profissional.",
-            description = "Desabilita ou Habilita um Profissional.",
+            description = "Informar dataDesligamento desliga o profissional (ativo=false) e grava a data; "
+                    + "não informar nada reabilita (ativo=true) e limpa a data.",
             tags = "Profissional")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
@@ -151,7 +152,7 @@ public class ProfissionalController {
                     description = "Atualiza um Profissional."))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> deleteProfissional(@PathVariable String cpf, ProfissionalAtivoRequestDto dto) {
+    public ResponseEntity<SuccessResponseDto> deleteProfissional(@PathVariable String cpf, ProfissionalDesligamentoRequestDto dto) {
         ProfissionalResponseDto responseDto = service.desabilitar(cpf, dto);
 
         String successMessage = "Profissional atualizado com sucesso!";
