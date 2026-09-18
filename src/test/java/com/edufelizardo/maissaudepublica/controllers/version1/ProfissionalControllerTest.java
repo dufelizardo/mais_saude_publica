@@ -210,7 +210,6 @@ class ProfissionalControllerTest {
         String matricula = profissionalRepository.findByCpfAndAtivoTrue(cpf).orElseThrow().getMatricula();
 
         mockMvc.perform(delete(BASE_URL + "des-habilitar/" + cpf)
-                        .param("ativo", "false")
                         .param("dataDesligamento", "2026-09-18")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -227,13 +226,12 @@ class ProfissionalControllerTest {
         String matricula = profissionalRepository.findByCpfAndAtivoTrue(cpf).orElseThrow().getMatricula();
 
         mockMvc.perform(delete(BASE_URL + "des-habilitar/" + cpf)
-                        .param("ativo", "false")
                         .param("dataDesligamento", "2026-09-18")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
+        // Sem dataDesligamento nenhuma = reabilita (ver ADR-0017)
         mockMvc.perform(delete(BASE_URL + "des-habilitar/" + cpf)
-                        .param("ativo", "true")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
