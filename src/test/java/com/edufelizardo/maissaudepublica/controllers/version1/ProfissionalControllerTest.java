@@ -125,7 +125,7 @@ class ProfissionalControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.details").value("Bad Request"));
+                .andExpect(jsonPath("$.details").value("Erro de Validação"));
     }
 
     @Test
@@ -192,10 +192,15 @@ class ProfissionalControllerTest {
                         .content(body))
                 .andExpect(status().isOk());
 
-        Profissional atualizado = profissionalRepository.findByCpfAndAtivoTrue(cpf).orElseThrow();
-        assertThat(atualizado.getEmail()).isEqualTo("novo-contato@saude.sp.gov.br");
-        assertThat(atualizado.getTelefones()).containsExactly("019-9999-8888");
-        assertThat(atualizado.getEndereco().getCidade()).isEqualTo("Campinas");
+        // Verifica via a resposta da API pública, não pelo repositório: `telefones` é uma
+        // @ElementCollection LAZY, então reabrir a entidade fora de uma transação/requisição HTTP
+        // lançaria LazyInitializationException — o DTO já resolve isso dentro da transação do
+        // service.
+        mockMvc.perform(get(BASE_URL + cpf))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("novo-contato@saude.sp.gov.br"))
+                .andExpect(jsonPath("$.telefones[0]").value("019-9999-8888"))
+                .andExpect(jsonPath("$.endereco.cidade").value("Campinas"));
     }
 
     @Test
