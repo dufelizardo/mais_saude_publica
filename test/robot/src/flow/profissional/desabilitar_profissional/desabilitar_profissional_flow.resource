@@ -1,6 +1,7 @@
 *** Settings ***
 Resource    ../../../pom/profissional/desabilitar_profissional/desabilitar_profissional_pom.resource
 Resource    ../../profissional/create_profissional/create_profissional_flow.resource
+Resource    ../../profissional/get_profissional_by_cpf/get_profissional_by_cpf_flow.resource
 Resource    ../../common/schema_validation_flow.resource
 Resource    ../../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -17,6 +18,30 @@ DELETE Desabilitar Profissional - Status Code 200
     Validate Object Schema    ${response.json()}    ${SUCCESS_RESPONSE_SCHEMA}
 
     RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+DELETE Desabilitar Profissional - Grava E Limpa Data De Desligamento
+    [Documentation]    Seeds a Profissional, disables it with a dataDesligamento (expects it persisted, see
+    ...    ADR-0017), then re-enables it and expects dataDesligamento cleared.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${cpf}=    Seed A Profissional Unit
+
+    ${response}=    DELETE Desabilitar Profissional    ${cpf}    ${False}    2026-09-18
+    Should Be Equal As Integers    ${response.status_code}    200
+
+    ${buscaDesligado}=    Call GET Get Profissional By Cpf    ${cpf}
+    Should Be Equal As Integers    ${buscaDesligado.status_code}    404
+    # buscarProfissionalPorCpf só enxerga fichas ATIVAS (ver ADR-0017) — depois de desligado, o
+    # GET por esse cpf não acha mais nada, então a confirmação da data fica só pelo lado do
+    # repositório (fora do alcance do Robot); aqui validamos que reabilitar funciona por cima.
+
+    ${response}=    DELETE Desabilitar Profissional    ${cpf}    ${True}
+    Should Be Equal As Integers    ${response.status_code}    200
+
+    ${buscaReabilitado}=    Call GET Get Profissional By Cpf    ${cpf}
+    Should Be Equal As Integers    ${buscaReabilitado.status_code}    200
+    Should Be Equal    ${buscaReabilitado.json()['dataDesligamento']}    ${None}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

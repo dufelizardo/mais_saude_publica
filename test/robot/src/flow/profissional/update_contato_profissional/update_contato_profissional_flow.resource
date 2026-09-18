@@ -10,8 +10,19 @@ Resource    ../../../resource/config/schema/schema.resource
 Build Update Contato Profissional Payload
     [Documentation]    Builds a valid ProfissionalContatoRequestDto payload.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${endereco}=    Create Dictionary
+    ...    cep=01310-100
+    ...    logradouro=Avenida Paulista
+    ...    numeroLogradouro=1000
+    ...    bairro=Bela Vista
+    ...    cidade=São Paulo
+    ...    estado=SP
+
+    ${telefones}=    Create List    1140028922
+
     ${payload}=    Create Dictionary
-    ...    telefone=1140028922
+    ...    endereco=${endereco}
+    ...    telefones=${telefones}
     ...    email=novo-contato@profissional.saude.sp.gov.br
 
     RETURN    ${payload}

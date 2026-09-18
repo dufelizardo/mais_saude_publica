@@ -1,0 +1,627 @@
+<!-- Skip link -->
+<a href="#main" class="skip-link">Pular para o conteúdo principal</a>
+
+<!-- ========= Accessibility bar ========= -->
+<div class="a11y-bar" role="region" aria-label="Barra de acessibilidade e governo">
+  <div class="container a11y-bar__row">
+    <div class="a11y-left">
+      <span class="gov-strip"><span class="gov-dot" aria-hidden="true"></span> Governo Municipal · Secretaria de Saúde</span>
+      <span aria-hidden="true">·</span>
+      <a href="#transparencia" style="color: var(--ink-500); text-decoration: none;">Transparência</a>
+      <a href="#ouvidoria" style="color: var(--ink-500); text-decoration: none;">Ouvidoria</a>
+    </div>
+    <div class="a11y-tools" role="toolbar" aria-label="Ferramentas de acessibilidade">
+      <button type="button" class="a11y-btn" [attr.aria-pressed]="fontSize() === 'default'" aria-label="Tamanho padrão de fonte" (click)="setFontSize('default')">A</button>
+      <button type="button" class="a11y-btn" [attr.aria-pressed]="fontSize() === 'lg'" aria-label="Aumentar fonte" (click)="setFontSize('lg')">A+</button>
+      <button type="button" class="a11y-btn" [attr.aria-pressed]="fontSize() === 'xl'" aria-label="Aumentar mais a fonte" (click)="setFontSize('xl')">A++</button>
+      <span class="a11y-sep" aria-hidden="true"></span>
+      <button type="button" class="a11y-btn" [attr.aria-pressed]="highContrast()" aria-label="Alto contraste" (click)="toggleHighContrast()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2v20"></path><path d="M12 2a10 10 0 0 0 0 20"></path></svg>
+        Alto contraste
+      </button>
+      <span class="a11y-sep" aria-hidden="true"></span>
+      <a href="#mapa-site" class="a11y-btn">Mapa do site</a>
+      <a href="#libras" class="a11y-btn">VLibras</a>
+    </div>
+  </div>
+</div>
+
+<!-- ========= Header ========= -->
+<header class="site-header" role="banner">
+  <div class="container header-row">
+    <a href="#" class="brand" aria-label="Mais Saúde Pública — página inicial">
+      <span class="brand__mark" aria-hidden="true">
+        <!-- Heart + pulse icon -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path><path d="M3.5 12h4l2-4 3 8 2-4h6" stroke="#fff" stroke-width="1.3" fill="none" opacity=".7"></path></svg>
+      </span>
+      <span>
+        <span class="brand__name">Mais Saúde Pública</span><br/>
+        <span class="brand__sub">Portal Integrado</span>
+      </span>
+    </a>
+
+    <nav class="nav" aria-label="Navegação principal">
+      <ul class="nav__list">
+        <li><a href="#servicos" class="nav__link" aria-current="page">Início</a></li>
+        <li><a href="#servicos" class="nav__link">Serviços</a></li>
+        <li><a href="#campanhas" class="nav__link">Campanhas</a></li>
+        <li><a href="#transparencia" class="nav__link">Transparência</a></li>
+        <li><a href="#institucional" class="nav__link">Institucional</a></li>
+        <li><a href="#contato" class="nav__link">Contato</a></li>
+      </ul>
+
+      <div class="header-actions">
+        <a href="#" class="btn btn--ghost btn--ghost-desktop">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          Buscar
+        </a>
+        <a href="#" class="btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+          Entrar
+        </a>
+        <button type="button" class="menu-toggle" aria-label="Abrir menu" [attr.aria-expanded]="mobileMenuOpen()" aria-controls="mobile-menu" (click)="toggleMobileMenu()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobile-menu" role="navigation" aria-label="Menu mobile" [attr.open]="mobileMenuOpen() ? '' : null">
+    <div class="container" style="display:grid; gap:4px;">
+      <a href="#servicos" class="nav__link" (click)="closeMobileMenu()">Início</a>
+      <a href="#servicos" class="nav__link" (click)="closeMobileMenu()">Serviços</a>
+      <a href="#campanhas" class="nav__link" (click)="closeMobileMenu()">Campanhas</a>
+      <a href="#transparencia" class="nav__link" (click)="closeMobileMenu()">Transparência</a>
+      <a href="#institucional" class="nav__link" (click)="closeMobileMenu()">Institucional</a>
+      <a href="#contato" class="nav__link" (click)="closeMobileMenu()">Contato</a>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <a href="#" class="btn btn--ghost btn--block" (click)="closeMobileMenu()">Buscar</a>
+        <a href="#" class="btn btn--block" (click)="closeMobileMenu()">Entrar</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ========= Hero ========= -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="container hero__grid">
+      <div>
+        <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Plataforma oficial · Versão 2026.1</span>
+        <h1 id="hero-title">Conectando gestão, profissionais e população para uma <em>saúde pública mais eficiente.</em></h1>
+        <p class="hero__lead">Acesse serviços, acompanhe indicadores em tempo real e participe das campanhas de saúde do município. Um sistema único, integrado e transparente.</p>
+
+        <div class="hero__cta">
+          <a href="#" class="btn btn--lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            Entrar no sistema
+          </a>
+          <a href="#servicos" class="btn btn--ghost btn--lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            Consultar serviços públicos
+          </a>
+        </div>
+
+        <div class="hero__trust" aria-label="Cobertura do sistema">
+          <span><strong>128</strong> unidades ativas</span>
+          <span aria-hidden="true" style="color:var(--ink-300)">|</span>
+          <span><strong>3.420</strong> profissionais</span>
+          <span aria-hidden="true" style="color:var(--ink-300)">|</span>
+          <span><strong>+1,2M</strong> atendimentos/ano</span>
+        </div>
+      </div>
+
+      <div class="hero-visual" role="img" aria-label="Pré-visualização ilustrativa do painel: cards com cobertura vacinal, atendimentos do dia e tendência mensal">
+        <div class="hv-card hv-card--1">
+          <div class="hv-card__row" style="justify-content:space-between;">
+            <span class="hv-card__label">Cobertura vacinal</span>
+            <span class="hv-card__pill">+4,2%</span>
+          </div>
+          <div class="hv-card__big">87,4%</div>
+          <div class="hv-bar"><div class="hv-bar__fill" style="width:87%"></div></div>
+        </div>
+        <div class="hv-card hv-card--2">
+          <span class="hv-card__label">Atendimentos hoje</span>
+          <div class="hv-card__big">2.184</div>
+          <div class="hv-spark" aria-hidden="true">
+            <span style="height:30%"></span><span style="height:55%"></span><span style="height:42%"></span>
+            <span style="height:70%"></span><span style="height:62%"></span><span style="height:85%"></span>
+            <span style="height:60%"></span><span style="height:78%"></span><span style="height:92%"></span>
+            <span style="height:68%"></span>
+          </div>
+        </div>
+        <div class="hv-card hv-card--3">
+          <div class="hv-card__row" style="gap:10px;">
+            <span style="width:32px; height:32px; border-radius:8px; background:var(--blue-50); color:var(--blue-700); display:grid; place-items:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </span>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">Agenda do dia</div>
+              <div style="color:var(--ink-500); font-size:0.8rem;">Dr. Carla M. · UBS Central</div>
+            </div>
+          </div>
+          <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="hv-card__pill" style="background:#e7f6ee; color:var(--ok);">09:00 ✓</span>
+            <span class="hv-card__pill" style="background:#e7f6ee; color:var(--ok);">09:30 ✓</span>
+            <span class="hv-card__pill">10:00</span>
+            <span class="hv-card__pill">10:30</span>
+            <span class="hv-card__pill" style="background:#fdecea; color:var(--alert);">11:00 falta</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========= Quick services ========= -->
+  <section id="servicos" class="block" aria-labelledby="srv-title">
+    <div class="container">
+      <header class="block-head">
+        <span class="eyebrow">Serviços públicos</span>
+        <h2 id="srv-title">Acesso rápido para o cidadão</h2>
+        <p>Consulte unidades, campanhas e programas de saúde sem precisar entrar no sistema.</p>
+      </header>
+
+      <div class="services">
+        <a href="#campanhas" class="svc-card">
+          <span class="svc-card__icon" aria-hidden="true">
+            <!-- syringe -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path><path d="m9 11 4 4"></path><path d="m5 19-3 3"></path><path d="m14 4 6 6"></path></svg>
+          </span>
+          <div class="svc-card__title">Campanhas de vacinação</div>
+          <div class="svc-card__desc">Calendário, faixas etárias e locais de imunização.</div>
+          <span class="svc-card__more">Consultar
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </span>
+        </a>
+        <a href="#unidades" class="svc-card">
+          <span class="svc-card__icon" aria-hidden="true">
+            <!-- hospital -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path><path d="M9 22v-4h6v4"></path></svg>
+          </span>
+          <div class="svc-card__title">Unidades de saúde</div>
+          <div class="svc-card__desc">Endereços, horários e especialidades disponíveis.</div>
+          <span class="svc-card__more">Localizar
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </span>
+        </a>
+        <a href="#programas" class="svc-card">
+          <span class="svc-card__icon" aria-hidden="true">
+            <!-- heart-pulse -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"></path></svg>
+          </span>
+          <div class="svc-card__title">Programas de saúde</div>
+          <div class="svc-card__desc">Saúde da família, hiperdia, saúde mental e mais.</div>
+          <span class="svc-card__more">Saber mais
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </span>
+        </a>
+        <a href="#agendamentos" class="svc-card">
+          <span class="svc-card__icon" aria-hidden="true">
+            <!-- calendar-check -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line><path d="m9 16 2 2 4-4"></path></svg>
+          </span>
+          <div class="svc-card__title">Agendamentos
+            <span style="display:inline-block; margin-left:6px; background:var(--ink-100); color:var(--ink-500); font-size:0.65rem; font-weight:600; padding:2px 6px; border-radius:4px; letter-spacing:0.04em; text-transform:uppercase; vertical-align:middle;">Em breve</span>
+          </div>
+          <div class="svc-card__desc">Marcação on-line de consultas e exames.</div>
+          <span class="svc-card__more">Saber mais
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========= Institutional ========= -->
+  <section id="institucional" class="block" style="background: var(--ink-50); padding-top: var(--s-16); padding-bottom: var(--s-16);" aria-labelledby="ins-title">
+    <div class="container">
+      <header class="block-head">
+        <span class="eyebrow">Institucional</span>
+        <h2 id="ins-title">Uma plataforma pública construída para servir.</h2>
+        <p>O Mais Saúde Pública unifica processos da rede municipal de saúde — da recepção à diretoria — em um único ambiente.</p>
+      </header>
+
+      <div class="institutional">
+        <div class="mvo" role="list">
+          <div class="mvo-item" role="listitem">
+            <div class="mvo-item__label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+              Missão
+            </div>
+            <p class="mvo-item__body">Integrar gestão, profissionais e cidadãos em torno de uma saúde pública resolutiva, transparente e baseada em evidências.</p>
+          </div>
+          <div class="mvo-item" role="listitem">
+            <div class="mvo-item__label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              Visão
+            </div>
+            <p class="mvo-item__body">Ser referência nacional em sistemas municipais de saúde, com decisões orientadas por dados em tempo real.</p>
+          </div>
+          <div class="mvo-item" role="listitem">
+            <div class="mvo-item__label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Objetivos
+            </div>
+            <p class="mvo-item__body">Reduzir filas, ampliar cobertura vacinal, qualificar a atenção primária e disponibilizar indicadores públicos auditáveis.</p>
+          </div>
+        </div>
+
+        <div class="benefits" role="list">
+          <div class="benefit" role="listitem">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <div>
+              <div class="benefit__title">Sala de situação integrada</div>
+              <div class="benefit__desc">Indicadores assistenciais, operacionais e estratégicos em um só lugar.</div>
+            </div>
+          </div>
+          <div class="benefit" role="listitem">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <div>
+              <div class="benefit__title">Segurança e LGPD</div>
+              <div class="benefit__desc">Auditoria completa, JWT, RBAC e bloqueio por tentativas.</div>
+            </div>
+          </div>
+          <div class="benefit" role="listitem">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"></circle><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg>
+            <div>
+              <div class="benefit__title">RH e escalas</div>
+              <div class="benefit__desc">Profissionais, equipes multidisciplinares, plantões e férias.</div>
+            </div>
+          </div>
+          <div class="benefit" role="listitem">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="m7 14 4-4 4 4 5-5"></path></svg>
+            <div>
+              <div class="benefit__title">Decisão orientada a dados</div>
+              <div class="benefit__desc">Cobertura, produtividade, demanda reprimida e epidemiologia.</div>
+            </div>
+          </div>
+          <div class="benefit" role="listitem">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <div>
+              <div class="benefit__title">Rede municipal completa</div>
+              <div class="benefit__desc">Unidades, coordenações regionais e supervisões vinculadas.</div>
+            </div>
+          </div>
+          <div class="benefit" role="listitem">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+            <div>
+              <div class="benefit__title">Tempo real</div>
+              <div class="benefit__desc">Filas, faltas, encaixes e alertas inteligentes de gargalo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========= Indicators ========= -->
+  <section id="transparencia" class="block indicators-wrap surface-tinted" aria-labelledby="ind-title">
+    <div class="container">
+      <header class="block-head" style="max-width: none;">
+        <div class="indicators-head" style="margin-bottom: 0; align-items: end;">
+          <div style="max-width: 720px;">
+            <span class="eyebrow">Transparência pública</span>
+            <h2 id="ind-title" style="margin-top: var(--s-4);">Indicadores em tempo real</h2>
+            <p style="margin-top: var(--s-4); color: var(--ink-500); font-size: 1.0625rem;">Dados consolidados da rede municipal, atualizados automaticamente pelo sistema.</p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <span class="stamp"><span class="dot" aria-hidden="true"></span> Atualizado há 4 min</span>
+            <a href="#" class="stamp" style="text-decoration:none;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Baixar dados abertos (CSV)
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <div class="kpis" style="margin-top: var(--s-8);">
+        <div class="kpi">
+          <div class="kpi__row">
+            <span class="kpi__icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            </span>
+            <span class="kpi__delta kpi__delta--up">+8,1%</span>
+          </div>
+          <div class="kpi__value">1.247.832</div>
+          <div class="kpi__label">Atendimentos realizados no ano</div>
+          <div class="kpi__bar" role="img" aria-label="78% da meta anual"><span style="width:78%"></span></div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi__row">
+            <span class="kpi__icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path><path d="m9 11 4 4"></path><path d="m5 19-3 3"></path><path d="m14 4 6 6"></path></svg>
+            </span>
+            <span class="kpi__delta kpi__delta--up">+4,2%</span>
+          </div>
+          <div class="kpi__value">87,4%</div>
+          <div class="kpi__label">Cobertura vacinal — meta 95%</div>
+          <div class="kpi__bar" role="img" aria-label="87% da cobertura vacinal"><span style="width:87%"></span></div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi__row">
+            <span class="kpi__icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path><path d="M9 22v-4h6v4"></path></svg>
+            </span>
+            <span class="kpi__delta kpi__delta--up">+2</span>
+          </div>
+          <div class="kpi__value">128</div>
+          <div class="kpi__label">Unidades de saúde ativas</div>
+          <div class="kpi__bar" role="img" aria-label="100% das unidades operacionais"><span style="width:100%"></span></div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi__row">
+            <span class="kpi__icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+            </span>
+            <span class="kpi__delta kpi__delta--down">−6 min</span>
+          </div>
+          <div class="kpi__value">24 min</div>
+          <div class="kpi__label">Tempo médio de espera</div>
+          <div class="kpi__bar" role="img" aria-label="Tempo de espera abaixo da meta"><span style="width:40%"></span></div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="chart-card">
+        <div class="chart-card__head">
+          <div>
+            <h3>Atendimentos por mês</h3>
+            <p style="color:var(--ink-500); font-size:var(--fs-sm); margin-top: 4px;">Comparativo da rede municipal — 2025 vs 2026</p>
+          </div>
+          <div class="legend" aria-hidden="true">
+            <span>2026</span>
+            <span class="l2">2025</span>
+          </div>
+        </div>
+
+        <!-- Inline SVG chart (12 months, two series of bars) -->
+        <svg class="chart" viewBox="0 0 720 240" role="img" aria-label="Gráfico de barras mostrando atendimentos por mês em 2026 e 2025; tendência geral de crescimento em 2026">
+          <!-- y gridlines -->
+          <g stroke="#eef1f5" stroke-width="1">
+            <line x1="40" y1="40" x2="710" y2="40"></line>
+            <line x1="40" y1="90" x2="710" y2="90"></line>
+            <line x1="40" y1="140" x2="710" y2="140"></line>
+            <line x1="40" y1="190" x2="710" y2="190"></line>
+          </g>
+          <!-- y labels -->
+          <g fill="#7a8392" font-size="11" font-family="IBM Plex Mono, monospace" text-anchor="end">
+            <text x="34" y="44">120k</text>
+            <text x="34" y="94">90k</text>
+            <text x="34" y="144">60k</text>
+            <text x="34" y="194">30k</text>
+          </g>
+          <!-- x axis -->
+          <line x1="40" y1="200" x2="710" y2="200" stroke="#dde1e8" stroke-width="1"></line>
+
+          <!-- Bars: 12 months, 2 series -->
+          <!-- Values for 2025 (light) and 2026 (dark) — illustrative -->
+          <g>
+            <!-- Jan -->
+            <rect x="50" y="120" width="18" height="80" fill="#5aa9ee" rx="2"></rect>
+            <rect x="70" y="100" width="18" height="100" fill="#1351b4" rx="2"></rect>
+            <!-- Fev -->
+            <rect x="106" y="130" width="18" height="70" fill="#5aa9ee" rx="2"></rect>
+            <rect x="126" y="110" width="18" height="90" fill="#1351b4" rx="2"></rect>
+            <!-- Mar -->
+            <rect x="162" y="110" width="18" height="90" fill="#5aa9ee" rx="2"></rect>
+            <rect x="182" y="80"  width="18" height="120" fill="#1351b4" rx="2"></rect>
+            <!-- Abr -->
+            <rect x="218" y="115" width="18" height="85" fill="#5aa9ee" rx="2"></rect>
+            <rect x="238" y="92"  width="18" height="108" fill="#1351b4" rx="2"></rect>
+            <!-- Mai -->
+            <rect x="274" y="98"  width="18" height="102" fill="#5aa9ee" rx="2"></rect>
+            <rect x="294" y="70"  width="18" height="130" fill="#1351b4" rx="2"></rect>
+            <!-- Jun -->
+            <rect x="330" y="106" width="18" height="94" fill="#5aa9ee" rx="2"></rect>
+            <rect x="350" y="82"  width="18" height="118" fill="#1351b4" rx="2"></rect>
+            <!-- Jul -->
+            <rect x="386" y="86"  width="18" height="114" fill="#5aa9ee" rx="2"></rect>
+            <rect x="406" y="58"  width="18" height="142" fill="#1351b4" rx="2"></rect>
+            <!-- Ago -->
+            <rect x="442" y="94"  width="18" height="106" fill="#5aa9ee" rx="2"></rect>
+            <rect x="462" y="66"  width="18" height="134" fill="#1351b4" rx="2"></rect>
+            <!-- Set -->
+            <rect x="498" y="102" width="18" height="98" fill="#5aa9ee" rx="2"></rect>
+            <rect x="518" y="74"  width="18" height="126" fill="#1351b4" rx="2"></rect>
+            <!-- Out -->
+            <rect x="554" y="90"  width="18" height="110" fill="#5aa9ee" rx="2"></rect>
+            <rect x="574" y="62"  width="18" height="138" fill="#1351b4" rx="2"></rect>
+            <!-- Nov -->
+            <rect x="610" y="108" width="18" height="92" fill="#5aa9ee" rx="2"></rect>
+            <rect x="630" y="78"  width="18" height="122" fill="#1351b4" rx="2"></rect>
+            <!-- Dez (current — projected) -->
+            <rect x="666" y="120" width="18" height="80" fill="#5aa9ee" rx="2"></rect>
+            <rect x="686" y="96"  width="18" height="104" fill="#1351b4" rx="2" opacity="0.4"></rect>
+          </g>
+          <!-- x labels -->
+          <g fill="#7a8392" font-size="11" font-family="IBM Plex Mono, monospace" text-anchor="middle">
+            <text x="78"  y="220">Jan</text>
+            <text x="134" y="220">Fev</text>
+            <text x="190" y="220">Mar</text>
+            <text x="246" y="220">Abr</text>
+            <text x="302" y="220">Mai</text>
+            <text x="358" y="220">Jun</text>
+            <text x="414" y="220">Jul</text>
+            <text x="470" y="220">Ago</text>
+            <text x="526" y="220">Set</text>
+            <text x="582" y="220">Out</text>
+            <text x="638" y="220">Nov</text>
+            <text x="694" y="220">Dez</text>
+          </g>
+        </svg>
+
+        <p style="margin-top: var(--s-4); color: var(--ink-500); font-size: var(--fs-xs);">Fonte: Mais Saúde Pública · Dados consolidados da rede municipal · Última sincronização: hoje, 14h32.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========= Campaigns / News ========= -->
+  <section id="campanhas" class="block" aria-labelledby="cmp-title">
+    <div class="container">
+      <header class="block-head" style="display:flex; justify-content:space-between; align-items:end; max-width:none; gap:var(--s-6); flex-wrap:wrap;">
+        <div style="max-width: 640px;">
+          <span class="eyebrow">Campanhas &amp; notícias</span>
+          <h2 id="cmp-title" style="margin-top: var(--s-4);">Campanhas em destaque</h2>
+          <p style="margin-top: var(--s-4); color: var(--ink-500); font-size: 1.0625rem;">Acompanhe as ações de prevenção, imunização e cuidado em curso na rede municipal.</p>
+        </div>
+        <a href="#todas" class="btn btn--ghost">Ver todas as campanhas</a>
+      </header>
+
+      <div class="campaigns">
+        <article>
+          <a href="#" class="news news--feature">
+            <div class="news__media">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path><path d="m9 11 4 4"></path><path d="m5 19-3 3"></path><path d="m14 4 6 6"></path></svg>
+              <span class="ph-tag">imagem da campanha · 16:9</span>
+            </div>
+            <div class="news__body">
+              <span class="news__chip">Vacinação</span>
+              <h3 class="news__title">Campanha de Vacinação contra a Gripe 2026 começa em todas as unidades.</h3>
+              <p style="color:var(--ink-500); font-size: var(--fs-sm);">Crianças, idosos, gestantes e profissionais de saúde são prioridade. Veja onde se vacinar.</p>
+              <div class="news__meta"><span>22 de maio de 2026</span><span aria-hidden="true">·</span><span>Leitura: 3 min</span></div>
+            </div>
+          </a>
+        </article>
+        <article>
+          <a href="#" class="news">
+            <div class="news__media">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12c4 2 14 2 18 0"></path><path d="M12 3c2.5 3 2.5 15 0 18"></path><path d="M12 3c-2.5 3-2.5 15 0 18"></path></svg>
+              <span class="ph-tag">campanha · 4:3</span>
+            </div>
+            <div class="news__body">
+              <span class="news__chip">Dengue</span>
+              <h3 class="news__title">10 minutos contra a Dengue: ação nos bairros começa nesta semana.</h3>
+              <div class="news__meta"><span>20 mai 2026</span></div>
+            </div>
+          </a>
+        </article>
+        <article>
+          <a href="#" class="news">
+            <div class="news__media">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
+              <span class="ph-tag">campanha · 4:3</span>
+            </div>
+            <div class="news__body">
+              <span class="news__chip">Saúde da Mulher</span>
+              <h3 class="news__title">Outubro Rosa 2026: agendamento de mamografia já disponível.</h3>
+              <div class="news__meta"><span>18 mai 2026</span></div>
+            </div>
+          </a>
+        </article>
+        <article>
+          <a href="#" class="news">
+            <div class="news__media">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a4 4 0 0 0-4 4v3a4 4 0 0 0 4 4 4 4 0 0 0 4-4V6a4 4 0 0 0-4-4z"></path><path d="M5 13a7 7 0 0 0 14 0"></path><path d="M12 20v2"></path></svg>
+              <span class="ph-tag">campanha · 4:3</span>
+            </div>
+            <div class="news__body">
+              <span class="news__chip">Saúde Mental</span>
+              <h3 class="news__title">Janeiro Branco: rede de acolhimento amplia atendimento em 12 unidades.</h3>
+              <div class="news__meta"><span>15 mai 2026</span></div>
+            </div>
+          </a>
+        </article>
+        <article>
+          <a href="#" class="news">
+            <div class="news__media">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"></path><circle cx="12" cy="12" r="1"></circle></svg>
+              <span class="ph-tag">campanha · 4:3</span>
+            </div>
+            <div class="news__body">
+              <span class="news__chip">COVID-19</span>
+              <h3 class="news__title">Dose de reforço: confira o calendário 2026 por faixa etária.</h3>
+              <div class="news__meta"><span>12 mai 2026</span></div>
+            </div>
+          </a>
+        </article>
+      </div>
+
+      <!-- CTA Strip -->
+      <div class="cta-strip" style="margin-top: var(--s-12);">
+        <div>
+          <h2>Você é profissional ou gestor da rede?</h2>
+          <p>Acesse o painel estratégico, consulte agendas, escalas e produtividade da sua equipe em tempo real.</p>
+        </div>
+        <div class="cta-strip__actions">
+          <a href="#" class="btn btn--lg btn--on-blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+            Entrar no sistema
+          </a>
+          <a href="#suporte" class="btn btn--lg btn--on-blue-ghost">Falar com suporte</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ========= Footer ========= -->
+<footer id="contato" role="contentinfo">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#" class="brand" aria-label="Mais Saúde Pública">
+          <span class="brand__mark" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </span>
+          <span>
+            <span class="brand__name">Mais Saúde Pública</span><br/>
+            <span class="brand__sub">Portal Integrado</span>
+          </span>
+        </a>
+        <p>Plataforma oficial da Secretaria Municipal de Saúde para gestão, atendimento e transparência da rede pública.</p>
+        <div class="footer-badges" style="margin-top: var(--s-5);">
+          <span class="footer-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            LGPD
+          </span>
+          <span class="footer-badge">WCAG 2.2 AA</span>
+          <span class="footer-badge">CNES Integrado</span>
+        </div>
+      </div>
+
+      <nav aria-label="Sistema">
+        <h4>Sistema</h4>
+        <ul class="footer-list">
+          <li><a href="#">Entrar</a></li>
+          <li><a href="#servicos">Serviços públicos</a></li>
+          <li><a href="#campanhas">Campanhas</a></li>
+          <li><a href="#unidades">Unidades de saúde</a></li>
+          <li><a href="#programas">Programas</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-label="Transparência">
+        <h4>Transparência</h4>
+        <ul class="footer-list">
+          <li><a href="#transparencia">Indicadores públicos</a></li>
+          <li><a href="#">Dados abertos</a></li>
+          <li><a href="#">Auditoria</a></li>
+          <li><a href="#">LGPD &amp; privacidade</a></li>
+          <li><a href="#">Termos de uso</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-label="Suporte e contato">
+        <h4>Contato</h4>
+        <ul class="footer-list">
+          <li><a href="#">Ouvidoria</a></li>
+          <li><a href="#">Fale conosco</a></li>
+          <li><a href="#">Suporte técnico</a></li>
+          <li><a href="tel:136">Disque-Saúde · 136</a></li>
+          <li><a href="#">Integrações governamentais</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© 2026 Secretaria Municipal de Saúde · Mais Saúde Pública</span>
+      <span>Versão 2026.1 · Construído com acessibilidade e dados abertos</span>
+    </div>
+  </div>
+</footer>

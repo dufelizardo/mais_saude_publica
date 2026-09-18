@@ -1,4 +1,5 @@
 *** Settings ***
+Library    Collections
 Resource    ../../common/mais_saude_publica_common.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -12,9 +13,9 @@ ${CONTENT_TYPE}    application/json
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 DELETE Desabilitar Profissional
-    [Documentation]    Sends a DELETE request to enable/disable a Profissional (ativo as a query param) and
-    ...    returns the response.
-    [Arguments]    ${cpf}    ${ativo}
+    [Documentation]    Sends a DELETE request to enable/disable a Profissional (ativo and dataDesligamento as
+    ...    query params, see ADR-0017) and returns the response.
+    [Arguments]    ${cpf}    ${ativo}    ${dataDesligamento}=${EMPTY}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Get Mais Saude Publica Session
 
@@ -23,6 +24,9 @@ DELETE Desabilitar Profissional
 
     ${params}=    Create Dictionary
     ...    ativo=${ativo}
+    IF    '${dataDesligamento}' != '${EMPTY}'
+        Set To Dictionary    ${params}    dataDesligamento=${dataDesligamento}
+    END
 
     ${response}=    DELETE On Session
     ...    msp_session
