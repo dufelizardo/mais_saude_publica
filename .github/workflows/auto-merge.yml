@@ -49,20 +49,40 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           pr="${{ github.event.pull_request.number }}"
+          # Checks exigidos pela protecao classica de qaa/homologacao/main (branches/{b}/protection).
+          # Usa /commits/{sha}/check-runs (REST) em vez de "gh pr view --json statusCheckRollup":
+          # o rollup da PR pode ficar momentaneamente vazio/desatualizado logo apos um evento
+          # "synchronize" (ex: o commit de pin-manifests da ADR-0015 chegando via push enquanto a
+          # PR de promocao acabou de abrir) - nessa janela, "0 pendentes" significa "os checks do
+          # commit certo ainda nem foram criados", nao "ja passaram". Consultar os check-runs do
+          # SHA atual, resolvido a cada iteracao, elimina essa corrida: so conta como "tudo pronto"
+          # quando os 3 checks nomeados existem de fato para o commit que sera mergeado.
+          required_checks="test analyze robot-acceptance"
           for i in $(seq 1 90); do
-            data=$(gh pr view "$pr" --json statusCheckRollup)
-            pending=$(echo "$data" | jq '[.statusCheckRollup[] | select(.__typename=="CheckRun" and .name != "admin-merge" and (.conclusion==null or .conclusion==""))] | length')
-            failed=$(echo "$data" | jq '[.statusCheckRollup[] | select(.__typename=="CheckRun" and .name != "admin-merge" and (.conclusion=="FAILURE" or .conclusion=="CANCELLED" or .conclusion=="TIMED_OUT" or .conclusion=="ACTION_REQUIRED"))] | length')
+            sha=$(gh pr view "$pr" --json headRefOid --jq '.headRefOid')
+            runs=$(gh api "repos/${GH_REPO}/commits/${sha}/check-runs" --jq '.check_runs')
+
+            missing=0
+            for check in $required_checks; do
+              found=$(echo "$runs" | jq --arg c "$check" '[.[] | select(.name == $c)] | length')
+              if [ "$found" -eq 0 ]; then
+                missing=1
+              fi
+            done
+
+            failed=$(echo "$runs" | jq '[.[] | select(.name != "admin-merge" and (.conclusion=="failure" or .conclusion=="cancelled" or .conclusion=="timed_out" or .conclusion=="action_required"))] | length')
             if [ "$failed" -gt 0 ]; then
               echo "Um check obrigatório falhou - não vou mergear."
               exit 1
             fi
-            if [ "$pending" -eq 0 ]; then
-              echo "Todos os checks concluídos - mergeando com privilégio de admin."
+
+            pending=$(echo "$runs" | jq '[.[] | select(.name != "admin-merge" and (.conclusion==null or .conclusion==""))] | length')
+            if [ "$missing" -eq 0 ] && [ "$pending" -eq 0 ]; then
+              echo "Todos os checks obrigatórios (${required_checks}) concluídos para ${sha} - mergeando com privilégio de admin."
               gh pr merge "$pr" --merge --admin
               exit 0
             fi
-            echo "Tentativa $i: ainda esperando checks terminarem..."
+            echo "Tentativa $i: sha=${sha} missing=${missing} pending=${pending} - ainda esperando..."
             sleep 20
           done
           echo "Checks não terminaram a tempo (30 min)."
