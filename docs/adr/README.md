@@ -23,7 +23,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0005](./0005-separacao-dominio-jpa.md) | Separação entre entidades de domínio e entidades JPA | Proposto |
 | [0006](./0006-seguranca-jwt.md) | Estratégia de segurança e autenticação com JWT | Proposto |
 | [0007](./0007-deploy-docker.md) | Estratégia de deploy com Docker e CI/CD | Proposto |
-| [0008](./0008-frontend-angular.md) | Escolha de front-end: Angular + TypeScript | Proposto |
+| [0008](./0008-frontend-angular.md) | Escolha de front-end: Angular + TypeScript | Aceita (parcialmente implementada) |
 | [0009](./0009-renomear-hierarquia-para-esferas-de-gestao-do-sus.md) | Renomear a hierarquia genérica (Zero/Um/Dois/Três) para as esferas de gestão do SUS (Federal/Estadual/Municipal/Regional) + criar o nível Unidade de Saúde | Aceita (parcialmente implementada) |
 | [0010](./0010-fluxo-de-branches-e-pipeline-de-promocao.md) | Fluxo de branches (developer → qaa → homologacao → main) com pipeline de gate no GitHub Actions + troca de MySQL para PostgreSQL | Aceita |
 | [0011](./0011-fase-2-melhorias-de-pipeline-e-branching.md) | Backlog de melhorias de branching/pipeline (Fase 2): PAT dedicado, feature/fix/hotfix, aprovações obrigatórias, testes de performance | Proposta |
@@ -31,6 +31,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0013](./0013-implementar-5-nivel-unidade-de-saude-e-supervisao-regional.md) | Implementar o 5º nível (Unidade de Saúde) e o vínculo de supervisão regional | Aceita |
 | [0014](./0014-modulo-profissional-rh-com-vinculo-fraco-por-reconciliacao.md) | Módulo Profissional/RH com vínculo fraco resolvido por reconciliação | Aceita |
 | [0015](./0015-pinar-imagens-por-sha-para-sincronizacao-automatica-do-argocd.md) | Pinar imagens por SHA para sincronização automática do ArgoCD (sem SSH/restart manual) | Aceita |
+| [0016](./0016-deploy-do-frontend-angular-no-ambiente-dev.md) | Deploy do front-end Angular no ambiente dev, em host separado | Aceita (escopo: dev) |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. Prioridade de implementação combinada: 0003 (arquitetura), 0006 (segurança) e 0007 (deploy) antes de novos domínios de negócio; 0008 (front-end) é a de menor prioridade.
 

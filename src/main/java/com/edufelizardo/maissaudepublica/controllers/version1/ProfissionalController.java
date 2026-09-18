@@ -96,13 +96,13 @@ public class ProfissionalController {
             ProfissionalResponseDto responseDto = service.create(dto);
 
             String successMessage = "Profissional criado com sucesso!";
-            String details = "Nome: " + responseDto.getNome() + ", CPF: " + responseDto.getCpf();
+            String details = "Nome: " + responseDto.getNome() + ", Matrícula: " + responseDto.getMatricula();
 
             SuccessResponseDto successResponseDto = new SuccessResponseDto(successMessage, details);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(successResponseDto);
         } catch (DataIntegrityViolationException e) {
-            throw new ResourceConflictException("Já existe um profissional registrado com este CPF.", e);
+            throw new ResourceConflictException("Não foi possível concluir o cadastro (conflito de dados).", e);
         } catch (ResourceBadRequestException e) {
             throw new ResourceBadRequestException("Não foi possível efetivar o cadastro", e);
         } catch (ResourceNotFoundException e) {
