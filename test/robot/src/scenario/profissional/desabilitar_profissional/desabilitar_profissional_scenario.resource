@@ -12,3 +12,11 @@ PROFISSIONAL - DESABILITAR - DELETE
     Profissional - Desabilitar - DELETE - By HTTP Status Code    ${meuCpf}    ${meuHTTP}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+PROFISSIONAL - DESABILITAR - DELETE - Grava E Limpa Data De Desligamento
+    [Documentation]    Test scenario for disabling a Profissional with a dataDesligamento and re-enabling it
+    ...    afterward, expecting dataDesligamento cleared (ver ADR-0017).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    DELETE Desabilitar Profissional - Grava E Limpa Data De Desligamento
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

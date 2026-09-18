@@ -42,3 +42,12 @@ CT-003 - Validate DELETE Desabilitar Profissional - HTTP 400 BAD REQUEST (URL Ma
     PROFISSIONAL - DESABILITAR - DELETE    ${EMPTY}    400
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-004 - Validate DELETE Desabilitar Profissional - Grava E Limpa Data De Desligamento
+    [Documentation]    Test case to validate that disabling a Profissional persists dataDesligamento, and
+    ...    re-enabling it clears that date (ver ADR-0017).
+    [Tags]    DELETE    DesabilitarProfissional    HTTP200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    PROFISSIONAL - DESABILITAR - DELETE - Grava E Limpa Data De Desligamento
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -176,6 +176,15 @@ class ReconciliacaoResponsavelTest {
                 {
                   "cpf": "%s",
                   "nome": "%s",
+                  "endereco": {
+                    "cep": "01310-100",
+                    "logradouro": "Avenida Paulista",
+                    "numeroLogradouro": "1000",
+                    "bairro": "Bela Vista",
+                    "cidade": "São Paulo",
+                    "estado": "SP"
+                  },
+                  "telefones": ["011-2063-7185"],
                   "email": "profissional@saude.sp.gov.br"
                 }
                 """.formatted(cpf, nome);

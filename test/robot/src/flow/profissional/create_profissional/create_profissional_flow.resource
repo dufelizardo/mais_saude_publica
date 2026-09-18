@@ -8,18 +8,31 @@ Resource    ../../../resource/config/schema/schema.resource
 *** Comments ***
     Profissional is a flat RH domain with no hierarchy chain, no superior and no tipo field (see ADR-0014) —
     same "no dependency" shape as Federal's create flow, just keyed by cpf instead of nome.
+    CPF is NOT unique (see ADR-0017) — a matrícula gerada automaticamente é a chave única de verdade, então
+    criar duas fichas com o mesmo CPF é esperado dar 201 nas duas vezes, não 409.
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 Build Profissional Payload
     [Documentation]    Builds a valid ProfissionalRequestDto payload, with the given cpf and nome.
     [Arguments]    ${cpf}    ${nome}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${endereco}=    Create Dictionary
+    ...    cep=01310-100
+    ...    logradouro=Avenida Paulista
+    ...    numeroLogradouro=1000
+    ...    bairro=Bela Vista
+    ...    cidade=São Paulo
+    ...    estado=SP
+
+    ${telefones}=    Create List    1140028922
+
     ${payload}=    Create Dictionary
     ...    cpf=${cpf}
     ...    nome=${nome}
     ...    conselhoClasse=COREN
     ...    numeroConselho=123456-SP
-    ...    telefone=1140028922
+    ...    endereco=${endereco}
+    ...    telefones=${telefones}
     ...    email=contato@profissional.saude.sp.gov.br
     ...    dataAdmissao=2026-01-15
 
@@ -53,16 +66,15 @@ Seed A Profissional Unit
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-POST Create Profissional - Status Code 409
-    [Documentation]    Seeds a Profissional, then attempts to create another with the same cpf, expecting a
-    ...    duplicate-cpf conflict (HTTP 409).
+POST Create Profissional - Status Code 201 - Cpf Repetido
+    [Documentation]    Seeds a Profissional, then creates another with the same cpf (different matrícula each
+    ...    time, gerada automaticamente), expecting HTTP 201 both times — cpf não é mais único (ADR-0017).
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${cpf}=    Seed A Profissional Unit
     ${suffix}=    Generate Random String    8    [LETTERS][NUMBERS]
-    ${payload}=    Build Profissional Payload    ${cpf}    Robot Teste Profissional Duplicado ${suffix}
+    ${payload}=    Build Profissional Payload    ${cpf}    Robot Teste Profissional Segunda Ficha ${suffix}
     ${response}=    POST Create Profissional    ${payload}
-    Should Be Equal As Integers    ${response.status_code}    409
-    Validate Object Schema    ${response.json()}    ${ERROR_RESPONSE_SCHEMA}
+    Should Be Equal As Integers    ${response.status_code}    201
 
     RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -103,7 +115,6 @@ Profissional - Create - POST - By HTTP Status Code
     [Arguments]    ${meuHTTP}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Run Keyword If    '${meuHTTP}' == '201'    Seed A Profissional Unit
-    ...    ELSE IF    '${meuHTTP}' == '409'    POST Create Profissional - Status Code 409
     ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Create Profissional test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
