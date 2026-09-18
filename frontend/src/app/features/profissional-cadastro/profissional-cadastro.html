@@ -1,0 +1,161 @@
+<a href="#main" class="skip-link">Pular para o conteúdo principal</a>
+
+<header class="site-header" role="banner">
+  <div class="container header-row">
+    <a routerLink="/" class="brand" aria-label="Mais Saúde Pública — página inicial">
+      <span class="brand__mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <span>
+        <span class="brand__name">Mais Saúde Pública</span><br/>
+        <span class="brand__sub">Portal Integrado</span>
+      </span>
+    </a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="block" style="padding-top: var(--s-10);">
+    <div class="container" style="max-width: 640px;">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Recursos Humanos</span>
+      <h1 style="font-size: var(--fs-h1); margin-top: var(--s-4);">Cadastrar profissional</h1>
+      <p style="margin-top: var(--s-3); color: var(--ink-500);">
+        Preencha os dados do profissional. Campos marcados com <strong>*</strong> são obrigatórios.
+      </p>
+
+      @if (successMessage()) {
+        <div class="form-banner form-banner--success" role="status">
+          {{ successMessage() }}
+        </div>
+      }
+      @if (errorMessage()) {
+        <div class="form-banner form-banner--error" role="alert">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+        <div class="form-group">
+          <label for="cpf">CPF *</label>
+          <input id="cpf" type="text" formControlName="cpf" autocomplete="off" />
+          @if (form.controls.cpf.invalid && form.controls.cpf.touched) {
+            <span class="form-error">CPF é obrigatório.</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="nome">Nome completo *</label>
+          <input id="nome" type="text" formControlName="nome" autocomplete="name" />
+          @if (form.controls.nome.invalid && form.controls.nome.touched) {
+            <span class="form-error">Nome é obrigatório.</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="email">E-mail *</label>
+          <input id="email" type="email" formControlName="email" autocomplete="email" />
+          @if (form.controls.email.hasError('required') && form.controls.email.touched) {
+            <span class="form-error">E-mail é obrigatório.</span>
+          }
+          @if (form.controls.email.hasError('email') && form.controls.email.touched) {
+            <span class="form-error">Informe um e-mail válido.</span>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="conselhoClasse">Conselho de classe</label>
+            <input id="conselhoClasse" type="text" formControlName="conselhoClasse" placeholder="Ex.: CRM, COREN" />
+          </div>
+          <div class="form-group">
+            <label for="numeroConselho">Número do conselho</label>
+            <input id="numeroConselho" type="text" formControlName="numeroConselho" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="telefone">Telefone *</label>
+            <input id="telefone" type="tel" formControlName="telefone" autocomplete="tel" />
+            @if (form.controls.telefone.invalid && form.controls.telefone.touched) {
+              <span class="form-error">Telefone é obrigatório.</span>
+            }
+          </div>
+          <div class="form-group">
+            <label for="dataAdmissao">Data de admissão</label>
+            <input id="dataAdmissao" type="date" formControlName="dataAdmissao" />
+          </div>
+        </div>
+
+        <h2 style="font-size: 1.0625rem; margin-top: var(--s-2);">Endereço</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cep">CEP *</label>
+            <input id="cep" type="text" formControlName="cep" autocomplete="postal-code" />
+            @if (buscandoCep()) {
+              <span style="font-size: var(--fs-xs); color: var(--ink-500);">Buscando endereço…</span>
+            } @else if (cepNaoEncontrado()) {
+              <span class="form-error">CEP não encontrado — preencha o endereço manualmente.</span>
+            } @else if (form.controls.cep.invalid && form.controls.cep.touched) {
+              <span class="form-error">CEP é obrigatório.</span>
+            }
+          </div>
+          <div class="form-group">
+            <label for="logradouro">Logradouro *</label>
+            <input id="logradouro" type="text" formControlName="logradouro" autocomplete="address-line1" />
+            @if (form.controls.logradouro.invalid && form.controls.logradouro.touched) {
+              <span class="form-error">Logradouro é obrigatório.</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="numeroLogradouro">Número *</label>
+            <input id="numeroLogradouro" type="text" formControlName="numeroLogradouro" />
+            @if (form.controls.numeroLogradouro.invalid && form.controls.numeroLogradouro.touched) {
+              <span class="form-error">Número é obrigatório.</span>
+            }
+          </div>
+          <div class="form-group">
+            <label for="complemento">Complemento</label>
+            <input id="complemento" type="text" formControlName="complemento" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bairro">Bairro *</label>
+            <input id="bairro" type="text" formControlName="bairro" />
+            @if (form.controls.bairro.invalid && form.controls.bairro.touched) {
+              <span class="form-error">Bairro é obrigatório.</span>
+            }
+          </div>
+          <div class="form-group">
+            <label for="cidade">Cidade *</label>
+            <input id="cidade" type="text" formControlName="cidade" autocomplete="address-level2" />
+            @if (form.controls.cidade.invalid && form.controls.cidade.touched) {
+              <span class="form-error">Cidade é obrigatória.</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="estado">Estado (UF) *</label>
+          <input id="estado" type="text" formControlName="estado" maxlength="2" style="max-width: 100px;" autocomplete="address-level1" />
+          @if (form.controls.estado.invalid && form.controls.estado.touched) {
+            <span class="form-error">Estado é obrigatório.</span>
+          }
+        </div>
+
+        <div class="form-actions">
+          <a routerLink="/" class="btn btn--ghost">Cancelar</a>
+          <button type="submit" class="btn" [disabled]="submitting()">
+            {{ submitting() ? 'Cadastrando…' : 'Cadastrar profissional' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>

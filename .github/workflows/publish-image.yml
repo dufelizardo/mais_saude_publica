@@ -26,6 +26,13 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        include:
+          - context: .
+            image: mais_saude_publica
+          - context: frontend
+            image: mais_saude_publica-frontend
 
     steps:
       - name: Checkout code
@@ -44,13 +51,13 @@ jobs:
       - name: Build e push da imagem
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ${{ matrix.context }}
           push: true
           tags: |
-            ghcr.io/dufelizardo/mais_saude_publica:${{ github.ref_name }}
-            ghcr.io/dufelizardo/mais_saude_publica:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ghcr.io/dufelizardo/${{ matrix.image }}:${{ github.ref_name }}
+            ghcr.io/dufelizardo/${{ matrix.image }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
   # :developer/:qaa/:homologacao/:main sao mutaveis - o syncPolicy do ArgoCD so reage ao texto do
   # manifest mudando de verdade no Git, nao a um digest novo atras de uma tag que nao mudou (ver

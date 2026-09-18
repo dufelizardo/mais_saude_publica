@@ -2,7 +2,9 @@
 
 ## Status
 
-Proposto — **não implementado**. O repositório é hoje uma API pura (sem nenhum código de front-end). Esta proposta depende de ADR 0006 (JWT) e ADR 0007 (Docker) estarem em andamento, e é a de **menor prioridade** entre as propostas — deve vir depois de arquitetura, segurança e deploy, e depois de expandir os domínios de negócio se aplicável.
+Aceita (parcialmente implementada). A landing page (`frontend/`, Angular 22) já existe e está no ar
+em `dev` (ver ADR-0016) — sem autenticação ainda, já que ADR 0006 (JWT) continua não implementada.
+As telas de CRUD que dependem de login ficam para depois de 0006 avançar.
 
 ## Contexto
 
