@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +32,12 @@ public class AfastamentoService {
                 dto.getDataFim(), dto.getStatus(), dto.getObservacao());
         afastamento = afastamentoRepository.save(afastamento);
         return AfastamentoResponseDto.fromAfastamento(afastamento);
+    }
+
+    Afastamento buscarEntidadePorId(UUID uuid) {
+        return afastamentoRepository.findById(uuid)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Não foi possível encontrar um afastamento com o id " + uuid + " em nossos registros."));
     }
 
     public List<AfastamentoResponseDto> listarHistorico(String matricula) {
