@@ -40,6 +40,15 @@ public class CargoService {
         return CargoResponseDto.fromCargo(buscarEntidadePorId(uuid));
     }
 
+    public CargoResponseDto atualizar(UUID uuid, CargoRequestDto dto) {
+        Cargo cargo = buscarEntidadePorId(uuid);
+        CategoriaSalarial categoria = categoriaSalarialService.buscarEntidadePorId(dto.getCategoriaId());
+        cargo.setCategoria(categoria);
+        cargo.setNome(dto.getNome());
+        cargo = cargoRepository.save(cargo);
+        return CargoResponseDto.fromCargo(cargo);
+    }
+
     Cargo buscarEntidadePorId(UUID uuid) {
         return cargoRepository.findById(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException(

@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -126,6 +127,48 @@ class CargoControllerTest {
     @Test
     void deveRetornarNotFoundAoBuscarIdInexistente() throws Exception {
         mockMvc.perform(get(BASE_URL + UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deveAtualizarComSucesso() throws Exception {
+        UUID categoriaId = criarCategoriaFixture(PREFIXO_CATEGORIA_TESTE + "Enfermagem 5");
+        String nome = PREFIXO_NOME_TESTE + "Enfermeiro Original";
+        Cargo cargo = new Cargo(categoriaSalarialRepository.findById(categoriaId).orElseThrow(), nome);
+        UUID cargoId = cargoRepository.save(cargo).getUuid();
+
+        String nomeAtualizado = PREFIXO_NOME_TESTE + "Enfermeiro Atualizado";
+        String body = """
+                {
+                  "categoriaId": "%s",
+                  "nome": "%s"
+                }
+                """.formatted(categoriaId, nomeAtualizado);
+
+        mockMvc.perform(patch(BASE_URL + cargoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Cargo atualizado com sucesso!"));
+
+        mockMvc.perform(get(BASE_URL + cargoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome").value(nomeAtualizado));
+    }
+
+    @Test
+    void deveRetornarNotFoundAoAtualizarIdInexistente() throws Exception {
+        UUID categoriaId = criarCategoriaFixture(PREFIXO_CATEGORIA_TESTE + "Enfermagem 6");
+        String body = """
+                {
+                  "categoriaId": "%s",
+                  "nome": "%s"
+                }
+                """.formatted(categoriaId, PREFIXO_NOME_TESTE + "Inexistente");
+
+        mockMvc.perform(patch(BASE_URL + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andExpect(status().isNotFound());
     }
 }

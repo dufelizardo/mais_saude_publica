@@ -81,4 +81,23 @@ public class CargoController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
+
+    @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Atualiza um cargo", tags = "Cargo")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(
+                    schema = @Schema(implementation = SuccessResponseDto.class)
+            ), examples = @ExampleObject(name = "Success",
+                    summary = "SuccessResponse",
+                    value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> update(@PathVariable UUID uuid, @Valid @RequestBody CargoRequestDto dto) {
+        CargoResponseDto responseDto = service.atualizar(uuid, dto);
+
+        String successMessage = "Cargo atualizado com sucesso!";
+        String details = "Nome: " + responseDto.getNome() + ", Categoria: " + responseDto.getCategoriaNome();
+
+        return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
+    }
 }

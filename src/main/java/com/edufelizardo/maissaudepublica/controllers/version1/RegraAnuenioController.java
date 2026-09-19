@@ -65,4 +65,25 @@ public class RegraAnuenioController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
+
+    @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Atualiza o percentual/teto de uma regra de anuênio",
+            description = "A categoria não muda numa edição — é a chave que garante uma regra por categoria.",
+            tags = "RegraAnuenio")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(
+                    schema = @Schema(implementation = SuccessResponseDto.class)
+            ), examples = @ExampleObject(name = "Success",
+                    summary = "SuccessResponse",
+                    value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> update(@PathVariable UUID uuid, @Valid @RequestBody RegraAnuenioRequestDto dto) {
+        RegraAnuenioResponseDto responseDto = service.atualizar(uuid, dto);
+
+        String successMessage = "Regra de anuênio atualizada com sucesso!";
+        String details = "Categoria: " + responseDto.getCategoriaNome() + ", Percentual por ano: " + responseDto.getPercentualPorAno();
+
+        return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
+    }
 }

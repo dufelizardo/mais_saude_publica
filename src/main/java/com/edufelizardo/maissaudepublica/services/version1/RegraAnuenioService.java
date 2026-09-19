@@ -34,6 +34,21 @@ public class RegraAnuenioService {
         return RegraAnuenioResponseDto.fromRegraAnuenio(regraAnuenio);
     }
 
+    /**
+     * A categoria não muda numa edição — é a chave que garante "uma regra por categoria"
+     * ({@link RegraAnuenioRepository#existsByCategoria_Uuid}); trocar de categoria seria criar
+     * uma regra nova, não editar esta. Só percentual e teto são atualizáveis.
+     */
+    public RegraAnuenioResponseDto atualizar(UUID uuid, RegraAnuenioRequestDto dto) {
+        RegraAnuenio regraAnuenio = regraAnuenioRepository.findById(uuid)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Não foi possível encontrar uma regra de anuênio com o id " + uuid + " em nossos registros."));
+        regraAnuenio.setPercentualPorAno(dto.getPercentualPorAno());
+        regraAnuenio.setTetoAnos(dto.getTetoAnos());
+        regraAnuenio = regraAnuenioRepository.save(regraAnuenio);
+        return RegraAnuenioResponseDto.fromRegraAnuenio(regraAnuenio);
+    }
+
     public RegraAnuenioResponseDto buscarPorCategoria(UUID categoriaId) {
         return regraAnuenioRepository.findByCategoria_Uuid(categoriaId)
                 .map(RegraAnuenioResponseDto::fromRegraAnuenio)

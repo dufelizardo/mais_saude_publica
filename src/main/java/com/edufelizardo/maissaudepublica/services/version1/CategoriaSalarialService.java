@@ -35,6 +35,14 @@ public class CategoriaSalarialService {
         return CategoriaSalarialResponseDto.fromCategoriaSalarial(buscarEntidadePorId(uuid));
     }
 
+    public CategoriaSalarialResponseDto atualizar(UUID uuid, CategoriaSalarialRequestDto dto) {
+        CategoriaSalarial categoria = buscarEntidadePorId(uuid);
+        categoria.setNome(dto.getNome());
+        categoria.setConvencaoColetiva(dto.getConvencaoColetiva());
+        categoria = categoriaSalarialRepository.save(categoria);
+        return CategoriaSalarialResponseDto.fromCategoriaSalarial(categoria);
+    }
+
     CategoriaSalarial buscarEntidadePorId(UUID uuid) {
         return categoriaSalarialRepository.findById(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException(
