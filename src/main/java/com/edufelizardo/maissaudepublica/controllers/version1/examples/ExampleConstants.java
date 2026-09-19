@@ -695,4 +695,27 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String VAGA_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeNome": "string",
+                    "cargoNome": "Enfermeiro",
+                    "quantidade": 2,
+                    "status": "ABERTA"
+                  }
+                ]
+            """;
+    public static final String CANDIDATO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "vagaId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "nome": "string",
+                    "cpf": "string",
+                    "curriculoUrl": null,
+                    "status": "INSCRITO"
+                  }
+                ]
+            """;
 }
