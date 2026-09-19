@@ -460,4 +460,39 @@ public class ExampleConstants {
                   "ativo": true
                 }
             """;
+    public static final String CATEGORIA_SALARIAL_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "nome": "Enfermagem",
+                    "convencaoColetiva": "SINDSAUDE-SP 2026"
+                  }
+                ]
+            """;
+    public static final String CARGO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "nome": "Enfermeiro",
+                    "categoriaUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "categoriaNome": "Enfermagem"
+                  }
+                ]
+            """;
+    public static final String LOTACAO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "unidadeNome": "string",
+                    "cargoNome": "Enfermeiro",
+                    "categoriaNome": "Enfermagem",
+                    "jornadaSemanalHoras": 40,
+                    "dataInicio": "2024-01-01",
+                    "dataFim": null,
+                    "motivo": "Admissão"
+                  }
+                ]
+            """;
 }
