@@ -89,7 +89,7 @@ coisa. Por isso ficam como **Fase 0 — pré-requisito**, antes da Fase 1 valer 
 | Subdomínio | Ideia central | Alimenta |
 |---|---|---|
 | **Lotação** | Vínculo profissional↔unidade com histórico (data início/fim), suporta transferência | Ponto (fase 2), Escala (fora desta lista, mas do mesmo tipo) |
-| **Salário** | Histórico de remuneração com data de vigência, suporta reajuste/promoção | Folha (fase 5), Desligamento/rescisão (fase 4) |
+| **Salário** | Derivado de tabela por cargo/categoria (não um valor solto por profissional) — dissídio reajusta o cargo inteiro, mudança de cargo já traz o valor novo junto (ver [MODELO-RH.md](./MODELO-RH.md#2-fase-0--lotação-cargo-e-salário-pré-requisitos)) | Folha (fase 5), Desligamento/rescisão (fase 4) |
 
 ## 5. Próximo passo planejado
 
@@ -101,6 +101,7 @@ em bloco.
 
 ## 6. Referências
 
+- [MODELO-RH.md](./MODELO-RH.md) — desenho completo das entidades/relacionamentos de todas as fases
 - [ADR-0014](../adr/0014-modulo-profissional-rh-com-vinculo-fraco-por-reconciliacao.md) — vínculo responsável↔unidade
 - [ADR-0017](../adr/0017-numero-de-matricula-automatico-e-cpf-nao-unico.md) — matrícula, ficha e o
   precedente de "dado temporal vira histórico"
