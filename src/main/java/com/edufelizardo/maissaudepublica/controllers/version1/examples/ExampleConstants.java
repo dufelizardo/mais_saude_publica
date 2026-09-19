@@ -616,4 +616,18 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String FOLHA_PAGAMENTO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "competencia": "09/2026",
+                    "proventos": 10964.00,
+                    "descontos": 2221.32,
+                    "encargos": 3069.92,
+                    "total": 8742.68
+                  }
+                ]
+            """;
 }
