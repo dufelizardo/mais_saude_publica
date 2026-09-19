@@ -495,4 +495,38 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String TABELA_SALARIAL_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "cargoNome": "Enfermeiro",
+                    "categoriaNome": "Enfermagem",
+                    "valorBase": 5000.00,
+                    "dataVigencia": "2026-01-01",
+                    "motivo": "DISSIDIO"
+                  }
+                ]
+            """;
+    public static final String REGRA_ANUENIO_RESPONSE_EXAMPLE = """
+                {
+                  "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "categoriaNome": "Enfermagem",
+                  "percentualPorAno": 1.00,
+                  "tetoAnos": 25
+                }
+            """;
+    public static final String AJUSTE_INDIVIDUAL_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "valor": 300.00,
+                    "dataInicio": "2026-01-01",
+                    "dataFim": null,
+                    "motivo": "GRATIFICACAO_PESSOAL",
+                    "referencia": null
+                  }
+                ]
+            """;
 }
