@@ -630,4 +630,28 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String TREINAMENTO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "nome": "NR-32 - Segurança em Saúde",
+                    "cargaHoraria": 8,
+                    "validadeMeses": 12,
+                    "obrigatorio": true
+                  }
+                ]
+            """;
+    public static final String PARTICIPACAO_TREINAMENTO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "treinamentoNome": "NR-32 - Segurança em Saúde",
+                    "dataConclusao": "2026-01-15",
+                    "dataValidade": "2027-01-15",
+                    "certificadoUrl": null
+                  }
+                ]
+            """;
 }
