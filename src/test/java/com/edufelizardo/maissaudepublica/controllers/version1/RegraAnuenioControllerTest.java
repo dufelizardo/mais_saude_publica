@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -141,6 +142,57 @@ class RegraAnuenioControllerTest {
         UUID categoriaId = criarCategoriaFixture("04");
 
         mockMvc.perform(get(BASE_URL + "categoria/" + categoriaId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deveAtualizarPercentualETeto() throws Exception {
+        UUID categoriaId = criarCategoriaFixture("05");
+        String bodyCriar = """
+                {
+                  "categoriaId": "%s",
+                  "percentualPorAno": 1.00,
+                  "tetoAnos": 25
+                }
+                """.formatted(categoriaId);
+
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(bodyCriar))
+                .andExpect(status().isCreated());
+
+        UUID regraId = regraAnuenioRepository.findByCategoria_Uuid(categoriaId).orElseThrow().getUuid();
+        String bodyAtualizar = """
+                {
+                  "categoriaId": "%s",
+                  "percentualPorAno": 1.50,
+                  "tetoAnos": 30
+                }
+                """.formatted(categoriaId);
+
+        mockMvc.perform(patch(BASE_URL + regraId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bodyAtualizar))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Regra de anuênio atualizada com sucesso!"));
+
+        mockMvc.perform(get(BASE_URL + "categoria/" + categoriaId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.percentualPorAno").value(1.50))
+                .andExpect(jsonPath("$.tetoAnos").value(30));
+    }
+
+    @Test
+    void deveRetornarNotFoundAoAtualizarIdInexistente() throws Exception {
+        UUID categoriaId = criarCategoriaFixture("06");
+        String body = """
+                {
+                  "categoriaId": "%s",
+                  "percentualPorAno": 1.00
+                }
+                """.formatted(categoriaId);
+
+        mockMvc.perform(patch(BASE_URL + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andExpect(status().isNotFound());
     }
 }
