@@ -6,11 +6,13 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { ErrorResponseDto } from '../../core/models/profissional';
 import { ProfissionalService } from '../../core/services/profissional';
 import { CepService } from '../../core/services/cep';
+import { formatCpf, formatTelefone } from '../../shared/format-mask';
 
 @Component({
   selector: 'app-profissional-cadastro',
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './profissional-cadastro.html',
+  styleUrl: './profissional-cadastro.css',
 })
 export class ProfissionalCadastro {
   private readonly fb = inject(FormBuilder);
@@ -45,6 +47,16 @@ export class ProfissionalCadastro {
     this.form.controls.cep.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe((cep) => this.buscarCep(cep));
+  }
+
+  protected onCpfInput(event: Event): void {
+    const valor = formatCpf((event.target as HTMLInputElement).value);
+    this.form.controls.cpf.setValue(valor);
+  }
+
+  protected onTelefoneInput(event: Event): void {
+    const valor = formatTelefone((event.target as HTMLInputElement).value);
+    this.form.controls.telefone.setValue(valor);
   }
 
   private buscarCep(cepDigitado: string): void {
