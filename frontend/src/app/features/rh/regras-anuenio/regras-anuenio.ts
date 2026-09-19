@@ -1,7 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { Modal } from '../../../shared/modal/modal';
 import { RegraAnuenioResponseDto } from '../../../core/models/regra-anuenio';
 import { CategoriaSalarialResponseDto } from '../../../core/models/categoria-salarial';
@@ -11,7 +10,7 @@ import { CategoriaSalarialService } from '../../../core/services/categoria-salar
 
 @Component({
   selector: 'app-regras-anuenio',
-  imports: [ReactiveFormsModule, RouterLink, Modal],
+  imports: [ReactiveFormsModule, Modal],
   templateUrl: './regras-anuenio.html',
   styleUrl: './regras-anuenio.css',
 })

@@ -32,6 +32,8 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0014](./0014-modulo-profissional-rh-com-vinculo-fraco-por-reconciliacao.md) | Módulo Profissional/RH com vínculo fraco resolvido por reconciliação | Aceita |
 | [0015](./0015-pinar-imagens-por-sha-para-sincronizacao-automatica-do-argocd.md) | Pinar imagens por SHA para sincronização automática do ArgoCD (sem SSH/restart manual) | Aceita |
 | [0016](./0016-deploy-do-frontend-angular-no-ambiente-dev.md) | Deploy do front-end Angular no ambiente dev, em host separado | Aceita (escopo: dev) |
+| [0017](./0017-numero-de-matricula-automatico-e-cpf-nao-unico.md) | Número de matrícula automático e CPF deixa de ser único em Profissional | Aceita |
+| [0018](./0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) | App shell de navegação e decisões de frontend da fatia 1 do módulo de RH | Aceita |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. Prioridade de implementação combinada: 0003 (arquitetura), 0006 (segurança) e 0007 (deploy) antes de novos domínios de negócio; 0008 (front-end) é a de menor prioridade.
 
