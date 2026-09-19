@@ -56,37 +56,48 @@ Achadas nesta conversa (não no documento do DeepSeek):
   acima: sem um histórico de lotação/cargo/salário, não há o que "transferir" ou "reajustar", só
   sobrescrever.
 
-## 4. Subdomínios identificados (visão geral, não desenhados)
+## 4. É um ecossistema, não itens isolados
 
-Lista curta — cada item é só o nome + a ideia central, sem fingir o nível de detalhe que o
-documento original tinha. "Status" indica se já tem um plano de implementação real ou se é só
-ideia registrada.
+Importante não perder de vista: os subdomínios abaixo se alimentam uns dos outros — Ponto abastece
+Folha, Afastamentos e Licenças se sobrepõem, Desligamento fecha o ciclo que Recrutamento abre. Não
+são features independentes que dá pra construir em qualquer ordem sem pensar nas dependências.
 
-| Subdomínio | Ideia central | Status |
+### Fases dos 9 subdomínios originais (ordem revisada com o usuário)
+
+| Fase | Subdomínio | Justificativa |
 |---|---|---|
-| **Lotação** | Vínculo profissional↔unidade com histórico (data início/fim), suporta transferência | 📝 Próximo a desenhar |
-| **Salário** | Histórico de remuneração com data de vigência, suporta reajuste/promoção | 📝 Depois de Lotação |
-| **Afastamentos** | Ausências (férias, licença médica/pessoal) sem alterar o status de `ativo` do profissional | 💡 Ideia registrada |
-| **Licenças** | Subtipos legais de afastamento (maternidade, paternidade, acidente de trabalho) com regras próprias de duração/remuneração | 💡 Ideia registrada |
-| **Ponto** | Registro de jornada (entrada/saída/intervalo) | 💡 Ideia registrada |
-| **Desligamento com cálculo de rescisão** | Hoje o desligamento é só `ativo=false` + data (ADR-0017); cálculo de verbas rescisórias (aviso prévio, FGTS, 13º/férias proporcionais) é outra etapa, e cai direto no aviso da seção 1 sobre validação | 💡 Ideia registrada |
-| **Folha de pagamento** | Fecha mensalmente a partir de ponto + afastamentos + salário vigente | 💡 Ideia registrada |
-| **Recrutamento** | Vaga → candidato → processo seletivo → admissão, com rastreabilidade de como cada profissional foi contratado | 💡 Ideia registrada |
-| **Treinamento/Certificações** | Educação continuada, certificações com validade (relevante pra saúde: NR-32, suporte básico de vida) | 💡 Ideia registrada |
-| **SST** | Exames ocupacionais, acidentes de trabalho (CAT), controle de EPI | 💡 Ideia registrada |
-| **Avaliação de desempenho** | Ciclos de avaliação, metas | 💡 Ideia registrada |
+| 1 | **Afastamentos** | Já iniciado (documento + discussão desta sessão), base pros demais |
+| 2 | **Ponto** | Obrigatório por lei, base pra folha |
+| 3 | **Licenças** | Complementa afastamentos |
+| 4 | **Desligamento** (com cálculo de rescisão) | Necessário pro ciclo de vida do profissional |
+| 5 | **Folha de pagamento** | Consolida tudo (ponto + afastamentos + licenças + salário vigente) |
+| 6 | **Treinamento/Certificações** | Qualidade e conformidade |
+| 7 | **SST** | Segurança do trabalho |
+| 8 | **Recrutamento** | Início do ciclo (para os próximos profissionais) |
+| 9 | **Avaliação de desempenho** | Desenvolvimento |
+
+Cada um continua como 💡 ideia registrada, não desenhada — nenhum desses tem plano de implementação
+ainda, e os números/regras trabalhistas seguem sujeitos ao aviso da seção 1.
+
+### Pré-requisitos identificados nesta sessão (não estavam na lista original)
+
+As lacunas da seção 3 (**Lotação** e **Salário**) não apareciam no documento original, mas o
+ecossistema acima depende delas silenciosamente: Ponto (fase 2) precisa saber a jornada associada a
+onde o profissional está lotado; Folha (fase 5) precisa do salário vigente pra calcular qualquer
+coisa. Por isso ficam como **Fase 0 — pré-requisito**, antes da Fase 1 valer a pena de verdade:
+
+| Subdomínio | Ideia central | Alimenta |
+|---|---|---|
+| **Lotação** | Vínculo profissional↔unidade com histórico (data início/fim), suporta transferência | Ponto (fase 2), Escala (fora desta lista, mas do mesmo tipo) |
+| **Salário** | Histórico de remuneração com data de vigência, suporta reajuste/promoção | Folha (fase 5), Desligamento/rescisão (fase 4) |
 
 ## 5. Próximo passo planejado
 
-**Lotação primeiro.** Motivos: já existe uma base pra generalizar (`UnidadeDeSaude.responsavel`),
-e o subdomínio é mais simples que Salário (não envolve cálculo, só "profissional X está na unidade
-Y desde a data Z") — serve de prova de conceito pro padrão de histórico da seção 2 antes de aplicá-lo
-a algo com dinheiro envolvido.
-
-**Salário depois**, mesmo padrão de histórico, uma vez validado com Lotação.
-
-Os demais subdomínios da seção 4 ficam como referência futura — cada um, quando for a vez de
-desenhar, merece sua própria conversa e plano, não uma adoção em bloco.
+**Lotação primeiro** (Fase 0), pelos motivos da seção 4 acima — sem ela, nem Ponto nem Escala têm
+onde ancorar a jornada. Depois **Salário** (também Fase 0), mesmo padrão de histórico, validado com
+Lotação antes de mexer em algo com dinheiro envolvido. A partir daí, seguir a ordem de fases 1-9
+combinada nesta seção — cada fase, na sua vez, merece sua própria conversa e plano, não uma adoção
+em bloco.
 
 ## 6. Referências
 
