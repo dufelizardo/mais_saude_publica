@@ -19,6 +19,7 @@ public class RegraAnuenioResponseDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private UUID uuid;
+    private UUID categoriaUuid;
     private String categoriaNome;
     private BigDecimal percentualPorAno;
     private Integer tetoAnos;
@@ -26,6 +27,7 @@ public class RegraAnuenioResponseDto implements Serializable {
     public static RegraAnuenioResponseDto fromRegraAnuenio(RegraAnuenio regraAnuenio) {
         return new RegraAnuenioResponseDto(
                 regraAnuenio.getUuid(),
+                regraAnuenio.getCategoria().getUuid(),
                 regraAnuenio.getCategoria().getNome(),
                 regraAnuenio.getPercentualPorAno(),
                 regraAnuenio.getTetoAnos()

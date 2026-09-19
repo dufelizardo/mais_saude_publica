@@ -510,6 +510,7 @@ public class ExampleConstants {
     public static final String REGRA_ANUENIO_RESPONSE_EXAMPLE = """
                 {
                   "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "categoriaUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa7",
                   "categoriaNome": "Enfermagem",
                   "percentualPorAno": 1.00,
                   "tetoAnos": 25

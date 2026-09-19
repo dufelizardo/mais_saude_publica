@@ -61,6 +61,25 @@ class RegraAnuenioControllerTest {
     }
 
     @Test
+    void deveListarRegrasCadastradas() throws Exception {
+        UUID categoriaId = criarCategoriaFixture("07");
+        String body = """
+                {
+                  "categoriaId": "%s",
+                  "percentualPorAno": 2.00,
+                  "tetoAnos": 15
+                }
+                """.formatted(categoriaId);
+
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get(BASE_URL))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.percentualPorAno == 2.00)]").exists());
+    }
+
+    @Test
     void deveCriarComSucesso() throws Exception {
         UUID categoriaId = criarCategoriaFixture("01");
         String body = """
