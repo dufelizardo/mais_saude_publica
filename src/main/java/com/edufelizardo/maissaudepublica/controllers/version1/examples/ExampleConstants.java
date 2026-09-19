@@ -576,4 +576,16 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String REGISTRO_PONTO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "dataHora": "2026-01-05T08:00:00",
+                    "tipo": "ENTRADA",
+                    "origem": "app"
+                  }
+                ]
+            """;
 }
