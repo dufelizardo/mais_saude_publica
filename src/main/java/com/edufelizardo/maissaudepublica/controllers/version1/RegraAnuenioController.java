@@ -1,8 +1,10 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
+import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RegraAnuenioRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.RegraAnuenioResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
@@ -21,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -30,6 +33,24 @@ public class RegraAnuenioController {
 
     @Autowired
     private RegraAnuenioService service;
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Lista as regras de anuênio cadastradas", tags = "RegraAnuenio")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(
+                    schema = @Schema(implementation = RegraAnuenioResponseDto.class)
+            ), examples = @ExampleObject(name = "Success",
+                    summary = "RegraAnuenioResponse",
+                    value = ExampleConstants.REGRA_ANUENIO_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesListagem
+    public ResponseEntity<List<RegraAnuenioResponseDto>> getAll() {
+        List<RegraAnuenioResponseDto> responseDtos = service.listar();
+        if (responseDtos.isEmpty()) {
+            throw new ResourceNotFoundException("Nenhum item foi encontrado.");
+        }
+        return ResponseEntity.ok(responseDtos);
+    }
 
     @GetMapping(value = "categoria/{categoriaId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca a regra de anuênio de uma categoria salarial", tags = "RegraAnuenio")

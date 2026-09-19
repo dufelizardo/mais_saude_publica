@@ -10,7 +10,9 @@ import com.edufelizardo.maissaudepublica.repositories.RegraAnuenioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class RegraAnuenioService {
@@ -20,6 +22,13 @@ public class RegraAnuenioService {
 
     @Autowired
     private CategoriaSalarialService categoriaSalarialService;
+
+    public List<RegraAnuenioResponseDto> listar() {
+        return regraAnuenioRepository.findAll()
+                .stream()
+                .map(RegraAnuenioResponseDto::fromRegraAnuenio)
+                .collect(Collectors.toList());
+    }
 
     public RegraAnuenioResponseDto criar(RegraAnuenioRequestDto dto) {
         CategoriaSalarial categoria = categoriaSalarialService.buscarEntidadePorId(dto.getCategoriaId());

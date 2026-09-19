@@ -1,0 +1,106 @@
+<a href="#main" class="skip-link">Pular para o conteúdo principal</a>
+
+<header class="site-header" role="banner">
+  <div class="container header-row">
+    <a routerLink="/" class="brand" aria-label="Mais Saúde Pública — página inicial">
+      <span class="brand__mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <span>
+        <span class="brand__name">Mais Saúde Pública</span><br/>
+        <span class="brand__sub">Portal Integrado</span>
+      </span>
+    </a>
+  </div>
+</header>
+
+<main id="main">
+  <section class="block" style="padding-top: var(--s-10);">
+    <div class="container">
+      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Recursos Humanos</span>
+
+      <header class="page-head" style="margin-top: var(--s-4);">
+        <div>
+          <h1>Cargos</h1>
+          <p>Cargos vinculados a uma categoria salarial.</p>
+        </div>
+        <button type="button" class="btn" (click)="abrirNovo()">Novo cargo</button>
+      </header>
+
+      <div class="toolbar" role="region" aria-label="Filtro de cargos">
+        <label class="search">
+          <span class="sr-only">Buscar cargo por nome</span>
+          <input type="search" placeholder="Buscar por nome…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+        <select [value]="filtroCategoria()" (change)="filtroCategoria.set($any($event.target).value)" aria-label="Filtrar por categoria">
+          <option value="">Todas as categorias</option>
+          @for (categoria of categorias(); track categoria.uuid) {
+            <option [value]="categoria.uuid">{{ categoria.nome }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="card" style="overflow: hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Categoria</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cargo of cargosFiltrados(); track cargo.uuid) {
+              <tr>
+                <td>{{ cargo.nome }}</td>
+                <td>{{ cargo.categoriaNome }}</td>
+                <td style="text-align: right; white-space: nowrap;">
+                  <a [routerLink]="['/rh/cargos', cargo.uuid, 'tabela-salarial']" class="btn btn--ghost">Tabela salarial</a>
+                  <button type="button" class="btn btn--ghost" (click)="abrirEdicao(cargo)">Editar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!carregando() && cargosFiltrados().length === 0) {
+          <p class="table-empty">Nenhum cargo encontrado.</p>
+        }
+      </div>
+    </div>
+  </section>
+</main>
+
+@if (modalAberto()) {
+  <app-modal [titulo]="editando() ? 'Editar cargo' : 'Novo cargo'" (fechar)="fecharModal()">
+    @if (errorMessage()) {
+      <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+      <div class="form-group">
+        <label for="categoriaId">Categoria salarial *</label>
+        <select id="categoriaId" formControlName="categoriaId">
+          <option value="" disabled>Selecione…</option>
+          @for (categoria of categorias(); track categoria.uuid) {
+            <option [value]="categoria.uuid">{{ categoria.nome }}</option>
+          }
+        </select>
+        @if (form.controls.categoriaId.invalid && form.controls.categoriaId.touched) {
+          <span class="form-error">Categoria é obrigatória.</span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="nome">Nome *</label>
+        <input id="nome" type="text" formControlName="nome" />
+        @if (form.controls.nome.invalid && form.controls.nome.touched) {
+          <span class="form-error">Nome é obrigatório.</span>
+        }
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submitting()">
+          {{ submitting() ? 'Salvando…' : 'Salvar' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}
