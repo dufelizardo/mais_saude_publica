@@ -42,15 +42,15 @@ desenho.
                  ┌────────▼──────────────────────────────▼───────▼───┐
                  │                  Profissional (já existe)          │
                  │         (matricula PK, cpf, ficha por contratação) │
-                 └──┬───────┬───────┬───────┬────────┬────────┬──────┘
-                    │ N     │ N     │ N      │ N      │ N      │ N
-        ┌───────────▼─┐ ┌───▼────┐ ┌▼───────┐ ┌──────▼──┐ ┌───▼────┐ ┌▼──────────┐
-        │AjusteIndiv.  │ │Afasta- │ │Registro│ │Treinam. │ │ SST    │ │Avaliação  │
-        │ (só residual)│ │mento   │ │Ponto   │ │(partic.)│ │(exame/ │ │           │
-        └──────────────┘ └───┬────┘ └────────┘ └─────────┘ │acident.│ └───────────┘
-                              │ 0..1                        │ /EPI)  │
-                       ┌──────▼─────┐                       └────────┘
-                       │  Licenca   │
+                 └──┬───────┬───────┬───────┬────────┬────────┬──────┬──────┐
+                    │ N     │ N     │ N      │ N      │ N      │ N   │ N
+        ┌───────────▼─┐ ┌───▼────┐ ┌▼───────┐ ┌──────▼──┐ ┌───▼────┐ ┌▼──────────┐ ┌▼──────────┐
+        │AjusteIndiv.  │ │Afasta- │ │Registro│ │Treinam. │ │ SST    │ │Avaliação  │ │AdesaoBene-│
+        │ (só residual)│ │mento   │ │Ponto   │ │(partic.)│ │(exame/ │ │           │ │ficio      │
+        └──────────────┘ └───┬────┘ └────────┘ └─────────┘ │acident.│ └───────────┘ └─────┬─────┘
+                              │ 0..1                        │ /EPI)  │                    │ N
+                       ┌──────▼─────┐                       └────────┘        TipoBeneficio ──1:N── ValorBeneficio
+                       │  Licenca   │                                         (catálogo)       (histórico por tipo)
                        │(subtipo)   │
                        └────────────┘
 
@@ -61,14 +61,14 @@ desenho.
                        └─────────────────┘
 
         Salário efetivo = TabelaSalarial vigente do Cargo (via Lotacao vigente) + anuênio calculado
-        pela RegraAnuenio + AjusteIndividual vigente. FolhaPagamento (mensal) consome esse valor +
-        RegistroPonto do mês + Afastamento/Licenca do mês. Campos de valor são registro, não
-        cálculo automático.
+        pela RegraAnuenio + AjusteIndividual vigente. FolhaPagamento (mensal) consome salário +
+        AdesaoBeneficio ativas × ValorBeneficio vigente + RegistroPonto do mês + Afastamento/Licenca
+        do mês. Campos de valor são registro, não cálculo automático.
 
         Vaga (FK UnidadeDeSaude) → Candidato → aprovado vira um Profissional novo (fecha o ciclo)
 ```
 
-## 2. Fase 0 — Lotação, Cargo e Salário (pré-requisitos)
+## 2. Fase 0 — Lotação, Cargo, Salário e Benefícios (pré-requisitos)
 
 Ponto levantado na revisão: salário não é um número solto por profissional. Ele deriva de uma
 **tabela salarial por cargo**, agrupada por categoria profissional (a mesma lógica de convenção
@@ -184,6 +184,54 @@ anuênio, seção 2.5), não tabela de cargo (isso é dissídio/mudança de carg
 mudança de cargo (que já resolve sozinha via `Lotacao`) — é o resíduo, não o caminho principal de
 reajuste.
 
+### Benefícios (remuneração indireta)
+
+Todo profissional recebe ou compartilha o custo de benefícios — vale transporte, vale
+alimentação/refeição, plano de saúde, plano odontológico, seguro de vida, cesta básica. É
+remuneração, mas **não é salário**: tem regras de custeio próprias (ex.: VT pode ter até 6% do
+salário descontado do profissional, por lei; VA/VR e plano de saúde costumam ser 100% empresa ou
+compartilhados de outra forma) e valores que mudam com reajuste próprio, não necessariamente junto
+com o dissídio de salário. Mesmo padrão dos outros dois: catálogo → tabela de valores por data →
+vínculo do profissional com data.
+
+### 2.7 `TipoBeneficio` (catálogo)
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `id` | UUID (PK) | |
+| `nome` | String | Ex.: "Vale Transporte", "Vale Alimentação", "Plano de Saúde", "Plano Odontológico", "Seguro de Vida", "Cesta Básica" |
+| `custeio` | enum: `EMPRESA`, `COMPARTILHADO`, `PROFISSIONAL` | Quem paga — `COMPARTILHADO` é o caso do VT (desconto limitado por lei) |
+
+### 2.8 `ValorBeneficio` (histórico de valor por tipo)
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `id` | UUID (PK) | |
+| `tipoBeneficio` | FK → `TipoBeneficio` | |
+| `valor` | BigDecimal | Valor de referência (ex.: valor mensal do VR, valor da mensalidade do plano) |
+| `dataVigencia` | LocalDate | |
+| `motivo` | String | "Reajuste", "Renovação de contrato com operadora" |
+
+**Regra**: mesmo padrão de `TabelaSalarial` — vigente = maior `dataVigencia <= hoje`. Reajuste de
+benefício é independente do dissídio salarial (podem acontecer em datas diferentes, negociados
+separadamente).
+
+### 2.9 `AdesaoBeneficio`
+
+| Campo | Tipo | Observação |
+|---|---|---|
+| `id` | UUID (PK) | |
+| `profissional` | FK → `Profissional` | |
+| `tipoBeneficio` | FK → `TipoBeneficio` | |
+| `dataInicio` | LocalDate | |
+| `dataFim` | LocalDate, nullable | `null` = adesão ativa. Desligamento (ADR-0017) encerra as adesões vigentes na mesma data, por consequência, não por regra própria daqui |
+| `quantidadeDependentes` | Integer, opcional | Relevante pra plano de saúde/odontológico, onde o custo pode escalar por dependente |
+
+**Consumido por**: `FolhaPagamento` (fase 5) — soma as `AdesaoBeneficio` ativas do mês × o
+`ValorBeneficio` vigente de cada uma, aplicando a regra de custeio (`EMPRESA` vira provento
+indireto/custo da empresa, `COMPARTILHADO`/`PROFISSIONAL` vira desconto). Mesma ressalva geral:
+campo de registro, cálculo de folha em si fica pra quando essa fase for desenhada de verdade.
+
 ## 3. Fase 1 — Afastamento
 
 | Campo | Tipo | Observação |
@@ -245,8 +293,9 @@ registro, não cálculo automático.
 ## 7. Fase 5 — Folha de pagamento
 
 Fecha mensalmente, consumindo o salário efetivo (fase 0 — `TabelaSalarial` do `Cargo` vigente via
-`Lotacao`, mais `AjusteIndividual`) + `RegistroPonto` do mês (fase 2) + `Afastamento`/`Licenca` do
-mês (fases 1 e 3).
+`Lotacao`, anuênio, `AjusteIndividual`) + benefícios (fase 0 — `AdesaoBeneficio` ativas ×
+`ValorBeneficio` vigente, respeitando o `custeio` de cada `TipoBeneficio`) + `RegistroPonto` do mês
+(fase 2) + `Afastamento`/`Licenca` do mês (fases 1 e 3).
 
 ### `FolhaPagamento`
 
@@ -294,8 +343,9 @@ conversa; fica registrado aqui como consumidor futuro).
 
 | Regra | Onde se aplica |
 |---|---|
-| Dado que muda com o tempo vira histórico (nunca update destrutivo) | `Lotacao`, `TabelaSalarial`, `AjusteIndividual` — e por extensão qualquer campo que a Folha (fase 5) precise reconstruir retroativamente |
-| Vigente = registro com maior data-de-início `<= hoje` | `Lotacao`, `TabelaSalarial`, `AjusteIndividual` |
+| Dado que muda com o tempo vira histórico (nunca update destrutivo) | `Lotacao`, `TabelaSalarial`, `AjusteIndividual`, `ValorBeneficio`, `AdesaoBeneficio` — e por extensão qualquer campo que a Folha (fase 5) precise reconstruir retroativamente |
+| Vigente = registro com maior data-de-início `<= hoje` | `Lotacao`, `TabelaSalarial`, `AjusteIndividual`, `ValorBeneficio` |
+| Benefício é remuneração indireta, não salário — tem custeio e reajuste próprios, independentes do dissídio salarial | `TipoBeneficio`, `ValorBeneficio`, `AdesaoBeneficio` |
 | Salário nunca é um valor solto por profissional — é derivado do `Cargo` da `Lotacao` vigente (via `TabelaSalarial`), mais anuênio calculado, mais ajustes individuais | `Lotacao`, `Cargo`, `TabelaSalarial`, `RegraAnuenio`, `AjusteIndividual`, consumido por `FolhaPagamento` |
 | Dissídio atualiza a `TabelaSalarial` uma vez por cargo afetado, nunca por profissional — propaga sozinho pra quem estiver lotado ali | `TabelaSalarial` |
 | Progressão automática (tempo de serviço) é regra calculada, não lançamento gravado por instância — só vira registro se um dia precisar de auditoria formal da concessão | `RegraAnuenio` vs. `AjusteIndividual` |

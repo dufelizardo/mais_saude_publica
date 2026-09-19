@@ -55,6 +55,9 @@ Achadas nesta conversa (não no documento do DeepSeek):
 - **Sem suporte a transferência, promoção ou reajuste** — consequência direta das duas lacunas
   acima: sem um histórico de lotação/cargo/salário, não há o que "transferir" ou "reajustar", só
   sobrescrever.
+- **Sem registro de benefícios.** Vale transporte, vale alimentação/refeição, plano de saúde,
+  plano odontológico, seguro de vida, cesta básica — nenhum desses é rastreado hoje, apesar de
+  toda empresa oferecer ou compartilhar o custo de algum deles.
 
 ## 4. É um ecossistema, não itens isolados
 
@@ -81,23 +84,25 @@ ainda, e os números/regras trabalhistas seguem sujeitos ao aviso da seção 1.
 
 ### Pré-requisitos identificados nesta sessão (não estavam na lista original)
 
-As lacunas da seção 3 (**Lotação** e **Salário**) não apareciam no documento original, mas o
-ecossistema acima depende delas silenciosamente: Ponto (fase 2) precisa saber a jornada associada a
-onde o profissional está lotado; Folha (fase 5) precisa do salário vigente pra calcular qualquer
-coisa. Por isso ficam como **Fase 0 — pré-requisito**, antes da Fase 1 valer a pena de verdade:
+As lacunas da seção 3 (**Lotação**, **Salário** e **Benefícios**) não apareciam no documento
+original, mas o ecossistema acima depende delas silenciosamente: Ponto (fase 2) precisa saber a
+jornada associada a onde o profissional está lotado; Folha (fase 5) precisa do salário vigente e
+dos benefícios ativos pra calcular qualquer coisa. Por isso ficam como **Fase 0 — pré-requisito**,
+antes da Fase 1 valer a pena de verdade:
 
 | Subdomínio | Ideia central | Alimenta |
 |---|---|---|
 | **Lotação** | Vínculo profissional↔unidade com histórico (data início/fim), suporta transferência | Ponto (fase 2), Escala (fora desta lista, mas do mesmo tipo) |
-| **Salário** | Derivado de tabela por cargo/categoria (não um valor solto por profissional) — dissídio reajusta o cargo inteiro, mudança de cargo já traz o valor novo junto (ver [MODELO-RH.md](./MODELO-RH.md#2-fase-0--lotação-cargo-e-salário-pré-requisitos)) | Folha (fase 5), Desligamento/rescisão (fase 4) |
+| **Salário** | Derivado de tabela por cargo/categoria (não um valor solto por profissional) — dissídio reajusta o cargo inteiro, mudança de cargo já traz o valor novo junto, anuênio é regra automática por tempo de serviço (ver [MODELO-RH.md](./MODELO-RH.md#2-fase-0--lotação-cargo-salário-e-benefícios-pré-requisitos)) | Folha (fase 5), Desligamento/rescisão (fase 4) |
+| **Benefícios** | Remuneração indireta (VT, VR/VA, plano de saúde, odontológico, seguro de vida, cesta básica) — catálogo + tabela de valores por data + adesão do profissional, com custeio próprio (empresa/compartilhado/profissional) | Folha (fase 5) |
 
 ## 5. Próximo passo planejado
 
 **Lotação primeiro** (Fase 0), pelos motivos da seção 4 acima — sem ela, nem Ponto nem Escala têm
-onde ancorar a jornada. Depois **Salário** (também Fase 0), mesmo padrão de histórico, validado com
-Lotação antes de mexer em algo com dinheiro envolvido. A partir daí, seguir a ordem de fases 1-9
-combinada nesta seção — cada fase, na sua vez, merece sua própria conversa e plano, não uma adoção
-em bloco.
+onde ancorar a jornada. Depois **Salário e Benefícios** (também Fase 0), mesmo padrão de histórico,
+validado com Lotação antes de mexer em algo com dinheiro envolvido. A partir daí, seguir a ordem de
+fases 1-9 combinada nesta seção — cada fase, na sua vez, merece sua própria conversa e plano, não
+uma adoção em bloco.
 
 ## 6. Referências
 
