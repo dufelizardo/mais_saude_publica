@@ -529,4 +529,37 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String TIPO_BENEFICIO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "nome": "Vale Refeição",
+                    "custeio": "EMPRESA"
+                  }
+                ]
+            """;
+    public static final String VALOR_BENEFICIO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "tipoBeneficioNome": "Vale Refeição",
+                    "valor": 35.00,
+                    "dataVigencia": "2026-01-01",
+                    "motivo": "Reajuste"
+                  }
+                ]
+            """;
+    public static final String ADESAO_BENEFICIO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "tipoBeneficioNome": "Vale Refeição",
+                    "dataInicio": "2026-01-01",
+                    "dataFim": null,
+                    "quantidadeDependentes": null
+                  }
+                ]
+            """;
 }
