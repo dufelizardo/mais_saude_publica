@@ -1,7 +1,10 @@
 # Escopo do domínio de RH — roadmap e ideias
 
-**Data:** 2026-09-19
-**Status:** Vivo (visão/roadmap, não uma decisão implementada — ver aviso na seção 1)
+**Data:** 2026-09-19 (criado) · atualizado em 2026-09-19 após conclusão do backend
+**Status:** Vivo. **Backend (Fases 0-9) implementado e mergeado em `developer`** — ver a tabela de
+PRs em [MODELO-RH.md](./MODELO-RH.md#0-estado-de-implementação-backend). Frontend em andamento, ver
+seção 7. Nenhuma fase foi promovida a `qaa`/`homologacao`/`main` ainda (regra do módulo completo,
+seção 5).
 
 ## 1. Contexto e como ler este documento
 

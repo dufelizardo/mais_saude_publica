@@ -1,25 +1,6 @@
-<a href="#main" class="skip-link">Pular para o conteúdo principal</a>
+<span class="eyebrow"><span class="dot" aria-hidden="true"></span> Recursos Humanos</span>
 
-<header class="site-header" role="banner">
-  <div class="container header-row">
-    <a routerLink="/" class="brand" aria-label="Mais Saúde Pública — página inicial">
-      <span class="brand__mark" aria-hidden="true">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-      </span>
-      <span>
-        <span class="brand__name">Mais Saúde Pública</span><br/>
-        <span class="brand__sub">Portal Integrado</span>
-      </span>
-    </a>
-  </div>
-</header>
-
-<main id="main">
-  <section class="block" style="padding-top: var(--s-10);">
-    <div class="container">
-      <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Recursos Humanos</span>
-
-      <header class="page-head" style="margin-top: var(--s-4);">
+<header class="page-head" style="margin-top: var(--s-4);">
         <div>
           <h1>Cargos</h1>
           <p>Cargos vinculados a uma categoria salarial.</p>
@@ -66,9 +47,6 @@
           <p class="table-empty">Nenhum cargo encontrado.</p>
         }
       </div>
-    </div>
-  </section>
-</main>
 
 @if (modalAberto()) {
   <app-modal [titulo]="editando() ? 'Editar cargo' : 'Novo cargo'" (fechar)="fecharModal()">

@@ -1,11 +1,31 @@
 # Modelo completo do domínio de RH
 
-**Data:** 2026-09-19
-**Status:** Desenho completo do domínio — ainda não implementado (ver [ESCOPO-RH.md](./ESCOPO-RH.md)
-para a ordem de fases e o que já é lacuna confirmada vs. ideia). Este documento é o detalhamento
-técnico: entidades, campos, relacionamentos e como cada peça se conecta às outras. Serve pra ter
-"todos os pontos" na mão antes de escolher por onde começar a implementar — não é uma proposta de
-implementar tudo de uma vez.
+**Data:** 2026-09-19 (criado) · atualizado em 2026-09-19 após conclusão do backend
+**Status:** Backend (Fases 0-9) **implementado e mergeado em `developer`**. Frontend em andamento —
+ver [ESCOPO-RH.md](./ESCOPO-RH.md) seção 7 pro estado atual e a tabela de implementação logo abaixo.
+Este documento é o detalhamento técnico: entidades, campos, relacionamentos e como cada peça se
+conecta às outras.
+
+## 0. Estado de implementação (backend)
+
+| Fase | Subdomínio | PR(s) | Status |
+|---|---|---|---|
+| 0 (1/3) | CategoriaSalarial, Cargo, Lotacao | [#123](https://github.com/dufelizardo/mais_saude_publica/pull/123) | ✅ |
+| 0 (2/3) | TabelaSalarial, RegraAnuenio, AjusteIndividual | [#124](https://github.com/dufelizardo/mais_saude_publica/pull/124) | ✅ |
+| 0 (3/3) | TipoBeneficio, ValorBeneficio, AdesaoBeneficio | [#125](https://github.com/dufelizardo/mais_saude_publica/pull/125) | ✅ |
+| 1 | Afastamento | [#126](https://github.com/dufelizardo/mais_saude_publica/pull/126) | ✅ |
+| 2 | RegistroPonto | [#127](https://github.com/dufelizardo/mais_saude_publica/pull/127) | ✅ |
+| 3 | Licenca | [#128](https://github.com/dufelizardo/mais_saude_publica/pull/128) | ✅ |
+| 4 | CalculoRescisao | [#129](https://github.com/dufelizardo/mais_saude_publica/pull/129) | ✅ |
+| 5 | FolhaPagamento | [#130](https://github.com/dufelizardo/mais_saude_publica/pull/130) | ✅ |
+| 6 | Treinamento, ParticipacaoTreinamento | [#131](https://github.com/dufelizardo/mais_saude_publica/pull/131) | ✅ |
+| 7 | ExameOcupacional, AcidenteTrabalho, EPI | [#132](https://github.com/dufelizardo/mais_saude_publica/pull/132) | ✅ |
+| 8 | Vaga, Candidato | [#133](https://github.com/dufelizardo/mais_saude_publica/pull/133) | ✅ |
+| 9 | CicloAvaliacao, Avaliacao | [#134](https://github.com/dufelizardo/mais_saude_publica/pull/134) | ✅ |
+| — | PATCH em CategoriaSalarial/Cargo/RegraAnuenio + `GET` listagem de RegraAnuenio (prep. frontend) | [#135](https://github.com/dufelizardo/mais_saude_publica/pull/135), [#136](https://github.com/dufelizardo/mais_saude_publica/pull/136) | ✅ |
+
+Todas as fases estão em `developer` — nenhuma foi promovida a `qaa`/`homologacao`/`main` ainda (ver
+[ESCOPO-RH.md](./ESCOPO-RH.md), regra de promoção do módulo completo).
 
 **Aviso que continua valendo:** os campos de valor monetário/percentual em Folha e Rescisão (seção
 7 e 8) são **campos de registro**, não cálculos automáticos — o sistema grava o que um profissional

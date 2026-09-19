@@ -1,0 +1,63 @@
+<a href="#main" class="skip-link">Pular para o conteúdo principal</a>
+
+<div class="app">
+  <aside class="sidebar" [class.is-open]="sidebarAberta()" aria-label="Navegação principal">
+    <a routerLink="/" class="sidebar__brand" aria-label="Mais Saúde Pública — página inicial">
+      <span class="brand__mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <span>
+        <span class="brand__name">Mais Saúde</span><br />
+        <span class="brand__sub">Sistema Integrado</span>
+      </span>
+    </a>
+
+    <nav class="sidebar__nav">
+      <div class="nav-group">
+        <div class="nav-group__label">Recursos Humanos</div>
+
+        <a routerLink="/profissionais/novo" routerLinkActive #rlaNovo="routerLinkActive" [attr.aria-current]="rlaNovo.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="16" y1="11" x2="22" y2="11"></line></svg>
+          <span class="nav-item__label">Cadastrar profissional</span>
+        </a>
+
+        <a routerLink="/profissionais/desligar" routerLinkActive #rlaDesligar="routerLinkActive" [attr.aria-current]="rlaDesligar.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="18" y1="8" x2="23" y2="13"></line><line x1="23" y1="8" x2="18" y2="13"></line></svg>
+          <span class="nav-item__label">Desligar profissional</span>
+        </a>
+
+        <a routerLink="/rh/categorias-salariais" routerLinkActive #rlaCategorias="routerLinkActive" [attr.aria-current]="rlaCategorias.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+          <span class="nav-item__label">Categorias salariais</span>
+        </a>
+
+        <a routerLink="/rh/cargos" routerLinkActive #rlaCargos="routerLinkActive" [attr.aria-current]="rlaCargos.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span class="nav-item__label">Cargos</span>
+        </a>
+
+        <a routerLink="/rh/regras-anuenio" routerLinkActive #rlaRegras="routerLinkActive" [attr.aria-current]="rlaRegras.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span class="nav-item__label">Regras de anuênio</span>
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <header class="topbar" role="banner">
+    <button type="button" class="menu-btn" aria-label="Abrir menu" aria-controls="sidebar" [attr.aria-expanded]="sidebarAberta()" (click)="toggleSidebar()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <nav class="crumbs" aria-label="Trilha">
+      <a routerLink="/" style="color: var(--ink-500);">Início</a>
+      @if (breadcrumb()) {
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <strong>{{ breadcrumb() }}</strong>
+      }
+    </nav>
+  </header>
+
+  <main class="content" id="main">
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -1,7 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { Modal } from '../../../shared/modal/modal';
 import { CategoriaSalarialResponseDto } from '../../../core/models/categoria-salarial';
 import { ErrorResponseDto } from '../../../core/models/profissional';
@@ -9,7 +8,7 @@ import { CategoriaSalarialService } from '../../../core/services/categoria-salar
 
 @Component({
   selector: 'app-categorias-salariais',
-  imports: [ReactiveFormsModule, RouterLink, Modal],
+  imports: [ReactiveFormsModule, Modal],
   templateUrl: './categorias-salariais.html',
   styleUrl: './categorias-salariais.css',
 })

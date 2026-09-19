@@ -6,13 +6,20 @@ import { CategoriasSalariais } from './features/rh/categorias-salariais/categori
 import { Cargos } from './features/rh/cargos/cargos';
 import { CargoTabelaSalarial } from './features/rh/cargo-tabela-salarial/cargo-tabela-salarial';
 import { RegrasAnuenio } from './features/rh/regras-anuenio/regras-anuenio';
+import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
   { path: '', component: LandingPage },
-  { path: 'profissionais/novo', component: ProfissionalCadastro },
-  { path: 'profissionais/desligar', component: ProfissionalDesligar },
-  { path: 'rh/categorias-salariais', component: CategoriasSalariais },
-  { path: 'rh/cargos', component: Cargos },
-  { path: 'rh/cargos/:cargoId/tabela-salarial', component: CargoTabelaSalarial },
-  { path: 'rh/regras-anuenio', component: RegrasAnuenio },
+  {
+    path: '',
+    component: AppShell,
+    children: [
+      { path: 'profissionais/novo', component: ProfissionalCadastro, data: { breadcrumb: 'Cadastrar profissional' } },
+      { path: 'profissionais/desligar', component: ProfissionalDesligar, data: { breadcrumb: 'Desligar profissional' } },
+      { path: 'rh/categorias-salariais', component: CategoriasSalariais, data: { breadcrumb: 'Categorias salariais' } },
+      { path: 'rh/cargos', component: Cargos, data: { breadcrumb: 'Cargos' } },
+      { path: 'rh/cargos/:cargoId/tabela-salarial', component: CargoTabelaSalarial, data: { breadcrumb: 'Tabela salarial' } },
+      { path: 'rh/regras-anuenio', component: RegrasAnuenio, data: { breadcrumb: 'Regras de anuênio' } },
+    ],
+  },
 ];
