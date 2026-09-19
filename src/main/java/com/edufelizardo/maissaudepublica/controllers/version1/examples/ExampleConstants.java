@@ -654,4 +654,45 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String EXAME_OCUPACIONAL_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "tipo": "PERIODICO",
+                    "dataRealizacao": "2026-01-15",
+                    "dataValidade": "2027-01-15",
+                    "resultado": "APTO",
+                    "asoUrl": null
+                  }
+                ]
+            """;
+    public static final String ACIDENTE_TRABALHO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "dataHora": "2026-01-15T10:30:00",
+                    "descricao": "string",
+                    "catEmitida": true,
+                    "catUrl": null,
+                    "diasAfastamento": 5
+                  }
+                ]
+            """;
+    public static final String EPI_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "tipo": "LUVAS",
+                    "numeroCA": "12345",
+                    "dataEntrega": "2026-01-15",
+                    "dataDevolucao": null
+                  }
+                ]
+            """;
 }
