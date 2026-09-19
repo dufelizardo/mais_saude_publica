@@ -37,7 +37,7 @@
       <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
         <div class="form-group">
           <label for="cpf">CPF *</label>
-          <input id="cpf" type="text" formControlName="cpf" autocomplete="off" />
+          <input id="cpf" type="text" formControlName="cpf" autocomplete="off" inputmode="numeric" maxlength="14" (input)="onCpfInput($event)" />
           @if (form.controls.cpf.invalid && form.controls.cpf.touched) {
             <span class="form-error">CPF é obrigatório.</span>
           }
@@ -76,7 +76,7 @@
         <div class="form-row">
           <div class="form-group">
             <label for="telefone">Telefone *</label>
-            <input id="telefone" type="tel" formControlName="telefone" autocomplete="tel" />
+            <input id="telefone" type="tel" formControlName="telefone" autocomplete="tel" inputmode="tel" maxlength="20" (input)="onTelefoneInput($event)" />
             @if (form.controls.telefone.invalid && form.controls.telefone.touched) {
               <span class="form-error">Telefone é obrigatório.</span>
             }

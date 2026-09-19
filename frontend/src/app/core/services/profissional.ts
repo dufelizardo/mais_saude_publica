@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ProfissionalRequestDto, SuccessResponseDto } from '../models/profissional';
+import { ProfissionalRequestDto, ProfissionalResponseDto, SuccessResponseDto } from '../models/profissional';
 
 @Injectable({ providedIn: 'root' })
 export class ProfissionalService {
@@ -10,5 +10,15 @@ export class ProfissionalService {
 
   create(dto: ProfissionalRequestDto): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/`, dto);
+  }
+
+  buscarPorCpf(cpf: string): Observable<ProfissionalResponseDto> {
+    return this.http.get<ProfissionalResponseDto>(`${this.baseUrl}/${cpf}`);
+  }
+
+  desligar(cpf: string, dataDesligamento: string): Observable<SuccessResponseDto> {
+    return this.http.delete<SuccessResponseDto>(`${this.baseUrl}/des-habilitar/${cpf}`, {
+      params: { dataDesligamento },
+    });
   }
 }

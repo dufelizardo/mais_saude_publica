@@ -20,6 +20,31 @@ export interface ProfissionalRequestDto {
   dataAdmissao?: string;
 }
 
+export interface EnderecoResponseDto {
+  cep: string;
+  logradouro: string;
+  numeroLogradouro: string;
+  complemento?: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  ddd?: string;
+}
+
+export interface ProfissionalResponseDto {
+  matricula: string;
+  cpf: string;
+  nome: string;
+  conselhoClasse?: string;
+  numeroConselho?: string;
+  endereco: EnderecoResponseDto;
+  telefones: string[];
+  email: string;
+  dataAdmissao?: string;
+  dataDesligamento?: string;
+  ativo: boolean;
+}
+
 export interface SuccessResponseDto {
   message: string;
   details: string;
