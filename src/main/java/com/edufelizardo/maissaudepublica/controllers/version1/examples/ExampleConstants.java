@@ -599,4 +599,21 @@ public class ExampleConstants {
                   "documentoUrl": null
                 }
             """;
+    public static final String CALCULO_RESCISAO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "tipoDesligamento": "SEM_JUSTA_CAUSA",
+                    "avisoPrevio": 3000.00,
+                    "feriasVencidas": 0.00,
+                    "feriasProporcionais": 1500.00,
+                    "decimoTerceiroProporcional": 1000.00,
+                    "multaFgts": 1200.00,
+                    "total": 6700.00,
+                    "documentoTrctUrl": null
+                  }
+                ]
+            """;
 }
