@@ -133,8 +133,10 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 7 | Histórico funcional consolidado — aba nova no perfil, sem endpoint novo (ver [ADR-0026](../adr/0026-historico-funcional-consolidado.md)) | [#150](https://github.com/dufelizardo/mais_saude_publica/pull/150) | ✅ |
 | 8a | Catálogo de treinamentos + Ciclos de avaliação (ver [ADR-0027](../adr/0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md)) | [#151](https://github.com/dufelizardo/mais_saude_publica/pull/151) | ✅ |
 | 8b | SST — aba "SST" no perfil, com 3 sub-abas (Exames ocupacionais, Acidentes de trabalho, EPIs) | [#152](https://github.com/dufelizardo/mais_saude_publica/pull/152) | ✅ |
-| 8c | Recrutamento — Vagas + Candidatos | — | ⏳ Não iniciada |
+| 8c | Recrutamento — Vagas + Candidatos | [#153](https://github.com/dufelizardo/mais_saude_publica/pull/153) | 🔶 PR aberta, bloqueada — CI não dispara para essa branch (causa ainda não diagnosticável por CLI, ver PR) |
 | 8d | Menu agrupado + breadcrumb dinâmico | — | ⏳ Não iniciada |
+| 9 | Benefícios — backend: `PATCH /adesao-beneficio/{uuid}/encerrar` (ver [ADR-0028](../adr/0028-fatia-9-beneficios.md)) | [#154](https://github.com/dufelizardo/mais_saude_publica/pull/154) | ✅ |
+| 9 | Benefícios — frontend: `/rh/tipos-beneficio`, `/rh/tipos-beneficio/:tipoId/valores`, aba "Benefícios" no perfil | — | ⏳ Não iniciada |
 
 ### Regra da fatia 8 (definida pelo usuário, vale para 8a-8d)
 
@@ -146,6 +148,11 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 Duas exceções derivadas (não são "status gravado", são calculadas a partir de datas já existentes
 — não violam a regra acima): status do ciclo de avaliação (Agendado/Em andamento/Encerrado) e
 situação do EPI (Em uso/Devolvido). Ver [ADR-0027](../adr/0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md).
+
+A fatia 9 (Benefícios) segue a mesma regra e o mesmo raciocínio de situação derivada — com uma
+diferença: ali a regra motivou uma mudança real de backend (`PATCH /adesao-beneficio/{uuid}/encerrar`),
+porque `AdesaoBeneficio.dataFim` já existia no model sem nenhum endpoint capaz de escrevê-lo. Ver
+[ADR-0028](../adr/0028-fatia-9-beneficios.md).
 
 ## 7. Referências
 

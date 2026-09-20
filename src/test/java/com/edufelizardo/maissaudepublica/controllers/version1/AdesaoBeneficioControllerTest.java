@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.models.AdesaoBeneficio;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.TipoBeneficio;
 import com.edufelizardo.maissaudepublica.models.enuns.CusteioBeneficio;
@@ -15,11 +16,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -78,6 +81,17 @@ class AdesaoBeneficioControllerTest {
         UUID id = tipoBeneficioRepository.save(tipoBeneficio).getUuid();
         tipoIdsCriados.add(id);
         return id;
+    }
+
+    private UUID criarAdesaoFixture(String sufixo, LocalDate dataFim) {
+        String matricula = criarProfissionalFixture(sufixo);
+        Profissional profissional = profissionalRepository.findByMatricula(matricula).orElseThrow();
+        UUID tipoId = criarTipoFixture(sufixo);
+        TipoBeneficio tipoBeneficio = tipoBeneficioRepository.findById(tipoId).orElseThrow();
+
+        AdesaoBeneficio adesaoBeneficio = new AdesaoBeneficio(profissional, tipoBeneficio, LocalDate.of(2026, 1, 1), null);
+        adesaoBeneficio.setDataFim(dataFim);
+        return adesaoBeneficioRepository.save(adesaoBeneficio).getUuid();
     }
 
     @Test
@@ -172,6 +186,32 @@ class AdesaoBeneficioControllerTest {
         String matricula = criarProfissionalFixture("05");
 
         mockMvc.perform(get(BASE_URL + "profissional/" + matricula))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deveEncerrarComSucesso() throws Exception {
+        UUID adesaoId = criarAdesaoFixture("06", null);
+
+        mockMvc.perform(patch(BASE_URL + adesaoId + "/encerrar")
+                        .param("dataFim", "2026-06-30"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Adesão de benefício encerrada com sucesso!"));
+    }
+
+    @Test
+    void deveRetornarConflictAoEncerrarAdesaoJaEncerrada() throws Exception {
+        UUID adesaoId = criarAdesaoFixture("07", LocalDate.of(2026, 3, 31));
+
+        mockMvc.perform(patch(BASE_URL + adesaoId + "/encerrar")
+                        .param("dataFim", "2026-06-30"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void deveRetornarNotFoundAoEncerrarAdesaoInexistente() throws Exception {
+        mockMvc.perform(patch(BASE_URL + UUID.randomUUID() + "/encerrar")
+                        .param("dataFim", "2026-06-30"))
                 .andExpect(status().isNotFound());
     }
 }
