@@ -1,10 +1,11 @@
 # Escopo do domínio de RH — roadmap e ideias
 
-**Data:** 2026-09-19 (criado) · atualizado em 2026-09-19 após conclusão do backend
+**Data:** 2026-09-19 (criado) · atualizado em 2026-09-20 (rastreabilidade Jira + fatias 9/#159/#161/#162)
 **Status:** Vivo. **Backend (Fases 0-9) implementado e mergeado em `developer`** — ver a tabela de
 PRs em [MODELO-RH.md](./MODELO-RH.md#0-estado-de-implementação-backend). Frontend em andamento, ver
 seção 6. Nenhuma fase foi promovida a `qaa`/`homologacao`/`main` ainda (regra do módulo completo,
-seção 5).
+seção 5). Rastreado no Jira sob o épico [AQUAQE-274](https://edufelizardo.atlassian.net/browse/AQUAQE-274)
+("Módulo de RH"), com uma História por item da tabela da seção 6.
 
 ## 1. Contexto e como ler este documento
 
@@ -138,6 +139,9 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 9 | Benefícios — backend: `PATCH /adesao-beneficio/{uuid}/encerrar` (ver [ADR-0028](../adr/0028-fatia-9-beneficios.md)) | [#154](https://github.com/dufelizardo/mais_saude_publica/pull/154) | ✅ |
 | 9 | Benefícios — frontend: `/rh/tipos-beneficio`, `/rh/tipos-beneficio/:tipoId/valores`, aba "Benefícios" no perfil | [#155](https://github.com/dufelizardo/mais_saude_publica/pull/155) | ✅ |
 | — | Gap identificado no levantamento de endpoints de `Profissional`: lista de profissionais (`/profissionais`) + edição de contato no perfil (ver [ADR-0029](../adr/0029-listagem-e-edicao-de-contato-do-profissional.md)) | [#157](https://github.com/dufelizardo/mais_saude_publica/pull/157) | ✅ |
+| — | Registro de ponto na UI (form "Registrar ponto") + correção de registro existente sujeita a aprovação do gestor (`solicitar-correcao`/`aprovar-correcao`/`rejeitar-correcao`), campos embutidos em `RegistroPonto` — atualização da [ADR-0024](../adr/0024-ponto-com-filtro-de-periodo.md) | [#159](https://github.com/dufelizardo/mais_saude_publica/pull/159) | ✅ |
+| — | `PATCH /vaga/{uuid}` (encerrar/editar vaga) — exceção deliberada à regra "sem PATCH" da fatia 8, só pra Vaga; `Cargo` ganha campo `descricao` opcional, `Vaga` expõe `cargoDescricao` derivado — atualização da [ADR-0027](../adr/0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md) | [#161](https://github.com/dufelizardo/mais_saude_publica/pull/161) | ✅ |
+| — | Fix de rolagem horizontal em tabelas largas: `.content` sem `min-width: 0` + `overflow: hidden` em wrappers de tabela cortavam conteúdo sem permitir rolar — corrigido em 12 telas + 14 pontos do perfil do profissional, documentado em `PADRAO-TELAS-INTERNAS.md` | [#162](https://github.com/dufelizardo/mais_saude_publica/pull/162) | ✅ |
 
 ### Regra da fatia 8 (definida pelo usuário, vale para 8a-8d)
 
