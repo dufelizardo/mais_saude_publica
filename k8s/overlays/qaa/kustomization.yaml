@@ -5,10 +5,15 @@ namespace: mais-saude-qaa
 
 resources:
   - ../../base
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - frontend-ingress.yaml
 
 images:
   - name: ghcr.io/dufelizardo/mais_saude_publica
     newTag: cd206b0fab593004e60dd89a0e55ba94a170f7cf
+  - name: ghcr.io/dufelizardo/mais_saude_publica-frontend
+    newTag: qaa
 
 configMapGenerator:
   - name: app-config
