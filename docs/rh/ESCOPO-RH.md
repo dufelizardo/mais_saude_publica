@@ -122,11 +122,13 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | — | Correção: cadastro de profissional (pré-existente, fora das fatias de RH) passa a vincular cargo e unidade via `Lotacao` — sem isso não havia de onde derivar salário nenhum (ver [ADR-0019](../adr/0019-vincular-cargo-e-lotacao-no-cadastro-de-profissional.md)) | [#141](https://github.com/dufelizardo/mais_saude_publica/pull/141) | ✅ |
 | App shell | Navegação (sidebar/topbar/breadcrumb) + componente de modal reutilizável | [#136](https://github.com/dufelizardo/mais_saude_publica/pull/136), [#137](https://github.com/dufelizardo/mais_saude_publica/pull/137) | ✅ |
 | 1 | Cadastros estruturais: Categorias salariais, Cargos, Tabela salarial, Regras de anuênio | [#135](https://github.com/dufelizardo/mais_saude_publica/pull/135), [#136](https://github.com/dufelizardo/mais_saude_publica/pull/136) | ✅ |
-| 2 | Tela central do Profissional (dados, lotação, ajustes, ponto, treinamentos, avaliações, desligamento) | — | ⏳ Não iniciada — precisa de um componente novo de timeline/histórico (não existe em `modelo_front/`) |
+| 2a | Tela central do Profissional — estrutura (busca por CPF, `.detail-card`/`.tabs`) + abas Dados e Lotação (só leitura) | [#142](https://github.com/dufelizardo/mais_saude_publica/pull/142) | ✅ |
+| 2b | Tela central do Profissional — abas Ajustes individuais e Treinamentos (histórico + registro) | — | ⏳ Não iniciada |
+| 2c | Tela central do Profissional — abas Avaliações e Desligamento/Rescisão (histórico + registro) | — | ⏳ Não iniciada |
 | 3 | Lotações (fluxo de transferência) | — | ⏳ Não iniciada |
 | 4 | Composição remuneratória | — | ⏳ Não iniciada — depende de um endpoint de leitura calculada ainda não construído (ver seção 3) |
-| 5 | Ajustes individuais, Afastamentos e Licenças | — | ⏳ Não iniciada — depende de resolver a lacuna de "listar licenças por profissional" |
-| 6 | Ponto, Desligamento/rescisão, Folha de pagamento | — | ⏳ Não iniciada — cada uma tem lacuna de backend própria (filtro por período, listagem por competência) |
+| 5 | Afastamentos e Licenças | — | ⏳ Não iniciada — depende de resolver a lacuna de "listar licenças por profissional". Ajustes individuais **não** depende disso — já é fatia 2b, listado aqui por engano antes |
+| 6 | Ponto, Desligamento/rescisão (folha), Folha de pagamento | — | ⏳ Não iniciada — cada uma tem lacuna de backend própria (filtro por período, listagem por competência); Desligamento/rescisão como *registro* de status já é fatia 2c, esta linha é a tela dedicada de fechamento de folha |
 | 7 | Histórico funcional consolidado | — | ⏳ Não iniciada |
 | 8 | Treinamento, SST, Recrutamento, Avaliação | — | 💡 Sem desenho de tela ainda — a especificação do usuário não detalha essas telas |
 
