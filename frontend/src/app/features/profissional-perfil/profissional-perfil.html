@@ -56,13 +56,18 @@
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'afastamentos'" (click)="selecionarAba('afastamentos')">Afastamentos e Licenças</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'ponto'" (click)="selecionarAba('ponto')">Ponto</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'folha'" (click)="selecionarAba('folha')">Folha de pagamento</button>
+      <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'sst'" (click)="selecionarAba('sst')">SST</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'treinamentos'" (click)="selecionarAba('treinamentos')">Treinamentos</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'avaliacoes'" (click)="selecionarAba('avaliacoes')">Avaliações</button>
+      <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'beneficios'" (click)="selecionarAba('beneficios')">Benefícios</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'desligamento'" (click)="selecionarAba('desligamento')">Desligamento/Rescisão</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'historico'" (click)="selecionarAba('historico')">Histórico funcional</button>
     </div>
 
     @if (abaAtiva() === 'dados') {
+      <div style="padding: var(--s-5) var(--s-5) 0; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn--ghost" (click)="abrirEditarContato()">Editar contato</button>
+      </div>
       <div class="info-grid">
         <div class="info-block">
           <h3>Contato</h3>
@@ -116,6 +121,96 @@
           </dl>
         </div>
       </div>
+    }
+
+    @if (contatoModalAberto()) {
+      <app-modal titulo="Editar contato" (fechar)="fecharContatoModal()">
+        @if (contatoErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ contatoErrorMessage() }}</div>
+        }
+        <form [formGroup]="contatoForm" (ngSubmit)="submitContato()" class="form" novalidate>
+          <div class="form-group">
+            <label for="emailContato">E-mail *</label>
+            <input id="emailContato" type="email" formControlName="email" autocomplete="email" />
+            @if (contatoForm.controls.email.hasError('required') && contatoForm.controls.email.touched) {
+              <span class="form-error">E-mail é obrigatório.</span>
+            }
+            @if (contatoForm.controls.email.hasError('email') && contatoForm.controls.email.touched) {
+              <span class="form-error">Informe um e-mail válido.</span>
+            }
+          </div>
+          <div class="form-group">
+            <label for="telefoneContato">Telefone *</label>
+            <input id="telefoneContato" type="tel" formControlName="telefone" autocomplete="tel" inputmode="tel" maxlength="20" (input)="onTelefoneContatoInput($event)" />
+            @if (contatoForm.controls.telefone.invalid && contatoForm.controls.telefone.touched) {
+              <span class="form-error">Telefone é obrigatório.</span>
+            }
+          </div>
+          <h3 style="font-size: 1.0625rem; margin-top: var(--s-2);">Endereço</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cepContato">CEP *</label>
+              <input id="cepContato" type="text" formControlName="cep" autocomplete="postal-code" />
+              @if (buscandoCepContato()) {
+                <span style="font-size: var(--fs-xs); color: var(--ink-500);">Buscando endereço…</span>
+              } @else if (cepContatoNaoEncontrado()) {
+                <span class="form-error">CEP não encontrado — preencha o endereço manualmente.</span>
+              } @else if (contatoForm.controls.cep.invalid && contatoForm.controls.cep.touched) {
+                <span class="form-error">CEP é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="logradouroContato">Logradouro *</label>
+              <input id="logradouroContato" type="text" formControlName="logradouro" autocomplete="address-line1" />
+              @if (contatoForm.controls.logradouro.invalid && contatoForm.controls.logradouro.touched) {
+                <span class="form-error">Logradouro é obrigatório.</span>
+              }
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="numeroLogradouroContato">Número *</label>
+              <input id="numeroLogradouroContato" type="text" formControlName="numeroLogradouro" />
+              @if (contatoForm.controls.numeroLogradouro.invalid && contatoForm.controls.numeroLogradouro.touched) {
+                <span class="form-error">Número é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="complementoContato">Complemento</label>
+              <input id="complementoContato" type="text" formControlName="complemento" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bairroContato">Bairro *</label>
+              <input id="bairroContato" type="text" formControlName="bairro" />
+              @if (contatoForm.controls.bairro.invalid && contatoForm.controls.bairro.touched) {
+                <span class="form-error">Bairro é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="cidadeContato">Cidade *</label>
+              <input id="cidadeContato" type="text" formControlName="cidade" autocomplete="address-level2" />
+              @if (contatoForm.controls.cidade.invalid && contatoForm.controls.cidade.touched) {
+                <span class="form-error">Cidade é obrigatória.</span>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="estadoContato">Estado (UF) *</label>
+            <input id="estadoContato" type="text" formControlName="estado" maxlength="2" style="max-width: 100px;" autocomplete="address-level1" />
+            @if (contatoForm.controls.estado.invalid && contatoForm.controls.estado.touched) {
+              <span class="form-error">Estado é obrigatório.</span>
+            }
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn--ghost" (click)="fecharContatoModal()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingContato()">
+              {{ submittingContato() ? 'Salvando…' : 'Salvar contato' }}
+            </button>
+          </div>
+        </form>
+      </app-modal>
     }
 
     @if (abaAtiva() === 'lotacao') {
@@ -554,12 +649,18 @@
           </div>
         </form>
 
+        @if (pontoErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ pontoErrorMessage() }}</div>
+        }
+
         <table>
           <thead>
             <tr>
               <th>Data/hora</th>
               <th>Tipo</th>
               <th>Origem</th>
+              <th>Situação</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -568,6 +669,24 @@
                 <td>{{ item.dataHora | date: 'dd/MM/yyyy HH:mm' }}</td>
                 <td>{{ item.tipo }}</td>
                 <td>{{ item.origem || '—' }}</td>
+                <td>
+                  @if (item.dataHoraProposta) {
+                    <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Correção pendente</span>
+                    <div style="font-size: var(--fs-xs); color: var(--ink-500); margin-top: 4px;">
+                      → {{ item.dataHoraProposta | date: 'dd/MM/yyyy HH:mm' }} ({{ item.tipoProposto }})
+                    </div>
+                  } @else {
+                    <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Regular</span>
+                  }
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                  @if (item.dataHoraProposta) {
+                    <button type="button" class="btn btn--ghost" [disabled]="resolvendoCorrecaoUuid() === item.uuid" (click)="aprovarCorrecaoPonto(item)">Aprovar</button>
+                    <button type="button" class="btn btn--ghost" [disabled]="resolvendoCorrecaoUuid() === item.uuid" (click)="rejeitarCorrecaoPonto(item)">Rejeitar</button>
+                  } @else {
+                    <button type="button" class="btn btn--ghost" (click)="abrirSolicitarCorrecaoPonto(item)">Solicitar correção</button>
+                  }
+                </td>
               </tr>
             }
           </tbody>
@@ -575,7 +694,87 @@
         @if (!carregandoPonto() && registrosPonto().length === 0) {
           <p class="table-empty">Nenhum registro de ponto no período.</p>
         }
+
+        <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Registrar ponto</h3>
+        <form [formGroup]="pontoForm" (ngSubmit)="registrarPonto()" class="form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoPonto">Tipo *</label>
+              <select id="tipoPonto" formControlName="tipo">
+                <option value="" disabled>Selecione…</option>
+                <option value="ENTRADA">Entrada</option>
+                <option value="INICIO_INTERVALO">Início do intervalo</option>
+                <option value="FIM_INTERVALO">Fim do intervalo</option>
+                <option value="SAIDA">Saída</option>
+              </select>
+              @if (pontoForm.controls.tipo.invalid && pontoForm.controls.tipo.touched) {
+                <span class="form-error">Tipo é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="dataHoraPonto">Data/hora *</label>
+              <input id="dataHoraPonto" type="datetime-local" formControlName="dataHora" />
+              @if (pontoForm.controls.dataHora.invalid && pontoForm.controls.dataHora.touched) {
+                <span class="form-error">Data/hora é obrigatória.</span>
+              }
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn" [disabled]="submittingPonto()">
+              {{ submittingPonto() ? 'Registrando…' : 'Registrar ponto' }}
+            </button>
+          </div>
+        </form>
       </div>
+    }
+
+    @if (correcaoPontoAlvo(); as alvo) {
+      <app-modal titulo="Solicitar correção de ponto" (fechar)="fecharCorrecaoPontoModal()">
+        @if (correcaoPontoErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ correcaoPontoErrorMessage() }}</div>
+        }
+        <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-bottom: var(--s-3);">
+          Registro atual: {{ alvo.dataHora | date: 'dd/MM/yyyy HH:mm' }} ({{ alvo.tipo }}). A correção só é aplicada
+          depois de aprovada.
+        </p>
+        <form [formGroup]="correcaoPontoForm" (ngSubmit)="confirmarSolicitarCorrecaoPonto()" class="form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoProposto">Tipo correto *</label>
+              <select id="tipoProposto" formControlName="tipoProposto">
+                <option value="" disabled>Selecione…</option>
+                <option value="ENTRADA">Entrada</option>
+                <option value="INICIO_INTERVALO">Início do intervalo</option>
+                <option value="FIM_INTERVALO">Fim do intervalo</option>
+                <option value="SAIDA">Saída</option>
+              </select>
+              @if (correcaoPontoForm.controls.tipoProposto.invalid && correcaoPontoForm.controls.tipoProposto.touched) {
+                <span class="form-error">Tipo é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="dataHoraProposta">Data/hora correta *</label>
+              <input id="dataHoraProposta" type="datetime-local" formControlName="dataHoraProposta" />
+              @if (correcaoPontoForm.controls.dataHoraProposta.invalid && correcaoPontoForm.controls.dataHoraProposta.touched) {
+                <span class="form-error">Data/hora é obrigatória.</span>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="justificativa">Justificativa *</label>
+            <input id="justificativa" type="text" formControlName="justificativa" placeholder="Ex.: relógio de ponto marcou errado" />
+            @if (correcaoPontoForm.controls.justificativa.invalid && correcaoPontoForm.controls.justificativa.touched) {
+              <span class="form-error">Justificativa é obrigatória.</span>
+            }
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn--ghost" (click)="fecharCorrecaoPontoModal()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingCorrecaoPonto()">
+              {{ submittingCorrecaoPonto() ? 'Enviando…' : 'Solicitar correção' }}
+            </button>
+          </div>
+        </form>
+      </app-modal>
     }
 
     @if (abaAtiva() === 'folha') {
@@ -648,6 +847,255 @@
           </div>
         </form>
       </div>
+    }
+
+    @if (abaAtiva() === 'sst') {
+      <div class="tabs" role="tablist" aria-label="Seções de SST" style="padding: 0 var(--s-5); border-top: 1px solid var(--ink-100);">
+        <button type="button" role="tab" [attr.aria-selected]="sstAbaAtiva() === 'exames'" (click)="selecionarAbaSst('exames')">Exames ocupacionais</button>
+        <button type="button" role="tab" [attr.aria-selected]="sstAbaAtiva() === 'acidentes'" (click)="selecionarAbaSst('acidentes')">Acidentes de trabalho</button>
+        <button type="button" role="tab" [attr.aria-selected]="sstAbaAtiva() === 'epis'" (click)="selecionarAbaSst('epis')">EPIs</button>
+      </div>
+
+      @if (sstAbaAtiva() === 'exames') {
+        <div style="padding: var(--s-5);">
+          <table>
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Realização</th>
+                <th>Validade</th>
+                <th>Resultado</th>
+                <th>ASO</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of exames(); track item.uuid) {
+                <tr>
+                  <td>{{ item.tipo }}</td>
+                  <td>{{ item.dataRealizacao | date: 'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dataValidade ? (item.dataValidade | date: 'dd/MM/yyyy') : '—' }}</td>
+                  <td>{{ item.resultado }}</td>
+                  <td>
+                    @if (item.asoUrl) {
+                      <a [href]="item.asoUrl" target="_blank" rel="noopener">Ver ASO</a>
+                    } @else {
+                      —
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (!carregandoExames() && exames().length === 0) {
+            <p class="table-empty">Nenhum exame ocupacional registrado.</p>
+          }
+
+          <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar exame</h4>
+          @if (exameErrorMessage()) {
+            <div class="form-banner form-banner--error" role="alert">{{ exameErrorMessage() }}</div>
+          }
+          <form [formGroup]="exameForm" (ngSubmit)="registrarExame()" class="form" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="tipoExame">Tipo *</label>
+                <select id="tipoExame" formControlName="tipo">
+                  <option value="" disabled>Selecione…</option>
+                  <option value="ADMISSIONAL">Admissional</option>
+                  <option value="PERIODICO">Periódico</option>
+                  <option value="DEMISSIONAL">Demissional</option>
+                  <option value="RETORNO">Retorno</option>
+                  <option value="MUDANCA_FUNCAO">Mudança de função</option>
+                </select>
+                @if (exameForm.controls.tipo.invalid && exameForm.controls.tipo.touched) {
+                  <span class="form-error">Tipo é obrigatório.</span>
+                }
+              </div>
+              <div class="form-group">
+                <label for="resultado">Resultado *</label>
+                <select id="resultado" formControlName="resultado">
+                  <option value="" disabled>Selecione…</option>
+                  <option value="APTO">Apto</option>
+                  <option value="INAPTO">Inapto</option>
+                  <option value="APTO_COM_RESTRICAO">Apto com restrição</option>
+                </select>
+                @if (exameForm.controls.resultado.invalid && exameForm.controls.resultado.touched) {
+                  <span class="form-error">Resultado é obrigatório.</span>
+                }
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dataRealizacao">Data de realização *</label>
+                <input id="dataRealizacao" type="date" formControlName="dataRealizacao" />
+                @if (exameForm.controls.dataRealizacao.invalid && exameForm.controls.dataRealizacao.touched) {
+                  <span class="form-error">Data de realização é obrigatória.</span>
+                }
+              </div>
+              <div class="form-group">
+                <label for="dataValidade">Data de validade</label>
+                <input id="dataValidade" type="date" formControlName="dataValidade" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="asoUrl">Link do ASO</label>
+              <input id="asoUrl" type="text" formControlName="asoUrl" placeholder="https://…" />
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn" [disabled]="submittingExame()">
+                {{ submittingExame() ? 'Registrando…' : 'Registrar exame' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      @if (sstAbaAtiva() === 'acidentes') {
+        <div style="padding: var(--s-5);">
+          <table>
+            <thead>
+              <tr>
+                <th>Data/hora</th>
+                <th>Descrição</th>
+                <th>CAT emitida</th>
+                <th>Dias de afastamento</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of acidentes(); track item.uuid) {
+                <tr>
+                  <td>{{ item.dataHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ item.descricao }}</td>
+                  <td>
+                    {{ item.catEmitida ? 'Sim' : 'Não' }}
+                    @if (item.catEmitida && item.catUrl) {
+                      · <a [href]="item.catUrl" target="_blank" rel="noopener">Ver CAT</a>
+                    }
+                  </td>
+                  <td>{{ item.diasAfastamento ?? '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (!carregandoAcidentes() && acidentes().length === 0) {
+            <p class="table-empty">Nenhum acidente de trabalho registrado.</p>
+          }
+
+          <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar acidente</h4>
+          @if (acidenteErrorMessage()) {
+            <div class="form-banner form-banner--error" role="alert">{{ acidenteErrorMessage() }}</div>
+          }
+          <form [formGroup]="acidenteForm" (ngSubmit)="registrarAcidente()" class="form" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dataHora">Data/hora *</label>
+                <input id="dataHora" type="datetime-local" formControlName="dataHora" />
+                @if (acidenteForm.controls.dataHora.invalid && acidenteForm.controls.dataHora.touched) {
+                  <span class="form-error">Data/hora é obrigatória.</span>
+                }
+              </div>
+              <div class="form-group">
+                <label for="diasAfastamento">Dias de afastamento</label>
+                <input id="diasAfastamento" type="number" step="1" min="0" formControlName="diasAfastamento" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="descricao">Descrição *</label>
+              <input id="descricao" type="text" formControlName="descricao" />
+              @if (acidenteForm.controls.descricao.invalid && acidenteForm.controls.descricao.touched) {
+                <span class="form-error">Descrição é obrigatória.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
+                <input type="checkbox" formControlName="catEmitida" style="width: auto;" />
+                CAT emitida
+              </label>
+            </div>
+            @if (acidenteForm.controls.catEmitida.value) {
+              <div class="form-group">
+                <label for="catUrl">Link da CAT *</label>
+                <input id="catUrl" type="text" formControlName="catUrl" placeholder="https://…" />
+                @if (acidenteForm.controls.catUrl.invalid && acidenteForm.controls.catUrl.touched) {
+                  <span class="form-error">Link da CAT é obrigatório quando a CAT foi emitida.</span>
+                }
+              </div>
+            }
+            <div class="form-actions">
+              <button type="submit" class="btn" [disabled]="submittingAcidente()">
+                {{ submittingAcidente() ? 'Registrando…' : 'Registrar acidente' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      @if (sstAbaAtiva() === 'epis') {
+        <div style="padding: var(--s-5);">
+          <table>
+            <thead>
+              <tr>
+                <th>EPI</th>
+                <th>CA</th>
+                <th>Entrega</th>
+                <th>Devolução</th>
+                <th>Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of epis(); track item.uuid) {
+                <tr>
+                  <td>{{ item.tipo }}</td>
+                  <td>{{ item.numeroCA || '—' }}</td>
+                  <td>{{ item.dataEntrega | date: 'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dataDevolucao ? (item.dataDevolucao | date: 'dd/MM/yyyy') : '—' }}</td>
+                  <td>{{ situacaoDoEpi(item) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (!carregandoEpis() && epis().length === 0) {
+            <p class="table-empty">Nenhum EPI registrado.</p>
+          }
+
+          <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar EPI</h4>
+          @if (epiErrorMessage()) {
+            <div class="form-banner form-banner--error" role="alert">{{ epiErrorMessage() }}</div>
+          }
+          <form [formGroup]="epiForm" (ngSubmit)="registrarEpi()" class="form" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="tipoEpi">Tipo *</label>
+                <input id="tipoEpi" type="text" formControlName="tipo" placeholder="Ex.: Luva nitrílica" />
+                @if (epiForm.controls.tipo.invalid && epiForm.controls.tipo.touched) {
+                  <span class="form-error">Tipo é obrigatório.</span>
+                }
+              </div>
+              <div class="form-group">
+                <label for="numeroCA">Número CA</label>
+                <input id="numeroCA" type="text" formControlName="numeroCA" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dataEntrega">Data de entrega *</label>
+                <input id="dataEntrega" type="date" formControlName="dataEntrega" />
+                @if (epiForm.controls.dataEntrega.invalid && epiForm.controls.dataEntrega.touched) {
+                  <span class="form-error">Data de entrega é obrigatória.</span>
+                }
+              </div>
+              <div class="form-group">
+                <label for="dataDevolucao">Data de devolução</label>
+                <input id="dataDevolucao" type="date" formControlName="dataDevolucao" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn" [disabled]="submittingEpi()">
+                {{ submittingEpi() ? 'Registrando…' : 'Registrar EPI' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      }
     }
 
     @if (abaAtiva() === 'treinamentos') {
@@ -791,6 +1239,109 @@
           </div>
         </form>
       </div>
+    }
+
+    @if (abaAtiva() === 'beneficios') {
+      <div style="padding: var(--s-5);">
+        @if (encerrarBeneficioErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ encerrarBeneficioErrorMessage() }}</div>
+        }
+        <table>
+          <thead>
+            <tr>
+              <th>Benefício</th>
+              <th>Início</th>
+              <th>Dependentes</th>
+              <th>Situação</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of beneficios(); track item.uuid) {
+              <tr>
+                <td>{{ item.tipoBeneficioNome }}</td>
+                <td>{{ item.dataInicio | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ item.quantidadeDependentes ?? '—' }}</td>
+                <td>
+                  @if (situacaoBeneficio(item) === 'Vigente') {
+                    <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Vigente</span>
+                  } @else {
+                    <span class="tag"><span class="dot" aria-hidden="true"></span> Encerrado {{ item.dataFim ? ('em ' + (item.dataFim | date: 'dd/MM/yyyy')) : '' }}</span>
+                  }
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                  @if (situacaoBeneficio(item) === 'Vigente') {
+                    <button type="button" class="btn btn--ghost" (click)="abrirEncerrarBeneficio(item)">Encerrar adesão</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!carregandoBeneficios() && beneficios().length === 0) {
+          <p class="table-empty">Nenhuma adesão a benefício registrada.</p>
+        }
+
+        <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Nova adesão</h3>
+        @if (beneficioErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ beneficioErrorMessage() }}</div>
+        }
+        <form [formGroup]="beneficioForm" (ngSubmit)="registrarBeneficio()" class="form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoBeneficioId">Benefício *</label>
+              <select id="tipoBeneficioId" formControlName="tipoBeneficioId">
+                <option value="" disabled>Selecione…</option>
+                @for (tipo of tiposBeneficioCatalogo(); track tipo.uuid) {
+                  <option [value]="tipo.uuid">{{ tipo.nome }}</option>
+                }
+              </select>
+              @if (beneficioForm.controls.tipoBeneficioId.invalid && beneficioForm.controls.tipoBeneficioId.touched) {
+                <span class="form-error">Benefício é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="dataInicioBeneficio">Data de início *</label>
+              <input id="dataInicioBeneficio" type="date" formControlName="dataInicio" />
+              @if (beneficioForm.controls.dataInicio.invalid && beneficioForm.controls.dataInicio.touched) {
+                <span class="form-error">Data de início é obrigatória.</span>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="quantidadeDependentes">Quantidade de dependentes</label>
+            <input id="quantidadeDependentes" type="number" step="1" min="0" formControlName="quantidadeDependentes" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn" [disabled]="submittingBeneficio()">
+              {{ submittingBeneficio() ? 'Registrando…' : 'Registrar adesão' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (encerrarBeneficioAlvo(); as alvo) {
+      <app-modal [titulo]="'Encerrar adesão — ' + alvo.tipoBeneficioNome" (fechar)="fecharEncerrarBeneficio()">
+        @if (encerrarBeneficioErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ encerrarBeneficioErrorMessage() }}</div>
+        }
+        <form [formGroup]="encerrarBeneficioForm" (ngSubmit)="confirmarEncerrarBeneficio()" class="form" novalidate>
+          <div class="form-group">
+            <label for="dataFimBeneficio">Data de fim *</label>
+            <input id="dataFimBeneficio" type="date" formControlName="dataFim" />
+            @if (encerrarBeneficioForm.controls.dataFim.invalid && encerrarBeneficioForm.controls.dataFim.touched) {
+              <span class="form-error">Data de fim é obrigatória.</span>
+            }
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn--ghost" (click)="fecharEncerrarBeneficio()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingEncerrarBeneficio()">
+              {{ submittingEncerrarBeneficio() ? 'Encerrando…' : 'Encerrar adesão' }}
+            </button>
+          </div>
+        </form>
+      </app-modal>
     }
 
     @if (abaAtiva() === 'desligamento') {

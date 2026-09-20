@@ -16,12 +16,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "/api/v1/adesao-beneficio/")
@@ -64,5 +67,28 @@ public class AdesaoBeneficioController {
         String details = "Profissional: " + responseDto.getProfissionalNome() + ", Benefício: " + responseDto.getTipoBeneficioNome();
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
+    }
+
+    @PatchMapping(value = "{uuid}/encerrar", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Encerra uma adesão de benefício",
+            description = "Operação de negócio explícita: a adesão não é apagada nem alterada destrutivamente, ela ganha uma data de fim. Recusa encerrar uma adesão que já foi encerrada (409).",
+            tags = "AdesaoBeneficio")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(
+                    schema = @Schema(implementation = SuccessResponseDto.class)
+            ), examples = @ExampleObject(name = "Success",
+                    summary = "SuccessResponse",
+                    value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> encerrar(
+            @PathVariable UUID uuid,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        AdesaoBeneficioResponseDto responseDto = service.encerrar(uuid, dataFim);
+
+        String successMessage = "Adesão de benefício encerrada com sucesso!";
+        String details = "Profissional: " + responseDto.getProfissionalNome() + ", Benefício: " + responseDto.getTipoBeneficioNome();
+
+        return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
     }
 }
