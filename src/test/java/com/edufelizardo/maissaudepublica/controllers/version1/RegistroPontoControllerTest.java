@@ -1,9 +1,12 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
 import com.edufelizardo.maissaudepublica.models.Profissional;
+import com.edufelizardo.maissaudepublica.models.RegistroPonto;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoRegistroPonto;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.RegistroPontoRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,11 +15,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -61,6 +66,13 @@ class RegistroPontoControllerTest {
         profissional.setAtivo(true);
         profissionalIdsCriados.add(profissionalRepository.save(profissional).getUuid());
         return matricula;
+    }
+
+    private UUID criarRegistroFixture(String sufixo) {
+        String matricula = criarProfissionalFixture(sufixo);
+        Profissional profissional = profissionalRepository.findByMatricula(matricula).orElseThrow();
+        RegistroPonto registroPonto = new RegistroPonto(profissional, LocalDateTime.of(2026, 1, 5, 8, 0), TipoRegistroPonto.ENTRADA, "app");
+        return registroPontoRepository.save(registroPonto).getUuid();
     }
 
     @Test
@@ -165,5 +177,126 @@ class RegistroPontoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].dataHora").value("2026-01-05T08:00:00"));
+    }
+
+    @Test
+    void deveSolicitarCorrecaoComSucesso() throws Exception {
+        UUID registroId = criarRegistroFixture("05");
+        String body = """
+                {
+                  "dataHoraProposta": "2026-01-05T08:03:00",
+                  "tipoProposto": "ENTRADA",
+                  "justificativa": "Relógio de ponto marcou errado"
+                }
+                """;
+
+        mockMvc.perform(patch(BASE_URL + registroId + "/solicitar-correcao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Correção de ponto solicitada com sucesso!"));
+    }
+
+    @Test
+    void deveRetornarConflictAoSolicitarCorrecaoJaPendente() throws Exception {
+        UUID registroId = criarRegistroFixture("06");
+        String body = """
+                {
+                  "dataHoraProposta": "2026-01-05T08:03:00",
+                  "tipoProposto": "ENTRADA",
+                  "justificativa": "Relógio de ponto marcou errado"
+                }
+                """;
+
+        mockMvc.perform(patch(BASE_URL + registroId + "/solicitar-correcao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk());
+        mockMvc.perform(patch(BASE_URL + registroId + "/solicitar-correcao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void deveRetornarNotFoundAoSolicitarCorrecaoDeRegistroInexistente() throws Exception {
+        String body = """
+                {
+                  "dataHoraProposta": "2026-01-05T08:03:00",
+                  "tipoProposto": "ENTRADA",
+                  "justificativa": "Relógio de ponto marcou errado"
+                }
+                """;
+
+        mockMvc.perform(patch(BASE_URL + UUID.randomUUID() + "/solicitar-correcao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deveAprovarCorrecaoEAplicarNoRegistro() throws Exception {
+        UUID registroId = criarRegistroFixture("07");
+        String body = """
+                {
+                  "dataHoraProposta": "2026-01-05T08:03:00",
+                  "tipoProposto": "SAIDA",
+                  "justificativa": "Relógio de ponto marcou errado"
+                }
+                """;
+        mockMvc.perform(patch(BASE_URL + registroId + "/solicitar-correcao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(patch(BASE_URL + registroId + "/aprovar-correcao"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Correção de ponto aprovada com sucesso!"));
+
+        RegistroPonto atualizado = registroPontoRepository.findById(registroId).orElseThrow();
+        Assertions.assertEquals(LocalDateTime.of(2026, 1, 5, 8, 3), atualizado.getDataHora());
+        Assertions.assertEquals(TipoRegistroPonto.SAIDA, atualizado.getTipo());
+        Assertions.assertNull(atualizado.getDataHoraProposta());
+    }
+
+    @Test
+    void deveRetornarConflictAoAprovarCorrecaoSemPendencia() throws Exception {
+        UUID registroId = criarRegistroFixture("08");
+
+        mockMvc.perform(patch(BASE_URL + registroId + "/aprovar-correcao"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void deveRejeitarCorrecaoEManterRegistroOriginal() throws Exception {
+        UUID registroId = criarRegistroFixture("09");
+        String body = """
+                {
+                  "dataHoraProposta": "2026-01-05T08:03:00",
+                  "tipoProposto": "SAIDA",
+                  "justificativa": "Relógio de ponto marcou errado"
+                }
+                """;
+        mockMvc.perform(patch(BASE_URL + registroId + "/solicitar-correcao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(patch(BASE_URL + registroId + "/rejeitar-correcao"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Correção de ponto rejeitada com sucesso!"));
+
+        RegistroPonto atualizado = registroPontoRepository.findById(registroId).orElseThrow();
+        Assertions.assertEquals(LocalDateTime.of(2026, 1, 5, 8, 0), atualizado.getDataHora());
+        Assertions.assertEquals(TipoRegistroPonto.ENTRADA, atualizado.getTipo());
+        Assertions.assertNull(atualizado.getDataHoraProposta());
+    }
+
+    @Test
+    void deveRetornarConflictAoRejeitarCorrecaoSemPendencia() throws Exception {
+        UUID registroId = criarRegistroFixture("10");
+
+        mockMvc.perform(patch(BASE_URL + registroId + "/rejeitar-correcao"))
+                .andExpect(status().isConflict());
     }
 }

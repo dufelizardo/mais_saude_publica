@@ -16,7 +16,7 @@ import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 import { ComposicaoRemuneratoriaService } from '../../core/services/composicao-remuneratoria';
 import { AfastamentoService } from '../../core/services/afastamento';
 import { LicencaService } from '../../core/services/licenca';
-import { RegistroPontoResponseDto } from '../../core/models/registro-ponto';
+import { RegistroPontoResponseDto, TipoRegistroPonto } from '../../core/models/registro-ponto';
 import { RegistroPontoService } from '../../core/services/registro-ponto';
 import { FolhaPagamentoResponseDto } from '../../core/models/folha-pagamento';
 import { FolhaPagamentoService } from '../../core/services/folha-pagamento';
@@ -119,6 +119,13 @@ export class ProfissionalPerfil {
 
   protected readonly registrosPonto = signal<RegistroPontoResponseDto[]>([]);
   protected readonly carregandoPonto = signal(false);
+  protected readonly submittingPonto = signal(false);
+  protected readonly pontoErrorMessage = signal<string | null>(null);
+
+  protected readonly correcaoPontoAlvo = signal<RegistroPontoResponseDto | null>(null);
+  protected readonly submittingCorrecaoPonto = signal(false);
+  protected readonly correcaoPontoErrorMessage = signal<string | null>(null);
+  protected readonly resolvendoCorrecaoUuid = signal<string | null>(null);
   private matriculaAtual = '';
 
   protected readonly folhas = signal<FolhaPagamentoResponseDto[]>([]);
@@ -247,6 +254,17 @@ export class ProfissionalPerfil {
   protected readonly filtroPontoForm = this.fb.nonNullable.group({
     dataInicio: [''],
     dataFim: [''],
+  });
+
+  protected readonly pontoForm = this.fb.nonNullable.group({
+    tipo: ['' as TipoRegistroPonto | '', [Validators.required]],
+    dataHora: ['', [Validators.required]],
+  });
+
+  protected readonly correcaoPontoForm = this.fb.nonNullable.group({
+    tipoProposto: ['' as TipoRegistroPonto | '', [Validators.required]],
+    dataHoraProposta: ['', [Validators.required]],
+    justificativa: ['', [Validators.required]],
   });
 
   protected readonly folhaForm = this.fb.nonNullable.group({
@@ -1002,6 +1020,114 @@ export class ProfissionalPerfil {
       error: () => {
         this.registrosPonto.set([]);
         this.carregandoPonto.set(false);
+      },
+    });
+  }
+
+  protected registrarPonto(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.pontoForm.invalid) {
+      this.pontoForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingPonto.set(true);
+    this.pontoErrorMessage.set(null);
+
+    const raw = this.pontoForm.getRawValue();
+    this.registroPontoService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        dataHora: raw.dataHora,
+        tipo: raw.tipo as TipoRegistroPonto,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingPonto.set(false);
+          this.pontoForm.reset({ tipo: '', dataHora: '' });
+          this.carregarPonto();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingPonto.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.pontoErrorMessage.set(body?.message ?? 'Não foi possível registrar o ponto. Tente novamente.');
+        },
+      });
+  }
+
+  protected abrirSolicitarCorrecaoPonto(registro: RegistroPontoResponseDto): void {
+    this.correcaoPontoForm.reset({
+      tipoProposto: registro.tipo,
+      dataHoraProposta: registro.dataHora,
+      justificativa: '',
+    });
+    this.correcaoPontoErrorMessage.set(null);
+    this.correcaoPontoAlvo.set(registro);
+  }
+
+  protected fecharCorrecaoPontoModal(): void {
+    this.correcaoPontoAlvo.set(null);
+  }
+
+  protected confirmarSolicitarCorrecaoPonto(): void {
+    const alvo = this.correcaoPontoAlvo();
+    if (!alvo || this.correcaoPontoForm.invalid) {
+      this.correcaoPontoForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingCorrecaoPonto.set(true);
+    this.correcaoPontoErrorMessage.set(null);
+
+    const raw = this.correcaoPontoForm.getRawValue();
+    this.registroPontoService
+      .solicitarCorrecao(alvo.uuid, {
+        dataHoraProposta: raw.dataHoraProposta,
+        tipoProposto: raw.tipoProposto as TipoRegistroPonto,
+        justificativa: raw.justificativa,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingCorrecaoPonto.set(false);
+          this.correcaoPontoAlvo.set(null);
+          this.carregarPonto();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingCorrecaoPonto.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.correcaoPontoErrorMessage.set(body?.message ?? 'Não foi possível solicitar a correção. Tente novamente.');
+        },
+      });
+  }
+
+  protected aprovarCorrecaoPonto(registro: RegistroPontoResponseDto): void {
+    this.resolvendoCorrecaoUuid.set(registro.uuid);
+    this.pontoErrorMessage.set(null);
+    this.registroPontoService.aprovarCorrecao(registro.uuid).subscribe({
+      next: () => {
+        this.resolvendoCorrecaoUuid.set(null);
+        this.carregarPonto();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.resolvendoCorrecaoUuid.set(null);
+        const body = error.error as ErrorResponseDto | undefined;
+        this.pontoErrorMessage.set(body?.message ?? 'Não foi possível aprovar a correção. Tente novamente.');
+      },
+    });
+  }
+
+  protected rejeitarCorrecaoPonto(registro: RegistroPontoResponseDto): void {
+    this.resolvendoCorrecaoUuid.set(registro.uuid);
+    this.pontoErrorMessage.set(null);
+    this.registroPontoService.rejeitarCorrecao(registro.uuid).subscribe({
+      next: () => {
+        this.resolvendoCorrecaoUuid.set(null);
+        this.carregarPonto();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.resolvendoCorrecaoUuid.set(null);
+        const body = error.error as ErrorResponseDto | undefined;
+        this.pontoErrorMessage.set(body?.message ?? 'Não foi possível rejeitar a correção. Tente novamente.');
       },
     });
   }
