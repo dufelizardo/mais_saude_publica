@@ -25,6 +25,9 @@ public class RegistroPontoResponseDto implements Serializable {
     private LocalDateTime dataHora;
     private TipoRegistroPonto tipo;
     private String origem;
+    private LocalDateTime dataHoraProposta;
+    private TipoRegistroPonto tipoProposto;
+    private String justificativaCorrecao;
 
     public static RegistroPontoResponseDto fromRegistroPonto(RegistroPonto registroPonto) {
         return new RegistroPontoResponseDto(
@@ -33,7 +36,10 @@ public class RegistroPontoResponseDto implements Serializable {
                 registroPonto.getProfissional().getNome(),
                 registroPonto.getDataHora(),
                 registroPonto.getTipo(),
-                registroPonto.getOrigem()
+                registroPonto.getOrigem(),
+                registroPonto.getDataHoraProposta(),
+                registroPonto.getTipoProposto(),
+                registroPonto.getJustificativaCorrecao()
         );
     }
 }

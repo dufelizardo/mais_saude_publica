@@ -649,12 +649,18 @@
           </div>
         </form>
 
+        @if (pontoErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ pontoErrorMessage() }}</div>
+        }
+
         <table>
           <thead>
             <tr>
               <th>Data/hora</th>
               <th>Tipo</th>
               <th>Origem</th>
+              <th>Situação</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -663,6 +669,24 @@
                 <td>{{ item.dataHora | date: 'dd/MM/yyyy HH:mm' }}</td>
                 <td>{{ item.tipo }}</td>
                 <td>{{ item.origem || '—' }}</td>
+                <td>
+                  @if (item.dataHoraProposta) {
+                    <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Correção pendente</span>
+                    <div style="font-size: var(--fs-xs); color: var(--ink-500); margin-top: 4px;">
+                      → {{ item.dataHoraProposta | date: 'dd/MM/yyyy HH:mm' }} ({{ item.tipoProposto }})
+                    </div>
+                  } @else {
+                    <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Regular</span>
+                  }
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                  @if (item.dataHoraProposta) {
+                    <button type="button" class="btn btn--ghost" [disabled]="resolvendoCorrecaoUuid() === item.uuid" (click)="aprovarCorrecaoPonto(item)">Aprovar</button>
+                    <button type="button" class="btn btn--ghost" [disabled]="resolvendoCorrecaoUuid() === item.uuid" (click)="rejeitarCorrecaoPonto(item)">Rejeitar</button>
+                  } @else {
+                    <button type="button" class="btn btn--ghost" (click)="abrirSolicitarCorrecaoPonto(item)">Solicitar correção</button>
+                  }
+                </td>
               </tr>
             }
           </tbody>
@@ -670,7 +694,87 @@
         @if (!carregandoPonto() && registrosPonto().length === 0) {
           <p class="table-empty">Nenhum registro de ponto no período.</p>
         }
+
+        <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Registrar ponto</h3>
+        <form [formGroup]="pontoForm" (ngSubmit)="registrarPonto()" class="form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoPonto">Tipo *</label>
+              <select id="tipoPonto" formControlName="tipo">
+                <option value="" disabled>Selecione…</option>
+                <option value="ENTRADA">Entrada</option>
+                <option value="INICIO_INTERVALO">Início do intervalo</option>
+                <option value="FIM_INTERVALO">Fim do intervalo</option>
+                <option value="SAIDA">Saída</option>
+              </select>
+              @if (pontoForm.controls.tipo.invalid && pontoForm.controls.tipo.touched) {
+                <span class="form-error">Tipo é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="dataHoraPonto">Data/hora *</label>
+              <input id="dataHoraPonto" type="datetime-local" formControlName="dataHora" />
+              @if (pontoForm.controls.dataHora.invalid && pontoForm.controls.dataHora.touched) {
+                <span class="form-error">Data/hora é obrigatória.</span>
+              }
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn" [disabled]="submittingPonto()">
+              {{ submittingPonto() ? 'Registrando…' : 'Registrar ponto' }}
+            </button>
+          </div>
+        </form>
       </div>
+    }
+
+    @if (correcaoPontoAlvo(); as alvo) {
+      <app-modal titulo="Solicitar correção de ponto" (fechar)="fecharCorrecaoPontoModal()">
+        @if (correcaoPontoErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ correcaoPontoErrorMessage() }}</div>
+        }
+        <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-bottom: var(--s-3);">
+          Registro atual: {{ alvo.dataHora | date: 'dd/MM/yyyy HH:mm' }} ({{ alvo.tipo }}). A correção só é aplicada
+          depois de aprovada.
+        </p>
+        <form [formGroup]="correcaoPontoForm" (ngSubmit)="confirmarSolicitarCorrecaoPonto()" class="form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoProposto">Tipo correto *</label>
+              <select id="tipoProposto" formControlName="tipoProposto">
+                <option value="" disabled>Selecione…</option>
+                <option value="ENTRADA">Entrada</option>
+                <option value="INICIO_INTERVALO">Início do intervalo</option>
+                <option value="FIM_INTERVALO">Fim do intervalo</option>
+                <option value="SAIDA">Saída</option>
+              </select>
+              @if (correcaoPontoForm.controls.tipoProposto.invalid && correcaoPontoForm.controls.tipoProposto.touched) {
+                <span class="form-error">Tipo é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="dataHoraProposta">Data/hora correta *</label>
+              <input id="dataHoraProposta" type="datetime-local" formControlName="dataHoraProposta" />
+              @if (correcaoPontoForm.controls.dataHoraProposta.invalid && correcaoPontoForm.controls.dataHoraProposta.touched) {
+                <span class="form-error">Data/hora é obrigatória.</span>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="justificativa">Justificativa *</label>
+            <input id="justificativa" type="text" formControlName="justificativa" placeholder="Ex.: relógio de ponto marcou errado" />
+            @if (correcaoPontoForm.controls.justificativa.invalid && correcaoPontoForm.controls.justificativa.touched) {
+              <span class="form-error">Justificativa é obrigatória.</span>
+            }
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn--ghost" (click)="fecharCorrecaoPontoModal()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingCorrecaoPonto()">
+              {{ submittingCorrecaoPonto() ? 'Enviando…' : 'Solicitar correção' }}
+            </button>
+          </div>
+        </form>
+      </app-modal>
     }
 
     @if (abaAtiva() === 'folha') {
