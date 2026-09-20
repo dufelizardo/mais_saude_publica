@@ -1,10 +1,43 @@
 import { Routes } from '@angular/router';
 import { LandingPage } from './features/landing/landing-page';
+import { ProfissionaisLista } from './features/profissionais-lista/profissionais-lista';
 import { ProfissionalCadastro } from './features/profissional-cadastro/profissional-cadastro';
 import { ProfissionalDesligar } from './features/profissional-desligar/profissional-desligar';
+import { ProfissionalPerfil } from './features/profissional-perfil/profissional-perfil';
+import { CategoriasSalariais } from './features/rh/categorias-salariais/categorias-salariais';
+import { Cargos } from './features/rh/cargos/cargos';
+import { CargoTabelaSalarial } from './features/rh/cargo-tabela-salarial/cargo-tabela-salarial';
+import { RegrasAnuenio } from './features/rh/regras-anuenio/regras-anuenio';
+import { FolhaPagamento } from './features/rh/folha-pagamento/folha-pagamento';
+import { Treinamentos } from './features/rh/treinamentos/treinamentos';
+import { CiclosAvaliacao } from './features/rh/ciclos-avaliacao/ciclos-avaliacao';
+import { Vagas } from './features/rh/vagas/vagas';
+import { VagaCandidatos } from './features/rh/vaga-candidatos/vaga-candidatos';
+import { TiposBeneficio } from './features/rh/tipos-beneficio/tipos-beneficio';
+import { TipoBeneficioValores } from './features/rh/tipo-beneficio-valores/tipo-beneficio-valores';
+import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
   { path: '', component: LandingPage },
-  { path: 'profissionais/novo', component: ProfissionalCadastro },
-  { path: 'profissionais/desligar', component: ProfissionalDesligar },
+  {
+    path: '',
+    component: AppShell,
+    children: [
+      { path: 'profissionais', component: ProfissionaisLista, data: { breadcrumb: 'Profissionais' } },
+      { path: 'profissionais/novo', component: ProfissionalCadastro, data: { breadcrumb: 'Cadastrar profissional' } },
+      { path: 'profissionais/desligar', component: ProfissionalDesligar, data: { breadcrumb: 'Desligar profissional' } },
+      { path: 'profissionais/perfil', component: ProfissionalPerfil, data: { breadcrumb: 'Perfil do profissional' } },
+      { path: 'rh/categorias-salariais', component: CategoriasSalariais, data: { breadcrumb: 'Categorias salariais' } },
+      { path: 'rh/cargos', component: Cargos, data: { breadcrumb: 'Cargos' } },
+      { path: 'rh/cargos/:cargoId/tabela-salarial', component: CargoTabelaSalarial, data: { breadcrumb: 'Tabela salarial' } },
+      { path: 'rh/regras-anuenio', component: RegrasAnuenio, data: { breadcrumb: 'Regras de anuênio' } },
+      { path: 'rh/folha-pagamento', component: FolhaPagamento, data: { breadcrumb: 'Folha de pagamento' } },
+      { path: 'rh/treinamentos', component: Treinamentos, data: { breadcrumb: 'Catálogo de treinamentos' } },
+      { path: 'rh/ciclos-avaliacao', component: CiclosAvaliacao, data: { breadcrumb: 'Ciclos de avaliação' } },
+      { path: 'rh/vagas', component: Vagas, data: { breadcrumb: 'Vagas' } },
+      { path: 'rh/vagas/:vagaId/candidatos', component: VagaCandidatos, data: { breadcrumb: 'Candidatos' } },
+      { path: 'rh/tipos-beneficio', component: TiposBeneficio, data: { breadcrumb: 'Tipos de benefício' } },
+      { path: 'rh/tipos-beneficio/:tipoId/valores', component: TipoBeneficioValores, data: { breadcrumb: 'Valores do benefício' } },
+    ],
+  },
 ];

@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.time.DayOfWeek;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -19,6 +20,7 @@ public class UnidadeSaudeResponseDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    private UUID uuid;
     private String nome;
     private TipoUnidadeDeSaude tipo;
     private String administracaoSuperior;
@@ -31,11 +33,12 @@ public class UnidadeSaudeResponseDto implements Serializable {
     private Map<DayOfWeek, String> horarioFuncionamento;
     private Map<DayOfWeek, String> horarioAtendimento;
 
-    public UnidadeSaudeResponseDto(String nome, TipoUnidadeDeSaude tipo, String administracaoSuperior,
+    public UnidadeSaudeResponseDto(UUID uuid, String nome, TipoUnidadeDeSaude tipo, String administracaoSuperior,
                                     String supervisaoRegional, String responsavelCpf, String responsavelNome,
                                     EnderecoResponseDto endereco, Set<String> saudeTelefones, String email,
                                     Map<DayOfWeek, String> horarioFuncionamento,
                                     Map<DayOfWeek, String> horarioAtendimento) {
+        this.uuid = uuid;
         this.nome = nome;
         this.tipo = tipo;
         this.administracaoSuperior = administracaoSuperior;
@@ -64,6 +67,7 @@ public class UnidadeSaudeResponseDto implements Serializable {
             responsavelNome = unidadeDeSaude.getResponsavel().getNome();
         }
         return new UnidadeSaudeResponseDto(
+                unidadeDeSaude.getUuid(),
                 unidadeDeSaude.getNome(),
                 unidadeDeSaude.getTipo(),
                 administracaoSuperior,

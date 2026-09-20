@@ -9,6 +9,12 @@ export interface EnderecoRequestDto {
   ddd?: string;
 }
 
+export interface ProfissionalContatoRequestDto {
+  endereco: EnderecoRequestDto;
+  telefones: string[];
+  email: string;
+}
+
 export interface ProfissionalRequestDto {
   cpf: string;
   nome: string;
