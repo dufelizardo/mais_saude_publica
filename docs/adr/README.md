@@ -42,6 +42,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0024](./0024-ponto-com-filtro-de-periodo.md) | Ponto com filtro de período (fatia 6a) | Aceita |
 | [0025](./0025-folha-de-pagamento-por-competencia.md) | Folha de pagamento por competência (fatia 6b, fecha a fatia 6) | Aceita |
 | [0026](./0026-historico-funcional-consolidado.md) | Histórico funcional consolidado (fatia 7) | Aceita |
+| [0027](./0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md) | Fatia 8: Treinamento, Avaliação, SST, Recrutamento | Aceita |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. Prioridade de implementação combinada: 0003 (arquitetura), 0006 (segurança) e 0007 (deploy) antes de novos domínios de negócio; 0008 (front-end) é a de menor prioridade.
 

@@ -1,3 +1,10 @@
+export interface TreinamentoRequestDto {
+  nome: string;
+  cargaHoraria?: number;
+  validadeMeses?: number;
+  obrigatorio?: boolean;
+}
+
 export interface TreinamentoResponseDto {
   uuid: string;
   nome: string;

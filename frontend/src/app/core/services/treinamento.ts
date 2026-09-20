@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   ParticipacaoTreinamentoRequestDto,
   ParticipacaoTreinamentoResponseDto,
+  TreinamentoRequestDto,
   TreinamentoResponseDto,
 } from '../models/treinamento';
 import { SuccessResponseDto } from '../models/profissional';
@@ -14,6 +15,10 @@ export class TreinamentoService {
 
   listarCatalogo(): Observable<TreinamentoResponseDto[]> {
     return this.http.get<TreinamentoResponseDto[]>('/api/v1/treinamento/');
+  }
+
+  criar(dto: TreinamentoRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>('/api/v1/treinamento/', dto);
   }
 
   listarParticipacoesPorProfissional(matricula: string): Observable<ParticipacaoTreinamentoResponseDto[]> {

@@ -131,7 +131,21 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 6a | Ponto com filtro de período — aba nova no perfil (ver [ADR-0024](../adr/0024-ponto-com-filtro-de-periodo.md)) | [#148](https://github.com/dufelizardo/mais_saude_publica/pull/148) | ✅ |
 | 6b | Folha de pagamento — listagem por competência + aba no perfil + tela própria (ver [ADR-0025](../adr/0025-folha-de-pagamento-por-competencia.md)) | [#149](https://github.com/dufelizardo/mais_saude_publica/pull/149) | ✅ |
 | 7 | Histórico funcional consolidado — aba nova no perfil, sem endpoint novo (ver [ADR-0026](../adr/0026-historico-funcional-consolidado.md)) | [#150](https://github.com/dufelizardo/mais_saude_publica/pull/150) | ✅ |
-| 8 | Treinamento, SST, Recrutamento, Avaliação | — | 💡 Sem desenho de tela ainda — a especificação do usuário não detalha essas telas |
+| 8a | Catálogo de treinamentos + Ciclos de avaliação (ver [ADR-0027](../adr/0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md)) | [#151](https://github.com/dufelizardo/mais_saude_publica/pull/151) | ✅ |
+| 8b | SST — 3 abas novas no perfil (Exames ocupacionais, Acidentes de trabalho, EPIs) | — | ⏳ Não iniciada |
+| 8c | Recrutamento — Vagas + Candidatos | — | ⏳ Não iniciada |
+| 8d | Menu agrupado + breadcrumb dinâmico | — | ⏳ Não iniciada |
+
+### Regra da fatia 8 (definida pelo usuário, vale para 8a-8d)
+
+> Os endpoints da fatia 8 atualmente suportam criação e consulta. As interfaces não devem
+> disponibilizar edição ou mudança de status onde não houver endpoint correspondente. A evolução
+> dessas operações poderá ser incorporada posteriormente com a disponibilização dos respectivos
+> endpoints.
+
+Duas exceções derivadas (não são "status gravado", são calculadas a partir de datas já existentes
+— não violam a regra acima): status do ciclo de avaliação (Agendado/Em andamento/Encerrado) e
+situação do EPI (Em uso/Devolvido). Ver [ADR-0027](../adr/0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md).
 
 ## 7. Referências
 
