@@ -742,4 +742,19 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String COMPOSICAO_REMUNERATORIA_RESPONSE_EXAMPLE = """
+                {
+                  "profissionalMatricula": "11111111111111-11",
+                  "profissionalNome": "string",
+                  "cargoNome": "Enfermeiro",
+                  "categoriaNome": "Enfermagem",
+                  "valorBase": 4000.00,
+                  "anosCompletos": 3,
+                  "percentualAnuenio": 1.00,
+                  "valorAnuenio": 120.00,
+                  "ajustesIndividuaisVigentes": [],
+                  "totalAjustesIndividuais": 0.00,
+                  "total": 4120.00
+                }
+            """;
 }

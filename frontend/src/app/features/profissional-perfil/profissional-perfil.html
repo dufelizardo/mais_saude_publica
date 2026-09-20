@@ -51,6 +51,7 @@
     <div class="tabs" role="tablist" aria-label="Seções do profissional">
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'dados'" (click)="selecionarAba('dados')">Dados</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'lotacao'" (click)="selecionarAba('lotacao')">Lotação</button>
+      <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'composicao'" (click)="selecionarAba('composicao')">Composição remuneratória</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'ajustes'" (click)="selecionarAba('ajustes')">Ajustes individuais</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'treinamentos'" (click)="selecionarAba('treinamentos')">Treinamentos</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'avaliacoes'" (click)="selecionarAba('avaliacoes')">Avaliações</button>
@@ -215,6 +216,58 @@
             </button>
           </div>
         </form>
+      </div>
+    }
+
+    @if (abaAtiva() === 'composicao') {
+      <div style="padding: var(--s-5);">
+        @if (composicao(); as c) {
+          <div class="card" style="padding: var(--s-5); margin-bottom: var(--s-4); background: var(--ink-50);">
+            <div style="font-size: var(--fs-xs); color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;">Total</div>
+            <div style="font-size: 1.75rem; font-weight: 600; margin-top: 4px;">{{ c.total | number: '1.2-2' }}</div>
+            <div style="color: var(--ink-500); font-size: var(--fs-sm); margin-top: 4px;">{{ c.cargoNome }} · {{ c.categoriaNome }}</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Componente</th>
+                <th>Detalhe</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Valor base</td>
+                <td>Tabela salarial vigente do cargo</td>
+                <td>{{ c.valorBase | number: '1.2-2' }}</td>
+              </tr>
+              <tr>
+                <td>Anuênio</td>
+                <td>
+                  @if (c.percentualAnuenio) {
+                    {{ c.anosCompletos }} ano(s) × {{ c.percentualAnuenio }}%
+                  } @else {
+                    Sem regra de anuênio para a categoria
+                  }
+                </td>
+                <td>{{ c.valorAnuenio | number: '1.2-2' }}</td>
+              </tr>
+              @for (ajuste of c.ajustesIndividuaisVigentes; track ajuste.uuid) {
+                <tr>
+                  <td>Ajuste individual</td>
+                  <td>{{ ajuste.motivo }}{{ ajuste.referencia ? ' · ' + ajuste.referencia : '' }}</td>
+                  <td>{{ ajuste.valor | number: '1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <p style="color: var(--ink-500); font-size: var(--fs-xs); margin-top: var(--s-3);">
+            Composição calculada na hora, não gravada — não é a Folha de pagamento.
+          </p>
+        } @else if (!carregandoComposicao() && composicaoNaoEncontrada()) {
+          <p class="table-empty">Não foi possível calcular a composição (sem lotação ou tabela salarial vigente).</p>
+        }
       </div>
     }
 
