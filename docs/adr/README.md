@@ -39,6 +39,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0021](./0021-fluxo-de-transferencia-na-aba-lotacao.md) | Fluxo de transferência de lotação embutido no perfil, sem tela própria (fatia 3) | Aceita |
 | [0022](./0022-composicao-remuneratoria-endpoint-calculado.md) | Endpoint calculado de composição remuneratória (fatia 4) | Aceita |
 | [0023](./0023-afastamentos-e-licencas-no-perfil.md) | Afastamentos e Licenças no perfil (fatia 5) | Aceita |
+| [0024](./0024-ponto-com-filtro-de-periodo.md) | Ponto com filtro de período (fatia 6a) | Aceita |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. Prioridade de implementação combinada: 0003 (arquitetura), 0006 (segurança) e 0007 (deploy) antes de novos domínios de negócio; 0008 (front-end) é a de menor prioridade.
 

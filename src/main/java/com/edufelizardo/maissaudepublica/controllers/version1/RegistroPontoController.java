@@ -16,11 +16,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -32,7 +34,9 @@ public class RegistroPontoController {
     private RegistroPontoService service;
 
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Lista o histórico de registros de ponto de um profissional", tags = "RegistroPonto")
+    @Operation(summary = "Lista o histórico de registros de ponto de um profissional",
+            description = "Sem dataInicio/dataFim, lista tudo. Com os dois, filtra o período (inclusive).",
+            tags = "RegistroPonto")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
                     schema = @Schema(implementation = RegistroPontoResponseDto.class)
@@ -41,8 +45,11 @@ public class RegistroPontoController {
                     value = ExampleConstants.REGISTRO_PONTO_RESPONSE_EXAMPLE))
     })
     @ApiErrorResponsesBusca
-    public ResponseEntity<List<RegistroPontoResponseDto>> listarHistorico(@PathVariable String matricula) {
-        return ResponseEntity.ok(service.listarHistorico(matricula));
+    public ResponseEntity<List<RegistroPontoResponseDto>> listarHistorico(
+            @PathVariable String matricula,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        return ResponseEntity.ok(service.listarHistorico(matricula, dataInicio, dataFim));
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)

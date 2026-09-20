@@ -135,4 +135,35 @@ class RegistroPontoControllerTest {
         mockMvc.perform(get(BASE_URL + "profissional/" + matricula))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void deveFiltrarHistoricoPorPeriodo() throws Exception {
+        String matricula = criarProfissionalFixture("04");
+        String bodyJaneiro = """
+                {
+                  "matriculaProfissional": "%s",
+                  "dataHora": "2026-01-05T08:00:00",
+                  "tipo": "ENTRADA"
+                }
+                """.formatted(matricula);
+        String bodyFevereiro = """
+                {
+                  "matriculaProfissional": "%s",
+                  "dataHora": "2026-02-05T08:00:00",
+                  "tipo": "ENTRADA"
+                }
+                """.formatted(matricula);
+
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(bodyJaneiro))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(bodyFevereiro))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get(BASE_URL + "profissional/" + matricula)
+                        .param("dataInicio", "2026-01-01")
+                        .param("dataFim", "2026-01-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].dataHora").value("2026-01-05T08:00:00"));
+    }
 }
