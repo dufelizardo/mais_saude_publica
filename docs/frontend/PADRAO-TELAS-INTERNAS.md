@@ -80,7 +80,30 @@ mockup pixel a pixel neste ponto específico.
    e conferir o **valor exato** (font-size, padding, cor) antes de escrever a regra — não
    implementar de memória de uma leitura anterior.
 
-## 6. Referências
+## 6. Tabelas largas — nunca `overflow: hidden`, sempre `overflow-x: auto`
+
+Achado num levantamento de usabilidade: 12 telas (mais 14 pontos dentro do perfil do profissional)
+envolviam `<table>` num `<div class="card" style="overflow: hidden;">` — pensado só pra cortar os
+cantos arredondados. Efeito colateral real: quando a tabela é mais larga que o `.card` (telas com
+muitas colunas, ou viewport estreito), o conteúdo excedente fica **invisível e inacessível**, sem
+nenhuma barra de rolagem — `overflow: hidden` corta, não rola.
+
+Some a isso que `.content` (área à direita do `.app`, grid `1fr`) não tinha `min-width: 0` — por
+comportamento padrão do CSS Grid, uma track `1fr` não encolhe abaixo do tamanho do seu conteúdo
+("min-content") a menos que isso seja setado explicitamente. Sem isso, uma tabela larga empurra a
+página inteira (incluindo a sidebar) pra além da viewport, criando uma rolagem horizontal
+inconsistente que não coincide com o que realmente ficou de fora.
+
+**Correção (`.content { min-width: 0; }` em `styles.css` + `overflow-x: auto` no lugar de
+`overflow: hidden` em todo `.card`/wrapper que contém `<table>`)**: a `.content` para de forçar a
+página a crescer, e cada tabela larga passa a rolar horizontalmente dentro do seu próprio card —
+sidebar e cabeçalho continuam fixos, só a tabela rola.
+
+**Regra pra toda tela nova**: qualquer `<table>` precisa estar dentro de um elemento com
+`overflow-x: auto` (nunca `overflow: hidden`) — geralmente o próprio `.card` que a envolve, ou o
+`<div style="padding: var(--s-5);">` de uma aba do perfil quando não há `.card` por perto.
+
+## 7. Referências
 
 - [ADR-0018](../adr/0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) — decisão original do
   `AppShell` e histórico das correções que motivaram este documento.
