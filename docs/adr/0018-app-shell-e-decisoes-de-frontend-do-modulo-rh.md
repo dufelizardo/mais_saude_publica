@@ -114,6 +114,18 @@ mockup, em vez de reabrir o arquivo e conferir o markup exato de cada peça.
   `.sb-name`/`.sb-sub` (classes próprias e menores que `Usuarios.html` define especificamente pra
   sidebar interna — `font-size: 0.9375rem`/`0.66rem` contra `1.0625rem`/`0.72rem` do público).
   Corrigido portando as 3 classes que faltavam.
+- **Tag "eyebrow" (pílula verde com o nome do módulo) sobrando nas 6 telas internas**: essa tag é
+  um componente do portal público (`Landing Page.html`, usada em seções de hero/institucional) —
+  o `.page-head` dos mockups internos (`Usuarios.html` etc.) não tem nada parecido antes do
+  `<h1>`, e agora que o breadcrumb já mostra "Recursos Humanos" ela ficou redundante também.
+  Removida das 6 telas (as 4 de RH usavam `.page-head`; as 2 de Profissional tinham o mesmo
+  `<span class="eyebrow">` solto antes do `<h1>` do formulário).
+- **`<h1>` do `.page-head` com fonte maior que o mockup**: usava `var(--fs-h1)` (token do hero
+  público, `clamp(1.75rem, 1.2rem + 2vw, 2.5rem)`) em vez do clamp próprio e menor que
+  `Usuarios.html` define pra `.page-head h1` (`clamp(1.375rem, 1.1rem + 0.7vw, 1.75rem)`).
+  Corrigido em `styles.css` e replicado inline nas 2 telas de Profissional, que não usam
+  `.page-head` (são formulários simples, sem precedente direto no mockup — mesmo valor aplicado
+  por consistência).
 
 ## Consequências
 
@@ -137,3 +149,6 @@ mockup, em vez de reabrir o arquivo e conferir o markup exato de cada peça.
 - [ADR-0008](./0008-frontend-angular.md) — escolha de Angular; ADR-0016 — deploy do frontend em dev.
 - `modelo_front/Usuarios.html` e `modelo_front/Profissionais.html` — fonte do padrão de shell
   (`.app`/`.sidebar`/`.topbar`) portado nesta ADR.
+- [PADRAO-TELAS-INTERNAS.md](../frontend/PADRAO-TELAS-INTERNAS.md) — referência viva de classes/
+  tokens corretos pra telas internas, criada a partir das correções desta ADR, pra consultar antes
+  de construir qualquer tela nova.
