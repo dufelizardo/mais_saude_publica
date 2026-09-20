@@ -10,4 +10,6 @@ public interface FolhaPagamentoRepository extends JpaRepository<FolhaPagamento, 
     boolean existsByProfissional_MatriculaAndCompetencia(String matricula, String competencia);
 
     List<FolhaPagamento> findByProfissional_MatriculaOrderByCompetenciaDesc(String matricula);
+
+    List<FolhaPagamento> findByCompetenciaOrderByProfissional_NomeAsc(String competencia);
 }

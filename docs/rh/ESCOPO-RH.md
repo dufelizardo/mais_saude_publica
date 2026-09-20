@@ -129,7 +129,7 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 4 | Composição remuneratória — endpoint de leitura calculada + aba nova no perfil (ver [ADR-0022](../adr/0022-composicao-remuneratoria-endpoint-calculado.md)) | [#146](https://github.com/dufelizardo/mais_saude_publica/pull/146) | ✅ |
 | 5 | Afastamentos e Licenças — aba nova no perfil (ver [ADR-0023](../adr/0023-afastamentos-e-licencas-no-perfil.md)) | [#147](https://github.com/dufelizardo/mais_saude_publica/pull/147) | ✅ |
 | 6a | Ponto com filtro de período — aba nova no perfil (ver [ADR-0024](../adr/0024-ponto-com-filtro-de-periodo.md)) | [#148](https://github.com/dufelizardo/mais_saude_publica/pull/148) | ✅ |
-| 6b | Folha de pagamento — listagem por competência + aba no perfil + tela própria | — | ⏳ Não iniciada |
+| 6b | Folha de pagamento — listagem por competência + aba no perfil + tela própria (ver [ADR-0025](../adr/0025-folha-de-pagamento-por-competencia.md)) | [#149](https://github.com/dufelizardo/mais_saude_publica/pull/149) | ✅ |
 | 7 | Histórico funcional consolidado | — | ⏳ Não iniciada |
 | 8 | Treinamento, SST, Recrutamento, Avaliação | — | 💡 Sem desenho de tela ainda — a especificação do usuário não detalha essas telas |
 

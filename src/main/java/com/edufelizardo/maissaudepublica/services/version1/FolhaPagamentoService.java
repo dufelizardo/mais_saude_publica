@@ -40,6 +40,18 @@ public class FolhaPagamentoService {
         return FolhaPagamentoResponseDto.fromFolhaPagamento(folhaPagamento);
     }
 
+    /**
+     * Sem 404 em lista vazia, diferente de {@link #listarHistorico}: "ninguém processado ainda
+     * nesta competência" é um estado normal de partida da tela, não um erro (a tela existe
+     * justamente pra ir preenchendo aos poucos).
+     */
+    public List<FolhaPagamentoResponseDto> listarPorCompetencia(String competencia) {
+        return folhaPagamentoRepository.findByCompetenciaOrderByProfissional_NomeAsc(competencia)
+                .stream()
+                .map(FolhaPagamentoResponseDto::fromFolhaPagamento)
+                .collect(Collectors.toList());
+    }
+
     public List<FolhaPagamentoResponseDto> listarHistorico(String matricula) {
         List<FolhaPagamentoResponseDto> historico = folhaPagamentoRepository.findByProfissional_MatriculaOrderByCompetenciaDesc(matricula)
                 .stream()

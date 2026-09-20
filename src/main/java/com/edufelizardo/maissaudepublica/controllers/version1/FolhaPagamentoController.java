@@ -31,6 +31,21 @@ public class FolhaPagamentoController {
     @Autowired
     private FolhaPagamentoService service;
 
+    @GetMapping(value = "competencia", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Lista as folhas de pagamento de todos os profissionais numa competência",
+            description = "Competência via query param (não path, o formato MM/AAAA tem barra) — ex.: ?valor=09/2026. Lista vazia (200) se ninguém foi processado ainda nessa competência, não é erro.",
+            tags = "FolhaPagamento")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(
+                    schema = @Schema(implementation = FolhaPagamentoResponseDto.class)
+            ), examples = @ExampleObject(name = "Success",
+                    summary = "FolhaPagamentoResponse",
+                    value = ExampleConstants.FOLHA_PAGAMENTO_RESPONSE_EXAMPLE))
+    })
+    public ResponseEntity<List<FolhaPagamentoResponseDto>> listarPorCompetencia(@RequestParam String valor) {
+        return ResponseEntity.ok(service.listarPorCompetencia(valor));
+    }
+
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de folhas de pagamento de um profissional", tags = "FolhaPagamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

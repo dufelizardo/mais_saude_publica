@@ -154,4 +154,46 @@ class FolhaPagamentoControllerTest {
         mockMvc.perform(get(BASE_URL + "profissional/" + matricula))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void deveListarPorCompetencia() throws Exception {
+        String matriculaA = criarProfissionalFixture("05A");
+        String matriculaB = criarProfissionalFixture("05B");
+        String bodyA = """
+                {
+                  "matriculaProfissional": "%s",
+                  "competencia": "10/2026",
+                  "proventos": 5000.00,
+                  "descontos": 500.00,
+                  "encargos": 800.00,
+                  "total": 4500.00
+                }
+                """.formatted(matriculaA);
+        String bodyB = """
+                {
+                  "matriculaProfissional": "%s",
+                  "competencia": "10/2026",
+                  "proventos": 6000.00,
+                  "descontos": 600.00,
+                  "encargos": 900.00,
+                  "total": 5400.00
+                }
+                """.formatted(matriculaB);
+
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(bodyA))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(bodyB))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get(BASE_URL + "competencia").param("valor", "10/2026"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void deveListarVazioParaCompetenciaSemFolhas() throws Exception {
+        mockMvc.perform(get(BASE_URL + "competencia").param("valor", "01/1999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
 }

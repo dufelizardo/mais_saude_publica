@@ -16,6 +16,8 @@ import { AfastamentoService } from '../../core/services/afastamento';
 import { LicencaService } from '../../core/services/licenca';
 import { RegistroPontoResponseDto } from '../../core/models/registro-ponto';
 import { RegistroPontoService } from '../../core/services/registro-ponto';
+import { FolhaPagamentoResponseDto } from '../../core/models/folha-pagamento';
+import { FolhaPagamentoService } from '../../core/services/folha-pagamento';
 import { AjusteIndividualResponseDto, MotivoAjusteIndividual } from '../../core/models/ajuste-individual';
 import { ParticipacaoTreinamentoResponseDto, TreinamentoResponseDto } from '../../core/models/treinamento';
 import { AvaliacaoResponseDto, CicloAvaliacaoResponseDto } from '../../core/models/avaliacao';
@@ -28,7 +30,7 @@ import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf } from '../../shared/format-mask';
 
-type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'treinamentos' | 'avaliacoes' | 'desligamento';
+type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'treinamentos' | 'avaliacoes' | 'desligamento';
 
 @Component({
   selector: 'app-profissional-perfil',
@@ -50,6 +52,7 @@ export class ProfissionalPerfil {
   private readonly afastamentoService = inject(AfastamentoService);
   private readonly licencaService = inject(LicencaService);
   private readonly registroPontoService = inject(RegistroPontoService);
+  private readonly folhaPagamentoService = inject(FolhaPagamentoService);
 
   protected readonly buscando = signal(false);
   protected readonly naoEncontrado = signal(false);
@@ -83,6 +86,11 @@ export class ProfissionalPerfil {
   protected readonly registrosPonto = signal<RegistroPontoResponseDto[]>([]);
   protected readonly carregandoPonto = signal(false);
   private matriculaAtual = '';
+
+  protected readonly folhas = signal<FolhaPagamentoResponseDto[]>([]);
+  protected readonly carregandoFolhas = signal(false);
+  protected readonly submittingFolha = signal(false);
+  protected readonly folhaErrorMessage = signal<string | null>(null);
 
   protected readonly ajustes = signal<AjusteIndividualResponseDto[]>([]);
   protected readonly carregandoAjustes = signal(false);
@@ -159,6 +167,14 @@ export class ProfissionalPerfil {
     dataFim: [''],
   });
 
+  protected readonly folhaForm = this.fb.nonNullable.group({
+    competencia: ['', [Validators.required, Validators.pattern(/^\d{2}\/\d{4}$/)]],
+    proventos: ['', [Validators.required]],
+    descontos: ['', [Validators.required]],
+    encargos: ['', [Validators.required]],
+    total: ['', [Validators.required]],
+  });
+
   protected readonly afastamentosSemLicenca = computed(() => {
     const idsComLicenca = new Set(this.licencas().map((l) => l.afastamentoId));
     return this.afastamentos().filter((a) => !idsComLicenca.has(a.uuid));
@@ -222,6 +238,7 @@ export class ProfissionalPerfil {
         this.matriculaAtual = profissional.matricula;
         this.filtroPontoForm.reset({ dataInicio: '', dataFim: '' });
         this.carregarPonto();
+        this.carregarFolhas(profissional.matricula);
         this.carregarTreinamentos(profissional.matricula);
         this.carregarAvaliacoes(profissional.matricula);
         this.carregarRescisao(profissional.matricula);
@@ -630,5 +647,53 @@ export class ProfissionalPerfil {
         this.carregandoPonto.set(false);
       },
     });
+  }
+
+  private carregarFolhas(matricula: string): void {
+    this.carregandoFolhas.set(true);
+    this.folhaPagamentoService.listarPorProfissional(matricula).subscribe({
+      next: (folhas) => {
+        this.folhas.set(folhas);
+        this.carregandoFolhas.set(false);
+      },
+      error: () => {
+        this.folhas.set([]);
+        this.carregandoFolhas.set(false);
+      },
+    });
+  }
+
+  protected registrarFolha(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.folhaForm.invalid) {
+      this.folhaForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingFolha.set(true);
+    this.folhaErrorMessage.set(null);
+
+    const raw = this.folhaForm.getRawValue();
+    this.folhaPagamentoService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        competencia: raw.competencia,
+        proventos: Number(raw.proventos),
+        descontos: Number(raw.descontos),
+        encargos: Number(raw.encargos),
+        total: Number(raw.total),
+      })
+      .subscribe({
+        next: () => {
+          this.submittingFolha.set(false);
+          this.folhaForm.reset({ competencia: '', proventos: '', descontos: '', encargos: '', total: '' });
+          this.carregarFolhas(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingFolha.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.folhaErrorMessage.set(body?.message ?? 'Não foi possível registrar a folha de pagamento. Tente novamente.');
+        },
+      });
   }
 }
