@@ -124,7 +124,7 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 1 | Cadastros estruturais: Categorias salariais, Cargos, Tabela salarial, Regras de anuênio | [#135](https://github.com/dufelizardo/mais_saude_publica/pull/135), [#136](https://github.com/dufelizardo/mais_saude_publica/pull/136) | ✅ |
 | 2a | Tela central do Profissional — estrutura (busca por CPF, `.detail-card`/`.tabs`) + abas Dados e Lotação (só leitura) | [#142](https://github.com/dufelizardo/mais_saude_publica/pull/142) | ✅ |
 | 2b | Tela central do Profissional — abas Ajustes individuais e Treinamentos (histórico + registro) | [#143](https://github.com/dufelizardo/mais_saude_publica/pull/143) | ✅ |
-| 2c | Tela central do Profissional — abas Avaliações e Desligamento/Rescisão (histórico + registro) | — | ⏳ Não iniciada |
+| 2c | Tela central do Profissional — abas Avaliações e Desligamento/Rescisão (histórico + registro) | [#144](https://github.com/dufelizardo/mais_saude_publica/pull/144) | ✅ |
 | 3 | Lotações (fluxo de transferência) | — | ⏳ Não iniciada |
 | 4 | Composição remuneratória | — | ⏳ Não iniciada — depende de um endpoint de leitura calculada ainda não construído (ver seção 3) |
 | 5 | Afastamentos e Licenças | — | ⏳ Não iniciada — depende de resolver a lacuna de "listar licenças por profissional". Ajustes individuais **não** depende disso — já é fatia 2b, listado aqui por engano antes |

@@ -6,13 +6,17 @@ import { ProfissionalResponseDto, ErrorResponseDto } from '../../core/models/pro
 import { LotacaoResponseDto } from '../../core/models/lotacao';
 import { AjusteIndividualResponseDto, MotivoAjusteIndividual } from '../../core/models/ajuste-individual';
 import { ParticipacaoTreinamentoResponseDto, TreinamentoResponseDto } from '../../core/models/treinamento';
+import { AvaliacaoResponseDto, CicloAvaliacaoResponseDto } from '../../core/models/avaliacao';
+import { CalculoRescisaoResponseDto, TipoDesligamento } from '../../core/models/calculo-rescisao';
 import { ProfissionalService } from '../../core/services/profissional';
 import { LotacaoService } from '../../core/services/lotacao';
 import { AjusteIndividualService } from '../../core/services/ajuste-individual';
 import { TreinamentoService } from '../../core/services/treinamento';
+import { AvaliacaoService } from '../../core/services/avaliacao';
+import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf } from '../../shared/format-mask';
 
-type Aba = 'dados' | 'lotacao' | 'ajustes' | 'treinamentos';
+type Aba = 'dados' | 'lotacao' | 'ajustes' | 'treinamentos' | 'avaliacoes' | 'desligamento';
 
 @Component({
   selector: 'app-profissional-perfil',
@@ -26,6 +30,8 @@ export class ProfissionalPerfil {
   private readonly lotacaoService = inject(LotacaoService);
   private readonly ajusteIndividualService = inject(AjusteIndividualService);
   private readonly treinamentoService = inject(TreinamentoService);
+  private readonly avaliacaoService = inject(AvaliacaoService);
+  private readonly calculoRescisaoService = inject(CalculoRescisaoService);
 
   protected readonly buscando = signal(false);
   protected readonly naoEncontrado = signal(false);
@@ -48,6 +54,17 @@ export class ProfissionalPerfil {
   protected readonly submittingParticipacao = signal(false);
   protected readonly participacaoErrorMessage = signal<string | null>(null);
 
+  protected readonly ciclosAvaliacao = signal<CicloAvaliacaoResponseDto[]>([]);
+  protected readonly avaliacoes = signal<AvaliacaoResponseDto[]>([]);
+  protected readonly carregandoAvaliacoes = signal(false);
+  protected readonly submittingAvaliacao = signal(false);
+  protected readonly avaliacaoErrorMessage = signal<string | null>(null);
+
+  protected readonly calculosRescisao = signal<CalculoRescisaoResponseDto[]>([]);
+  protected readonly carregandoRescisao = signal(false);
+  protected readonly submittingRescisao = signal(false);
+  protected readonly rescisaoErrorMessage = signal<string | null>(null);
+
   protected readonly cpfForm = this.fb.nonNullable.group({
     cpf: ['', [Validators.required]],
   });
@@ -66,10 +83,32 @@ export class ProfissionalPerfil {
     certificadoUrl: [''],
   });
 
+  protected readonly avaliacaoForm = this.fb.nonNullable.group({
+    cicloId: ['', [Validators.required]],
+    avaliador: ['', [Validators.required]],
+    nota: ['', [Validators.required]],
+    observacao: [''],
+  });
+
+  protected readonly rescisaoForm = this.fb.nonNullable.group({
+    tipoDesligamento: ['' as TipoDesligamento | '', [Validators.required]],
+    avisoPrevio: ['', [Validators.required]],
+    feriasVencidas: ['', [Validators.required]],
+    feriasProporcionais: ['', [Validators.required]],
+    decimoTerceiroProporcional: ['', [Validators.required]],
+    multaFgts: ['', [Validators.required]],
+    total: ['', [Validators.required]],
+    documentoTrctUrl: [''],
+  });
+
   constructor() {
     this.treinamentoService.listarCatalogo().subscribe({
       next: (catalogo) => this.treinamentosCatalogo.set(catalogo),
       error: () => this.treinamentosCatalogo.set([]),
+    });
+    this.avaliacaoService.listarCiclos().subscribe({
+      next: (ciclos) => this.ciclosAvaliacao.set(ciclos),
+      error: () => this.ciclosAvaliacao.set([]),
     });
   }
 
@@ -96,6 +135,8 @@ export class ProfissionalPerfil {
         this.carregarLotacao(profissional.matricula);
         this.carregarAjustes(profissional.matricula);
         this.carregarTreinamentos(profissional.matricula);
+        this.carregarAvaliacoes(profissional.matricula);
+        this.carregarRescisao(profissional.matricula);
       },
       error: () => {
         this.buscando.set(false);
@@ -225,6 +266,113 @@ export class ProfissionalPerfil {
           this.submittingParticipacao.set(false);
           const body = error.error as ErrorResponseDto | undefined;
           this.participacaoErrorMessage.set(body?.message ?? 'Não foi possível registrar a participação. Tente novamente.');
+        },
+      });
+  }
+
+  private carregarAvaliacoes(matricula: string): void {
+    this.carregandoAvaliacoes.set(true);
+    this.avaliacaoService.listarPorProfissional(matricula).subscribe({
+      next: (avaliacoes) => {
+        this.avaliacoes.set(avaliacoes);
+        this.carregandoAvaliacoes.set(false);
+      },
+      error: () => {
+        this.avaliacoes.set([]);
+        this.carregandoAvaliacoes.set(false);
+      },
+    });
+  }
+
+  protected registrarAvaliacao(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.avaliacaoForm.invalid) {
+      this.avaliacaoForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingAvaliacao.set(true);
+    this.avaliacaoErrorMessage.set(null);
+
+    const raw = this.avaliacaoForm.getRawValue();
+    this.avaliacaoService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        cicloId: raw.cicloId,
+        avaliador: raw.avaliador,
+        nota: Number(raw.nota),
+        observacao: raw.observacao || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingAvaliacao.set(false);
+          this.avaliacaoForm.reset({ cicloId: '', avaliador: '', nota: '', observacao: '' });
+          this.carregarAvaliacoes(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingAvaliacao.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.avaliacaoErrorMessage.set(body?.message ?? 'Não foi possível registrar a avaliação. Tente novamente.');
+        },
+      });
+  }
+
+  private carregarRescisao(matricula: string): void {
+    this.carregandoRescisao.set(true);
+    this.calculoRescisaoService.listarPorProfissional(matricula).subscribe({
+      next: (calculos) => {
+        this.calculosRescisao.set(calculos);
+        this.carregandoRescisao.set(false);
+      },
+      error: () => {
+        this.calculosRescisao.set([]);
+        this.carregandoRescisao.set(false);
+      },
+    });
+  }
+
+  protected registrarRescisao(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.rescisaoForm.invalid) {
+      this.rescisaoForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingRescisao.set(true);
+    this.rescisaoErrorMessage.set(null);
+
+    const raw = this.rescisaoForm.getRawValue();
+    this.calculoRescisaoService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        tipoDesligamento: raw.tipoDesligamento as TipoDesligamento,
+        avisoPrevio: Number(raw.avisoPrevio),
+        feriasVencidas: Number(raw.feriasVencidas),
+        feriasProporcionais: Number(raw.feriasProporcionais),
+        decimoTerceiroProporcional: Number(raw.decimoTerceiroProporcional),
+        multaFgts: Number(raw.multaFgts),
+        total: Number(raw.total),
+        documentoTrctUrl: raw.documentoTrctUrl || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingRescisao.set(false);
+          this.rescisaoForm.reset({
+            tipoDesligamento: '',
+            avisoPrevio: '',
+            feriasVencidas: '',
+            feriasProporcionais: '',
+            decimoTerceiroProporcional: '',
+            multaFgts: '',
+            total: '',
+            documentoTrctUrl: '',
+          });
+          this.carregarRescisao(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingRescisao.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.rescisaoErrorMessage.set(body?.message ?? 'Não foi possível registrar o cálculo de rescisão. Tente novamente.');
         },
       });
   }
