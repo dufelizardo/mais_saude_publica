@@ -6,8 +6,10 @@ import { ProfissionalResponseDto, ErrorResponseDto } from '../../core/models/pro
 import { LotacaoResponseDto } from '../../core/models/lotacao';
 import { CargoResponseDto } from '../../core/models/cargo';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
+import { ComposicaoRemuneratoriaResponseDto } from '../../core/models/composicao-remuneratoria';
 import { CargoService } from '../../core/services/cargo';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
+import { ComposicaoRemuneratoriaService } from '../../core/services/composicao-remuneratoria';
 import { AjusteIndividualResponseDto, MotivoAjusteIndividual } from '../../core/models/ajuste-individual';
 import { ParticipacaoTreinamentoResponseDto, TreinamentoResponseDto } from '../../core/models/treinamento';
 import { AvaliacaoResponseDto, CicloAvaliacaoResponseDto } from '../../core/models/avaliacao';
@@ -20,7 +22,7 @@ import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf } from '../../shared/format-mask';
 
-type Aba = 'dados' | 'lotacao' | 'ajustes' | 'treinamentos' | 'avaliacoes' | 'desligamento';
+type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'treinamentos' | 'avaliacoes' | 'desligamento';
 
 @Component({
   selector: 'app-profissional-perfil',
@@ -38,6 +40,7 @@ export class ProfissionalPerfil {
   private readonly calculoRescisaoService = inject(CalculoRescisaoService);
   private readonly cargoService = inject(CargoService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
+  private readonly composicaoRemuneratoriaService = inject(ComposicaoRemuneratoriaService);
 
   protected readonly buscando = signal(false);
   protected readonly naoEncontrado = signal(false);
@@ -53,6 +56,10 @@ export class ProfissionalPerfil {
 
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly cargos = signal<CargoResponseDto[]>([]);
+
+  protected readonly composicao = signal<ComposicaoRemuneratoriaResponseDto | null>(null);
+  protected readonly carregandoComposicao = signal(false);
+  protected readonly composicaoNaoEncontrada = signal(false);
 
   protected readonly ajustes = signal<AjusteIndividualResponseDto[]>([]);
   protected readonly carregandoAjustes = signal(false);
@@ -160,6 +167,7 @@ export class ProfissionalPerfil {
         this.profissional.set(profissional);
         this.abaAtiva.set('dados');
         this.carregarLotacao(profissional.matricula);
+        this.carregarComposicao(profissional.matricula);
         this.carregarAjustes(profissional.matricula);
         this.carregarTreinamentos(profissional.matricula);
         this.carregarAvaliacoes(profissional.matricula);
@@ -194,6 +202,22 @@ export class ProfissionalPerfil {
     this.abaAtiva.set(aba);
   }
 
+  private carregarComposicao(matricula: string): void {
+    this.carregandoComposicao.set(true);
+    this.composicaoNaoEncontrada.set(false);
+    this.composicaoRemuneratoriaService.calcular(matricula).subscribe({
+      next: (composicao) => {
+        this.composicao.set(composicao);
+        this.carregandoComposicao.set(false);
+      },
+      error: () => {
+        this.composicao.set(null);
+        this.composicaoNaoEncontrada.set(true);
+        this.carregandoComposicao.set(false);
+      },
+    });
+  }
+
   protected registrarTransferencia(): void {
     const profissional = this.profissional();
     if (!profissional || this.transferenciaForm.invalid) {
@@ -225,6 +249,7 @@ export class ProfissionalPerfil {
             motivo: 'Transferência',
           });
           this.carregarLotacao(profissional.matricula);
+          this.carregarComposicao(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
           this.submittingTransferencia.set(false);
@@ -282,6 +307,7 @@ export class ProfissionalPerfil {
           this.submittingAjuste.set(false);
           this.ajusteForm.reset({ valor: '', motivo: '', dataInicio: '', dataFim: '', referencia: '' });
           this.carregarAjustes(profissional.matricula);
+          this.carregarComposicao(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
           this.submittingAjuste.set(false);
