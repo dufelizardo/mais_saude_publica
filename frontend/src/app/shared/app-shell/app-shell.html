@@ -66,6 +66,11 @@
           <span class="nav-item__label">Ciclos de avaliação</span>
         </a>
 
+        <a routerLink="/rh/vagas" routerLinkActive #rlaVagas="routerLinkActive" [attr.aria-current]="rlaVagas.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span class="nav-item__label">Vagas</span>
+        </a>
+
         <a routerLink="/rh/tipos-beneficio" routerLinkActive #rlaBeneficios="routerLinkActive" [attr.aria-current]="rlaBeneficios.isActive ? 'page' : null" class="nav-item">
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"></path><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path></svg>
           <span class="nav-item__label">Tipos de benefício</span>
