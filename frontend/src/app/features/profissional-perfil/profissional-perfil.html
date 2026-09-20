@@ -214,7 +214,7 @@
     }
 
     @if (abaAtiva() === 'lotacao') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         @if (lotacaoVigente(); as v) {
           <div class="card" style="padding: var(--s-5); margin-bottom: var(--s-4); background: var(--ink-50);">
             <div style="font-size: var(--fs-xs); color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;">Lotação vigente</div>
@@ -319,7 +319,7 @@
     }
 
     @if (abaAtiva() === 'composicao') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         @if (composicao(); as c) {
           <div class="card" style="padding: var(--s-5); margin-bottom: var(--s-4); background: var(--ink-50);">
             <div style="font-size: var(--fs-xs); color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;">Total</div>
@@ -371,7 +371,7 @@
     }
 
     @if (abaAtiva() === 'ajustes') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         <table>
           <thead>
             <tr>
@@ -450,7 +450,7 @@
     }
 
     @if (abaAtiva() === 'afastamentos') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         <h3 style="font-size: 1.0625rem;">Afastamentos</h3>
         <table>
           <thead>
@@ -632,7 +632,7 @@
     }
 
     @if (abaAtiva() === 'ponto') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         <form [formGroup]="filtroPontoForm" (ngSubmit)="carregarPonto()" class="form" style="margin-top: 0;" novalidate>
           <div class="form-row" style="align-items: end;">
             <div class="form-group">
@@ -778,7 +778,7 @@
     }
 
     @if (abaAtiva() === 'folha') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         <table>
           <thead>
             <tr>
@@ -857,7 +857,7 @@
       </div>
 
       @if (sstAbaAtiva() === 'exames') {
-        <div style="padding: var(--s-5);">
+        <div style="padding: var(--s-5); overflow-x: auto;">
           <table>
             <thead>
               <tr>
@@ -950,7 +950,7 @@
       }
 
       @if (sstAbaAtiva() === 'acidentes') {
-        <div style="padding: var(--s-5);">
+        <div style="padding: var(--s-5); overflow-x: auto;">
           <table>
             <thead>
               <tr>
@@ -1030,7 +1030,7 @@
       }
 
       @if (sstAbaAtiva() === 'epis') {
-        <div style="padding: var(--s-5);">
+        <div style="padding: var(--s-5); overflow-x: auto;">
           <table>
             <thead>
               <tr>
@@ -1099,7 +1099,7 @@
     }
 
     @if (abaAtiva() === 'treinamentos') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         <table>
           <thead>
             <tr>
@@ -1170,7 +1170,7 @@
     }
 
     @if (abaAtiva() === 'avaliacoes') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         <table>
           <thead>
             <tr>
@@ -1242,7 +1242,7 @@
     }
 
     @if (abaAtiva() === 'beneficios') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         @if (encerrarBeneficioErrorMessage()) {
           <div class="form-banner form-banner--error" role="alert">{{ encerrarBeneficioErrorMessage() }}</div>
         }
@@ -1345,7 +1345,7 @@
     }
 
     @if (abaAtiva() === 'desligamento') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         <div class="card" style="padding: var(--s-5); margin-bottom: var(--s-4); background: var(--ink-50);">
           <div style="font-size: var(--fs-xs); color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;">Situação</div>
           @if (p.ativo) {
@@ -1453,7 +1453,7 @@
     }
 
     @if (abaAtiva() === 'historico') {
-      <div style="padding: var(--s-5);">
+      <div style="padding: var(--s-5); overflow-x: auto;">
         <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-bottom: var(--s-4);">
           Linha do tempo consolidada — lotação, afastamentos, ajustes individuais e desligamento, mais recente primeiro.
         </p>
