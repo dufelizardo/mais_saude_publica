@@ -10,6 +10,8 @@ import { RegrasAnuenio } from './features/rh/regras-anuenio/regras-anuenio';
 import { FolhaPagamento } from './features/rh/folha-pagamento/folha-pagamento';
 import { Treinamentos } from './features/rh/treinamentos/treinamentos';
 import { CiclosAvaliacao } from './features/rh/ciclos-avaliacao/ciclos-avaliacao';
+import { TiposBeneficio } from './features/rh/tipos-beneficio/tipos-beneficio';
+import { TipoBeneficioValores } from './features/rh/tipo-beneficio-valores/tipo-beneficio-valores';
 import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
@@ -28,6 +30,8 @@ export const routes: Routes = [
       { path: 'rh/folha-pagamento', component: FolhaPagamento, data: { breadcrumb: 'Folha de pagamento' } },
       { path: 'rh/treinamentos', component: Treinamentos, data: { breadcrumb: 'Catálogo de treinamentos' } },
       { path: 'rh/ciclos-avaliacao', component: CiclosAvaliacao, data: { breadcrumb: 'Ciclos de avaliação' } },
+      { path: 'rh/tipos-beneficio', component: TiposBeneficio, data: { breadcrumb: 'Tipos de benefício' } },
+      { path: 'rh/tipos-beneficio/:tipoId/valores', component: TipoBeneficioValores, data: { breadcrumb: 'Valores do benefício' } },
     ],
   },
 ];
