@@ -4,6 +4,10 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ProfissionalResponseDto, ErrorResponseDto } from '../../core/models/profissional';
 import { LotacaoResponseDto } from '../../core/models/lotacao';
+import { CargoResponseDto } from '../../core/models/cargo';
+import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
+import { CargoService } from '../../core/services/cargo';
+import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 import { AjusteIndividualResponseDto, MotivoAjusteIndividual } from '../../core/models/ajuste-individual';
 import { ParticipacaoTreinamentoResponseDto, TreinamentoResponseDto } from '../../core/models/treinamento';
 import { AvaliacaoResponseDto, CicloAvaliacaoResponseDto } from '../../core/models/avaliacao';
@@ -32,6 +36,8 @@ export class ProfissionalPerfil {
   private readonly treinamentoService = inject(TreinamentoService);
   private readonly avaliacaoService = inject(AvaliacaoService);
   private readonly calculoRescisaoService = inject(CalculoRescisaoService);
+  private readonly cargoService = inject(CargoService);
+  private readonly unidadeSaudeService = inject(UnidadeSaudeService);
 
   protected readonly buscando = signal(false);
   protected readonly naoEncontrado = signal(false);
@@ -42,6 +48,11 @@ export class ProfissionalPerfil {
   protected readonly lotacaoVigente = signal<LotacaoResponseDto | null>(null);
   protected readonly lotacaoHistorico = signal<LotacaoResponseDto[]>([]);
   protected readonly carregandoLotacao = signal(false);
+  protected readonly submittingTransferencia = signal(false);
+  protected readonly transferenciaErrorMessage = signal<string | null>(null);
+
+  protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
+  protected readonly cargos = signal<CargoResponseDto[]>([]);
 
   protected readonly ajustes = signal<AjusteIndividualResponseDto[]>([]);
   protected readonly carregandoAjustes = signal(false);
@@ -67,6 +78,14 @@ export class ProfissionalPerfil {
 
   protected readonly cpfForm = this.fb.nonNullable.group({
     cpf: ['', [Validators.required]],
+  });
+
+  protected readonly transferenciaForm = this.fb.nonNullable.group({
+    unidadeId: ['', [Validators.required]],
+    cargoId: ['', [Validators.required]],
+    jornadaSemanalHoras: [''],
+    dataInicio: ['', [Validators.required]],
+    motivo: ['Transferência', [Validators.required]],
   });
 
   protected readonly ajusteForm = this.fb.nonNullable.group({
@@ -109,6 +128,14 @@ export class ProfissionalPerfil {
     this.avaliacaoService.listarCiclos().subscribe({
       next: (ciclos) => this.ciclosAvaliacao.set(ciclos),
       error: () => this.ciclosAvaliacao.set([]),
+    });
+    this.unidadeSaudeService.listar().subscribe({
+      next: (unidades) => this.unidades.set(unidades),
+      error: () => this.unidades.set([]),
+    });
+    this.cargoService.listar().subscribe({
+      next: (cargos) => this.cargos.set(cargos),
+      error: () => this.cargos.set([]),
     });
   }
 
@@ -165,6 +192,46 @@ export class ProfissionalPerfil {
 
   protected selecionarAba(aba: Aba): void {
     this.abaAtiva.set(aba);
+  }
+
+  protected registrarTransferencia(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.transferenciaForm.invalid) {
+      this.transferenciaForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingTransferencia.set(true);
+    this.transferenciaErrorMessage.set(null);
+
+    const raw = this.transferenciaForm.getRawValue();
+    this.lotacaoService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        unidadeId: raw.unidadeId,
+        cargoId: raw.cargoId,
+        jornadaSemanalHoras: raw.jornadaSemanalHoras ? Number(raw.jornadaSemanalHoras) : undefined,
+        dataInicio: raw.dataInicio,
+        motivo: raw.motivo,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingTransferencia.set(false);
+          this.transferenciaForm.reset({
+            unidadeId: '',
+            cargoId: '',
+            jornadaSemanalHoras: '',
+            dataInicio: '',
+            motivo: 'Transferência',
+          });
+          this.carregarLotacao(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingTransferencia.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.transferenciaErrorMessage.set(body?.message ?? 'Não foi possível registrar a transferência. Tente novamente.');
+        },
+      });
   }
 
   private carregarAjustes(matricula: string): void {
