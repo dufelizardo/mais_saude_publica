@@ -25,18 +25,23 @@ import { AcidenteTrabalhoService } from '../../core/services/acidente-trabalho';
 import { EpiResponseDto } from '../../core/models/epi';
 import { EpiService } from '../../core/services/epi';
 import { AjusteIndividualResponseDto, MotivoAjusteIndividual } from '../../core/models/ajuste-individual';
+import { AdesaoBeneficioResponseDto } from '../../core/models/adesao-beneficio';
+import { TipoBeneficioResponseDto } from '../../core/models/tipo-beneficio';
 import { ParticipacaoTreinamentoResponseDto, TreinamentoResponseDto } from '../../core/models/treinamento';
 import { AvaliacaoResponseDto, CicloAvaliacaoResponseDto } from '../../core/models/avaliacao';
 import { CalculoRescisaoResponseDto, TipoDesligamento } from '../../core/models/calculo-rescisao';
 import { ProfissionalService } from '../../core/services/profissional';
 import { LotacaoService } from '../../core/services/lotacao';
 import { AjusteIndividualService } from '../../core/services/ajuste-individual';
+import { AdesaoBeneficioService } from '../../core/services/adesao-beneficio';
+import { TipoBeneficioService } from '../../core/services/tipo-beneficio';
 import { TreinamentoService } from '../../core/services/treinamento';
 import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf } from '../../shared/format-mask';
+import { Modal } from '../../shared/modal/modal';
 
-type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'sst' | 'treinamentos' | 'avaliacoes' | 'desligamento' | 'historico';
+type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'sst' | 'treinamentos' | 'avaliacoes' | 'beneficios' | 'desligamento' | 'historico';
 type AbaSst = 'exames' | 'acidentes' | 'epis';
 
 interface EventoHistorico {
@@ -47,7 +52,7 @@ interface EventoHistorico {
 
 @Component({
   selector: 'app-profissional-perfil',
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Modal],
   templateUrl: './profissional-perfil.html',
   styleUrl: './profissional-perfil.css',
 })
@@ -56,6 +61,8 @@ export class ProfissionalPerfil {
   private readonly profissionalService = inject(ProfissionalService);
   private readonly lotacaoService = inject(LotacaoService);
   private readonly ajusteIndividualService = inject(AjusteIndividualService);
+  private readonly adesaoBeneficioService = inject(AdesaoBeneficioService);
+  private readonly tipoBeneficioService = inject(TipoBeneficioService);
   private readonly treinamentoService = inject(TreinamentoService);
   private readonly avaliacaoService = inject(AvaliacaoService);
   private readonly calculoRescisaoService = inject(CalculoRescisaoService);
@@ -130,6 +137,15 @@ export class ProfissionalPerfil {
   protected readonly submittingAjuste = signal(false);
   protected readonly ajusteErrorMessage = signal<string | null>(null);
 
+  protected readonly tiposBeneficioCatalogo = signal<TipoBeneficioResponseDto[]>([]);
+  protected readonly beneficios = signal<AdesaoBeneficioResponseDto[]>([]);
+  protected readonly carregandoBeneficios = signal(false);
+  protected readonly submittingBeneficio = signal(false);
+  protected readonly beneficioErrorMessage = signal<string | null>(null);
+  protected readonly encerrarBeneficioAlvo = signal<AdesaoBeneficioResponseDto | null>(null);
+  protected readonly submittingEncerrarBeneficio = signal(false);
+  protected readonly encerrarBeneficioErrorMessage = signal<string | null>(null);
+
   protected readonly treinamentosCatalogo = signal<TreinamentoResponseDto[]>([]);
   protected readonly participacoes = signal<ParticipacaoTreinamentoResponseDto[]>([]);
   protected readonly carregandoTreinamentos = signal(false);
@@ -165,6 +181,16 @@ export class ProfissionalPerfil {
     dataInicio: ['', [Validators.required]],
     dataFim: [''],
     referencia: [''],
+  });
+
+  protected readonly beneficioForm = this.fb.nonNullable.group({
+    tipoBeneficioId: ['', [Validators.required]],
+    dataInicio: ['', [Validators.required]],
+    quantidadeDependentes: [''],
+  });
+
+  protected readonly encerrarBeneficioForm = this.fb.nonNullable.group({
+    dataFim: ['', [Validators.required]],
   });
 
   protected readonly participacaoForm = this.fb.nonNullable.group({
@@ -302,6 +328,10 @@ export class ProfissionalPerfil {
       next: (ciclos) => this.ciclosAvaliacao.set(ciclos),
       error: () => this.ciclosAvaliacao.set([]),
     });
+    this.tipoBeneficioService.listar().subscribe({
+      next: (tipos) => this.tiposBeneficioCatalogo.set(tipos),
+      error: () => this.tiposBeneficioCatalogo.set([]),
+    });
     this.unidadeSaudeService.listar().subscribe({
       next: (unidades) => this.unidades.set(unidades),
       error: () => this.unidades.set([]),
@@ -346,6 +376,7 @@ export class ProfissionalPerfil {
         this.carregarEpis(profissional.matricula);
         this.carregarTreinamentos(profissional.matricula);
         this.carregarAvaliacoes(profissional.matricula);
+        this.carregarBeneficios(profissional.matricula);
         this.carregarRescisao(profissional.matricula);
       },
       error: () => {
@@ -490,6 +521,92 @@ export class ProfissionalPerfil {
           this.ajusteErrorMessage.set(body?.message ?? 'Não foi possível registrar o ajuste. Tente novamente.');
         },
       });
+  }
+
+  private carregarBeneficios(matricula: string): void {
+    this.carregandoBeneficios.set(true);
+    this.adesaoBeneficioService.listarHistorico(matricula).subscribe({
+      next: (beneficios) => {
+        this.beneficios.set(beneficios);
+        this.carregandoBeneficios.set(false);
+      },
+      error: () => {
+        this.beneficios.set([]);
+        this.carregandoBeneficios.set(false);
+      },
+    });
+  }
+
+  protected situacaoBeneficio(adesao: AdesaoBeneficioResponseDto): 'Vigente' | 'Encerrado' {
+    return adesao.dataFim ? 'Encerrado' : 'Vigente';
+  }
+
+  protected registrarBeneficio(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.beneficioForm.invalid) {
+      this.beneficioForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingBeneficio.set(true);
+    this.beneficioErrorMessage.set(null);
+
+    const raw = this.beneficioForm.getRawValue();
+    this.adesaoBeneficioService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        tipoBeneficioId: raw.tipoBeneficioId,
+        dataInicio: raw.dataInicio,
+        quantidadeDependentes: raw.quantidadeDependentes ? Number(raw.quantidadeDependentes) : undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingBeneficio.set(false);
+          this.beneficioForm.reset({ tipoBeneficioId: '', dataInicio: '', quantidadeDependentes: '' });
+          this.carregarBeneficios(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingBeneficio.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.beneficioErrorMessage.set(body?.message ?? 'Não foi possível registrar a adesão. Tente novamente.');
+        },
+      });
+  }
+
+  protected abrirEncerrarBeneficio(adesao: AdesaoBeneficioResponseDto): void {
+    this.encerrarBeneficioForm.reset({ dataFim: '' });
+    this.encerrarBeneficioErrorMessage.set(null);
+    this.encerrarBeneficioAlvo.set(adesao);
+  }
+
+  protected fecharEncerrarBeneficio(): void {
+    this.encerrarBeneficioAlvo.set(null);
+  }
+
+  protected confirmarEncerrarBeneficio(): void {
+    const profissional = this.profissional();
+    const adesao = this.encerrarBeneficioAlvo();
+    if (!profissional || !adesao || this.encerrarBeneficioForm.invalid) {
+      this.encerrarBeneficioForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingEncerrarBeneficio.set(true);
+    this.encerrarBeneficioErrorMessage.set(null);
+
+    const dataFim = this.encerrarBeneficioForm.getRawValue().dataFim;
+    this.adesaoBeneficioService.encerrar(adesao.uuid, dataFim).subscribe({
+      next: () => {
+        this.submittingEncerrarBeneficio.set(false);
+        this.encerrarBeneficioAlvo.set(null);
+        this.carregarBeneficios(profissional.matricula);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.submittingEncerrarBeneficio.set(false);
+        const body = error.error as ErrorResponseDto | undefined;
+        this.encerrarBeneficioErrorMessage.set(body?.message ?? 'Não foi possível encerrar a adesão. Tente novamente.');
+      },
+    });
   }
 
   private carregarTreinamentos(matricula: string): void {

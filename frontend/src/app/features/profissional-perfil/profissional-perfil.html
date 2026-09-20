@@ -59,6 +59,7 @@
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'sst'" (click)="selecionarAba('sst')">SST</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'treinamentos'" (click)="selecionarAba('treinamentos')">Treinamentos</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'avaliacoes'" (click)="selecionarAba('avaliacoes')">Avaliações</button>
+      <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'beneficios'" (click)="selecionarAba('beneficios')">Benefícios</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'desligamento'" (click)="selecionarAba('desligamento')">Desligamento/Rescisão</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'historico'" (click)="selecionarAba('historico')">Histórico funcional</button>
     </div>
@@ -1041,6 +1042,109 @@
           </div>
         </form>
       </div>
+    }
+
+    @if (abaAtiva() === 'beneficios') {
+      <div style="padding: var(--s-5);">
+        @if (encerrarBeneficioErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ encerrarBeneficioErrorMessage() }}</div>
+        }
+        <table>
+          <thead>
+            <tr>
+              <th>Benefício</th>
+              <th>Início</th>
+              <th>Dependentes</th>
+              <th>Situação</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of beneficios(); track item.uuid) {
+              <tr>
+                <td>{{ item.tipoBeneficioNome }}</td>
+                <td>{{ item.dataInicio | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ item.quantidadeDependentes ?? '—' }}</td>
+                <td>
+                  @if (situacaoBeneficio(item) === 'Vigente') {
+                    <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Vigente</span>
+                  } @else {
+                    <span class="tag"><span class="dot" aria-hidden="true"></span> Encerrado {{ item.dataFim ? ('em ' + (item.dataFim | date: 'dd/MM/yyyy')) : '' }}</span>
+                  }
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                  @if (situacaoBeneficio(item) === 'Vigente') {
+                    <button type="button" class="btn btn--ghost" (click)="abrirEncerrarBeneficio(item)">Encerrar adesão</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!carregandoBeneficios() && beneficios().length === 0) {
+          <p class="table-empty">Nenhuma adesão a benefício registrada.</p>
+        }
+
+        <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Nova adesão</h3>
+        @if (beneficioErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ beneficioErrorMessage() }}</div>
+        }
+        <form [formGroup]="beneficioForm" (ngSubmit)="registrarBeneficio()" class="form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoBeneficioId">Benefício *</label>
+              <select id="tipoBeneficioId" formControlName="tipoBeneficioId">
+                <option value="" disabled>Selecione…</option>
+                @for (tipo of tiposBeneficioCatalogo(); track tipo.uuid) {
+                  <option [value]="tipo.uuid">{{ tipo.nome }}</option>
+                }
+              </select>
+              @if (beneficioForm.controls.tipoBeneficioId.invalid && beneficioForm.controls.tipoBeneficioId.touched) {
+                <span class="form-error">Benefício é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="dataInicioBeneficio">Data de início *</label>
+              <input id="dataInicioBeneficio" type="date" formControlName="dataInicio" />
+              @if (beneficioForm.controls.dataInicio.invalid && beneficioForm.controls.dataInicio.touched) {
+                <span class="form-error">Data de início é obrigatória.</span>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="quantidadeDependentes">Quantidade de dependentes</label>
+            <input id="quantidadeDependentes" type="number" step="1" min="0" formControlName="quantidadeDependentes" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn" [disabled]="submittingBeneficio()">
+              {{ submittingBeneficio() ? 'Registrando…' : 'Registrar adesão' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (encerrarBeneficioAlvo(); as alvo) {
+      <app-modal [titulo]="'Encerrar adesão — ' + alvo.tipoBeneficioNome" (fechar)="fecharEncerrarBeneficio()">
+        @if (encerrarBeneficioErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ encerrarBeneficioErrorMessage() }}</div>
+        }
+        <form [formGroup]="encerrarBeneficioForm" (ngSubmit)="confirmarEncerrarBeneficio()" class="form" novalidate>
+          <div class="form-group">
+            <label for="dataFimBeneficio">Data de fim *</label>
+            <input id="dataFimBeneficio" type="date" formControlName="dataFim" />
+            @if (encerrarBeneficioForm.controls.dataFim.invalid && encerrarBeneficioForm.controls.dataFim.touched) {
+              <span class="form-error">Data de fim é obrigatória.</span>
+            }
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn--ghost" (click)="fecharEncerrarBeneficio()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingEncerrarBeneficio()">
+              {{ submittingEncerrarBeneficio() ? 'Encerrando…' : 'Encerrar adesão' }}
+            </button>
+          </div>
+        </form>
+      </app-modal>
     }
 
     @if (abaAtiva() === 'desligamento') {
