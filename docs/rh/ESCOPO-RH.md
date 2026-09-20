@@ -119,6 +119,7 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 
 | Fatia | Escopo | PR(s) | Status |
 |---|---|---|---|
+| — | Correção: cadastro de profissional (pré-existente, fora das fatias de RH) passa a vincular cargo e unidade via `Lotacao` — sem isso não havia de onde derivar salário nenhum (ver [ADR-0019](../adr/0019-vincular-cargo-e-lotacao-no-cadastro-de-profissional.md)) | — | ✅ |
 | App shell | Navegação (sidebar/topbar/breadcrumb) + componente de modal reutilizável | [#136](https://github.com/dufelizardo/mais_saude_publica/pull/136), [#137](https://github.com/dufelizardo/mais_saude_publica/pull/137) | ✅ |
 | 1 | Cadastros estruturais: Categorias salariais, Cargos, Tabela salarial, Regras de anuênio | [#135](https://github.com/dufelizardo/mais_saude_publica/pull/135), [#136](https://github.com/dufelizardo/mais_saude_publica/pull/136) | ✅ |
 | 2 | Tela central do Profissional (dados, lotação, ajustes, ponto, treinamentos, avaliações, desligamento) | — | ⏳ Não iniciada — precisa de um componente novo de timeline/histórico (não existe em `modelo_front/`) |
