@@ -63,8 +63,40 @@
             }
           </div>
           <div class="form-group">
-            <label for="dataAdmissao">Data de admissão</label>
+            <label for="dataAdmissao">Data de admissão *</label>
             <input id="dataAdmissao" type="date" formControlName="dataAdmissao" />
+            @if (form.controls.dataAdmissao.invalid && form.controls.dataAdmissao.touched) {
+              <span class="form-error">Data de admissão é obrigatória.</span>
+            }
+          </div>
+        </div>
+
+        <h2 style="font-size: 1.0625rem; margin-top: var(--s-2);">Lotação</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="unidadeId">Unidade de saúde *</label>
+            <select id="unidadeId" formControlName="unidadeId">
+              <option value="" disabled>Selecione…</option>
+              @for (unidade of unidades(); track unidade.uuid) {
+                <option [value]="unidade.uuid">{{ unidade.nome }}</option>
+              }
+            </select>
+            @if (form.controls.unidadeId.invalid && form.controls.unidadeId.touched) {
+              <span class="form-error">Unidade de saúde é obrigatória.</span>
+            }
+          </div>
+          <div class="form-group">
+            <label for="cargoId">Cargo *</label>
+            <select id="cargoId" formControlName="cargoId">
+              <option value="" disabled>Selecione…</option>
+              @for (cargo of cargos(); track cargo.uuid) {
+                <option [value]="cargo.uuid">{{ cargo.nome }} ({{ cargo.categoriaNome }})</option>
+              }
+            </select>
+            @if (form.controls.cargoId.invalid && form.controls.cargoId.touched) {
+              <span class="form-error">Cargo é obrigatório.</span>
+            }
           </div>
         </div>
 
