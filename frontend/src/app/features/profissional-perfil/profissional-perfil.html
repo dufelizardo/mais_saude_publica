@@ -54,6 +54,7 @@
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'composicao'" (click)="selecionarAba('composicao')">Composição remuneratória</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'ajustes'" (click)="selecionarAba('ajustes')">Ajustes individuais</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'afastamentos'" (click)="selecionarAba('afastamentos')">Afastamentos e Licenças</button>
+      <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'ponto'" (click)="selecionarAba('ponto')">Ponto</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'treinamentos'" (click)="selecionarAba('treinamentos')">Treinamentos</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'avaliacoes'" (click)="selecionarAba('avaliacoes')">Avaliações</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'desligamento'" (click)="selecionarAba('desligamento')">Desligamento/Rescisão</button>
@@ -530,6 +531,48 @@
             </button>
           </div>
         </form>
+      </div>
+    }
+
+    @if (abaAtiva() === 'ponto') {
+      <div style="padding: var(--s-5);">
+        <form [formGroup]="filtroPontoForm" (ngSubmit)="carregarPonto()" class="form" style="margin-top: 0;" novalidate>
+          <div class="form-row" style="align-items: end;">
+            <div class="form-group">
+              <label for="pontoDataInicio">De</label>
+              <input id="pontoDataInicio" type="date" formControlName="dataInicio" />
+            </div>
+            <div class="form-group">
+              <label for="pontoDataFim">Até</label>
+              <input id="pontoDataFim" type="date" formControlName="dataFim" />
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn btn--ghost">Filtrar</button>
+            </div>
+          </div>
+        </form>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Data/hora</th>
+              <th>Tipo</th>
+              <th>Origem</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of registrosPonto(); track item.uuid) {
+              <tr>
+                <td>{{ item.dataHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ item.tipo }}</td>
+                <td>{{ item.origem || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!carregandoPonto() && registrosPonto().length === 0) {
+          <p class="table-empty">Nenhum registro de ponto no período.</p>
+        }
       </div>
     }
 

@@ -14,6 +14,8 @@ import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 import { ComposicaoRemuneratoriaService } from '../../core/services/composicao-remuneratoria';
 import { AfastamentoService } from '../../core/services/afastamento';
 import { LicencaService } from '../../core/services/licenca';
+import { RegistroPontoResponseDto } from '../../core/models/registro-ponto';
+import { RegistroPontoService } from '../../core/services/registro-ponto';
 import { AjusteIndividualResponseDto, MotivoAjusteIndividual } from '../../core/models/ajuste-individual';
 import { ParticipacaoTreinamentoResponseDto, TreinamentoResponseDto } from '../../core/models/treinamento';
 import { AvaliacaoResponseDto, CicloAvaliacaoResponseDto } from '../../core/models/avaliacao';
@@ -26,7 +28,7 @@ import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf } from '../../shared/format-mask';
 
-type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'treinamentos' | 'avaliacoes' | 'desligamento';
+type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'treinamentos' | 'avaliacoes' | 'desligamento';
 
 @Component({
   selector: 'app-profissional-perfil',
@@ -47,6 +49,7 @@ export class ProfissionalPerfil {
   private readonly composicaoRemuneratoriaService = inject(ComposicaoRemuneratoriaService);
   private readonly afastamentoService = inject(AfastamentoService);
   private readonly licencaService = inject(LicencaService);
+  private readonly registroPontoService = inject(RegistroPontoService);
 
   protected readonly buscando = signal(false);
   protected readonly naoEncontrado = signal(false);
@@ -76,6 +79,10 @@ export class ProfissionalPerfil {
   protected readonly carregandoLicencas = signal(false);
   protected readonly submittingLicenca = signal(false);
   protected readonly licencaErrorMessage = signal<string | null>(null);
+
+  protected readonly registrosPonto = signal<RegistroPontoResponseDto[]>([]);
+  protected readonly carregandoPonto = signal(false);
+  private matriculaAtual = '';
 
   protected readonly ajustes = signal<AjusteIndividualResponseDto[]>([]);
   protected readonly carregandoAjustes = signal(false);
@@ -147,6 +154,11 @@ export class ProfissionalPerfil {
     documentoUrl: [''],
   });
 
+  protected readonly filtroPontoForm = this.fb.nonNullable.group({
+    dataInicio: [''],
+    dataFim: [''],
+  });
+
   protected readonly afastamentosSemLicenca = computed(() => {
     const idsComLicenca = new Set(this.licencas().map((l) => l.afastamentoId));
     return this.afastamentos().filter((a) => !idsComLicenca.has(a.uuid));
@@ -207,6 +219,9 @@ export class ProfissionalPerfil {
         this.carregarAjustes(profissional.matricula);
         this.carregarAfastamentos(profissional.matricula);
         this.carregarLicencas(profissional.matricula);
+        this.matriculaAtual = profissional.matricula;
+        this.filtroPontoForm.reset({ dataInicio: '', dataFim: '' });
+        this.carregarPonto();
         this.carregarTreinamentos(profissional.matricula);
         this.carregarAvaliacoes(profissional.matricula);
         this.carregarRescisao(profissional.matricula);
@@ -600,5 +615,20 @@ export class ProfissionalPerfil {
           this.licencaErrorMessage.set(body?.message ?? 'Não foi possível registrar a licença. Tente novamente.');
         },
       });
+  }
+
+  protected carregarPonto(): void {
+    this.carregandoPonto.set(true);
+    const raw = this.filtroPontoForm.getRawValue();
+    this.registroPontoService.listarPorProfissional(this.matriculaAtual, raw.dataInicio || undefined, raw.dataFim || undefined).subscribe({
+      next: (registros) => {
+        this.registrosPonto.set(registros);
+        this.carregandoPonto.set(false);
+      },
+      error: () => {
+        this.registrosPonto.set([]);
+        this.carregandoPonto.set(false);
+      },
+    });
   }
 }

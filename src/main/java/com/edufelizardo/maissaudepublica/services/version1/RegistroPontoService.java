@@ -10,6 +10,8 @@ import com.edufelizardo.maissaudepublica.repositories.RegistroPontoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,9 +34,13 @@ public class RegistroPontoService {
         return RegistroPontoResponseDto.fromRegistroPonto(registroPonto);
     }
 
-    public List<RegistroPontoResponseDto> listarHistorico(String matricula) {
-        List<RegistroPontoResponseDto> historico = registroPontoRepository.findByProfissional_MatriculaOrderByDataHoraDesc(matricula)
-                .stream()
+    public List<RegistroPontoResponseDto> listarHistorico(String matricula, LocalDate dataInicio, LocalDate dataFim) {
+        List<RegistroPonto> registros = (dataInicio != null && dataFim != null)
+                ? registroPontoRepository.findByProfissional_MatriculaAndDataHoraBetweenOrderByDataHoraDesc(
+                        matricula, dataInicio.atStartOfDay(), dataFim.atTime(LocalTime.MAX))
+                : registroPontoRepository.findByProfissional_MatriculaOrderByDataHoraDesc(matricula);
+
+        List<RegistroPontoResponseDto> historico = registros.stream()
                 .map(RegistroPontoResponseDto::fromRegistroPonto)
                 .collect(Collectors.toList());
         if (historico.isEmpty()) {
