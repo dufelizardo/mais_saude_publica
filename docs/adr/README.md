@@ -45,7 +45,17 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0027](./0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md) | Fatia 8: Treinamento, Avaliação, SST, Recrutamento | Aceita |
 | [0028](./0028-fatia-9-beneficios.md) | Fatia 9: Benefícios (+ endpoint `encerrar` de AdesaoBeneficio) | Aceita |
 | [0029](./0029-listagem-e-edicao-de-contato-do-profissional.md) | Listagem de profissionais e edição de contato | Aceita |
+| [0030](./0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) | Setor Administrativo e relação com Unidade de Saúde | Proposta |
+| [0031](./0031-perfil-administrativo-por-tipo-de-unidade.md) | Perfil Administrativo por tipo de unidade | Proposta |
+| [0032](./0032-catalogo-de-capacidades-administrativas.md) | Catálogo de capacidades administrativas | Proposta |
+| [0033](./0033-processos-administrativos-por-capacidade.md) | Processos administrativos por capacidade | Proposta |
+| [0034](./0034-integracao-administrativo-rh-sem-duplicar-profissional.md) | Integração Administrativo ↔ RH sem duplicar Profissional | Proposta |
+| [0035](./0035-responsabilidade-administrativa-separada-da-lotacao.md) | Responsabilidade administrativa separada da lotação | Proposta |
+| [0036](./0036-necessidade-de-pessoal-encaminhada-ao-rh.md) | Necessidade de pessoal encaminhada ao RH | Proposta |
+| [0037](./0037-criterio-para-especializacao-administrativa.md) | Critério para especialização administrativa | Proposta |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. Prioridade de implementação combinada: 0003 (arquitetura), 0006 (segurança) e 0007 (deploy) antes de novos domínios de negócio; 0008 (front-end) é a de menor prioridade.
+
+As ADRs 0030 a 0037 formam o roadmap do Setor Administrativo (também não implementado ainda) — ver [`docs/administrativo/ESCOPO-ADMINISTRATIVO.md`](../administrativo/ESCOPO-ADMINISTRATIVO.md) para o contexto completo e a ordem de implementação planejada.
 
 Ver também [`DER-atual.md`](./DER-atual.md) (schema real implementado hoje) e [`DER.md`](./DER.md) (modelo de dados clínico futuro/proposto).

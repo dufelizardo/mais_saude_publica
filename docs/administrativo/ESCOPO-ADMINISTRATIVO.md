@@ -1,0 +1,118 @@
+# Escopo do domínio Administrativo — roadmap e ideias
+
+**Data:** 2026-09-20 (criado)
+**Status:** Vivo. **Nenhuma fase implementada ainda** — este documento e os ADRs 0030-0037
+registram a arquitetura conceitual acordada, para implementação incremental e discutida (mesmo
+princípio já seguido no módulo de RH, ver seção 1). Rastreamento Jira: a definir (nenhum épico
+Administrativo aberto até o momento — o módulo de RH usa o épico
+[AQUAQE-274](https://edufelizardo.atlassian.net/browse/AQUAQE-274) como padrão a seguir quando
+houver).
+
+## 1. Contexto e como ler este documento
+
+Este documento nasceu de uma "Especificação Preliminar do Setor Administrativo Adaptativo" (v0.1,
+20/09/2026), trazida pelo usuário como material externo. O próprio documento já declara (seção 32)
+que não é "uma decisão definitiva sobre cada entidade ou relacionamento", mas sim uma base
+conceitual para produzir ADRs.
+
+Esse é o mesmo tratamento já dado ao material externo que originou o módulo de RH (ver
+[ESCOPO-RH.md, seção 1](../rh/ESCOPO-RH.md#1-contexto-e-como-ler-este-documento)): serve como
+**checklist de vocabulário e de estrutura de decisão**, não como especificação literal. Ao
+confrontar com o código real desta vez, dois pontos precisaram de ajuste:
+
+- O documento usa "Vínculo" como conceito genérico de RH; o código já tem `Lotacao` cobrindo
+  exatamente esse papel (histórico profissional↔unidade↔cargo). Nenhuma entidade `Vinculo` nova
+  será criada — ver [ADR-0034](../adr/0034-integracao-administrativo-rh-sem-duplicar-profissional.md).
+- O documento cita equipamentos (UPA, Laboratório, CAPS, Centro de Especialidades, Centro de
+  Reabilitação, Policlínica) que ainda não existem como valores de `TipoUnidadeDeSaude` — hoje o
+  enum só tem `FEDERAL, ESTADUAL, MUNICIPAL, REGIONAL, UBS, HOSPITAL`. A extensão desse enum faz
+  parte da decisão da [ADR-0031](../adr/0031-perfil-administrativo-por-tipo-de-unidade.md), seguindo
+  o mesmo padrão de generalização já usado pela
+  [ADR-0013](../adr/0013-implementar-5-nivel-unidade-de-saude-e-supervisao-regional.md).
+- O documento propõe `NecessidadeDePessoal` fluindo da Administração para o RH; o RH já tem `Vaga`
+  (recrutamento, fatia 8c). As duas entidades não colidem — ver
+  [ADR-0036](../adr/0036-necessidade-de-pessoal-encaminhada-ao-rh.md).
+
+O projeto segue avançando por **incrementos pequenos e discutidos**, não adotando o roadmap
+inteiro de uma vez (mesma prática já registrada em `ESCOPO-RH.md`, seção 1). Por isso todos os
+ADRs 0030-0037 têm status **Proposta**: a direção arquitetural está definida, mas a implementação é
+fatia por fatia, cada uma merecendo sua própria conversa e PR.
+
+## 2. Princípio arquitetural
+
+```text
+UnidadeDeSaude
+      │
+      ▼
+TipoUnidadeDeSaude
+      │
+      ▼
+PerfilAdministrativo
+      │
+      ▼
+CapacidadeAdministrativa
+      │
+      ▼
+ProcessoAdministrativo
+```
+
+O tipo da unidade não determina uma implementação específica do setor administrativo — determina
+qual configuração (perfil → capacidades → processos) está disponível para aquela unidade. Ver
+detalhamento em [ADR-0030](../adr/0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) a
+[ADR-0033](../adr/0033-processos-administrativos-por-capacidade.md).
+
+## 3. Relação com o RH
+
+A Administração nunca duplica `Profissional`, `Cargo` ou `Lotacao` — apenas referencia por FK
+direta (ver [ADR-0034](../adr/0034-integracao-administrativo-rh-sem-duplicar-profissional.md)).
+Dois conceitos novos, específicos do domínio Administrativo, também referenciam o RH sem
+duplicá-lo:
+
+- `ResponsabilidadeAdministrativa` (profissional responde por um setor/recurso, distinto de estar
+  lotado nele) — [ADR-0035](../adr/0035-responsabilidade-administrativa-separada-da-lotacao.md).
+- `NecessidadeDePessoal` (a unidade identifica necessidade operacional, RH conduz o ciclo de
+  recrutamento) — [ADR-0036](../adr/0036-necessidade-de-pessoal-encaminhada-ao-rh.md).
+
+## 4. Fases planejadas (roadmap, ainda não implementado)
+
+Ordem de implementação combinada, adaptada da estratégia da especificação original (sua seção 27):
+
+| Fase | Entrega | ADR(s) |
+|---|---|---|
+| 1 | `Setor`/`TipoSetor` ligados a `UnidadeDeSaude` | [0030](../adr/0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) |
+| 2 | `CapacidadeAdministrativa` (catálogo) | [0032](../adr/0032-catalogo-de-capacidades-administrativas.md) |
+| 3 | `PerfilAdministrativo` + extensão de `TipoUnidadeDeSaude` | [0031](../adr/0031-perfil-administrativo-por-tipo-de-unidade.md) |
+| 4 | `ProcessoAdministrativo` | [0033](../adr/0033-processos-administrativos-por-capacidade.md) |
+| 5 | Integração com RH (referências diretas) | [0034](../adr/0034-integracao-administrativo-rh-sem-duplicar-profissional.md) |
+| 6 | `ResponsabilidadeAdministrativa` | [0035](../adr/0035-responsabilidade-administrativa-separada-da-lotacao.md) |
+| 6 | `NecessidadeDePessoal` | [0036](../adr/0036-necessidade-de-pessoal-encaminhada-ao-rh.md) |
+| 7+ | Recursos administrativos (Patrimônio, Estoque, Compras, Fornecedores, Contratos, Manutenção, Documentos, Transporte) e especializações assistenciais (Leitos, Internação, Centro Cirúrgico, Laboratório, Coleta) — só quando houver requisito real | [0037](../adr/0037-criterio-para-especializacao-administrativa.md) |
+
+Cada fase, na sua vez, terá sua própria conversa/PR e (quando implementada) uma atualização de
+status nesta tabela e nos ADRs correspondentes — mesmo padrão do módulo de RH.
+
+## 5. Estado de implementação
+
+Nenhuma fase implementada até o momento. Esta seção será preenchida com PRs conforme cada fase for
+construída (mesmo formato da tabela em
+[ESCOPO-RH.md, seção 6](../rh/ESCOPO-RH.md#6-estado-do-frontend)).
+
+| Fase | Escopo | PR(s) | Status |
+|---|---|---|---|
+| — | — | — | ⏳ Não iniciada |
+
+## 6. Referências
+
+- [MODELO-RH.md](../rh/MODELO-RH.md) e [ESCOPO-RH.md](../rh/ESCOPO-RH.md) — precedente direto de
+  como este documento e os ADRs 0030-0037 foram estruturados.
+- [ADR-0013](../adr/0013-implementar-5-nivel-unidade-de-saude-e-supervisao-regional.md) — precedente
+  de generalização de `TipoUnidadeDeSaude`/`getTiposAceitos()` e de rejeição de uma proposta externa
+  de separar `Administracao`/`UnidadeDeSaude`.
+- [ADR-0014](../adr/0014-modulo-profissional-rh-com-vinculo-fraco-por-reconciliacao.md) e
+  [ADR-0017](../adr/0017-numero-de-matricula-automatico-e-cpf-nao-unico.md) — contexto de por que a
+  integração com RH (ADR-0034) usa referência direta em vez do vínculo fraco por CPF.
+- ADRs [0030](../adr/0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) a
+  [0037](../adr/0037-criterio-para-especializacao-administrativa.md) — decisões individuais
+  derivadas deste documento.
+- O texto original da "Especificação Preliminar do Setor Administrativo Adaptativo" (v0.1) não foi
+  anexado a este repositório — este documento é a versão curada e confrontada com o código real.
