@@ -619,6 +619,9 @@ footer a:hover { color: #fff; text-decoration: underline; }
   .sidebar.is-open { display: flex; position: fixed; inset: 0 auto 0 0; width: 280px; z-index: 150; box-shadow: var(--shadow-lg); }
 }
 .sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--ink-100); height: var(--top-h); flex-shrink: 0; text-decoration: none; color: inherit; }
+.sb-mark { width: 36px; height: 36px; border-radius: 9px; background: var(--blue-700); color: #fff; display: grid; place-items: center; flex-shrink: 0; }
+.sb-name { font-weight: 600; font-size: 0.9375rem; line-height: 1.05; white-space: nowrap; }
+.sb-sub { font-size: 0.66rem; color: var(--ink-500); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
 .sidebar__nav { padding: var(--s-3) 10px; flex: 1; }
 .nav-group { margin-bottom: var(--s-4); }
 .nav-group__label { font-size: 0.66rem; font-weight: 600; color: var(--ink-400); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 10px 4px; }
