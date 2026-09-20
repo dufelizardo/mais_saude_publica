@@ -59,6 +59,7 @@
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'treinamentos'" (click)="selecionarAba('treinamentos')">Treinamentos</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'avaliacoes'" (click)="selecionarAba('avaliacoes')">Avaliações</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'desligamento'" (click)="selecionarAba('desligamento')">Desligamento/Rescisão</button>
+      <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'historico'" (click)="selecionarAba('historico')">Histórico funcional</button>
     </div>
 
     @if (abaAtiva() === 'dados') {
@@ -896,6 +897,35 @@
               </button>
             </div>
           </form>
+        }
+      </div>
+    }
+
+    @if (abaAtiva() === 'historico') {
+      <div style="padding: var(--s-5);">
+        <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-bottom: var(--s-4);">
+          Linha do tempo consolidada — lotação, afastamentos, ajustes individuais e desligamento, mais recente primeiro.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Descrição</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (evento of historicoFuncional(); track evento.data + evento.tipo + evento.descricao) {
+              <tr>
+                <td>{{ evento.data | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ evento.tipo }}</td>
+                <td>{{ evento.descricao }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (historicoFuncional().length === 0) {
+          <p class="table-empty">Nenhum evento no histórico funcional.</p>
         }
       </div>
     }

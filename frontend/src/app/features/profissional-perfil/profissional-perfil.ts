@@ -30,7 +30,13 @@ import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf } from '../../shared/format-mask';
 
-type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'treinamentos' | 'avaliacoes' | 'desligamento';
+type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'treinamentos' | 'avaliacoes' | 'desligamento' | 'historico';
+
+interface EventoHistorico {
+  data: string;
+  tipo: string;
+  descricao: string;
+}
 
 @Component({
   selector: 'app-profissional-perfil',
@@ -173,6 +179,46 @@ export class ProfissionalPerfil {
     descontos: ['', [Validators.required]],
     encargos: ['', [Validators.required]],
     total: ['', [Validators.required]],
+  });
+
+  protected readonly historicoFuncional = computed<EventoHistorico[]>(() => {
+    const eventos: EventoHistorico[] = [];
+
+    for (const l of this.lotacaoHistorico()) {
+      eventos.push({
+        data: l.dataInicio,
+        tipo: 'Lotação',
+        descricao: `${l.motivo || 'Lotação'} — ${l.cargoNome} em ${l.unidadeNome}`,
+      });
+    }
+
+    for (const a of this.afastamentos()) {
+      const licenca = this.licencas().find((l) => l.afastamentoId === a.uuid);
+      eventos.push({
+        data: a.dataInicio,
+        tipo: 'Afastamento',
+        descricao: `${a.tipo} (${a.status})` + (licenca ? ` — licença: ${licenca.tipoLegal}` : ''),
+      });
+    }
+
+    for (const aj of this.ajustes()) {
+      eventos.push({
+        data: aj.dataInicio,
+        tipo: 'Ajuste individual',
+        descricao: `${this.rotuloMotivoAjuste(aj.motivo)}: ${aj.valor}`,
+      });
+    }
+
+    const profissional = this.profissional();
+    if (profissional?.dataDesligamento) {
+      eventos.push({
+        data: profissional.dataDesligamento,
+        tipo: 'Desligamento',
+        descricao: 'Profissional desligado',
+      });
+    }
+
+    return eventos.sort((a, b) => b.data.localeCompare(a.data));
   });
 
   protected readonly afastamentosSemLicenca = computed(() => {
