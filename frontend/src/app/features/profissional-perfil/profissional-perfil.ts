@@ -1,6 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ProfissionalResponseDto, ErrorResponseDto } from '../../core/models/profissional';
 import { LotacaoResponseDto } from '../../core/models/lotacao';
@@ -31,6 +33,7 @@ import { ParticipacaoTreinamentoResponseDto, TreinamentoResponseDto } from '../.
 import { AvaliacaoResponseDto, CicloAvaliacaoResponseDto } from '../../core/models/avaliacao';
 import { CalculoRescisaoResponseDto, TipoDesligamento } from '../../core/models/calculo-rescisao';
 import { ProfissionalService } from '../../core/services/profissional';
+import { CepService } from '../../core/services/cep';
 import { LotacaoService } from '../../core/services/lotacao';
 import { AjusteIndividualService } from '../../core/services/ajuste-individual';
 import { AdesaoBeneficioService } from '../../core/services/adesao-beneficio';
@@ -38,7 +41,7 @@ import { TipoBeneficioService } from '../../core/services/tipo-beneficio';
 import { TreinamentoService } from '../../core/services/treinamento';
 import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
-import { formatCpf } from '../../shared/format-mask';
+import { formatCpf, formatTelefone } from '../../shared/format-mask';
 import { Modal } from '../../shared/modal/modal';
 
 type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'sst' | 'treinamentos' | 'avaliacoes' | 'beneficios' | 'desligamento' | 'historico';
@@ -58,7 +61,9 @@ interface EventoHistorico {
 })
 export class ProfissionalPerfil {
   private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
   private readonly profissionalService = inject(ProfissionalService);
+  private readonly cepService = inject(CepService);
   private readonly lotacaoService = inject(LotacaoService);
   private readonly ajusteIndividualService = inject(AjusteIndividualService);
   private readonly adesaoBeneficioService = inject(AdesaoBeneficioService);
@@ -82,6 +87,12 @@ export class ProfissionalPerfil {
   protected readonly profissional = signal<ProfissionalResponseDto | null>(null);
 
   protected readonly abaAtiva = signal<Aba>('dados');
+
+  protected readonly contatoModalAberto = signal(false);
+  protected readonly submittingContato = signal(false);
+  protected readonly contatoErrorMessage = signal<string | null>(null);
+  protected readonly buscandoCepContato = signal(false);
+  protected readonly cepContatoNaoEncontrado = signal(false);
 
   protected readonly lotacaoVigente = signal<LotacaoResponseDto | null>(null);
   protected readonly lotacaoHistorico = signal<LotacaoResponseDto[]>([]);
@@ -165,6 +176,18 @@ export class ProfissionalPerfil {
 
   protected readonly cpfForm = this.fb.nonNullable.group({
     cpf: ['', [Validators.required]],
+  });
+
+  protected readonly contatoForm = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    telefone: ['', [Validators.required]],
+    cep: ['', [Validators.required]],
+    logradouro: ['', [Validators.required]],
+    numeroLogradouro: ['', [Validators.required]],
+    complemento: [''],
+    bairro: ['', [Validators.required]],
+    cidade: ['', [Validators.required]],
+    estado: ['', [Validators.required]],
   });
 
   protected readonly transferenciaForm = this.fb.nonNullable.group({
@@ -340,11 +363,123 @@ export class ProfissionalPerfil {
       next: (cargos) => this.cargos.set(cargos),
       error: () => this.cargos.set([]),
     });
+
+    this.contatoForm.controls.cep.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe((cep) => this.buscarCepContato(cep));
+
+    const cpfNaUrl = this.route.snapshot.queryParamMap.get('cpf');
+    if (cpfNaUrl) {
+      this.cpfForm.controls.cpf.setValue(formatCpf(cpfNaUrl));
+      this.buscar();
+    }
   }
 
   protected onCpfInput(event: Event): void {
     const valor = formatCpf((event.target as HTMLInputElement).value);
     this.cpfForm.controls.cpf.setValue(valor);
+  }
+
+  protected onTelefoneContatoInput(event: Event): void {
+    const valor = formatTelefone((event.target as HTMLInputElement).value);
+    this.contatoForm.controls.telefone.setValue(valor);
+  }
+
+  private buscarCepContato(cepDigitado: string): void {
+    const cep = cepDigitado.replace(/\D/g, '');
+    this.cepContatoNaoEncontrado.set(false);
+
+    if (cep.length !== 8) {
+      return;
+    }
+
+    this.buscandoCepContato.set(true);
+    this.cepService.buscar(cep).subscribe({
+      next: (endereco) => {
+        this.buscandoCepContato.set(false);
+        if (endereco.erro) {
+          this.cepContatoNaoEncontrado.set(true);
+          return;
+        }
+        this.contatoForm.patchValue({
+          logradouro: endereco.logradouro,
+          bairro: endereco.bairro,
+          cidade: endereco.localidade,
+          estado: endereco.uf,
+        });
+      },
+      error: () => {
+        this.buscandoCepContato.set(false);
+        this.cepContatoNaoEncontrado.set(true);
+      },
+    });
+  }
+
+  protected abrirEditarContato(): void {
+    const profissional = this.profissional();
+    if (!profissional) {
+      return;
+    }
+
+    this.contatoForm.reset({
+      email: profissional.email,
+      telefone: profissional.telefones[0] ?? '',
+      cep: profissional.endereco.cep,
+      logradouro: profissional.endereco.logradouro,
+      numeroLogradouro: profissional.endereco.numeroLogradouro,
+      complemento: profissional.endereco.complemento ?? '',
+      bairro: profissional.endereco.bairro,
+      cidade: profissional.endereco.cidade,
+      estado: profissional.endereco.estado,
+    });
+    this.contatoErrorMessage.set(null);
+    this.cepContatoNaoEncontrado.set(false);
+    this.contatoModalAberto.set(true);
+  }
+
+  protected fecharContatoModal(): void {
+    this.contatoModalAberto.set(false);
+  }
+
+  protected submitContato(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.contatoForm.invalid) {
+      this.contatoForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingContato.set(true);
+    this.contatoErrorMessage.set(null);
+
+    const raw = this.contatoForm.getRawValue();
+    this.profissionalService
+      .atualizarContato(profissional.cpf, {
+        email: raw.email,
+        telefones: [raw.telefone],
+        endereco: {
+          cep: raw.cep,
+          logradouro: raw.logradouro,
+          numeroLogradouro: raw.numeroLogradouro,
+          complemento: raw.complemento || undefined,
+          bairro: raw.bairro,
+          cidade: raw.cidade,
+          estado: raw.estado,
+        },
+      })
+      .subscribe({
+        next: () => {
+          this.submittingContato.set(false);
+          this.contatoModalAberto.set(false);
+          this.profissionalService.buscarPorCpf(profissional.cpf).subscribe({
+            next: (atualizado) => this.profissional.set(atualizado),
+          });
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingContato.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.contatoErrorMessage.set(body?.message ?? 'Não foi possível atualizar o contato. Tente novamente.');
+        },
+      });
   }
 
   protected buscar(): void {
