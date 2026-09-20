@@ -24,7 +24,7 @@ public class CargoService {
 
     public CargoResponseDto criar(CargoRequestDto dto) {
         CategoriaSalarial categoria = categoriaSalarialService.buscarEntidadePorId(dto.getCategoriaId());
-        Cargo cargo = new Cargo(categoria, dto.getNome());
+        Cargo cargo = new Cargo(categoria, dto.getNome(), dto.getDescricao());
         cargo = cargoRepository.save(cargo);
         return CargoResponseDto.fromCargo(cargo);
     }
@@ -45,6 +45,7 @@ public class CargoService {
         CategoriaSalarial categoria = categoriaSalarialService.buscarEntidadePorId(dto.getCategoriaId());
         cargo.setCategoria(categoria);
         cargo.setNome(dto.getNome());
+        cargo.setDescricao(dto.getDescricao());
         cargo = cargoRepository.save(cargo);
         return CargoResponseDto.fromCargo(cargo);
     }

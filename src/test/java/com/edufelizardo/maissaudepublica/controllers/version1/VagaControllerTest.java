@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -178,6 +179,100 @@ class VagaControllerTest {
     @Test
     void deveRetornarNotFoundAoBuscarIdInexistente() throws Exception {
         mockMvc.perform(get(BASE_URL + UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deveAtualizarComSucesso() throws Exception {
+        UUID unidadeId = criarUnidadeFixture("05");
+        UUID cargoId = criarCargoFixture("05");
+        String bodyCriacao = """
+                {
+                  "unidadeId": "%s",
+                  "cargoId": "%s",
+                  "quantidade": 5,
+                  "status": "ABERTA"
+                }
+                """.formatted(unidadeId, cargoId);
+
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(bodyCriacao))
+                .andExpect(status().isCreated());
+
+        UUID vagaId = vagaRepository.findAll().stream()
+                .filter(v -> v.getQuantidade() == 5)
+                .findFirst()
+                .orElseThrow()
+                .getUuid();
+        vagaIdsCriadas.add(vagaId);
+
+        String bodyAtualizacao = """
+                {
+                  "unidadeId": "%s",
+                  "cargoId": "%s",
+                  "quantidade": 5,
+                  "status": "FECHADA"
+                }
+                """.formatted(unidadeId, cargoId);
+
+        mockMvc.perform(patch(BASE_URL + vagaId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bodyAtualizacao))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Vaga atualizada com sucesso!"));
+
+        mockMvc.perform(get(BASE_URL + vagaId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FECHADA"));
+    }
+
+    @Test
+    void deveHerdarDescricaoDoCargo() throws Exception {
+        UUID unidadeId = criarUnidadeFixture("07");
+        UUID cargoId = criarCargoFixture("07");
+        Cargo cargo = cargoRepository.findById(cargoId).orElseThrow();
+        cargo.setDescricao("Atuação em plantões noturnos, 12x36.");
+        cargoRepository.save(cargo);
+
+        String body = """
+                {
+                  "unidadeId": "%s",
+                  "cargoId": "%s",
+                  "quantidade": 1,
+                  "status": "ABERTA"
+                }
+                """.formatted(unidadeId, cargoId);
+
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated());
+
+        UUID vagaId = vagaRepository.findAll().stream()
+                .filter(v -> v.getCargo().getUuid().equals(cargoId))
+                .findFirst()
+                .orElseThrow()
+                .getUuid();
+        vagaIdsCriadas.add(vagaId);
+
+        mockMvc.perform(get(BASE_URL + vagaId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cargoDescricao").value("Atuação em plantões noturnos, 12x36."));
+    }
+
+    @Test
+    void deveRetornarNotFoundAoAtualizarVagaInexistente() throws Exception {
+        UUID unidadeId = criarUnidadeFixture("06");
+        UUID cargoId = criarCargoFixture("06");
+        String body = """
+                {
+                  "unidadeId": "%s",
+                  "cargoId": "%s",
+                  "quantidade": 1,
+                  "status": "FECHADA"
+                }
+                """.formatted(unidadeId, cargoId);
+
+        mockMvc.perform(patch(BASE_URL + UUID.randomUUID())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
                 .andExpect(status().isNotFound());
     }
 }

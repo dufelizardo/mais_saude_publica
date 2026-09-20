@@ -3,6 +3,9 @@
     <h1>Candidatos</h1>
     @if (vaga(); as v) {
       <p>{{ v.cargoNome }} · {{ v.unidadeNome }} · {{ v.quantidade }} vaga(s) · {{ v.status }}</p>
+      @if (v.cargoDescricao) {
+        <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-top: 4px;">{{ v.cargoDescricao }}</p>
+      }
     }
   </div>
   <a routerLink="/rh/vagas" class="btn btn--ghost">Voltar às vagas</a>

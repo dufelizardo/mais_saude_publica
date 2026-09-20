@@ -1,6 +1,7 @@
 export interface CargoRequestDto {
   categoriaId: string;
   nome: string;
+  descricao?: string;
 }
 
 export interface CargoResponseDto {
@@ -8,4 +9,5 @@ export interface CargoResponseDto {
   nome: string;
   categoriaUuid: string;
   categoriaNome: string;
+  descricao?: string;
 }

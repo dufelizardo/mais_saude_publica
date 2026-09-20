@@ -31,7 +31,12 @@
           <tbody>
             @for (cargo of cargosFiltrados(); track cargo.uuid) {
               <tr>
-                <td>{{ cargo.nome }}</td>
+                <td>
+                  {{ cargo.nome }}
+                  @if (cargo.descricao) {
+                    <div style="font-size: var(--fs-xs); color: var(--ink-500); margin-top: 2px;">{{ cargo.descricao }}</div>
+                  }
+                </td>
                 <td>{{ cargo.categoriaNome }}</td>
                 <td style="text-align: right; white-space: nowrap;">
                   <a [routerLink]="['/rh/cargos', cargo.uuid, 'tabela-salarial']" class="btn btn--ghost">Tabela salarial</a>
@@ -70,6 +75,10 @@
         @if (form.controls.nome.invalid && form.controls.nome.touched) {
           <span class="form-error">Nome é obrigatório.</span>
         }
+      </div>
+      <div class="form-group">
+        <label for="descricaoCargo">Descrição</label>
+        <textarea id="descricaoCargo" formControlName="descricao" rows="4" placeholder="Responsabilidades, requisitos, turno, etc. — herdada por toda vaga deste cargo."></textarea>
       </div>
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>

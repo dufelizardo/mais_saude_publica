@@ -22,4 +22,6 @@ public class CargoRequestDto implements Serializable {
 
     @NotBlank
     private String nome;
+
+    private String descricao;
 }

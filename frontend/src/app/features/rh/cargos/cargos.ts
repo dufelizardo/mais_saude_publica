@@ -44,6 +44,7 @@ export class Cargos {
   protected readonly form = this.fb.nonNullable.group({
     categoriaId: ['', [Validators.required]],
     nome: ['', [Validators.required]],
+    descricao: [''],
   });
 
   constructor() {
@@ -74,14 +75,14 @@ export class Cargos {
 
   protected abrirNovo(): void {
     this.editando.set(null);
-    this.form.reset({ categoriaId: '', nome: '' });
+    this.form.reset({ categoriaId: '', nome: '', descricao: '' });
     this.errorMessage.set(null);
     this.modalAberto.set(true);
   }
 
   protected abrirEdicao(cargo: CargoResponseDto): void {
     this.editando.set(cargo);
-    this.form.reset({ categoriaId: cargo.categoriaUuid, nome: cargo.nome });
+    this.form.reset({ categoriaId: cargo.categoriaUuid, nome: cargo.nome, descricao: cargo.descricao ?? '' });
     this.errorMessage.set(null);
     this.modalAberto.set(true);
   }
@@ -100,7 +101,7 @@ export class Cargos {
     this.errorMessage.set(null);
 
     const raw = this.form.getRawValue();
-    const dto = { categoriaId: raw.categoriaId, nome: raw.nome };
+    const dto = { categoriaId: raw.categoriaId, nome: raw.nome, descricao: raw.descricao || undefined };
 
     const editando = this.editando();
     const request = editando

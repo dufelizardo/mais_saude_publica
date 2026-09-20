@@ -1,7 +1,7 @@
 <header class="page-head">
   <div>
     <h1>Vagas</h1>
-    <p>Status informado na criação — sem edição posterior (sem endpoint de atualização ainda).</p>
+    <p>Oportunidades de recrutamento — cargo, unidade e status. A descrição vem do cargo escolhido (ver Cargos).</p>
   </div>
   <button type="button" class="btn" (click)="abrirNovo()">Nova vaga</button>
 </header>
@@ -20,12 +20,18 @@
     <tbody>
       @for (vaga of vagas(); track vaga.uuid) {
         <tr>
-          <td>{{ vaga.cargoNome }}</td>
+          <td>
+            {{ vaga.cargoNome }}
+            @if (vaga.cargoDescricao) {
+              <div style="font-size: var(--fs-xs); color: var(--ink-500); margin-top: 2px;">{{ vaga.cargoDescricao }}</div>
+            }
+          </td>
           <td>{{ vaga.unidadeNome }}</td>
           <td>{{ vaga.quantidade }}</td>
           <td>{{ vaga.status }}</td>
-          <td style="text-align: right;">
+          <td style="text-align: right; white-space: nowrap;">
             <a [routerLink]="['/rh/vagas', vaga.uuid, 'candidatos']" class="btn btn--ghost">Ver candidatos</a>
+            <button type="button" class="btn btn--ghost" (click)="abrirEdicao(vaga)">Editar</button>
           </td>
         </tr>
       }
@@ -37,7 +43,7 @@
 </div>
 
 @if (modalAberto()) {
-  <app-modal titulo="Nova vaga" (fechar)="fecharModal()">
+  <app-modal [titulo]="editando() ? 'Editar vaga' : 'Nova vaga'" (fechar)="fecharModal()">
     @if (errorMessage()) {
       <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
     }
@@ -65,6 +71,9 @@
           </select>
           @if (form.controls.cargoId.invalid && form.controls.cargoId.touched) {
             <span class="form-error">Cargo é obrigatório.</span>
+          }
+          @if (cargoSelecionadoDescricao()) {
+            <p style="font-size: var(--fs-xs); color: var(--ink-500); margin-top: 4px;">{{ cargoSelecionadoDescricao() }}</p>
           }
         </div>
       </div>

@@ -9,8 +9,11 @@ export interface VagaRequestDto {
 
 export interface VagaResponseDto {
   uuid: string;
+  unidadeUuid: string;
   unidadeNome: string;
+  cargoUuid: string;
   cargoNome: string;
+  cargoDescricao?: string;
   quantidade: number;
   status: StatusVaga;
 }

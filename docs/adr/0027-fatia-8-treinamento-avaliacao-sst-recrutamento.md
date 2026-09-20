@@ -77,6 +77,30 @@ já suportam hoje — nenhuma mudança de backend nesta fatia inteira.
 **Negativas / pendências**: quando `PATCH` for adicionado a qualquer um desses 8 endpoints, as
 telas correspondentes precisam de uma ação de editar — não é automático, é trabalho futuro.
 
+## Atualização: `Vaga` ganha `PATCH` (exceção à regra acima)
+
+Revisão feita depois de revisar a tela de Vagas: a oportunidade nasce aberta, mas em algum momento
+precisa ser alterada — status (encerrar, cancelar) ou os demais campos (unidade, cargo,
+quantidade). Diferente de `AdesaoBeneficio.encerrar` (uma transição única e irreversível),
+`Vaga` precisa de mutabilidade genérica de verdade. `PATCH /vaga/{uuid}` foi adicionado seguindo o
+mesmo padrão já usado em `Cargo`/`CategoriaSalarial`/`RegraAnuenio`: substitui os campos editáveis
+por inteiro, com tela de "Editar vaga" (mesmo modal de "Nova vaga", reaproveitado). Isso supersede
+a linha "sem PATCH, sem edição" desta ADR especificamente para `Vaga` — os demais 7 endpoints da
+fatia 8 continuam sem `PATCH`.
+
+### Descrição da vaga vem do `Cargo`, não é campo próprio
+
+Primeira tentativa foi um campo `titulo`/`descricao` livre na própria `Vaga`. Revisado: neste
+domínio, `Cargo` já é granular o suficiente pra capturar variações reais (ex.: "Enfermeiro 40h
+Diurno", "Enfermeiro 12h Noturno" são cargos diferentes, cada um com sua própria
+`TabelaSalarial`). Nesse nível de granularidade, duas vagas do mesmo cargo exato têm,
+por definição, a mesma descrição de responsabilidades — então a descrição pertence ao `Cargo`
+(campo novo, opcional), e `Vaga` só expõe `cargoDescricao` (derivado, não armazenado) no
+`VagaResponseDto`. Ganhos: sem redigitação ao abrir várias vagas do mesmo cargo; `Cargo` continua
+sendo a fonte única da "descrição do papel". Trade-off aceito: editar a descrição de um `Cargo`
+propaga pra todas as vagas abertas daquele cargo — comportamento desejado nesse nível de
+granularidade (é a mesma definição de papel, não um texto específico por anúncio).
+
 ## Referências
 
 - [ADR-0018](./0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) — padrão de modal/CSS

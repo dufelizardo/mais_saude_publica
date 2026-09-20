@@ -38,6 +38,22 @@ public class VagaService {
         return VagaResponseDto.fromVaga(vaga);
     }
 
+    public VagaResponseDto atualizar(UUID uuid, VagaRequestDto dto) {
+        Vaga vaga = buscarEntidadePorId(uuid);
+
+        UnidadeDeSaude unidade = unidadeDeSaudeRepository.findById(dto.getUnidadeId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Não foi possível encontrar uma unidade de saúde com o id " + dto.getUnidadeId() + " em nossos registros."));
+        Cargo cargo = cargoService.buscarEntidadePorId(dto.getCargoId());
+
+        vaga.setUnidade(unidade);
+        vaga.setCargo(cargo);
+        vaga.setQuantidade(dto.getQuantidade());
+        vaga.setStatus(dto.getStatus());
+        vaga = vagaRepository.save(vaga);
+        return VagaResponseDto.fromVaga(vaga);
+    }
+
     public List<VagaResponseDto> listar() {
         return vagaRepository.findAll()
                 .stream()
