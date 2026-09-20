@@ -36,8 +36,17 @@ public class Cargo implements Serializable {
     @NotBlank
     private String nome;
 
+    @Column(columnDefinition = "TEXT")
+    private String descricao;
+
     public Cargo(CategoriaSalarial categoria, String nome) {
         this.categoria = categoria;
         this.nome = nome;
+    }
+
+    public Cargo(CategoriaSalarial categoria, String nome, String descricao) {
+        this.categoria = categoria;
+        this.nome = nome;
+        this.descricao = descricao;
     }
 }

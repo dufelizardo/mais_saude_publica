@@ -29,8 +29,10 @@ export class Vagas {
   protected readonly carregando = signal(true);
 
   protected readonly modalAberto = signal(false);
+  protected readonly editando = signal<VagaResponseDto | null>(null);
   protected readonly submitting = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly cargoSelecionadoDescricao = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
     unidadeId: ['', [Validators.required]],
@@ -49,6 +51,11 @@ export class Vagas {
       next: (unidades) => this.unidades.set(unidades),
       error: () => this.unidades.set([]),
     });
+
+    this.form.controls.cargoId.valueChanges.subscribe((cargoId) => {
+      const cargo = this.cargos().find((c) => c.uuid === cargoId);
+      this.cargoSelecionadoDescricao.set(cargo?.descricao ?? null);
+    });
   }
 
   private carregar(): void {
@@ -66,7 +73,20 @@ export class Vagas {
   }
 
   protected abrirNovo(): void {
+    this.editando.set(null);
     this.form.reset({ unidadeId: '', cargoId: '', quantidade: '', status: 'ABERTA' });
+    this.errorMessage.set(null);
+    this.modalAberto.set(true);
+  }
+
+  protected abrirEdicao(vaga: VagaResponseDto): void {
+    this.editando.set(vaga);
+    this.form.reset({
+      unidadeId: vaga.unidadeUuid,
+      cargoId: vaga.cargoUuid,
+      quantidade: String(vaga.quantidade),
+      status: vaga.status,
+    });
     this.errorMessage.set(null);
     this.modalAberto.set(true);
   }
@@ -85,24 +105,27 @@ export class Vagas {
     this.errorMessage.set(null);
 
     const raw = this.form.getRawValue();
-    this.vagaService
-      .criar({
-        unidadeId: raw.unidadeId,
-        cargoId: raw.cargoId,
-        quantidade: Number(raw.quantidade),
-        status: raw.status,
-      })
-      .subscribe({
-        next: () => {
-          this.submitting.set(false);
-          this.modalAberto.set(false);
-          this.carregar();
-        },
-        error: (error: HttpErrorResponse) => {
-          this.submitting.set(false);
-          const body = error.error as ErrorResponseDto | undefined;
-          this.errorMessage.set(body?.message ?? 'Não foi possível cadastrar a vaga. Tente novamente.');
-        },
-      });
+    const dto = {
+      unidadeId: raw.unidadeId,
+      cargoId: raw.cargoId,
+      quantidade: Number(raw.quantidade),
+      status: raw.status,
+    };
+
+    const editando = this.editando();
+    const request = editando ? this.vagaService.atualizar(editando.uuid, dto) : this.vagaService.criar(dto);
+
+    request.subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.modalAberto.set(false);
+        this.carregar();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.submitting.set(false);
+        const body = error.error as ErrorResponseDto | undefined;
+        this.errorMessage.set(body?.message ?? 'Não foi possível salvar a vaga. Tente novamente.');
+      },
+    });
   }
 }

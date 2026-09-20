@@ -81,4 +81,25 @@ public class VagaController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
+
+    @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Atualiza uma vaga",
+            description = "Cobre tanto encerrar a vaga (mudar status) quanto corrigir título/descrição/quantidade — substitui os campos editáveis por inteiro.",
+            tags = "Vaga")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(
+                    schema = @Schema(implementation = SuccessResponseDto.class)
+            ), examples = @ExampleObject(name = "Success",
+                    summary = "SuccessResponse",
+                    value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> update(@PathVariable UUID uuid, @Valid @RequestBody VagaRequestDto dto) {
+        VagaResponseDto responseDto = service.atualizar(uuid, dto);
+
+        String successMessage = "Vaga atualizada com sucesso!";
+        String details = "Cargo: " + responseDto.getCargoNome() + ", Status: " + responseDto.getStatus();
+
+        return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
+    }
 }

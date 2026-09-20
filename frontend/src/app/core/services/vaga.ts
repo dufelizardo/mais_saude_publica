@@ -20,4 +20,8 @@ export class VagaService {
   criar(dto: VagaRequestDto): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/`, dto);
   }
+
+  atualizar(uuid: string, dto: VagaRequestDto): Observable<SuccessResponseDto> {
+    return this.http.patch<SuccessResponseDto>(`${this.baseUrl}/${uuid}`, dto);
+  }
 }

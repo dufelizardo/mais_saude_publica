@@ -21,13 +21,15 @@ public class CargoResponseDto implements Serializable {
     private String nome;
     private UUID categoriaUuid;
     private String categoriaNome;
+    private String descricao;
 
     public static CargoResponseDto fromCargo(Cargo cargo) {
         return new CargoResponseDto(
                 cargo.getUuid(),
                 cargo.getNome(),
                 cargo.getCategoria().getUuid(),
-                cargo.getCategoria().getNome()
+                cargo.getCategoria().getNome(),
+                cargo.getDescricao()
         );
     }
 }
