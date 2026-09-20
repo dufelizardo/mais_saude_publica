@@ -35,6 +35,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0017](./0017-numero-de-matricula-automatico-e-cpf-nao-unico.md) | Número de matrícula automático e CPF deixa de ser único em Profissional | Aceita |
 | [0018](./0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) | App shell de navegação e decisões de frontend da fatia 1 do módulo de RH | Aceita |
 | [0019](./0019-vincular-cargo-e-lotacao-no-cadastro-de-profissional.md) | Vincular cargo e lotação (e portanto salário) no cadastro de profissional | Aceita |
+| [0020](./0020-tela-central-do-profissional.md) | Tela central do Profissional (fatia 2) | Aceita |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. Prioridade de implementação combinada: 0003 (arquitetura), 0006 (segurança) e 0007 (deploy) antes de novos domínios de negócio; 0008 (front-end) é a de menor prioridade.
 
