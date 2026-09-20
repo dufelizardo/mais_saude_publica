@@ -1,0 +1,68 @@
+<header class="page-head">
+  <div>
+    <h1>Tipos de benefício</h1>
+    <p>Catálogo de benefícios (remuneração indireta) que podem ser oferecidos aos profissionais.</p>
+  </div>
+  <button type="button" class="btn" (click)="abrirNovo()">Novo tipo de benefício</button>
+</header>
+
+<div class="card" style="overflow-x: auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Custeio</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (tipo of tipos(); track tipo.uuid) {
+        <tr>
+          <td>{{ tipo.nome }}</td>
+          <td>{{ rotuloCusteio(tipo.custeio) }}</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <a [routerLink]="['/rh/tipos-beneficio', tipo.uuid, 'valores']" class="btn btn--ghost">Valores</a>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (!carregando() && tipos().length === 0) {
+    <p class="table-empty">Nenhum tipo de benefício cadastrado.</p>
+  }
+</div>
+
+@if (modalAberto()) {
+  <app-modal titulo="Novo tipo de benefício" (fechar)="fecharModal()">
+    @if (errorMessage()) {
+      <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+      <div class="form-group">
+        <label for="nome">Nome *</label>
+        <input id="nome" type="text" formControlName="nome" />
+        @if (form.controls.nome.invalid && form.controls.nome.touched) {
+          <span class="form-error">Nome é obrigatório.</span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="custeio">Custeio *</label>
+        <select id="custeio" formControlName="custeio">
+          <option value="" disabled>Selecione…</option>
+          <option value="EMPRESA">Empresa</option>
+          <option value="COMPARTILHADO">Compartilhado</option>
+          <option value="PROFISSIONAL">Profissional</option>
+        </select>
+        @if (form.controls.custeio.invalid && form.controls.custeio.touched) {
+          <span class="form-error">Custeio é obrigatório.</span>
+        }
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submitting()">
+          {{ submitting() ? 'Salvando…' : 'Salvar' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}
