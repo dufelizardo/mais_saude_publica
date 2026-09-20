@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { LandingPage } from './features/landing/landing-page';
+import { ProfissionaisLista } from './features/profissionais-lista/profissionais-lista';
 import { ProfissionalCadastro } from './features/profissional-cadastro/profissional-cadastro';
 import { ProfissionalDesligar } from './features/profissional-desligar/profissional-desligar';
 import { ProfissionalPerfil } from './features/profissional-perfil/profissional-perfil';
@@ -20,6 +21,7 @@ export const routes: Routes = [
     path: '',
     component: AppShell,
     children: [
+      { path: 'profissionais', component: ProfissionaisLista, data: { breadcrumb: 'Profissionais' } },
       { path: 'profissionais/novo', component: ProfissionalCadastro, data: { breadcrumb: 'Cadastrar profissional' } },
       { path: 'profissionais/desligar', component: ProfissionalDesligar, data: { breadcrumb: 'Desligar profissional' } },
       { path: 'profissionais/perfil', component: ProfissionalPerfil, data: { breadcrumb: 'Perfil do profissional' } },
