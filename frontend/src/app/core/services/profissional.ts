@@ -1,16 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ProfissionalContatoRequestDto, ProfissionalRequestDto, ProfissionalResponseDto, SuccessResponseDto } from '../models/profissional';
+import { ProfissionalRequestDto, ProfissionalResponseDto, SuccessResponseDto } from '../models/profissional';
 
 @Injectable({ providedIn: 'root' })
 export class ProfissionalService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/v1/profissional';
-
-  listar(): Observable<ProfissionalResponseDto[]> {
-    return this.http.get<ProfissionalResponseDto[]>(`${this.baseUrl}/`);
-  }
 
   create(dto: ProfissionalRequestDto): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/`, dto);
@@ -18,10 +14,6 @@ export class ProfissionalService {
 
   buscarPorCpf(cpf: string): Observable<ProfissionalResponseDto> {
     return this.http.get<ProfissionalResponseDto>(`${this.baseUrl}/${cpf}`);
-  }
-
-  atualizarContato(cpf: string, dto: ProfissionalContatoRequestDto): Observable<SuccessResponseDto> {
-    return this.http.patch<SuccessResponseDto>(`${this.baseUrl}/contato/${cpf}`, dto);
   }
 
   desligar(cpf: string, dataDesligamento: string): Observable<SuccessResponseDto> {
