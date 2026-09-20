@@ -137,7 +137,7 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 8d | Menu agrupado + breadcrumb dinâmico | — | ⏳ Não iniciada |
 | 9 | Benefícios — backend: `PATCH /adesao-beneficio/{uuid}/encerrar` (ver [ADR-0028](../adr/0028-fatia-9-beneficios.md)) | [#154](https://github.com/dufelizardo/mais_saude_publica/pull/154) | ✅ |
 | 9 | Benefícios — frontend: `/rh/tipos-beneficio`, `/rh/tipos-beneficio/:tipoId/valores`, aba "Benefícios" no perfil | [#155](https://github.com/dufelizardo/mais_saude_publica/pull/155) | ✅ |
-| — | Gap identificado no levantamento de endpoints de `Profissional`: lista de profissionais (`/profissionais`) + edição de contato no perfil (ver [ADR-0029](../adr/0029-listagem-e-edicao-de-contato-do-profissional.md)) | — | ⏳ Em andamento |
+| — | Gap identificado no levantamento de endpoints de `Profissional`: lista de profissionais (`/profissionais`) + edição de contato no perfil (ver [ADR-0029](../adr/0029-listagem-e-edicao-de-contato-do-profissional.md)) | [#157](https://github.com/dufelizardo/mais_saude_publica/pull/157) | ✅ |
 
 ### Regra da fatia 8 (definida pelo usuário, vale para 8a-8d)
 
