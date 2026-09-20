@@ -127,7 +127,7 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 2c | Tela central do Profissional — abas Avaliações e Desligamento/Rescisão (histórico + registro) | [#144](https://github.com/dufelizardo/mais_saude_publica/pull/144) | ✅ |
 | 3 | Lotações (fluxo de transferência) — form embutido na aba Lotação do perfil, sem tela própria (ver [ADR-0021](../adr/0021-fluxo-de-transferencia-na-aba-lotacao.md)) | [#145](https://github.com/dufelizardo/mais_saude_publica/pull/145) | ✅ |
 | 4 | Composição remuneratória — endpoint de leitura calculada + aba nova no perfil (ver [ADR-0022](../adr/0022-composicao-remuneratoria-endpoint-calculado.md)) | [#146](https://github.com/dufelizardo/mais_saude_publica/pull/146) | ✅ |
-| 5 | Afastamentos e Licenças | — | ⏳ Não iniciada — depende de resolver a lacuna de "listar licenças por profissional". Ajustes individuais **não** depende disso — já é fatia 2b, listado aqui por engano antes |
+| 5 | Afastamentos e Licenças — aba nova no perfil (ver [ADR-0023](../adr/0023-afastamentos-e-licencas-no-perfil.md)) | [#147](https://github.com/dufelizardo/mais_saude_publica/pull/147) | ✅ |
 | 6 | Ponto, Desligamento/rescisão (folha), Folha de pagamento | — | ⏳ Não iniciada — cada uma tem lacuna de backend própria (filtro por período, listagem por competência); Desligamento/rescisão como *registro* de status já é fatia 2c, esta linha é a tela dedicada de fechamento de folha |
 | 7 | Histórico funcional consolidado | — | ⏳ Não iniciada |
 | 8 | Treinamento, SST, Recrutamento, Avaliação | — | 💡 Sem desenho de tela ainda — a especificação do usuário não detalha essas telas |
