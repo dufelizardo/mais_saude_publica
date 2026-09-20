@@ -88,6 +88,16 @@ Construído o shell que faltava, portado de `Usuarios.html`/`Profissionais.html`
 - ❌ Rejeitada: seriam itens de menu para domínios sem nenhuma tela real por trás — o mesmo erro
   invertido (inventar o que não existe, em vez de esconder o que falta).
 
+## Correção pós-implementação (2026-09-19)
+
+Ao remover o `:host { background: var(--ink-50); }` de cada tela migrada (a intenção era que o
+`.app`/`.content` compartilhado assumisse essa responsabilidade), a regra equivalente nunca foi
+adicionada no shell — as 6 telas internas voltaram a cair no `background: var(--white)` do `body`
+global, que é o fundo do portal público, repetindo um erro visual que o usuário já tinha pedido
+para corrigir antes (individualmente, no `profissional-cadastro`, comparando com
+`Painel.html`). Corrigido adicionando `background: var(--ink-50)` na regra `.app` em
+`frontend/src/styles.css` — é o mesmo valor usado no `body` de todo mockup interno.
+
 ## Consequências
 
 **Positivas**
