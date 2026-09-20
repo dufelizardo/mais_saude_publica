@@ -18,6 +18,12 @@ import { RegistroPontoResponseDto } from '../../core/models/registro-ponto';
 import { RegistroPontoService } from '../../core/services/registro-ponto';
 import { FolhaPagamentoResponseDto } from '../../core/models/folha-pagamento';
 import { FolhaPagamentoService } from '../../core/services/folha-pagamento';
+import { ExameOcupacionalResponseDto, TipoExameOcupacional, ResultadoExameOcupacional } from '../../core/models/exame-ocupacional';
+import { ExameOcupacionalService } from '../../core/services/exame-ocupacional';
+import { AcidenteTrabalhoResponseDto } from '../../core/models/acidente-trabalho';
+import { AcidenteTrabalhoService } from '../../core/services/acidente-trabalho';
+import { EpiResponseDto } from '../../core/models/epi';
+import { EpiService } from '../../core/services/epi';
 import { AjusteIndividualResponseDto, MotivoAjusteIndividual } from '../../core/models/ajuste-individual';
 import { ParticipacaoTreinamentoResponseDto, TreinamentoResponseDto } from '../../core/models/treinamento';
 import { AvaliacaoResponseDto, CicloAvaliacaoResponseDto } from '../../core/models/avaliacao';
@@ -30,7 +36,8 @@ import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf } from '../../shared/format-mask';
 
-type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'treinamentos' | 'avaliacoes' | 'desligamento' | 'historico';
+type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'sst' | 'treinamentos' | 'avaliacoes' | 'desligamento' | 'historico';
+type AbaSst = 'exames' | 'acidentes' | 'epis';
 
 interface EventoHistorico {
   data: string;
@@ -59,6 +66,9 @@ export class ProfissionalPerfil {
   private readonly licencaService = inject(LicencaService);
   private readonly registroPontoService = inject(RegistroPontoService);
   private readonly folhaPagamentoService = inject(FolhaPagamentoService);
+  private readonly exameOcupacionalService = inject(ExameOcupacionalService);
+  private readonly acidenteTrabalhoService = inject(AcidenteTrabalhoService);
+  private readonly epiService = inject(EpiService);
 
   protected readonly buscando = signal(false);
   protected readonly naoEncontrado = signal(false);
@@ -97,6 +107,23 @@ export class ProfissionalPerfil {
   protected readonly carregandoFolhas = signal(false);
   protected readonly submittingFolha = signal(false);
   protected readonly folhaErrorMessage = signal<string | null>(null);
+
+  protected readonly sstAbaAtiva = signal<AbaSst>('exames');
+
+  protected readonly exames = signal<ExameOcupacionalResponseDto[]>([]);
+  protected readonly carregandoExames = signal(false);
+  protected readonly submittingExame = signal(false);
+  protected readonly exameErrorMessage = signal<string | null>(null);
+
+  protected readonly acidentes = signal<AcidenteTrabalhoResponseDto[]>([]);
+  protected readonly carregandoAcidentes = signal(false);
+  protected readonly submittingAcidente = signal(false);
+  protected readonly acidenteErrorMessage = signal<string | null>(null);
+
+  protected readonly epis = signal<EpiResponseDto[]>([]);
+  protected readonly carregandoEpis = signal(false);
+  protected readonly submittingEpi = signal(false);
+  protected readonly epiErrorMessage = signal<string | null>(null);
 
   protected readonly ajustes = signal<AjusteIndividualResponseDto[]>([]);
   protected readonly carregandoAjustes = signal(false);
@@ -181,6 +208,29 @@ export class ProfissionalPerfil {
     total: ['', [Validators.required]],
   });
 
+  protected readonly exameForm = this.fb.nonNullable.group({
+    tipo: ['' as TipoExameOcupacional | '', [Validators.required]],
+    dataRealizacao: ['', [Validators.required]],
+    dataValidade: [''],
+    resultado: ['' as ResultadoExameOcupacional | '', [Validators.required]],
+    asoUrl: [''],
+  });
+
+  protected readonly acidenteForm = this.fb.nonNullable.group({
+    dataHora: ['', [Validators.required]],
+    descricao: ['', [Validators.required]],
+    catEmitida: [false],
+    catUrl: [''],
+    diasAfastamento: [''],
+  });
+
+  protected readonly epiForm = this.fb.nonNullable.group({
+    tipo: ['', [Validators.required]],
+    numeroCA: [''],
+    dataEntrega: ['', [Validators.required]],
+    dataDevolucao: [''],
+  });
+
   protected readonly historicoFuncional = computed<EventoHistorico[]>(() => {
     const eventos: EventoHistorico[] = [];
 
@@ -238,6 +288,12 @@ export class ProfissionalPerfil {
   });
 
   constructor() {
+    this.acidenteForm.controls.catEmitida.valueChanges.subscribe((catEmitida) => {
+      const catUrlControl = this.acidenteForm.controls.catUrl;
+      catUrlControl.setValidators(catEmitida ? [Validators.required] : []);
+      catUrlControl.updateValueAndValidity();
+    });
+
     this.treinamentoService.listarCatalogo().subscribe({
       next: (catalogo) => this.treinamentosCatalogo.set(catalogo),
       error: () => this.treinamentosCatalogo.set([]),
@@ -285,6 +341,9 @@ export class ProfissionalPerfil {
         this.filtroPontoForm.reset({ dataInicio: '', dataFim: '' });
         this.carregarPonto();
         this.carregarFolhas(profissional.matricula);
+        this.carregarExames(profissional.matricula);
+        this.carregarAcidentes(profissional.matricula);
+        this.carregarEpis(profissional.matricula);
         this.carregarTreinamentos(profissional.matricula);
         this.carregarAvaliacoes(profissional.matricula);
         this.carregarRescisao(profissional.matricula);
@@ -739,6 +798,158 @@ export class ProfissionalPerfil {
           this.submittingFolha.set(false);
           const body = error.error as ErrorResponseDto | undefined;
           this.folhaErrorMessage.set(body?.message ?? 'Não foi possível registrar a folha de pagamento. Tente novamente.');
+        },
+      });
+  }
+
+  protected selecionarAbaSst(aba: AbaSst): void {
+    this.sstAbaAtiva.set(aba);
+  }
+
+  private carregarExames(matricula: string): void {
+    this.carregandoExames.set(true);
+    this.exameOcupacionalService.listarPorProfissional(matricula).subscribe({
+      next: (exames) => {
+        this.exames.set(exames);
+        this.carregandoExames.set(false);
+      },
+      error: () => {
+        this.exames.set([]);
+        this.carregandoExames.set(false);
+      },
+    });
+  }
+
+  protected registrarExame(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.exameForm.invalid) {
+      this.exameForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingExame.set(true);
+    this.exameErrorMessage.set(null);
+
+    const raw = this.exameForm.getRawValue();
+    this.exameOcupacionalService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        tipo: raw.tipo as TipoExameOcupacional,
+        dataRealizacao: raw.dataRealizacao,
+        dataValidade: raw.dataValidade || undefined,
+        resultado: raw.resultado as ResultadoExameOcupacional,
+        asoUrl: raw.asoUrl || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingExame.set(false);
+          this.exameForm.reset({ tipo: '', dataRealizacao: '', dataValidade: '', resultado: '', asoUrl: '' });
+          this.carregarExames(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingExame.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.exameErrorMessage.set(body?.message ?? 'Não foi possível registrar o exame. Tente novamente.');
+        },
+      });
+  }
+
+  private carregarAcidentes(matricula: string): void {
+    this.carregandoAcidentes.set(true);
+    this.acidenteTrabalhoService.listarPorProfissional(matricula).subscribe({
+      next: (acidentes) => {
+        this.acidentes.set(acidentes);
+        this.carregandoAcidentes.set(false);
+      },
+      error: () => {
+        this.acidentes.set([]);
+        this.carregandoAcidentes.set(false);
+      },
+    });
+  }
+
+  protected registrarAcidente(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.acidenteForm.invalid) {
+      this.acidenteForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingAcidente.set(true);
+    this.acidenteErrorMessage.set(null);
+
+    const raw = this.acidenteForm.getRawValue();
+    this.acidenteTrabalhoService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        dataHora: raw.dataHora,
+        descricao: raw.descricao,
+        catEmitida: raw.catEmitida,
+        catUrl: raw.catUrl || undefined,
+        diasAfastamento: raw.diasAfastamento ? Number(raw.diasAfastamento) : undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingAcidente.set(false);
+          this.acidenteForm.reset({ dataHora: '', descricao: '', catEmitida: false, catUrl: '', diasAfastamento: '' });
+          this.carregarAcidentes(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingAcidente.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.acidenteErrorMessage.set(body?.message ?? 'Não foi possível registrar o acidente. Tente novamente.');
+        },
+      });
+  }
+
+  private carregarEpis(matricula: string): void {
+    this.carregandoEpis.set(true);
+    this.epiService.listarPorProfissional(matricula).subscribe({
+      next: (epis) => {
+        this.epis.set(epis);
+        this.carregandoEpis.set(false);
+      },
+      error: () => {
+        this.epis.set([]);
+        this.carregandoEpis.set(false);
+      },
+    });
+  }
+
+  /** Sem campo de situação no backend — derivado da presença de dataDevolucao (ver ADR-0027). */
+  protected situacaoDoEpi(epi: EpiResponseDto): 'Em uso' | 'Devolvido' {
+    return epi.dataDevolucao ? 'Devolvido' : 'Em uso';
+  }
+
+  protected registrarEpi(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.epiForm.invalid) {
+      this.epiForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingEpi.set(true);
+    this.epiErrorMessage.set(null);
+
+    const raw = this.epiForm.getRawValue();
+    this.epiService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        tipo: raw.tipo,
+        numeroCA: raw.numeroCA || undefined,
+        dataEntrega: raw.dataEntrega,
+        dataDevolucao: raw.dataDevolucao || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingEpi.set(false);
+          this.epiForm.reset({ tipo: '', numeroCA: '', dataEntrega: '', dataDevolucao: '' });
+          this.carregarEpis(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingEpi.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.epiErrorMessage.set(body?.message ?? 'Não foi possível registrar o EPI. Tente novamente.');
         },
       });
   }
