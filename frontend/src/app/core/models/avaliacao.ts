@@ -1,3 +1,9 @@
+export interface CicloAvaliacaoRequestDto {
+  nome: string;
+  dataInicio: string;
+  dataFim: string;
+}
+
 export interface CicloAvaliacaoResponseDto {
   uuid: string;
   nome: string;
