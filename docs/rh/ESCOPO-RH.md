@@ -133,7 +133,7 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 7 | Histórico funcional consolidado — aba nova no perfil, sem endpoint novo (ver [ADR-0026](../adr/0026-historico-funcional-consolidado.md)) | [#150](https://github.com/dufelizardo/mais_saude_publica/pull/150) | ✅ |
 | 8a | Catálogo de treinamentos + Ciclos de avaliação (ver [ADR-0027](../adr/0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md)) | [#151](https://github.com/dufelizardo/mais_saude_publica/pull/151) | ✅ |
 | 8b | SST — 3 abas novas no perfil (Exames ocupacionais, Acidentes de trabalho, EPIs) | — | ⏳ Não iniciada |
-| 8c | Recrutamento — Vagas + Candidatos | — | ⏳ Não iniciada |
+| 8c | Recrutamento — Vagas + Candidatos por vaga | [#153](https://github.com/dufelizardo/mais_saude_publica/pull/153) | ✅ |
 | 8d | Menu agrupado + breadcrumb dinâmico | — | ⏳ Não iniciada |
 
 ### Regra da fatia 8 (definida pelo usuário, vale para 8a-8d)

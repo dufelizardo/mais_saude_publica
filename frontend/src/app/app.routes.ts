@@ -10,6 +10,8 @@ import { RegrasAnuenio } from './features/rh/regras-anuenio/regras-anuenio';
 import { FolhaPagamento } from './features/rh/folha-pagamento/folha-pagamento';
 import { Treinamentos } from './features/rh/treinamentos/treinamentos';
 import { CiclosAvaliacao } from './features/rh/ciclos-avaliacao/ciclos-avaliacao';
+import { Vagas } from './features/rh/vagas/vagas';
+import { VagaCandidatos } from './features/rh/vaga-candidatos/vaga-candidatos';
 import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
@@ -28,6 +30,8 @@ export const routes: Routes = [
       { path: 'rh/folha-pagamento', component: FolhaPagamento, data: { breadcrumb: 'Folha de pagamento' } },
       { path: 'rh/treinamentos', component: Treinamentos, data: { breadcrumb: 'Catálogo de treinamentos' } },
       { path: 'rh/ciclos-avaliacao', component: CiclosAvaliacao, data: { breadcrumb: 'Ciclos de avaliação' } },
+      { path: 'rh/vagas', component: Vagas, data: { breadcrumb: 'Vagas' } },
+      { path: 'rh/vagas/:vagaId/candidatos', component: VagaCandidatos, data: { breadcrumb: 'Candidatos' } },
     ],
   },
 ];
