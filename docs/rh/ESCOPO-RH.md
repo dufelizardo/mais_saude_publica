@@ -132,7 +132,7 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 6b | Folha de pagamento — listagem por competência + aba no perfil + tela própria (ver [ADR-0025](../adr/0025-folha-de-pagamento-por-competencia.md)) | [#149](https://github.com/dufelizardo/mais_saude_publica/pull/149) | ✅ |
 | 7 | Histórico funcional consolidado — aba nova no perfil, sem endpoint novo (ver [ADR-0026](../adr/0026-historico-funcional-consolidado.md)) | [#150](https://github.com/dufelizardo/mais_saude_publica/pull/150) | ✅ |
 | 8a | Catálogo de treinamentos + Ciclos de avaliação (ver [ADR-0027](../adr/0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md)) | [#151](https://github.com/dufelizardo/mais_saude_publica/pull/151) | ✅ |
-| 8b | SST — 3 abas novas no perfil (Exames ocupacionais, Acidentes de trabalho, EPIs) | — | ⏳ Não iniciada |
+| 8b | SST — aba "SST" no perfil, com 3 sub-abas (Exames ocupacionais, Acidentes de trabalho, EPIs) | [#152](https://github.com/dufelizardo/mais_saude_publica/pull/152) | ✅ |
 | 8c | Recrutamento — Vagas + Candidatos | — | ⏳ Não iniciada |
 | 8d | Menu agrupado + breadcrumb dinâmico | — | ⏳ Não iniciada |
 
