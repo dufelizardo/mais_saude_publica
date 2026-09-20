@@ -136,7 +136,7 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 8c | Recrutamento — Vagas + Candidatos | [#153](https://github.com/dufelizardo/mais_saude_publica/pull/153) | 🔶 PR aberta, bloqueada — CI não dispara para essa branch (causa ainda não diagnosticável por CLI, ver PR) |
 | 8d | Menu agrupado + breadcrumb dinâmico | — | ⏳ Não iniciada |
 | 9 | Benefícios — backend: `PATCH /adesao-beneficio/{uuid}/encerrar` (ver [ADR-0028](../adr/0028-fatia-9-beneficios.md)) | [#154](https://github.com/dufelizardo/mais_saude_publica/pull/154) | ✅ |
-| 9 | Benefícios — frontend: `/rh/tipos-beneficio`, `/rh/tipos-beneficio/:tipoId/valores`, aba "Benefícios" no perfil | [#155](https://github.com/dufelizardo/mais_saude_publica/pull/155) | 🔶 PR aberta, aguardando CI |
+| 9 | Benefícios — frontend: `/rh/tipos-beneficio`, `/rh/tipos-beneficio/:tipoId/valores`, aba "Benefícios" no perfil | [#155](https://github.com/dufelizardo/mais_saude_publica/pull/155) | ✅ |
 
 ### Regra da fatia 8 (definida pelo usuário, vale para 8a-8d)
 
