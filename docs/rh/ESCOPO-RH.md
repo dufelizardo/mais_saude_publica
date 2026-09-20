@@ -3,7 +3,7 @@
 **Data:** 2026-09-19 (criado) · atualizado em 2026-09-19 após conclusão do backend
 **Status:** Vivo. **Backend (Fases 0-9) implementado e mergeado em `developer`** — ver a tabela de
 PRs em [MODELO-RH.md](./MODELO-RH.md#0-estado-de-implementação-backend). Frontend em andamento, ver
-seção 7. Nenhuma fase foi promovida a `qaa`/`homologacao`/`main` ainda (regra do módulo completo,
+seção 6. Nenhuma fase foi promovida a `qaa`/`homologacao`/`main` ainda (regra do módulo completo,
 seção 5).
 
 ## 1. Contexto e como ler este documento
@@ -82,8 +82,11 @@ são features independentes que dá pra construir em qualquer ordem sem pensar n
 | 8 | **Recrutamento** | Início do ciclo (para os próximos profissionais) |
 | 9 | **Avaliação de desempenho** | Desenvolvimento |
 
-Cada um continua como 💡 ideia registrada, não desenhada — nenhum desses tem plano de implementação
-ainda, e os números/regras trabalhistas seguem sujeitos ao aviso da seção 1.
+**Todas as 9 fases acima, mais a Fase 0 (Lotação/Salário/Benefícios), já foram implementadas no
+backend** — ver a tabela de PRs em
+[MODELO-RH.md](./MODELO-RH.md#0-estado-de-implementação-backend). Esta tabela documenta a ordem
+*planejada*; os números/regras trabalhistas seguem sujeitos ao aviso da seção 1 (campos de registro,
+não cálculo automático, onde aplicável).
 
 ### Pré-requisitos identificados nesta sessão (não estavam na lista original)
 
@@ -107,7 +110,26 @@ validado com Lotação antes de mexer em algo com dinheiro envolvido. A partir d
 fases 1-9 combinada nesta seção — cada fase, na sua vez, merece sua própria conversa e plano, não
 uma adoção em bloco.
 
-## 6. Referências
+## 6. Estado do frontend
+
+Backend completo (seção acima); frontend construído fatia por fatia, seguindo a ordem da
+"Especificação Funcional das Telas do Domínio de RH" (documento trazido pelo usuário, não anexado
+a este repositório — ver [ADR-0018](../adr/0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md)
+pra como ele orientou a análise de lacunas e a ordem das fatias).
+
+| Fatia | Escopo | PR(s) | Status |
+|---|---|---|---|
+| App shell | Navegação (sidebar/topbar/breadcrumb) + componente de modal reutilizável | [#136](https://github.com/dufelizardo/mais_saude_publica/pull/136), [#137](https://github.com/dufelizardo/mais_saude_publica/pull/137) | ✅ |
+| 1 | Cadastros estruturais: Categorias salariais, Cargos, Tabela salarial, Regras de anuênio | [#135](https://github.com/dufelizardo/mais_saude_publica/pull/135), [#136](https://github.com/dufelizardo/mais_saude_publica/pull/136) | ✅ |
+| 2 | Tela central do Profissional (dados, lotação, ajustes, ponto, treinamentos, avaliações, desligamento) | — | ⏳ Não iniciada — precisa de um componente novo de timeline/histórico (não existe em `modelo_front/`) |
+| 3 | Lotações (fluxo de transferência) | — | ⏳ Não iniciada |
+| 4 | Composição remuneratória | — | ⏳ Não iniciada — depende de um endpoint de leitura calculada ainda não construído (ver seção 3) |
+| 5 | Ajustes individuais, Afastamentos e Licenças | — | ⏳ Não iniciada — depende de resolver a lacuna de "listar licenças por profissional" |
+| 6 | Ponto, Desligamento/rescisão, Folha de pagamento | — | ⏳ Não iniciada — cada uma tem lacuna de backend própria (filtro por período, listagem por competência) |
+| 7 | Histórico funcional consolidado | — | ⏳ Não iniciada |
+| 8 | Treinamento, SST, Recrutamento, Avaliação | — | 💡 Sem desenho de tela ainda — a especificação do usuário não detalha essas telas |
+
+## 7. Referências
 
 - [MODELO-RH.md](./MODELO-RH.md) — desenho completo das entidades/relacionamentos de todas as fases
 - [ADR-0014](../adr/0014-modulo-profissional-rh-com-vinculo-fraco-por-reconciliacao.md) — vínculo responsável↔unidade
