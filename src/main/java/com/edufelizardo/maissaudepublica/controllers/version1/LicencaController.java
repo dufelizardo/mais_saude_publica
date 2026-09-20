@@ -21,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -30,6 +31,20 @@ public class LicencaController {
 
     @Autowired
     private LicencaService service;
+
+    @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Lista as licenças de um profissional", tags = "Licenca")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(
+                    schema = @Schema(implementation = LicencaResponseDto.class)
+            ), examples = @ExampleObject(name = "Success",
+                    summary = "LicencaResponse",
+                    value = ExampleConstants.LICENCA_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesBusca
+    public ResponseEntity<List<LicencaResponseDto>> listarPorProfissional(@PathVariable String matricula) {
+        return ResponseEntity.ok(service.listarPorProfissional(matricula));
+    }
 
     @GetMapping(value = "afastamento/{afastamentoId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca a licença de um afastamento", tags = "Licenca")

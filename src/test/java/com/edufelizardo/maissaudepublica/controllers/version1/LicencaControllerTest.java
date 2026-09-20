@@ -164,4 +164,33 @@ class LicencaControllerTest {
         mockMvc.perform(get(BASE_URL + "afastamento/" + afastamentoId))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void deveListarPorProfissional() throws Exception {
+        String matricula = PREFIXO_MATRICULA_TESTE + "05";
+        UUID afastamentoId = criarAfastamentoFixture("05");
+        String body = """
+                {
+                  "afastamentoId": "%s",
+                  "tipoLegal": "DOENCA",
+                  "responsavelPagamento": "INSS"
+                }
+                """.formatted(afastamentoId);
+
+        mockMvc.perform(post(BASE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get(BASE_URL + "profissional/" + matricula))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.tipoLegal == 'DOENCA')]").exists());
+    }
+
+    @Test
+    void deveListarVazioParaProfissionalSemLicenca() throws Exception {
+        mockMvc.perform(get(BASE_URL + "profissional/" + PREFIXO_MATRICULA_TESTE + "INEXISTENTE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
 }

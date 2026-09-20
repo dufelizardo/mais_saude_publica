@@ -53,6 +53,7 @@
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'lotacao'" (click)="selecionarAba('lotacao')">Lotação</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'composicao'" (click)="selecionarAba('composicao')">Composição remuneratória</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'ajustes'" (click)="selecionarAba('ajustes')">Ajustes individuais</button>
+      <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'afastamentos'" (click)="selecionarAba('afastamentos')">Afastamentos e Licenças</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'treinamentos'" (click)="selecionarAba('treinamentos')">Treinamentos</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'avaliacoes'" (click)="selecionarAba('avaliacoes')">Avaliações</button>
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'desligamento'" (click)="selecionarAba('desligamento')">Desligamento/Rescisão</button>
@@ -344,6 +345,188 @@
           <div class="form-actions">
             <button type="submit" class="btn" [disabled]="submittingAjuste()">
               {{ submittingAjuste() ? 'Registrando…' : 'Registrar ajuste' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (abaAtiva() === 'afastamentos') {
+      <div style="padding: var(--s-5);">
+        <h3 style="font-size: 1.0625rem;">Afastamentos</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Início</th>
+              <th>Fim</th>
+              <th>Status</th>
+              <th>Observação</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of afastamentos(); track item.uuid) {
+              <tr>
+                <td>{{ item.tipo }}</td>
+                <td>{{ item.dataInicio | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ item.dataFim | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ item.status }}</td>
+                <td>{{ item.observacao || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!carregandoAfastamentos() && afastamentos().length === 0) {
+          <p class="table-empty">Nenhum afastamento registrado.</p>
+        }
+
+        <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar afastamento</h4>
+        @if (afastamentoErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ afastamentoErrorMessage() }}</div>
+        }
+        <form [formGroup]="afastamentoForm" (ngSubmit)="registrarAfastamento()" class="form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoAfastamento">Tipo *</label>
+              <select id="tipoAfastamento" formControlName="tipo">
+                <option value="" disabled>Selecione…</option>
+                <option value="FERIAS">Férias</option>
+                <option value="LICENCA_MEDICA">Licença médica</option>
+                <option value="LICENCA_PESSOAL">Licença pessoal</option>
+                <option value="OUTROS">Outros</option>
+              </select>
+              @if (afastamentoForm.controls.tipo.invalid && afastamentoForm.controls.tipo.touched) {
+                <span class="form-error">Tipo é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="statusAfastamento">Status *</label>
+              <select id="statusAfastamento" formControlName="status">
+                <option value="" disabled>Selecione…</option>
+                <option value="SOLICITADO">Solicitado</option>
+                <option value="APROVADO">Aprovado</option>
+                <option value="EM_ANDAMENTO">Em andamento</option>
+                <option value="CONCLUIDO">Concluído</option>
+                <option value="CANCELADO">Cancelado</option>
+              </select>
+              @if (afastamentoForm.controls.status.invalid && afastamentoForm.controls.status.touched) {
+                <span class="form-error">Status é obrigatório.</span>
+              }
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="afastamentoDataInicio">Data de início *</label>
+              <input id="afastamentoDataInicio" type="date" formControlName="dataInicio" />
+              @if (afastamentoForm.controls.dataInicio.invalid && afastamentoForm.controls.dataInicio.touched) {
+                <span class="form-error">Data de início é obrigatória.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="afastamentoDataFim">Data de fim *</label>
+              <input id="afastamentoDataFim" type="date" formControlName="dataFim" />
+              @if (afastamentoForm.controls.dataFim.invalid && afastamentoForm.controls.dataFim.touched) {
+                <span class="form-error">Data de fim é obrigatória.</span>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="observacao">Observação</label>
+            <input id="observacao" type="text" formControlName="observacao" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn" [disabled]="submittingAfastamento()">
+              {{ submittingAfastamento() ? 'Registrando…' : 'Registrar afastamento' }}
+            </button>
+          </div>
+        </form>
+
+        <h3 style="font-size: 1.0625rem; margin-top: var(--s-8);">Licenças</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo legal</th>
+              <th>Responsável pelo pagamento</th>
+              <th>Documento</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of licencas(); track item.uuid) {
+              <tr>
+                <td>{{ item.tipoLegal }}</td>
+                <td>{{ item.responsavelPagamento }}</td>
+                <td>
+                  @if (item.documentoUrl) {
+                    <a [href]="item.documentoUrl" target="_blank" rel="noopener">Ver</a>
+                  } @else {
+                    —
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!carregandoLicencas() && licencas().length === 0) {
+          <p class="table-empty">Nenhuma licença registrada.</p>
+        }
+
+        <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar licença</h4>
+        <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-top: 4px;">
+          Só afastamentos sem licença registrada ainda aparecem no seletor.
+        </p>
+        @if (licencaErrorMessage()) {
+          <div class="form-banner form-banner--error" role="alert">{{ licencaErrorMessage() }}</div>
+        }
+        <form [formGroup]="licencaForm" (ngSubmit)="registrarLicenca()" class="form" novalidate>
+          <div class="form-group">
+            <label for="afastamentoId">Afastamento *</label>
+            <select id="afastamentoId" formControlName="afastamentoId">
+              <option value="" disabled>Selecione…</option>
+              @for (afastamento of afastamentosSemLicenca(); track afastamento.uuid) {
+                <option [value]="afastamento.uuid">{{ afastamento.tipo }} · {{ afastamento.dataInicio | date: 'dd/MM/yyyy' }}</option>
+              }
+            </select>
+            @if (licencaForm.controls.afastamentoId.invalid && licencaForm.controls.afastamentoId.touched) {
+              <span class="form-error">Afastamento é obrigatório.</span>
+            }
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="tipoLegal">Tipo legal *</label>
+              <select id="tipoLegal" formControlName="tipoLegal">
+                <option value="" disabled>Selecione…</option>
+                <option value="MATERNIDADE">Maternidade</option>
+                <option value="PATERNIDADE">Paternidade</option>
+                <option value="DOENCA">Doença</option>
+                <option value="ACIDENTE_DE_TRABALHO">Acidente de trabalho</option>
+                <option value="FALECIMENTO">Falecimento</option>
+                <option value="CASAMENTO">Casamento</option>
+                <option value="OUTROS">Outros</option>
+              </select>
+              @if (licencaForm.controls.tipoLegal.invalid && licencaForm.controls.tipoLegal.touched) {
+                <span class="form-error">Tipo legal é obrigatório.</span>
+              }
+            </div>
+            <div class="form-group">
+              <label for="responsavelPagamento">Responsável pelo pagamento *</label>
+              <select id="responsavelPagamento" formControlName="responsavelPagamento">
+                <option value="" disabled>Selecione…</option>
+                <option value="EMPRESA">Empresa</option>
+                <option value="INSS">INSS</option>
+                <option value="MISTO">Misto</option>
+              </select>
+              @if (licencaForm.controls.responsavelPagamento.invalid && licencaForm.controls.responsavelPagamento.touched) {
+                <span class="form-error">Responsável é obrigatório.</span>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="documentoUrl">Link do documento</label>
+            <input id="documentoUrl" type="text" formControlName="documentoUrl" placeholder="https://…" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn" [disabled]="submittingLicenca() || afastamentosSemLicenca().length === 0">
+              {{ submittingLicenca() ? 'Registrando…' : 'Registrar licença' }}
             </button>
           </div>
         </form>

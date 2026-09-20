@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ProfissionalResponseDto, ErrorResponseDto } from '../../core/models/profissional';
@@ -7,9 +7,13 @@ import { LotacaoResponseDto } from '../../core/models/lotacao';
 import { CargoResponseDto } from '../../core/models/cargo';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import { ComposicaoRemuneratoriaResponseDto } from '../../core/models/composicao-remuneratoria';
+import { AfastamentoResponseDto, TipoAfastamento, StatusAfastamento } from '../../core/models/afastamento';
+import { LicencaResponseDto, TipoLicenca, ResponsavelPagamentoLicenca } from '../../core/models/licenca';
 import { CargoService } from '../../core/services/cargo';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 import { ComposicaoRemuneratoriaService } from '../../core/services/composicao-remuneratoria';
+import { AfastamentoService } from '../../core/services/afastamento';
+import { LicencaService } from '../../core/services/licenca';
 import { AjusteIndividualResponseDto, MotivoAjusteIndividual } from '../../core/models/ajuste-individual';
 import { ParticipacaoTreinamentoResponseDto, TreinamentoResponseDto } from '../../core/models/treinamento';
 import { AvaliacaoResponseDto, CicloAvaliacaoResponseDto } from '../../core/models/avaliacao';
@@ -22,7 +26,7 @@ import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf } from '../../shared/format-mask';
 
-type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'treinamentos' | 'avaliacoes' | 'desligamento';
+type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'treinamentos' | 'avaliacoes' | 'desligamento';
 
 @Component({
   selector: 'app-profissional-perfil',
@@ -41,6 +45,8 @@ export class ProfissionalPerfil {
   private readonly cargoService = inject(CargoService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
   private readonly composicaoRemuneratoriaService = inject(ComposicaoRemuneratoriaService);
+  private readonly afastamentoService = inject(AfastamentoService);
+  private readonly licencaService = inject(LicencaService);
 
   protected readonly buscando = signal(false);
   protected readonly naoEncontrado = signal(false);
@@ -60,6 +66,16 @@ export class ProfissionalPerfil {
   protected readonly composicao = signal<ComposicaoRemuneratoriaResponseDto | null>(null);
   protected readonly carregandoComposicao = signal(false);
   protected readonly composicaoNaoEncontrada = signal(false);
+
+  protected readonly afastamentos = signal<AfastamentoResponseDto[]>([]);
+  protected readonly carregandoAfastamentos = signal(false);
+  protected readonly submittingAfastamento = signal(false);
+  protected readonly afastamentoErrorMessage = signal<string | null>(null);
+
+  protected readonly licencas = signal<LicencaResponseDto[]>([]);
+  protected readonly carregandoLicencas = signal(false);
+  protected readonly submittingLicenca = signal(false);
+  protected readonly licencaErrorMessage = signal<string | null>(null);
 
   protected readonly ajustes = signal<AjusteIndividualResponseDto[]>([]);
   protected readonly carregandoAjustes = signal(false);
@@ -116,6 +132,26 @@ export class ProfissionalPerfil {
     observacao: [''],
   });
 
+  protected readonly afastamentoForm = this.fb.nonNullable.group({
+    tipo: ['' as TipoAfastamento | '', [Validators.required]],
+    dataInicio: ['', [Validators.required]],
+    dataFim: ['', [Validators.required]],
+    status: ['' as StatusAfastamento | '', [Validators.required]],
+    observacao: [''],
+  });
+
+  protected readonly licencaForm = this.fb.nonNullable.group({
+    afastamentoId: ['', [Validators.required]],
+    tipoLegal: ['' as TipoLicenca | '', [Validators.required]],
+    responsavelPagamento: ['' as ResponsavelPagamentoLicenca | '', [Validators.required]],
+    documentoUrl: [''],
+  });
+
+  protected readonly afastamentosSemLicenca = computed(() => {
+    const idsComLicenca = new Set(this.licencas().map((l) => l.afastamentoId));
+    return this.afastamentos().filter((a) => !idsComLicenca.has(a.uuid));
+  });
+
   protected readonly rescisaoForm = this.fb.nonNullable.group({
     tipoDesligamento: ['' as TipoDesligamento | '', [Validators.required]],
     avisoPrevio: ['', [Validators.required]],
@@ -169,6 +205,8 @@ export class ProfissionalPerfil {
         this.carregarLotacao(profissional.matricula);
         this.carregarComposicao(profissional.matricula);
         this.carregarAjustes(profissional.matricula);
+        this.carregarAfastamentos(profissional.matricula);
+        this.carregarLicencas(profissional.matricula);
         this.carregarTreinamentos(profissional.matricula);
         this.carregarAvaliacoes(profissional.matricula);
         this.carregarRescisao(profissional.matricula);
@@ -466,6 +504,100 @@ export class ProfissionalPerfil {
           this.submittingRescisao.set(false);
           const body = error.error as ErrorResponseDto | undefined;
           this.rescisaoErrorMessage.set(body?.message ?? 'Não foi possível registrar o cálculo de rescisão. Tente novamente.');
+        },
+      });
+  }
+
+  private carregarAfastamentos(matricula: string): void {
+    this.carregandoAfastamentos.set(true);
+    this.afastamentoService.listarPorProfissional(matricula).subscribe({
+      next: (afastamentos) => {
+        this.afastamentos.set(afastamentos);
+        this.carregandoAfastamentos.set(false);
+      },
+      error: () => {
+        this.afastamentos.set([]);
+        this.carregandoAfastamentos.set(false);
+      },
+    });
+  }
+
+  protected registrarAfastamento(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.afastamentoForm.invalid) {
+      this.afastamentoForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingAfastamento.set(true);
+    this.afastamentoErrorMessage.set(null);
+
+    const raw = this.afastamentoForm.getRawValue();
+    this.afastamentoService
+      .criar({
+        matriculaProfissional: profissional.matricula,
+        tipo: raw.tipo as TipoAfastamento,
+        dataInicio: raw.dataInicio,
+        dataFim: raw.dataFim,
+        status: raw.status as StatusAfastamento,
+        observacao: raw.observacao || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingAfastamento.set(false);
+          this.afastamentoForm.reset({ tipo: '', dataInicio: '', dataFim: '', status: '', observacao: '' });
+          this.carregarAfastamentos(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingAfastamento.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.afastamentoErrorMessage.set(body?.message ?? 'Não foi possível registrar o afastamento. Tente novamente.');
+        },
+      });
+  }
+
+  private carregarLicencas(matricula: string): void {
+    this.carregandoLicencas.set(true);
+    this.licencaService.listarPorProfissional(matricula).subscribe({
+      next: (licencas) => {
+        this.licencas.set(licencas);
+        this.carregandoLicencas.set(false);
+      },
+      error: () => {
+        this.licencas.set([]);
+        this.carregandoLicencas.set(false);
+      },
+    });
+  }
+
+  protected registrarLicenca(): void {
+    const profissional = this.profissional();
+    if (!profissional || this.licencaForm.invalid) {
+      this.licencaForm.markAllAsTouched();
+      return;
+    }
+
+    this.submittingLicenca.set(true);
+    this.licencaErrorMessage.set(null);
+
+    const raw = this.licencaForm.getRawValue();
+    this.licencaService
+      .criar({
+        afastamentoId: raw.afastamentoId,
+        tipoLegal: raw.tipoLegal as TipoLicenca,
+        responsavelPagamento: raw.responsavelPagamento as ResponsavelPagamentoLicenca,
+        documentoUrl: raw.documentoUrl || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.submittingLicenca.set(false);
+          this.licencaForm.reset({ afastamentoId: '', tipoLegal: '', responsavelPagamento: '', documentoUrl: '' });
+          this.carregarLicencas(profissional.matricula);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.submittingLicenca.set(false);
+          const body = error.error as ErrorResponseDto | undefined;
+          this.licencaErrorMessage.set(body?.message ?? 'Não foi possível registrar a licença. Tente novamente.');
         },
       });
   }
