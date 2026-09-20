@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { LotacaoRequestDto } from '../models/lotacao';
+import { LotacaoRequestDto, LotacaoResponseDto } from '../models/lotacao';
 import { SuccessResponseDto } from '../models/profissional';
 
 @Injectable({ providedIn: 'root' })
@@ -11,5 +11,13 @@ export class LotacaoService {
 
   criar(dto: LotacaoRequestDto): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/`, dto);
+  }
+
+  listarHistorico(matricula: string): Observable<LotacaoResponseDto[]> {
+    return this.http.get<LotacaoResponseDto[]>(`${this.baseUrl}/profissional/${matricula}`);
+  }
+
+  buscarVigente(matricula: string): Observable<LotacaoResponseDto> {
+    return this.http.get<LotacaoResponseDto>(`${this.baseUrl}/profissional/${matricula}/atual`);
   }
 }
