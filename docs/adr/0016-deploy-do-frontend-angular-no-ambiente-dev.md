@@ -2,7 +2,8 @@
 
 ## Status
 
-Aceita e implementada (escopo: ambiente `dev` apenas).
+Aceita e implementada. **Escopo ampliado (2026-09-20)**: replicado para `qaa`, `homologacao` e
+`prod` — ver seção "Atualização: escopo ampliado para os 4 ambientes" no fim deste documento.
 
 ## Contexto
 
@@ -62,11 +63,25 @@ não cabem debaixo de um prefixo `/api` sem reescrever rotas.
 - Nenhuma mudança de comportamento em `dev.mais-saude.local` (API/Swagger).
 
 **Negativas / pendências**
-- Front-end só existe em `dev` por enquanto — replicar pra `qaa`/`homologacao`/`prod` exige repetir
-  os 3 manifests + patch de Ingress em cada overlay quando for a vez (não é automático só por
-  promover o código, ver "Decisão" acima).
 - Sem HTTPS/TLS em nenhum host `.local` — consistente com o resto da infraestrutura do home-lab
   (ADR-0012), não é uma lacuna nova introduzida aqui.
-- `publish-image.yml` agora builda 2 imagens em vez de 1 a cada push, mesmo nos 3 ambientes que
-  ainda não usam a imagem do front-end — custo de CI um pouco maior, aceito em troca de manter o
-  workflow simples (uma única matrix) em vez de condicionar o build por branch.
+
+## Atualização: escopo ampliado para os 4 ambientes (2026-09-20)
+
+A pendência "front-end só existe em dev" foi resolvida: os mesmos 3 manifests
+(`frontend-deployment.yaml`, `frontend-service.yaml`, `frontend-ingress.yaml`) foram replicados
+para `k8s/overlays/qaa/`, `k8s/overlays/homologacao/` e `k8s/overlays/prod/`, cada um com seu
+próprio host — mesmo padrão de nomenclatura já usado pela API em cada ambiente:
+
+| Ambiente | Host do frontend |
+|---|---|
+| `dev` | `frontend-dev.mais-saude.local` |
+| `qaa` | `frontend-qaa.mais-saude.local` |
+| `homologacao` | `frontend-homologacao.mais-saude.local` |
+| `prod` | `frontend.mais-saude.local` (sem sufixo, mesmo padrão que a API usa em prod) |
+
+`deployment.yaml`/`service.yaml` são idênticos entre ambientes (a imagem correta é resolvida pelo
+`images:` override de cada `kustomization.yaml`, mesmo mecanismo já usado para a imagem do
+backend) — só `frontend-ingress.yaml` muda, por causa do host. `publish-image.yml` já buildava a
+imagem do frontend para todas as branches desde a decisão original; esta atualização só passa a
+consumi-la nos 3 ambientes que antes não tinham manifest nenhum.
