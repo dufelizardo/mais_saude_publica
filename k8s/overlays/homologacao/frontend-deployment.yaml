@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: mais-saude-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mais-saude-frontend
+  template:
+    metadata:
+      labels:
+        app: mais-saude-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/dufelizardo/mais_saude_publica-frontend:homologacao
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
