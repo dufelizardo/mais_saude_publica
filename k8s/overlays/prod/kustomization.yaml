@@ -5,10 +5,15 @@ namespace: mais-saude-prod
 
 resources:
   - ../../base
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - frontend-ingress.yaml
 
 images:
   - name: ghcr.io/dufelizardo/mais_saude_publica
     newTag: 9d69758a02cd745938e150527737370fd18bd6db
+  - name: ghcr.io/dufelizardo/mais_saude_publica-frontend
+    newTag: main
 
 configMapGenerator:
   - name: app-config
