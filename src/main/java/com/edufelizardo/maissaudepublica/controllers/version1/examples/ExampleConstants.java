@@ -761,4 +761,17 @@ public class ExampleConstants {
                   "total": 4120.00
                 }
             """;
+    public static final String SETOR_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeNome": "string",
+                    "nome": "Administração",
+                    "codigo": "ADM",
+                    "tipo": "ADMINISTRATIVO",
+                    "ativo": true
+                  }
+                ]
+            """;
 }
