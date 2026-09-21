@@ -13,3 +13,5 @@ Resource    ../../schema/municipal/municipal_schema.resource
 Resource    ../../schema/unidade_saude/unidade_saude_schema.resource
 # PROFISSIONAL
 Resource    ../../schema/profissional/profissional_schema.resource
+# SETOR
+Resource    ../../schema/setor/setor_schema.resource
