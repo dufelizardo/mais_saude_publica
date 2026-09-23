@@ -1,12 +1,12 @@
 # Escopo do domínio Administrativo — roadmap e ideias
 
-**Data:** 2026-09-20 (criado)
-**Status:** Vivo. **Nenhuma fase implementada ainda** — este documento e os ADRs 0030-0037
-registram a arquitetura conceitual acordada, para implementação incremental e discutida (mesmo
-princípio já seguido no módulo de RH, ver seção 1). Rastreamento Jira: a definir (nenhum épico
-Administrativo aberto até o momento — o módulo de RH usa o épico
-[AQUAQE-274](https://edufelizardo.atlassian.net/browse/AQUAQE-274) como padrão a seguir quando
-houver).
+**Data:** 2026-09-20 (criado) · atualizado em 2026-09-23 (Fase 1 implementada + rastreabilidade Jira)
+**Status:** Vivo. **Fase 1 implementada e mergeada em `developer`** — ver seção 5. Nenhuma fase
+promovida a `qaa`/`homologacao`/`main` ainda (regra do módulo completo, mesma do RH). Rastreado no
+Jira sob o épico [AQUAQE-318](https://edufelizardo.atlassian.net/browse/AQUAQE-318) ("Setor
+Administrativo Adaptativo"), com uma História por ADR/fase (0030→AQUAQE-319, 0031→AQUAQE-320,
+0032→AQUAQE-321, 0033→AQUAQE-322, 0034→AQUAQE-323, 0035→AQUAQE-324, 0036→AQUAQE-325,
+0037→AQUAQE-326).
 
 ## 1. Contexto e como ler este documento
 
@@ -34,9 +34,10 @@ confrontar com o código real desta vez, dois pontos precisaram de ajuste:
   [ADR-0036](../adr/0036-necessidade-de-pessoal-encaminhada-ao-rh.md).
 
 O projeto segue avançando por **incrementos pequenos e discutidos**, não adotando o roadmap
-inteiro de uma vez (mesma prática já registrada em `ESCOPO-RH.md`, seção 1). Por isso todos os
-ADRs 0030-0037 têm status **Proposta**: a direção arquitetural está definida, mas a implementação é
-fatia por fatia, cada uma merecendo sua própria conversa e PR.
+inteiro de uma vez (mesma prática já registrada em `ESCOPO-RH.md`, seção 1). Por isso os ADRs
+0031-0037 seguem com status **Proposta**: a direção arquitetural está definida, mas a implementação
+é fatia por fatia, cada uma merecendo sua própria conversa e PR. A ADR-0030 (Fase 1) já foi
+implementada e passa a "Aceita".
 
 ## 2. Princípio arquitetural
 
@@ -79,7 +80,7 @@ Ordem de implementação combinada, adaptada da estratégia da especificação o
 
 | Fase | Entrega | ADR(s) |
 |---|---|---|
-| 1 | `Setor`/`TipoSetor` ligados a `UnidadeDeSaude` | [0030](../adr/0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) |
+| 1 ✅ | `Setor`/`TipoSetor` ligados a `UnidadeDeSaude` | [0030](../adr/0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) |
 | 2 | `CapacidadeAdministrativa` (catálogo) | [0032](../adr/0032-catalogo-de-capacidades-administrativas.md) |
 | 3 | `PerfilAdministrativo` + extensão de `TipoUnidadeDeSaude` | [0031](../adr/0031-perfil-administrativo-por-tipo-de-unidade.md) |
 | 4 | `ProcessoAdministrativo` | [0033](../adr/0033-processos-administrativos-por-capacidade.md) |
@@ -93,13 +94,13 @@ status nesta tabela e nos ADRs correspondentes — mesmo padrão do módulo de R
 
 ## 5. Estado de implementação
 
-Nenhuma fase implementada até o momento. Esta seção será preenchida com PRs conforme cada fase for
-construída (mesmo formato da tabela em
+Preenchida com PRs conforme cada fase é construída (mesmo formato da tabela em
 [ESCOPO-RH.md, seção 6](../rh/ESCOPO-RH.md#6-estado-do-frontend)).
 
 | Fase | Escopo | PR(s) | Status |
 |---|---|---|---|
-| — | — | — | ⏳ Não iniciada |
+| 1 | `Setor`/`TipoSetor` ligados a `UnidadeDeSaude`, CRUD em `/api/v1/setor/`, testes JUnit + Robot (ver [ADR-0030](../adr/0030-setor-administrativo-e-relacao-com-unidade-de-saude.md)) | [#181](https://github.com/dufelizardo/mais_saude_publica/pull/181) | ✅ |
+| 2-7+ | Demais fases (Capacidade, Perfil, Processo, Integração RH, Responsabilidade, Necessidade de Pessoal, recursos/especializações) | — | ⏳ Não iniciada |
 
 ## 6. Referências
 

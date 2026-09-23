@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposta.
+Aceita e implementada (Fase 1 — [PR #181](https://github.com/dufelizardo/mais_saude_publica/pull/181)).
 
 ## Contexto
 

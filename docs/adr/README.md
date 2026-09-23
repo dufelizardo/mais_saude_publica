@@ -45,7 +45,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0027](./0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md) | Fatia 8: Treinamento, Avaliação, SST, Recrutamento | Aceita |
 | [0028](./0028-fatia-9-beneficios.md) | Fatia 9: Benefícios (+ endpoint `encerrar` de AdesaoBeneficio) | Aceita |
 | [0029](./0029-listagem-e-edicao-de-contato-do-profissional.md) | Listagem de profissionais e edição de contato | Aceita |
-| [0030](./0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) | Setor Administrativo e relação com Unidade de Saúde | Proposta |
+| [0030](./0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) | Setor Administrativo e relação com Unidade de Saúde | Aceita |
 | [0031](./0031-perfil-administrativo-por-tipo-de-unidade.md) | Perfil Administrativo por tipo de unidade | Proposta |
 | [0032](./0032-catalogo-de-capacidades-administrativas.md) | Catálogo de capacidades administrativas | Proposta |
 | [0033](./0033-processos-administrativos-por-capacidade.md) | Processos administrativos por capacidade | Proposta |
