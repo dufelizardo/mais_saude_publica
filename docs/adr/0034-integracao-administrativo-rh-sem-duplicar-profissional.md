@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposta.
+Aceita e implementada (Fase 5 — [PR #189](https://github.com/dufelizardo/mais_saude_publica/pull/189)).
 
 ## Contexto
 
@@ -24,8 +24,10 @@ ADR-0017), então esse padrão de vínculo fraco não precisa ser repetido para 
 
 - Mapeamento de vocabulário: "Vínculo" (documento-fonte) = `Lotacao` (código, já existente) —
   nenhuma entidade `Vinculo` será criada.
-- Toda referência do domínio Administrativo a um profissional é **FK direta para `Profissional`**
-  (por `uuid`), nunca cópia de nome/matrícula/CPF. Isso vale para `Setor.responsavel` (ADR-0030),
+- Toda referência do domínio Administrativo a um profissional é **FK direta para `Profissional`**,
+  resolvida **por matrícula** (não por `uuid` interno — `ProfissionalResponseDto` nunca expõe
+  `uuid`; mesma convenção já usada por `LotacaoRequestDto.matriculaProfissional`), nunca cópia de
+  nome/matrícula/CPF. Isso vale para `Setor.responsavel` (implementado nesta fase — ver ADR-0030),
   `ResponsabilidadeAdministrativa` (ADR-0035) e qualquer entidade administrativa futura que precise
   identificar um responsável.
 - Leitura de lotação/cargo pelo Administrativo é sempre via consulta ao RH (join/consulta),
@@ -35,7 +37,7 @@ ADR-0017), então esse padrão de vínculo fraco não precisa ser repetido para 
 
 ## Trade-offs considerados
 
-**FK direta a `Profissional` para toda referência nova (escolhida)**
+**FK direta a `Profissional` por matrícula para toda referência nova (escolhida)**
 - ✅ Simples e correto agora que o RH é estável — evita a complexidade de reconciliação por CPF da
   ADR-0014, que resolvia um problema de ordem de criação que não existe para entidades
   administrativas novas (criadas depois do RH já existir).

@@ -25,7 +25,8 @@ classe/entidade própria, seria o mesmo erro que a ADR-0013 já rejeitou ao recu
 ## Decisão
 
 - Nova entidade `Setor`: `uuid`, `unidade` (`@ManyToOne UnidadeDeSaude`), `nome`, `codigo`, `tipo`,
-  `ativo`.
+  `ativo`. Fase 5 (ver ADR-0034) acrescenta `responsavel` (`@ManyToOne Profissional`, opcional,
+  resolvido por matrícula).
 - Novo enum `TipoSetor`: `ADMINISTRATIVO, ASSISTENCIAL, APOIO, TECNICO` — lista inicial, ampliável
   por dado/negócio conforme outros domínios (assistencial, apoio) forem modelados.
 - **`SetorAdministrativo` não é uma classe ou entidade própria.** É simplesmente um `Setor` com
