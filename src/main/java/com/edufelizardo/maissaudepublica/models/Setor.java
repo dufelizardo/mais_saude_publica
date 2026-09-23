@@ -14,7 +14,8 @@ import java.util.UUID;
  * Subdivisão organizacional de uma {@link UnidadeDeSaude} (ver
  * docs/adr/0030-setor-administrativo-e-relacao-com-unidade-de-saude.md). Genérico por
  * {@link TipoSetor} — "Setor Administrativo" é apenas um Setor com tipo {@code ADMINISTRATIVO},
- * não uma subclasse própria.
+ * não uma subclasse própria. {@code responsavel} referencia {@link Profissional} por FK direta,
+ * nunca por cópia (ver docs/adr/0034-integracao-administrativo-rh-sem-duplicar-profissional.md).
  */
 @Entity
 @Table(name = "TB_SETOR")
@@ -48,11 +49,17 @@ public class Setor implements Serializable {
 
     private boolean ativo;
 
-    public Setor(UnidadeDeSaude unidade, String nome, String codigo, TipoSetor tipo, boolean ativo) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsavel_id", referencedColumnName = "uuid", nullable = true)
+    private Profissional responsavel;
+
+    public Setor(UnidadeDeSaude unidade, String nome, String codigo, TipoSetor tipo, boolean ativo,
+                 Profissional responsavel) {
         this.unidade = unidade;
         this.nome = nome;
         this.codigo = codigo;
         this.tipo = tipo;
         this.ativo = ativo;
+        this.responsavel = responsavel;
     }
 }

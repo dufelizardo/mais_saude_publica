@@ -40,3 +40,22 @@ CT-003 - Validate POST Create Setor - HTTP 400 BAD REQUEST (Campos Obrigatorios 
     SETOR - CREATE - POST    400
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-004 - Validate POST Create Setor - HTTP 201 CREATED (Com Responsavel)
+    [Documentation]    Test case to validate the POST create Setor endpoint with a matriculaResponsavel,
+    ...    expecting HTTP 201 CREATED and the GET response to carry responsavelMatricula/responsavelNome
+    ...    (ver ADR-0034).
+    [Tags]    POST    CreateSetor    HTTP201
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    SETOR - CREATE - POST - Com Responsavel
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-005 - Validate POST Create Setor - HTTP 404 NOT FOUND (Responsavel Inexistente)
+    [Documentation]    Test case to validate the POST create Setor endpoint with HTTP 404 NOT FOUND response,
+    ...    when matriculaResponsavel points at a Profissional that doesn't exist (ver ADR-0034).
+    [Tags]    POST    CreateSetor    HTTP404
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    SETOR - CREATE - POST - Responsavel Inexistente
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

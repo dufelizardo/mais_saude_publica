@@ -42,6 +42,28 @@ PATCH Update Setor - Status Code 200
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+PATCH Update Setor - Status Code 200 - Define Responsavel
+    [Documentation]    Seeds a fresh Setor (sem responsável) and um Profissional, atualiza o Setor definindo
+    ...    matriculaResponsavel, e confirma via GET que responsavelMatricula/responsavelNome refletem o
+    ...    Profissional vinculado (ver ADR-0034).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${setorId}    ${codigo}    ${unidadeId}=    Seed A Setor
+    ${matriculaResponsavel}=    Seed A Profissional Matricula
+    ${payload}=    Build Setor Payload
+    ...    ${unidadeId}    Robot Teste Setor Com Responsavel    ${codigo}    ADMINISTRATIVO    ${True}
+    ...    ${matriculaResponsavel}
+
+    ${response}=    Call PATCH Update Setor    ${setorId}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    200
+
+    ${getResponse}=    Call GET Get Setor By Id    ${setorId}
+    Should Be Equal As Integers    ${getResponse.status_code}    200
+    Should Be Equal As Strings    ${getResponse.json()['responsavelMatricula']}    ${matriculaResponsavel}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 PATCH Update Setor - Status Code 404
     [Documentation]    Attempts to update a Setor identified by a random, non-existent uuid, expecting HTTP 404.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════

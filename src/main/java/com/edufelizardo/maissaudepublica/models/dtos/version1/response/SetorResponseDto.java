@@ -25,8 +25,16 @@ public class SetorResponseDto implements Serializable {
     private String codigo;
     private TipoSetor tipo;
     private boolean ativo;
+    private String responsavelMatricula;
+    private String responsavelNome;
 
     public static SetorResponseDto fromSetor(Setor setor) {
+        String responsavelMatricula = null;
+        String responsavelNome = null;
+        if (setor.getResponsavel() != null) {
+            responsavelMatricula = setor.getResponsavel().getMatricula();
+            responsavelNome = setor.getResponsavel().getNome();
+        }
         return new SetorResponseDto(
                 setor.getUuid(),
                 setor.getUnidade().getUuid(),
@@ -34,7 +42,9 @@ public class SetorResponseDto implements Serializable {
                 setor.getNome(),
                 setor.getCodigo(),
                 setor.getTipo(),
-                setor.isAtivo()
+                setor.isAtivo(),
+                responsavelMatricula,
+                responsavelNome
         );
     }
 }

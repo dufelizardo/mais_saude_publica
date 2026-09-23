@@ -1,7 +1,9 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.SetorRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -45,13 +47,18 @@ class SetorControllerTest {
     @Autowired
     private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
 
+    @Autowired
+    private ProfissionalRepository profissionalRepository;
+
     private final List<UUID> setorIdsCriados = new ArrayList<>();
     private final List<UUID> unidadeIdsCriadas = new ArrayList<>();
+    private final List<UUID> profissionalIdsCriados = new ArrayList<>();
 
     @AfterEach
     void limparDadosDeTeste() {
         setorRepository.deleteAllById(setorIdsCriados);
         unidadeDeSaudeRepository.deleteAllById(unidadeIdsCriadas);
+        profissionalRepository.deleteAllById(profissionalIdsCriados);
     }
 
     private UUID criarUnidadeFixture(String sufixo) {
@@ -62,6 +69,18 @@ class SetorControllerTest {
         UUID id = unidadeDeSaudeRepository.save(unidade).getUuid();
         unidadeIdsCriadas.add(id);
         return id;
+    }
+
+    private String criarProfissionalFixture(String sufixo) {
+        Profissional profissional = new Profissional();
+        String matricula = "FIXTURE-SETOR-" + sufixo;
+        profissional.setMatricula(matricula);
+        profissional.setCpf("00000000000");
+        profissional.setNome(PREFIXO_NOME_TESTE + "Profissional " + sufixo);
+        profissional.setAtivo(true);
+        UUID id = profissionalRepository.save(profissional).getUuid();
+        profissionalIdsCriados.add(id);
+        return matricula;
     }
 
     @Test
@@ -182,6 +201,100 @@ class SetorControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Administração Central"))
                 .andExpect(jsonPath("$.ativo").value(false));
+    }
+
+    @Test
+    void deveCriarComResponsavel() throws Exception {
+        UUID unidadeId = criarUnidadeFixture("07");
+        String matriculaResponsavel = criarProfissionalFixture("07");
+        String body = """
+                {
+                  "unidadeId": "%s",
+                  "nome": "Administração",
+                  "codigo": "ADM-07",
+                  "tipo": "ADMINISTRATIVO",
+                  "ativo": true,
+                  "matriculaResponsavel": "%s"
+                }
+                """.formatted(unidadeId, matriculaResponsavel);
+
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated());
+
+        UUID setorId = setorRepository.findAll().stream()
+                .filter(s -> s.getCodigo().equals("ADM-07"))
+                .findFirst()
+                .orElseThrow()
+                .getUuid();
+        setorIdsCriados.add(setorId);
+
+        mockMvc.perform(get(BASE_URL + setorId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.responsavelMatricula").value(matriculaResponsavel));
+    }
+
+    @Test
+    void deveRetornarNotFoundAoCriarComResponsavelInexistente() throws Exception {
+        UUID unidadeId = criarUnidadeFixture("08");
+        String body = """
+                {
+                  "unidadeId": "%s",
+                  "nome": "Administração",
+                  "codigo": "ADM-08",
+                  "tipo": "ADMINISTRATIVO",
+                  "ativo": true,
+                  "matriculaResponsavel": "00000000000000-00"
+                }
+                """.formatted(unidadeId);
+
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deveAtualizarResponsavel() throws Exception {
+        UUID unidadeId = criarUnidadeFixture("09");
+        String matriculaResponsavel = criarProfissionalFixture("09");
+        String bodyCriacao = """
+                {
+                  "unidadeId": "%s",
+                  "nome": "Administração",
+                  "codigo": "ADM-09",
+                  "tipo": "ADMINISTRATIVO",
+                  "ativo": true
+                }
+                """.formatted(unidadeId);
+
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(bodyCriacao))
+                .andExpect(status().isCreated());
+
+        UUID setorId = setorRepository.findAll().stream()
+                .filter(s -> s.getCodigo().equals("ADM-09"))
+                .findFirst()
+                .orElseThrow()
+                .getUuid();
+        setorIdsCriados.add(setorId);
+
+        String bodyAtualizacao = """
+                {
+                  "unidadeId": "%s",
+                  "nome": "Administração",
+                  "codigo": "ADM-09",
+                  "tipo": "ADMINISTRATIVO",
+                  "ativo": true,
+                  "matriculaResponsavel": "%s"
+                }
+                """.formatted(unidadeId, matriculaResponsavel);
+
+        mockMvc.perform(patch(BASE_URL + setorId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bodyAtualizacao))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get(BASE_URL + setorId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.responsavelMatricula").value(matriculaResponsavel))
+                .andExpect(jsonPath("$.responsavelNome").value(PREFIXO_NOME_TESTE + "Profissional 09"));
     }
 
     @Test

@@ -12,3 +12,11 @@ SETOR - UPDATE - PATCH
     Setor - Update - PATCH - By HTTP Status Code    ${meuHTTP}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+SETOR - UPDATE - PATCH - Define Responsavel
+    [Documentation]    Test scenario for updating a Setor to set matriculaResponsavel, expecting HTTP 200 and
+    ...    the GET response to carry responsavelMatricula/responsavelNome (ver ADR-0034).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    PATCH Update Setor - Status Code 200 - Define Responsavel
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
