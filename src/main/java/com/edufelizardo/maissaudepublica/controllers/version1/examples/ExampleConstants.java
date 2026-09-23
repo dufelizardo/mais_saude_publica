@@ -807,4 +807,18 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String PROCESSO_ADMINISTRATIVO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "capacidadeUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "capacidadeCodigo": "PATRIMONIO",
+                    "capacidadeNome": "Patrimônio",
+                    "codigo": "CADASTRO",
+                    "nome": "Cadastro de bem",
+                    "descricao": "Registro inicial de um bem patrimonial.",
+                    "ativo": true
+                  }
+                ]
+            """;
 }
