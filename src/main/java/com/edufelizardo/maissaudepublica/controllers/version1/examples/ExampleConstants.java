@@ -774,4 +774,15 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String CAPACIDADE_ADMINISTRATIVA_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "codigo": "PATRIMONIO",
+                    "nome": "Patrimônio",
+                    "descricao": "Cadastro, transferência, inventário, manutenção, baixa e descarte de bens.",
+                    "ativo": true
+                  }
+                ]
+            """;
 }
