@@ -15,3 +15,5 @@ Resource    ../../schema/unidade_saude/unidade_saude_schema.resource
 Resource    ../../schema/profissional/profissional_schema.resource
 # SETOR
 Resource    ../../schema/setor/setor_schema.resource
+# CAPACIDADE ADMINISTRATIVA
+Resource    ../../schema/capacidade_administrativa/capacidade_administrativa_schema.resource
