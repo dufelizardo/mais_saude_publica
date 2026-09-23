@@ -1,7 +1,7 @@
 # Escopo do domínio Administrativo — roadmap e ideias
 
-**Data:** 2026-09-20 (criado) · atualizado em 2026-09-23 (Fases 1-2 implementadas + rastreabilidade Jira)
-**Status:** Vivo. **Fases 1-2 implementadas e mergeadas em `developer`** — ver seção 5. Nenhuma fase
+**Data:** 2026-09-20 (criado) · atualizado em 2026-09-23 (Fases 1-3 implementadas + rastreabilidade Jira)
+**Status:** Vivo. **Fases 1-3 implementadas e mergeadas em `developer`** — ver seção 5. Nenhuma fase
 promovida a `qaa`/`homologacao`/`main` ainda (regra do módulo completo, mesma do RH). Rastreado no
 Jira sob o épico [AQUAQE-318](https://edufelizardo.atlassian.net/browse/AQUAQE-318) ("Setor
 Administrativo Adaptativo"), com uma História por ADR/fase (0030→AQUAQE-319, 0031→AQUAQE-320,
@@ -35,9 +35,9 @@ confrontar com o código real desta vez, dois pontos precisaram de ajuste:
 
 O projeto segue avançando por **incrementos pequenos e discutidos**, não adotando o roadmap
 inteiro de uma vez (mesma prática já registrada em `ESCOPO-RH.md`, seção 1). Por isso os ADRs
-0031, 0033-0037 seguem com status **Proposta**: a direção arquitetural está definida, mas a
-implementação é fatia por fatia, cada uma merecendo sua própria conversa e PR. As ADRs 0030 (Fase 1)
-e 0032 (Fase 2) já foram implementadas e passam a "Aceita".
+0033-0037 seguem com status **Proposta**: a direção arquitetural está definida, mas a implementação
+é fatia por fatia, cada uma merecendo sua própria conversa e PR. As ADRs 0030 (Fase 1), 0032
+(Fase 2) e 0031 (Fase 3) já foram implementadas e passam a "Aceita".
 
 ## 2. Princípio arquitetural
 
@@ -82,7 +82,7 @@ Ordem de implementação combinada, adaptada da estratégia da especificação o
 |---|---|---|
 | 1 ✅ | `Setor`/`TipoSetor` ligados a `UnidadeDeSaude` | [0030](../adr/0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) |
 | 2 ✅ | `CapacidadeAdministrativa` (catálogo) | [0032](../adr/0032-catalogo-de-capacidades-administrativas.md) |
-| 3 | `PerfilAdministrativo` + extensão de `TipoUnidadeDeSaude` | [0031](../adr/0031-perfil-administrativo-por-tipo-de-unidade.md) |
+| 3 ✅ | `PerfilAdministrativo` + extensão de `TipoUnidadeDeSaude` | [0031](../adr/0031-perfil-administrativo-por-tipo-de-unidade.md) |
 | 4 | `ProcessoAdministrativo` | [0033](../adr/0033-processos-administrativos-por-capacidade.md) |
 | 5 | Integração com RH (referências diretas) | [0034](../adr/0034-integracao-administrativo-rh-sem-duplicar-profissional.md) |
 | 6 | `ResponsabilidadeAdministrativa` | [0035](../adr/0035-responsabilidade-administrativa-separada-da-lotacao.md) |
@@ -101,7 +101,8 @@ Preenchida com PRs conforme cada fase é construída (mesmo formato da tabela em
 |---|---|---|---|
 | 1 | `Setor`/`TipoSetor` ligados a `UnidadeDeSaude`, CRUD em `/api/v1/setor/`, testes JUnit + Robot (ver [ADR-0030](../adr/0030-setor-administrativo-e-relacao-com-unidade-de-saude.md)) | [#181](https://github.com/dufelizardo/mais_saude_publica/pull/181) | ✅ |
 | 2 | `CapacidadeAdministrativa` (catálogo/feature-toggle, dado em tabela), CRUD em `/api/v1/capacidade-administrativa/`, testes JUnit + Robot (ver [ADR-0032](../adr/0032-catalogo-de-capacidades-administrativas.md)) | [#183](https://github.com/dufelizardo/mais_saude_publica/pull/183) | ✅ |
-| 3-7+ | Demais fases (Perfil, Processo, Integração RH, Responsabilidade, Necessidade de Pessoal, recursos/especializações) | — | ⏳ Não iniciada |
+| 3 | Extensão de `TipoUnidadeDeSaude` (UPA/Laboratório/CAPS/Centro de Especialidades/Centro de Reabilitação/Policlínica), `PerfilAdministrativo` (catálogo) e `PerfilPorTipoUnidade` (resolve o perfil de cada tipo), CRUD em `/api/v1/perfil-administrativo/` e `/api/v1/perfil-por-tipo-unidade/`, testes JUnit + Robot (ver [ADR-0031](../adr/0031-perfil-administrativo-por-tipo-de-unidade.md)) | [#185](https://github.com/dufelizardo/mais_saude_publica/pull/185) | ✅ |
+| 4-7+ | Demais fases (Processo, Integração RH, Responsabilidade, Necessidade de Pessoal, recursos/especializações) | — | ⏳ Não iniciada |
 
 ## 6. Referências
 
