@@ -785,4 +785,26 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String PERFIL_ADMINISTRATIVO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "codigo": "ADMIN_UBS",
+                    "nome": "Perfil Administrativo - UBS",
+                    "descricao": "Perfil padrão para Unidades Básicas de Saúde.",
+                    "ativo": true
+                  }
+                ]
+            """;
+    public static final String PERFIL_POR_TIPO_UNIDADE_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "tipo": "UBS",
+                    "perfilAdministrativoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "perfilAdministrativoCodigo": "ADMIN_UBS",
+                    "perfilAdministrativoNome": "Perfil Administrativo - UBS"
+                  }
+                ]
+            """;
 }
