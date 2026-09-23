@@ -32,3 +32,13 @@ CT-002 - Validate PATCH Update Setor - HTTP 404 NOT FOUND
     SETOR - UPDATE - PATCH    404
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-003 - Validate PATCH Update Setor - HTTP 200 OK (Define Responsavel)
+    [Documentation]    Test case to validate the PATCH update Setor endpoint setting matriculaResponsavel,
+    ...    expecting HTTP 200 OK and the GET response to carry responsavelMatricula/responsavelNome
+    ...    (ver ADR-0034).
+    [Tags]    PATCH    UpdateSetor    HTTP200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    SETOR - UPDATE - PATCH - Define Responsavel
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -32,4 +32,11 @@ public class SetorRequestDto implements Serializable {
 
     @NotNull
     private Boolean ativo;
+
+    /**
+     * Opcional — referencia um {@link com.edufelizardo.maissaudepublica.models.Profissional} do RH
+     * pela matrícula (mesma convenção de {@code LotacaoRequestDto.matriculaProfissional}, FK direta
+     * por trás, ver ADR-0034). {@code null}/em branco desvincula o responsável atual.
+     */
+    private String matriculaResponsavel;
 }

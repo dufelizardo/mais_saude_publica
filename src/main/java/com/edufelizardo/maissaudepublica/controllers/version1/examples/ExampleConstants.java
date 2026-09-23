@@ -770,7 +770,9 @@ public class ExampleConstants {
                     "nome": "Administração",
                     "codigo": "ADM",
                     "tipo": "ADMINISTRATIVO",
-                    "ativo": true
+                    "ativo": true,
+                    "responsavelMatricula": "11111111111111-11",
+                    "responsavelNome": "string"
                   }
                 ]
             """;
