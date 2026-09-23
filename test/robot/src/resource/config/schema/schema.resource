@@ -21,3 +21,5 @@ Resource    ../../schema/capacidade_administrativa/capacidade_administrativa_sch
 Resource    ../../schema/perfil_administrativo/perfil_administrativo_schema.resource
 # PERFIL POR TIPO UNIDADE
 Resource    ../../schema/perfil_por_tipo_unidade/perfil_por_tipo_unidade_schema.resource
+# PROCESSO ADMINISTRATIVO
+Resource    ../../schema/processo_administrativo/processo_administrativo_schema.resource
