@@ -1,7 +1,8 @@
 # Escopo do domínio Administrativo — roadmap e ideias
 
-**Data:** 2026-09-20 (criado) · atualizado em 2026-09-24 (Fase 6 implementada)
-**Status:** Vivo. **Fases 1-6 implementadas e mergeadas em `developer`** — ver seção 5. Nenhuma fase
+**Data:** 2026-09-20 (criado) · atualizado em 2026-09-24 (frontend das Fases 1-6 implementado)
+**Status:** Vivo. **Fases 1-6 implementadas (backend e frontend) e mergeadas em `developer`** — ver
+seções 5 e 6. Nenhuma fase
 promovida a `qaa`/`homologacao`/`main` ainda (regra do módulo completo, mesma do RH). Rastreado no
 Jira sob o épico [AQUAQE-318](https://edufelizardo.atlassian.net/browse/AQUAQE-318) ("Setor
 Administrativo Adaptativo"), com uma História por ADR/fase (0030→AQUAQE-319, 0031→AQUAQE-320,
@@ -123,7 +124,7 @@ pras decisões de frontend específicas deste módulo).
 | F3 | Telas **Perfis Administrativos** (`administrativo/perfis`) + **Perfil por Tipo de Unidade** (`administrativo/perfis-por-tipo-unidade`) | [#197](https://github.com/dufelizardo/mais_saude_publica/pull/197) | ✅ |
 | F4 | Tela **Processos Administrativos** (`administrativo/processos`) | [#198](https://github.com/dufelizardo/mais_saude_publica/pull/198) | ✅ |
 | F5 | Tela **Responsabilidades Administrativas** (`administrativo/responsabilidades`) | [#199](https://github.com/dufelizardo/mais_saude_publica/pull/199) | ✅ |
-| F6 | Tela **Necessidades de Pessoal** (`administrativo/necessidades-de-pessoal`) | — | ⏳ Não iniciada |
+| F6 | Tela **Necessidades de Pessoal** (`administrativo/necessidades-de-pessoal`) | [#200](https://github.com/dufelizardo/mais_saude_publica/pull/200) | ✅ |
 
 ## 7. Referências
 
