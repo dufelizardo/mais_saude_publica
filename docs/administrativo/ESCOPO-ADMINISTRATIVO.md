@@ -121,7 +121,7 @@ pras decisões de frontend específicas deste módulo).
 | F1 | Tela **Setores** (`administrativo/setores`) | [#195](https://github.com/dufelizardo/mais_saude_publica/pull/195) | ✅ |
 | F2 | Tela **Capacidades Administrativas** (`administrativo/capacidades`) | [#196](https://github.com/dufelizardo/mais_saude_publica/pull/196) | ✅ |
 | F3 | Telas **Perfis Administrativos** (`administrativo/perfis`) + **Perfil por Tipo de Unidade** (`administrativo/perfis-por-tipo-unidade`) | [#197](https://github.com/dufelizardo/mais_saude_publica/pull/197) | ✅ |
-| F4 | Tela **Processos Administrativos** (`administrativo/processos`) | — | ⏳ Não iniciada |
+| F4 | Tela **Processos Administrativos** (`administrativo/processos`) | [#198](https://github.com/dufelizardo/mais_saude_publica/pull/198) | ✅ |
 | F5 | Tela **Responsabilidades Administrativas** (`administrativo/responsabilidades`) | — | ⏳ Não iniciada |
 | F6 | Tela **Necessidades de Pessoal** (`administrativo/necessidades-de-pessoal`) | — | ⏳ Não iniciada |
 
