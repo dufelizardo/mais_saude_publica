@@ -5,8 +5,7 @@ Resource    ../../../pom/setor/create_setor/create_setor_pom.resource
 Resource    ../../../pom/setor/get_all_setores/get_all_setores_pom.resource
 Resource    ../../unidade_saude/create_unidade_saude/create_unidade_saude_flow.resource
 Resource    ../../unidade_saude/get_unidade_saude_by_nome/get_unidade_saude_by_nome_flow.resource
-Resource    ../../profissional/create_profissional/create_profissional_flow.resource
-Resource    ../../profissional/get_profissional_by_cpf/get_profissional_by_cpf_flow.resource
+Resource    ../../profissional/get_profissional_by_matricula/get_profissional_by_matricula_flow.resource
 Resource    ../../common/schema_validation_flow.resource
 Resource    ../../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -52,18 +51,6 @@ Build Setor Payload
     END
 
     RETURN    ${payload}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-Seed A Profissional Matricula
-    [Documentation]    Seeds a fresh Profissional and returns its auto-generated matrícula, resolved via GET by
-    ...    cpf (the create endpoint only returns a cpf-bearing SuccessResponseDto, not the matricula).
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${cpf}=    Seed A Profissional Unit
-    ${response}=    Call GET Get Profissional By Cpf    ${cpf}
-    ${matricula}=    Set Variable    ${response.json()['matricula']}
-
-    RETURN    ${matricula}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
