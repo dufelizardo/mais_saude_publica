@@ -46,6 +46,18 @@ public class ProfissionalService {
         return ProfissionalResponseDto.fromProfissional(buscarProfissionalPorCpf(cpf));
     }
 
+    /**
+     * Busca por matrícula (chave única de verdade do domínio, ver ADR-0017) — usada por domínios
+     * fora do RH que referenciam Profissional só por matrícula (ver ADR-0034), como o Setor
+     * Administrativo, e precisam resolver o nome antes de confirmar uma ação.
+     */
+    public ProfissionalResponseDto findByMatricula(String matricula) {
+        Profissional profissional = profissionalRepository.findByMatricula(matricula)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Não foi possível encontrar um profissional com a matrícula " + matricula + " em nossos registros."));
+        return ProfissionalResponseDto.fromProfissional(profissional);
+    }
+
     @Transactional
     public ProfissionalResponseDto create(ProfissionalRequestDto dto) {
         Profissional profissional = new Profissional(dto);

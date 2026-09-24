@@ -78,6 +78,24 @@ public class ProfissionalController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @GetMapping(value = "matricula/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Busca um Profissional pela sua matrícula.",
+            description = "Verifica a existência de um Profissional pela matrícula (chave única de verdade do domínio, ver ADR-0017) — usado por domínios fora do RH que referenciam Profissional só por matrícula (ver ADR-0034).",
+            tags = "Profissional")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(
+                    schema = @Schema(implementation = ProfissionalResponseDto.class)
+            ), examples = @ExampleObject(name = "Success",
+                    summary = "ProfissionalResponse",
+                    value = ExampleConstants.PROFISSIONAL_RESPONSE_FIND_EXAMPLE,
+                    description = "O servidor consegue processar a requisição, e retorna no corpo da resposta as informações encontradas."))
+    })
+    @ApiErrorResponsesBusca
+    public ResponseEntity<ProfissionalResponseDto> findByMatricula(@PathVariable String matricula) {
+        ProfissionalResponseDto responseDto = service.findByMatricula(matricula);
+        return ResponseEntity.ok(responseDto);
+    }
+
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um Profissional.",
             description = "Cria um Profissional e reconcilia automaticamente o vínculo com Unidades de Saúde pendentes que já referenciavam este CPF.",
