@@ -1,11 +1,12 @@
 # Escopo do domínio de RH — roadmap e ideias
 
-**Data:** 2026-09-19 (criado) · atualizado em 2026-09-20 (rastreabilidade Jira + fatias 9/#159/#161/#162)
-**Status:** Vivo. **Backend (Fases 0-9) implementado e mergeado em `developer`** — ver a tabela de
-PRs em [MODELO-RH.md](./MODELO-RH.md#0-estado-de-implementação-backend). Frontend em andamento, ver
-seção 6. Nenhuma fase foi promovida a `qaa`/`homologacao`/`main` ainda (regra do módulo completo,
-seção 5). Rastreado no Jira sob o épico [AQUAQE-274](https://edufelizardo.atlassian.net/browse/AQUAQE-274)
-("Módulo de RH"), com uma História por item da tabela da seção 6.
+**Data:** 2026-09-19 (criado) · atualizado em 2026-09-24 (módulo promovido até `main`)
+**Status:** Vivo. **Backend (Fases 0-9) e frontend implementados** — ver a tabela de PRs em
+[MODELO-RH.md](./MODELO-RH.md#0-estado-de-implementação-backend) e a seção 6. **Módulo já
+promovido até `main` (produção)** — deixou de ser regra "nenhuma fase promovida ainda"; o módulo
+completo passou pelo fluxo `developer → qaa → homologacao → main` (ADR-0010). Rastreado no Jira
+sob o épico [AQUAQE-274](https://edufelizardo.atlassian.net/browse/AQUAQE-274) ("Módulo de RH"),
+com uma História por item da tabela da seção 6.
 
 ## 1. Contexto e como ler este documento
 
