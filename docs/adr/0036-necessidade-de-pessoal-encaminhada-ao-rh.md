@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposta.
+Aceita e implementada (Fase 6 — [PR #191](https://github.com/dufelizardo/mais_saude_publica/pull/191)).
 
 ## Contexto
 
@@ -24,8 +24,9 @@ existente — é preciso decidir como as duas se relacionam sem colisão.
   (texto), `justificativa`, `dataRegistro`, `vagaAssociada` (FK `Vaga`, nullable).
 - Fluxo: a Administração registra a necessidade; quando o RH decide abrir recrutamento a partir
   dela, cria uma `Vaga` (fluxo/tela do próprio RH, sem alterar o contrato de `Vaga`) e a referência
-  é gravada em `vagaAssociada` — um link informativo, não um gatilho automático. Não há escrita
-  automática cross-domain.
+  é gravada em `vagaAssociada` via `PATCH .../{uuid}/vincular-vaga` — um link informativo, não um
+  gatilho automático (recusa vincular uma necessidade que já tem vaga associada, 409). Não há
+  escrita automática cross-domain.
 - `NecessidadeDePessoal` não substitui nem se confunde com `Vaga`: a primeira é o "pedido
   operacional da unidade" (mais granular — por setor, com jornada/competências/justificativa que
   `Vaga` não tem e não precisa ganhar); a segunda é o "processo seletivo aberto pelo RH".
