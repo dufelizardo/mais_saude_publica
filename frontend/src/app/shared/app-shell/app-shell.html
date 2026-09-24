@@ -104,6 +104,11 @@
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span class="nav-item__label">Processos administrativos</span>
         </a>
+
+        <a routerLink="/administrativo/responsabilidades" routerLinkActive #rlaResponsabilidades="routerLinkActive" [attr.aria-current]="rlaResponsabilidades.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 6v6c0 5 3.8 9 9 10 5.2-1 9-5 9-10V6l-9-4z"></path></svg>
+          <span class="nav-item__label">Responsabilidades administrativas</span>
+        </a>
       </div>
     </nav>
   </aside>

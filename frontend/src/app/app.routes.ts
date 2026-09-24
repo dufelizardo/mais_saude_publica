@@ -20,6 +20,7 @@ import { CapacidadesAdministrativas } from './features/administrativo/capacidade
 import { PerfisAdministrativos } from './features/administrativo/perfis-administrativos/perfis-administrativos';
 import { PerfisPorTipoUnidade } from './features/administrativo/perfis-por-tipo-unidade/perfis-por-tipo-unidade';
 import { ProcessosAdministrativos } from './features/administrativo/processos-administrativos/processos-administrativos';
+import { ResponsabilidadesAdministrativas } from './features/administrativo/responsabilidades-administrativas/responsabilidades-administrativas';
 import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
@@ -48,6 +49,7 @@ export const routes: Routes = [
       { path: 'administrativo/perfis', component: PerfisAdministrativos, data: { breadcrumb: 'Perfis administrativos', area: 'Administrativo' } },
       { path: 'administrativo/perfis-por-tipo-unidade', component: PerfisPorTipoUnidade, data: { breadcrumb: 'Perfil por tipo de unidade', area: 'Administrativo' } },
       { path: 'administrativo/processos', component: ProcessosAdministrativos, data: { breadcrumb: 'Processos administrativos', area: 'Administrativo' } },
+      { path: 'administrativo/responsabilidades', component: ResponsabilidadesAdministrativas, data: { breadcrumb: 'Responsabilidades administrativas', area: 'Administrativo' } },
     ],
   },
 ];
