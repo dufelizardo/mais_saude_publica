@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposta.
+Aceita e implementada (Fase 6 — [PR #191](https://github.com/dufelizardo/mais_saude_publica/pull/191)).
 
 ## Contexto
 
@@ -20,10 +20,10 @@ documento-fonte.
 
 ## Decisão
 
-- Nova entidade `ResponsabilidadeAdministrativa`: `uuid`, `profissional` (`@ManyToOne Profissional`
-  — FK direta, ver ADR-0034), alvo da responsabilidade (`setor`, `@ManyToOne Setor`, e/ou recurso
-  administrativo — campo de recurso fica nullable até que recursos existam, Etapa 6/7), `tipo`/
-  `descricao`, `dataInicio`, `dataFim` (nullable = vigente).
+- Nova entidade `ResponsabilidadeAdministrativa`: `uuid`, `profissional` (`@ManyToOne Profissional`,
+  FK direta por matrícula — ver ADR-0034), `setor` (`@ManyToOne Setor`, obrigatório — único alvo
+  possível até que recursos administrativos existam, Etapa 7), `tipo` (texto livre, ex.: "Fiscal de
+  Contrato"), `descricao` (opcional), `dataInicio`, `dataFim` (nullable = vigente).
 - Regra de vigência: como `AjusteIndividual`, permite **múltiplas** `ResponsabilidadeAdministrativa`
   vigentes simultâneas para o mesmo profissional.
 - Encerrar uma responsabilidade é sempre preencher `dataFim` — nunca deletar o registro, preservando
@@ -48,9 +48,9 @@ documento-fonte.
 **Positivas**: representa a realidade operacional descrita no documento sem alterar `Lotacao`/RH;
 reaproveita um padrão de histórico já validado (`AjusteIndividual`).
 
-**Negativas / pendências**: o alvo da responsabilidade (setor vs. recurso administrativo) fica
-modelado com FKs nullable até que o primeiro recurso administrativo seja implementado — o schema
-final pode precisar de ajuste nesse momento (Etapa 6/7 do roadmap).
+**Negativas / pendências**: o alvo da responsabilidade hoje é só `Setor` — quando o primeiro recurso
+administrativo for implementado (Etapa 7 do roadmap), o schema pode precisar de um campo adicional
+nullable para cobrir esse segundo tipo de alvo.
 
 ## Referências
 
