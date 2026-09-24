@@ -89,6 +89,16 @@
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
           <span class="nav-item__label">Capacidades administrativas</span>
         </a>
+
+        <a routerLink="/administrativo/perfis" routerLinkActive #rlaPerfis="routerLinkActive" [attr.aria-current]="rlaPerfis.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+          <span class="nav-item__label">Perfis administrativos</span>
+        </a>
+
+        <a routerLink="/administrativo/perfis-por-tipo-unidade" routerLinkActive #rlaPerfisPorTipo="routerLinkActive" [attr.aria-current]="rlaPerfisPorTipo.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span class="nav-item__label">Perfil por tipo de unidade</span>
+        </a>
       </div>
     </nav>
   </aside>

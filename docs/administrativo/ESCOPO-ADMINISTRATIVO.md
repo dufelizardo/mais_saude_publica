@@ -120,7 +120,7 @@ pras decisões de frontend específicas deste módulo).
 | F0b | Breadcrumb dinâmico (campo `area` em toda rota) + grupo de menu "Administrativo" no `AppShell` + ADR-0038 | [#194](https://github.com/dufelizardo/mais_saude_publica/pull/194) | ✅ |
 | F1 | Tela **Setores** (`administrativo/setores`) | [#195](https://github.com/dufelizardo/mais_saude_publica/pull/195) | ✅ |
 | F2 | Tela **Capacidades Administrativas** (`administrativo/capacidades`) | [#196](https://github.com/dufelizardo/mais_saude_publica/pull/196) | ✅ |
-| F3 | Telas **Perfis Administrativos** + **Perfil por Tipo de Unidade** | — | ⏳ Não iniciada |
+| F3 | Telas **Perfis Administrativos** (`administrativo/perfis`) + **Perfil por Tipo de Unidade** (`administrativo/perfis-por-tipo-unidade`) | [#197](https://github.com/dufelizardo/mais_saude_publica/pull/197) | ✅ |
 | F4 | Tela **Processos Administrativos** (`administrativo/processos`) | — | ⏳ Não iniciada |
 | F5 | Tela **Responsabilidades Administrativas** (`administrativo/responsabilidades`) | — | ⏳ Não iniciada |
 | F6 | Tela **Necessidades de Pessoal** (`administrativo/necessidades-de-pessoal`) | — | ⏳ Não iniciada |
