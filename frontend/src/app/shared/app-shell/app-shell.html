@@ -79,6 +79,11 @@
 
       <div class="nav-group">
         <div class="nav-group__label">Administrativo</div>
+
+        <a routerLink="/administrativo/setores" routerLinkActive #rlaSetores="routerLinkActive" [attr.aria-current]="rlaSetores.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span class="nav-item__label">Setores</span>
+        </a>
       </div>
     </nav>
   </aside>
