@@ -17,6 +17,8 @@ import { TiposBeneficio } from './features/rh/tipos-beneficio/tipos-beneficio';
 import { TipoBeneficioValores } from './features/rh/tipo-beneficio-valores/tipo-beneficio-valores';
 import { Setores } from './features/administrativo/setores/setores';
 import { CapacidadesAdministrativas } from './features/administrativo/capacidades-administrativas/capacidades-administrativas';
+import { PerfisAdministrativos } from './features/administrativo/perfis-administrativos/perfis-administrativos';
+import { PerfisPorTipoUnidade } from './features/administrativo/perfis-por-tipo-unidade/perfis-por-tipo-unidade';
 import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
@@ -42,6 +44,8 @@ export const routes: Routes = [
       { path: 'rh/tipos-beneficio/:tipoId/valores', component: TipoBeneficioValores, data: { breadcrumb: 'Valores do benefício', area: 'Recursos Humanos' } },
       { path: 'administrativo/setores', component: Setores, data: { breadcrumb: 'Setores', area: 'Administrativo' } },
       { path: 'administrativo/capacidades', component: CapacidadesAdministrativas, data: { breadcrumb: 'Capacidades administrativas', area: 'Administrativo' } },
+      { path: 'administrativo/perfis', component: PerfisAdministrativos, data: { breadcrumb: 'Perfis administrativos', area: 'Administrativo' } },
+      { path: 'administrativo/perfis-por-tipo-unidade', component: PerfisPorTipoUnidade, data: { breadcrumb: 'Perfil por tipo de unidade', area: 'Administrativo' } },
     ],
   },
 ];
