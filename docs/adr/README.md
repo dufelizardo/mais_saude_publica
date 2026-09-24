@@ -53,6 +53,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0035](./0035-responsabilidade-administrativa-separada-da-lotacao.md) | Responsabilidade administrativa separada da lotação | Aceita |
 | [0036](./0036-necessidade-de-pessoal-encaminhada-ao-rh.md) | Necessidade de pessoal encaminhada ao RH | Aceita |
 | [0037](./0037-criterio-para-especializacao-administrativa.md) | Critério para especialização administrativa | Proposta |
+| [0038](./0038-app-shell-dinamico-e-telas-de-frontend-do-setor-administrativo.md) | App shell dinâmico e decisões de frontend do Setor Administrativo | Aceita |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. Prioridade de implementação combinada: 0003 (arquitetura), 0006 (segurança) e 0007 (deploy) antes de novos domínios de negócio; 0008 (front-end) é a de menor prioridade.
 

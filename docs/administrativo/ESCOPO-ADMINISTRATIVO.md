@@ -108,7 +108,24 @@ Preenchida com PRs conforme cada fase é construída (mesmo formato da tabela em
 | 6 | `ResponsabilidadeAdministrativa` (histórico com múltiplas vigentes simultâneas, `PATCH .../encerrar`, ver [ADR-0035](../adr/0035-responsabilidade-administrativa-separada-da-lotacao.md)) e `NecessidadeDePessoal` (CRUD full-replace + `PATCH .../vincular-vaga` informativo a `Vaga` do RH, ver [ADR-0036](../adr/0036-necessidade-de-pessoal-encaminhada-ao-rh.md)), testes JUnit + Robot | [#191](https://github.com/dufelizardo/mais_saude_publica/pull/191) | ✅ |
 | 7+ | Recursos administrativos e especializações assistenciais, só quando houver requisito real (ver [ADR-0037](../adr/0037-criterio-para-especializacao-administrativa.md)) | — | ⏳ Não iniciada |
 
-## 6. Referências
+## 6. Estado do frontend
+
+Backend completo (seção acima); frontend construído fase a fase, seguindo o mesmo padrão do módulo
+de RH (ver [ADR-0038](../adr/0038-app-shell-dinamico-e-telas-de-frontend-do-setor-administrativo.md)
+pras decisões de frontend específicas deste módulo).
+
+| Fase | Escopo | PR(s) | Status |
+|---|---|---|---|
+| F0a | Backend: `GET /api/v1/profissional/matricula/{matricula}` — pré-requisito pras telas de Setor e Responsabilidades Administrativas resolverem nome a partir da matrícula (ver ADR-0038) | [#193](https://github.com/dufelizardo/mais_saude_publica/pull/193) | ✅ |
+| F0b | Breadcrumb dinâmico (campo `area` em toda rota) + grupo de menu "Administrativo" no `AppShell` + ADR-0038 | [#194](https://github.com/dufelizardo/mais_saude_publica/pull/194) | ✅ |
+| F1 | Tela **Setores** (`administrativo/setores`) | — | ⏳ Não iniciada |
+| F2 | Tela **Capacidades Administrativas** (`administrativo/capacidades`) | — | ⏳ Não iniciada |
+| F3 | Telas **Perfis Administrativos** + **Perfil por Tipo de Unidade** | — | ⏳ Não iniciada |
+| F4 | Tela **Processos Administrativos** (`administrativo/processos`) | — | ⏳ Não iniciada |
+| F5 | Tela **Responsabilidades Administrativas** (`administrativo/responsabilidades`) | — | ⏳ Não iniciada |
+| F6 | Tela **Necessidades de Pessoal** (`administrativo/necessidades-de-pessoal`) | — | ⏳ Não iniciada |
+
+## 7. Referências
 
 - [MODELO-RH.md](../rh/MODELO-RH.md) e [ESCOPO-RH.md](../rh/ESCOPO-RH.md) — precedente direto de
   como este documento e os ADRs 0030-0037 foram estruturados.

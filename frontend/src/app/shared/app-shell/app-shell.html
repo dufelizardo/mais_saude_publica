@@ -76,6 +76,10 @@
           <span class="nav-item__label">Tipos de benefício</span>
         </a>
       </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Administrativo</div>
+      </div>
     </nav>
   </aside>
 
@@ -85,8 +89,10 @@
     </button>
     <nav class="crumbs" aria-label="Trilha">
       <a routerLink="/" style="color: var(--ink-500);">Início</a>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
-      <span style="color: var(--ink-500);">Recursos Humanos</span>
+      @if (area()) {
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <span style="color: var(--ink-500);">{{ area() }}</span>
+      }
       @if (breadcrumb()) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
         <strong>{{ breadcrumb() }}</strong>
