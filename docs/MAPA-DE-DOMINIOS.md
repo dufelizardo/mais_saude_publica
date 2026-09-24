@@ -57,7 +57,8 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
                   ├── Identidade / Segurança
                   ├── Auditoria
                   ├── Integrações
-                  └── Indicadores / BI
+                  ├── Indicadores / BI
+                  └── Documentos
 ```
 
 Os **20 domínios** do usuário estão todos numerados abaixo (nenhum foi descartado), organizados
@@ -106,6 +107,7 @@ dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 | 18 (parte) | **Auditoria** | Rastreabilidade: quem alterou o quê, quando — fundamental para sistema público e LGPD. | `EventoDeAuditoria` | ⏳ Não iniciado — proposta original em `adr/DER.md` (entidade `AUDITORIA`), mantida como referência |
 | 20 (parte) | **Integrações** | Adapters para sistemas externos (SUS, CNES, DATASUS, e-SUS, SIGTAP). | *(camada de integração, não entidade de domínio)* | ⏳ Não iniciado — arquitetura de adapters antes de implementar qualquer integração específica |
 | 19 | **Indicadores, BI e Gestão** | Transforma fatos operacionais (já registrados pelos domínios acima) em informação de gestão — nunca o inverso. | `Indicador`, `Dashboard` (camada de leitura, não fonte de dado) | ⏳ Não iniciado — depende dos domínios operacionais existirem primeiro para ter dado confiável para agregar |
+| — | **Documentos** | Anexos/documentos formais (contrato, prontuário, processo, compra) — reaproveitável por qualquer domínio, em vez de cada um ter seu próprio conceito de anexo. Citado na visão original do usuário, sem número na lista final de 20 — mantido aqui para não se perder. | `Documento`, `Versao`, `Tipo`, `Aprovacao`, `Assinatura` | ⏳ Não iniciado |
 
 ## 4. Ondas de implementação
 
@@ -151,7 +153,9 @@ Administrativo).
   mapa (segurança adiada, Clean Architecture não adotada, `Pessoa` compartilhada rejeitada,
   Prontuário como agregação).
 - [`adr/DER.md`](./adr/DER.md) — modelo de dados revisado para a próxima onda (Paciente,
-  Atendimento, Agendamento, Consulta, Procedimento).
+  Atendimento, Agendamento, Consulta, Procedimento), e um apêndice com esboço de campos/fluxos
+  para todos os demais domínios listados na seção 3 — nenhuma informação do material original do
+  usuário foi descartada, mesmo a que ainda não tem onda de implementação definida.
 - [`adr/DER-atual.md`](./adr/DER-atual.md) — schema real implementado hoje (hierarquia
   `UnidadeDeSaude`).
 - [`rh/ESCOPO-RH.md`](./rh/ESCOPO-RH.md) e [`rh/MODELO-RH.md`](./rh/MODELO-RH.md) — módulo RH

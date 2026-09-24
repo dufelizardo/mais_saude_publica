@@ -72,9 +72,19 @@ mesma disciplina já usada em RH/Administrativo.
    RH, que também foi implementado como agregação de leitura, não uma entidade própria.
 7. **Nem todos os 20 domínios são desenhados agora.** Só a próxima onda (Paciente, Atendimento,
    Agendamento, Prontuário) ganhou um modelo revisado no `DER.md`. Os demais 15+ ficam com
-   responsabilidade e entidades candidatas em uma frase no mapa, a desenhar quando sua própria onda
-   chegar — mesma disciplina do "Fase 7+" do Administrativo ("só quando houver requisito real",
-   ADR-0037).
+   responsabilidade e entidades candidatas em uma frase no mapa, a desenhar de verdade quando sua
+   própria onda chegar — mesma disciplina do "Fase 7+" do Administrativo ("só quando houver
+   requisito real", ADR-0037).
+8. **Domínio ainda não desenhado ganha esboço no DER.md, nunca uma ADR própria.** Para não perder o
+   material detalhado (campos, fluxos, relações) que o usuário já trouxe para os 15+ domínios da
+   onda seguinte, cada um recebeu um esboço no apêndice de `DER.md` — mas nenhum ganhou ADR. Uma
+   ADR registra uma decisão com trade-off real; um domínio ainda não desenhado não tem decisão
+   nenhuma tomada além de "isso existirá algum dia", e forçar uma ADR aí produziria um documento
+   oco. Um DER é descritivo por natureza (a própria proposta original deste arquivo já era um
+   "modelo futuro/proposto", nunca uma decisão), então é o lugar certo para o esboço. Cada domínio
+   ganha sua própria ADR quando sua onda chegar e houver uma decisão de verdade a registrar — mesmo
+   padrão que a ADR-0037 já segue para "Patrimônio"/"Compras"/"Gestão de Leitos" no Administrativo
+   (rótulo no catálogo, sem ADR própria, até que a especialização seja de fato decidida).
 
 ## Trade-offs considerados
 

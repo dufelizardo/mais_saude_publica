@@ -660,3 +660,220 @@ Decisão explícita (ADR-0039): `Prontuário` é uma **visão agregada de leitur
 funcional consolidado" do RH (ADR-0026), que também é um endpoint de agregação, não uma entidade
 nova. Reavaliar apenas se um requisito concreto (ex.: documentos clínicos anexados) exigir uma
 tabela própria — não antecipar agora.
+
+Candidatos citados pelo usuário que **ainda não têm um lar claro** em `Atendimento`/`Consulta`/
+`Procedimento` — registrados aqui para não perder, a posicionar quando a agregação for de fato
+implementada: **Evolução** (registro de acompanhamento entre consultas, hoje só existe como
+conceito para o RH — `HistoricoFuncional`, ADR-0026 — e precisaria de um equivalente clínico),
+**Alergia** (lista por paciente, referenciada por `Consulta` mas não modelada), **Documento
+clínico** (anexos — depende de o domínio transversal "Documentos", ver apêndice, existir primeiro).
+
+---
+
+## 📎 Apêndice — Esboços dos demais domínios
+
+> **Não implementado, não decidido — apenas registro do material trazido pelo usuário**, para que
+> nenhuma informação se perca (ver `MAPA-DE-DOMINIOS.md` §3 para a visão de responsabilidade em
+> uma frase de cada um). Estes esboços não passaram pela mesma reconciliação contra o código real
+> que a seção anterior passou — são candidatos a entidades/campos/fluxos, sujeitos a mudar por
+> completo quando a onda de cada domínio de fato chegar e merecer sua própria conversa (mesma
+> disciplina de "incrementos pequenos e discutidos" de RH/Administrativo). Nenhum destes vira ADR
+> agora — só quando houver uma decisão real com trade-off para registrar (ver ADR-0039).
+
+### Enfermagem (#8)
+
+Processos de enfermagem, com peso maior em UPA/Hospital que em UBS.
+
+- `Triagem` — pressão, temperatura, saturação, frequência cardíaca, peso.
+- `ClassificacaoDeRisco` — resultado da triagem.
+- `EvolucaoDeEnfermagem`, `AdministracaoDeMedicamento`, `Cuidado`, `Escala`.
+
+```text
+Paciente → Triagem (sinais vitais) → Classificação de risco → Atendimento médico/enfermagem
+```
+
+### Farmácia (#9)
+
+Medicamentos e dispensação — regras próprias, deliberadamente **separado de Estoque** (#13):
+medicamento tem lote/validade/controle de dispensação que material de almoxarifado não tem.
+
+- `Medicamento`, `Lote` (validade, quantidade), `Dispensacao`, `MovimentacaoFarmacia`,
+  `TransferenciaEntreUnidades`, `Perda`, `InventarioFarmacia`.
+
+```text
+Prescrição → Farmácia → Dispensação → Paciente
+```
+
+### Laboratório e Diagnóstico (#10)
+
+- `SolicitacaoExame`, `Coleta`, `Amostra`, `ProcessamentoLaboratorial`, `Resultado`, `Laudo`,
+  `EquipamentoLaboratorio`, `MaterialLaboratorio`, `ControleDeQualidade`.
+
+```text
+Atendimento → Solicitação de exame → Agendamento/Coleta → Amostra
+  → Laboratório → Resultado → Laudo → Prontuário (agregação)
+```
+
+### Regulação (#11)
+
+Conecta a rede inteira, não uma unidade só — coordena acesso a serviço que não está disponível na
+unidade de origem.
+
+- `SolicitacaoRegulacao`, `Fila`, `Prioridade`, `Vaga`, `Encaminhamento`, `Contrarreferencia`.
+
+```text
+UBS → Solicitação (ex.: cardiologia) → Regulação → Fila
+  → Vaga disponível → Hospital/Especialista
+
+UPA → Solicitação de internação → Regulação → Hospital
+```
+
+### Gestão de Leitos e Internação (#12)
+
+Relevante principalmente para Hospital/UPA. Rótulo `GESTAO_DE_LEITOS` já reservado no catálogo
+administrativo (ADR-0032/0037).
+
+- `Leito`, `Quarto`/`Enfermaria`, `Internacao`, `Ocupacao`, `Bloqueio`, `Transferencia`.
+
+```text
+Paciente → Regulação → Internação → Leito → Transferência → Alta
+
+Hospital
+ ├── UTI (Leito 01, 02, 03)
+ ├── Clínica Médica (Leito 10, 11)
+ └── Pediatria (Leito 20, 21)
+```
+
+Integra com Administrativo: `Leito → Patrimônio → Manutenção`.
+
+### Estoque e Almoxarifado (#13)
+
+Materiais e insumos gerais — **diferente de Farmácia** (#9): luvas, máscaras, seringas, papel,
+material de limpeza, material administrativo, EPI (não confundir com o `Epi` do RH, que é o EPI
+*entregue a um profissional*, já implementado — este é o estoque de EPI antes da entrega).
+
+- `Produto`, `Lote`, `Estoque`, `MovimentacaoEstoque`, `Inventario`, `Almoxarifado`.
+
+```text
+Entrada → Estoque → Movimentação → Consumo → Reposição
+
+Almoxarifado Central
+ ├── UBS A
+ ├── UBS B
+ ├── UPA A
+ └── Hospital A
+```
+
+### Compras, Contratos e Fornecedores (#14)
+
+- `Fornecedor`, `SolicitacaoCompra`, `Cotacao`, `Contrato`, `ItemContratado`, `Entrega`,
+  `FiscalizacaoContratual`.
+
+```text
+Unidade → Necessidade → Solicitação → Compra → Fornecedor → Entrega → Estoque
+
+Administrativo → Necessidade → Compras → Fornecedor → Contrato → Financeiro
+```
+
+### Patrimônio e Manutenção (#15)
+
+Bens físicos: computadores, macas, respiradores, geladeiras, veículos, equipamentos médicos,
+mobiliário.
+
+- `Equipamento` (patrimônio, unidade, setor, fabricante, modelo, status, manutenção),
+  `Manutencao` (preventiva/corretiva, histórico).
+
+### Transporte Sanitário (#16)
+
+- `Veiculo`, `Ambulancia`, `Motorista`, `SolicitacaoTransporte`, `Rota`, `AgendamentoTransporte`,
+  `Transferencia`, `ManutencaoVeiculo`.
+
+```text
+UPA → Solicitação de transferência → Regulação → Ambulância → Hospital
+```
+
+Integrações: RH → motorista; Patrimônio → veículo; Paciente → passageiro; Atendimento → motivo;
+Regulação → necessidade.
+
+### Financeiro (#17)
+
+- `Orcamento`, `Empenho`, `Despesa`, `Receita`, `Pagamento`, `CentroDeCusto`,
+  `PrestacaoDeContas`.
+
+```text
+Unidade → Centro de custo → Despesa → Categoria → Valor
+```
+
+Decisão a tomar quando esta onda chegar (não decidida agora): sistema financeiro completo vs. só
+registro/acompanhamento integrado a um ERP/sistema de governo externo — tendência inicial pela
+segunda opção, dado o custo/risco de reimplementar regras financeiras públicas do zero.
+
+### Qualidade (#18, parte)
+
+- `Indicador` (meta, valor, período, unidade), `NaoConformidade`, `Incidente`, `PlanoDeAcao`,
+  `Evidencia`, `Melhoria`.
+
+```text
+Não conformidade → Análise → Plano de ação → Execução → Verificação → Encerramento
+```
+
+### Auditoria (#18, parte)
+
+Já esboçada como entidade `AUDITORIA` na proposta original (seção 15 acima) — mantida como
+referência, com o entendimento de que roda **transversalmente** a todos os domínios, não só ao
+clínico: `EventoDeAuditoria` (ação, entidade, entidade_id, dados_anteriores, dados_novos, ip,
+usuário, data/hora). Perguntas que deve responder: quem alterou a lotação, quem dispensou o
+medicamento, quem alterou o resultado do exame, quem aprovou a compra, quem autorizou a
+transferência.
+
+### Indicadores, BI e Gestão (#19)
+
+**Regra explícita (mantida da ADR-0039): não é fonte de dado, só consumidor** — os indicadores
+abaixo só existem quando os domínios operacionais que os alimentam já existirem.
+
+Exemplos citados: tempo médio de espera, taxa de ocupação, número de atendimentos, absenteísmo,
+produção por unidade, consumo de medicamentos, taxa de retorno, tempo de internação, produção
+médica.
+
+### Identidade e Acesso (#20, parte)
+
+- `Usuario`, `Perfil`, `Papel`, `Permissao`, com escopo por `Unidade`/`Setor` — controle de acesso
+  **por contexto organizacional**, não só por papel global:
+
+```text
+Usuário
+ ├── Unidade A → Administração
+ └── Unidade B → Enfermagem
+```
+
+Adiado por decisão explícita (ADR-0039/ADR-0006) — revisitar antes de produção com dado real de
+paciente.
+
+### Integrações Externas (#20, parte)
+
+- SUS, CNES, DATASUS, e-SUS, SIGTAP, sistemas municipais, laboratórios/farmácias externos,
+  sistemas financeiros, sistemas de regulação externos.
+
+```text
+Mais Saúde → Integration Layer → adapters (CNES, SUS, DATASUS, ...)
+```
+
+Não implementar nenhuma integração específica antes de ter uma arquitetura de adapters — evita
+acoplar o domínio a um formato de API externo específico.
+
+### Documentos
+
+**Domínio transversal citado na visão original do usuário, sem número na lista final de 20 — mas
+registrado aqui para não se perder** (ver `MAPA-DE-DOMINIOS.md` §3, Transversal). Qualquer domínio
+poderia reaproveitá-lo em vez de ter seu próprio conceito de anexo.
+
+- `Documento`, `Versao`, `Tipo`, `Classificacao`, `Autor`, `Aprovacao`, `Assinatura`, `Historico`.
+
+```text
+Contrato → Documento
+Paciente → Documento
+Processo → Documento
+Auditoria → Documento
+Compra → Documento
+Unidade → Documento
+```
