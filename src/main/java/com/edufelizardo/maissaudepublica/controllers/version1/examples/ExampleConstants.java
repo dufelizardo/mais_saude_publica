@@ -823,4 +823,38 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String RESPONSABILIDADE_ADMINISTRATIVA_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "setorUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "setorNome": "Administração",
+                    "tipo": "Fiscal de Contrato",
+                    "descricao": null,
+                    "dataInicio": "2026-01-01",
+                    "dataFim": null
+                  }
+                ]
+            """;
+    public static final String NECESSIDADE_DE_PESSOAL_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeNome": "UBS Central",
+                    "setorUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "setorNome": "Administração",
+                    "cargoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "cargoNome": "Enfermeiro",
+                    "quantidade": 2,
+                    "jornadaSemanalHoras": 40,
+                    "competenciasNecessarias": "Experiência em atenção primária",
+                    "justificativa": "Reposição de quadro",
+                    "dataRegistro": "2026-01-01",
+                    "vagaAssociadaUuid": null
+                  }
+                ]
+            """;
 }
