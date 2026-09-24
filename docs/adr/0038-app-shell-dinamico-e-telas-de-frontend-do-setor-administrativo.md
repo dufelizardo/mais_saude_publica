@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceita e implementada (F0b — [PR pendente]).
+Aceita e implementada (F0b — [PR #194](https://github.com/dufelizardo/mais_saude_publica/pull/194)).
 
 ## Contexto
 

@@ -117,7 +117,7 @@ pras decisões de frontend específicas deste módulo).
 | Fase | Escopo | PR(s) | Status |
 |---|---|---|---|
 | F0a | Backend: `GET /api/v1/profissional/matricula/{matricula}` — pré-requisito pras telas de Setor e Responsabilidades Administrativas resolverem nome a partir da matrícula (ver ADR-0038) | [#193](https://github.com/dufelizardo/mais_saude_publica/pull/193) | ✅ |
-| F0b | Breadcrumb dinâmico (campo `area` em toda rota) + grupo de menu "Administrativo" no `AppShell` + ADR-0038 | — | ⏳ Em andamento |
+| F0b | Breadcrumb dinâmico (campo `area` em toda rota) + grupo de menu "Administrativo" no `AppShell` + ADR-0038 | [#194](https://github.com/dufelizardo/mais_saude_publica/pull/194) | ✅ |
 | F1 | Tela **Setores** (`administrativo/setores`) | — | ⏳ Não iniciada |
 | F2 | Tela **Capacidades Administrativas** (`administrativo/capacidades`) | — | ⏳ Não iniciada |
 | F3 | Telas **Perfis Administrativos** + **Perfil por Tipo de Unidade** | — | ⏳ Não iniciada |
