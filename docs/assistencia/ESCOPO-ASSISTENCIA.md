@@ -66,8 +66,8 @@ pras decisões de frontend específicas deste módulo).
 | F2 | Tela **Atendimentos** (`assistencia/atendimentos`) | [#216](https://github.com/dufelizardo/mais_saude_publica/pull/216) | ✅ |
 | F3 | Tela **Agendamentos** (`assistencia/agendamentos`) | [#217](https://github.com/dufelizardo/mais_saude_publica/pull/217) | ✅ |
 | F4 | Tela **Consultas** (`assistencia/consultas`) | [#218](https://github.com/dufelizardo/mais_saude_publica/pull/218) | ✅ |
-| F5 | Tela **Procedimentos** (`assistencia/procedimentos`) | [#219](https://github.com/dufelizardo/mais_saude_publica/pull/219) | ⏳ Em andamento |
-| F6 | Tela **Prontuário** (`assistencia/prontuario`, somente leitura) | — | ⏳ Não iniciada |
+| F5 | Tela **Procedimentos** (`assistencia/procedimentos`) | [#219](https://github.com/dufelizardo/mais_saude_publica/pull/219) | ✅ |
+| F6 | Tela **Prontuário** (`assistencia/prontuario`, somente leitura) | — | ⏳ Em andamento |
 
 ## 7. Referências
 
