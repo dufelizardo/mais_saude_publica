@@ -24,6 +24,7 @@ import { ResponsabilidadesAdministrativas } from './features/administrativo/resp
 import { NecessidadesDePessoal } from './features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal';
 import { Pacientes } from './features/assistencia/pacientes/pacientes';
 import { Atendimentos } from './features/assistencia/atendimentos/atendimentos';
+import { Agendamentos } from './features/assistencia/agendamentos/agendamentos';
 import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
@@ -56,6 +57,7 @@ export const routes: Routes = [
       { path: 'administrativo/necessidades-de-pessoal', component: NecessidadesDePessoal, data: { breadcrumb: 'Necessidades de pessoal', area: 'Administrativo' } },
       { path: 'assistencia/pacientes', component: Pacientes, data: { breadcrumb: 'Pacientes', area: 'Assistência' } },
       { path: 'assistencia/atendimentos', component: Atendimentos, data: { breadcrumb: 'Atendimentos', area: 'Assistência' } },
+      { path: 'assistencia/agendamentos', component: Agendamentos, data: { breadcrumb: 'Agendamentos', area: 'Assistência' } },
     ],
   },
 ];
