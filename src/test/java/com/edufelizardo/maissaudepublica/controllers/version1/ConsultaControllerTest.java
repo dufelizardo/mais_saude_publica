@@ -1,6 +1,5 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
-import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.Consulta;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
@@ -235,7 +234,15 @@ class ConsultaControllerTest {
         return pacienteRepository.findByCpf(cpf).stream().findFirst().orElseThrow().getUuid();
     }
 
-    private UUID criarAtendimentoEBuscarUuid(String sufixo) throws Exception {
+    /**
+     * Retorna o uuid do Atendimento junto com a matrícula do Profissional vinculado — evitar
+     * reabrir a entidade e navegar {@code atendimento.getProfissional()} fora de uma transação
+     * (LAZY, lançaria LazyInitializationException).
+     */
+    private record AtendimentoSeed(UUID atendimentoId, String profissionalMatricula) {
+    }
+
+    private AtendimentoSeed criarAtendimentoEBuscarUuid(String sufixo) throws Exception {
         UUID unidadeId = criarUnidadeSaudeUbs(sufixo);
         String matricula = criarProfissionalEBuscarMatricula(PREFIXO_CPF_TESTE + sufixo, "Profissional " + sufixo);
         UUID pacienteId = criarPacienteEBuscarUuid(PREFIXO_CPF_TESTE + sufixo, "Paciente " + sufixo);
@@ -254,11 +261,13 @@ class ConsultaControllerTest {
                                 """.formatted(pacienteId, matricula, unidadeId)))
                 .andExpect(status().isCreated());
 
-        return atendimentoRepository.findAll().stream()
+        UUID atendimentoId = atendimentoRepository.findAll().stream()
                 .filter(a -> a.getPaciente().getUuid().equals(pacienteId))
                 .findFirst()
                 .orElseThrow()
                 .getUuid();
+
+        return new AtendimentoSeed(atendimentoId, matricula);
     }
 
     private String corpoConsulta(UUID atendimentoId, String profissionalMatricula, String tipoConsulta) {
@@ -279,13 +288,11 @@ class ConsultaControllerTest {
 
     @Test
     void deveCriarComSucesso() throws Exception {
-        UUID atendimentoId = criarAtendimentoEBuscarUuid("01");
-        Atendimento atendimento = atendimentoRepository.findById(atendimentoId).orElseThrow();
-        String matricula = atendimento.getProfissional().getMatricula();
+        AtendimentoSeed seed = criarAtendimentoEBuscarUuid("01");
 
         mockMvc.perform(post(CONSULTA_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoConsulta(atendimentoId, matricula, "PRIMEIRA")))
+                        .content(corpoConsulta(seed.atendimentoId(), seed.profissionalMatricula(), "PRIMEIRA")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Consulta criada com sucesso!"));
     }
@@ -311,27 +318,25 @@ class ConsultaControllerTest {
 
     @Test
     void deveRetornarNotFoundQuandoProfissionalNaoExiste() throws Exception {
-        UUID atendimentoId = criarAtendimentoEBuscarUuid("03");
+        AtendimentoSeed seed = criarAtendimentoEBuscarUuid("03");
 
         mockMvc.perform(post(CONSULTA_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoConsulta(atendimentoId, "00000000000000-00", "PRIMEIRA")))
+                        .content(corpoConsulta(seed.atendimentoId(), "00000000000000-00", "PRIMEIRA")))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void deveBuscarPorId() throws Exception {
-        UUID atendimentoId = criarAtendimentoEBuscarUuid("04");
-        Atendimento atendimento = atendimentoRepository.findById(atendimentoId).orElseThrow();
-        String matricula = atendimento.getProfissional().getMatricula();
+        AtendimentoSeed seed = criarAtendimentoEBuscarUuid("04");
 
         mockMvc.perform(post(CONSULTA_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoConsulta(atendimentoId, matricula, "RETORNO")))
+                        .content(corpoConsulta(seed.atendimentoId(), seed.profissionalMatricula(), "RETORNO")))
                 .andExpect(status().isCreated());
 
         UUID uuid = consultaRepository.findAll().stream()
-                .filter(c -> c.getAtendimento().getUuid().equals(atendimentoId))
+                .filter(c -> c.getAtendimento().getUuid().equals(seed.atendimentoId()))
                 .findFirst()
                 .orElseThrow()
                 .getUuid();
@@ -350,17 +355,15 @@ class ConsultaControllerTest {
 
     @Test
     void deveAtualizarDiagnostico() throws Exception {
-        UUID atendimentoId = criarAtendimentoEBuscarUuid("05");
-        Atendimento atendimento = atendimentoRepository.findById(atendimentoId).orElseThrow();
-        String matricula = atendimento.getProfissional().getMatricula();
+        AtendimentoSeed seed = criarAtendimentoEBuscarUuid("05");
 
         mockMvc.perform(post(CONSULTA_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoConsulta(atendimentoId, matricula, "PRIMEIRA")))
+                        .content(corpoConsulta(seed.atendimentoId(), seed.profissionalMatricula(), "PRIMEIRA")))
                 .andExpect(status().isCreated());
 
         UUID uuid = consultaRepository.findAll().stream()
-                .filter(c -> c.getAtendimento().getUuid().equals(atendimentoId))
+                .filter(c -> c.getAtendimento().getUuid().equals(seed.atendimentoId()))
                 .findFirst()
                 .orElseThrow()
                 .getUuid();
@@ -374,7 +377,7 @@ class ConsultaControllerTest {
                   "diagnostico": "Enxaqueca",
                   "retorno": "2026-02-15"
                 }
-                """.formatted(atendimentoId, matricula);
+                """.formatted(seed.atendimentoId(), seed.profissionalMatricula());
 
         mockMvc.perform(patch(CONSULTA_URL + uuid)
                         .contentType(MediaType.APPLICATION_JSON)
