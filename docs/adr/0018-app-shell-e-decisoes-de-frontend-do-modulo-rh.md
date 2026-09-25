@@ -127,6 +127,18 @@ mockup, em vez de reabrir o arquivo e conferir o markup exato de cada peça.
   `.page-head` (são formulários simples, sem precedente direto no mockup — mesmo valor aplicado
   por consistência).
 
+## Melhoria pós-implementação (2026-09-25)
+
+Com 3 grupos de menu (Recursos Humanos, Administrativo, Assistência) e 30+ itens ao todo, o usuário
+pediu um acordeão: clicar no rótulo de um grupo expande/recolhe a lista de páginas dele, clicar de
+novo esconde. `.nav-group__label` (antes um `<div>` estático) virou um `<button>` com
+`[attr.aria-expanded]` e um chevron SVG que gira -90° quando recolhido (`.nav-group__chevron`,
+`transition: transform`); os `<a>` de cada grupo ficam dentro de um `@if (estaExpandido(nome))` no
+`AppShell`. Estado vive num `signal<ReadonlySet<string>>` no próprio `AppShell` (todos os grupos
+começam expandidos, igual ao visual anterior) — não precisa de `localStorage`, porque o `AppShell`
+nunca é destruído entre navegações dentro da mesma sessão, então o estado sobrevive sozinho a
+trocar de página.
+
 ## Consequências
 
 **Positivas**
