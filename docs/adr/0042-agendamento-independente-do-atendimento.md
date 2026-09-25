@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceita e implementada (terceira fatia da onda Operação Assistencial).
+Aceita e implementada (terceira fatia da onda Operação Assistencial — [PR #211](https://github.com/dufelizardo/mais_saude_publica/pull/211)).
 
 ## Contexto
 
