@@ -491,6 +491,24 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String TRIAGEM_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "atendimentoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "dataHora": "2026-01-01T08:15:00",
+                    "pressaoArterial": "120/80",
+                    "temperatura": 36.5,
+                    "saturacaoOxigenio": 98.0,
+                    "frequenciaCardiaca": 80,
+                    "peso": 70.5,
+                    "classificacaoRisco": "VERDE",
+                    "observacoes": "string"
+                  }
+                ]
+            """;
     public static final String AGENDAMENTO_RESPONSE_EXAMPLE = """
                 [
                   {
