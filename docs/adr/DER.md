@@ -4,7 +4,9 @@
 **Versão:** 1.0  
 **Autor:** Equipe de Desenvolvimento  
 
-> ⚠️ **Este é um modelo de dados FUTURO/proposto**, para uma expansão de domínio clínico (Usuário, Paciente, Profissional, Atendimento, Consulta, Procedimento, Equipe, Agendamento, Notificação, Auditoria etc.) que **ainda não existe no código**. Ele não reflete o schema atual do banco. Para o schema real e implementado hoje (uma única entidade `UnidadeDeSaude` autorreferenciada + `Endereco` embutido), veja [`DER-atual.md`](./DER-atual.md). Mantido lado a lado com o modelo atual como visão de roadmap (ver também as propostas de arquitetura em `0003-adocao-clean-architecture.md` a `0008-frontend-angular.md`).
+> ⚠️ **Este é um modelo de dados FUTURO/proposto**, para uma expansão de domínio clínico (Usuário, Paciente, Profissional, Atendimento, Consulta, Procedimento, Equipe, Agendamento, Notificação, Auditoria etc.) que **ainda não existe no código**. Ele não reflete o schema atual do banco. Para o schema real e implementado hoje, veja [`DER-atual.md`](./DER-atual.md) (hierarquia `UnidadeDeSaude`) e [`MODELO-RH.md`](../rh/MODELO-RH.md) (módulo de RH). Mantido lado a lado com o modelo atual como registro histórico da proposta original.
+
+> 🔄 **Nota de reconciliação (ver [ADR-0039](./0039-mapa-de-dominios-e-prioridades-de-arquitetura.md) e [`MAPA-DE-DOMINIOS.md`](../MAPA-DE-DOMINIOS.md))**: esta proposta é de 2026-09-06, **antes** de RH e Administrativo existirem, e ficou desatualizada em pontos que agora conflitam com o que foi realmente implementado — está marcada entidade a entidade abaixo. As seções de `ATENDIMENTO`/`CONSULTA`/`PROCEDIMENTO`/`AGENDAMENTO` continuam sendo a base útil para a próxima onda (ver seção **"Modelo revisado para a próxima onda"** ao final deste documento, que substitui o DDL original). O DDL original foi removido por estar truncado e desatualizado — o schema real sempre nasce do JPA quando cada entidade é implementada (mesmo padrão de RH/Administrativo), não de um DDL escrito à mão antes do código.
 
 ---
 
@@ -184,7 +186,14 @@
 
 ## 📋 **Descrição Detalhada das Entidades**
 
-### 1. **USUARIO** (Tabela Base de Autenticação)
+### 1. **USUARIO** (Tabela Base de Autenticação) — ⚠️ SUPERSEDIDA
+
+> Nenhuma entidade `Usuario` foi criada. A ADR-0006 (JWT/autenticação) segue "Proposta", adiada
+> conscientemente mesmo para o domínio clínico (ver ADR-0039) — RH e Administrativo inteiros foram
+> construídos sem nenhuma autenticação, e a próxima onda (Paciente/Atendimento) segue o mesmo
+> padrão por decisão explícita. Esta tabela fica como registro da proposta original, não como algo
+> a implementar na próxima onda.
+
 Armazena as credenciais e perfis de acesso ao sistema.
 
 | **Campo** | **Tipo** | **Descrição** | **Restrições** |
@@ -206,7 +215,15 @@ Armazena as credenciais e perfis de acesso ao sistema.
 
 ---
 
-### 2. **PROFISSIONAL**
+### 2. **PROFISSIONAL** — ⚠️ SUPERSEDIDA
+
+> O RH implementou um `Profissional` real e muito mais rico que esta casca (matrícula automática
+> como chave única de verdade — ADR-0017 —, CPF não único, endereço embutido, 20+ entidades
+> satélite: `Cargo`, `Lotacao`, `Afastamento`, etc. — ver [`MODELO-RH.md`](../rh/MODELO-RH.md)). Não
+> existe (nem existirá) um `usuario_id` acoplando `Profissional` a autenticação. Qualquer domínio
+> novo que precise referenciar um profissional deve usar o `Profissional` real, **por matrícula**,
+> nunca recriar esta forma — mesmo princípio já usado pelo Administrativo (ADR-0034).
+
 Profissionais de saúde que atuam no sistema.
 
 | **Campo** | **Tipo** | **Descrição** | **Restrições** |
@@ -263,7 +280,14 @@ Pacientes atendidos no sistema de saúde.
 
 ---
 
-### 4. **UNIDADE_SAUDE**
+### 4. **UNIDADE_SAUDE** — ⚠️ SUPERSEDIDA
+
+> A entidade real (`UnidadeDeSaude`, ver [`DER-atual.md`](./DER-atual.md)) é uma única tabela
+> **autorreferenciada de 5 níveis** (Federal → Estadual → Municipal → Regional → Unidade de Saúde,
+> tipo `UBS`/`HOSPITAL`/... — ADR-0002/0009/0013), não este modelo plano por `cnes`. Qualquer
+> domínio novo referencia a `UnidadeDeSaude` real pelo `uuid`, nunca recria uma tabela paralela.
+> Setor Administrativo (ADR-0030) já segue essa regra.
+
 Unidades de saúde (hospitais, UBS, clínicas, etc.).
 
 | **Campo** | **Tipo** | **Descrição** | **Restrições** |
@@ -291,7 +315,13 @@ Unidades de saúde (hospitais, UBS, clínicas, etc.).
 
 ---
 
-### 5. **ENDERECO**
+### 5. **ENDERECO** — ⚠️ FORMA REVISADA
+
+> No código real, `Endereco` é um `@Embeddable` **embutido** em cada entidade que precisa dele
+> (`UnidadeDeSaude`, `Profissional`), não uma tabela própria com FK — evita join desnecessário para
+> um dado que nunca é consultado sozinho. A próxima onda (`Paciente`) segue o mesmo padrão. Ver
+> [`DER-atual.md`](./DER-atual.md).
+
 Endereços de pacientes, profissionais e unidades.
 
 | **Campo** | **Tipo** | **Descrição** | **Restrições** |
@@ -558,111 +588,292 @@ USUARIO (1) ───────────── (1) PROFISSIONAL
 
 ---
 
-## 📊 **Script SQL (DDL - PostgreSQL)**
+## 🔄 Modelo revisado para a próxima onda (Paciente → Atendimento → Prontuário)
 
-```sql
--- Criação do banco
-CREATE DATABASE mais_saude_publica;
-\c mais_saude_publica;
+> Substitui o antigo "Script SQL (DDL - PostgreSQL)" desta seção, que estava truncado no meio de
+> `CREATE TABLE consulta` e desatualizado (referenciava `usuario_id`/`unidade_saude` na forma
+> supersedida). Ver decisões completas na [ADR-0039](./0039-mapa-de-dominios-e-prioridades-de-arquitetura.md)
+> e no [`MAPA-DE-DOMINIOS.md`](../MAPA-DE-DOMINIOS.md). Nenhuma destas entidades está implementada
+> ainda — este é o desenho de referência para quando essa onda começar, seguindo a mesma disciplina
+> de "incrementos pequenos e discutidos" já usada em RH e Administrativo. O schema real (JPA/DDL)
+> só nasce quando cada entidade for de fato implementada, não antes.
 
--- Extensão para UUID
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+### Paciente
 
--- 1. TABELA USUARIO
-CREATE TABLE usuario (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    senha_hash VARCHAR(255) NOT NULL,
-    nome VARCHAR(255) NOT NULL,
-    roles VARCHAR(255) NOT NULL,
-    ativo BOOLEAN DEFAULT TRUE,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+Identidade da pessoa atendida pela rede — **sem** `usuario_id` (não há autenticação, decisão
+mantida na ADR-0039) e **sem** entidade `Pessoa` compartilhada com `Profissional` (rejeitado por
+YAGNI na ADR-0039; vínculo fraco por CPF resolve o caso raro de alguém ser as duas coisas, mesmo
+princípio da ADR-0014).
 
--- 2. TABELA ENDERECO
-CREATE TABLE endereco (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    logradouro VARCHAR(255) NOT NULL,
-    numero VARCHAR(20),
-    complemento VARCHAR(100),
-    bairro VARCHAR(100) NOT NULL,
-    cidade VARCHAR(100) NOT NULL,
-    estado VARCHAR(2) NOT NULL,
-    cep VARCHAR(10),
-    latitude DECIMAL(10,8),
-    longitude DECIMAL(11,8)
-);
+| Campo | Tipo | Observações |
+|---|---|---|
+| `uuid` | UUID (PK) | |
+| `nome` | String | |
+| `cpf` | String | não único — mesmo motivo do `Profissional` (ADR-0017): uma pessoa pode ter mais de um registro ao longo do tempo |
+| `cartaoSus` | String | identificador de referência (papel equivalente ao da matrícula do `Profissional`) |
+| `dataNascimento` | LocalDate | |
+| `sexo` | enum | |
+| `endereco` | `@Embeddable Endereco` | reaproveita o mesmo padrão embutido de `UnidadeDeSaude`/`Profissional`, não uma tabela `ENDERECO` própria |
+| `telefones` | `List<String>` | mesmo padrão de `Profissional.telefones` |
+| `email` | String | |
+| `ativo` | boolean | |
 
--- 3. TABELA UNIDADE_SAUDE
-CREATE TABLE unidade_saude (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    endereco_id UUID REFERENCES endereco(id),
-    nome VARCHAR(255) NOT NULL,
-    cnes VARCHAR(10) UNIQUE NOT NULL,
-    tipo VARCHAR(50) NOT NULL,
-    telefone VARCHAR(20),
-    email VARCHAR(255),
-    site VARCHAR(255),
-    status VARCHAR(20) DEFAULT 'ATIVO',
-    horario_abertura TIME,
-    horario_fechamento TIME,
-    capacidade INTEGER,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+### Atendimento
 
--- 4. TABELA PROFISSIONAL
-CREATE TABLE profissional (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    usuario_id UUID UNIQUE REFERENCES usuario(id),
-    unidade_id UUID REFERENCES unidade_saude(id),
-    nome_completo VARCHAR(255) NOT NULL,
-    especialidade VARCHAR(100),
-    conselho VARCHAR(20),
-    numero_conselho VARCHAR(50) UNIQUE,
-    data_contratacao DATE,
-    data_desligamento DATE,
-    ativo BOOLEAN DEFAULT TRUE,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+Registro de entrada do paciente na rede — referencia os modelos reais, não os supersedidos.
 
--- 5. TABELA PACIENTE
-CREATE TABLE paciente (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    usuario_id UUID UNIQUE REFERENCES usuario(id),
-    endereco_id UUID REFERENCES endereco(id),
-    cpf VARCHAR(14) UNIQUE NOT NULL,
-    nome_completo VARCHAR(255) NOT NULL,
-    data_nascimento DATE NOT NULL,
-    sexo VARCHAR(20),
-    cartao_sus VARCHAR(20) UNIQUE,
-    telefone VARCHAR(20),
-    email VARCHAR(255),
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+| Campo | Tipo | Observações |
+|---|---|---|
+| `uuid` | UUID (PK) | |
+| `paciente` | FK `Paciente` | por `uuid` (Paciente não tem um equivalente à matrícula ainda) |
+| `profissionalMatricula` | String | FK direta ao `Profissional` real, **por matrícula** — nunca por uuid interno (ADR-0034) |
+| `unidade` | FK `UnidadeDeSaude` | a entidade real de 5 níveis, não o `UNIDADE_SAUDE` supersedido |
+| `setor` | FK `Setor` (opcional) | reaproveita o Setor Administrativo (ADR-0030) quando fizer sentido (ex.: "Setor de Vacinação") |
+| `agendamento` | FK `Agendamento` (opcional) | referência opcional, nunca obrigatória — mesmo padrão de `NecessidadeDePessoal.vagaAssociada` (ADR-0036): um atendimento pode nascer de um agendamento ou ser espontâneo (acolhimento) |
+| `tipo` | enum | `CONSULTA`, `URGENCIA`, `INTERNACAO`, ... |
+| `status` | enum | `AGENDADO`, `EM_ANDAMENTO`, `CONCLUIDO` |
+| `dataHora` | LocalDateTime | |
 
--- 6. TABELA ATENDIMENTO
-CREATE TABLE atendimento (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    paciente_id UUID NOT NULL REFERENCES paciente(id),
-    profissional_id UUID NOT NULL REFERENCES profissional(id),
-    unidade_id UUID NOT NULL REFERENCES unidade_saude(id),
-    tipo VARCHAR(50) NOT NULL,
-    data_hora TIMESTAMP NOT NULL,
-    status VARCHAR(20) DEFAULT 'AGENDADO',
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+### Consulta
 
--- 7. TABELA CONSULTA
-CREATE TABLE consulta (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    atendimento_id UUID NOT NULL REFERENCES atendimento(id),
-    profissional_id UUID NOT NULL REFERENCES profissional(id),
-    data_hora TIMESTAMP NOT NULL,
-    tipo_consulta VARCHAR(50) NOT NULL,
-    queixa_principal TEXT,
-    diagnost
+Mantida como no desenho original (campo a campo), apenas trocando as FKs supersedidas pelas reais
+(`Atendimento` acima, `profissionalMatricula` em vez de `profissional_id`). `diagnostico`,
+`receituario` e `exames_solicitados` continuam como campos de texto — sem entidades `Diagnostico`/
+`Exame`/`Prescricao` próprias por ora (YAGNI: nenhum requisito concreto pede consulta estruturada
+desses dados ainda; revisitar quando Farmácia/Laboratório entrarem no roadmap).
+
+### Procedimento
+
+Mantido como no desenho original, apenas trocando `profissional_id` por `profissionalMatricula`.
+
+### Agendamento
+
+Mantido como no desenho original (paciente, profissional, data/hora, status, tipo), com
+`profissionalMatricula` no lugar de `profissional_id`. Existe independente de `Atendimento` — um
+agendamento pode nunca virar atendimento (não comparecimento), e um atendimento pode não ter
+agendamento (acolhimento espontâneo).
+
+### Prontuário — não é uma tabela
+
+Decisão explícita (ADR-0039): `Prontuário` é uma **visão agregada de leitura** sobre os
+`Atendimento`/`Consulta`/`Procedimento` de um `Paciente` — mesmo padrão já usado pelo "Histórico
+funcional consolidado" do RH (ADR-0026), que também é um endpoint de agregação, não uma entidade
+nova. Reavaliar apenas se um requisito concreto (ex.: documentos clínicos anexados) exigir uma
+tabela própria — não antecipar agora.
+
+Candidatos citados pelo usuário que **ainda não têm um lar claro** em `Atendimento`/`Consulta`/
+`Procedimento` — registrados aqui para não perder, a posicionar quando a agregação for de fato
+implementada: **Evolução** (registro de acompanhamento entre consultas, hoje só existe como
+conceito para o RH — `HistoricoFuncional`, ADR-0026 — e precisaria de um equivalente clínico),
+**Alergia** (lista por paciente, referenciada por `Consulta` mas não modelada), **Documento
+clínico** (anexos — depende de o domínio transversal "Documentos", ver apêndice, existir primeiro).
+
+---
+
+## 📎 Apêndice — Esboços dos demais domínios
+
+> **Não implementado, não decidido — apenas registro do material trazido pelo usuário**, para que
+> nenhuma informação se perca (ver `MAPA-DE-DOMINIOS.md` §3 para a visão de responsabilidade em
+> uma frase de cada um). Estes esboços não passaram pela mesma reconciliação contra o código real
+> que a seção anterior passou — são candidatos a entidades/campos/fluxos, sujeitos a mudar por
+> completo quando a onda de cada domínio de fato chegar e merecer sua própria conversa (mesma
+> disciplina de "incrementos pequenos e discutidos" de RH/Administrativo). Nenhum destes vira ADR
+> agora — só quando houver uma decisão real com trade-off para registrar (ver ADR-0039).
+
+### Enfermagem (#8)
+
+Processos de enfermagem, com peso maior em UPA/Hospital que em UBS.
+
+- `Triagem` — pressão, temperatura, saturação, frequência cardíaca, peso.
+- `ClassificacaoDeRisco` — resultado da triagem.
+- `EvolucaoDeEnfermagem`, `AdministracaoDeMedicamento`, `Cuidado`, `Escala`.
+
+```text
+Paciente → Triagem (sinais vitais) → Classificação de risco → Atendimento médico/enfermagem
+```
+
+### Farmácia (#9)
+
+Medicamentos e dispensação — regras próprias, deliberadamente **separado de Estoque** (#13):
+medicamento tem lote/validade/controle de dispensação que material de almoxarifado não tem.
+
+- `Medicamento`, `Lote` (validade, quantidade), `Dispensacao`, `MovimentacaoFarmacia`,
+  `TransferenciaEntreUnidades`, `Perda`, `InventarioFarmacia`.
+
+```text
+Prescrição → Farmácia → Dispensação → Paciente
+```
+
+### Laboratório e Diagnóstico (#10)
+
+- `SolicitacaoExame`, `Coleta`, `Amostra`, `ProcessamentoLaboratorial`, `Resultado`, `Laudo`,
+  `EquipamentoLaboratorio`, `MaterialLaboratorio`, `ControleDeQualidade`.
+
+```text
+Atendimento → Solicitação de exame → Agendamento/Coleta → Amostra
+  → Laboratório → Resultado → Laudo → Prontuário (agregação)
+```
+
+### Regulação (#11)
+
+Conecta a rede inteira, não uma unidade só — coordena acesso a serviço que não está disponível na
+unidade de origem.
+
+- `SolicitacaoRegulacao`, `Fila`, `Prioridade`, `Vaga`, `Encaminhamento`, `Contrarreferencia`.
+
+```text
+UBS → Solicitação (ex.: cardiologia) → Regulação → Fila
+  → Vaga disponível → Hospital/Especialista
+
+UPA → Solicitação de internação → Regulação → Hospital
+```
+
+### Gestão de Leitos e Internação (#12)
+
+Relevante principalmente para Hospital/UPA. Rótulo `GESTAO_DE_LEITOS` já reservado no catálogo
+administrativo (ADR-0032/0037).
+
+- `Leito`, `Quarto`/`Enfermaria`, `Internacao`, `Ocupacao`, `Bloqueio`, `Transferencia`.
+
+```text
+Paciente → Regulação → Internação → Leito → Transferência → Alta
+
+Hospital
+ ├── UTI (Leito 01, 02, 03)
+ ├── Clínica Médica (Leito 10, 11)
+ └── Pediatria (Leito 20, 21)
+```
+
+Integra com Administrativo: `Leito → Patrimônio → Manutenção`.
+
+### Estoque e Almoxarifado (#13)
+
+Materiais e insumos gerais — **diferente de Farmácia** (#9): luvas, máscaras, seringas, papel,
+material de limpeza, material administrativo, EPI (não confundir com o `Epi` do RH, que é o EPI
+*entregue a um profissional*, já implementado — este é o estoque de EPI antes da entrega).
+
+- `Produto`, `Lote`, `Estoque`, `MovimentacaoEstoque`, `Inventario`, `Almoxarifado`.
+
+```text
+Entrada → Estoque → Movimentação → Consumo → Reposição
+
+Almoxarifado Central
+ ├── UBS A
+ ├── UBS B
+ ├── UPA A
+ └── Hospital A
+```
+
+### Compras, Contratos e Fornecedores (#14)
+
+- `Fornecedor`, `SolicitacaoCompra`, `Cotacao`, `Contrato`, `ItemContratado`, `Entrega`,
+  `FiscalizacaoContratual`.
+
+```text
+Unidade → Necessidade → Solicitação → Compra → Fornecedor → Entrega → Estoque
+
+Administrativo → Necessidade → Compras → Fornecedor → Contrato → Financeiro
+```
+
+### Patrimônio e Manutenção (#15)
+
+Bens físicos: computadores, macas, respiradores, geladeiras, veículos, equipamentos médicos,
+mobiliário.
+
+- `Equipamento` (patrimônio, unidade, setor, fabricante, modelo, status, manutenção),
+  `Manutencao` (preventiva/corretiva, histórico).
+
+### Transporte Sanitário (#16)
+
+- `Veiculo`, `Ambulancia`, `Motorista`, `SolicitacaoTransporte`, `Rota`, `AgendamentoTransporte`,
+  `Transferencia`, `ManutencaoVeiculo`.
+
+```text
+UPA → Solicitação de transferência → Regulação → Ambulância → Hospital
+```
+
+Integrações: RH → motorista; Patrimônio → veículo; Paciente → passageiro; Atendimento → motivo;
+Regulação → necessidade.
+
+### Financeiro (#17)
+
+- `Orcamento`, `Empenho`, `Despesa`, `Receita`, `Pagamento`, `CentroDeCusto`,
+  `PrestacaoDeContas`.
+
+```text
+Unidade → Centro de custo → Despesa → Categoria → Valor
+```
+
+Decisão a tomar quando esta onda chegar (não decidida agora): sistema financeiro completo vs. só
+registro/acompanhamento integrado a um ERP/sistema de governo externo — tendência inicial pela
+segunda opção, dado o custo/risco de reimplementar regras financeiras públicas do zero.
+
+### Qualidade (#18, parte)
+
+- `Indicador` (meta, valor, período, unidade), `NaoConformidade`, `Incidente`, `PlanoDeAcao`,
+  `Evidencia`, `Melhoria`.
+
+```text
+Não conformidade → Análise → Plano de ação → Execução → Verificação → Encerramento
+```
+
+### Auditoria (#18, parte)
+
+Já esboçada como entidade `AUDITORIA` na proposta original (seção 15 acima) — mantida como
+referência, com o entendimento de que roda **transversalmente** a todos os domínios, não só ao
+clínico: `EventoDeAuditoria` (ação, entidade, entidade_id, dados_anteriores, dados_novos, ip,
+usuário, data/hora). Perguntas que deve responder: quem alterou a lotação, quem dispensou o
+medicamento, quem alterou o resultado do exame, quem aprovou a compra, quem autorizou a
+transferência.
+
+### Indicadores, BI e Gestão (#19)
+
+**Regra explícita (mantida da ADR-0039): não é fonte de dado, só consumidor** — os indicadores
+abaixo só existem quando os domínios operacionais que os alimentam já existirem.
+
+Exemplos citados: tempo médio de espera, taxa de ocupação, número de atendimentos, absenteísmo,
+produção por unidade, consumo de medicamentos, taxa de retorno, tempo de internação, produção
+médica.
+
+### Identidade e Acesso (#20, parte)
+
+- `Usuario`, `Perfil`, `Papel`, `Permissao`, com escopo por `Unidade`/`Setor` — controle de acesso
+  **por contexto organizacional**, não só por papel global:
+
+```text
+Usuário
+ ├── Unidade A → Administração
+ └── Unidade B → Enfermagem
+```
+
+Adiado por decisão explícita (ADR-0039/ADR-0006) — revisitar antes de produção com dado real de
+paciente.
+
+### Integrações Externas (#20, parte)
+
+- SUS, CNES, DATASUS, e-SUS, SIGTAP, sistemas municipais, laboratórios/farmácias externos,
+  sistemas financeiros, sistemas de regulação externos.
+
+```text
+Mais Saúde → Integration Layer → adapters (CNES, SUS, DATASUS, ...)
+```
+
+Não implementar nenhuma integração específica antes de ter uma arquitetura de adapters — evita
+acoplar o domínio a um formato de API externo específico.
+
+### Documentos
+
+**Domínio transversal citado na visão original do usuário, sem número na lista final de 20 — mas
+registrado aqui para não se perder** (ver `MAPA-DE-DOMINIOS.md` §3, Transversal). Qualquer domínio
+poderia reaproveitá-lo em vez de ter seu próprio conceito de anexo.
+
+- `Documento`, `Versao`, `Tipo`, `Classificacao`, `Autor`, `Aprovacao`, `Assinatura`, `Historico`.
+
+```text
+Contrato → Documento
+Paciente → Documento
+Processo → Documento
+Auditoria → Documento
+Compra → Documento
+Unidade → Documento
+```

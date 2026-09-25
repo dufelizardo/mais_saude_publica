@@ -4,7 +4,9 @@
 
 Proposto — roadmap futuro, **não implementado**. Não confundir com a arquitetura atual do código (controller/service/repository/DTO em camadas, descrita na ADR 0001 e ADR 0002).
 
-> ⚠️ **Nota de reconciliação**: este ADR foi originalmente escrito em `docs/adr/ADR.md` referenciando um pacote fictício `com.maisaude` e um "ADR-001 (Stack Tecnológico)" que não existe no repositório — o ADR 0001 real trata de outro assunto (restaurar/refatorar o código apagado). O pacote real do projeto é `com.edufelizardo.maissaudepublica`. Nada da estrutura abaixo foi criada ainda. Prioridade de implementação (decidida com o usuário): esta proposta de arquitetura, junto com segurança (0006) e deploy (0007), vem **antes** de novos domínios de negócio (paciente/profissional/atendimento etc., ver `DER.md`).
+> ⚠️ **Nota de reconciliação**: este ADR foi originalmente escrito em `docs/adr/ADR.md` referenciando um pacote fictício `com.maisaude` e um "ADR-001 (Stack Tecnológico)" que não existe no repositório — o ADR 0001 real trata de outro assunto (restaurar/refatorar o código apagado). O pacote real do projeto é `com.edufelizardo.maissaudepublica`. Nada da estrutura abaixo foi criada ainda.
+>
+> **Atualização ([ADR-0039](./0039-mapa-de-dominios-e-prioridades-de-arquitetura.md))**: a prioridade original abaixo ("antes de novos domínios de negócio") não foi seguida na prática — RH e Administrativo (ambos novos domínios de negócio) foram construídos inteiros com a estrutura flat tradicional, sem Clean Architecture. A ADR-0039 formalizou essa realidade: a convenção flat é reafirmada, e esta proposta segue "Proposta" sem plano de adoção — revisitar apenas se um problema concreto de manutenibilidade aparecer.
 
 ## Contexto
 

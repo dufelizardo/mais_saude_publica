@@ -7,6 +7,20 @@ Complementa (não substitui) os testes JUnit/MockMvc em `../../src/test/java/` �
 in-process como parte do build Maven (`mvnw test`); estes aqui rodam de fora pra dentro, contra
 a aplicação real de pé, via HTTP.
 
+## ⚠️ Regra: todo endpoint novo precisa de teste Robot, não só JUnit
+
+**Toda vez que um controller/endpoint novo é criado no backend, a tarefa só está completa quando
+também existir cobertura aqui** (pelo menos: sucesso, 404 de referência inexistente, 400 de campo
+obrigatório em branco) — nunca como um follow-up "pra depois".
+
+Essa regra existe porque **não foi seguida no passado**: a seção "Cobertura" logo abaixo descreve
+118 casos como "suíte completa", mas isso descreve apenas a hierarquia original (Federal/Estadual/
+Municipal/Regional/Unidade de Saúde) e Profissional — **todas as fatias posteriores do módulo de
+RH (Cargo, Categoria Salarial, Lotação, Vaga, Tabela Salarial, Benefícios, Recrutamento etc.)
+ficaram sem nenhum teste Robot, só JUnit.** Não foi uma decisão de arquitetura deliberada, foi a
+suíte parando de crescer junto com o backend. "Suíte completa" descreve o escopo histórico
+coberto, não uma licença para pular Robot em domínios novos.
+
 ## Camadas (POM → FLOW → SCENARIO → TEST)
 
 Regra de dependência: **estritamente unidirecional, de cima pra baixo**. `TEST` depende de

@@ -20,6 +20,7 @@ export class AppShell {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly breadcrumb = signal('');
+  protected readonly area = signal('');
   protected readonly sidebarAberta = signal(false);
 
   constructor() {
@@ -36,6 +37,7 @@ export class AppShell {
       rota = rota.firstChild;
     }
     this.breadcrumb.set((rota.data['breadcrumb'] as string) ?? '');
+    this.area.set((rota.data['area'] as string) ?? '');
   }
 
   protected toggleSidebar(): void {

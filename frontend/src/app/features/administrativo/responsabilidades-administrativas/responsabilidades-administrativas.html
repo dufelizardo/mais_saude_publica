@@ -1,0 +1,145 @@
+<header class="page-head">
+  <div>
+    <h1>Responsabilidades administrativas</h1>
+    <p>Busque um profissional pela matrícula para ver e registrar responsabilidades administrativas.</p>
+  </div>
+</header>
+
+<div class="card">
+  <form [formGroup]="matriculaForm" (ngSubmit)="buscar()" class="form" novalidate>
+    <div class="form-group">
+      <label for="matricula">Matrícula *</label>
+      <input id="matricula" type="text" formControlName="matricula" autocomplete="off" />
+      @if (matriculaForm.controls.matricula.invalid && matriculaForm.controls.matricula.touched) {
+        <span class="form-error">Matrícula é obrigatória.</span>
+      }
+      @if (naoEncontrado()) {
+        <span class="form-error">Profissional não encontrado.</span>
+      }
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn" [disabled]="buscando()">
+        {{ buscando() ? 'Buscando…' : 'Buscar' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+@if (profissional(); as p) {
+  <div class="card" style="margin-top: var(--s-5); padding: var(--s-5);">
+    <h2 style="font-size: 1.0625rem;">{{ p.nome }}</h2>
+    <p style="color: var(--ink-500); font-size: 0.875rem;">Matrícula {{ p.matricula }} · CPF {{ p.cpf }}</p>
+  </div>
+
+  <div class="card" style="margin-top: var(--s-5); overflow-x: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th>Setor</th>
+          <th>Início</th>
+          <th>Situação</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of historico(); track item.uuid) {
+          <tr>
+            <td>
+              {{ item.tipo }}
+              @if (item.descricao) {
+                <div style="font-size: var(--fs-xs); color: var(--ink-500); margin-top: 2px;">{{ item.descricao }}</div>
+              }
+            </td>
+            <td>{{ item.setorNome }}</td>
+            <td>{{ item.dataInicio | date: 'dd/MM/yyyy' }}</td>
+            <td>
+              @if (situacao(item) === 'Vigente') {
+                <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Vigente</span>
+              } @else {
+                <span class="tag"><span class="dot" aria-hidden="true"></span> Encerrada {{ item.dataFim ? ('em ' + (item.dataFim | date: 'dd/MM/yyyy')) : '' }}</span>
+              }
+            </td>
+            <td style="text-align: right; white-space: nowrap;">
+              @if (situacao(item) === 'Vigente') {
+                <button type="button" class="btn btn--ghost" (click)="abrirEncerrar(item)">Encerrar</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (!carregandoHistorico() && historico().length === 0) {
+      <p class="table-empty">Nenhuma responsabilidade administrativa registrada.</p>
+    }
+  </div>
+
+  <div class="card" style="margin-top: var(--s-5); padding: var(--s-5);">
+    <h2 style="font-size: 1.0625rem; margin-bottom: var(--s-3);">Nova responsabilidade</h2>
+    @if (novaErrorMessage()) {
+      <div class="form-banner form-banner--error" role="alert">{{ novaErrorMessage() }}</div>
+    }
+    <form [formGroup]="novaForm" (ngSubmit)="registrarResponsabilidade()" class="form" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="setorId">Setor *</label>
+          <select id="setorId" formControlName="setorId">
+            <option value="" disabled>Selecione…</option>
+            @for (setor of setores(); track setor.uuid) {
+              <option [value]="setor.uuid">{{ setor.nome }}</option>
+            }
+          </select>
+          @if (novaForm.controls.setorId.invalid && novaForm.controls.setorId.touched) {
+            <span class="form-error">Setor é obrigatório.</span>
+          }
+        </div>
+        <div class="form-group">
+          <label for="tipo">Tipo *</label>
+          <input id="tipo" type="text" formControlName="tipo" placeholder="Ex.: Fiscal de Contrato" />
+          @if (novaForm.controls.tipo.invalid && novaForm.controls.tipo.touched) {
+            <span class="form-error">Tipo é obrigatório.</span>
+          }
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="descricao">Descrição</label>
+        <textarea id="descricao" formControlName="descricao" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="dataInicio">Data de início *</label>
+        <input id="dataInicio" type="date" formControlName="dataInicio" />
+        @if (novaForm.controls.dataInicio.invalid && novaForm.controls.dataInicio.touched) {
+          <span class="form-error">Data de início é obrigatória.</span>
+        }
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn" [disabled]="submittingNova()">
+          {{ submittingNova() ? 'Registrando…' : 'Registrar responsabilidade' }}
+        </button>
+      </div>
+    </form>
+  </div>
+}
+
+@if (encerrarAlvo(); as alvo) {
+  <app-modal [titulo]="'Encerrar responsabilidade — ' + alvo.tipo" (fechar)="fecharEncerrar()">
+    @if (encerrarErrorMessage()) {
+      <div class="form-banner form-banner--error" role="alert">{{ encerrarErrorMessage() }}</div>
+    }
+    <form [formGroup]="encerrarForm" (ngSubmit)="confirmarEncerrar()" class="form" novalidate>
+      <div class="form-group">
+        <label for="dataFim">Data de fim *</label>
+        <input id="dataFim" type="date" formControlName="dataFim" />
+        @if (encerrarForm.controls.dataFim.invalid && encerrarForm.controls.dataFim.touched) {
+          <span class="form-error">Data de fim é obrigatória.</span>
+        }
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="fecharEncerrar()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submittingEncerrar()">
+          {{ submittingEncerrar() ? 'Encerrando…' : 'Encerrar responsabilidade' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}

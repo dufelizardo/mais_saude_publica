@@ -1,10 +1,12 @@
 # Escopo do domínio de RH — roadmap e ideias
 
-**Data:** 2026-09-19 (criado) · atualizado em 2026-09-19 após conclusão do backend
-**Status:** Vivo. **Backend (Fases 0-9) implementado e mergeado em `developer`** — ver a tabela de
-PRs em [MODELO-RH.md](./MODELO-RH.md#0-estado-de-implementação-backend). Frontend em andamento, ver
-seção 6. Nenhuma fase foi promovida a `qaa`/`homologacao`/`main` ainda (regra do módulo completo,
-seção 5).
+**Data:** 2026-09-19 (criado) · atualizado em 2026-09-24 (módulo promovido até `main`)
+**Status:** Vivo. **Backend (Fases 0-9) e frontend implementados** — ver a tabela de PRs em
+[MODELO-RH.md](./MODELO-RH.md#0-estado-de-implementação-backend) e a seção 6. **Módulo já
+promovido até `main` (produção)** — deixou de ser regra "nenhuma fase promovida ainda"; o módulo
+completo passou pelo fluxo `developer → qaa → homologacao → main` (ADR-0010). Rastreado no Jira
+sob o épico [AQUAQE-274](https://edufelizardo.atlassian.net/browse/AQUAQE-274) ("Módulo de RH"),
+com uma História por item da tabela da seção 6.
 
 ## 1. Contexto e como ler este documento
 
@@ -134,10 +136,13 @@ pra como ele orientou a análise de lacunas e a ordem das fatias).
 | 8a | Catálogo de treinamentos + Ciclos de avaliação (ver [ADR-0027](../adr/0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md)) | [#151](https://github.com/dufelizardo/mais_saude_publica/pull/151) | ✅ |
 | 8b | SST — aba "SST" no perfil, com 3 sub-abas (Exames ocupacionais, Acidentes de trabalho, EPIs) | [#152](https://github.com/dufelizardo/mais_saude_publica/pull/152) | ✅ |
 | 8c | Recrutamento — Vagas + Candidatos por vaga | [#153](https://github.com/dufelizardo/mais_saude_publica/pull/153) | ✅ (CI ficou travada até atualizar contra `developer` — branch estava semanas defasada e em estado `CONFLICTING`, o que parece ter impedido o evento `pull_request` de disparar; após o merge de `developer` e novo push, disparou normalmente) |
-| 8d | Menu agrupado + breadcrumb dinâmico | — | ⏳ Não iniciada |
+| 8d | Breadcrumb dinâmico (o "menu agrupado" virou necessário só quando o Setor Administrativo trouxe um segundo grupo de menu — ver [ADR-0038](../adr/0038-app-shell-dinamico-e-telas-de-frontend-do-setor-administrativo.md)) | — | ✅ |
 | 9 | Benefícios — backend: `PATCH /adesao-beneficio/{uuid}/encerrar` (ver [ADR-0028](../adr/0028-fatia-9-beneficios.md)) | [#154](https://github.com/dufelizardo/mais_saude_publica/pull/154) | ✅ |
 | 9 | Benefícios — frontend: `/rh/tipos-beneficio`, `/rh/tipos-beneficio/:tipoId/valores`, aba "Benefícios" no perfil | [#155](https://github.com/dufelizardo/mais_saude_publica/pull/155) | ✅ |
 | — | Gap identificado no levantamento de endpoints de `Profissional`: lista de profissionais (`/profissionais`) + edição de contato no perfil (ver [ADR-0029](../adr/0029-listagem-e-edicao-de-contato-do-profissional.md)) | [#157](https://github.com/dufelizardo/mais_saude_publica/pull/157) | ✅ |
+| — | Registro de ponto na UI (form "Registrar ponto") + correção de registro existente sujeita a aprovação do gestor (`solicitar-correcao`/`aprovar-correcao`/`rejeitar-correcao`), campos embutidos em `RegistroPonto` — atualização da [ADR-0024](../adr/0024-ponto-com-filtro-de-periodo.md) | [#159](https://github.com/dufelizardo/mais_saude_publica/pull/159) | ✅ |
+| — | `PATCH /vaga/{uuid}` (encerrar/editar vaga) — exceção deliberada à regra "sem PATCH" da fatia 8, só pra Vaga; `Cargo` ganha campo `descricao` opcional, `Vaga` expõe `cargoDescricao` derivado — atualização da [ADR-0027](../adr/0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md) | [#161](https://github.com/dufelizardo/mais_saude_publica/pull/161) | ✅ |
+| — | Fix de rolagem horizontal em tabelas largas: `.content` sem `min-width: 0` + `overflow: hidden` em wrappers de tabela cortavam conteúdo sem permitir rolar — corrigido em 12 telas + 14 pontos do perfil do profissional, documentado em `PADRAO-TELAS-INTERNAS.md` | [#162](https://github.com/dufelizardo/mais_saude_publica/pull/162) | ✅ |
 
 ### Regra da fatia 8 (definida pelo usuário, vale para 8a-8d)
 
