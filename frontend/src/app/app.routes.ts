@@ -27,6 +27,7 @@ import { Atendimentos } from './features/assistencia/atendimentos/atendimentos';
 import { Agendamentos } from './features/assistencia/agendamentos/agendamentos';
 import { Consultas } from './features/assistencia/consultas/consultas';
 import { Procedimentos } from './features/assistencia/procedimentos/procedimentos';
+import { Prontuario } from './features/assistencia/prontuario/prontuario';
 import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
@@ -62,6 +63,7 @@ export const routes: Routes = [
       { path: 'assistencia/agendamentos', component: Agendamentos, data: { breadcrumb: 'Agendamentos', area: 'Assistência' } },
       { path: 'assistencia/consultas', component: Consultas, data: { breadcrumb: 'Consultas', area: 'Assistência' } },
       { path: 'assistencia/procedimentos', component: Procedimentos, data: { breadcrumb: 'Procedimentos', area: 'Assistência' } },
+      { path: 'assistencia/prontuario', component: Prontuario, data: { breadcrumb: 'Prontuário', area: 'Assistência' } },
     ],
   },
 ];
