@@ -653,13 +653,15 @@ Mantido como no desenho original (paciente, profissional, data/hora, status, tip
 agendamento pode nunca virar atendimento (não comparecimento), e um atendimento pode não ter
 agendamento (acolhimento espontâneo).
 
-### Prontuário — não é uma tabela
+### Prontuário — não é uma tabela — ✅ Implementado (ADR-0045)
 
 Decisão explícita (ADR-0039): `Prontuário` é uma **visão agregada de leitura** sobre os
-`Atendimento`/`Consulta`/`Procedimento` de um `Paciente` — mesmo padrão já usado pelo "Histórico
-funcional consolidado" do RH (ADR-0026), que também é um endpoint de agregação, não uma entidade
-nova. Reavaliar apenas se um requisito concreto (ex.: documentos clínicos anexados) exigir uma
-tabela própria — não antecipar agora.
+`Atendimento`/`Consulta`/`Procedimento` de um `Paciente`. Implementado como
+`GET /api/v1/prontuario/{pacienteId}` no backend (ADR-0045) — diferente do "Histórico funcional
+consolidado" do RH (ADR-0026), que agrega inteiramente no frontend (`computed()` sobre sinais já
+carregados pela tela), porque a Assistência ainda não tem nenhuma tela para reaproveitar dados já
+carregados. Reavaliar apenas se um requisito concreto (ex.: documentos clínicos anexados) exigir
+uma tabela própria — não antecipar agora.
 
 Candidatos citados pelo usuário que **ainda não têm um lar claro** em `Atendimento`/`Consulta`/
 `Procedimento` — registrados aqui para não perder, a posicionar quando a agregação for de fato
