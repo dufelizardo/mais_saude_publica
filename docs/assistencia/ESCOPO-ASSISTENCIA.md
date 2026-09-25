@@ -64,8 +64,8 @@ pras decisões de frontend específicas deste módulo).
 |---|---|---|---|
 | F1 | Tela **Pacientes** (`assistencia/pacientes`) + grupo de menu "Assistência" no `AppShell` + ADR-0046 | [#215](https://github.com/dufelizardo/mais_saude_publica/pull/215) | ✅ |
 | F2 | Tela **Atendimentos** (`assistencia/atendimentos`) | [#216](https://github.com/dufelizardo/mais_saude_publica/pull/216) | ✅ |
-| F3 | Tela **Agendamentos** (`assistencia/agendamentos`) | [#217](https://github.com/dufelizardo/mais_saude_publica/pull/217) | ⏳ Em andamento |
-| F4 | Tela **Consultas** (`assistencia/consultas`) | — | ⏳ Não iniciada |
+| F3 | Tela **Agendamentos** (`assistencia/agendamentos`) | [#217](https://github.com/dufelizardo/mais_saude_publica/pull/217) | ✅ |
+| F4 | Tela **Consultas** (`assistencia/consultas`) | — | ⏳ Em andamento |
 | F5 | Tela **Procedimentos** (`assistencia/procedimentos`) | — | ⏳ Não iniciada |
 | F6 | Tela **Prontuário** (`assistencia/prontuario`, somente leitura) | — | ⏳ Não iniciada |
 
