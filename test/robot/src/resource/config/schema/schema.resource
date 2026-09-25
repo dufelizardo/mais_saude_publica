@@ -31,3 +31,5 @@ Resource    ../../schema/necessidade_de_pessoal/necessidade_de_pessoal_schema.re
 Resource    ../../schema/paciente/paciente_schema.resource
 # ATENDIMENTO
 Resource    ../../schema/atendimento/atendimento_schema.resource
+# AGENDAMENTO
+Resource    ../../schema/agendamento/agendamento_schema.resource

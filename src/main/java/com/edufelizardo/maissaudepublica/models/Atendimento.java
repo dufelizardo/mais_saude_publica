@@ -16,10 +16,10 @@ import java.util.UUID;
  * ADR-0039, MAPA-DE-DOMINIOS.md #4). {@code profissional} referencia {@link Profissional} por FK
  * direta (uuid interno), resolvida a partir da matrícula na fronteira da API — mesmo padrão do
  * {@code Setor.responsavel} (ver ADR-0034). {@code setor} é opcional (nem todo atendimento passa
- * por um setor específico). Sem campo {@code agendamento} ainda: a entidade `Agendamento` é a
- * próxima fatia da mesma onda (ver ADR-0041) — o vínculo opcional será acrescentado quando ela
- * existir, mesmo padrão de "campo chega depois" já usado por {@code Setor.responsavel} (ADR-0030 →
- * ADR-0034).
+ * por um setor específico). {@code agendamento} também é opcional — um atendimento pode nascer de
+ * um agendamento prévio ou ser espontâneo (acolhimento); acrescentado nesta fase (ver ADR-0042)
+ * agora que {@link Agendamento} existe, mesmo padrão de "campo chega depois" já usado por
+ * {@code Setor.responsavel} (ADR-0030 → ADR-0034).
  */
 @Entity
 @Table(name = "TB_ATENDIMENTO")
@@ -53,6 +53,10 @@ public class Atendimento implements Serializable {
     @JoinColumn(name = "setor_id", referencedColumnName = "uuid", nullable = true)
     private Setor setor;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agendamento_id", referencedColumnName = "uuid", nullable = true)
+    private Agendamento agendamento;
+
     @Enumerated(EnumType.STRING)
     private TipoAtendimento tipo;
 
@@ -63,11 +67,13 @@ public class Atendimento implements Serializable {
     private LocalDateTime dataHora;
 
     public Atendimento(Paciente paciente, Profissional profissional, UnidadeDeSaude unidade, Setor setor,
-                        TipoAtendimento tipo, StatusAtendimento status, LocalDateTime dataHora) {
+                        Agendamento agendamento, TipoAtendimento tipo, StatusAtendimento status,
+                        LocalDateTime dataHora) {
         this.paciente = paciente;
         this.profissional = profissional;
         this.unidade = unidade;
         this.setor = setor;
+        this.agendamento = agendamento;
         this.tipo = tipo;
         this.status = status;
         this.dataHora = dataHora;

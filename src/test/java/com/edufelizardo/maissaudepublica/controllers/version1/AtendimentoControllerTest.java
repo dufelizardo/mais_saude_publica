@@ -1,11 +1,15 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.models.Agendamento;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Setor;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusAgendamento;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoAgendamento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoSetor;
+import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
@@ -57,6 +61,9 @@ class AtendimentoControllerTest {
     private AtendimentoRepository atendimentoRepository;
 
     @Autowired
+    private AgendamentoRepository agendamentoRepository;
+
+    @Autowired
     private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
 
     @Autowired
@@ -73,8 +80,9 @@ class AtendimentoControllerTest {
         // Atendimento não tem um campo de teste próprio para filtrar (paciente/profissional são
         // @ManyToOne LAZY — navegar até paciente.getCpf() fora de uma transação lançaria
         // LazyInitializationException). Este é o único teste que cria Atendimento, então apagar
-        // tudo é seguro.
+        // tudo é seguro. Agendamento primeiro seria bloqueado pela FK de tb_atendimento.
         atendimentoRepository.deleteAll();
+        agendamentoRepository.deleteAll();
 
         setorRepository.deleteAll(setorRepository.findAll().stream()
                 .filter(s -> s.getNome() != null && s.getNome().startsWith(PREFIXO_NOME_TESTE))
@@ -239,18 +247,25 @@ class AtendimentoControllerTest {
 
     private String corpoAtendimento(UUID pacienteId, String profissionalMatricula, UUID unidadeId, UUID setorId,
                                      String tipo, String status) {
+        return corpoAtendimento(pacienteId, profissionalMatricula, unidadeId, setorId, null, tipo, status);
+    }
+
+    private String corpoAtendimento(UUID pacienteId, String profissionalMatricula, UUID unidadeId, UUID setorId,
+                                     UUID agendamentoId, String tipo, String status) {
         String setorJson = setorId == null ? "null" : "\"" + setorId + "\"";
+        String agendamentoJson = agendamentoId == null ? "null" : "\"" + agendamentoId + "\"";
         return """
                 {
                   "pacienteId": "%s",
                   "profissionalMatricula": "%s",
                   "unidadeId": "%s",
                   "setorId": %s,
+                  "agendamentoId": %s,
                   "tipo": "%s",
                   "status": "%s",
                   "dataHora": "2026-01-01T08:00:00"
                 }
-                """.formatted(pacienteId, profissionalMatricula, unidadeId, setorJson, tipo, status);
+                """.formatted(pacienteId, profissionalMatricula, unidadeId, setorJson, agendamentoJson, tipo, status);
     }
 
     private UUID seedAtendimentoUuid(String sufixo) throws Exception {
@@ -337,6 +352,37 @@ class AtendimentoControllerTest {
         mockMvc.perform(get(ATENDIMENTO_URL + criado.getUuid()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.setorNome").value(PREFIXO_NOME_TESTE + "Setor 04"));
+    }
+
+    @Test
+    void deveCriarComAgendamentoOpcional() throws Exception {
+        // Vínculo acrescentado nesta fase (ADR-0042): um atendimento pode nascer de um agendamento
+        // prévio.
+        UUID unidadeId = criarUnidadeSaudeUbs("07");
+        String matricula = criarProfissionalEBuscarMatricula(PREFIXO_CPF_TESTE + "07", "Profissional Sete");
+        UUID pacienteId = criarPacienteEBuscarUuid(PREFIXO_CPF_TESTE + "07", "Paciente Sete");
+
+        Paciente paciente = pacienteRepository.findById(pacienteId).orElseThrow();
+        Profissional profissional = profissionalRepository.findByMatricula(matricula).orElseThrow();
+        Agendamento agendamento = new Agendamento(paciente, profissional,
+                java.time.LocalDateTime.parse("2026-01-01T08:00:00"), StatusAgendamento.CONFIRMADO,
+                TipoAgendamento.CONSULTA, null);
+        agendamento = agendamentoRepository.save(agendamento);
+
+        mockMvc.perform(post(ATENDIMENTO_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoAtendimento(pacienteId, matricula, unidadeId, null, agendamento.getUuid(),
+                                "CONSULTA", "EM_ANDAMENTO")))
+                .andExpect(status().isCreated());
+
+        Atendimento criado = atendimentoRepository.findAll().stream()
+                .filter(a -> a.getPaciente().getUuid().equals(pacienteId))
+                .findFirst()
+                .orElseThrow();
+
+        mockMvc.perform(get(ATENDIMENTO_URL + criado.getUuid()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.agendamentoUuid").value(agendamento.getUuid().toString()));
     }
 
     @Test

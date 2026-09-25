@@ -598,7 +598,7 @@ USUARIO (1) ───────────── (1) PROFISSIONAL
 > de "incrementos pequenos e discutidos" já usada em RH e Administrativo. O schema real (JPA/DDL)
 > só nasce quando cada entidade for de fato implementada, não antes.
 
-### Paciente
+### Paciente — ✅ Implementado (ADR-0040)
 
 Identidade da pessoa atendida pela rede — **sem** `usuario_id` (não há autenticação, decisão
 mantida na ADR-0039) e **sem** entidade `Pessoa` compartilhada com `Profissional` (rejeitado por
@@ -618,7 +618,7 @@ princípio da ADR-0014).
 | `email` | String | |
 | `ativo` | boolean | |
 
-### Atendimento
+### Atendimento — ✅ Implementado (ADR-0041)
 
 Registro de entrada do paciente na rede — referencia os modelos reais, não os supersedidos.
 
@@ -646,7 +646,7 @@ desses dados ainda; revisitar quando Farmácia/Laboratório entrarem no roadmap)
 
 Mantido como no desenho original, apenas trocando `profissional_id` por `profissionalMatricula`.
 
-### Agendamento
+### Agendamento — ✅ Implementado (ADR-0042)
 
 Mantido como no desenho original (paciente, profissional, data/hora, status, tipo), com
 `profissionalMatricula` no lugar de `profissional_id`. Existe independente de `Atendimento` — um

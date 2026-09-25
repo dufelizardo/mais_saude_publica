@@ -50,3 +50,13 @@ CT-004 - Validate POST Create Atendimento - HTTP 404 NOT FOUND (Profissional Ine
     ATENDIMENTO - CREATE - POST - Profissional Inexistente
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-005 - Validate POST Create Atendimento - HTTP 201 CREATED (Com Agendamento)
+    [Documentation]    Test case to validate the POST create Atendimento endpoint linked to a pre-existing
+    ...    Agendamento, expecting HTTP 201 CREATED and the GET response to carry agendamentoUuid (ver
+    ...    ADR-0042).
+    [Tags]    POST    CreateAtendimento    HTTP201
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ATENDIMENTO - CREATE - POST - Com Agendamento
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
