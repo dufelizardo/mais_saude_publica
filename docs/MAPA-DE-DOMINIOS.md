@@ -90,7 +90,7 @@ dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 |---|---|---|---|---|
 | 5 | **Paciente / Cidadão** | Identidade da pessoa que usa a rede pública de saúde. | `Paciente` (identificação, contatos, endereço, CNS) | ✅ Implementado (Fase 1 da onda) — ver [ADR-0040](./adr/0040-paciente-primeira-entidade-da-assistencia.md) |
 | 4 | **Atendimento** | Momento em que o cidadão entra na rede para receber um serviço. | `Atendimento`, `TipoAtendimento`, `Acolhimento` | ✅ Implementado (Fase 2 da onda) — ver [ADR-0041](./adr/0041-atendimento-registra-entrada-do-paciente-na-rede.md) |
-| 7 | **Agendamento e Agenda** | Quando e onde os serviços serão realizados — agendas, horários, fila de espera. | `Agendamento`, `Horario` | ⏳ Próxima onda — referência opcional a partir de `Atendimento`, mesmo padrão de `NecessidadeDePessoal.vagaAssociada` (ADR-0036) |
+| 7 | **Agendamento e Agenda** | Quando e onde os serviços serão realizados — agendas, horários, fila de espera. | `Agendamento`, `Horario` | ✅ `Agendamento` implementado (Fase 3 da onda) — ver [ADR-0042](./adr/0042-agendamento-independente-do-atendimento.md). `Horario` (agenda do profissional) ainda não desenhado |
 | 6 | **Prontuário / Histórico Clínico** | Histórico clínico do paciente na rede. | *(nenhuma — ver decisão abaixo)* | ⏳ Próxima onda, como **agregação de leitura** sobre Atendimento/Consulta/Procedimento (ADR-0039, decisão 6) — não uma tabela nova, mesmo padrão do "Histórico funcional consolidado" do RH (ADR-0026) |
 | 8 | **Enfermagem** | Triagem, sinais vitais, classificação de risco, cuidados — processos próprios da enfermagem. | `Triagem`, `SinaisVitais`, `ClassificacaoDeRisco` | ⏳ Não iniciado — depende de Atendimento existir primeiro |
 | 9 | **Farmácia** | Medicamentos e sua dispensação — regras próprias, diferente de Estoque. | `Medicamento`, `Lote`, `Dispensacao` | ⏳ Não iniciado — "só quando houver requisito real" |
@@ -114,7 +114,7 @@ dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 | Onda | Domínios | Status |
 |---|---|---|
 | 🟢 **Fundação** | #1 Organização, #2 RH, #3 Administração | ✅ Completo (backend + frontend) |
-| 🔵 **Operação Assistencial** | #5 Paciente → #4 Atendimento → #7 Agendamento → #6 Prontuário (agregação), depois #8 Enfermagem, #9 Farmácia, #10 Laboratório, #11 Regulação, #12 Leitos, #16 Transporte, conforme requisito real | 🔵 Em andamento — #5 Paciente (ADR-0040) e #4 Atendimento (ADR-0041) implementados; #7 Agendamento é a próxima fatia |
+| 🔵 **Operação Assistencial** | #5 Paciente → #4 Atendimento → #7 Agendamento → #6 Prontuário (agregação), depois #8 Enfermagem, #9 Farmácia, #10 Laboratório, #11 Regulação, #12 Leitos, #16 Transporte, conforme requisito real | 🔵 Em andamento — #5 Paciente (ADR-0040), #4 Atendimento (ADR-0041) e #7 Agendamento (ADR-0042) implementados; #6 Prontuário (agregação) é a próxima fatia |
 | 🟣 **Gestão e Inteligência** | #13 Estoque, #14 Compras, #15 Patrimônio, #17 Financeiro, #18 Qualidade, #19 Indicadores/BI | ⏳ Depois — mesma disciplina do "Fase 7+" do Administrativo (ADR-0037): só quando houver requisito real |
 | — (distribuído por dependência) | #20 Identidade/Segurança/Integrações, Auditoria | ⏳ Adiado — Segurança revisitada antes de produção real; Auditoria/Integrações quando houver necessidade concreta |
 

@@ -1,42 +1,56 @@
 *** Settings ***
-Resource    ../../../flow/atendimento/create_atendimento/create_atendimento_flow.resource
-Resource    ../../../flow/atendimento/get_atendimento_by_id/get_atendimento_by_id_flow.resource
+Resource    ../../../pom/agendamento/get_agendamento_by_id/get_agendamento_by_id_pom.resource
+Resource    ../create_agendamento/create_agendamento_flow.resource
+Resource    ../../common/schema_validation_flow.resource
+Resource    ../../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
-ATENDIMENTO - CREATE - POST
-    [Documentation]    Test scenario for creating an Atendimento (POST /api/v1/atendimento/) on the Mais Saúde
-    ...    Pública API.
+Call GET Get Agendamento By Id
+    [Documentation]    Calls the GET Get Agendamento By Id keyword from the POM.
+    [Arguments]    ${uuid}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${response}=    GET Get Agendamento By Id    ${uuid}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+GET Get Agendamento By Id - Status Code 200
+    [Documentation]    Seeds a fresh Agendamento (unless ${uuid} is informed) and fetches it by id, expecting
+    ...    HTTP 200.
+    [Arguments]    ${uuid}=${EMPTY}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    IF    '${uuid}' == '${EMPTY}'
+        ${uuid}    ${pacienteId}    ${matricula}=    Seed Um Agendamento
+    END
+    ${response}=    Call GET Get Agendamento By Id    ${uuid}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Validate Object Schema    ${response.json()}    ${AGENDAMENTO_SCHEMA}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+GET Get Agendamento By Id - Status Code 404
+    [Documentation]    Fetches an Agendamento by a random, non-existent uuid, expecting HTTP 404.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuidInexistente}=    Evaluate    str(uuid.uuid4())    modules=uuid
+    ${response}=    Call GET Get Agendamento By Id    ${uuidInexistente}
+    Should Be Equal As Integers    ${response.status_code}    404
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Agendamento - Get By Id - GET - By HTTP Status Code
+    [Documentation]    Executes the appropriate Get Agendamento By Id test scenario based on the provided
+    ...    HTTP status code.
     [Arguments]    ${meuHTTP}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Atendimento - Create - POST - By HTTP Status Code    ${meuHTTP}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-ATENDIMENTO - CREATE - POST - Com Agendamento
-    [Documentation]    Test scenario for creating an Atendimento linked to a pre-existing Agendamento,
-    ...    expecting HTTP 201 and the GET response to carry the matching agendamentoUuid (ver ADR-0042).
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${atendimentoId}    ${agendamentoId}=    POST Create Atendimento - Status Code 201 - Com Agendamento
-    ${getResponse}=    Call GET Get Atendimento By Id    ${atendimentoId}
-    Should Be Equal As Integers    ${getResponse.status_code}    200
-    Should Be Equal As Strings    ${getResponse.json()['agendamentoUuid']}    ${agendamentoId}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-ATENDIMENTO - CREATE - POST - Paciente Inexistente
-    [Documentation]    Test scenario for creating an Atendimento pointing at a pacienteId that doesn't exist,
-    ...    expecting HTTP 404.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    POST Create Atendimento - Status Code 404 - Paciente Inexistente
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-ATENDIMENTO - CREATE - POST - Profissional Inexistente
-    [Documentation]    Test scenario for creating an Atendimento pointing at a profissionalMatricula that
-    ...    doesn't exist, expecting HTTP 404 (ver ADR-0034).
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    POST Create Atendimento - Status Code 404 - Profissional Inexistente
+    Run Keyword If    '${meuHTTP}' == '200'    GET Get Agendamento By Id - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '404'    GET Get Agendamento By Id - Status Code 404
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Get Agendamento By Id test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

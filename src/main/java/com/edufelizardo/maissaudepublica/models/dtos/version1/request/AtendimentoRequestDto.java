@@ -38,6 +38,12 @@ public class AtendimentoRequestDto implements Serializable {
      */
     private UUID setorId;
 
+    /**
+     * Opcional — um atendimento pode nascer de um agendamento prévio ou ser espontâneo
+     * (acolhimento). Ver ADR-0042.
+     */
+    private UUID agendamentoId;
+
     @NotNull
     private TipoAtendimento tipo;
 

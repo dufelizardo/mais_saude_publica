@@ -29,6 +29,7 @@ public class AtendimentoResponseDto implements Serializable {
     private String unidadeNome;
     private UUID setorUuid;
     private String setorNome;
+    private UUID agendamentoUuid;
     private TipoAtendimento tipo;
     private StatusAtendimento status;
     private LocalDateTime dataHora;
@@ -40,6 +41,10 @@ public class AtendimentoResponseDto implements Serializable {
             setorUuid = atendimento.getSetor().getUuid();
             setorNome = atendimento.getSetor().getNome();
         }
+        UUID agendamentoUuid = null;
+        if (atendimento.getAgendamento() != null) {
+            agendamentoUuid = atendimento.getAgendamento().getUuid();
+        }
         return new AtendimentoResponseDto(
                 atendimento.getUuid(),
                 atendimento.getPaciente().getUuid(),
@@ -50,6 +55,7 @@ public class AtendimentoResponseDto implements Serializable {
                 atendimento.getUnidade().getNome(),
                 setorUuid,
                 setorNome,
+                agendamentoUuid,
                 atendimento.getTipo(),
                 atendimento.getStatus(),
                 atendimento.getDataHora()

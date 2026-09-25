@@ -1,42 +1,52 @@
 *** Settings ***
-Resource    ../../../flow/atendimento/create_atendimento/create_atendimento_flow.resource
-Resource    ../../../flow/atendimento/get_atendimento_by_id/get_atendimento_by_id_flow.resource
+Resource    ../../../src/scenario/agendamento/create_agendamento/create_agendamento_scenario.resource
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Metadata    Test Suite - POST Create Agendamento
+Metadata    Test Suite Description        This test suite validates the POST create Agendamento endpoint of the Mais Saúde Pública API.
+Metadata    Test Suite Owner              Eduardo Felizardo
+Metadata    Test Suite Version            1.0
+Metadata    Test Suite Tags               POST    CreateAgendamento    MaisSaudePublicaAPI
+Metadata    Test Suite Created On         2026-09-25
+Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Project                       Layered Keyword Driven Framework (LKDF)
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-*** Keywords ***
-ATENDIMENTO - CREATE - POST
-    [Documentation]    Test scenario for creating an Atendimento (POST /api/v1/atendimento/) on the Mais Saúde
-    ...    Pública API.
-    [Arguments]    ${meuHTTP}
+*** Variables ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Test Cases ***
+CT-001 - Validate POST Create Agendamento - HTTP 201 CREATED
+    [Documentation]    Test case to validate the POST create Agendamento endpoint with HTTP 201 CREATED
+    ...    response.
+    [Tags]    POST    CreateAgendamento    HTTP201
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Atendimento - Create - POST - By HTTP Status Code    ${meuHTTP}
+    AGENDAMENTO - CREATE - POST    201
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-ATENDIMENTO - CREATE - POST - Com Agendamento
-    [Documentation]    Test scenario for creating an Atendimento linked to a pre-existing Agendamento,
-    ...    expecting HTTP 201 and the GET response to carry the matching agendamentoUuid (ver ADR-0042).
+CT-002 - Validate POST Create Agendamento - HTTP 400 BAD REQUEST (Campos Obrigatorios Em Branco)
+    [Documentation]    Test case to validate the POST create Agendamento endpoint with HTTP 400 BAD REQUEST
+    ...    response, when required fields are omitted.
+    [Tags]    POST    CreateAgendamento    HTTP400
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${atendimentoId}    ${agendamentoId}=    POST Create Atendimento - Status Code 201 - Com Agendamento
-    ${getResponse}=    Call GET Get Atendimento By Id    ${atendimentoId}
-    Should Be Equal As Integers    ${getResponse.status_code}    200
-    Should Be Equal As Strings    ${getResponse.json()['agendamentoUuid']}    ${agendamentoId}
+    AGENDAMENTO - CREATE - POST    400
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-ATENDIMENTO - CREATE - POST - Paciente Inexistente
-    [Documentation]    Test scenario for creating an Atendimento pointing at a pacienteId that doesn't exist,
-    ...    expecting HTTP 404.
+CT-003 - Validate POST Create Agendamento - HTTP 404 NOT FOUND (Paciente Inexistente)
+    [Documentation]    Test case to validate the POST create Agendamento endpoint with HTTP 404 NOT FOUND
+    ...    response, when pacienteId points at a Paciente that doesn't exist.
+    [Tags]    POST    CreateAgendamento    HTTP404
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    POST Create Atendimento - Status Code 404 - Paciente Inexistente
+    AGENDAMENTO - CREATE - POST - Paciente Inexistente
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-ATENDIMENTO - CREATE - POST - Profissional Inexistente
-    [Documentation]    Test scenario for creating an Atendimento pointing at a profissionalMatricula that
-    ...    doesn't exist, expecting HTTP 404 (ver ADR-0034).
+CT-004 - Validate POST Create Agendamento - HTTP 404 NOT FOUND (Profissional Inexistente)
+    [Documentation]    Test case to validate the POST create Agendamento endpoint with HTTP 404 NOT FOUND
+    ...    response, when profissionalMatricula points at a Profissional that doesn't exist (ver ADR-0034).
+    [Tags]    POST    CreateAgendamento    HTTP404
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    POST Create Atendimento - Status Code 404 - Profissional Inexistente
+    AGENDAMENTO - CREATE - POST - Profissional Inexistente
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
