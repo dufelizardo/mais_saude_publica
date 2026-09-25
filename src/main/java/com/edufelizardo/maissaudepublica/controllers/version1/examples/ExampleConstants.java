@@ -460,6 +460,33 @@ public class ExampleConstants {
                   "ativo": true
                 }
             """;
+    public static final String PACIENTE_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "nome": "string",
+                    "cpf": "string",
+                    "cartaoSus": "string",
+                    "dataNascimento": "1990-01-01",
+                    "sexo": "FEMININO",
+                    "endereco": {
+                      "cep": "string",
+                      "logradouro": "string",
+                      "numeroLogradouro": "string",
+                      "complemento": "string",
+                      "bairro": "string",
+                      "cidade": "string",
+                      "estado": "string",
+                      "ddd": "string"
+                    },
+                    "telefones": [
+                      "string"
+                    ],
+                    "email": "string",
+                    "ativo": true
+                  }
+                ]
+            """;
     public static final String CATEGORIA_SALARIAL_RESPONSE_EXAMPLE = """
                 [
                   {
