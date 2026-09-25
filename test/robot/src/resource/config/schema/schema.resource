@@ -23,3 +23,7 @@ Resource    ../../schema/perfil_administrativo/perfil_administrativo_schema.reso
 Resource    ../../schema/perfil_por_tipo_unidade/perfil_por_tipo_unidade_schema.resource
 # PROCESSO ADMINISTRATIVO
 Resource    ../../schema/processo_administrativo/processo_administrativo_schema.resource
+# RESPONSABILIDADE ADMINISTRATIVA
+Resource    ../../schema/responsabilidade_administrativa/responsabilidade_administrativa_schema.resource
+# NECESSIDADE DE PESSOAL
+Resource    ../../schema/necessidade_de_pessoal/necessidade_de_pessoal_schema.resource
