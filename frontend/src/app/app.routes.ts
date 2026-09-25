@@ -23,6 +23,7 @@ import { ProcessosAdministrativos } from './features/administrativo/processos-ad
 import { ResponsabilidadesAdministrativas } from './features/administrativo/responsabilidades-administrativas/responsabilidades-administrativas';
 import { NecessidadesDePessoal } from './features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal';
 import { Pacientes } from './features/assistencia/pacientes/pacientes';
+import { Atendimentos } from './features/assistencia/atendimentos/atendimentos';
 import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
@@ -54,6 +55,7 @@ export const routes: Routes = [
       { path: 'administrativo/responsabilidades', component: ResponsabilidadesAdministrativas, data: { breadcrumb: 'Responsabilidades administrativas', area: 'Administrativo' } },
       { path: 'administrativo/necessidades-de-pessoal', component: NecessidadesDePessoal, data: { breadcrumb: 'Necessidades de pessoal', area: 'Administrativo' } },
       { path: 'assistencia/pacientes', component: Pacientes, data: { breadcrumb: 'Pacientes', area: 'Assistência' } },
+      { path: 'assistencia/atendimentos', component: Atendimentos, data: { breadcrumb: 'Atendimentos', area: 'Assistência' } },
     ],
   },
 ];
