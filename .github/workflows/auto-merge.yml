@@ -4,6 +4,20 @@ name: Auto-merge de promoção
 # (developer -> qaa -> homologacao -> main). So dispara nas 3 promocoes reais do fluxo - nao mexe
 # em PRs abertas de/para qualquer outra branch (ex: um terceiro contribuindo direto em developer).
 #
+# Aceita tambem branches dedicadas de promocao (ex: "promocao-qaa-administrativo") alem do nome
+# literal da branch de origem: quando uma promocao tem conflito de merge de verdade (ex: o pin de
+# imagem em k8s/overlays/<env>/kustomization.yaml, que sempre diverge entre origem e destino), o
+# evento pull_request nao dispara em absoluto enquanto o PR estiver "CONFLICTING" - so volta a
+# disparar depois que o conflito e resolvido numa branch dedicada e o push acontece nela. Sem essa
+# branch dedicada nao ha como resolver o conflito localmente sem tocar na branch literal
+# qaa/homologacao/developer. O prefixo "promocao-<destino>-" e uma convencao adotada so pra esses
+# casos, nunca usada por PRs de terceiros.
+#
+# "types" inclui "synchronize" (alem de "opened"/"reopened") pelo mesmo motivo: o push que resolve
+# o conflito na branch dedicada chega depois da abertura do PR, entao e o evento "synchronize"
+# daquele push que precisa disparar este job - "opened" sozinho nunca dispararia (o PR nasceu em
+# conflito).
+#
 # Usa "gh pr merge --admin" em vez de "--auto": desde que a Ruleset de aprovacao obrigatoria pra
 # terceiros existe (ADR-0011), o merge automatico (--auto) fica preso em "aguardando aprovacao"
 # mesmo pro dono do repositorio, porque a fila de auto-merge nao aplica bypass de Ruleset sozinha
@@ -25,7 +39,7 @@ name: Auto-merge de promoção
 # uma acao administrativa de verdade, nao coberta por "Pull requests: write" sozinho.
 on:
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
     branches:
       - qaa
       - homologacao
@@ -35,12 +49,16 @@ permissions:
   contents: write
   pull-requests: write
 
+concurrency:
+  group: auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   admin-merge:
     if: |
-      (github.base_ref == 'qaa' && github.head_ref == 'developer') ||
-      (github.base_ref == 'homologacao' && github.head_ref == 'qaa') ||
-      (github.base_ref == 'main' && github.head_ref == 'homologacao')
+      (github.base_ref == 'qaa' && (github.head_ref == 'developer' || startsWith(github.head_ref, 'promocao-qaa-'))) ||
+      (github.base_ref == 'homologacao' && (github.head_ref == 'qaa' || startsWith(github.head_ref, 'promocao-homologacao-'))) ||
+      (github.base_ref == 'main' && (github.head_ref == 'homologacao' || startsWith(github.head_ref, 'promocao-main-')))
     runs-on: ubuntu-latest
     steps:
       - name: Esperar os checks obrigatórios e mergear com privilégio de admin
