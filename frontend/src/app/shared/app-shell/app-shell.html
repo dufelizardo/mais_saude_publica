@@ -115,6 +115,15 @@
           <span class="nav-item__label">Necessidades de pessoal</span>
         </a>
       </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Assistência</div>
+
+        <a routerLink="/assistencia/pacientes" routerLinkActive #rlaPacientes="routerLinkActive" [attr.aria-current]="rlaPacientes.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <span class="nav-item__label">Pacientes</span>
+        </a>
+      </div>
     </nav>
   </aside>
 
