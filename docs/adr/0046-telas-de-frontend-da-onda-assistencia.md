@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceita e em implementação (F1 — [PR a preencher]).
+Aceita e em implementação (F1 — [PR #215](https://github.com/dufelizardo/mais_saude_publica/pull/215)).
 
 ## Contexto
 
