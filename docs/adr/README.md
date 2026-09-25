@@ -67,6 +67,6 @@ As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) 
 
 As ADRs 0030 a 0037 formam o roadmap do Setor Administrativo. 0030-0036 (Fases 1-6) já foram implementadas; 0037 (Fase 7+) ainda não — ver [`docs/administrativo/ESCOPO-ADMINISTRATIVO.md`](../administrativo/ESCOPO-ADMINISTRATIVO.md) para o contexto completo e a ordem de implementação planejada.
 
-As ADRs 0040 a 0046 formam a onda Operação Assistencial (`Paciente`, `Atendimento`, `Agendamento`, `Consulta`, `Procedimento`, `Prontuário` e suas telas de frontend) — backend completo, frontend em andamento fase a fase — ver [`docs/assistencia/ESCOPO-ASSISTENCIA.md`](../assistencia/ESCOPO-ASSISTENCIA.md) para o estado atual.
+As ADRs 0040 a 0046 formam a onda Operação Assistencial (`Paciente`, `Atendimento`, `Agendamento`, `Consulta`, `Procedimento`, `Prontuário` e suas telas de frontend) — backend e frontend completos — ver [`docs/assistencia/ESCOPO-ASSISTENCIA.md`](../assistencia/ESCOPO-ASSISTENCIA.md) para o estado atual.
 
 Ver também [`DER-atual.md`](./DER-atual.md) (schema real implementado hoje), [`DER.md`](./DER.md) (modelo de dados clínico, revisado pela ADR-0039) e [`../MAPA-DE-DOMINIOS.md`](../MAPA-DE-DOMINIOS.md) (mapa dos 20 domínios da plataforma inteira e ordem de implementação).

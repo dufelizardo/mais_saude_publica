@@ -67,7 +67,12 @@ pras decisões de frontend específicas deste módulo).
 | F3 | Tela **Agendamentos** (`assistencia/agendamentos`) | [#217](https://github.com/dufelizardo/mais_saude_publica/pull/217) | ✅ |
 | F4 | Tela **Consultas** (`assistencia/consultas`) | [#218](https://github.com/dufelizardo/mais_saude_publica/pull/218) | ✅ |
 | F5 | Tela **Procedimentos** (`assistencia/procedimentos`) | [#219](https://github.com/dufelizardo/mais_saude_publica/pull/219) | ✅ |
-| F6 | Tela **Prontuário** (`assistencia/prontuario`, somente leitura) | [#220](https://github.com/dufelizardo/mais_saude_publica/pull/220) | ⏳ Em andamento |
+| F6 | Tela **Prontuário** (`assistencia/prontuario`, somente leitura) | [#220](https://github.com/dufelizardo/mais_saude_publica/pull/220) | ✅ |
+
+As 6 telas mergeadas em `developer` fecham a ADR-0046. Melhoria compartilhada com os demais
+módulos (não específica da Assistência): acordeão nos grupos do menu lateral, documentado como
+addendum na [ADR-0018](../adr/0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md#melhoria-pós-implementação-2026-09-25)
+([PR #221](https://github.com/dufelizardo/mais_saude_publica/pull/221)).
 
 ## 7. Referências
 
