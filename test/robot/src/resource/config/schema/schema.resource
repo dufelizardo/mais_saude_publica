@@ -27,3 +27,13 @@ Resource    ../../schema/processo_administrativo/processo_administrativo_schema.
 Resource    ../../schema/responsabilidade_administrativa/responsabilidade_administrativa_schema.resource
 # NECESSIDADE DE PESSOAL
 Resource    ../../schema/necessidade_de_pessoal/necessidade_de_pessoal_schema.resource
+# PACIENTE
+Resource    ../../schema/paciente/paciente_schema.resource
+# ATENDIMENTO
+Resource    ../../schema/atendimento/atendimento_schema.resource
+# AGENDAMENTO
+Resource    ../../schema/agendamento/agendamento_schema.resource
+# CONSULTA
+Resource    ../../schema/consulta/consulta_schema.resource
+# PROCEDIMENTO
+Resource    ../../schema/procedimento/procedimento_schema.resource
