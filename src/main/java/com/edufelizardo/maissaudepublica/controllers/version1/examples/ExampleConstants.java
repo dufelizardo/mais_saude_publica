@@ -460,6 +460,23 @@ public class ExampleConstants {
                   "ativo": true
                 }
             """;
+    public static final String CONSULTA_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "atendimentoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "dataHora": "2026-01-01T08:00:00",
+                    "tipoConsulta": "PRIMEIRA",
+                    "queixaPrincipal": "string",
+                    "diagnostico": "string",
+                    "receituario": "string",
+                    "examesSolicitados": "string",
+                    "retorno": "2026-02-01"
+                  }
+                ]
+            """;
     public static final String AGENDAMENTO_RESPONSE_EXAMPLE = """
                 [
                   {

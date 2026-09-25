@@ -634,7 +634,7 @@ Registro de entrada do paciente na rede — referencia os modelos reais, não os
 | `status` | enum | `AGENDADO`, `EM_ANDAMENTO`, `CONCLUIDO` |
 | `dataHora` | LocalDateTime | |
 
-### Consulta
+### Consulta — ✅ Implementado (ADR-0043)
 
 Mantida como no desenho original (campo a campo), apenas trocando as FKs supersedidas pelas reais
 (`Atendimento` acima, `profissionalMatricula` em vez de `profissional_id`). `diagnostico`,
