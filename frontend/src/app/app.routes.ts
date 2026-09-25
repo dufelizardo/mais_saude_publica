@@ -25,6 +25,7 @@ import { NecessidadesDePessoal } from './features/administrativo/necessidades-de
 import { Pacientes } from './features/assistencia/pacientes/pacientes';
 import { Atendimentos } from './features/assistencia/atendimentos/atendimentos';
 import { Agendamentos } from './features/assistencia/agendamentos/agendamentos';
+import { Consultas } from './features/assistencia/consultas/consultas';
 import { AppShell } from './shared/app-shell/app-shell';
 
 export const routes: Routes = [
@@ -58,6 +59,7 @@ export const routes: Routes = [
       { path: 'assistencia/pacientes', component: Pacientes, data: { breadcrumb: 'Pacientes', area: 'Assistência' } },
       { path: 'assistencia/atendimentos', component: Atendimentos, data: { breadcrumb: 'Atendimentos', area: 'Assistência' } },
       { path: 'assistencia/agendamentos', component: Agendamentos, data: { breadcrumb: 'Agendamentos', area: 'Assistência' } },
+      { path: 'assistencia/consultas', component: Consultas, data: { breadcrumb: 'Consultas', area: 'Assistência' } },
     ],
   },
 ];

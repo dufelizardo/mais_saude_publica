@@ -133,6 +133,11 @@
           <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span class="nav-item__label">Agendamentos</span>
         </a>
+
+        <a routerLink="/assistencia/consultas" routerLinkActive #rlaConsultas="routerLinkActive" [attr.aria-current]="rlaConsultas.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+          <span class="nav-item__label">Consultas</span>
+        </a>
       </div>
     </nav>
   </aside>
