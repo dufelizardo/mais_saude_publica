@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceita e implementada (Fase 1 da onda Operação Assistencial).
+Aceita e implementada (Fase 1 da onda Operação Assistencial — [PR #209](https://github.com/dufelizardo/mais_saude_publica/pull/209)).
 
 ## Contexto
 
