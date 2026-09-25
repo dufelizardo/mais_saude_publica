@@ -460,6 +460,97 @@ public class ExampleConstants {
                   "ativo": true
                 }
             """;
+    public static final String PROCEDIMENTO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "consultaUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "tipo": "EXAME",
+                    "descricao": "string",
+                    "dataRealizacao": "2026-01-01T09:00:00",
+                    "status": "AGENDADO"
+                  }
+                ]
+            """;
+    public static final String CONSULTA_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "atendimentoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "dataHora": "2026-01-01T08:00:00",
+                    "tipoConsulta": "PRIMEIRA",
+                    "queixaPrincipal": "string",
+                    "diagnostico": "string",
+                    "receituario": "string",
+                    "examesSolicitados": "string",
+                    "retorno": "2026-02-01"
+                  }
+                ]
+            """;
+    public static final String AGENDAMENTO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "pacienteUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "pacienteNome": "string",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "dataHora": "2026-01-01T08:00:00",
+                    "status": "AGENDADO",
+                    "tipo": "CONSULTA",
+                    "observacao": "string"
+                  }
+                ]
+            """;
+    public static final String ATENDIMENTO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "pacienteUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "pacienteNome": "string",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "unidadeUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeNome": "string",
+                    "setorUuid": null,
+                    "setorNome": null,
+                    "tipo": "CONSULTA",
+                    "status": "AGENDADO",
+                    "dataHora": "2026-01-01T08:00:00"
+                  }
+                ]
+            """;
+    public static final String PACIENTE_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "nome": "string",
+                    "cpf": "string",
+                    "cartaoSus": "string",
+                    "dataNascimento": "1990-01-01",
+                    "sexo": "FEMININO",
+                    "endereco": {
+                      "cep": "string",
+                      "logradouro": "string",
+                      "numeroLogradouro": "string",
+                      "complemento": "string",
+                      "bairro": "string",
+                      "cidade": "string",
+                      "estado": "string",
+                      "ddd": "string"
+                    },
+                    "telefones": [
+                      "string"
+                    ],
+                    "email": "string",
+                    "ativo": true
+                  }
+                ]
+            """;
     public static final String CATEGORIA_SALARIAL_RESPONSE_EXAMPLE = """
                 [
                   {

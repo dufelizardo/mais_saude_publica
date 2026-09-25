@@ -598,7 +598,7 @@ USUARIO (1) ───────────── (1) PROFISSIONAL
 > de "incrementos pequenos e discutidos" já usada em RH e Administrativo. O schema real (JPA/DDL)
 > só nasce quando cada entidade for de fato implementada, não antes.
 
-### Paciente
+### Paciente — ✅ Implementado (ADR-0040)
 
 Identidade da pessoa atendida pela rede — **sem** `usuario_id` (não há autenticação, decisão
 mantida na ADR-0039) e **sem** entidade `Pessoa` compartilhada com `Profissional` (rejeitado por
@@ -618,7 +618,7 @@ princípio da ADR-0014).
 | `email` | String | |
 | `ativo` | boolean | |
 
-### Atendimento
+### Atendimento — ✅ Implementado (ADR-0041)
 
 Registro de entrada do paciente na rede — referencia os modelos reais, não os supersedidos.
 
@@ -634,7 +634,7 @@ Registro de entrada do paciente na rede — referencia os modelos reais, não os
 | `status` | enum | `AGENDADO`, `EM_ANDAMENTO`, `CONCLUIDO` |
 | `dataHora` | LocalDateTime | |
 
-### Consulta
+### Consulta — ✅ Implementado (ADR-0043)
 
 Mantida como no desenho original (campo a campo), apenas trocando as FKs supersedidas pelas reais
 (`Atendimento` acima, `profissionalMatricula` em vez de `profissional_id`). `diagnostico`,
@@ -642,24 +642,26 @@ Mantida como no desenho original (campo a campo), apenas trocando as FKs superse
 `Exame`/`Prescricao` próprias por ora (YAGNI: nenhum requisito concreto pede consulta estruturada
 desses dados ainda; revisitar quando Farmácia/Laboratório entrarem no roadmap).
 
-### Procedimento
+### Procedimento — ✅ Implementado (ADR-0044)
 
 Mantido como no desenho original, apenas trocando `profissional_id` por `profissionalMatricula`.
 
-### Agendamento
+### Agendamento — ✅ Implementado (ADR-0042)
 
 Mantido como no desenho original (paciente, profissional, data/hora, status, tipo), com
 `profissionalMatricula` no lugar de `profissional_id`. Existe independente de `Atendimento` — um
 agendamento pode nunca virar atendimento (não comparecimento), e um atendimento pode não ter
 agendamento (acolhimento espontâneo).
 
-### Prontuário — não é uma tabela
+### Prontuário — não é uma tabela — ✅ Implementado (ADR-0045)
 
 Decisão explícita (ADR-0039): `Prontuário` é uma **visão agregada de leitura** sobre os
-`Atendimento`/`Consulta`/`Procedimento` de um `Paciente` — mesmo padrão já usado pelo "Histórico
-funcional consolidado" do RH (ADR-0026), que também é um endpoint de agregação, não uma entidade
-nova. Reavaliar apenas se um requisito concreto (ex.: documentos clínicos anexados) exigir uma
-tabela própria — não antecipar agora.
+`Atendimento`/`Consulta`/`Procedimento` de um `Paciente`. Implementado como
+`GET /api/v1/prontuario/{pacienteId}` no backend (ADR-0045) — diferente do "Histórico funcional
+consolidado" do RH (ADR-0026), que agrega inteiramente no frontend (`computed()` sobre sinais já
+carregados pela tela), porque a Assistência ainda não tem nenhuma tela para reaproveitar dados já
+carregados. Reavaliar apenas se um requisito concreto (ex.: documentos clínicos anexados) exigir
+uma tabela própria — não antecipar agora.
 
 Candidatos citados pelo usuário que **ainda não têm um lar claro** em `Atendimento`/`Consulta`/
 `Procedimento` — registrados aqui para não perder, a posicionar quando a agregação for de fato

@@ -23,6 +23,16 @@ export class AppShell {
   protected readonly area = signal('');
   protected readonly sidebarAberta = signal(false);
 
+  /**
+   * Grupos do menu que estão expandidos — todos começam abertos (mesmo visual de antes do
+   * acordeão). O estado vive aqui, não em cada rota, porque o AppShell nunca é destruído entre
+   * navegações — não precisa de persistência em localStorage pra sobreviver a troca de página
+   * dentro da mesma sessão.
+   */
+  protected readonly gruposExpandidos = signal<ReadonlySet<string>>(
+    new Set(['Recursos Humanos', 'Administrativo', 'Assistência']),
+  );
+
   constructor() {
     this.atualizarBreadcrumb();
     this.router.events.pipe(filter((evento) => evento instanceof NavigationEnd)).subscribe(() => {
@@ -42,5 +52,21 @@ export class AppShell {
 
   protected toggleSidebar(): void {
     this.sidebarAberta.update((aberta) => !aberta);
+  }
+
+  protected estaExpandido(grupo: string): boolean {
+    return this.gruposExpandidos().has(grupo);
+  }
+
+  protected toggleGrupo(grupo: string): void {
+    this.gruposExpandidos.update((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(grupo)) {
+        novo.delete(grupo);
+      } else {
+        novo.add(grupo);
+      }
+      return novo;
+    });
   }
 }
