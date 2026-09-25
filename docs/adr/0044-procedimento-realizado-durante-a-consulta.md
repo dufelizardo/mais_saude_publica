@@ -3,7 +3,7 @@
 ## Status
 
 Aceita e implementada (quinta fatia da onda Operação Assistencial — último insumo antes da
-agregação do Prontuário).
+agregação do Prontuário — [PR #213](https://github.com/dufelizardo/mais_saude_publica/pull/213)).
 
 ## Contexto
 
