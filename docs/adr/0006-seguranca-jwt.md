@@ -4,7 +4,9 @@
 
 Proposto — **não implementado**. Hoje a API não tem nenhuma camada de autenticação/autorização (nem Spring Security, nem JWT), apesar do `README.md` do repositório mencionar um endpoint `/auth` que não existe no código.
 
-> Prioridade de implementação (decidida com o usuário): esta proposta entra no grupo prioritário (junto com Clean Architecture e Docker), antes de novos domínios de negócio.
+> Prioridade de implementação (decidida com o usuário, na época): esta proposta entra no grupo prioritário (junto com Clean Architecture e Docker), antes de novos domínios de negócio.
+>
+> **Atualização ([ADR-0039](./0039-mapa-de-dominios-e-prioridades-de-arquitetura.md))**: essa prioridade não foi seguida — RH e Administrativo (novos domínios de negócio) foram construídos 100% abertos, sem nenhuma autenticação. Ao entrar no domínio Assistência (Paciente/Atendimento — dado de saúde real, sensível por LGPD), o usuário foi consultado novamente e **decidiu manter o mesmo padrão de adiar**, conscientemente, com a ressalva explícita de revisitar esta ADR antes de qualquer deploy com dado real de paciente.
 
 ## Contexto
 

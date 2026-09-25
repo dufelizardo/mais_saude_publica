@@ -113,7 +113,8 @@ public abstract class AbstractHierarquicoService<RES> {
             case ESTADUAL -> TipoUnidadeDeSaude.FEDERAL;
             case MUNICIPAL -> TipoUnidadeDeSaude.ESTADUAL;
             case REGIONAL -> TipoUnidadeDeSaude.MUNICIPAL;
-            case UBS, HOSPITAL -> TipoUnidadeDeSaude.MUNICIPAL;
+            case UBS, HOSPITAL, UPA, LABORATORIO, CAPS, CENTRO_ESPECIALIDADES, CENTRO_REABILITACAO,
+                 POLICLINICA -> TipoUnidadeDeSaude.MUNICIPAL;
             default -> null;
         };
     }

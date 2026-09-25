@@ -6,5 +6,11 @@ public enum TipoUnidadeDeSaude {
     MUNICIPAL,
     REGIONAL,
     UBS,
-    HOSPITAL
+    HOSPITAL,
+    UPA,
+    LABORATORIO,
+    CAPS,
+    CENTRO_ESPECIALIDADES,
+    CENTRO_REABILITACAO,
+    POLICLINICA
 }

@@ -1,0 +1,126 @@
+<header class="page-head">
+        <div>
+          <h1>Setores</h1>
+          <p>Subdivisões organizacionais de uma unidade de saúde.</p>
+        </div>
+        <button type="button" class="btn" (click)="abrirNovo()">Novo setor</button>
+      </header>
+
+      <div class="toolbar" role="region" aria-label="Filtro de setores">
+        <label class="search">
+          <span class="sr-only">Buscar setor por nome</span>
+          <input type="search" placeholder="Buscar por nome…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+        <select [value]="filtroTipo()" (change)="filtroTipo.set($any($event.target).value)" aria-label="Filtrar por tipo">
+          <option value="">Todos os tipos</option>
+          @for (tipo of tipos; track tipo) {
+            <option [value]="tipo">{{ tipo }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="card" style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Unidade</th>
+              <th>Tipo</th>
+              <th>Responsável</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (setor of setoresFiltrados(); track setor.uuid) {
+              <tr>
+                <td>
+                  {{ setor.nome }}
+                  <div style="font-size: var(--fs-xs); color: var(--ink-500); margin-top: 2px;">{{ setor.codigo }}</div>
+                </td>
+                <td>{{ setor.unidadeNome }}</td>
+                <td>{{ setor.tipo }}</td>
+                <td>{{ setor.responsavelNome || '—' }}</td>
+                <td>
+                  @if (setor.ativo) {
+                    <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Ativo</span>
+                  } @else {
+                    <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Inativo</span>
+                  }
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                  <button type="button" class="btn btn--ghost" (click)="abrirEdicao(setor)">Editar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!carregando() && setoresFiltrados().length === 0) {
+          <p class="table-empty">Nenhum setor encontrado.</p>
+        }
+      </div>
+
+@if (modalAberto()) {
+  <app-modal [titulo]="editando() ? 'Editar setor' : 'Novo setor'" (fechar)="fecharModal()">
+    @if (errorMessage()) {
+      <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+      <div class="form-group">
+        <label for="unidadeId">Unidade de saúde *</label>
+        <select id="unidadeId" formControlName="unidadeId">
+          <option value="" disabled>Selecione…</option>
+          @for (unidade of unidades(); track unidade.uuid) {
+            <option [value]="unidade.uuid">{{ unidade.nome }}</option>
+          }
+        </select>
+        @if (form.controls.unidadeId.invalid && form.controls.unidadeId.touched) {
+          <span class="form-error">Unidade de saúde é obrigatória.</span>
+        }
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nome">Nome *</label>
+          <input id="nome" type="text" formControlName="nome" />
+          @if (form.controls.nome.invalid && form.controls.nome.touched) {
+            <span class="form-error">Nome é obrigatório.</span>
+          }
+        </div>
+        <div class="form-group">
+          <label for="codigo">Código *</label>
+          <input id="codigo" type="text" formControlName="codigo" />
+          @if (form.controls.codigo.invalid && form.controls.codigo.touched) {
+            <span class="form-error">Código é obrigatório.</span>
+          }
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="tipo">Tipo *</label>
+        <select id="tipo" formControlName="tipo">
+          @for (tipo of tipos; track tipo) {
+            <option [value]="tipo">{{ tipo }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="matriculaResponsavel">Matrícula do responsável</label>
+        <input id="matriculaResponsavel" type="text" formControlName="matriculaResponsavel" placeholder="Opcional — deixe em branco para desvincular" />
+        @if (editando()?.responsavelNome) {
+          <span style="font-size: var(--fs-xs); color: var(--ink-500);">Responsável atual: {{ editando()?.responsavelNome }}</span>
+        }
+      </div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
+          <input type="checkbox" formControlName="ativo" style="width: auto;" />
+          Ativo
+        </label>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submitting()">
+          {{ submitting() ? 'Salvando…' : 'Salvar' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}

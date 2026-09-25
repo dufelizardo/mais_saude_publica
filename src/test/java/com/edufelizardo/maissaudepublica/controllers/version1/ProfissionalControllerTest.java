@@ -168,6 +168,25 @@ class ProfissionalControllerTest {
     }
 
     @Test
+    void deveBuscarPorMatricula() throws Exception {
+        String cpf = PREFIXO_CPF_TESTE + "09";
+        String nome = "Profissional Busca Por Matricula";
+        criarProfissional(cpf, nome);
+        String matricula = profissionalRepository.findByCpfAndAtivoTrue(cpf).orElseThrow().getMatricula();
+
+        mockMvc.perform(get(BASE_URL + "matricula/" + matricula))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.matricula").value(matricula))
+                .andExpect(jsonPath("$.nome").value(nome));
+    }
+
+    @Test
+    void deveRetornarNotFoundAoBuscarMatriculaInexistente() throws Exception {
+        mockMvc.perform(get(BASE_URL + "matricula/00000000000000-00"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void deveAtualizarContato() throws Exception {
         String cpf = PREFIXO_CPF_TESTE + "04";
         criarProfissional(cpf, "Profissional Contato");

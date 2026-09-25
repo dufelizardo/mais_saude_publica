@@ -1,0 +1,93 @@
+<header class="page-head">
+        <div>
+          <h1>Capacidades administrativas</h1>
+          <p>Catálogo de capacidades que compõem um perfil administrativo.</p>
+        </div>
+        <button type="button" class="btn" (click)="abrirNovo()">Nova capacidade</button>
+      </header>
+
+      <div class="toolbar" role="region" aria-label="Filtro de capacidades administrativas">
+        <label class="search">
+          <span class="sr-only">Buscar capacidade por nome ou código</span>
+          <input type="search" placeholder="Buscar por nome ou código…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+      </div>
+
+      <div class="card" style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nome</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (capacidade of capacidadesFiltradas(); track capacidade.uuid) {
+              <tr>
+                <td>{{ capacidade.codigo }}</td>
+                <td>
+                  {{ capacidade.nome }}
+                  @if (capacidade.descricao) {
+                    <div style="font-size: var(--fs-xs); color: var(--ink-500); margin-top: 2px;">{{ capacidade.descricao }}</div>
+                  }
+                </td>
+                <td>
+                  @if (capacidade.ativo) {
+                    <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Ativa</span>
+                  } @else {
+                    <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Inativa</span>
+                  }
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                  <button type="button" class="btn btn--ghost" (click)="abrirEdicao(capacidade)">Editar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (!carregando() && capacidadesFiltradas().length === 0) {
+          <p class="table-empty">Nenhuma capacidade administrativa encontrada.</p>
+        }
+      </div>
+
+@if (modalAberto()) {
+  <app-modal [titulo]="editando() ? 'Editar capacidade administrativa' : 'Nova capacidade administrativa'" (fechar)="fecharModal()">
+    @if (errorMessage()) {
+      <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+      <div class="form-group">
+        <label for="codigo">Código *</label>
+        <input id="codigo" type="text" formControlName="codigo" />
+        @if (form.controls.codigo.invalid && form.controls.codigo.touched) {
+          <span class="form-error">Código é obrigatório.</span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="nome">Nome *</label>
+        <input id="nome" type="text" formControlName="nome" />
+        @if (form.controls.nome.invalid && form.controls.nome.touched) {
+          <span class="form-error">Nome é obrigatório.</span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="descricao">Descrição</label>
+        <textarea id="descricao" formControlName="descricao" rows="4"></textarea>
+      </div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
+          <input type="checkbox" formControlName="ativo" style="width: auto;" />
+          Ativa
+        </label>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submitting()">
+          {{ submitting() ? 'Salvando…' : 'Salvar' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}
