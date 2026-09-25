@@ -33,3 +33,5 @@ Resource    ../../schema/paciente/paciente_schema.resource
 Resource    ../../schema/atendimento/atendimento_schema.resource
 # AGENDAMENTO
 Resource    ../../schema/agendamento/agendamento_schema.resource
+# CONSULTA
+Resource    ../../schema/consulta/consulta_schema.resource
