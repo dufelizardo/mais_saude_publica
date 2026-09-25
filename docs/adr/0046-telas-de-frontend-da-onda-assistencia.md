@@ -2,7 +2,12 @@
 
 ## Status
 
-Aceita e em implementação (F1 — [PR #215](https://github.com/dufelizardo/mais_saude_publica/pull/215)).
+Aceita e implementada (F1 a F6 — [PR #215](https://github.com/dufelizardo/mais_saude_publica/pull/215),
+[#216](https://github.com/dufelizardo/mais_saude_publica/pull/216),
+[#217](https://github.com/dufelizardo/mais_saude_publica/pull/217),
+[#218](https://github.com/dufelizardo/mais_saude_publica/pull/218),
+[#219](https://github.com/dufelizardo/mais_saude_publica/pull/219),
+[#220](https://github.com/dufelizardo/mais_saude_publica/pull/220)).
 
 ## Contexto
 
