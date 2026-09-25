@@ -1,0 +1,142 @@
+<header class="page-head">
+  <div>
+    <h1>Atendimentos</h1>
+    <p>Registros de entrada do paciente na rede.</p>
+  </div>
+  <button type="button" class="btn" (click)="abrirNovo()">Novo atendimento</button>
+</header>
+
+<div class="card" style="overflow-x: auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>Paciente</th>
+        <th>Profissional</th>
+        <th>Unidade</th>
+        <th>Tipo</th>
+        <th>Status</th>
+        <th>Data/hora</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (atendimento of atendimentos(); track atendimento.uuid) {
+        <tr>
+          <td>{{ atendimento.pacienteNome }}</td>
+          <td>{{ atendimento.profissionalNome }}</td>
+          <td>{{ atendimento.unidadeNome }}</td>
+          <td>{{ atendimento.tipo }}</td>
+          <td>{{ atendimento.status }}</td>
+          <td>{{ atendimento.dataHora }}</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button type="button" class="btn btn--ghost" (click)="abrirEdicao(atendimento)">Editar</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (!carregando() && atendimentos().length === 0) {
+    <p class="table-empty">Nenhum atendimento encontrado.</p>
+  }
+</div>
+
+@if (modalAberto()) {
+  <app-modal [titulo]="editando() ? 'Editar atendimento' : 'Novo atendimento'" (fechar)="fecharModal()">
+    @if (errorMessage()) {
+      <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+      <div class="form-group">
+        <label for="pacienteId">Paciente *</label>
+        <select id="pacienteId" formControlName="pacienteId">
+          <option value="" disabled>Selecione…</option>
+          @for (paciente of pacientes(); track paciente.uuid) {
+            <option [value]="paciente.uuid">{{ paciente.nome }} ({{ paciente.cpf }})</option>
+          }
+        </select>
+        @if (form.controls.pacienteId.invalid && form.controls.pacienteId.touched) {
+          <span class="form-error">Paciente é obrigatório.</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="profissionalMatricula">Matrícula do profissional *</label>
+        <input id="profissionalMatricula" type="text" formControlName="profissionalMatricula" />
+        @if (editando()?.profissionalNome) {
+          <span style="font-size: var(--fs-xs); color: var(--ink-500);">Profissional: {{ editando()?.profissionalNome }}</span>
+        }
+        @if (form.controls.profissionalMatricula.invalid && form.controls.profissionalMatricula.touched) {
+          <span class="form-error">Matrícula do profissional é obrigatória.</span>
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="unidadeId">Unidade de saúde *</label>
+          <select id="unidadeId" formControlName="unidadeId">
+            <option value="" disabled>Selecione…</option>
+            @for (unidade of unidades(); track unidade.uuid) {
+              <option [value]="unidade.uuid">{{ unidade.nome }}</option>
+            }
+          </select>
+          @if (form.controls.unidadeId.invalid && form.controls.unidadeId.touched) {
+            <span class="form-error">Unidade de saúde é obrigatória.</span>
+          }
+        </div>
+        <div class="form-group">
+          <label for="setorId">Setor</label>
+          <select id="setorId" formControlName="setorId">
+            <option value="">Nenhum</option>
+            @for (setor of setores(); track setor.uuid) {
+              <option [value]="setor.uuid">{{ setor.nome }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="agendamentoId">Agendamento de origem</label>
+        <select id="agendamentoId" formControlName="agendamentoId">
+          <option value="">Nenhum (acolhimento espontâneo)</option>
+          @for (agendamento of agendamentos(); track agendamento.uuid) {
+            <option [value]="agendamento.uuid">{{ agendamento.pacienteNome }} — {{ agendamento.dataHora }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tipo">Tipo *</label>
+          <select id="tipo" formControlName="tipo">
+            @for (tipo of tipos; track tipo) {
+              <option [value]="tipo">{{ tipo }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="status">Status *</label>
+          <select id="status" formControlName="status">
+            @for (status of statusList; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dataHora">Data/hora *</label>
+        <input id="dataHora" type="datetime-local" formControlName="dataHora" />
+        @if (form.controls.dataHora.invalid && form.controls.dataHora.touched) {
+          <span class="form-error">Data/hora é obrigatória.</span>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submitting()">
+          {{ submitting() ? 'Salvando…' : 'Salvar' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}

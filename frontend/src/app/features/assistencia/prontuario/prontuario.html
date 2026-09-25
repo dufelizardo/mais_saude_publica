@@ -1,0 +1,101 @@
+<header class="page-head">
+  <div>
+    <h1>Prontuário</h1>
+    <p>Busque um paciente pelo CPF para ver seu histórico clínico consolidado.</p>
+  </div>
+</header>
+
+<div class="card">
+  <form [formGroup]="cpfForm" (ngSubmit)="buscarPorCpf()" class="form" novalidate>
+    <div class="form-group">
+      <label for="cpf">CPF *</label>
+      <input id="cpf" type="text" formControlName="cpf" autocomplete="off" />
+      @if (cpfForm.controls.cpf.invalid && cpfForm.controls.cpf.touched) {
+        <span class="form-error">CPF é obrigatório.</span>
+      }
+      @if (naoEncontrado()) {
+        <span class="form-error">Paciente não encontrado.</span>
+      }
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn" [disabled]="buscando()">
+        {{ buscando() ? 'Buscando…' : 'Buscar' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+@if (prontuario(); as p) {
+  <div class="card" style="margin-top: var(--s-5); padding: var(--s-5);">
+    <h2 style="font-size: 1.0625rem;">{{ p.pacienteNome }}</h2>
+  </div>
+
+  @if (p.atendimentos.length === 0) {
+    <div class="card" style="margin-top: var(--s-5); padding: var(--s-5);">
+      <p class="table-empty">Nenhum atendimento registrado para este paciente.</p>
+    </div>
+  }
+
+  @for (item of p.atendimentos; track item.atendimento.uuid) {
+    <div class="card" style="margin-top: var(--s-5); padding: var(--s-5);">
+      <h3 style="font-size: 1rem;">
+        Atendimento — {{ item.atendimento.tipo }} · {{ item.atendimento.status }} · {{ item.atendimento.dataHora }}
+      </h3>
+      <p style="color: var(--ink-500); font-size: 0.875rem;">
+        Profissional: {{ item.atendimento.profissionalNome }} · Unidade: {{ item.atendimento.unidadeNome }}
+        @if (item.atendimento.setorNome) {
+          · Setor: {{ item.atendimento.setorNome }}
+        }
+      </p>
+
+      @if (item.consultas.length === 0) {
+        <p class="table-empty" style="margin-top: var(--s-3);">Nenhuma consulta registrada neste atendimento.</p>
+      }
+
+      @for (c of item.consultas; track c.consulta.uuid) {
+        <div style="margin-top: var(--s-4); padding-left: var(--s-4); border-left: 2px solid var(--ink-100);">
+          <h4 style="font-size: 0.9375rem;">
+            Consulta — {{ c.consulta.tipoConsulta }} · {{ c.consulta.dataHora }}
+          </h4>
+          <p style="color: var(--ink-500); font-size: 0.875rem;">Profissional: {{ c.consulta.profissionalNome }}</p>
+          @if (c.consulta.queixaPrincipal) {
+            <p style="font-size: 0.875rem;">Queixa principal: {{ c.consulta.queixaPrincipal }}</p>
+          }
+          @if (c.consulta.diagnostico) {
+            <p style="font-size: 0.875rem;">Diagnóstico: {{ c.consulta.diagnostico }}</p>
+          }
+          @if (c.consulta.receituario) {
+            <p style="font-size: 0.875rem;">Receituário: {{ c.consulta.receituario }}</p>
+          }
+          @if (c.consulta.examesSolicitados) {
+            <p style="font-size: 0.875rem;">Exames solicitados: {{ c.consulta.examesSolicitados }}</p>
+          }
+          @if (c.consulta.retorno) {
+            <p style="font-size: 0.875rem;">Retorno: {{ c.consulta.retorno }}</p>
+          }
+
+          @if (c.procedimentos.length > 0) {
+            <table style="margin-top: var(--s-3);">
+              <thead>
+                <tr>
+                  <th>Procedimento</th>
+                  <th>Status</th>
+                  <th>Realizado em</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (proc of c.procedimentos; track proc.uuid) {
+                  <tr>
+                    <td>{{ proc.tipo }}</td>
+                    <td>{{ proc.status }}</td>
+                    <td>{{ proc.dataRealizacao }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      }
+    </div>
+  }
+}
