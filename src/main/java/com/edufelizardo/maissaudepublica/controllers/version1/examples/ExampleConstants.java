@@ -761,4 +761,100 @@ public class ExampleConstants {
                   "total": 4120.00
                 }
             """;
+    public static final String SETOR_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeNome": "string",
+                    "nome": "Administração",
+                    "codigo": "ADM",
+                    "tipo": "ADMINISTRATIVO",
+                    "ativo": true,
+                    "responsavelMatricula": "11111111111111-11",
+                    "responsavelNome": "string"
+                  }
+                ]
+            """;
+    public static final String CAPACIDADE_ADMINISTRATIVA_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "codigo": "PATRIMONIO",
+                    "nome": "Patrimônio",
+                    "descricao": "Cadastro, transferência, inventário, manutenção, baixa e descarte de bens.",
+                    "ativo": true
+                  }
+                ]
+            """;
+    public static final String PERFIL_ADMINISTRATIVO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "codigo": "ADMIN_UBS",
+                    "nome": "Perfil Administrativo - UBS",
+                    "descricao": "Perfil padrão para Unidades Básicas de Saúde.",
+                    "ativo": true
+                  }
+                ]
+            """;
+    public static final String PERFIL_POR_TIPO_UNIDADE_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "tipo": "UBS",
+                    "perfilAdministrativoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "perfilAdministrativoCodigo": "ADMIN_UBS",
+                    "perfilAdministrativoNome": "Perfil Administrativo - UBS"
+                  }
+                ]
+            """;
+    public static final String PROCESSO_ADMINISTRATIVO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "capacidadeUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "capacidadeCodigo": "PATRIMONIO",
+                    "capacidadeNome": "Patrimônio",
+                    "codigo": "CADASTRO",
+                    "nome": "Cadastro de bem",
+                    "descricao": "Registro inicial de um bem patrimonial.",
+                    "ativo": true
+                  }
+                ]
+            """;
+    public static final String RESPONSABILIDADE_ADMINISTRATIVA_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "setorUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "setorNome": "Administração",
+                    "tipo": "Fiscal de Contrato",
+                    "descricao": null,
+                    "dataInicio": "2026-01-01",
+                    "dataFim": null
+                  }
+                ]
+            """;
+    public static final String NECESSIDADE_DE_PESSOAL_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeNome": "UBS Central",
+                    "setorUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "setorNome": "Administração",
+                    "cargoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "cargoNome": "Enfermeiro",
+                    "quantidade": 2,
+                    "jornadaSemanalHoras": 40,
+                    "competenciasNecessarias": "Experiência em atenção primária",
+                    "justificativa": "Reposição de quadro",
+                    "dataRegistro": "2026-01-01",
+                    "vagaAssociadaUuid": null
+                  }
+                ]
+            """;
 }

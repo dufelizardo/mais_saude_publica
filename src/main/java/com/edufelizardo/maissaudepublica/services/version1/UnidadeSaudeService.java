@@ -22,7 +22,10 @@ public class UnidadeSaudeService extends AbstractHierarquicoService<UnidadeSaude
 
     @Override
     protected List<TipoUnidadeDeSaude> getTiposAceitos() {
-        return List.of(TipoUnidadeDeSaude.UBS, TipoUnidadeDeSaude.HOSPITAL);
+        return List.of(TipoUnidadeDeSaude.UBS, TipoUnidadeDeSaude.HOSPITAL, TipoUnidadeDeSaude.UPA,
+                TipoUnidadeDeSaude.LABORATORIO, TipoUnidadeDeSaude.CAPS,
+                TipoUnidadeDeSaude.CENTRO_ESPECIALIDADES, TipoUnidadeDeSaude.CENTRO_REABILITACAO,
+                TipoUnidadeDeSaude.POLICLINICA);
     }
 
     @Override

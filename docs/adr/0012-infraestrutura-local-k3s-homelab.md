@@ -160,6 +160,14 @@ minimizar risco de conflito com o DHCP do modem (Sagemcom F@ST 3895; não foi po
 range exato do DHCP dele, então optou-se por uma faixa improvável de colidir em vez de aguardar
 essa confirmação). Se algum conflito de IP aparecer no futuro, revisar essa faixa.
 
+**Lição aprendida (2026-09-21):** o hosts do frontend (`frontend-<ambiente>.mais-saude.local`,
+adicionado quando o deploy do frontend foi expandido de `dev` para os 4 ambientes) tem que ganhar
+uma entrada nova no arquivo `hosts` de cada máquina a cada vez que um host novo é criado —
+não é automático. Causou 404 real em `frontend.mais-saude.local` (prod) porque a entrada ficou de
+fora quando as de `frontend-dev`/`frontend-qaa`/`frontend-homologacao` foram adicionadas. Editar
+`C:\Windows\System32\drivers\etc\hosts` exige PowerShell/prompt como Administrador — não dá para
+automatizar via uma sessão sem privilégio elevado.
+
 ### GitOps
 
 Manifests do Kubernetes (Deployment, Service, Ingress, ConfigMap, Secret) organizados em

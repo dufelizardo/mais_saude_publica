@@ -1,0 +1,34 @@
+*** Settings ***
+Resource    ../../../src/scenario/necessidade_de_pessoal/update_necessidade_de_pessoal/update_necessidade_de_pessoal_scenario.resource
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Metadata    Test Suite - PATCH Update Necessidade De Pessoal
+Metadata    Test Suite Description        This test suite validates the PATCH update Necessidade De Pessoal endpoint of the Mais Saúde Pública API.
+Metadata    Test Suite Owner              Eduardo Felizardo
+Metadata    Test Suite Version            1.0
+Metadata    Test Suite Tags               PATCH    UpdateNecessidadeDePessoal    MaisSaudePublicaAPI
+Metadata    Test Suite Created On         2026-09-23
+Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Project                       Layered Keyword Driven Framework (LKDF)
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Comments ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Variables ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Test Cases ***
+CT-001 - Validate PATCH Update Necessidade De Pessoal - HTTP 200 OK
+    [Documentation]    Test case to validate the PATCH update Necessidade De Pessoal endpoint with HTTP 200 OK
+    ...    response.
+    [Tags]    PATCH    UpdateNecessidadeDePessoal    HTTP200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    NECESSIDADE DE PESSOAL - UPDATE - PATCH    200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-002 - Validate PATCH Update Necessidade De Pessoal - HTTP 404 NOT FOUND
+    [Documentation]    Test case to validate the PATCH update Necessidade De Pessoal endpoint with HTTP 404 NOT
+    ...    FOUND response, when the uuid in the path doesn't exist.
+    [Tags]    PATCH    UpdateNecessidadeDePessoal    HTTP404
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    NECESSIDADE DE PESSOAL - UPDATE - PATCH    404
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

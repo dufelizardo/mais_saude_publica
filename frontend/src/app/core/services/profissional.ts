@@ -20,6 +20,10 @@ export class ProfissionalService {
     return this.http.get<ProfissionalResponseDto>(`${this.baseUrl}/${cpf}`);
   }
 
+  buscarPorMatricula(matricula: string): Observable<ProfissionalResponseDto> {
+    return this.http.get<ProfissionalResponseDto>(`${this.baseUrl}/matricula/${matricula}`);
+  }
+
   atualizarContato(cpf: string, dto: ProfissionalContatoRequestDto): Observable<SuccessResponseDto> {
     return this.http.patch<SuccessResponseDto>(`${this.baseUrl}/contato/${cpf}`, dto);
   }

@@ -5,9 +5,14 @@ namespace: mais-saude-homolog
 
 resources:
   - ../../base
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  - frontend-ingress.yaml
 
 images:
   - name: ghcr.io/dufelizardo/mais_saude_publica
+    newTag: homologacao
+  - name: ghcr.io/dufelizardo/mais_saude_publica-frontend
     newTag: homologacao
 
 configMapGenerator:
