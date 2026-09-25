@@ -56,6 +56,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0038](./0038-app-shell-dinamico-e-telas-de-frontend-do-setor-administrativo.md) | App shell dinâmico e decisões de frontend do Setor Administrativo | Aceita |
 | [0039](./0039-mapa-de-dominios-e-prioridades-de-arquitetura.md) | Mapa de domínios do Mais Saúde Pública e prioridades de arquitetura | Aceita |
 | [0040](./0040-paciente-primeira-entidade-da-assistencia.md) | Paciente: primeira entidade da onda Assistência | Aceita |
+| [0041](./0041-atendimento-registra-entrada-do-paciente-na-rede.md) | Atendimento registra a entrada do paciente na rede | Aceita |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 
