@@ -70,10 +70,11 @@ class AtendimentoControllerTest {
 
     @AfterEach
     void limparDadosDeTeste() {
-        atendimentoRepository.deleteAll(atendimentoRepository.findAll().stream()
-                .filter(a -> a.getPaciente() != null && a.getPaciente().getCpf() != null
-                        && a.getPaciente().getCpf().startsWith(PREFIXO_CPF_TESTE))
-                .toList());
+        // Atendimento não tem um campo de teste próprio para filtrar (paciente/profissional são
+        // @ManyToOne LAZY — navegar até paciente.getCpf() fora de uma transação lançaria
+        // LazyInitializationException). Este é o único teste que cria Atendimento, então apagar
+        // tudo é seguro.
+        atendimentoRepository.deleteAll();
 
         setorRepository.deleteAll(setorRepository.findAll().stream()
                 .filter(s -> s.getNome() != null && s.getNome().startsWith(PREFIXO_NOME_TESTE))
