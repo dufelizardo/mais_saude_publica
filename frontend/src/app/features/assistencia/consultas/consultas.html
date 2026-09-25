@@ -1,0 +1,122 @@
+<header class="page-head">
+  <div>
+    <h1>Consultas</h1>
+    <p>Consultas realizadas durante um atendimento.</p>
+  </div>
+  <button type="button" class="btn" (click)="abrirNovo()">Nova consulta</button>
+</header>
+
+<div class="card" style="overflow-x: auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>Atendimento</th>
+        <th>Profissional</th>
+        <th>Tipo</th>
+        <th>Data/hora</th>
+        <th>Diagnóstico</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (consulta of consultas(); track consulta.uuid) {
+        <tr>
+          <td>{{ descricaoAtendimento(consulta.atendimentoUuid) }}</td>
+          <td>{{ consulta.profissionalNome }}</td>
+          <td>{{ consulta.tipoConsulta }}</td>
+          <td>{{ consulta.dataHora }}</td>
+          <td>{{ consulta.diagnostico || '—' }}</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button type="button" class="btn btn--ghost" (click)="abrirEdicao(consulta)">Editar</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (!carregando() && consultas().length === 0) {
+    <p class="table-empty">Nenhuma consulta encontrada.</p>
+  }
+</div>
+
+@if (modalAberto()) {
+  <app-modal [titulo]="editando() ? 'Editar consulta' : 'Nova consulta'" (fechar)="fecharModal()">
+    @if (errorMessage()) {
+      <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+      <div class="form-group">
+        <label for="atendimentoId">Atendimento *</label>
+        <select id="atendimentoId" formControlName="atendimentoId">
+          <option value="" disabled>Selecione…</option>
+          @for (atendimento of atendimentos(); track atendimento.uuid) {
+            <option [value]="atendimento.uuid">{{ atendimento.pacienteNome }} — {{ atendimento.dataHora }}</option>
+          }
+        </select>
+        @if (form.controls.atendimentoId.invalid && form.controls.atendimentoId.touched) {
+          <span class="form-error">Atendimento é obrigatório.</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="profissionalMatricula">Matrícula do profissional *</label>
+        <input id="profissionalMatricula" type="text" formControlName="profissionalMatricula" />
+        @if (editando()?.profissionalNome) {
+          <span style="font-size: var(--fs-xs); color: var(--ink-500);">Profissional: {{ editando()?.profissionalNome }}</span>
+        }
+        @if (form.controls.profissionalMatricula.invalid && form.controls.profissionalMatricula.touched) {
+          <span class="form-error">Matrícula do profissional é obrigatória.</span>
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tipoConsulta">Tipo *</label>
+          <select id="tipoConsulta" formControlName="tipoConsulta">
+            @for (tipo of tipos; track tipo) {
+              <option [value]="tipo">{{ tipo }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="dataHora">Data/hora *</label>
+          <input id="dataHora" type="datetime-local" formControlName="dataHora" />
+          @if (form.controls.dataHora.invalid && form.controls.dataHora.touched) {
+            <span class="form-error">Data/hora é obrigatória.</span>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="queixaPrincipal">Queixa principal</label>
+        <input id="queixaPrincipal" type="text" formControlName="queixaPrincipal" placeholder="Opcional" />
+      </div>
+
+      <div class="form-group">
+        <label for="diagnostico">Diagnóstico</label>
+        <input id="diagnostico" type="text" formControlName="diagnostico" placeholder="Opcional" />
+      </div>
+
+      <div class="form-group">
+        <label for="receituario">Receituário</label>
+        <input id="receituario" type="text" formControlName="receituario" placeholder="Opcional" />
+      </div>
+
+      <div class="form-group">
+        <label for="examesSolicitados">Exames solicitados</label>
+        <input id="examesSolicitados" type="text" formControlName="examesSolicitados" placeholder="Opcional" />
+      </div>
+
+      <div class="form-group">
+        <label for="retorno">Data de retorno</label>
+        <input id="retorno" type="date" formControlName="retorno" />
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submitting()">
+          {{ submitting() ? 'Salvando…' : 'Salvar' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}

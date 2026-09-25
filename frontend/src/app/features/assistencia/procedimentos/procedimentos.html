@@ -1,0 +1,110 @@
+<header class="page-head">
+  <div>
+    <h1>Procedimentos</h1>
+    <p>Procedimentos realizados durante uma consulta.</p>
+  </div>
+  <button type="button" class="btn" (click)="abrirNovo()">Novo procedimento</button>
+</header>
+
+<div class="card" style="overflow-x: auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>Consulta</th>
+        <th>Profissional</th>
+        <th>Tipo</th>
+        <th>Status</th>
+        <th>Data de realização</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (procedimento of procedimentos(); track procedimento.uuid) {
+        <tr>
+          <td>{{ descricaoConsulta(procedimento.consultaUuid) }}</td>
+          <td>{{ procedimento.profissionalNome }}</td>
+          <td>{{ procedimento.tipo }}</td>
+          <td>{{ procedimento.status }}</td>
+          <td>{{ procedimento.dataRealizacao }}</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button type="button" class="btn btn--ghost" (click)="abrirEdicao(procedimento)">Editar</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  @if (!carregando() && procedimentos().length === 0) {
+    <p class="table-empty">Nenhum procedimento encontrado.</p>
+  }
+</div>
+
+@if (modalAberto()) {
+  <app-modal [titulo]="editando() ? 'Editar procedimento' : 'Novo procedimento'" (fechar)="fecharModal()">
+    @if (errorMessage()) {
+      <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form" novalidate>
+      <div class="form-group">
+        <label for="consultaId">Consulta *</label>
+        <select id="consultaId" formControlName="consultaId">
+          <option value="" disabled>Selecione…</option>
+          @for (consulta of consultas(); track consulta.uuid) {
+            <option [value]="consulta.uuid">{{ consulta.tipoConsulta }} — {{ consulta.dataHora }}</option>
+          }
+        </select>
+        @if (form.controls.consultaId.invalid && form.controls.consultaId.touched) {
+          <span class="form-error">Consulta é obrigatória.</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="profissionalMatricula">Matrícula do profissional *</label>
+        <input id="profissionalMatricula" type="text" formControlName="profissionalMatricula" />
+        @if (editando()?.profissionalNome) {
+          <span style="font-size: var(--fs-xs); color: var(--ink-500);">Profissional: {{ editando()?.profissionalNome }}</span>
+        }
+        @if (form.controls.profissionalMatricula.invalid && form.controls.profissionalMatricula.touched) {
+          <span class="form-error">Matrícula do profissional é obrigatória.</span>
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tipo">Tipo *</label>
+          <input id="tipo" type="text" formControlName="tipo" placeholder="Ex.: CIRURGIA, EXAME, CURATIVO" />
+          @if (form.controls.tipo.invalid && form.controls.tipo.touched) {
+            <span class="form-error">Tipo é obrigatório.</span>
+          }
+        </div>
+        <div class="form-group">
+          <label for="status">Status *</label>
+          <select id="status" formControlName="status">
+            @for (status of statusList; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="descricao">Descrição</label>
+        <input id="descricao" type="text" formControlName="descricao" placeholder="Opcional" />
+      </div>
+
+      <div class="form-group">
+        <label for="dataRealizacao">Data de realização *</label>
+        <input id="dataRealizacao" type="datetime-local" formControlName="dataRealizacao" />
+        @if (form.controls.dataRealizacao.invalid && form.controls.dataRealizacao.touched) {
+          <span class="form-error">Data de realização é obrigatória.</span>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submitting()">
+          {{ submitting() ? 'Salvando…' : 'Salvar' }}
+        </button>
+      </div>
+    </form>
+  </app-modal>
+}
