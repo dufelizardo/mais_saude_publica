@@ -642,7 +642,7 @@ Mantida como no desenho original (campo a campo), apenas trocando as FKs superse
 `Exame`/`Prescricao` próprias por ora (YAGNI: nenhum requisito concreto pede consulta estruturada
 desses dados ainda; revisitar quando Farmácia/Laboratório entrarem no roadmap).
 
-### Procedimento
+### Procedimento — ✅ Implementado (ADR-0044)
 
 Mantido como no desenho original, apenas trocando `profissional_id` por `profissionalMatricula`.
 
