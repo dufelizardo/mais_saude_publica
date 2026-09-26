@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceita e implementada (parte backend — ver Consequências para o que ainda falta).
+Aceita e implementada (backend + frontend — ver Consequências para o que ainda falta).
 
 ## Contexto
 
@@ -69,13 +69,25 @@ Investigação confirmou:
    curto, default 8h) — resolve o caso de uso real sem implementar refresh token.
 8. **Toggle por ambiente, sequenciamento seguro**: `app.security.enabled=false` em
    `application.properties` (herdado por `dev`/`test`/`prod` — nenhum perfil sobrescreve). **Nenhum
-   overlay k8s liga o toggle nesta entrega** — a wiring do secret JWT (`APP_SECURITY_JWT_SECRET`,
+   overlay k8s liga o toggle ainda** — a wiring do secret JWT (`APP_SECURITY_JWT_SECRET`,
    `optional: true` no `k8s/base/deployment-app.yaml`) está pronta, mas `APP_SECURITY_ENABLED` só
    será adicionado ao `configMapGenerator` de `app-config` do overlay `dev` depois que a tela de
-   Login (frontend, próxima entrega) estiver mesclada e confirmada — ligar agora quebraria a UI já
-   implantada em `developer` (sem tela de login ainda, todo `/api/**` passaria a exigir token).
-   Overlays `qaa`/`homologacao`/`prod` só recebem o toggle quando essas branches forem promovidas,
-   com sinal explícito do usuário (mesma regra já seguida a sessão inteira).
+   Login (frontend, item 9) estiver confirmada visualmente pelo usuário — ligar antes disso
+   quebraria a UI já implantada em `developer` (todo `/api/**` passaria a exigir token). Overlays
+   `qaa`/`homologacao`/`prod` só recebem o toggle quando essas branches forem promovidas, com sinal
+   explícito do usuário (mesma regra já seguida a sessão inteira).
+9. **Frontend** (`features/auth/login/`): tela de Login fiel ao mockup fornecido pelo usuário —
+   abas CPF/Matrícula (reaproveitando `formatCpf` de `shared/format-mask.ts`), "Entrar com gov.br"
+   e "Esqueci minha senha" desabilitados com `title="Em breve"`, "Manter conectado" controlando
+   `localStorage`/`sessionStorage` (ver item 7). `AuthService` (`core/services/auth.ts`) expõe
+   `login()`, `logout()` e `securityEnabled()` (cacheado, com fallback para `false` se a chamada
+   falhar — evita travar a navegação local se o backend estiver fora do ar). `authGuard`
+   (`core/guards/`) protege a rota-wrapper do `AppShell` inteira de uma vez, liberando sempre que o
+   toggle está desligado. `authInterceptor` (`core/interceptors/`) anexa o Bearer token e desloga em
+   qualquer 401. Botão de logout novo no `app-shell` (`.top-actions`, ao lado de
+   Notificações/Configurações). Os 5 links "Entrar" da landing page (header, menu mobile, hero,
+   cta-strip, rodapé), que apontavam para `href="#"` como placeholder, passaram a usar
+   `routerLink="/login"`.
 
 ## Trade-offs considerados
 
@@ -102,20 +114,21 @@ Profile por ambiente de deploy existia para reaproveitar.
 
 ## Consequências
 
-**Positivas**: login funcional (CPF ou matrícula), toggle seguro por ambiente sem quebrar nenhum
-teste existente, bootstrap do primeiro usuário sem exigir Papel/Permissao ainda, nenhum segredo
-commitado no git.
+**Positivas**: login funcional ponta a ponta (CPF ou matrícula) — backend e frontend — toggle
+seguro por ambiente sem quebrar nenhum teste existente, bootstrap do primeiro usuário sem exigir
+Papel/Permissao ainda, nenhum segredo commitado no git, tela fiel ao mockup fornecido.
 
 **Negativas / pendências**:
 - RBAC granular (`Papel`/`Permissao`/`EscopoAcesso`/`AtribuicaoAcesso`, ADR-0054) continua não
   implementado — quando o toggle estiver ligado, qualquer usuário autenticado acessa qualquer rota.
-- **Frontend ainda não implementado** (tela de Login, `AuthService`, guard, interceptor) — próxima
-  entrega desta mesma ADR.
 - **"Entrar com gov.br"** e **"Esqueci minha senha"** ficam "Em breve" no frontend — integração
   OAuth externa e recuperação por e-mail/SMS são escopo à parte.
+- Sem refresh token — "Manter conectado" resolve o caso de uso real trocando storage/duração do
+  token, mas um token expirado exige logar de novo.
 - Provisionamento manual necessário do usuário, fora do alcance deste agente: valor real do secret
   JWT e das credenciais do `AdministradorPlataforma` no cluster K3s, para os ambientes que forem de
-  fato promovidos; e a decisão de quando de fato ligar `APP_SECURITY_ENABLED=true` em cada overlay.
+  fato promovidos; e a decisão de quando de fato ligar `APP_SECURITY_ENABLED=true` em cada overlay
+  (começando pelo `dev`, agora que a tela de Login já está pronta e confirmada).
 
 ## Referências
 

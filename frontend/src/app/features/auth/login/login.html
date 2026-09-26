@@ -1,0 +1,219 @@
+<a href="#main" class="skip-link">Pular para o formulário</a>
+
+<div class="login-shell">
+  <!-- =========== Left brand panel =========== -->
+  <aside class="brand-panel" aria-labelledby="bp-title">
+    <a routerLink="/" class="bp-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      Voltar ao portal
+    </a>
+
+    <div class="bp-brand">
+      <span class="bp-brand__mark" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <div>
+        <div class="bp-brand__name">Mais Saúde Pública</div>
+        <div class="bp-brand__sub">Portal Integrado</div>
+      </div>
+    </div>
+
+    <div class="bp-content">
+      <h1 id="bp-title" class="bp-headline">A rede municipal de saúde em <em>um único sistema.</em></h1>
+      <p class="bp-lead">Profissionais, gestores e coordenações acessam aqui a sala de situação, agendas, pacientes e escalas da sua unidade.</p>
+
+      <div class="bp-features">
+        <div class="bp-feat">
+          <span class="bp-feat__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+          </span>
+          <div>
+            <div class="bp-feat__title">Acesso seguro</div>
+            <div class="bp-feat__desc">JWT, RBAC e bloqueio por tentativas.</div>
+          </div>
+        </div>
+        <div class="bp-feat">
+          <span class="bp-feat__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+          </span>
+          <div>
+            <div class="bp-feat__title">Tempo real</div>
+            <div class="bp-feat__desc">Indicadores atualizados a cada minuto.</div>
+          </div>
+        </div>
+        <div class="bp-feat">
+          <span class="bp-feat__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m7 14 4-4 4 4 5-5"></path></svg>
+          </span>
+          <div>
+            <div class="bp-feat__title">Decisão por dados</div>
+            <div class="bp-feat__desc">Sala de situação operacional e estratégica.</div>
+          </div>
+        </div>
+        <div class="bp-feat">
+          <span class="bp-feat__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"></circle><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </span>
+          <div>
+            <div class="bp-feat__title">Toda a equipe</div>
+            <div class="bp-feat__desc">Recepção, enfermagem, médicos e gestão.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bp-foot">
+        <span class="bp-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          LGPD
+        </span>
+        <span class="bp-badge">WCAG 2.2 AA</span>
+        <span class="bp-badge">CNES Integrado</span>
+        <span class="bp-badge">SUS</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========== Right form panel =========== -->
+  <section class="form-panel" aria-labelledby="form-title">
+    <!-- Accessibility tools -->
+    <div class="form-panel__top" role="toolbar" aria-label="Ferramentas de acessibilidade">
+      <button type="button" class="a11y-btn" [attr.aria-pressed]="fontSize() === 'default'" aria-label="Tamanho padrão de fonte" (click)="setFontSize('default')">A</button>
+      <button type="button" class="a11y-btn" [attr.aria-pressed]="fontSize() === 'lg'" aria-label="Aumentar fonte" (click)="setFontSize('lg')">A+</button>
+      <button type="button" class="a11y-btn" [attr.aria-pressed]="fontSize() === 'xl'" aria-label="Aumentar mais a fonte" (click)="setFontSize('xl')">A++</button>
+      <button type="button" class="a11y-btn" [attr.aria-pressed]="highContrast()" aria-label="Alto contraste" (click)="toggleHighContrast()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 0 0 20"></path></svg>
+        Contraste
+      </button>
+    </div>
+
+    <main id="main" class="form-wrap" role="main">
+      <h1 id="form-title">Entrar no sistema</h1>
+      <p class="lead">Acesso restrito a profissionais e gestores da rede municipal. Use seu CPF ou matrícula funcional.</p>
+
+      <!-- Tabs -->
+      <div class="seg" role="tablist" aria-label="Tipo de acesso">
+        <button class="seg__btn" role="tab" type="button" [attr.aria-selected]="aba() === 'CPF'" id="tab-cpf" aria-controls="login-form" (click)="selecionarAba('CPF')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M5 18a4 4 0 0 1 8 0"></path><line x1="15" y1="9" x2="19" y2="9"></line><line x1="15" y1="13" x2="19" y2="13"></line></svg>
+          CPF
+        </button>
+        <button class="seg__btn" role="tab" type="button" [attr.aria-selected]="aba() === 'MATRICULA'" id="tab-mat" aria-controls="login-form" (click)="selecionarAba('MATRICULA')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="7" y1="15" x2="11" y2="15"></line><line x1="14" y1="15" x2="17" y2="15"></line></svg>
+          Matrícula
+        </button>
+      </div>
+
+      <form id="login-form" novalidate [formGroup]="form" (ngSubmit)="enviar()">
+        <!-- Identifier -->
+        <div class="field" id="field-id" [class.has-error]="identificadorInvalido()">
+          <label for="identifier">{{ aba() === 'CPF' ? 'CPF' : 'Matrícula funcional' }}</label>
+          <div class="input-wrap" [class.has-error]="identificadorInvalido()">
+            <span class="input-wrap__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+            </span>
+            <input
+              id="identifier"
+              formControlName="identificador"
+              type="text"
+              autocomplete="username"
+              [attr.inputmode]="aba() === 'CPF' ? 'numeric' : 'text'"
+              [placeholder]="aba() === 'CPF' ? '000.000.000-00' : 'Ex: 458320'"
+              [attr.maxlength]="aba() === 'CPF' ? 14 : null"
+              (input)="onIdentificadorInput($event)"
+              aria-describedby="identifier-error"
+            />
+          </div>
+          @if (identificadorInvalido()) {
+            <span class="error-msg" id="identifier-error" role="alert" style="display: inline-flex;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              {{ aba() === 'CPF' ? 'Informe um CPF válido (11 dígitos).' : 'Informe uma matrícula válida.' }}
+            </span>
+          }
+        </div>
+
+        <!-- Password -->
+        <div class="field" id="field-pwd" [class.has-error]="senhaInvalida()">
+          <div class="field__row">
+            <label for="password">Senha</label>
+            <button type="button" class="hint" disabled title="Em breve — recuperação de senha ainda não implementada">Esqueci minha senha</button>
+          </div>
+          <div class="input-wrap" [class.has-error]="senhaInvalida()">
+            <span class="input-wrap__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </span>
+            <input
+              id="password"
+              formControlName="senha"
+              [type]="mostrarSenha() ? 'text' : 'password'"
+              autocomplete="current-password"
+              placeholder="Digite sua senha"
+              aria-describedby="password-error"
+            />
+            <button type="button" class="input-wrap__action" (click)="toggleMostrarSenha()" [attr.aria-pressed]="mostrarSenha()" [attr.aria-label]="mostrarSenha() ? 'Ocultar senha' : 'Mostrar senha'">
+              @if (!mostrarSenha()) {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-10-7-10-7a18.5 18.5 0 0 1 4.06-5.94"></path><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 10 7 10 7a18.6 18.6 0 0 1-3.18 4.36"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+              }
+            </button>
+          </div>
+          @if (senhaInvalida()) {
+            <span class="error-msg" id="password-error" role="alert" style="display: inline-flex;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              A senha deve ter ao menos 8 caracteres.
+            </span>
+          }
+        </div>
+
+        @if (erroServidor()) {
+          <span class="error-msg" role="alert" style="display: inline-flex;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            {{ erroServidor() }}
+          </span>
+        }
+
+        <div class="check-row">
+          <label class="check">
+            <input type="checkbox" formControlName="manterConectado" />
+            <span class="check__box" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </span>
+            Manter conectado neste dispositivo
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn--block" [disabled]="enviando()">
+          {{ enviando() ? 'Entrando...' : 'Entrar' }}
+          @if (!enviando()) {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          }
+        </button>
+      </form>
+
+      <div class="divider"><span>ou</span></div>
+
+      <button type="button" class="gov-btn" disabled title="Em breve — integração com gov.br ainda não implementada">
+        <span class="gov-pill" aria-hidden="true">gov.br</span>
+        Entrar com sua conta gov.br
+      </button>
+
+      <div class="security-note" role="note">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <div>
+          <strong>Acesso protegido.</strong> Suas credenciais trafegam por conexão criptografada. Sessões expiram após inatividade e tentativas inválidas bloqueiam temporariamente o acesso (LGPD &middot; auditoria de logs ativa).
+        </div>
+      </div>
+
+      <p style="margin-top: var(--s-6); color: var(--ink-500); font-size: 0.875rem; text-align: center;">
+        Não tem cadastro? Procure a coordenação da sua unidade ou abra um chamado no suporte técnico.
+      </p>
+    </main>
+
+    <footer class="form-panel__bottom">
+      <span>© 2026 Secretaria Municipal de Saúde</span>
+      <div style="display:flex; gap:12px;">
+        <a href="#">Termos de uso</a>
+        <a href="#">Privacidade</a>
+      </div>
+    </footer>
+  </section>
+</div>

@@ -8,6 +8,7 @@ import {
   RouterOutlet,
 } from '@angular/router';
 import { filter } from 'rxjs';
+import { AuthService } from '../../core/services/auth';
 
 @Component({
   selector: 'app-shell',
@@ -18,6 +19,7 @@ import { filter } from 'rxjs';
 export class AppShell {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly authService = inject(AuthService);
 
   protected readonly breadcrumb = signal('');
   protected readonly area = signal('');
@@ -68,5 +70,10 @@ export class AppShell {
       }
       return novo;
     });
+  }
+
+  protected sair(): void {
+    this.authService.logout();
+    this.router.navigateByUrl('/login');
   }
 }

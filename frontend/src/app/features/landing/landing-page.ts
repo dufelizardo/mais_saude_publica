@@ -1,10 +1,12 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 type FontSize = 'default' | 'lg' | 'xl';
 
 @Component({
   selector: 'app-landing-page',
+  imports: [RouterLink],
   templateUrl: './landing-page.html',
 })
 export class LandingPage {
