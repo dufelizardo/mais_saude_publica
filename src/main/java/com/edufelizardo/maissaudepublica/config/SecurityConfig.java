@@ -51,9 +51,11 @@ public class SecurityConfig {
         // sessao) enviada automaticamente pelo navegador. Esta API e stateless: autenticacao viaja
         // por Bearer token no header Authorization, nunca por cookie/sessao (ver
         // SessionCreationPolicy.STATELESS logo abaixo) - nao ha credencial ambiente para um site
-        // malicioso explorar, entao CSRF nao se aplica. Mesma orientacao oficial do Spring Security
-        // para APIs REST stateless (ver ADR-0006/ADR-0055).
-        http.csrf(csrf -> csrf.disable()) // lgtm[java/spring-disabled-csrf-protection]
+        // malicioso explorar, entao CSRF nao se aplica a nenhuma rota aqui. Mesma orientacao oficial
+        // do Spring Security para APIs REST stateless (ver ADR-0006/ADR-0055). Usa
+        // ignoringRequestMatchers em vez de um disable() global para manter o filtro tecnicamente
+        // ativo (mais facil de restringir no futuro se alguma rota baseada em cookie/sessao surgir).
+        http.csrf(csrf -> csrf.ignoringRequestMatchers("/**"))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         if (!securityEnabled) {
