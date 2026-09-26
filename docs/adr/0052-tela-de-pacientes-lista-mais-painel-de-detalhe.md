@@ -99,8 +99,18 @@ Diante disso, duas abordagens foram discutidas com o usuário:
   - Programas, Vacinação, Anexos: cada uma sua própria aba "em breve".
   `core/models/prontuario.ts` ganha `TriagemResponseDto`/`EvolucaoEnfermagemResponseDto` e os campos `triagens`/`evolucoes` em
   `ProntuarioAtendimentoDto`, espelhando o que o backend já expõe desde as ADRs 0047/0048.
-- **Editar continua sendo o `<app-modal>` já existente**, aberto pelo botão "Editar" no cabeçalho
-  do painel — sem edição inline nova.
+- **Editar continua sendo o `<app-modal>` já existente**, aberto agora por um botão só-ícone
+  (`.icon-btn`, novo — nenhuma tela do projeto tinha até aqui) no cabeçalho do painel, igual ao
+  mockup — decisão deliberada de divergir do botão de texto que `profissional-perfil` usa pro
+  mesmo tipo de ação; outras telas migram pra esse estilo depois, uma de cada vez, não em bloco.
+  Ao lado, um botão "Mais opções" (⋮) "em breve" (o próprio mockup não define o que tem ali, é
+  estático).
+- **CPF, CNS e "Prontuário" ficam sempre visíveis no cabeçalho do painel** (`.detail-head__ids`),
+  não só dentro da aba Resumo — mesmo comportamento do mockup, onde esses identificadores não
+  somem ao trocar de aba. **"Prontuário" fica marcado "Em breve"**: o mockup mostra um número fixo
+  (`#08471`) que não existe no nosso modelo (o Prontuário é agregado por uuid do paciente, sem
+  numeração própria — ADR-0045). Decisão de manter o rótulo (não remover) pensando num possível
+  "prontuário familiar" ou numeração própria no futuro — a decidir quando/se surgir requisito real.
 - **Sem toggle "Lista/Cartões"** do mockup — só uma visualização.
 
 ## Trade-offs considerados
