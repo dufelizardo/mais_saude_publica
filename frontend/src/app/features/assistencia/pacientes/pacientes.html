@@ -1,56 +1,376 @@
 <header class="page-head">
   <div>
     <h1>Pacientes</h1>
-    <p>Cidadãos atendidos pela rede pública de saúde.</p>
+    <p>{{ totalPacientes() }} pacientes cadastrados na rede pública de saúde.</p>
   </div>
-  <button type="button" class="btn" (click)="abrirNovo()">Novo paciente</button>
+  <div class="actions" style="display: flex; gap: 8px;">
+    <button type="button" class="btn btn--ghost" disabled title="Em breve">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      Exportar
+    </button>
+    <button type="button" class="btn btn--ghost" disabled title="Em breve">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+      Importar CSV
+    </button>
+    <button type="button" class="btn" (click)="abrirNovo()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Novo paciente
+    </button>
+  </div>
 </header>
 
+<section class="stats" aria-label="Resumo de pacientes">
+  <div class="stat">
+    <span class="stat__icon stat__icon--ok" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+    </span>
+    <div>
+      <div class="stat__lbl">Pacientes ativos</div>
+      <div class="stat__val">{{ totalAtivos() }}</div>
+    </div>
+  </div>
+  <div class="stat stat--pending" title="Em breve — depende de um campo de data de cadastro, que ainda não existe">
+    <span class="stat__icon" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+    </span>
+    <div>
+      <div class="stat__lbl">Novos cadastros · mês</div>
+      <div class="stat__val">Em breve</div>
+    </div>
+  </div>
+  <div class="stat stat--pending" title="Em breve — depende do domínio Programas de Saúde, ainda não implementado">
+    <span class="stat__icon" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+    </span>
+    <div>
+      <div class="stat__lbl">Em programas de saúde</div>
+      <div class="stat__val">Em breve</div>
+    </div>
+  </div>
+  <div class="stat stat--pending" title="Em breve — exigiria uma agregação nova sobre a triagem mais recente de cada paciente">
+    <span class="stat__icon stat__icon--alert" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    </span>
+    <div>
+      <div class="stat__lbl">Com alerta clínico</div>
+      <div class="stat__val">Em breve</div>
+    </div>
+  </div>
+</section>
+
 <div class="toolbar" role="region" aria-label="Filtro de pacientes">
-  <label class="search">
+  <label class="search search--icon">
     <span class="sr-only">Buscar paciente por nome ou CPF</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
     <input type="search" placeholder="Buscar por nome ou CPF…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
   </label>
+
+  <label class="pill pill--select" title="Em breve — domínio Programas de Saúde ainda não existe">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+    <span class="sr-only">Programa</span>
+    <select disabled><option>Programa</option></select>
+  </label>
+
+  <label class="pill pill--select" title="Em breve — Paciente ainda não tem vínculo de unidade">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    <span class="sr-only">Unidade</span>
+    <select disabled><option>Unidade</option></select>
+  </label>
+
+  <label class="pill pill--select">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+    <span class="sr-only">Faixa etária</span>
+    <select [value]="filtroFaixaEtaria()" (change)="filtroFaixaEtaria.set($any($event.target).value)">
+      <option value="TODAS">Faixa etária: Todas</option>
+      <option value="0-11">0–11 anos</option>
+      <option value="12-17">12–17 anos</option>
+      <option value="18-59">18–59 anos</option>
+      <option value="60+">60+ anos</option>
+    </select>
+  </label>
+
+  <label class="pill pill--select">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+    <span class="sr-only">Status</span>
+    <select [value]="filtroStatus()" (change)="filtroStatus.set($any($event.target).value)">
+      <option value="TODOS">Status: Todos</option>
+      <option value="ATIVO">Status: Ativo</option>
+      <option value="INATIVO">Status: Inativo</option>
+    </select>
+  </label>
+
+  <button type="button" class="pill" style="margin-left: auto;" disabled title="Em breve">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+    Mais filtros
+  </button>
 </div>
 
-<div class="card" style="overflow-x: auto;">
-  <table>
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th>CPF</th>
-        <th>Cartão SUS</th>
-        <th>Data de nascimento</th>
-        <th>Status</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (paciente of pacientesFiltrados(); track paciente.uuid) {
+<section class="split">
+  <div class="card" style="overflow: hidden;">
+    <div class="card__head">
+      <div>
+        <h2>Lista de pacientes</h2>
+        <div class="sub">{{ pacientesFiltrados().length }} resultado(s)</div>
+      </div>
+      <div class="seg" role="group" aria-label="Visualização">
+        <button type="button" aria-pressed="true">Lista</button>
+        <button type="button" aria-pressed="false" disabled title="Em breve">Cartões</button>
+      </div>
+    </div>
+    <div style="overflow-x: auto;">
+    <table>
+      <thead>
         <tr>
-          <td>{{ paciente.nome }}</td>
-          <td>{{ paciente.cpf }}</td>
-          <td>{{ paciente.cartaoSus || '—' }}</td>
-          <td>{{ paciente.dataNascimento }}</td>
-          <td>
-            @if (paciente.ativo) {
+          <th>Paciente</th>
+          <th>Idade · Sexo</th>
+          <th>Cartão SUS</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (paciente of pacientesFiltrados(); track paciente.uuid) {
+          <tr (click)="selecionar(paciente)" [attr.aria-selected]="selecionado()?.uuid === paciente.uuid" style="cursor: pointer;">
+            <td>
+              <div class="who-cell">
+                <span class="avatar" aria-hidden="true">{{ iniciais(paciente.nome) }}</span>
+                <div>
+                  <span class="n">{{ paciente.nome }}</span>
+                  <span class="r">CPF {{ paciente.cpf }}</span>
+                </div>
+              </div>
+            </td>
+            <td>{{ idade(paciente.dataNascimento) }} · {{ paciente.sexo === 'MASCULINO' ? 'Masc.' : (paciente.sexo === 'FEMININO' ? 'Fem.' : 'Ignorado') }}</td>
+            <td>{{ paciente.cartaoSus || '—' }}</td>
+            <td>
+              @if (paciente.ativo) {
+                <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Ativo</span>
+              } @else {
+                <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Inativo</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    @if (!carregando() && pacientesFiltrados().length === 0) {
+      <p class="table-empty">Nenhum paciente encontrado.</p>
+    }
+    </div>
+  </div>
+
+  @if (selecionado(); as p) {
+    <aside class="card detail-card" aria-label="Detalhes do paciente">
+      <div class="detail-head">
+        <span class="avatar" aria-hidden="true" style="width: 52px; height: 52px; font-size: 1.125rem; border-radius: 14px;">{{ iniciais(p.nome) }}</span>
+        <div class="detail-head__info">
+          <h2>{{ p.nome }}</h2>
+          <div style="color: var(--ink-500); font-size: 0.875rem; margin-top: 2px;">
+            {{ idade(p.dataNascimento) }} anos · {{ p.sexo === 'MASCULINO' ? 'Masc.' : (p.sexo === 'FEMININO' ? 'Fem.' : 'Ignorado') }}
+          </div>
+          <div class="detail-head__chips">
+            @if (p.ativo) {
               <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Ativo</span>
             } @else {
               <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Inativo</span>
             }
-          </td>
-          <td style="text-align: right; white-space: nowrap;">
-            <a [routerLink]="['/assistencia/prontuario']" [queryParams]="{ pacienteId: paciente.uuid }" class="btn btn--ghost">Ver prontuário</a>
-            <button type="button" class="btn btn--ghost" (click)="abrirEdicao(paciente)">Editar</button>
-          </td>
-        </tr>
+          </div>
+        </div>
+        <div class="detail-head__actions">
+          <button type="button" class="btn btn--ghost" (click)="abrirEdicao(p)">Editar</button>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Seções do paciente">
+        <button type="button" role="tab" [attr.aria-selected]="abaDetalhe() === 'resumo'" (click)="selecionarAba('resumo')">Resumo</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaDetalhe() === 'historico'" (click)="selecionarAba('historico')">Histórico</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaDetalhe() === 'programas'" (click)="selecionarAba('programas')">Programas</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaDetalhe() === 'vacinacao'" (click)="selecionarAba('vacinacao')">Vacinação</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaDetalhe() === 'anexos'" (click)="selecionarAba('anexos')">Anexos</button>
+      </div>
+
+      @if (abaDetalhe() === 'resumo') {
+        <div style="padding: var(--s-5); padding-bottom: 0;">
+          <div class="section-title" style="font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px;">
+            Sinais vitais · última triagem
+          </div>
+          @if (carregandoProntuario()) {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Carregando…</p>
+          } @else if (ultimaTriagem(); as t) {
+            <div class="vitals">
+              <div class="vital">
+                <div class="vital__lbl">PA</div>
+                <div class="vital__val">{{ t.pressaoArterial || '—' }} <small>mmHg</small></div>
+              </div>
+              <div class="vital">
+                <div class="vital__lbl">FC</div>
+                <div class="vital__val">{{ t.frequenciaCardiaca ?? '—' }} <small>bpm</small></div>
+              </div>
+              <div class="vital">
+                <div class="vital__lbl">Temperatura</div>
+                <div class="vital__val">{{ t.temperatura ?? '—' }} <small>°C</small></div>
+              </div>
+              <div class="vital">
+                <div class="vital__lbl">Peso</div>
+                <div class="vital__val">{{ t.peso ?? '—' }} <small>kg</small></div>
+              </div>
+            </div>
+          } @else {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Nenhuma triagem registrada ainda.</p>
+          }
+        </div>
+
+        <div class="info-grid">
+          <div class="info-block">
+            <h3>Identificação</h3>
+            <dl class="info-list">
+              <div>
+                <dt>CPF</dt>
+                <dd>{{ p.cpf }}</dd>
+              </div>
+              <div>
+                <dt>Cartão SUS</dt>
+                <dd>{{ p.cartaoSus || '—' }}</dd>
+              </div>
+              <div>
+                <dt>Data de nascimento</dt>
+                <dd>{{ p.dataNascimento }}</dd>
+              </div>
+            </dl>
+          </div>
+          <div class="info-block">
+            <h3>Contato</h3>
+            <dl class="info-list">
+              <div>
+                <dt>Telefone</dt>
+                <dd>{{ p.telefones[0] || '—' }}</dd>
+              </div>
+              <div>
+                <dt>E-mail</dt>
+                <dd>{{ p.email || '—' }}</dd>
+              </div>
+            </dl>
+          </div>
+          <div class="info-block">
+            <h3>Endereço</h3>
+            <dl class="info-list">
+              <div>
+                <dt>Logradouro</dt>
+                <dd>{{ p.endereco.logradouro }}, {{ p.endereco.numeroLogradouro }}{{ p.endereco.complemento ? ' — ' + p.endereco.complemento : '' }}</dd>
+              </div>
+              <div>
+                <dt>Bairro · Cidade</dt>
+                <dd>{{ p.endereco.bairro }} · {{ p.endereco.cidade }}/{{ p.endereco.estado }}</dd>
+              </div>
+              <div>
+                <dt>CEP</dt>
+                <dd>{{ p.endereco.cep }}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="section-title" style="font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; padding: 0 var(--s-5); margin-bottom: 10px;">
+          Programas vinculados
+        </div>
+        <div class="empty-state" style="padding-top: 0;">
+          <span class="empty-state__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+          </span>
+          <div class="empty-state__title">Em breve</div>
+          <p class="empty-state__desc">Vai mostrar os programas de saúde vinculados ao paciente, como HiperDia e Saúde da Família — depende de um domínio de backend que ainda não existe.</p>
+        </div>
+
+        <div class="section-title" style="font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; padding: 0 var(--s-5); margin-bottom: 10px;">
+          Próximos atendimentos
+        </div>
+        <div class="empty-state" style="padding-top: 0;">
+          <span class="empty-state__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </span>
+          <div class="empty-state__title">Em breve</div>
+          <p class="empty-state__desc">Vai mostrar os próximos agendamentos deste paciente — depende de uma busca de agendamentos por paciente que ainda não existe no backend.</p>
+        </div>
+
+        <div class="section-title" style="font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; padding: 0 var(--s-5); margin-bottom: 10px;">
+          Histórico recente
+        </div>
+        <div style="padding: 0 var(--s-5) var(--s-5);">
+          @if (carregandoProntuario()) {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Carregando…</p>
+          } @else if (timelinePreview().length > 0) {
+            <div class="tl">
+              @for (item of timelinePreview(); track item.data + item.titulo) {
+                <div class="tl-row">
+                  <div class="date">{{ item.data | date: 'dd/MM/yyyy HH:mm' }}</div>
+                  <div class="title">{{ item.titulo }}</div>
+                  @if (item.descricao) {
+                    <div class="desc">{{ item.descricao }}</div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Nenhum registro clínico ainda.</p>
+          }
+          <button type="button" class="btn btn--ghost btn--block" (click)="selecionarAba('historico')">Ver histórico completo</button>
+        </div>
       }
-    </tbody>
-  </table>
-  @if (!carregando() && pacientesFiltrados().length === 0) {
-    <p class="table-empty">Nenhum paciente encontrado.</p>
+
+      @if (abaDetalhe() === 'historico') {
+        <div style="padding: var(--s-5);">
+          @if (carregandoProntuario()) {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Carregando…</p>
+          } @else if (timeline().length > 0) {
+            <div class="tl">
+              @for (item of timeline(); track item.data + item.titulo) {
+                <div class="tl-row">
+                  <div class="date">{{ item.data | date: 'dd/MM/yyyy HH:mm' }}</div>
+                  <div class="title">{{ item.titulo }}</div>
+                  @if (item.descricao) {
+                    <div class="desc">{{ item.descricao }}</div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Nenhum registro clínico ainda.</p>
+          }
+          <a [routerLink]="['/assistencia/prontuario']" [queryParams]="{ pacienteId: p.uuid }" class="btn btn--ghost btn--block" style="margin-top: var(--s-3);">Ver prontuário completo</a>
+        </div>
+      }
+
+      @if (abaDetalhe() === 'programas') {
+        <div class="empty-state">
+          <span class="empty-state__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+          </span>
+          <div class="empty-state__title">Em breve</div>
+          <p class="empty-state__desc">Vai mostrar os programas de saúde vinculados ao paciente, como HiperDia e Saúde da Família — depende de um domínio de backend que ainda não existe.</p>
+        </div>
+      }
+
+      @if (abaDetalhe() === 'vacinacao') {
+        <div class="empty-state">
+          <span class="empty-state__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.6 5.4 21 3m-9.75 9.75L9 15m2.25-2.25L15 9m-3.75 3.75L9 15m9-9-3.35 3.35M5 19l1.5-4.5L15 6l3 3-8.5 8.5L5 19Z"></path></svg>
+          </span>
+          <div class="empty-state__title">Em breve</div>
+          <p class="empty-state__desc">Vai mostrar o histórico de vacinação do paciente — depende de um domínio de backend que ainda não existe.</p>
+        </div>
+      }
+
+      @if (abaDetalhe() === 'anexos') {
+        <div class="empty-state">
+          <span class="empty-state__icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+          </span>
+          <div class="empty-state__title">Em breve</div>
+          <p class="empty-state__desc">Vai mostrar documentos anexados ao paciente — depende do domínio transversal de Documentos, ainda não implementado.</p>
+        </div>
+      }
+    </aside>
   }
-</div>
+</section>
 
 @if (modalAberto()) {
   <app-modal [titulo]="editando() ? 'Editar paciente' : 'Novo paciente'" (fechar)="fecharModal()">

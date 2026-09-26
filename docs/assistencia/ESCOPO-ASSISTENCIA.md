@@ -68,6 +68,7 @@ pras decisões de frontend específicas deste módulo).
 | F4 | Tela **Consultas** (`assistencia/consultas`) | [#218](https://github.com/dufelizardo/mais_saude_publica/pull/218) | ✅ |
 | F5 | Tela **Procedimentos** (`assistencia/procedimentos`) | [#219](https://github.com/dufelizardo/mais_saude_publica/pull/219) | ✅ |
 | F6 | Tela **Prontuário** (`assistencia/prontuario`, somente leitura) | [#220](https://github.com/dufelizardo/mais_saude_publica/pull/220) | ✅ |
+| F7 | Redesenho de **Pacientes** — layout lista + painel de detalhe (KPIs, filtros, abas Resumo/Histórico/Programas/Vacinação/Anexos), estados "Em breve" para o que não tem backend ainda; expõe `Triagem`/`EvolucaoEnfermagem` no frontend pela primeira vez, ver [ADR-0052](../adr/0052-tela-de-pacientes-lista-mais-painel-de-detalhe.md) | *(em aberto)* | 🔵 |
 
 As 6 telas mergeadas em `developer` fecham a ADR-0046. Melhoria compartilhada com os demais
 módulos (não específica da Assistência): acordeão nos grupos do menu lateral, documentado como
