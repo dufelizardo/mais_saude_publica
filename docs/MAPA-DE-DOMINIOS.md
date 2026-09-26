@@ -70,7 +70,7 @@ dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 
 | # | Domínio | Responsabilidade | Entidades candidatas | Hoje |
 |---|---|---|---|---|
-| 1 | **Organização e Estrutura da Rede** | Onde a saúde pública acontece e como as unidades se organizam hierarquicamente. | `UnidadeDeSaude`, `TipoUnidadeDeSaude`, `Setor` | ✅ Implementado — hierarquia autorreferenciada de 5 níveis (ADR-0002/0009/0013) + `Setor` do Administrativo (ADR-0030) |
+| 1 | **Organização e Estrutura da Rede** | Onde a saúde pública acontece e como as unidades se organizam hierarquicamente. | `UnidadeDeSaude`, `TipoUnidadeDeSaude`, `Setor` | ✅ Implementado — hierarquia autorreferenciada de 5 níveis (ADR-0002/0009/0013) + `Setor` do Administrativo (ADR-0030). Levantamento completo de equipamentos de saúde (CNES) reconciliado em [`MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`](./MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md); critério de governança para novos tipos em [ADR-0053](./adr/0053-criterio-de-governanca-para-equipamentos-de-saude.md) |
 
 ### Gestão
 
@@ -163,3 +163,8 @@ Administrativo).
 - [`administrativo/ESCOPO-ADMINISTRATIVO.md`](./administrativo/ESCOPO-ADMINISTRATIVO.md) — módulo
   Administrativo completo, precedente direto do formato deste documento.
 - ADRs 0003–0008 — roadmap de arquitetura futura, prioridade revisitada pela ADR-0039.
+- [`MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`](./MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md) — levantamento completo
+  de ~30 equipamentos de saúde (base CNES), com o modelo conceitual Equipamento→Serviço→
+  Capacidade→Profissional→Setor que conecta este domínio a Administrativo e RH — ver
+  [ADR-0053](./adr/0053-criterio-de-governanca-para-equipamentos-de-saude.md) para o critério de
+  quando um equipamento novo vira valor de `TipoUnidadeDeSaude`, capacidade ou especialização.
