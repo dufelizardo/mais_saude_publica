@@ -140,7 +140,7 @@
               </div>
             </td>
             <td>{{ idade(paciente.dataNascimento) }} · {{ paciente.sexo === 'MASCULINO' ? 'Masc.' : (paciente.sexo === 'FEMININO' ? 'Fem.' : 'Ignorado') }}</td>
-            <td>{{ paciente.cartaoSus || '—' }}</td>
+            <td>{{ cartaoSusFormatado(paciente.cartaoSus) || '—' }}</td>
             <td>
               @if (paciente.ativo) {
                 <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Ativo</span>
@@ -174,9 +174,19 @@
               <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Inativo</span>
             }
           </div>
+          <div class="detail-head__ids">
+            <span>CPF <strong>{{ p.cpf }}</strong></span>
+            <span>CNS <strong>{{ cartaoSusFormatado(p.cartaoSus) || '—' }}</strong></span>
+            <span>Prontuário <strong class="pending">Em breve</strong></span>
+          </div>
         </div>
         <div class="detail-head__actions">
-          <button type="button" class="btn btn--ghost" (click)="abrirEdicao(p)">Editar</button>
+          <button type="button" class="icon-btn" (click)="abrirEdicao(p)" aria-label="Editar" title="Editar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+          </button>
+          <button type="button" class="icon-btn" disabled title="Em breve" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
         </div>
       </div>
 
@@ -223,14 +233,6 @@
           <div class="info-block">
             <h3>Identificação</h3>
             <dl class="info-list">
-              <div>
-                <dt>CPF</dt>
-                <dd>{{ p.cpf }}</dd>
-              </div>
-              <div>
-                <dt>Cartão SUS</dt>
-                <dd>{{ p.cartaoSus || '—' }}</dd>
-              </div>
               <div>
                 <dt>Data de nascimento</dt>
                 <dd>{{ p.dataNascimento }}</dd>
@@ -398,7 +400,7 @@
       <div class="form-row">
         <div class="form-group">
           <label for="cartaoSus">Cartão Nacional de Saúde (CNS)</label>
-          <input id="cartaoSus" type="text" formControlName="cartaoSus" placeholder="Opcional" />
+          <input id="cartaoSus" type="text" formControlName="cartaoSus" autocomplete="off" inputmode="numeric" maxlength="18" placeholder="Opcional" (input)="onCartaoSusInput($event)" />
         </div>
         <div class="form-group">
           <label for="dataNascimento">Data de nascimento *</label>

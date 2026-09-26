@@ -5,7 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Modal } from '../../../shared/modal/modal';
-import { formatCpf, formatTelefone } from '../../../shared/format-mask';
+import { formatCartaoSus, formatCpf, formatTelefone } from '../../../shared/format-mask';
 import { PacienteResponseDto, Sexo } from '../../../core/models/paciente';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { PacienteService } from '../../../core/services/paciente';
@@ -252,6 +252,15 @@ export class Pacientes {
     this.form.controls.cpf.setValue(valor);
   }
 
+  protected onCartaoSusInput(event: Event): void {
+    const valor = formatCartaoSus((event.target as HTMLInputElement).value);
+    this.form.controls.cartaoSus.setValue(valor);
+  }
+
+  protected cartaoSusFormatado(cartaoSus: string | undefined): string {
+    return cartaoSus ? formatCartaoSus(cartaoSus) : '';
+  }
+
   protected onTelefoneInput(event: Event): void {
     const valor = formatTelefone((event.target as HTMLInputElement).value);
     this.form.controls.telefone.setValue(valor);
@@ -315,7 +324,7 @@ export class Pacientes {
     this.form.reset({
       nome: paciente.nome,
       cpf: paciente.cpf,
-      cartaoSus: paciente.cartaoSus ?? '',
+      cartaoSus: this.cartaoSusFormatado(paciente.cartaoSus),
       dataNascimento: paciente.dataNascimento,
       sexo: paciente.sexo,
       telefone: paciente.telefones[0] ?? '',
