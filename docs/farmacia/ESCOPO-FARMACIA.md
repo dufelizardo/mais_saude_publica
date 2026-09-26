@@ -28,14 +28,14 @@ por depender desta entidade existir primeiro. Nenhuma implementação ainda refe
 | Fase | Escopo | ADR | PR(s) | Status |
 |---|---|---|---|---|
 | 1 | `Medicamento`, CRUD em `/api/v1/medicamento/`, testes JUnit + Robot | [0049](../adr/0049-medicamento-primeira-entidade-da-farmacia.md) | [#228](https://github.com/dufelizardo/mais_saude_publica/pull/228) | ✅ |
-| 2 | `Lote`, CRUD em `/api/v1/lote/` (FKs a Medicamento e UnidadeDeSaude), testes JUnit + Robot | [0050](../adr/0050-lote-segunda-entidade-da-farmacia.md) | *(em aberto)* | 🔵 |
+| 2 | `Lote`, CRUD em `/api/v1/lote/` (FKs a Medicamento e UnidadeDeSaude), testes JUnit + Robot | [0050](../adr/0050-lote-segunda-entidade-da-farmacia.md) | [#229](https://github.com/dufelizardo/mais_saude_publica/pull/229) | ✅ |
+| 3 | `Dispensacao`, só criação/leitura em `/api/v1/dispensacao/` (sem PATCH — imutável), debita `Lote.quantidade`, testes JUnit + Robot | [0051](../adr/0051-dispensacao-terceira-entidade-da-farmacia.md) | *(em aberto)* | 🔵 |
 
-Ambas as fases mergeadas (ou em PR) em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
+Todas as fases mergeadas (ou em PR) em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
 solicitada.
 
-Próximos candidatos do domínio (`Dispensacao`, `MovimentacaoFarmacia`,
-`TransferenciaEntreUnidades`, `Perda`, `InventarioFarmacia`) — sem ADR, sem implementação, só
-quando houver requisito real.
+Próximos candidatos do domínio (`MovimentacaoFarmacia`, `TransferenciaEntreUnidades`, `Perda`,
+`InventarioFarmacia`) — sem ADR, sem implementação, só quando houver requisito real.
 
 ## 5. Estado do frontend
 
@@ -50,3 +50,5 @@ Não iniciado — nenhuma tela para Medicamento ainda.
   (`Medicamento`), incluindo a pesquisa sobre Hórus e movimentação de estoque farmacêutico.
 - [ADR-0050](../adr/0050-lote-segunda-entidade-da-farmacia.md) — decisão de design da fase 2
   (`Lote`), incluindo a nota sobre a colisão de nome com o candidato `Lote` do domínio Estoque (#13).
+- [ADR-0051](../adr/0051-dispensacao-terceira-entidade-da-farmacia.md) — decisão de design da fase 3
+  (`Dispensacao`), incluindo a decisão de ser create-only (sem PATCH) e debitar `Lote.quantidade`.
