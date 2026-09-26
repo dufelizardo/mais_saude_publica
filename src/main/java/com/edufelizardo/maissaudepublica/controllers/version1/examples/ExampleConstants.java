@@ -491,6 +491,23 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String DISPENSACAO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "loteUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "loteNumeroLote": "string",
+                    "medicamentoNome": "string",
+                    "pacienteUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "pacienteNome": "string",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "consultaUuid": null,
+                    "quantidade": 10,
+                    "dataHora": "2026-01-01T14:00:00"
+                  }
+                ]
+            """;
     public static final String LOTE_RESPONSE_EXAMPLE = """
                 [
                   {

@@ -710,10 +710,13 @@ Paciente → Triagem (sinais vitais) → Classificação de risco → Atendiment
 Medicamentos e dispensação — regras próprias, deliberadamente **separado de Estoque** (#13):
 medicamento tem lote/validade/controle de dispensação que material de almoxarifado não tem.
 
-> **`Medicamento` e `Lote` já foram implementados** — ver
-> [ADR-0049](./0049-medicamento-primeira-entidade-da-farmacia.md) e
-> [ADR-0050](./0050-lote-segunda-entidade-da-farmacia.md). `Lote` referencia `Medicamento` e
-> `UnidadeDeSaude` (estoque rastreado por unidade, não um estoque único da rede). `Dispensacao`,
+> **`Medicamento`, `Lote` e `Dispensacao` já foram implementados** — ver
+> [ADR-0049](./0049-medicamento-primeira-entidade-da-farmacia.md),
+> [ADR-0050](./0050-lote-segunda-entidade-da-farmacia.md) e
+> [ADR-0051](./0051-dispensacao-terceira-entidade-da-farmacia.md). `Lote` referencia `Medicamento` e
+> `UnidadeDeSaude` (estoque rastreado por unidade, não um estoque único da rede). `Dispensacao`
+> referencia `Lote`/`Paciente`/`Profissional` (e opcionalmente `Consulta`), é **create-only** (sem
+> PATCH — histórico imutável) e debita `Lote.quantidade` como efeito colateral do create.
 > `MovimentacaoFarmacia`, `TransferenciaEntreUnidades`, `Perda` e `InventarioFarmacia` continuam
 > como esboço, não implementados.
 

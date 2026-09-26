@@ -45,3 +45,5 @@ Resource    ../../schema/evolucao_enfermagem/evolucao_enfermagem_schema.resource
 Resource    ../../schema/medicamento/medicamento_schema.resource
 # LOTE
 Resource    ../../schema/lote/lote_schema.resource
+# DISPENSACAO
+Resource    ../../schema/dispensacao/dispensacao_schema.resource
