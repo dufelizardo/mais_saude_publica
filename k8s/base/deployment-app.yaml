@@ -31,13 +31,27 @@ spec:
                   key: password
             # Opcional (ver ADR-0055) — sem este secret provisionado, a app sobe normalmente e
             # JwtService gera uma chave efemera em memoria (tokens nao sobrevivem a um restart).
-            # Nenhum overlay liga APP_SECURITY_ENABLED ainda; quando ligar, provisionar este
-            # secret primeiro para sessoes persistentes.
             - name: APP_SECURITY_JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: app-secrets
                   key: jwt-secret
+                  optional: true
+            # Bootstrap do AdministradorPlataforma (ADR-0054 decisao 5) — tambem opcional: sem os
+            # dois valores, AdministradorPlataformaBootstrap so pula a criacao (nao crasha). Mas se
+            # o toggle de seguranca estiver ligado (ver overlay) e nenhum Usuario existir ainda,
+            # ninguem consegue logar sem isso provisionado.
+            - name: APP_SECURITY_BOOTSTRAP_CPF
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: bootstrap-cpf
+                  optional: true
+            - name: APP_SECURITY_BOOTSTRAP_SENHA
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: bootstrap-senha
                   optional: true
           resources:
             requests:

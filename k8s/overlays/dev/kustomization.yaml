@@ -22,6 +22,10 @@ configMapGenerator:
       - JAVA_TOOL_OPTIONS=-Xmx384m
       - DATABASE_URL=jdbc:postgresql://postgres:5432/saudepublica_dev
       - DATABASE_USERNAME=postgres
+      # Ligado pela primeira vez neste ambiente (ver ADR-0055) — requer o secret app-secrets
+      # (jwt-secret, bootstrap-cpf, bootstrap-senha) provisionado no namespace mais-saude-dev,
+      # senao ninguem consegue logar (sem crash, so sem ninguem cadastrado).
+      - APP_SECURITY_ENABLED=true
   - name: db-config
     literals:
       - POSTGRES_DB=saudepublica_dev
