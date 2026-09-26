@@ -8,11 +8,13 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.Atendimen
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ConsultaResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProcedimentoResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioAtendimentoDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EvolucaoEnfermagemResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioConsultaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TriagemResponseDto;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.ConsultaRepository;
+import com.edufelizardo.maissaudepublica.repositories.EvolucaoEnfermagemRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProcedimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.TriagemRepository;
@@ -45,6 +47,9 @@ public class ProntuarioService {
     @Autowired
     private TriagemRepository triagemRepository;
 
+    @Autowired
+    private EvolucaoEnfermagemRepository evolucaoEnfermagemRepository;
+
     public ProntuarioResponseDto buscarPorPacienteId(UUID pacienteId) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -70,6 +75,11 @@ public class ProntuarioService {
                 .map(TriagemResponseDto::fromTriagem)
                 .collect(Collectors.toList());
 
+        List<EvolucaoEnfermagemResponseDto> evolucoes = evolucaoEnfermagemRepository.findByAtendimentoUuid(atendimento.getUuid())
+                .stream()
+                .map(EvolucaoEnfermagemResponseDto::fromEvolucaoEnfermagem)
+                .collect(Collectors.toList());
+
         List<ProntuarioConsultaDto> consultas = consultaRepository.findByAtendimentoUuid(atendimento.getUuid())
                 .stream()
                 .map(this::montarConsulta)
@@ -78,6 +88,7 @@ public class ProntuarioService {
         ProntuarioAtendimentoDto dto = new ProntuarioAtendimentoDto();
         dto.setAtendimento(atendimentoDto);
         dto.setTriagens(triagens);
+        dto.setEvolucoes(evolucoes);
         dto.setConsultas(consultas);
         return dto;
     }

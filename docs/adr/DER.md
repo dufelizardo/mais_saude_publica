@@ -686,12 +686,16 @@ clínico** (anexos — depende de o domínio transversal "Documentos", ver apên
 
 Processos de enfermagem, com peso maior em UPA/Hospital que em UBS.
 
-> **`Triagem` já foi reconciliada e implementada** — ver
-> [ADR-0047](./0047-triagem-primeira-entidade-da-enfermagem.md). O fluxo abaixo (Triagem antes do
-> Atendimento) é o esboço original, **não** o que foi implementado: na versão real, `Triagem` é
-> filha de `Atendimento` (mesmo papel estrutural de `Consulta`), e `classificacaoRisco` é um campo
-> enum na própria `Triagem`, não uma entidade `ClassificacaoDeRisco` separada. `EvolucaoDeEnfermagem`,
-> `AdministracaoDeMedicamento`, `Cuidado` e `Escala` continuam como esboço, não implementados.
+> **`Triagem` e `EvolucaoDeEnfermagem` já foram reconciliadas e implementadas** — ver
+> [ADR-0047](./0047-triagem-primeira-entidade-da-enfermagem.md) e
+> [ADR-0048](./0048-evolucao-de-enfermagem-segunda-entidade-da-enfermagem.md). O fluxo abaixo
+> (Triagem antes do Atendimento) é o esboço original, **não** o que foi implementado: na versão
+> real, `Triagem` e `EvolucaoEnfermagem` (implementada sem o "De" no nome da classe) são filhas de
+> `Atendimento` (mesmo papel estrutural de `Consulta`), `classificacaoRisco` é um campo enum na
+> própria `Triagem` (não uma entidade `ClassificacaoDeRisco` separada), e `EvolucaoEnfermagem` tem
+> só um campo `descricao` de texto livre (sem estruturação SOAP). `AdministracaoDeMedicamento`
+> (depende de Farmácia, #9, ainda não iniciado), `Cuidado` e `Escala` continuam como esboço, não
+> implementados.
 
 - `Triagem` — pressão, temperatura, saturação, frequência cardíaca, peso.
 - `ClassificacaoDeRisco` — resultado da triagem.
