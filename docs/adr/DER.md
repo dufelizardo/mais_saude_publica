@@ -681,6 +681,14 @@ clínico** (anexos — depende de o domínio transversal "Documentos", ver apên
 > completo quando a onda de cada domínio de fato chegar e merecer sua própria conversa (mesma
 > disciplina de "incrementos pequenos e discutidos" de RH/Administrativo). Nenhum destes vira ADR
 > agora — só quando houver uma decisão real com trade-off para registrar (ver ADR-0039).
+>
+> **2026-09-26**: o levantamento de equipamentos de saúde do usuário
+> ([`docs/pm/sistema_de_saude_brasileiro.md`](../pm/sistema_de_saude_brasileiro.md), reconciliado em
+> [`MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`](../MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md) e
+> [ADR-0053](./0053-criterio-de-governanca-para-equipamentos-de-saude.md)) identificou estruturas
+> que se relacionam com alguns dos domínios abaixo (anotadas na própria seção do domínio) e outras
+> sem nenhum domínio correspondente ainda, reunidas na nova subseção
+> "Equipamentos ainda sem domínio próprio" ao final deste apêndice.
 
 ### Enfermagem (#8)
 
@@ -737,6 +745,14 @@ Atendimento → Solicitação de exame → Agendamento/Coleta → Amostra
   → Laboratório → Resultado → Laudo → Prontuário (agregação)
 ```
 
+> **Nota (2026-09-26, do levantamento de equipamentos)**: este esboço cobre o laboratório
+> **assistencial** (o que hoje mapeia para `TipoUnidadeDeSaude.LABORATORIO`, ADR-0031). O
+> **LACEN**/Laboratório de Saúde Pública é uma função distinta — vigilância laboratorial,
+> investigação de surto, apoio epidemiológico — não um "laboratório municipal que faz mais exames".
+> Ver `MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md` §3.2. Sem entidade candidata própria ainda; quando este
+> domínio for desenhado de verdade, decidir se LACEN é uma especialização de Laboratório ou um
+> domínio de Vigilância à parte.
+
 ### Regulação (#11)
 
 Conecta a rede inteira, não uma unidade só — coordena acesso a serviço que não está disponível na
@@ -750,6 +766,12 @@ UBS → Solicitação (ex.: cardiologia) → Regulação → Fila
 
 UPA → Solicitação de internação → Regulação → Hospital
 ```
+
+> **Nota (2026-09-26, do levantamento de equipamentos)**: o levantamento distingue **Central de
+> Regulação Médica das Urgências** (despacha SAMU) de **Central de Regulação do Acesso** (fila para
+> especialista/internação eletiva) como estruturas separadas no CNES — hoje este esboço não
+> distingue as duas. `SAMU 192` depende desta Central para despacho — ver `MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`
+> §3.2 e §3.4.
 
 ### Gestão de Leitos e Internação (#12)
 
@@ -787,6 +809,10 @@ Almoxarifado Central
  └── Hospital A
 ```
 
+> **Nota (2026-09-26, do levantamento de equipamentos)**: a **Central de Abastecimento** do
+> levantamento do usuário corresponde ao "Almoxarifado Central" já esboçado acima — mesmo conceito,
+> nomes diferentes. Ver `MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md` §3.2.
+
 ### Compras, Contratos e Fornecedores (#14)
 
 - `Fornecedor`, `SolicitacaoCompra`, `Cotacao`, `Contrato`, `ItemContratado`, `Entrega`,
@@ -817,6 +843,12 @@ UPA → Solicitação de transferência → Regulação → Ambulância → Hosp
 
 Integrações: RH → motorista; Patrimônio → veículo; Paciente → passageiro; Atendimento → motivo;
 Regulação → necessidade.
+
+> **Nota (2026-09-26, do levantamento de equipamentos)**: **SAMU 192** é o serviço/rede de
+> atendimento pré-hospitalar móvel que opera as ambulâncias deste domínio — regulado pela Central de
+> Regulação Médica das Urgências (#11). O levantamento é explícito: `SAMU` é serviço/rede,
+> `Ambulância` é recurso móvel — nenhum dos dois deve virar `UnidadeDeSaude`. Ver
+> `MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md` §3.4.
 
 ### Financeiro (#17)
 
@@ -900,3 +932,30 @@ Auditoria → Documento
 Compra → Documento
 Unidade → Documento
 ```
+
+### Equipamentos ainda sem domínio próprio (do levantamento de equipamentos de saúde)
+
+> Mesma disciplina do restante do apêndice: **não implementado, não decidido**. Estes equipamentos,
+> do levantamento em [`docs/pm/sistema_de_saude_brasileiro.md`](../pm/sistema_de_saude_brasileiro.md)
+> e reconciliados em [`MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`](../MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md), não
+> correspondem a nenhum dos 20 domínios já listados na seção 3 de `MAPA-DE-DOMINIOS.md` — cada um só
+> ganha número de domínio, entidades desenhadas de verdade e (se houver trade-off real) sua própria
+> ADR quando uma onda futura de fato o priorizar (ADR-0039 decisão 8). Formato compacto (sem
+> diagrama de fluxo por item) dado o volume — ver o mapa de equipamentos para função/público/papel
+> na rede de cada um.
+
+| Equipamento | Entidades candidatas (esboço) | Observação |
+|---|---|---|
+| Hemoterapia / Hemocentro | `Doador`, `ColetaSangue`, `Hemocomponente`, `TesteCompatibilidade`, `Transfusao` | Suporte à rede hospitalar; poderia compartilhar `Lote`/rastreabilidade com Farmácia (#9), a decidir quando desenhado |
+| Saúde Indígena (DSEI / Polo Base / UBSI / CASAI) | `DistritoSanitarioIndigena`, `PoloBase`, `Uni­dadeSaudeIndigena`, `CasaDeApoio` | Estrutura territorial própria do SasiSUS — o levantamento explicitamente recomenda não forçar encaixe em UBS/UPA/Hospital existentes |
+| Telessaúde | `Teleconsulta`, `SegundaOpiniao`, `SessaoEducacaoPermanente` | Serviço de apoio remoto a profissionais, não atendimento direto ao paciente |
+| Central de Transplantes | `PotencialDoador`, `ListaDeEspera`, `Compatibilidade`, `CaptacaoOrgao` | Coordenação entre hospitais; depende de Regulação (#11) para fila/prioridade |
+| Serviço de Verificação de Óbito (SVO) | `VerificacaoObito` | Alimenta indicadores de mortalidade/vigilância (#19) |
+| CEREST | `CasoSaudeTrabalhador`, `InvestigacaoAgravoTrabalho` | Assistência + vigilância + referência técnica — não é só clínica |
+| Unidade de Vigilância de Zoonoses (UVZ) | `NotificacaoZoonose`, `ControleDeVetor` | Vigilância, não clínica veterinária |
+| Oficina Ortopédica | `OrteseProtese`, `Confeccao`, `Manutencao` | Ligada à Reabilitação (`TipoUnidadeDeSaude.CENTRO_REABILITACAO`, já implementado) |
+| Unidades móveis (terrestre/fluvial/pré-hospitalar) | *(nenhuma nova — modalidade de uma unidade existente)* | O levantamento recomenda modelar como `modalidade = MOVEL` em uma unidade já existente, não uma entidade própria |
+| Maternidade / Centro de Parto Normal | `Parto`, `AssistenciaObstetrica`, `CuidadoNeonatal` | Especialização de Hospital (perfil obstétrico/neonatal) ou estrutura própria — não decidido |
+| Serviço de Atenção Domiciliar (SAD) | `PlanoDeCuidadoDomiciliar`, `VisitaDomiciliar`, `EquipeEMAD`, `EquipeEMAP` | Desospitalização — depende de Hospital/Atendimento como origem |
+| Academia da Saúde / Consultório na Rua | *(nenhuma nova — serviço/equipe da APS)* | O levantamento os trata como serviços/equipes vinculados à APS, não novos tipos de unidade |
+| Centro de Imunização | `CampanhaVacinacao`, `RegistroImunobiologico` | Pode existir dentro de uma UBS ou como estrutura própria — o próprio levantamento nota que "serviço não precisa necessariamente ser uma UnidadeDeSaude independente" |
