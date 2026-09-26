@@ -29,12 +29,16 @@ import { Consultas } from './features/assistencia/consultas/consultas';
 import { Procedimentos } from './features/assistencia/procedimentos/procedimentos';
 import { Prontuario } from './features/assistencia/prontuario/prontuario';
 import { AppShell } from './shared/app-shell/app-shell';
+import { Login } from './features/auth/login/login';
+import { authGuard } from './core/guards/auth-guard';
 
 export const routes: Routes = [
   { path: '', component: LandingPage },
+  { path: 'login', component: Login },
   {
     path: '',
     component: AppShell,
+    canActivate: [authGuard],
     children: [
       { path: 'profissionais', component: ProfissionaisLista, data: { breadcrumb: 'Profissionais', area: 'Recursos Humanos' } },
       { path: 'profissionais/novo', component: ProfissionalCadastro, data: { breadcrumb: 'Cadastrar profissional', area: 'Recursos Humanos' } },
