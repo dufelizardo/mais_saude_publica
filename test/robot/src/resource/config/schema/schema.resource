@@ -39,3 +39,5 @@ Resource    ../../schema/consulta/consulta_schema.resource
 Resource    ../../schema/procedimento/procedimento_schema.resource
 # TRIAGEM
 Resource    ../../schema/triagem/triagem_schema.resource
+# EVOLUCAO ENFERMAGEM
+Resource    ../../schema/evolucao_enfermagem/evolucao_enfermagem_schema.resource

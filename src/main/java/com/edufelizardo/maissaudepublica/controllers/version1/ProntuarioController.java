@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 /**
- * Prontuário — agregação de leitura sobre Atendimento/Triagem/Consulta/Procedimento de um Paciente
- * (ver ADR-0039 decisão 6, ADR-0045, estendida pela ADR-0047). Sem POST/PATCH: não existe entidade
- * própria para criar/atualizar.
+ * Prontuário — agregação de leitura sobre Atendimento/Triagem/Evolução de Enfermagem/Consulta/
+ * Procedimento de um Paciente (ver ADR-0039 decisão 6, ADR-0045, estendida pelas ADR-0047/0048).
+ * Sem POST/PATCH: não existe entidade própria para criar/atualizar.
  */
 @RestController
 @RequestMapping(value = "/api/v1/prontuario/")
@@ -33,7 +33,7 @@ public class ProntuarioController {
 
     @GetMapping(value = "{pacienteId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca o prontuário consolidado de um paciente",
-            description = "Agrega os Atendimentos do paciente, cada um com suas Triagens de enfermagem e suas Consultas, cada uma com seus Procedimentos.",
+            description = "Agrega os Atendimentos do paciente, cada um com suas Triagens e Evoluções de enfermagem e suas Consultas, cada uma com seus Procedimentos.",
             tags = "Prontuário")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json",

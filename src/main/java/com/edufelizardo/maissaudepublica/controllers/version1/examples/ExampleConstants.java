@@ -491,6 +491,18 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String EVOLUCAO_ENFERMAGEM_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "atendimentoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "dataHora": "2026-01-01T10:00:00",
+                    "descricao": "string"
+                  }
+                ]
+            """;
     public static final String TRIAGEM_RESPONSE_EXAMPLE = """
                 [
                   {
