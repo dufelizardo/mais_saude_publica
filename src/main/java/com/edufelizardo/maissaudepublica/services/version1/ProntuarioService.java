@@ -10,10 +10,12 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.Procedime
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioAtendimentoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioConsultaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioResponseDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TriagemResponseDto;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.ConsultaRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProcedimentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.TriagemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +42,9 @@ public class ProntuarioService {
     @Autowired
     private ProcedimentoRepository procedimentoRepository;
 
+    @Autowired
+    private TriagemRepository triagemRepository;
+
     public ProntuarioResponseDto buscarPorPacienteId(UUID pacienteId) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -60,6 +65,11 @@ public class ProntuarioService {
     private ProntuarioAtendimentoDto montarAtendimento(Atendimento atendimento) {
         AtendimentoResponseDto atendimentoDto = AtendimentoResponseDto.fromAtendimento(atendimento);
 
+        List<TriagemResponseDto> triagens = triagemRepository.findByAtendimentoUuid(atendimento.getUuid())
+                .stream()
+                .map(TriagemResponseDto::fromTriagem)
+                .collect(Collectors.toList());
+
         List<ProntuarioConsultaDto> consultas = consultaRepository.findByAtendimentoUuid(atendimento.getUuid())
                 .stream()
                 .map(this::montarConsulta)
@@ -67,6 +77,7 @@ public class ProntuarioService {
 
         ProntuarioAtendimentoDto dto = new ProntuarioAtendimentoDto();
         dto.setAtendimento(atendimentoDto);
+        dto.setTriagens(triagens);
         dto.setConsultas(consultas);
         return dto;
     }

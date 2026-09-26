@@ -686,6 +686,13 @@ clínico** (anexos — depende de o domínio transversal "Documentos", ver apên
 
 Processos de enfermagem, com peso maior em UPA/Hospital que em UBS.
 
+> **`Triagem` já foi reconciliada e implementada** — ver
+> [ADR-0047](./0047-triagem-primeira-entidade-da-enfermagem.md). O fluxo abaixo (Triagem antes do
+> Atendimento) é o esboço original, **não** o que foi implementado: na versão real, `Triagem` é
+> filha de `Atendimento` (mesmo papel estrutural de `Consulta`), e `classificacaoRisco` é um campo
+> enum na própria `Triagem`, não uma entidade `ClassificacaoDeRisco` separada. `EvolucaoDeEnfermagem`,
+> `AdministracaoDeMedicamento`, `Cuidado` e `Escala` continuam como esboço, não implementados.
+
 - `Triagem` — pressão, temperatura, saturação, frequência cardíaca, peso.
 - `ClassificacaoDeRisco` — resultado da triagem.
 - `EvolucaoDeEnfermagem`, `AdministracaoDeMedicamento`, `Cuidado`, `Escala`.

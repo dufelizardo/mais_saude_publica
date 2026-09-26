@@ -62,11 +62,12 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0044](./0044-procedimento-realizado-durante-a-consulta.md) | Procedimento realizado durante a Consulta | Aceita |
 | [0045](./0045-prontuario-agregacao-de-leitura.md) | Prontuário como agregação de leitura no backend | Aceita |
 | [0046](./0046-telas-de-frontend-da-onda-assistencia.md) | Telas de frontend da onda Assistência | Aceita |
+| [0047](./0047-triagem-primeira-entidade-da-enfermagem.md) | Triagem: primeira entidade do domínio Enfermagem | Aceita |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 
 As ADRs 0030 a 0037 formam o roadmap do Setor Administrativo. 0030-0036 (Fases 1-6) já foram implementadas; 0037 (Fase 7+) ainda não — ver [`docs/administrativo/ESCOPO-ADMINISTRATIVO.md`](../administrativo/ESCOPO-ADMINISTRATIVO.md) para o contexto completo e a ordem de implementação planejada.
 
-As ADRs 0040 a 0046 formam a onda Operação Assistencial (`Paciente`, `Atendimento`, `Agendamento`, `Consulta`, `Procedimento`, `Prontuário` e suas telas de frontend) — backend e frontend completos — ver [`docs/assistencia/ESCOPO-ASSISTENCIA.md`](../assistencia/ESCOPO-ASSISTENCIA.md) para o estado atual.
+As ADRs 0040 a 0046 formam a onda Operação Assistencial (`Paciente`, `Atendimento`, `Agendamento`, `Consulta`, `Procedimento`, `Prontuário` e suas telas de frontend) — backend e frontend completos — ver [`docs/assistencia/ESCOPO-ASSISTENCIA.md`](../assistencia/ESCOPO-ASSISTENCIA.md) para o estado atual. A ADR-0047 inicia o domínio seguinte do mapa, Enfermagem (`Triagem`), reaproveitando a mesma agregação de Prontuário — ver [`docs/enfermagem/ESCOPO-ENFERMAGEM.md`](../enfermagem/ESCOPO-ENFERMAGEM.md) para o estado atual.
 
 Ver também [`DER-atual.md`](./DER-atual.md) (schema real implementado hoje), [`DER.md`](./DER.md) (modelo de dados clínico, revisado pela ADR-0039) e [`../MAPA-DE-DOMINIOS.md`](../MAPA-DE-DOMINIOS.md) (mapa dos 20 domínios da plataforma inteira e ordem de implementação).

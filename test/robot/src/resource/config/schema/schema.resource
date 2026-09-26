@@ -37,3 +37,5 @@ Resource    ../../schema/agendamento/agendamento_schema.resource
 Resource    ../../schema/consulta/consulta_schema.resource
 # PROCEDIMENTO
 Resource    ../../schema/procedimento/procedimento_schema.resource
+# TRIAGEM
+Resource    ../../schema/triagem/triagem_schema.resource
