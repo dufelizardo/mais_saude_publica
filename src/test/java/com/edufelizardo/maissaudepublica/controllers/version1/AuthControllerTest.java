@@ -2,10 +2,9 @@ package com.edufelizardo.maissaudepublica.controllers.version1;
 
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Usuario;
-import com.edufelizardo.maissaudepublica.models.dtos.version1.response.LoginResponseDto;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,9 +54,6 @@ class AuthControllerTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @BeforeEach
     void seed() {
@@ -154,10 +150,10 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        LoginResponseDto login = objectMapper.readValue(responseBody, LoginResponseDto.class);
+        String token = JsonPath.read(responseBody, "$.token");
 
         int statusCode = mockMvc.perform(get("/api/v1/medicamento/")
-                        .header("Authorization", "Bearer " + login.getToken()))
+                        .header("Authorization", "Bearer " + token))
                 .andReturn().getResponse().getStatus();
 
         assertThat(statusCode).isNotEqualTo(401);
