@@ -56,6 +56,9 @@ class AuthControllerTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @BeforeEach
     void seed() {
         limpar();
@@ -151,7 +154,7 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        LoginResponseDto login = new ObjectMapper().readValue(responseBody, LoginResponseDto.class);
+        LoginResponseDto login = objectMapper.readValue(responseBody, LoginResponseDto.class);
 
         int statusCode = mockMvc.perform(get("/api/v1/medicamento/")
                         .header("Authorization", "Bearer " + login.getToken()))
