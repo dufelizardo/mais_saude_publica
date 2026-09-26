@@ -188,11 +188,13 @@
 
 ### 1. **USUARIO** (Tabela Base de Autenticação) — ⚠️ SUPERSEDIDA
 
-> Nenhuma entidade `Usuario` foi criada. A ADR-0006 (JWT/autenticação) segue "Proposta", adiada
-> conscientemente mesmo para o domínio clínico (ver ADR-0039) — RH e Administrativo inteiros foram
-> construídos sem nenhuma autenticação, e a próxima onda (Paciente/Atendimento) segue o mesmo
-> padrão por decisão explícita. Esta tabela fica como registro da proposta original, não como algo
-> a implementar na próxima onda.
+> Nenhuma entidade `Usuario` foi criada. A ADR-0006 (JWT/autenticação) segue adiada conscientemente
+> mesmo para o domínio clínico (ver ADR-0039) — RH e Administrativo inteiros foram construídos sem
+> nenhuma autenticação, e a próxima onda (Paciente/Atendimento) seguiu o mesmo padrão por decisão
+> explícita. Esta tabela (com a coluna `roles` de 4 valores fixos) fica como registro da proposta
+> **original**, substituída pelo modelo de `Papel`/`Permissao`/`Escopo` da
+> [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md) — ver o esboço expandido em
+> "Identidade e Acesso" no apêndice. Continua não sendo algo a implementar agora.
 
 Armazena as credenciais e perfis de acesso ao sistema.
 
@@ -530,6 +532,11 @@ Notificações para usuários do sistema.
 ---
 
 ### 15. **AUDITORIA**
+
+> Esboço original, ainda compatível com o modelo adotado pela
+> [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md) — ver a versão enriquecida
+> (unidade/contexto) em "Auditoria" no apêndice.
+
 Log de auditoria de ações no sistema.
 
 | **Campo** | **Tipo** | **Descrição** | **Restrições** |
@@ -876,10 +883,12 @@ Não conformidade → Análise → Plano de ação → Execução → Verificaç
 
 Já esboçada como entidade `AUDITORIA` na proposta original (seção 15 acima) — mantida como
 referência, com o entendimento de que roda **transversalmente** a todos os domínios, não só ao
-clínico: `EventoDeAuditoria` (ação, entidade, entidade_id, dados_anteriores, dados_novos, ip,
-usuário, data/hora). Perguntas que deve responder: quem alterou a lotação, quem dispensou o
-medicamento, quem alterou o resultado do exame, quem aprovou a compra, quem autorizou a
-transferência.
+clínico. Enriquecida pela [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md)
+(2026-09-26, origem [`docs/pm/sistema_de_acesso.md`](../pm/sistema_de_acesso.md)) com unidade/contexto
+organizacional: `EventoAuditoria` (usuário, ação, recurso/entidade, entidade_id, unidade/contexto,
+dados_anteriores, dados_novos — quando a ação for uma alteração —, ip, data/hora). Perguntas que
+deve responder: quem alterou a lotação, quem dispensou o medicamento, quem alterou o resultado do
+exame, quem aprovou a compra, quem autorizou a transferência, a partir de qual unidade.
 
 ### Indicadores, BI e Gestão (#19)
 
@@ -892,17 +901,48 @@ médica.
 
 ### Identidade e Acesso (#20, parte)
 
-- `Usuario`, `Perfil`, `Papel`, `Permissao`, com escopo por `Unidade`/`Setor` — controle de acesso
-  **por contexto organizacional**, não só por papel global:
+> **Modelo decidido pela [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md)**
+> (2026-09-26), substituindo o esboço curto anterior — implementação continua adiada por decisão
+> explícita (ADR-0039/ADR-0006), revisitar antes de produção com dado real de paciente. Origem:
+> [`docs/pm/sistema_de_acesso.md`](../pm/sistema_de_acesso.md).
+
+- `Usuario` — identidade digital (login, credencial, status), separada de `Profissional` (RH) e
+  `Paciente` (Assistência); vínculo fraco opcional por CPF/uuid, mesmo mecanismo da ADR-0014.
+- `Credencial` — dados de autenticação do `Usuario` (hash de senha, ou futura integração externa).
+- `Papel` — agrupamento nomeado de `Permissao` (catálogo como dado, mesmo padrão da
+  `CapacidadeAdministrativa`/ADR-0032, não enum Java).
+- `Permissao` — granular, formato `RECURSO.ACAO` (ex.: `PRONTUARIO.CONSULTAR`,
+  `FARMACIA.DISPENSAR`).
+- `EscopoAcesso` — reaproveita a hierarquia organizacional já implementada (`UnidadeDeSaude` de 5
+  níveis, `Setor`), sem hierarquia de escopo nova.
+- `AtribuicaoAcesso` — liga `Usuario + Papel + EscopoAcesso`, com período de validade opcional
+  (`inicio`/`fim` nullable, para acesso temporário — ex.: plantonista).
+- `AdministradorPlataforma` — identidade de bootstrap, fora do fluxo normal de concessão de papel;
+  a partir dela nascem administradores municipais/regionais/de unidade, descentralizando a
+  administração.
 
 ```text
-Usuário
- ├── Unidade A → Administração
- └── Unidade B → Enfermagem
+Usuario
+   │
+   ├── AtribuicaoAcesso
+   │       │
+   │       ├── Papel
+   │       │       └── Permissoes
+   │       │
+   │       └── EscopoAcesso (Unidade/Setor, com herança pela hierarquia)
+   │
+   └── EventoAuditoria
+
+Bootstrap:
+Sistema instalado → AdministradorPlataforma → configura organização
+  → cria unidades → cria administradores municipais/regionais/de unidade
+  → administração passa a ser descentralizada
 ```
 
-Adiado por decisão explícita (ADR-0039/ADR-0006) — revisitar antes de produção com dado real de
-paciente.
+Regra de governança (não mecanismo técnico, ver ADR-0054): ninguém concede papel/escopo acima do
+próprio nível de autoridade. `Cargo` (RH) permanece explicitamente distinto de `Papel` (Segurança) —
+mesma disciplina de bounded context da ADR-0034. Pendência aberta, não decidida: se o acesso a dado
+clínico será só por papel/escopo, ou também por regra contextual (ex.: vínculo assistencial ativo).
 
 ### Integrações Externas (#20, parte)
 
