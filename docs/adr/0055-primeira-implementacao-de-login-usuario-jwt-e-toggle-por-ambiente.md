@@ -68,14 +68,28 @@ Investigação confirmou:
    `app.security.jwt-expiration-hours-remember-me`, default 168h) vs. `sessionStorage` (token
    curto, default 8h) — resolve o caso de uso real sem implementar refresh token.
 8. **Toggle por ambiente, sequenciamento seguro**: `app.security.enabled=false` em
-   `application.properties` (herdado por `dev`/`test`/`prod` — nenhum perfil sobrescreve). **Nenhum
-   overlay k8s liga o toggle ainda** — a wiring do secret JWT (`APP_SECURITY_JWT_SECRET`,
-   `optional: true` no `k8s/base/deployment-app.yaml`) está pronta, mas `APP_SECURITY_ENABLED` só
-   será adicionado ao `configMapGenerator` de `app-config` do overlay `dev` depois que a tela de
-   Login (frontend, item 9) estiver confirmada visualmente pelo usuário — ligar antes disso
-   quebraria a UI já implantada em `developer` (todo `/api/**` passaria a exigir token). Overlays
+   `application.properties` (herdado por `dev`/`test`/`prod` — nenhum perfil sobrescreve). O toggle
+   só foi ligado no overlay `dev` (`APP_SECURITY_ENABLED=true` no `configMapGenerator` de
+   `app-config`) depois que a tela de Login (frontend, item 9) estava mesclada e confirmada
+   visualmente pelo usuário — ligar antes disso quebraria a UI já implantada em `developer` (todo
+   `/api/**` passaria a exigir token sem nenhuma tela para obtê-lo). Overlays
    `qaa`/`homologacao`/`prod` só recebem o toggle quando essas branches forem promovidas, com sinal
    explícito do usuário (mesma regra já seguida a sessão inteira).
+   - **Provisionamento necessário no cluster (ação do usuário, fora do meu alcance)**: o namespace
+     `mais-saude-dev` precisa de um `Secret` chamado `app-secrets` com as chaves `jwt-secret`,
+     `bootstrap-cpf` e `bootstrap-senha` (wiring em `k8s/base/deployment-app.yaml`, todas
+     `optional: true` — sem elas a app sobe normalmente, só ninguém consegue logar: sem
+     `jwt-secret` a chave é efêmera, ver JwtService; sem `bootstrap-cpf`/`bootstrap-senha` nenhum
+     `Usuario` é criado). Exemplo:
+     ```bash
+     kubectl create secret generic app-secrets \
+       --namespace mais-saude-dev \
+       --from-literal=jwt-secret="$(openssl rand -base64 32)" \
+       --from-literal=bootstrap-cpf="<cpf só dígitos>" \
+       --from-literal=bootstrap-senha="<senha forte>"
+     ```
+     Um restart do pod (ou o próximo sync do ArgoCD) é necessário para os env vars serem lidos —
+     variáveis de ambiente de um `Secret` não são recarregadas a quente.
 9. **Frontend** (`features/auth/login/`): tela de Login fiel ao mockup fornecido pelo usuário —
    abas CPF/Matrícula (reaproveitando `formatCpf` de `shared/format-mask.ts`), "Entrar com gov.br"
    e "Esqueci minha senha" desabilitados com `title="Em breve"`, "Manter conectado" controlando
@@ -125,10 +139,10 @@ Papel/Permissao ainda, nenhum segredo commitado no git, tela fiel ao mockup forn
   OAuth externa e recuperação por e-mail/SMS são escopo à parte.
 - Sem refresh token — "Manter conectado" resolve o caso de uso real trocando storage/duração do
   token, mas um token expirado exige logar de novo.
-- Provisionamento manual necessário do usuário, fora do alcance deste agente: valor real do secret
-  JWT e das credenciais do `AdministradorPlataforma` no cluster K3s, para os ambientes que forem de
-  fato promovidos; e a decisão de quando de fato ligar `APP_SECURITY_ENABLED=true` em cada overlay
-  (começando pelo `dev`, agora que a tela de Login já está pronta e confirmada).
+- **Provisionamento manual necessário no cluster** (ação do usuário, fora do alcance deste agente):
+  o `Secret` `app-secrets` (`jwt-secret`/`bootstrap-cpf`/`bootstrap-senha`) precisa existir no
+  namespace `mais-saude-dev` para o login realmente funcionar em `dev` — ver comando na Decisão,
+  item 8. `qaa`/`homologacao`/`prod` recebem o mesmo tratamento quando forem promovidos.
 
 ## Referências
 
