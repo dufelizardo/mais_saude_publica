@@ -224,6 +224,7 @@ body.fs-xl { font-size: 1.25rem; }
 .btn--ghost:hover { background: var(--blue-50); border-color: var(--blue-700); color: var(--blue-700); }
 .btn--lg { padding: 14px 22px; font-size: 1rem; }
 .btn--block { width: 100%; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 /* Mobile menu button */
 .menu-toggle { display: none; }
@@ -644,6 +645,11 @@ footer a:hover { color: #fff; text-decoration: underline; }
 .crumbs { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--ink-500); }
 .crumbs strong { color: var(--ink-900); font-weight: 600; }
 
+/* Ações da topbar — Notificações/Configurações "em breve" (ver adendo à ADR-0018) */
+.top-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.top-btn { background: transparent; border: 1px solid transparent; color: var(--ink-700); width: 40px; height: 40px; border-radius: var(--r-md); display: inline-grid; place-items: center; }
+.top-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .content { grid-area: content; padding: var(--s-6); max-width: 1600px; min-width: 0; }
 @media (max-width: 600px) { .content { padding: var(--s-4); } }
 
@@ -662,6 +668,18 @@ footer a:hover { color: #fff; text-decoration: underline; }
 .toolbar .search input { width: 100%; padding: 9px 12px; border: 1.5px solid var(--ink-200); border-radius: var(--r-md); background: var(--ink-50); font: inherit; font-size: 0.875rem; min-height: 40px; }
 .toolbar .search input:focus { background: var(--white); border-color: var(--blue-500); outline: none; }
 .toolbar select { min-width: 200px; }
+
+/* Busca com ícone (ver ADR-0052) */
+.toolbar .search--icon input { padding-left: 36px; }
+.toolbar .search--icon svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+
+/* Pill como filtro dropdown (um por dimensão de filtro, ver ADR-0052) */
+.pill--select { padding: 0 10px 0 10px; gap: 6px; }
+.pill--select svg:first-child { color: var(--ink-400); flex-shrink: 0; }
+.pill--select select { border: 0; background: transparent; font: inherit; font-size: 0.8125rem; color: inherit; padding: 8px 0; min-height: auto; }
+.pill--select select:focus { outline: none; }
+.pill--select:has(select:disabled) { opacity: 0.5; cursor: not-allowed; }
+.pill--select select:disabled { cursor: not-allowed; }
 
 table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 thead th { text-align: left; padding: 10px var(--s-5); font-size: 0.72rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--ink-200); background: var(--ink-50); }
@@ -725,6 +743,69 @@ tbody tr:hover { background: var(--ink-50); }
 .info-list { display: grid; gap: 10px; }
 .info-list dt { font-size: 0.72rem; color: var(--ink-500); margin-bottom: 2px; }
 .info-list dd { margin: 0; font-size: 0.875rem; color: var(--ink-900); font-weight: 500; }
+
+/* ====== Tira de KPI (tela de lista + painel de detalhe, ver ADR-0052) ====== */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-3); margin-bottom: var(--s-4); }
+@media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .stats { grid-template-columns: 1fr; } }
+.stat { background: var(--white); border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-4); display: flex; gap: 14px; align-items: center; }
+.stat__icon { width: 42px; height: 42px; border-radius: 10px; background: var(--blue-50); color: var(--blue-700); display: grid; place-items: center; flex-shrink: 0; }
+.stat__icon--ok { background: var(--ok-bg); color: var(--ok); }
+.stat__icon--alert { background: var(--alert-bg); color: var(--alert); }
+.stat__lbl { color: var(--ink-500); font-size: 0.78rem; }
+.stat__val { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.05; margin-top: 2px; }
+
+/* Seção "Em breve" — dado sem backend ainda, nunca mostra número/conteúdo inventado (ver ADR-0052) */
+.stat--pending .stat__icon { opacity: 0.5; }
+.stat--pending .stat__val { font-size: 0.9375rem; font-weight: 600; color: var(--ink-400); }
+
+/* ====== Filtro por pill, dentro do .toolbar já existente (ver ADR-0052) ====== */
+.pill { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1.5px solid var(--ink-200); padding: 8px 12px; border-radius: var(--r-md); font-size: 0.8125rem; color: var(--ink-700); font-weight: 500; min-height: 40px; }
+.pill:hover { border-color: var(--blue-700); color: var(--blue-700); }
+.pill.active { background: var(--blue-50); border-color: var(--blue-100); color: var(--blue-700); }
+.pill:disabled { opacity: 0.5; cursor: not-allowed; }
+.pill:disabled:hover { border-color: var(--ink-200); color: var(--ink-700); }
+
+/* ====== Layout dividido: lista + painel de detalhe (ver ADR-0052) ====== */
+.split { display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--s-4); align-items: start; }
+@media (max-width: 1100px) { .split { grid-template-columns: 1fr; } }
+.split .detail-card { position: sticky; top: calc(var(--top-h) + var(--s-4)); }
+@media (max-width: 1100px) { .split .detail-card { position: static; } }
+
+/* ====== Avatar com iniciais (linha da tabela e cabeçalho do painel, ver ADR-0052) ====== */
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 0.75rem; flex-shrink: 0; }
+.who-cell { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.who-cell .n { display: block; font-weight: 600; color: var(--ink-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.who-cell .r { display: block; color: var(--ink-500); font-size: 0.72rem; }
+
+/* ====== Segmentado Lista/Cartões (cabeçalho da lista, ver ADR-0052) ====== */
+.seg { display: inline-flex; background: var(--ink-100); border-radius: var(--r-md); padding: 3px; border: 1px solid var(--ink-200); }
+.seg button { background: transparent; border: 0; padding: 6px 10px; border-radius: var(--r-sm); font-size: 0.78rem; font-weight: 500; color: var(--ink-500); min-height: 30px; }
+.seg button[aria-pressed="true"] { background: var(--white); color: var(--blue-700); box-shadow: var(--shadow-sm); }
+.seg button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ====== Sinais vitais (aba Resumo, ver ADR-0052) ====== */
+.vitals { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-2); }
+@media (max-width: 600px) { .vitals { grid-template-columns: repeat(2, 1fr); } }
+.vital { background: var(--ink-50); border: 1px solid var(--ink-200); border-radius: var(--r-md); padding: 10px 12px; }
+.vital__lbl { font-size: 0.7rem; color: var(--ink-500); }
+.vital__val { font-size: 1.0625rem; font-weight: 600; margin-top: 2px; }
+.vital__val small { font-size: 0.7rem; color: var(--ink-500); font-weight: 500; margin-left: 2px; }
+
+/* ====== Timeline (aba Histórico, ver ADR-0052) ====== */
+.tl { position: relative; padding-left: 24px; }
+.tl::before { content: ""; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: var(--ink-200); }
+.tl-row { position: relative; padding-bottom: var(--s-4); }
+.tl-row::before { content: ""; position: absolute; left: -22px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--white); border: 2px solid var(--blue-700); }
+.tl-row .date { font-size: 0.7rem; color: var(--ink-500); }
+.tl-row .title { font-weight: 600; font-size: 0.875rem; margin-top: 2px; }
+.tl-row .desc { font-size: 0.8125rem; color: var(--ink-500); margin-top: 2px; }
+
+/* ====== Estado "Em breve" — seção sem backend ainda (ver ADR-0052) ====== */
+.empty-state { padding: var(--s-8) var(--s-5); text-align: center; color: var(--ink-500); }
+.empty-state__icon { width: 48px; height: 48px; margin: 0 auto var(--s-3); border-radius: 50%; background: var(--ink-100); color: var(--ink-400); display: grid; place-items: center; }
+.empty-state__title { font-weight: 600; color: var(--ink-700); font-size: 0.9375rem; }
+.empty-state__desc { font-size: 0.8125rem; margin-top: 4px; max-width: 320px; margin-left: auto; margin-right: auto; }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {

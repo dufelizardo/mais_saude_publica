@@ -139,6 +139,22 @@ começam expandidos, igual ao visual anterior) — não precisa de `localStorage
 nunca é destruído entre navegações dentro da mesma sessão, então o estado sobrevive sozinho a
 trocar de página.
 
+## Melhoria pós-implementação (2026-09-26)
+
+Durante o redesenho da tela de Pacientes (ADR-0052), surgiu o padrão "constrói tudo do mockup,
+marca como 'Em breve' o que não tem dado/funcionalidade real por trás" — usado ali pros KPIs,
+filtros e abas sem backend. A mesma pergunta apareceu pra topbar do app shell: o mockup original
+(`Usuarios.html`/`Profissionais.html`, mesma família que originou este app shell) tem ícones de
+notificação e configurações que a decisão original desta ADR deixou de fora, junto com busca
+global e o indicador "dados ao vivo".
+
+Decisão: **notificações e configurações entram como ícones "em breve"** (`.top-btn`, `disabled`,
+`title="Em breve"`) na topbar — mesmo raciocínio da ADR-0052, baixo custo, dois botões simples.
+**Busca global e "dados ao vivo" continuam de fora**, porque a lacuna ali não é só "falta dado", é
+falta de infraestrutura inteira (busca cruzando múltiplos domínios; atualização em tempo real via
+websocket/polling) — categoria diferente das outras pendências "em breve" já registradas no
+projeto, e que mereceria sua própria decisão se/quando chegar a vez.
+
 ## Consequências
 
 **Positivas**
