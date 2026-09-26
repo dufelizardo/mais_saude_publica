@@ -47,3 +47,5 @@ Resource    ../../schema/medicamento/medicamento_schema.resource
 Resource    ../../schema/lote/lote_schema.resource
 # DISPENSACAO
 Resource    ../../schema/dispensacao/dispensacao_schema.resource
+# AUTH
+Resource    ../../schema/auth/auth_schema.resource

@@ -29,6 +29,16 @@ spec:
                 secretKeyRef:
                   name: db-credentials
                   key: password
+            # Opcional (ver ADR-0055) — sem este secret provisionado, a app sobe normalmente e
+            # JwtService gera uma chave efemera em memoria (tokens nao sobrevivem a um restart).
+            # Nenhum overlay liga APP_SECURITY_ENABLED ainda; quando ligar, provisionar este
+            # secret primeiro para sessoes persistentes.
+            - name: APP_SECURITY_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: jwt-secret
+                  optional: true
           resources:
             requests:
               cpu: 250m
