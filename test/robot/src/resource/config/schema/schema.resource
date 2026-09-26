@@ -43,3 +43,5 @@ Resource    ../../schema/triagem/triagem_schema.resource
 Resource    ../../schema/evolucao_enfermagem/evolucao_enfermagem_schema.resource
 # MEDICAMENTO
 Resource    ../../schema/medicamento/medicamento_schema.resource
+# LOTE
+Resource    ../../schema/lote/lote_schema.resource
