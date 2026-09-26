@@ -2,11 +2,21 @@
 
 ## Status
 
-Proposto — **não implementado**. Hoje a API não tem nenhuma camada de autenticação/autorização (nem Spring Security, nem JWT), apesar do `README.md` do repositório mencionar um endpoint `/auth` que não existe no código.
+**Substituída pela [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md)**. Conteúdo
+histórico preservado abaixo, não implementado. Hoje a API não tem nenhuma camada de
+autenticação/autorização (nem Spring Security, nem JWT), apesar do `README.md` do repositório
+mencionar um endpoint `/auth` que não existe no código.
 
 > Prioridade de implementação (decidida com o usuário, na época): esta proposta entra no grupo prioritário (junto com Clean Architecture e Docker), antes de novos domínios de negócio.
 >
 > **Atualização ([ADR-0039](./0039-mapa-de-dominios-e-prioridades-de-arquitetura.md))**: essa prioridade não foi seguida — RH e Administrativo (novos domínios de negócio) foram construídos 100% abertos, sem nenhuma autenticação. Ao entrar no domínio Assistência (Paciente/Atendimento — dado de saúde real, sensível por LGPD), o usuário foi consultado novamente e **decidiu manter o mesmo padrão de adiar**, conscientemente, com a ressalva explícita de revisitar esta ADR antes de qualquer deploy com dado real de paciente.
+>
+> **Substituição ([ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md), 2026-09-26)**:
+> o usuário trouxe um desenho mais rico de autorização (RBAC + escopo organizacional + catálogo de
+> permissões como dado, em vez das 4 roles fixas abaixo) e pediu para formalizá-lo. O **mecanismo de
+> autenticação** proposto aqui (JWT + Spring Security, fluxo de login) continua válido como candidato
+> técnico — o que a ADR-0054 substitui é o **modelo de autorização** (roles fixas → Papel/Permissão/
+> Escopo). Implementação de ambos continua adiada pelos mesmos motivos desta ADR.
 
 ## Contexto
 
