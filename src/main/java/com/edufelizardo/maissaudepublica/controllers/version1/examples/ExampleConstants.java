@@ -491,6 +491,18 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String MEDICAMENTO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "nome": "string",
+                    "principioAtivo": "string",
+                    "apresentacao": "string",
+                    "codigo": "string",
+                    "ativo": true
+                  }
+                ]
+            """;
     public static final String EVOLUCAO_ENFERMAGEM_RESPONSE_EXAMPLE = """
                 [
                   {
