@@ -138,6 +138,16 @@ rejeitada**
   árvore inteira — evita duplicar a mesma lógica de agregação em dois lugares com estilos
   diferentes.
 
+## Melhoria pós-implementação (2026-09-27)
+
+A pedido do usuário, conferindo a tela em `dev` contra o mockup, saíram do painel de detalhe dois
+elementos que o mockup não tem:
+- o selo "Ativo"/"Inativo" no cabeçalho (`.detail-head__chips`) — o status continua visível na
+  coluna da lista e no filtro de Status;
+- o bloco Identificação/Contato/Endereço (`.info-grid`) da aba Resumo, que agora vai direto de
+  Sinais vitais para Programas vinculados, como no mockup. Data de nascimento segue refletida na
+  idade do cabeçalho; telefone, e-mail e endereço ficam acessíveis pelo modal de edição.
+
 ## Consequências
 
 **Positivas**: primeiro uso de um padrão lista+detalhe na plataforma, reaproveitando quase
