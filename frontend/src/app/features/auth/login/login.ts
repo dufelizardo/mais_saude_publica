@@ -1,12 +1,15 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
 import { TipoIdentificadorLogin } from '../../../core/models/auth';
 import { formatCpf } from '../../../shared/format-mask';
 
 type FontSize = 'default' | 'lg' | 'xl';
+
+// Primeira tela do menu interno — não existe uma página inicial própria da área logada.
+const DESTINO_PADRAO = '/profissionais';
 
 @Component({
   selector: 'app-login',
@@ -18,6 +21,7 @@ export class Login {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly fontSize = signal<FontSize>('default');
   protected readonly highContrast = signal(false);
@@ -111,13 +115,24 @@ export class Login {
       .subscribe({
         next: () => {
           this.enviando.set(false);
-          this.router.navigateByUrl('/');
+          this.router.navigateByUrl(this.destinoAposLogin());
         },
         error: (erro) => {
           this.enviando.set(false);
           this.erroServidor.set(erro?.error?.message ?? 'Não foi possível entrar. Tente novamente.');
         },
       });
+  }
+
+  /**
+   * Só aceita caminho interno da própria aplicação ("/algo", nunca "//host" nem URL absoluta) —
+   * `returnUrl` vem da query string, então não dá para confiar nele cegamente.
+   */
+  private destinoAposLogin(): string {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    const ehCaminhoInterno =
+      !!returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//') && !returnUrl.startsWith('/login');
+    return ehCaminhoInterno ? returnUrl : DESTINO_PADRAO;
   }
 
   private restaurarPreferencias(): void {
