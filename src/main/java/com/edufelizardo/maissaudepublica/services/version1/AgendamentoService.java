@@ -65,6 +65,22 @@ public class AgendamentoService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Todos os agendamentos do paciente, do mais antigo ao mais recente — quem consome decide o
+     * recorte (a tela de Pacientes, por exemplo, mostra só os futuros ainda não cancelados).
+     */
+    public List<AgendamentoResponseDto> listarPorPaciente(UUID pacienteId) {
+        List<AgendamentoResponseDto> agendamentos = agendamentoRepository.findByPaciente_UuidOrderByDataHoraAsc(pacienteId)
+                .stream()
+                .map(AgendamentoResponseDto::fromAgendamento)
+                .collect(Collectors.toList());
+        if (agendamentos.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "Não foi possível encontrar agendamentos para o paciente de id " + pacienteId + " em nossos registros.");
+        }
+        return agendamentos;
+    }
+
     public AgendamentoResponseDto buscarPorId(UUID uuid) {
         return AgendamentoResponseDto.fromAgendamento(buscarEntidadePorId(uuid));
     }

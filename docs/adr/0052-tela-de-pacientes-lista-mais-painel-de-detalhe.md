@@ -148,6 +148,23 @@ elementos que o mockup não tem:
   Sinais vitais para Programas vinculados, como no mockup. Data de nascimento segue refletida na
   idade do cabeçalho; telefone, e-mail e endereço ficam acessíveis pelo modal de edição.
 
+Na mesma data, quatro "Em breve" pequenos foram resolvidos (duas das cinco lacunas de backend listadas
+em Consequências):
+- **Próximos atendimentos** (aba Resumo): novo `GET /api/v1/agendamento/paciente/{pacienteId}`
+  (`AgendamentoRepository.findByPaciente_UuidOrderByDataHoraAsc`), todos os agendamentos do paciente
+  em ordem de data, 404 quando não há nenhum (mesma convenção dos demais endpoints de listagem por
+  entidade relacionada). A tela mostra os 3 próximos ainda válidos (futuros, agendados ou
+  confirmados), no mesmo desenho do mockup (`.next-row`).
+- **KPI "Novos cadastros · mês"**: `Paciente.dataCadastro` (`Instant`, preenchido na criação, não
+  atualizável). O mês é calculado no fuso do navegador, para um cadastro às 22h do último dia do
+  mês não cair no mês seguinte. Pacientes anteriores ao campo ficam com data nula e não entram na
+  conta.
+- **Exportar**: CSV gerado no próprio frontend a partir da lista já filtrada (separador `;` e BOM
+  UTF-8, para abrir direto no Excel em português; valores iniciados por `= + - @` neutralizados
+  contra injeção de fórmula).
+- **Visualização em Cartões**: o mockup só tem o botão, sem layout; os cartões (`.pcard`) reúnem os
+  mesmos dados da linha da tabela e selecionam o paciente como ela.
+
 ## Consequências
 
 **Positivas**: primeiro uso de um padrão lista+detalhe na plataforma, reaproveitando quase
@@ -157,7 +174,7 @@ tela futura que precise do mesmo meio-termo "constrói tudo, marca o que falta";
 timeline (dado que já existia no backend desde ADRs 0047/0048, mas nunca tinha sido puxado pro
 frontend) finalmente aparecem em algum lugar do produto.
 
-**Negativas / pendências**: cinco lacunas de backend ficam registradas, mas **sem plano de
+**Negativas / pendências** (atualizado em 2026-09-27 — `findByPacienteUuid` e a data de cadastro já foram resolvidos, ver adenda acima): cinco lacunas de backend ficam registradas, mas **sem plano de
 implementação ainda** (a ser conversado separadamente): `AgendamentoRepository.findByPacienteUuid`
 (pequeno), domínio Programas de Saúde (novo, grande), domínio Vacinação (novo, grande), domínio
 Documentos/Anexos (novo, depende do domínio transversal "Documentos" do `MAPA-DE-DOMINIOS.md`), e

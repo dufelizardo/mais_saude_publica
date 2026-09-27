@@ -4,7 +4,7 @@
     <p>{{ totalPacientes() }} pacientes cadastrados na rede pública de saúde.</p>
   </div>
   <div class="actions" style="display: flex; gap: 8px;">
-    <button type="button" class="btn btn--ghost" disabled title="Em breve">
+    <button type="button" class="btn btn--ghost" (click)="exportarCsv()" [disabled]="pacientesFiltrados().length === 0" title="Exporta a lista filtrada em CSV">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       Exportar
     </button>
@@ -29,13 +29,13 @@
       <div class="stat__val">{{ totalAtivos() }}</div>
     </div>
   </div>
-  <div class="stat stat--pending" title="Em breve — depende de um campo de data de cadastro, que ainda não existe">
+  <div class="stat" title="Cadastrados no mês corrente. Pacientes anteriores à data de cadastro existir não entram na conta.">
     <span class="stat__icon" aria-hidden="true">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
     </span>
     <div>
       <div class="stat__lbl">Novos cadastros · mês</div>
-      <div class="stat__val">Em breve</div>
+      <div class="stat__val">{{ novosCadastrosMes() }}</div>
     </div>
   </div>
   <div class="stat stat--pending" title="Em breve — depende do domínio Programas de Saúde, ainda não implementado">
@@ -113,10 +113,32 @@
         <div class="sub">{{ pacientesFiltrados().length }} resultado(s)</div>
       </div>
       <div class="seg" role="group" aria-label="Visualização">
-        <button type="button" aria-pressed="true">Lista</button>
-        <button type="button" aria-pressed="false" disabled title="Em breve">Cartões</button>
+        <button type="button" [attr.aria-pressed]="modoVisualizacao() === 'lista'" (click)="modoVisualizacao.set('lista')">Lista</button>
+        <button type="button" [attr.aria-pressed]="modoVisualizacao() === 'cartoes'" (click)="modoVisualizacao.set('cartoes')">Cartões</button>
       </div>
     </div>
+    @if (modoVisualizacao() === 'cartoes') {
+      <div class="pcard-grid">
+        @for (paciente of pacientesFiltrados(); track paciente.uuid) {
+          <button type="button" class="pcard" (click)="selecionar(paciente)" [attr.aria-pressed]="selecionado()?.uuid === paciente.uuid">
+            <span class="avatar" aria-hidden="true">{{ iniciais(paciente.nome) }}</span>
+            <span class="pcard__body">
+              <span class="pcard__name">{{ paciente.nome }}</span>
+              <span class="pcard__meta">{{ idade(paciente.dataNascimento) }} anos · {{ paciente.sexo === 'MASCULINO' ? 'Masc.' : (paciente.sexo === 'FEMININO' ? 'Fem.' : 'Ignorado') }}</span>
+              <span class="pcard__meta">CNS {{ cartaoSusFormatado(paciente.cartaoSus) || '—' }}</span>
+            </span>
+            @if (paciente.ativo) {
+              <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Ativo</span>
+            } @else {
+              <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Inativo</span>
+            }
+          </button>
+        }
+      </div>
+      @if (!carregando() && pacientesFiltrados().length === 0) {
+        <p class="table-empty">Nenhum paciente encontrado.</p>
+      }
+    } @else {
     <div style="overflow-x: auto;">
     <table>
       <thead>
@@ -156,6 +178,7 @@
       <p class="table-empty">Nenhum paciente encontrado.</p>
     }
     </div>
+    }
   </div>
 
   @if (selecionado(); as p) {
@@ -236,12 +259,28 @@
         <div class="section-title" style="font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; padding: 0 var(--s-5); margin-bottom: 10px;">
           Próximos atendimentos
         </div>
-        <div class="empty-state" style="padding-top: 0;">
-          <span class="empty-state__icon" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          </span>
-          <div class="empty-state__title">Em breve</div>
-          <p class="empty-state__desc">Vai mostrar os próximos agendamentos deste paciente — depende de uma busca de agendamentos por paciente que ainda não existe no backend.</p>
+        <div style="padding: 0 var(--s-5) var(--s-5);">
+          @if (carregandoAgendamentos()) {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Carregando…</p>
+          } @else if (proximosAtendimentos().length > 0) {
+            <div class="next">
+              @for (agendamento of proximosAtendimentos(); track agendamento.uuid) {
+                <div class="next-row">
+                  <div class="next-row__date">
+                    <div class="d">{{ diaDoMes(agendamento.dataHora) }}</div>
+                    <div class="m">{{ mesAbreviado(agendamento.dataHora) }}</div>
+                  </div>
+                  <div>
+                    <div class="next-row__what">{{ tipoAgendamento(agendamento.tipo) }}@if (agendamento.status === 'CONFIRMADO') { · confirmado}</div>
+                    <div class="next-row__where">{{ agendamento.profissionalNome }} · {{ agendamento.dataHora | date: 'HH:mm' }}</div>
+                  </div>
+                  <a routerLink="/assistencia/agendamentos" class="next-row__action">Agenda →</a>
+                </div>
+              }
+            </div>
+          } @else {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Nenhum atendimento agendado.</p>
+          }
         </div>
 
         <div class="section-title" style="font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; padding: 0 var(--s-5); margin-bottom: 10px;">

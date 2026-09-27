@@ -173,6 +173,48 @@ class AgendamentoControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    private String corpoAgendamentoEm(UUID pacienteId, String profissionalMatricula, String dataHora) {
+        return """
+                {
+                  "pacienteId": "%s",
+                  "profissionalMatricula": "%s",
+                  "dataHora": "%s",
+                  "status": "AGENDADO",
+                  "tipo": "CONSULTA"
+                }
+                """.formatted(pacienteId, profissionalMatricula, dataHora);
+    }
+
+    @Test
+    void deveListarAgendamentosDoPacienteEmOrdemDeData() throws Exception {
+        String matricula = criarProfissionalEBuscarMatricula(PREFIXO_CPF_TESTE + "10", "Profissional Dez");
+        UUID pacienteId = criarPacienteEBuscarUuid(PREFIXO_CPF_TESTE + "10", "Paciente Dez");
+        UUID outroPacienteId = criarPacienteEBuscarUuid(PREFIXO_CPF_TESTE + "11", "Paciente Onze");
+
+        for (String corpo : List.of(
+                corpoAgendamentoEm(pacienteId, matricula, "2026-12-10T14:00:00"),
+                corpoAgendamentoEm(pacienteId, matricula, "2026-11-05T09:30:00"),
+                corpoAgendamentoEm(outroPacienteId, matricula, "2026-10-01T08:00:00"))) {
+            mockMvc.perform(post(AGENDAMENTO_URL).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                    .andExpect(status().isCreated());
+        }
+
+        mockMvc.perform(get(AGENDAMENTO_URL + "paciente/" + pacienteId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].dataHora").value("2026-11-05T09:30:00"))
+                .andExpect(jsonPath("$[1].dataHora").value("2026-12-10T14:00:00"))
+                .andExpect(jsonPath("$[0].pacienteUuid").value(pacienteId.toString()));
+    }
+
+    @Test
+    void deveRetornarNotFoundQuandoPacienteNaoTemAgendamentos() throws Exception {
+        UUID pacienteId = criarPacienteEBuscarUuid(PREFIXO_CPF_TESTE + "12", "Paciente Doze");
+
+        mockMvc.perform(get(AGENDAMENTO_URL + "paciente/" + pacienteId))
+                .andExpect(status().isNotFound());
+    }
+
     @Test
     void deveBuscarPorId() throws Exception {
         String matricula = criarProfissionalEBuscarMatricula(PREFIXO_CPF_TESTE + "04", "Profissional Quatro");

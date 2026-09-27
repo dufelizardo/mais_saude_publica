@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
@@ -68,7 +69,15 @@ public class Paciente implements Serializable {
     private String email;
     private boolean ativo;
 
+    /**
+     * Momento do cadastro — base do indicador "novos cadastros no mês" da tela de Pacientes
+     * (ADR-0052). Pacientes cadastrados antes deste campo existir ficam com {@code null}.
+     */
+    @Column(updatable = false)
+    private Instant dataCadastro;
+
     public Paciente(PacienteRequestDto dto) {
+        this.dataCadastro = Instant.now();
         this.nome = dto.getNome();
         this.cpf = dto.getCpf();
         this.cartaoSus = dto.getCartaoSus();
