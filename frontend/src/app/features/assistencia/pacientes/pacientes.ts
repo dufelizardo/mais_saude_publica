@@ -13,8 +13,13 @@ import { CepService } from '../../../core/services/cep';
 import { ProntuarioService } from '../../../core/services/prontuario';
 import { ProntuarioResponseDto } from '../../../core/models/prontuario';
 import { TriagemResponseDto } from '../../../core/models/triagem';
+import { AgendamentoResponseDto } from '../../../core/models/agendamento';
+import { AgendamentoService } from '../../../core/services/agendamento';
 
 type AbaDetalhe = 'resumo' | 'historico' | 'programas' | 'vacinacao' | 'anexos';
+type ModoVisualizacao = 'lista' | 'cartoes';
+
+const MESES_ABREVIADOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 interface TimelineItem {
   data: string;
@@ -34,8 +39,21 @@ export class Pacientes {
   private readonly pacienteService = inject(PacienteService);
   private readonly cepService = inject(CepService);
   private readonly prontuarioService = inject(ProntuarioService);
+  private readonly agendamentoService = inject(AgendamentoService);
 
   protected readonly sexos: Sexo[] = ['MASCULINO', 'FEMININO', 'IGNORADO'];
+  protected readonly modoVisualizacao = signal<ModoVisualizacao>('lista');
+
+  protected readonly agendamentos = signal<AgendamentoResponseDto[]>([]);
+  protected readonly carregandoAgendamentos = signal(false);
+
+  /** Futuros e ainda válidos (agendados ou confirmados), do mais próximo ao mais distante. */
+  protected readonly proximosAtendimentos = computed(() => {
+    const agora = Date.now();
+    return this.agendamentos()
+      .filter((a) => (a.status === 'AGENDADO' || a.status === 'CONFIRMADO') && new Date(a.dataHora).getTime() >= agora)
+      .slice(0, 3);
+  });
 
   protected readonly pacientes = signal<PacienteResponseDto[]>([]);
   protected readonly busca = signal('');
@@ -140,6 +158,18 @@ export class Pacientes {
   protected readonly totalAtivos = computed(() => this.pacientes().filter((p) => p.ativo).length);
   protected readonly totalInativos = computed(() => this.pacientes().filter((p) => !p.ativo).length);
 
+  /** Mês corrente no fuso do navegador. Pacientes sem data de cadastro (anteriores ao campo) não contam. */
+  protected readonly novosCadastrosMes = computed(() => {
+    const hoje = new Date();
+    return this.pacientes().filter((p) => {
+      if (!p.dataCadastro) {
+        return false;
+      }
+      const cadastro = new Date(p.dataCadastro);
+      return cadastro.getFullYear() === hoje.getFullYear() && cadastro.getMonth() === hoje.getMonth();
+    }).length;
+  });
+
   protected readonly form = this.fb.nonNullable.group({
     nome: ['', [Validators.required]],
     cpf: ['', [Validators.required]],
@@ -188,7 +218,7 @@ export class Pacientes {
     const proximo = mantido ?? pacientes[0] ?? null;
     this.selecionado.set(proximo);
     if (proximo && proximo.uuid !== atual?.uuid) {
-      this.carregarProntuario(proximo.uuid);
+      this.carregarDetalhe(proximo.uuid);
     }
   }
 
@@ -198,7 +228,77 @@ export class Pacientes {
     }
     this.selecionado.set(paciente);
     this.abaDetalhe.set('resumo');
-    this.carregarProntuario(paciente.uuid);
+    this.carregarDetalhe(paciente.uuid);
+  }
+
+  private carregarDetalhe(pacienteId: string): void {
+    this.carregarProntuario(pacienteId);
+    this.carregarAgendamentos(pacienteId);
+  }
+
+  private carregarAgendamentos(pacienteId: string): void {
+    this.agendamentos.set([]);
+    this.carregandoAgendamentos.set(true);
+    this.agendamentoService.listarPorPaciente(pacienteId).subscribe({
+      next: (agendamentos) => {
+        if (this.selecionado()?.uuid !== pacienteId) {
+          return;
+        }
+        this.agendamentos.set(agendamentos);
+        this.carregandoAgendamentos.set(false);
+      },
+      // 404 = paciente sem agendamentos; qualquer outra falha também cai em "nenhum" em vez de travar o painel.
+      error: () => {
+        if (this.selecionado()?.uuid !== pacienteId) {
+          return;
+        }
+        this.agendamentos.set([]);
+        this.carregandoAgendamentos.set(false);
+      },
+    });
+  }
+
+  protected diaDoMes(dataHora: string): string {
+    return String(new Date(dataHora).getDate()).padStart(2, '0');
+  }
+
+  protected mesAbreviado(dataHora: string): string {
+    return MESES_ABREVIADOS[new Date(dataHora).getMonth()];
+  }
+
+  protected tipoAgendamento(tipo: AgendamentoResponseDto['tipo']): string {
+    return { CONSULTA: 'Consulta', PROCEDIMENTO: 'Procedimento', RETORNO: 'Retorno' }[tipo];
+  }
+
+  protected exportarCsv(): void {
+    const cabecalho = [
+      'Nome', 'CPF', 'Cartão SUS', 'Data de nascimento', 'Idade', 'Sexo',
+      'Telefone', 'E-mail', 'Cidade', 'UF', 'Status', 'Data de cadastro',
+    ];
+    const linhas = this.pacientesFiltrados().map((p) => [
+      p.nome,
+      p.cpf,
+      this.cartaoSusFormatado(p.cartaoSus),
+      p.dataNascimento,
+      String(this.idade(p.dataNascimento)),
+      p.sexo === 'MASCULINO' ? 'Masculino' : p.sexo === 'FEMININO' ? 'Feminino' : 'Ignorado',
+      p.telefones[0] ?? '',
+      p.email ?? '',
+      p.endereco.cidade,
+      p.endereco.estado,
+      p.ativo ? 'Ativo' : 'Inativo',
+      p.dataCadastro ? p.dataCadastro.slice(0, 10) : '',
+    ]);
+
+    const csv = [cabecalho, ...linhas].map((linha) => linha.map(celulaCsv).join(';')).join('\r\n');
+    // BOM: sem ele o Excel abre o arquivo como ANSI e quebra os acentos.
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `pacientes-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   protected selecionarAba(aba: AbaDetalhe): void {
@@ -394,4 +494,14 @@ export class Pacientes {
       },
     });
   }
+}
+
+/**
+ * Aspas quando o valor tem separador, aspas ou quebra de linha. Valores que começam com
+ * = + - @ ganham um apóstrofo na frente para o Excel não interpretá-los como fórmula
+ * (injeção de fórmula em CSV, OWASP).
+ */
+function celulaCsv(valor: string): string {
+  const neutralizado = /^[=+\-@]/.test(valor) ? `'${valor}` : valor;
+  return /[;"\r\n]/.test(neutralizado) ? `"${neutralizado.replace(/"/g, '""')}"` : neutralizado;
 }

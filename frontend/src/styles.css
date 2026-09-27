@@ -922,6 +922,26 @@ tbody tr:hover { background: var(--ink-50); }
 .security-note svg { color: var(--blue-700); flex-shrink: 0; margin-top: 2px; }
 .security-note strong { color: var(--ink-900); font-weight: 600; }
 
+/* ====== Próximos atendimentos (aba Resumo de Pacientes, mesmo desenho do mockup — ver ADR-0052) ====== */
+.next { display: grid; gap: 8px; }
+.next-row { display: grid; grid-template-columns: 52px 1fr auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--ink-200); border-radius: 10px; }
+.next-row__date { background: var(--blue-50); color: var(--blue-700); border-radius: 8px; padding: 6px 4px; text-align: center; font-weight: 600; min-width: 52px; }
+.next-row__date .d { font-size: 1.125rem; line-height: 1; }
+.next-row__date .m { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+.next-row__what { font-weight: 600; font-size: 0.875rem; }
+.next-row__where { font-size: 0.72rem; color: var(--ink-500); margin-top: 2px; }
+.next-row__action { font-size: 0.78rem; font-weight: 500; }
+
+/* ====== Visualização em cartões da lista de Pacientes (ver ADR-0052) ====== */
+.pcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; padding: var(--s-4); }
+.pcard { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: 8px 10px; align-items: start; text-align: left; padding: 12px; border: 1px solid var(--ink-200); border-radius: var(--r-md); background: var(--white); font: inherit; color: inherit; cursor: pointer; }
+.pcard:hover { border-color: var(--blue-400); }
+.pcard[aria-pressed="true"] { border-color: var(--blue-700); box-shadow: 0 0 0 3px rgba(19,81,180,0.12); }
+.pcard .tag { grid-column: 2; justify-self: start; }
+.pcard__body { display: grid; gap: 2px; min-width: 0; }
+.pcard__name { font-weight: 600; color: var(--ink-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcard__meta { font-size: 0.72rem; color: var(--ink-500); }
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }

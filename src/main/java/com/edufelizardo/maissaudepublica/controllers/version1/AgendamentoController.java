@@ -52,6 +52,20 @@ public class AgendamentoController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @GetMapping(value = "paciente/{pacienteId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Lista os agendamentos de um paciente, do mais antigo ao mais recente", tags = "Agendamento")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(
+                    schema = @Schema(implementation = AgendamentoResponseDto.class)
+            ), examples = @ExampleObject(name = "Success",
+                    summary = "AgendamentoResponse",
+                    value = ExampleConstants.AGENDAMENTO_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesBusca
+    public ResponseEntity<List<AgendamentoResponseDto>> listarPorPaciente(@PathVariable UUID pacienteId) {
+        return ResponseEntity.ok(service.listarPorPaciente(pacienteId));
+    }
+
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um agendamento pelo id", tags = "Agendamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
