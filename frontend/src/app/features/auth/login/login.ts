@@ -3,6 +3,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
+import { VersaoService } from '../../../core/services/versao';
 import { TipoIdentificadorLogin } from '../../../core/models/auth';
 import { formatCpf } from '../../../shared/format-mask';
 
@@ -22,6 +23,8 @@ export class Login {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+
+  protected readonly versao = inject(VersaoService).versao;
 
   protected readonly fontSize = signal<FontSize>('default');
   protected readonly highContrast = signal(false);
