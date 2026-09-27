@@ -1,0 +1,48 @@
+name: Protótipo navegável (GitHub Pages)
+
+# Publica a pasta prototipo/ (telas estáticas de referência, dados fictícios) no GitHub Pages, para
+# quem visita o repositório navegar pelo sistema sem backend. Não é o sistema real: o frontend
+# Angular em frontend/ evolui separado e pode divergir destas telas.
+#
+# Roda a partir de developer (e não de main) porque não é código de aplicação — não passa pelo
+# fluxo de promoção developer -> qaa -> homologacao -> main (ADR-0010).
+on:
+  push:
+    branches:
+      - developer
+    paths:
+      - 'prototipo/**'
+      - '.github/workflows/prototipo-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configurar o GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Empacotar a pasta prototipo/
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: prototipo
+
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4

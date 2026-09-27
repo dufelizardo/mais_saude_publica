@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sala de Situação — Mais Saúde Pública</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ===== Tokens ===== */
+  :root {
+    --blue-900: #0a2540;
+    --blue-800: #0c3170;
+    --blue-700: #1351b4;
+    --blue-600: #1e6fd9;
+    --blue-500: #2f8de4;
+    --blue-400: #5aa9ee;
+    --blue-200: #c7daf5;
+    --blue-100: #e7f0fb;
+    --blue-50:  #f3f7fd;
+
+    --ink-900: #0e1116;
+    --ink-700: #2a3140;
+    --ink-500: #5c6470;
+    --ink-400: #7a8392;
+    --ink-300: #b6bdc9;
+    --ink-200: #dde1e8;
+    --ink-100: #eef1f5;
+    --ink-50:  #f7f8fb;
+    --white:   #ffffff;
+
+    --ok:      #1f8a5b;
+    --ok-bg:   #e7f6ee;
+    --warn:    #b86b00;
+    --warn-bg: #fdf4e3;
+    --alert:   #c0392b;
+    --alert-bg:#fdecea;
+
+    --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-xl: 18px;
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px;
+    --s-6: 24px; --s-7: 28px; --s-8: 32px; --s-10: 40px; --s-12: 48px;
+
+    --side-w: 260px;
+    --top-h: 64px;
+
+    --shadow-sm: 0 1px 2px rgba(14,17,22,0.05);
+    --shadow-md: 0 1px 2px rgba(14,17,22,0.04), 0 6px 18px rgba(14,17,22,0.06);
+    --shadow-lg: 0 10px 30px rgba(14,17,22,0.10);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ink-50);
+    color: var(--ink-900);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  a { color: var(--blue-700); text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+  h1, h2, h3, h4 { margin: 0; letter-spacing: -0.01em; line-height: 1.2; font-weight: 600; }
+  p { margin: 0; }
+  ul { margin: 0; padding: 0; list-style: none; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  :focus-visible { outline: 3px solid var(--blue-500); outline-offset: 2px; border-radius: 6px; }
+
+  .skip-link {
+    position: absolute; left: 8px; top: -100px;
+    background: var(--blue-700); color: #fff; padding: 10px 14px;
+    border-radius: 6px; font-weight: 600; z-index: 200;
+    transition: top 0.15s;
+  }
+  .skip-link:focus { top: 8px; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* ============ App shell ============ */
+  .app {
+    display: grid;
+    grid-template-columns: var(--side-w) 1fr;
+    grid-template-rows: var(--top-h) 1fr;
+    grid-template-areas:
+      "sidebar topbar"
+      "sidebar content";
+    min-height: 100vh;
+  }
+  @media (max-width: 980px) {
+    .app { grid-template-columns: 1fr; grid-template-areas: "topbar" "content"; }
+  }
+
+  /* ============ Sidebar ============ */
+  .sidebar {
+    grid-area: sidebar;
+    background: #fff;
+    border-right: 1px solid var(--ink-200);
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh;
+    overflow-y: auto;
+  }
+  /* Mobile: hide sidebar unless toggled open. Placed AFTER base .sidebar rule so it wins source-order. */
+  @media (max-width: 980px) {
+    .sidebar { display: none; }
+    .sidebar.is-open {
+      display: flex; position: fixed; inset: 0 auto 0 0;
+      width: 280px; z-index: 150;
+      box-shadow: var(--shadow-lg);
+    }
+  }
+  .sidebar__brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--ink-100);
+    height: var(--top-h);
+    flex-shrink: 0;
+  }
+  .sb-mark { width: 36px; height: 36px; border-radius: 9px; background: var(--blue-700); color: #fff; display: grid; place-items: center; flex-shrink: 0; }
+  .sb-name { font-weight: 600; font-size: 0.9375rem; letter-spacing: -0.01em; line-height: 1.05; white-space: nowrap; }
+  .sb-sub { font-size: 0.66rem; color: var(--ink-500); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .sidebar__nav { padding: var(--s-3) 10px; flex: 1; }
+  .nav-group { margin-bottom: var(--s-4); }
+  .nav-group__label {
+    font-size: 0.66rem;
+    font-weight: 600;
+    color: var(--ink-400);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 8px 10px 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: var(--ink-700);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    min-height: 36px;
+  }
+  .nav-item:hover { background: var(--blue-50); color: var(--blue-700); }
+  .nav-item[aria-current="page"] {
+    background: var(--blue-700); color: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+  .nav-item[aria-current="page"] .nav-badge { background: rgba(255,255,255,0.2); color: #fff; }
+  .nav-item__icon { width: 18px; height: 18px; color: currentColor; flex-shrink: 0; }
+  .nav-item__label { flex: 1; }
+  .nav-badge {
+    background: var(--ink-100); color: var(--ink-500);
+    font-size: 0.7rem; font-weight: 600;
+    padding: 2px 7px; border-radius: 999px;
+  }
+  .nav-sub { padding-left: 28px; display: grid; gap: 1px; margin-top: 2px; }
+  .nav-sub a {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; border-radius: 6px;
+    color: var(--ink-500); font-size: 0.8125rem;
+    text-decoration: none;
+    min-height: 32px;
+  }
+  .nav-sub a:hover { background: var(--blue-50); color: var(--blue-700); }
+  .nav-sub a[aria-current="page"] { color: var(--blue-700); font-weight: 600; background: var(--blue-50); }
+
+  .sidebar__foot {
+    border-top: 1px solid var(--ink-100);
+    padding: var(--s-3);
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+  .who { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; padding: 4px 6px; border-radius: 8px; }
+  .who:hover { background: var(--ink-50); }
+  .who__avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+    color: #fff; display: grid; place-items: center;
+    font-weight: 600; font-size: 0.8125rem;
+    flex-shrink: 0;
+  }
+  .who__name { font-weight: 600; font-size: 0.8125rem; color: var(--ink-900); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who__role { font-size: 0.7rem; color: var(--ink-500); }
+  .icon-btn {
+    background: transparent; border: 1px solid transparent;
+    color: var(--ink-500);
+    width: 32px; height: 32px; border-radius: 8px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .icon-btn:hover { background: var(--ink-100); color: var(--ink-900); }
+
+  /* ============ Topbar ============ */
+  .topbar {
+    grid-area: topbar;
+    background: #fff;
+    border-bottom: 1px solid var(--ink-200);
+    height: var(--top-h);
+    display: flex; align-items: center;
+    padding: 0 var(--s-6);
+    gap: var(--s-4);
+    position: sticky; top: 0; z-index: 80;
+  }
+  @media (max-width: 600px) { .topbar { padding: 0 var(--s-4); } }
+  .menu-btn {
+    display: none;
+    width: 40px; height: 40px; border-radius: 8px;
+    background: transparent; border: 1px solid var(--ink-200);
+    color: var(--ink-700);
+    align-items: center; justify-content: center;
+  }
+  @media (max-width: 980px) { .menu-btn { display: inline-flex; } }
+
+  .crumbs { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--ink-500); }
+  .crumbs strong { color: var(--ink-900); font-weight: 600; }
+  @media (max-width: 1024px) { .crumbs { display: none; } }
+
+  .topbar__search {
+    margin-left: auto;
+    position: relative;
+    flex: 0 1 320px;
+    min-width: 0;
+  }
+  .topbar__search input {
+    width: 100%;
+    padding: 9px 12px 9px 36px;
+    border: 1px solid var(--ink-200);
+    border-radius: 8px;
+    background: var(--ink-50);
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--ink-900);
+    min-height: 40px;
+  }
+  .topbar__search input:focus { background: #fff; }
+  .topbar__search svg {
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    color: var(--ink-400); pointer-events: none;
+  }
+  @media (max-width: 700px) { .topbar__search { display: none; } }
+
+  .top-actions { display: flex; align-items: center; gap: 4px; }
+  .top-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--ok-bg); color: var(--ok);
+    padding: 5px 10px; border-radius: 999px;
+    font-size: 0.72rem; font-weight: 600;
+  }
+  .top-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(31,138,91,0.18); }
+  @media (max-width: 700px) { .top-pill { display: none; } }
+
+  .top-btn {
+    background: transparent; border: 1px solid transparent;
+    color: var(--ink-700);
+    width: 40px; height: 40px; border-radius: 8px;
+    display: inline-grid; place-items: center;
+    position: relative;
+  }
+  .top-btn:hover { background: var(--ink-50); }
+  .top-btn .dot-alert {
+    position: absolute; top: 8px; right: 8px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--alert);
+    border: 2px solid #fff;
+  }
+
+  /* ============ Content ============ */
+  .content {
+    grid-area: content;
+    padding: var(--s-6);
+    max-width: 1600px;
+  }
+  @media (max-width: 600px) { .content { padding: var(--s-4); } }
+
+  .page-head {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    gap: var(--s-6); flex-wrap: wrap; margin-bottom: var(--s-6);
+  }
+  .page-head h1 { font-size: clamp(1.375rem, 1.1rem + 0.7vw, 1.75rem); }
+  .page-head p { color: var(--ink-500); font-size: 0.875rem; margin-top: 4px; }
+
+  .filters { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+  .filter {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.8125rem;
+    color: var(--ink-700);
+    font-weight: 500;
+    min-height: 38px;
+    cursor: pointer;
+  }
+  .filter:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .filter svg { color: var(--ink-400); }
+  .filter strong { color: var(--ink-900); font-weight: 600; margin-left: 4px; }
+  .filter--primary {
+    background: var(--blue-700); border-color: var(--blue-700); color: #fff;
+  }
+  .filter--primary:hover { background: var(--blue-800); color: #fff; }
+  .filter--primary svg { color: #fff; }
+  .filter--primary strong { color: #fff; }
+  .seg-filter {
+    display: inline-flex; background: var(--ink-100); border-radius: 8px; padding: 3px;
+    border: 1px solid var(--ink-200);
+  }
+  .seg-filter button {
+    appearance: none; background: transparent; border: 0;
+    padding: 6px 12px; border-radius: 6px;
+    font-size: 0.8125rem; font-weight: 500; color: var(--ink-500);
+    min-height: 32px;
+  }
+  .seg-filter button[aria-pressed="true"] { background: #fff; color: var(--blue-700); box-shadow: var(--shadow-sm); }
+
+  /* ============ Alerts strip ============ */
+  .alerts {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: var(--s-3);
+    margin-bottom: var(--s-6);
+  }
+  @media (max-width: 980px) { .alerts { grid-template-columns: 1fr; } }
+  .alert-card {
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: var(--r-lg);
+    padding: var(--s-4);
+    display: flex; gap: 12px; align-items: flex-start;
+    border-left-width: 4px;
+  }
+  .alert-card--danger { border-left-color: var(--alert); }
+  .alert-card--warn { border-left-color: var(--warn); }
+  .alert-card--info { border-left-color: var(--blue-700); }
+  .alert-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .alert-card--danger .alert-icon { background: var(--alert-bg); color: var(--alert); }
+  .alert-card--warn .alert-icon { background: var(--warn-bg); color: var(--warn); }
+  .alert-card--info .alert-icon { background: var(--blue-50); color: var(--blue-700); }
+  .alert-card h3 { font-size: 0.9375rem; }
+  .alert-card p { color: var(--ink-500); font-size: 0.8125rem; margin-top: 2px; }
+  .alert-card .alert-meta { margin-top: 6px; display: flex; gap: 10px; font-size: 0.72rem; color: var(--ink-400); align-items: center; }
+  .alert-action { color: var(--blue-700); font-weight: 600; font-size: 0.8125rem; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; }
+
+  /* ============ KPI strip ============ */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--s-3);
+    margin-bottom: var(--s-6);
+  }
+  @media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 600px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .kpi {
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: var(--r-lg);
+    padding: var(--s-4);
+  }
+  .kpi__top { display: flex; justify-content: space-between; align-items: center; }
+  .kpi__icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--blue-50); color: var(--blue-700);
+    display: grid; place-items: center;
+  }
+  .kpi__delta { font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
+  .kpi__delta--up { color: var(--ok); background: var(--ok-bg); }
+  .kpi__delta--down { color: var(--alert); background: var(--alert-bg); }
+  .kpi__delta--neutral { color: var(--ink-500); background: var(--ink-100); }
+  .kpi__val { font-size: 1.625rem; font-weight: 600; margin-top: var(--s-3); letter-spacing: -0.02em; line-height: 1; }
+  .kpi__lbl { color: var(--ink-500); font-size: 0.78rem; margin-top: 4px; }
+  .kpi__bar { height: 3px; background: var(--ink-100); border-radius: 999px; margin-top: 10px; overflow: hidden; }
+  .kpi__bar > span { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; }
+
+  /* ============ Card primitive ============ */
+  .card {
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: var(--r-lg);
+    padding: var(--s-5);
+  }
+  .card__head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: var(--s-3); margin-bottom: var(--s-4);
+  }
+  .card__title { font-size: 1rem; }
+  .card__sub { color: var(--ink-500); font-size: 0.8125rem; margin-top: 2px; }
+  .card__actions { display: flex; gap: 4px; align-items: center; }
+  .legend { display: flex; gap: 12px; font-size: 0.72rem; color: var(--ink-500); flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--blue-700);
+  }
+  .legend .l2 i { background: var(--blue-400); }
+  .legend .l3 i { background: var(--ok); }
+  .legend .l4 i { background: var(--warn); }
+
+  /* ============ Grids ============ */
+  .row { display: grid; gap: var(--s-4); margin-bottom: var(--s-4); }
+  .row--2 { grid-template-columns: 1.4fr 1fr; }
+  .row--3 { grid-template-columns: 1fr 1fr 1fr; }
+  .row--alt { grid-template-columns: 1fr 1.2fr 1fr; }
+  @media (max-width: 1100px) {
+    .row--2, .row--3, .row--alt { grid-template-columns: 1fr; }
+  }
+
+  /* ============ Bar chart (hourly) ============ */
+  .chart-svg { width: 100%; height: 260px; display: block; }
+
+  /* ============ Age range bars ============ */
+  .age-list { display: grid; gap: var(--s-3); }
+  .age-row { display: grid; grid-template-columns: 130px 1fr 60px; gap: 12px; align-items: center; }
+  .age-row .age-lbl { font-size: 0.8125rem; color: var(--ink-700); font-weight: 500; }
+  .age-row .age-lbl small { display: block; color: var(--ink-400); font-size: 0.7rem; font-weight: 400; margin-top: 1px; }
+  .age-track { background: var(--ink-100); border-radius: 999px; height: 10px; overflow: hidden; position: relative; }
+  .age-fill { height: 100%; background: var(--blue-700); border-radius: inherit; transition: width 0.4s; }
+  .age-fill--alt { background: var(--blue-400); }
+  .age-val { text-align: right; font-weight: 600; font-size: 0.8125rem; color: var(--ink-900); }
+
+  /* ============ Donut (cobertura) ============ */
+  .donut-wrap {
+    display: flex; align-items: center; gap: var(--s-5);
+    flex-wrap: wrap;
+  }
+  .donut { width: 160px; height: 160px; flex-shrink: 0; }
+  .donut__center {
+    fill: var(--ink-900);
+    font-size: 7px;
+    font-weight: 600;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .donut__sub {
+    fill: var(--ink-500);
+    font-size: 2.6px;
+    font-weight: 500;
+  }
+  .donut-legend { flex: 1; display: grid; gap: 10px; min-width: 160px; }
+  .donut-legend-row {
+    display: grid; grid-template-columns: 12px 1fr auto; gap: 10px;
+    align-items: center;
+    font-size: 0.8125rem;
+  }
+  .donut-legend-row i { width: 10px; height: 10px; border-radius: 2px; }
+  .donut-legend-row strong { color: var(--ink-900); font-variant-numeric: tabular-nums; }
+
+  /* ============ Ranking ============ */
+  .rank-list { display: grid; gap: 2px; }
+  .rank-row {
+    display: grid; grid-template-columns: 24px 1fr 80px;
+    align-items: center; gap: 12px;
+    padding: 8px 6px;
+    border-radius: 6px;
+  }
+  .rank-row:hover { background: var(--ink-50); }
+  .rank-pos {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-400);
+    text-align: center;
+    font-weight: 500;
+  }
+  .rank-row.top-3 .rank-pos { color: var(--blue-700); font-weight: 600; }
+  .rank-name { font-size: 0.875rem; color: var(--ink-900); font-weight: 500; }
+  .rank-name small { display: block; color: var(--ink-500); font-size: 0.72rem; font-weight: 400; }
+  .rank-val { text-align: right; }
+  .rank-val .v { font-weight: 600; font-size: 0.875rem; }
+  .rank-val .d { font-size: 0.7rem; color: var(--ok); }
+
+  /* ============ Programs ============ */
+  .prog-list { display: grid; gap: var(--s-3); }
+  .prog {
+    display: grid; grid-template-columns: 40px 1fr auto;
+    gap: 12px; align-items: center;
+    padding: var(--s-3);
+    border: 1px solid var(--ink-200);
+    border-radius: var(--r-md);
+  }
+  .prog__icon {
+    width: 40px; height: 40px; border-radius: 9px;
+    background: var(--blue-50); color: var(--blue-700);
+    display: grid; place-items: center;
+  }
+  .prog__title { font-weight: 600; font-size: 0.875rem; }
+  .prog__meta { font-size: 0.72rem; color: var(--ink-500); margin-top: 2px; }
+  .prog__chart { width: 60px; height: 28px; }
+  .prog__val { font-weight: 600; font-size: 0.875rem; text-align: right; margin-left: 8px; }
+  .prog__bar { height: 4px; background: var(--ink-100); border-radius: 999px; margin-top: 8px; overflow: hidden; grid-column: 2 / 4; }
+  .prog__bar span { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; }
+
+  /* ============ Capacity bars ============ */
+  .cap-list { display: grid; gap: var(--s-3); }
+  .cap-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+  .cap-name { font-size: 0.875rem; font-weight: 500; }
+  .cap-name small { color: var(--ink-500); font-weight: 400; font-size: 0.72rem; display: block; margin-top: 1px; }
+  .cap-val { font-weight: 600; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+  .cap-bar { height: 8px; background: var(--ink-100); border-radius: 999px; overflow: hidden; grid-column: 1 / 3; }
+  .cap-bar span { display: block; height: 100%; border-radius: inherit; }
+  .cap-bar .lo { background: var(--ok); }
+  .cap-bar .mid { background: var(--blue-700); }
+  .cap-bar .hi { background: var(--warn); }
+  .cap-bar .crit { background: var(--alert); }
+
+  /* ============ Status table (absences) ============ */
+  .table-card { padding: 0; overflow: hidden; }
+  .table-card .card__head { padding: var(--s-5) var(--s-5) 0; margin-bottom: var(--s-4); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  thead th {
+    text-align: left; padding: 10px var(--s-5);
+    font-size: 0.7rem; font-weight: 600;
+    color: var(--ink-500); letter-spacing: 0.04em; text-transform: uppercase;
+    border-bottom: 1px solid var(--ink-200);
+    background: var(--ink-50);
+  }
+  tbody td { padding: 12px var(--s-5); border-bottom: 1px solid var(--ink-100); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: var(--ink-50); }
+  .who-cell { display: flex; align-items: center; gap: 10px; }
+  .who-cell .who__avatar { width: 28px; height: 28px; font-size: 0.7rem; }
+  .who-cell .n { font-weight: 500; }
+  .who-cell .r { display: block; color: var(--ink-500); font-size: 0.72rem; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 999px;
+    font-size: 0.7rem; font-weight: 600;
+  }
+  .badge--warn { background: var(--warn-bg); color: var(--warn); }
+  .badge--alert { background: var(--alert-bg); color: var(--alert); }
+  .badge--ok { background: var(--ok-bg); color: var(--ok); }
+  .badge--info { background: var(--blue-50); color: var(--blue-700); }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* ============ Helper ============ */
+  body.hc { --ink-200: #000; --ink-500: #1a1a1a; --blue-700: #0033a0; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div role="note" style="position:relative;z-index:200;background:#fff4d6;color:#5c4200;border-bottom:1px solid #f0d58c;padding:8px 16px;font:500 13px/1.45 'IBM Plex Sans',system-ui,sans-serif;text-align:center">Protótipo navegável do <strong>Mais Saúde Pública</strong>: telas de referência com dados fictícios, não é o sistema em produção. <a href="https://github.com/dufelizardo/mais_saude_publica" style="color:inherit;text-decoration:underline">Ver o código no GitHub</a></div>
+
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+
+<div class="app">
+
+  <!-- ============= Sidebar ============= -->
+  <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+    <div class="sidebar__brand">
+      <span class="sb-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <div>
+        <div class="sb-name">Mais Saúde</div>
+        <div class="sb-sub">Sistema Integrado</div>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="nav-group">
+        <a href="Painel.html" class="nav-item" aria-current="page">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          <span class="nav-item__label">Sala de Situação</span>
+          <span class="nav-badge">5</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Assistencial</div>
+        <a href="Pacientes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+          <span class="nav-item__label">Pacientes</span>
+        </a>
+        <a href="Agenda.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+          <span class="nav-item__label">Programas de Saúde</span>
+        </a>
+        <a href="Profissionais.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span class="nav-item__label">Agenda</span>
+          <span class="nav-badge">128</span>
+        </a>
+        <a href="Equipamentos.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14H5a2 2 0 0 0-2 2v3"></path><circle cx="9" cy="7" r="4"></circle><path d="m14.5 14.5 5 5"></path><path d="M21 19h-2v-2"></path><path d="M14 19h2v-2"></path><path d="M21 14h-2v2"></path></svg>
+          <span class="nav-item__label">Consultas</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Recursos Humanos</div>
+        <a href="Escalas.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span class="nav-item__label">Profissionais</span>
+        </a>
+        <a href="Equipes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+          <span class="nav-item__label">Equipes</span>
+        </a>
+        <a href="Relatorios.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span class="nav-item__label">Escalas</span>
+        </a>
+        <a href="Usuarios.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span class="nav-item__label">Funções</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Gestão Organizacional</div>
+        <a href="Coordenacoes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path><path d="M9 22v-4h6v4"></path></svg>
+          <span class="nav-item__label">Equipamentos de Saúde</span>
+        </a>
+        <a href="Coordenacoes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span class="nav-item__label">Coordenações &amp; Gerência</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <span class="nav-item__label">Supervisões</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Operacional</div>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          <span class="nav-item__label">Atividades</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M8 14h.01"></path><path d="M12 14h.01"></path><path d="M16 14h.01"></path><path d="M8 18h.01"></path><path d="M12 18h.01"></path></svg>
+          <span class="nav-item__label">Campanhas</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span class="nav-item__label">Relatórios</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Administração</div>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span class="nav-item__label">Usuários &amp; Perfis</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+          <span class="nav-item__label">Auditoria</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar__foot">
+      <div class="who" tabindex="0">
+        <span class="who__avatar" aria-hidden="true">MS</span>
+        <div style="min-width:0;">
+          <div class="who__name">Mariana Souza</div>
+          <div class="who__role">Coordenação · Regional Centro</div>
+        </div>
+      </div>
+      <a href="Login.html" class="icon-btn" aria-label="Sair do sistema" title="Sair">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============= Topbar ============= -->
+  <header class="topbar" role="banner">
+    <button class="menu-btn" id="menu-btn" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <nav class="crumbs" aria-label="Trilha de navegação">
+      <span>Início</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <strong>Sala de Situação</strong>
+    </nav>
+
+    <label class="topbar__search" role="search">
+      <span class="sr-only">Buscar</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="search" placeholder="Buscar paciente, profissional, unidade…" />
+    </label>
+
+    <div class="top-actions">
+      <span class="top-pill"><span class="dot" aria-hidden="true"></span> Dados ao vivo · 14h32</span>
+      <button class="top-btn" aria-label="Notificações (3 não lidas)" title="Notificações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="dot-alert" aria-hidden="true"></span>
+      </button>
+      <button class="top-btn" aria-label="Ajuda" title="Ajuda">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+      </button>
+      <button class="top-btn" aria-label="Configurações" title="Configurações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============= Content ============= -->
+  <main class="content" id="main">
+
+    <header class="page-head">
+      <div>
+        <h1>Sala de Situação da Saúde</h1>
+        <p>Visão operacional, assistencial e estratégica da rede municipal · sábado, 23 de maio de 2026</p>
+      </div>
+      <div class="filters" role="group" aria-label="Filtros do painel">
+        <button class="filter">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          Unidade: <strong>Todas (128)</strong>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="seg-filter" role="group" aria-label="Período">
+          <button aria-pressed="false">Hoje</button>
+          <button aria-pressed="true">Semana</button>
+          <button aria-pressed="false">Mês</button>
+          <button aria-pressed="false">Ano</button>
+        </div>
+        <button class="filter filter--primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Exportar
+        </button>
+      </div>
+    </header>
+
+    <!-- ===== Alerts ===== -->
+    <section class="alerts" aria-label="Alertas inteligentes">
+      <article class="alert-card alert-card--danger">
+        <span class="alert-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </span>
+        <div style="flex:1; min-width:0;">
+          <h3>Superlotação na UBS Centro</h3>
+          <p>Fila atual com 42 pacientes — capacidade prevista 25.</p>
+          <div class="alert-meta">
+            <span>há 8 min</span>
+            <span aria-hidden="true">·</span>
+            <span>Recepção · enfermagem</span>
+          </div>
+          <a href="#" class="alert-action">Acionar coordenação
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
+        </div>
+      </article>
+
+      <article class="alert-card alert-card--warn">
+        <span class="alert-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path></svg>
+        </span>
+        <div style="flex:1; min-width:0;">
+          <h3>Cobertura vacinal abaixo da meta</h3>
+          <p>HPV em adolescentes 12-14 anos: 71% (meta 90%).</p>
+          <div class="alert-meta">
+            <span>4 unidades afetadas</span>
+            <span aria-hidden="true">·</span>
+            <span>Regional Sul</span>
+          </div>
+          <a href="#" class="alert-action">Ver detalhamento
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
+        </div>
+      </article>
+
+      <article class="alert-card alert-card--info">
+        <span class="alert-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </span>
+        <div style="flex:1; min-width:0;">
+          <h3>Agendas saturadas em pediatria</h3>
+          <p>3 unidades com ocupação acima de 95% nos próximos 7 dias.</p>
+          <div class="alert-meta">
+            <span>Sugestão</span>
+            <span aria-hidden="true">·</span>
+            <span>Encaminhar para UBS Norte</span>
+          </div>
+          <a href="#" class="alert-action">Reorganizar agenda
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </a>
+        </div>
+      </article>
+    </section>
+
+    <!-- ===== KPI strip ===== -->
+    <section class="kpi-grid" aria-label="Indicadores assistenciais e operacionais">
+      <div class="kpi">
+        <div class="kpi__top">
+          <span class="kpi__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+          </span>
+          <span class="kpi__delta kpi__delta--up">+12%</span>
+        </div>
+        <div class="kpi__val mono">2.184</div>
+        <div class="kpi__lbl">Pacientes atendidos hoje</div>
+        <div class="kpi__bar"><span style="width:72%"></span></div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi__top">
+          <span class="kpi__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14H5a2 2 0 0 0-2 2v3"></path><circle cx="9" cy="7" r="4"></circle><path d="m14.5 14.5 5 5"></path></svg>
+          </span>
+          <span class="kpi__delta kpi__delta--up">+4%</span>
+        </div>
+        <div class="kpi__val mono">1.467</div>
+        <div class="kpi__lbl">Consultas realizadas</div>
+        <div class="kpi__bar"><span style="width:84%"></span></div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi__top">
+          <span class="kpi__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+          </span>
+          <span class="kpi__delta kpi__delta--down">−6 min</span>
+        </div>
+        <div class="kpi__val mono">24<small style="font-size:0.95rem; color:var(--ink-500); margin-left:4px;">min</small></div>
+        <div class="kpi__lbl">Tempo médio de espera</div>
+        <div class="kpi__bar"><span style="width:40%; background:var(--ok);"></span></div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi__top">
+          <span class="kpi__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"></path></svg>
+          </span>
+          <span class="kpi__delta kpi__delta--neutral">±0</span>
+        </div>
+        <div class="kpi__val mono">87<small style="font-size:0.95rem; color:var(--ink-500); margin-left:4px;">%</small></div>
+        <div class="kpi__lbl">Ocupação das agendas</div>
+        <div class="kpi__bar"><span style="width:87%"></span></div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi__top">
+          <span class="kpi__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+          </span>
+          <span class="kpi__delta kpi__delta--up">+3</span>
+        </div>
+        <div class="kpi__val mono">94</div>
+        <div class="kpi__lbl">Faltas registradas</div>
+        <div class="kpi__bar"><span style="width:18%; background:var(--alert);"></span></div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi__top">
+          <span class="kpi__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </span>
+          <span class="kpi__delta kpi__delta--up">+18</span>
+        </div>
+        <div class="kpi__val mono">61</div>
+        <div class="kpi__lbl">Encaixes realizados</div>
+        <div class="kpi__bar"><span style="width:55%; background:var(--blue-500);"></span></div>
+      </div>
+    </section>
+
+    <!-- ===== Row 1: Atendimentos chart + Cobertura vacinal donut ===== -->
+    <section class="row row--2">
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Atendimentos por hora</h2>
+            <p class="card__sub">Pico previsto entre 09h–11h · semana atual</p>
+          </div>
+          <div class="legend" aria-hidden="true">
+            <span><i></i> Médicos</span>
+            <span class="l2"><i></i> Enfermagem</span>
+          </div>
+        </div>
+
+        <!-- Stacked bar by hour 7-19 -->
+        <svg class="chart-svg" viewBox="0 0 720 260" role="img" aria-label="Gráfico de barras de atendimentos por hora; pico às 9h–10h com 180 médicos e 130 enfermagem">
+          <g stroke="#eef1f5" stroke-width="1">
+            <line x1="44" y1="40" x2="710" y2="40"></line>
+            <line x1="44" y1="90" x2="710" y2="90"></line>
+            <line x1="44" y1="140" x2="710" y2="140"></line>
+            <line x1="44" y1="190" x2="710" y2="190"></line>
+          </g>
+          <g fill="#7a8392" font-size="10" font-family="IBM Plex Mono, monospace" text-anchor="end">
+            <text x="38" y="44">320</text>
+            <text x="38" y="94">240</text>
+            <text x="38" y="144">160</text>
+            <text x="38" y="194">80</text>
+          </g>
+          <line x1="44" y1="220" x2="710" y2="220" stroke="#dde1e8"></line>
+
+          <!-- Bars: 13 hours, 7-19; each col 50px wide, gap 1px -->
+          <!-- doctor + nurse stacked; bottom = enfermagem (light), top = médicos (dark) -->
+          <!-- height scale: each unit / 80 = 50px; mid-day peak -->
+          <g>
+            <!-- 7h -->
+            <rect x="56" y="180" width="34" height="40" fill="#5aa9ee" rx="2"></rect>
+            <rect x="56" y="150" width="34" height="30" fill="#1351b4" rx="2"></rect>
+            <!-- 8h -->
+            <rect x="108" y="150" width="34" height="70" fill="#5aa9ee" rx="2"></rect>
+            <rect x="108" y="105" width="34" height="45" fill="#1351b4" rx="2"></rect>
+            <!-- 9h (peak) -->
+            <rect x="160" y="115" width="34" height="105" fill="#5aa9ee" rx="2"></rect>
+            <rect x="160" y="50" width="34" height="65" fill="#1351b4" rx="2"></rect>
+            <!-- 10h (peak) -->
+            <rect x="212" y="120" width="34" height="100" fill="#5aa9ee" rx="2"></rect>
+            <rect x="212" y="60" width="34" height="60" fill="#1351b4" rx="2"></rect>
+            <!-- 11h -->
+            <rect x="264" y="135" width="34" height="85" fill="#5aa9ee" rx="2"></rect>
+            <rect x="264" y="82" width="34" height="53" fill="#1351b4" rx="2"></rect>
+            <!-- 12h dip -->
+            <rect x="316" y="170" width="34" height="50" fill="#5aa9ee" rx="2"></rect>
+            <rect x="316" y="138" width="34" height="32" fill="#1351b4" rx="2"></rect>
+            <!-- 13h -->
+            <rect x="368" y="160" width="34" height="60" fill="#5aa9ee" rx="2"></rect>
+            <rect x="368" y="125" width="34" height="35" fill="#1351b4" rx="2"></rect>
+            <!-- 14h (current) -->
+            <rect x="420" y="135" width="34" height="85" fill="#5aa9ee" rx="2"></rect>
+            <rect x="420" y="85" width="34" height="50" fill="#1351b4" rx="2"></rect>
+            <!-- 15h projected -->
+            <rect x="472" y="140" width="34" height="80" fill="#5aa9ee" rx="2" opacity="0.5"></rect>
+            <rect x="472" y="90" width="34" height="50" fill="#1351b4" rx="2" opacity="0.5"></rect>
+            <!-- 16h -->
+            <rect x="524" y="150" width="34" height="70" fill="#5aa9ee" rx="2" opacity="0.5"></rect>
+            <rect x="524" y="100" width="34" height="50" fill="#1351b4" rx="2" opacity="0.5"></rect>
+            <!-- 17h -->
+            <rect x="576" y="160" width="34" height="60" fill="#5aa9ee" rx="2" opacity="0.5"></rect>
+            <rect x="576" y="115" width="34" height="45" fill="#1351b4" rx="2" opacity="0.5"></rect>
+            <!-- 18h -->
+            <rect x="628" y="175" width="34" height="45" fill="#5aa9ee" rx="2" opacity="0.5"></rect>
+            <rect x="628" y="140" width="34" height="35" fill="#1351b4" rx="2" opacity="0.5"></rect>
+            <!-- 19h -->
+            <rect x="680" y="195" width="22" height="25" fill="#5aa9ee" rx="2" opacity="0.5"></rect>
+            <rect x="680" y="180" width="22" height="15" fill="#1351b4" rx="2" opacity="0.5"></rect>
+          </g>
+          <!-- "now" marker at 14h -->
+          <line x1="454" y1="35" x2="454" y2="220" stroke="#c0392b" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"></line>
+          <text x="458" y="42" font-size="9" font-family="IBM Plex Mono, monospace" fill="#c0392b" font-weight="600">agora</text>
+
+          <g fill="#7a8392" font-size="10" font-family="IBM Plex Mono, monospace" text-anchor="middle">
+            <text x="73"  y="238">07h</text>
+            <text x="125" y="238">08h</text>
+            <text x="177" y="238">09h</text>
+            <text x="229" y="238">10h</text>
+            <text x="281" y="238">11h</text>
+            <text x="333" y="238">12h</text>
+            <text x="385" y="238">13h</text>
+            <text x="437" y="238">14h</text>
+            <text x="489" y="238">15h</text>
+            <text x="541" y="238">16h</text>
+            <text x="593" y="238">17h</text>
+            <text x="645" y="238">18h</text>
+            <text x="691" y="238">19h</text>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Cobertura vacinal donut -->
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Cobertura vacinal</h2>
+            <p class="card__sub">Meta municipal: 95%</p>
+          </div>
+          <button class="icon-btn" aria-label="Mais opções" title="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </div>
+
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 42 42" aria-label="Donut com 87,4% de cobertura vacinal geral">
+            <!-- background ring -->
+            <circle cx="21" cy="21" r="15.915" fill="none" stroke="#eef1f5" stroke-width="5"></circle>
+            <!-- segments (sum 100). values: BCG 32, polio 26, tríplice 18, HPV 11.4 — totals 87.4 -->
+            <!-- using stroke-dasharray for arcs, gap=1 -->
+            <circle cx="21" cy="21" r="15.915" fill="none" stroke="#1351b4" stroke-width="5"
+                    stroke-dasharray="32 68" stroke-dashoffset="25"></circle>
+            <circle cx="21" cy="21" r="15.915" fill="none" stroke="#1e6fd9" stroke-width="5"
+                    stroke-dasharray="26 74" stroke-dashoffset="-7"></circle>
+            <circle cx="21" cy="21" r="15.915" fill="none" stroke="#5aa9ee" stroke-width="5"
+                    stroke-dasharray="18 82" stroke-dashoffset="-33"></circle>
+            <circle cx="21" cy="21" r="15.915" fill="none" stroke="#c7daf5" stroke-width="5"
+                    stroke-dasharray="11.4 88.6" stroke-dashoffset="-51"></circle>
+            <text x="21" y="21.5" text-anchor="middle" class="donut__center" font-family="IBM Plex Sans">87,4%</text>
+            <text x="21" y="26" text-anchor="middle" class="donut__sub" font-family="IBM Plex Sans">cobertura geral</text>
+          </svg>
+
+          <div class="donut-legend">
+            <div class="donut-legend-row">
+              <i style="background:#1351b4;"></i>
+              <span>BCG (recém-nascidos)</span>
+              <strong>96,2%</strong>
+            </div>
+            <div class="donut-legend-row">
+              <i style="background:#1e6fd9;"></i>
+              <span>Pólio (1ª infância)</span>
+              <strong>92,1%</strong>
+            </div>
+            <div class="donut-legend-row">
+              <i style="background:#5aa9ee;"></i>
+              <span>Tríplice viral</span>
+              <strong>89,8%</strong>
+            </div>
+            <div class="donut-legend-row">
+              <i style="background:#c7daf5;"></i>
+              <span>HPV (adolescentes)</span>
+              <strong style="color:var(--alert);">71,4%</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Row 2: Faixa etária + Ranking unidades + Programas ===== -->
+    <section class="row row--alt">
+      <!-- Faixa etária -->
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Atendimento por faixa etária</h2>
+            <p class="card__sub">Distribuição da semana</p>
+          </div>
+        </div>
+        <div class="age-list" role="list">
+          <div class="age-row" role="listitem">
+            <div class="age-lbl">Neonatal<small>0–28 dias</small></div>
+            <div class="age-track"><div class="age-fill" style="width:8%"></div></div>
+            <div class="age-val mono">142</div>
+          </div>
+          <div class="age-row" role="listitem">
+            <div class="age-lbl">1ª infância<small>0–5 anos</small></div>
+            <div class="age-track"><div class="age-fill" style="width:34%"></div></div>
+            <div class="age-val mono">612</div>
+          </div>
+          <div class="age-row" role="listitem">
+            <div class="age-lbl">Crianças<small>6–12 anos</small></div>
+            <div class="age-track"><div class="age-fill" style="width:42%"></div></div>
+            <div class="age-val mono">758</div>
+          </div>
+          <div class="age-row" role="listitem">
+            <div class="age-lbl">Adolescentes<small>13–17 anos</small></div>
+            <div class="age-track"><div class="age-fill age-fill--alt" style="width:21%"></div></div>
+            <div class="age-val mono">381</div>
+          </div>
+          <div class="age-row" role="listitem">
+            <div class="age-lbl">Adultos<small>18–59 anos</small></div>
+            <div class="age-track"><div class="age-fill" style="width:78%"></div></div>
+            <div class="age-val mono">1.402</div>
+          </div>
+          <div class="age-row" role="listitem">
+            <div class="age-lbl">Idosos<small>60+ anos</small></div>
+            <div class="age-track"><div class="age-fill" style="width:58%"></div></div>
+            <div class="age-val mono">1.043</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ranking unidades produtividade -->
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Produtividade por unidade</h2>
+            <p class="card__sub">Top 6 da semana · atendimentos concluídos</p>
+          </div>
+          <a href="#" style="font-size:0.8125rem; font-weight:500;">Ver todas →</a>
+        </div>
+        <div class="rank-list">
+          <div class="rank-row top-3">
+            <span class="rank-pos mono">01</span>
+            <div class="rank-name">UBS Vila Esperança<small>Regional Centro · 18 prof.</small></div>
+            <div class="rank-val"><div class="v mono">1.842</div><div class="d">+9,4%</div></div>
+          </div>
+          <div class="rank-row top-3">
+            <span class="rank-pos mono">02</span>
+            <div class="rank-name">UBS Jardim das Flores<small>Regional Sul · 15 prof.</small></div>
+            <div class="rank-val"><div class="v mono">1.687</div><div class="d">+6,1%</div></div>
+          </div>
+          <div class="rank-row top-3">
+            <span class="rank-pos mono">03</span>
+            <div class="rank-name">CSF Bela Vista<small>Regional Norte · 22 prof.</small></div>
+            <div class="rank-val"><div class="v mono">1.524</div><div class="d">+3,8%</div></div>
+          </div>
+          <div class="rank-row">
+            <span class="rank-pos mono">04</span>
+            <div class="rank-name">UBS Centro<small>Regional Centro · 28 prof.</small></div>
+            <div class="rank-val"><div class="v mono">1.461</div><div class="d" style="color:var(--alert);">−2,1%</div></div>
+          </div>
+          <div class="rank-row">
+            <span class="rank-pos mono">05</span>
+            <div class="rank-name">UPA São Pedro<small>24h · 41 prof.</small></div>
+            <div class="rank-val"><div class="v mono">1.398</div><div class="d">+1,7%</div></div>
+          </div>
+          <div class="rank-row">
+            <span class="rank-pos mono">06</span>
+            <div class="rank-name">UBS Boa Esperança<small>Regional Oeste · 12 prof.</small></div>
+            <div class="rank-val"><div class="v mono">1.205</div><div class="d">+0,8%</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Programas de saúde -->
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Programas de saúde</h2>
+            <p class="card__sub">Pacientes acompanhados</p>
+          </div>
+          <a href="#" style="font-size:0.8125rem; font-weight:500;">Gerenciar →</a>
+        </div>
+        <div class="prog-list">
+          <div class="prog">
+            <span class="prog__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+            </span>
+            <div>
+              <div class="prog__title">Saúde da Família</div>
+              <div class="prog__meta">18.430 pacientes · 92% cobertura</div>
+            </div>
+            <div class="prog__val mono">+248</div>
+            <div class="prog__bar"><span style="width:92%"></span></div>
+          </div>
+          <div class="prog">
+            <span class="prog__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"></path></svg>
+            </span>
+            <div>
+              <div class="prog__title">HiperDia</div>
+              <div class="prog__meta">9.812 pacientes · hipertensos/diabéticos</div>
+            </div>
+            <div class="prog__val mono">+126</div>
+            <div class="prog__bar"><span style="width:78%"></span></div>
+          </div>
+          <div class="prog">
+            <span class="prog__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+            </span>
+            <div>
+              <div class="prog__title">Saúde Mental</div>
+              <div class="prog__meta">3.402 pacientes · CAPS integrado</div>
+            </div>
+            <div class="prog__val mono">+52</div>
+            <div class="prog__bar"><span style="width:65%"></span></div>
+          </div>
+          <div class="prog">
+            <span class="prog__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            </span>
+            <div>
+              <div class="prog__title">Pré-Natal</div>
+              <div class="prog__meta">1.284 gestantes acompanhadas</div>
+            </div>
+            <div class="prog__val mono">+38</div>
+            <div class="prog__bar"><span style="width:84%"></span></div>
+          </div>
+          <div class="prog">
+            <span class="prog__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            </span>
+            <div>
+              <div class="prog__title">Saúde da Mulher</div>
+              <div class="prog__meta">5.918 pacientes · prevenção CA</div>
+            </div>
+            <div class="prog__val mono">+87</div>
+            <div class="prog__bar"><span style="width:71%"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Row 3: Vacinação por faixa + Ocupação agendas ===== -->
+    <section class="row row--2">
+      <!-- Vacinação por faixa etária -->
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Doses aplicadas por faixa etária</h2>
+            <p class="card__sub">Acumulado do mês · meta vs realizado</p>
+          </div>
+          <div class="legend" aria-hidden="true">
+            <span><i></i> Realizado</span>
+            <span class="l2"><i></i> Meta</span>
+          </div>
+        </div>
+
+        <!-- Grouped bars: 4 groups (crianças, adolescentes, adultos, idosos) -->
+        <svg class="chart-svg" viewBox="0 0 720 260" role="img" aria-label="Gráfico de barras agrupadas comparando doses realizadas e metas por faixa etária">
+          <g stroke="#eef1f5" stroke-width="1">
+            <line x1="50" y1="40" x2="710" y2="40"></line>
+            <line x1="50" y1="90" x2="710" y2="90"></line>
+            <line x1="50" y1="140" x2="710" y2="140"></line>
+            <line x1="50" y1="190" x2="710" y2="190"></line>
+          </g>
+          <g fill="#7a8392" font-size="10" font-family="IBM Plex Mono, monospace" text-anchor="end">
+            <text x="44" y="44">12k</text>
+            <text x="44" y="94">9k</text>
+            <text x="44" y="144">6k</text>
+            <text x="44" y="194">3k</text>
+          </g>
+          <line x1="50" y1="220" x2="710" y2="220" stroke="#dde1e8"></line>
+
+          <!-- groups, ~150px wide each, 2 bars side by side -->
+          <!-- Crianças: real 9800/12k = 81%, meta 12k -->
+          <g>
+            <rect x="100" y="60" width="50" height="160" fill="#1351b4" rx="3"></rect>
+            <rect x="156" y="40" width="50" height="180" fill="#5aa9ee" rx="3"></rect>
+          </g>
+          <text x="153" y="238" text-anchor="middle" fill="#2a3140" font-size="11" font-weight="500" font-family="IBM Plex Sans">Crianças</text>
+          <text x="153" y="252" text-anchor="middle" fill="#7a8392" font-size="9" font-family="IBM Plex Mono, monospace">9.842 / 12k</text>
+
+          <g>
+            <rect x="260" y="110" width="50" height="110" fill="#1351b4" rx="3"></rect>
+            <rect x="316" y="80" width="50" height="140" fill="#5aa9ee" rx="3"></rect>
+          </g>
+          <text x="313" y="238" text-anchor="middle" fill="#2a3140" font-size="11" font-weight="500" font-family="IBM Plex Sans">Adolescentes</text>
+          <text x="313" y="252" text-anchor="middle" fill="#c0392b" font-size="9" font-family="IBM Plex Mono, monospace">5.218 / 8k · 65%</text>
+
+          <g>
+            <rect x="420" y="70" width="50" height="150" fill="#1351b4" rx="3"></rect>
+            <rect x="476" y="58" width="50" height="162" fill="#5aa9ee" rx="3"></rect>
+          </g>
+          <text x="473" y="238" text-anchor="middle" fill="#2a3140" font-size="11" font-weight="500" font-family="IBM Plex Sans">Adultos</text>
+          <text x="473" y="252" text-anchor="middle" fill="#7a8392" font-size="9" font-family="IBM Plex Mono, monospace">9.020 / 10k</text>
+
+          <g>
+            <rect x="580" y="76" width="50" height="144" fill="#1351b4" rx="3"></rect>
+            <rect x="636" y="68" width="50" height="152" fill="#5aa9ee" rx="3"></rect>
+          </g>
+          <text x="633" y="238" text-anchor="middle" fill="#2a3140" font-size="11" font-weight="500" font-family="IBM Plex Sans">Idosos</text>
+          <text x="633" y="252" text-anchor="middle" fill="#1f8a5b" font-size="9" font-family="IBM Plex Mono, monospace">8.640 / 9k · 96%</text>
+        </svg>
+      </div>
+
+      <!-- Ocupação das agendas -->
+      <div class="card">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Ocupação das agendas</h2>
+            <p class="card__sub">Especialidades · próximos 7 dias</p>
+          </div>
+          <button class="icon-btn" aria-label="Mais opções" title="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </div>
+
+        <div class="cap-list">
+          <div class="cap-row">
+            <div class="cap-name">Clínica Geral<small>284 vagas semanais</small></div>
+            <div class="cap-val">82%</div>
+            <div class="cap-bar"><span class="mid" style="width:82%"></span></div>
+          </div>
+          <div class="cap-row">
+            <div class="cap-name">Pediatria<small>196 vagas semanais</small></div>
+            <div class="cap-val" style="color:var(--alert);">96%</div>
+            <div class="cap-bar"><span class="crit" style="width:96%"></span></div>
+          </div>
+          <div class="cap-row">
+            <div class="cap-name">Ginecologia / Obstetrícia<small>148 vagas semanais</small></div>
+            <div class="cap-val">71%</div>
+            <div class="cap-bar"><span class="mid" style="width:71%"></span></div>
+          </div>
+          <div class="cap-row">
+            <div class="cap-name">Cardiologia<small>96 vagas semanais</small></div>
+            <div class="cap-val" style="color:var(--warn);">88%</div>
+            <div class="cap-bar"><span class="hi" style="width:88%"></span></div>
+          </div>
+          <div class="cap-row">
+            <div class="cap-name">Odontologia<small>312 vagas semanais</small></div>
+            <div class="cap-val">54%</div>
+            <div class="cap-bar"><span class="lo" style="width:54%"></span></div>
+          </div>
+          <div class="cap-row">
+            <div class="cap-name">Saúde Mental<small>72 vagas semanais</small></div>
+            <div class="cap-val">63%</div>
+            <div class="cap-bar"><span class="mid" style="width:63%"></span></div>
+          </div>
+          <div class="cap-row">
+            <div class="cap-name">Enfermagem (procedimentos)<small>520 vagas semanais</small></div>
+            <div class="cap-val">75%</div>
+            <div class="cap-bar"><span class="mid" style="width:75%"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Row 4: Profissionais ausentes table ===== -->
+    <section class="row" style="grid-template-columns: 1fr;">
+      <div class="card table-card">
+        <div class="card__head">
+          <div>
+            <h2 class="card__title">Profissionais ausentes &amp; ocorrências da escala</h2>
+            <p class="card__sub">11 ocorrências ativas · dados em tempo real</p>
+          </div>
+          <div class="card__actions">
+            <a href="#" style="font-size:0.8125rem; font-weight:500;">Ver escala completa →</a>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Profissional</th>
+              <th>Função</th>
+              <th>Unidade</th>
+              <th>Turno</th>
+              <th>Motivo</th>
+              <th>Status</th>
+              <th>Cobertura</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="who-cell">
+                  <span class="who__avatar" aria-hidden="true">CR</span>
+                  <div><span class="n">Dra. Carla Ramos</span><span class="r">CRM 12.382</span></div>
+                </div>
+              </td>
+              <td>Médica · Pediatria</td>
+              <td>UBS Centro</td>
+              <td>Manhã (07–13h)</td>
+              <td>Atestado médico</td>
+              <td><span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Não coberto</span></td>
+              <td><a href="#">Designar →</a></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="who-cell">
+                  <span class="who__avatar" aria-hidden="true">PS</span>
+                  <div><span class="n">Enf. Paulo Silva</span><span class="r">COREN 87.214</span></div>
+                </div>
+              </td>
+              <td>Enfermagem</td>
+              <td>UPA São Pedro</td>
+              <td>Tarde (13–19h)</td>
+              <td>Férias programadas</td>
+              <td><span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Coberto</span></td>
+              <td>Enf. Bia Costa</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="who-cell">
+                  <span class="who__avatar" aria-hidden="true">LM</span>
+                  <div><span class="n">Dr. Leonardo Matos</span><span class="r">CRM 28.911</span></div>
+                </div>
+              </td>
+              <td>Médico · Cardiologia</td>
+              <td>UBS Jardim das Flores</td>
+              <td>Manhã (07–13h)</td>
+              <td>Congresso autorizado</td>
+              <td><span class="badge badge--warn"><span class="dot" aria-hidden="true"></span> Parcial</span></td>
+              <td><a href="#">Redirecionar agenda →</a></td>
+            </tr>
+            <tr>
+              <td>
+                <div class="who-cell">
+                  <span class="who__avatar" aria-hidden="true">AT</span>
+                  <div><span class="n">TS Ana Torres</span><span class="r">Aux. enfermagem</span></div>
+                </div>
+              </td>
+              <td>Vacinação</td>
+              <td>UBS Vila Esperança</td>
+              <td>Integral</td>
+              <td>Plantão extra (encaixe)</td>
+              <td><span class="badge badge--info"><span class="dot" aria-hidden="true"></span> Adicional</span></td>
+              <td>—</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="who-cell">
+                  <span class="who__avatar" aria-hidden="true">RC</span>
+                  <div><span class="n">Dra. Renata Castro</span><span class="r">CRM 34.110</span></div>
+                </div>
+              </td>
+              <td>Médica · Saúde Mental</td>
+              <td>CAPS Norte</td>
+              <td>Tarde (13–19h)</td>
+              <td>Licença maternidade</td>
+              <td><span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Coberto</span></td>
+              <td>Dr. F. Andrade</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p style="text-align: center; color: var(--ink-400); font-size: 0.75rem; margin-top: var(--s-8);">
+      Fonte: Mais Saúde Pública · dados consolidados em tempo real · LGPD &middot; auditoria ativa
+    </p>
+  </main>
+</div>
+
+<script>
+  // ===== Mobile sidebar toggle =====
+  (function () {
+    const btn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn || !sidebar) return;
+    btn.addEventListener('click', () => {
+      const open = sidebar.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    // Close on backdrop click (outside sidebar)
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth > 980) return;
+      if (!sidebar.classList.contains('is-open')) return;
+      if (sidebar.contains(e.target) || btn.contains(e.target)) return;
+      sidebar.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  })();
+
+  // ===== Period segmented control =====
+  (function () {
+    document.querySelectorAll('.seg-filter').forEach(group => {
+      group.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => {
+          group.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
+          b.setAttribute('aria-pressed', 'true');
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>
