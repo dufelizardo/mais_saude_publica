@@ -1,6 +1,17 @@
 # Mais Saúde Pública
 
-![visitors](https://visitor-badge.laobi.icu/badge?page_id=dufelizardo.visitor-mais_saude_publica) ![GitHub followers](https://img.shields.io/github/followers/dufelizardo.visitor-mais_saude_publica?style=social) <img src="https://img.shields.io/badge/public-Yes-green"/>
+[![Pipeline de Promoção](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/pipeline.yml/badge.svg?branch=developer)](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/pipeline.yml)
+[![CodeQL](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/codeql.yml/badge.svg)](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/codeql.yml)
+[![Release](https://img.shields.io/github/v/release/dufelizardo/mais_saude_publica)](https://github.com/dufelizardo/mais_saude_publica/releases/latest)
+[![Licença](https://img.shields.io/github/license/dufelizardo/mais_saude_publica)](LICENSE)
+[![Protótipo navegável](https://img.shields.io/badge/prot%C3%B3tipo-naveg%C3%A1vel-1351b4?logo=githubpages&logoColor=white)](https://dufelizardo.github.io/mais_saude_publica/)
+
+![Java 17](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)
+![Spring Boot 4.0](https://img.shields.io/badge/Spring_Boot-4.0-6DB33F?logo=springboot&logoColor=white)
+![Angular 22](https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white)
+![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![visitors](https://visitor-badge.laobi.icu/badge?page_id=dufelizardo.visitor-mais_saude_publica)
+![GitHub followers](https://img.shields.io/github/followers/dufelizardo?style=social)
 
 API REST para gestão da hierarquia de unidades de saúde do SUS — Federal, Estadual, Municipal e
 Regional —, construída em Spring Boot. Cada esfera expõe CRUD completo (criação, busca, listagem,
