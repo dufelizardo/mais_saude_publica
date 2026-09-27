@@ -89,7 +89,7 @@
   <section class="hero" aria-labelledby="hero-title">
     <div class="container hero__grid">
       <div>
-        <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Plataforma oficial · Versão 2026.1</span>
+        <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Plataforma oficial@if (versao()) { · Versão {{ versao() }}}</span>
         <h1 id="hero-title">Conectando gestão, profissionais e população para uma <em>saúde pública mais eficiente.</em></h1>
         <p class="hero__lead">Acesse serviços, acompanhe indicadores em tempo real e participe das campanhas de saúde do município. Um sistema único, integrado e transparente.</p>
 
@@ -621,7 +621,7 @@
 
     <div class="footer-bottom">
       <span>© 2026 Secretaria Municipal de Saúde · Mais Saúde Pública</span>
-      <span>Versão 2026.1 · Construído com acessibilidade e dados abertos</span>
+      <span>@if (versao()) {Versão {{ versao() }} · }Construído com acessibilidade e dados abertos</span>
     </div>
   </div>
 </footer>

@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { VersaoService } from '../../core/services/versao';
 
 type FontSize = 'default' | 'lg' | 'xl';
 
@@ -11,6 +12,8 @@ type FontSize = 'default' | 'lg' | 'xl';
 })
 export class LandingPage {
   private readonly document = inject(DOCUMENT);
+
+  protected readonly versao = inject(VersaoService).versao;
 
   protected readonly fontSize = signal<FontSize>('default');
   protected readonly highContrast = signal(false);
