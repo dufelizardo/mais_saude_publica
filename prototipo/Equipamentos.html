@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Equipamentos de Saúde — Mais Saúde Pública</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --blue-900:#0a2540; --blue-800:#0c3170; --blue-700:#1351b4; --blue-600:#1e6fd9;
+    --blue-500:#2f8de4; --blue-400:#5aa9ee; --blue-200:#c7daf5; --blue-100:#e7f0fb; --blue-50:#f3f7fd;
+    --ink-900:#0e1116; --ink-700:#2a3140; --ink-500:#5c6470; --ink-400:#7a8392;
+    --ink-300:#b6bdc9; --ink-200:#dde1e8; --ink-100:#eef1f5; --ink-50:#f7f8fb;
+    --white:#fff;
+    --ok:#1f8a5b; --ok-bg:#e7f6ee; --warn:#b86b00; --warn-bg:#fdf4e3; --alert:#c0392b; --alert-bg:#fdecea;
+    --purple:#6936c2; --purple-bg:#f4ecff;
+    --teal:#0b8a8a; --teal-bg:#e3f4f4;
+    --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:18px;
+    --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:20px; --s-6:24px; --s-8:32px;
+    --side-w:260px; --top-h:64px;
+    --shadow-sm:0 1px 2px rgba(14,17,22,0.05);
+    --shadow-md:0 1px 2px rgba(14,17,22,0.04), 0 6px 18px rgba(14,17,22,0.06);
+    --shadow-lg:0 10px 30px rgba(14,17,22,0.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin:0; background: var(--ink-50); color: var(--ink-900); font-family:'IBM Plex Sans', system-ui, -apple-system, sans-serif; font-size:0.9375rem; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x: hidden; }
+  a { color: var(--blue-700); text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+  h1,h2,h3,h4 { margin:0; letter-spacing:-0.01em; line-height:1.2; font-weight:600; }
+  p { margin:0; }
+  ul { margin:0; padding:0; list-style:none; }
+  .mono { font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 3px solid var(--blue-500); outline-offset: 2px; border-radius: 6px; }
+  .skip-link { position: absolute; left: 8px; top: -100px; background: var(--blue-700); color:#fff; padding: 10px 14px; border-radius: 6px; font-weight: 600; z-index: 200; }
+  .skip-link:focus { top: 8px; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  /* === Shell === */
+  .app { display: grid; grid-template-columns: var(--side-w) 1fr; grid-template-rows: var(--top-h) 1fr; grid-template-areas: "sidebar topbar" "sidebar content"; min-height: 100vh; }
+  @media (max-width: 980px) { .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "topbar" "content"; } }
+  .sidebar { grid-area: sidebar; background: #fff; border-right: 1px solid var(--ink-200); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  @media (max-width: 980px) {
+    .sidebar { display: none; }
+    .sidebar.is-open { display: flex; position: fixed; inset: 0 auto 0 0; width: 280px; z-index: 150; box-shadow: var(--shadow-lg); }
+  }
+  .sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--ink-100); height: var(--top-h); flex-shrink: 0; }
+  .sb-mark { width: 36px; height: 36px; border-radius: 9px; background: var(--blue-700); color: #fff; display: grid; place-items: center; flex-shrink: 0; }
+  .sb-name { font-weight: 600; font-size: 0.9375rem; line-height: 1.05; white-space: nowrap; }
+  .sb-sub { font-size: 0.66rem; color: var(--ink-500); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+  .sidebar__nav { padding: var(--s-3) 10px; flex: 1; }
+  .nav-group { margin-bottom: var(--s-4); }
+  .nav-group__label { font-size: 0.66rem; font-weight: 600; color: var(--ink-400); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 10px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--ink-700); font-size: 0.875rem; font-weight: 500; text-decoration: none; min-height: 36px; }
+  .nav-item:hover { background: var(--blue-50); color: var(--blue-700); }
+  .nav-item[aria-current="page"] { background: var(--blue-700); color: #fff; box-shadow: var(--shadow-sm); }
+  .nav-item[aria-current="page"] .nav-badge { background: rgba(255,255,255,0.2); color: #fff; }
+  .nav-item__icon { width: 18px; height: 18px; color: currentColor; flex-shrink: 0; }
+  .nav-item__label { flex: 1; }
+  .nav-badge { background: var(--ink-100); color: var(--ink-500); font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
+  .sidebar__foot { border-top: 1px solid var(--ink-100); padding: var(--s-3); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .who { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; padding: 4px 6px; border-radius: 8px; }
+  .who:hover { background: var(--ink-50); }
+  .who__avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 0.8125rem; flex-shrink: 0; }
+  .who__name { font-weight: 600; font-size: 0.8125rem; color: var(--ink-900); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who__role { font-size: 0.7rem; color: var(--ink-500); }
+  .icon-btn { background: transparent; border: 1px solid transparent; color: var(--ink-500); width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+  .icon-btn:hover { background: var(--ink-100); color: var(--ink-900); }
+
+  /* === Topbar === */
+  .topbar { grid-area: topbar; background: #fff; border-bottom: 1px solid var(--ink-200); height: var(--top-h); display: flex; align-items: center; padding: 0 var(--s-6); gap: var(--s-4); position: sticky; top: 0; z-index: 80; }
+  @media (max-width: 600px) { .topbar { padding: 0 var(--s-4); } }
+  .menu-btn { display: none; width: 40px; height: 40px; border-radius: 8px; background: transparent; border: 1px solid var(--ink-200); color: var(--ink-700); align-items: center; justify-content: center; }
+  @media (max-width: 980px) { .menu-btn { display: inline-flex; } }
+  .crumbs { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--ink-500); }
+  .crumbs strong { color: var(--ink-900); font-weight: 600; }
+  @media (max-width: 1024px) { .crumbs { display: none; } }
+  .topbar__search { margin-left: auto; position: relative; flex: 0 1 320px; min-width: 0; }
+  .topbar__search input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--ink-200); border-radius: 8px; background: var(--ink-50); font: inherit; font-size: 0.875rem; min-height: 40px; }
+  .topbar__search input:focus { background: #fff; }
+  .topbar__search > svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+  @media (max-width: 700px) { .topbar__search { display: none; } }
+  .top-actions { display: flex; align-items: center; gap: 4px; }
+  .top-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--ok-bg); color: var(--ok); padding: 5px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+  .top-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(31,138,91,0.18); }
+  @media (max-width: 700px) { .top-pill { display: none; } }
+  .top-btn { background: transparent; border: 1px solid transparent; color: var(--ink-700); width: 40px; height: 40px; border-radius: 8px; display: inline-grid; place-items: center; position: relative; }
+  .top-btn:hover { background: var(--ink-50); }
+  .top-btn .dot-alert { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--alert); border: 2px solid #fff; }
+
+  /* === Content === */
+  .content { grid-area: content; padding: var(--s-6); max-width: 1600px; }
+  @media (max-width: 600px) { .content { padding: var(--s-4); } }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s-4); flex-wrap: wrap; margin-bottom: var(--s-5); }
+  .page-head h1 { font-size: clamp(1.375rem, 1.1rem + 0.7vw, 1.75rem); }
+  .page-head p { color: var(--ink-500); font-size: 0.875rem; margin-top: 4px; }
+  .actions { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+  .btn { appearance:none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 14px; border-radius: 8px; border: 1.5px solid var(--ink-200); background: #fff; color: var(--ink-700); font-weight: 500; font-size: 0.875rem; min-height: 40px; text-decoration: none; }
+  .btn:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .btn--primary { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+  .btn--primary:hover { background: var(--blue-800); border-color: var(--blue-800); color: #fff; }
+
+  /* === Stats === */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); margin-bottom: var(--s-5); }
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .stats { grid-template-columns: minmax(0, 1fr); } }
+  .stat { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-4); display: flex; gap: 14px; align-items: center; }
+  .stat__icon { width: 42px; height: 42px; border-radius: 10px; background: var(--blue-50); color: var(--blue-700); display: grid; place-items: center; flex-shrink: 0; }
+  .stat__icon--warn { background: var(--warn-bg); color: var(--warn); }
+  .stat__icon--alert { background: var(--alert-bg); color: var(--alert); }
+  .stat__icon--purple { background: var(--purple-bg); color: var(--purple); }
+  .stat__lbl { color: var(--ink-500); font-size: 0.78rem; }
+  .stat__val { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.05; margin-top: 2px; }
+  .stat__sub { font-size: 0.72rem; color: var(--ink-500); margin-top: 2px; }
+
+  /* === Filter bar === */
+  .filterbar { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-3) var(--s-4); display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; margin-bottom: var(--s-4); }
+  .filterbar .search { position: relative; flex: 1 1 280px; min-width: 200px; }
+  .filterbar .search input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--ink-200); border-radius: 8px; background: var(--ink-50); font: inherit; font-size: 0.875rem; min-height: 40px; }
+  .filterbar .search input:focus { background: #fff; }
+  .filterbar .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--ink-200); padding: 8px 12px; border-radius: 8px; font-size: 0.8125rem; color: var(--ink-700); font-weight: 500; min-height: 40px; cursor: pointer; }
+  .pill:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .pill svg { color: var(--ink-400); }
+  .pill.active { background: var(--blue-50); border-color: var(--blue-200); color: var(--blue-700); }
+  .pill.active svg { color: var(--blue-700); }
+  .pill .x { display: inline-flex; width: 16px; height: 16px; border-radius: 50%; background: var(--blue-700); color: #fff; align-items: center; justify-content: center; margin-left: 2px; font-size: 11px; }
+  .seg { display: inline-flex; background: var(--ink-100); border-radius: 8px; padding: 3px; border: 1px solid var(--ink-200); margin-left: auto; }
+  .seg button { background: transparent; border: 0; padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 500; color: var(--ink-500); min-height: 30px; display: inline-flex; align-items: center; gap: 6px; }
+  .seg button[aria-pressed="true"] { background: #fff; color: var(--blue-700); box-shadow: var(--shadow-sm); }
+
+  /* === Map + list split === */
+  .split { display: grid; grid-template-columns: 1.4fr minmax(0, 1fr); gap: var(--s-4); margin-bottom: var(--s-4); align-items: start; }
+  @media (max-width: 1100px) { .split { grid-template-columns: minmax(0, 1fr); } }
+
+  .card { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); }
+
+  /* === Map === */
+  .map-card { padding: 0; overflow: hidden; position: relative; }
+  .map-svg {
+    display: block; width: 100%;
+    height: 480px;
+    background: #eef3f9;
+  }
+  @media (max-width: 700px) { .map-svg { height: 320px; } }
+  .map-overlay {
+    position: absolute; left: 12px; top: 12px;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    backdrop-filter: blur(4px);
+    box-shadow: var(--shadow-sm);
+  }
+  .map-overlay h3 { font-size: 0.875rem; margin-bottom: 6px; }
+  .map-legend { display: grid; gap: 6px; }
+  .map-legend-row { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--ink-700); }
+  .legend-pin {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px var(--ink-300);
+    flex-shrink: 0;
+  }
+  .pin--ubs { background: var(--blue-700); }
+  .pin--upa { background: var(--purple); }
+  .pin--ceo { background: var(--teal); }
+  .pin--caps { background: var(--ok); }
+  .pin--manut { background: var(--warn); }
+  .pin--closed { background: var(--alert); }
+  .map-zoom {
+    position: absolute; right: 12px; top: 12px;
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .map-zoom button {
+    background: transparent; border: 0;
+    width: 36px; height: 36px;
+    color: var(--ink-700);
+    display: grid; place-items: center;
+  }
+  .map-zoom button:hover { background: var(--ink-100); color: var(--blue-700); }
+  .map-zoom button + button { border-top: 1px solid var(--ink-200); }
+  .map-compass {
+    position: absolute; right: 12px; bottom: 12px;
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.72rem; color: var(--ink-500);
+    font-family: 'IBM Plex Mono', monospace;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* === Unit list (right side) === */
+  .list-card { display: flex; flex-direction: column; }
+  .list-head { padding: var(--s-4) var(--s-4) var(--s-3); border-bottom: 1px solid var(--ink-100); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .list-head h2 { font-size: 1rem; }
+  .list-head .sub { color: var(--ink-500); font-size: 0.78rem; }
+  .list-body { max-height: 480px; overflow-y: auto; padding: var(--s-3) var(--s-4); display: grid; gap: var(--s-2); }
+  @media (max-width: 1100px) { .list-body { max-height: none; } }
+
+  .unit-row {
+    display: grid; grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .unit-row:hover { border-color: var(--blue-700); background: var(--blue-50); }
+  .unit-row[aria-selected="true"] { border-color: var(--blue-700); background: var(--blue-50); box-shadow: inset 3px 0 0 var(--blue-700); }
+  .unit-pin {
+    width: 26px; height: 26px; border-radius: 999px;
+    background: var(--blue-700); color: #fff;
+    display: grid; place-items: center;
+    font-size: 0.7rem; font-weight: 600;
+    flex-shrink: 0;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .unit-pin.t-upa { background: var(--purple); }
+  .unit-pin.t-ceo { background: var(--teal); }
+  .unit-pin.t-caps { background: var(--ok); }
+  .unit-pin.t-manut { background: var(--warn); }
+  .unit-pin.t-closed { background: var(--alert); }
+  .unit-name { font-weight: 600; font-size: 0.875rem; }
+  .unit-meta { font-size: 0.72rem; color: var(--ink-500); margin-top: 1px; }
+  .unit-bar { margin-top: 6px; height: 4px; background: var(--ink-100); border-radius: 999px; overflow: hidden; max-width: 220px; }
+  .unit-bar span { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; }
+  .unit-bar span.hi { background: var(--warn); }
+  .unit-bar span.crit { background: var(--alert); }
+  .unit-bar span.lo { background: var(--ok); }
+  .unit-right { text-align: right; font-size: 0.72rem; color: var(--ink-500); }
+  .unit-right .v { font-weight: 600; color: var(--ink-900); font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem; display: block; }
+
+  /* === Unit detail panel === */
+  .detail-card { padding: 0; overflow: hidden; }
+  .detail-head {
+    padding: var(--s-5);
+    border-bottom: 1px solid var(--ink-100);
+    background:
+      radial-gradient(60% 80% at 100% 0%, rgba(19,81,180,0.06), transparent 70%),
+      #fff;
+    display: flex; gap: var(--s-4); align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .detail-head__mark {
+    width: 52px; height: 52px;
+    background: var(--blue-50); color: var(--blue-700);
+    border-radius: 14px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .detail-head__info { flex: 1; min-width: 240px; }
+  .detail-head__info h2 { font-size: 1.25rem; }
+  .detail-head__chips { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .detail-head__actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .tag { font-size: 0.7rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; }
+  .tag--md { background: var(--blue-50); color: var(--blue-800); }
+  .tag--upa { background: var(--purple-bg); color: var(--purple); }
+  .tag--ceo { background: var(--teal-bg); color: var(--teal); }
+  .tag--ok { background: var(--ok-bg); color: var(--ok); }
+  .tag--warn { background: var(--warn-bg); color: var(--warn); }
+  .tag--alert { background: var(--alert-bg); color: var(--alert); }
+  .tag .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .tabs { display: flex; gap: 4px; padding: 0 var(--s-5); border-bottom: 1px solid var(--ink-100); overflow-x: auto; }
+  .tabs button {
+    background: transparent; border: 0; padding: 12px 4px; margin-right: 18px;
+    font-size: 0.875rem; font-weight: 500; color: var(--ink-500);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    min-height: 44px; white-space: nowrap;
+  }
+  .tabs button[aria-selected="true"] { color: var(--blue-700); border-bottom-color: var(--blue-700); font-weight: 600; }
+  .tabs button:hover { color: var(--ink-900); }
+
+  /* === Info sections === */
+  .info-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4); padding: var(--s-5); }
+  @media (max-width: 900px) { .info-grid { grid-template-columns: minmax(0, 1fr); } }
+  .info-block h3 { font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+  .info-list { display: grid; gap: 10px; }
+  .info-list dt { font-size: 0.72rem; color: var(--ink-500); margin-bottom: 2px; }
+  .info-list dd { margin: 0; font-size: 0.875rem; color: var(--ink-900); font-weight: 500; }
+  .info-list dd.mono-data { font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+
+  .hours-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  .hours-table td { padding: 6px 0; }
+  .hours-table td:first-child { color: var(--ink-500); }
+  .hours-table td:last-child { text-align: right; font-family: 'IBM Plex Mono', monospace; color: var(--ink-900); }
+  .hours-table tr.is-today td { font-weight: 600; color: var(--blue-700); }
+  .hours-table tr.is-today td:first-child { color: var(--blue-700); }
+  .hours-table tr.closed td:last-child { color: var(--ink-400); }
+
+  .cap-grid { display: grid; gap: 10px; }
+  .cap-row { display: flex; align-items: center; gap: 10px; font-size: 0.8125rem; }
+  .cap-row .lbl { flex: 0 0 110px; color: var(--ink-700); }
+  .cap-row .bar { flex: 1; height: 8px; background: var(--ink-100); border-radius: 999px; overflow: hidden; }
+  .cap-row .bar > span { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; }
+  .cap-row .bar > span.hi { background: var(--warn); }
+  .cap-row .bar > span.crit { background: var(--alert); }
+  .cap-row .bar > span.lo { background: var(--ok); }
+  .cap-row .val { flex: 0 0 56px; text-align: right; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+
+  .teams { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); padding: var(--s-5); border-top: 1px solid var(--ink-100); }
+  @media (max-width: 900px) { .teams { grid-template-columns: minmax(0, 1fr); } }
+  .team-card { background: var(--ink-50); border: 1px solid var(--ink-200); border-radius: 10px; padding: var(--s-4); }
+  .team-card h4 { font-size: 0.875rem; }
+  .team-card .meta { color: var(--ink-500); font-size: 0.72rem; margin-top: 2px; }
+  .team-stack { display: flex; margin-top: 10px; }
+  .team-stack .who__avatar { width: 26px; height: 26px; font-size: 0.65rem; border: 2px solid var(--ink-50); margin-left: -8px; }
+  .team-stack .who__avatar:first-child { margin-left: 0; }
+  .team-stack .more {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #fff; border: 2px solid var(--ink-50);
+    color: var(--ink-500);
+    display: grid; place-items: center;
+    font-size: 0.65rem; font-weight: 600;
+    margin-left: -8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div role="note" style="position:relative;z-index:200;background:#fff4d6;color:#5c4200;border-bottom:1px solid #f0d58c;padding:8px 16px;font:500 13px/1.45 'IBM Plex Sans',system-ui,sans-serif;text-align:center">Protótipo navegável do <strong>Mais Saúde Pública</strong>: telas de referência com dados fictícios, não é o sistema em produção. <a href="https://github.com/dufelizardo/mais_saude_publica" style="color:inherit;text-decoration:underline">Ver o código no GitHub</a></div>
+
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+    <div class="sidebar__brand">
+      <span class="sb-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <div>
+        <div class="sb-name">Mais Saúde</div>
+        <div class="sb-sub">Sistema Integrado</div>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="nav-group">
+        <a href="Painel.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          <span class="nav-item__label">Sala de Situação</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Assistencial</div>
+        <a href="Pacientes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+          <span class="nav-item__label">Pacientes</span>
+        </a>
+        <a href="Escalas.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+          <span class="nav-item__label">Programas de Saúde</span>
+        </a>
+        <a href="Agenda.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span class="nav-item__label">Agenda</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Recursos Humanos</div>
+        <a href="Profissionais.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path></svg>
+          <span class="nav-item__label">Profissionais</span>
+        </a>
+        <a href="Equipes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+          <span class="nav-item__label">Equipes</span>
+        </a>
+        <a href="Relatorios.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span class="nav-item__label">Escalas</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Gestão</div>
+        <a href="Equipamentos.html" class="nav-item" aria-current="page">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path><path d="M9 22v-4h6v4"></path></svg>
+          <span class="nav-item__label">Equipamentos</span>
+          <span class="nav-badge">128</span>
+        </a>
+        <a href="Coordenacoes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span class="nav-item__label">Coordenações &amp; Gerência</span>
+        </a>
+        <a href="Coordenacoes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <span class="nav-item__label">Supervisões</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span class="nav-item__label">Relatórios</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar__foot">
+      <div class="who" tabindex="0">
+        <span class="who__avatar" aria-hidden="true">MS</span>
+        <div style="min-width:0;">
+          <div class="who__name">Mariana Souza</div>
+          <div class="who__role">Coordenação · Regional Centro</div>
+        </div>
+      </div>
+      <a href="Login.html" class="icon-btn" aria-label="Sair" title="Sair">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Topbar -->
+  <header class="topbar" role="banner">
+    <button class="menu-btn" id="menu-btn" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <nav class="crumbs" aria-label="Trilha">
+      <a href="Painel.html" style="color:var(--ink-500);">Início</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <span style="color:var(--ink-500);">Gestão</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <strong>Equipamentos de Saúde</strong>
+    </nav>
+
+    <label class="topbar__search" role="search">
+      <span class="sr-only">Buscar</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="search" placeholder="Buscar unidade, CNES, bairro…" />
+    </label>
+
+    <div class="top-actions">
+      <span class="top-pill"><span class="dot" aria-hidden="true"></span> Dados ao vivo</span>
+      <button class="top-btn" aria-label="Notificações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="dot-alert" aria-hidden="true"></span>
+      </button>
+      <button class="top-btn" aria-label="Configurações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="content" id="main">
+
+    <header class="page-head">
+      <div>
+        <h1>Equipamentos de Saúde</h1>
+        <p>128 unidades · 7 regionais · integração com CNES</p>
+      </div>
+      <div class="actions">
+        <button class="btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Exportar
+        </button>
+        <button class="btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect></svg>
+          Sincronizar CNES
+        </button>
+        <button class="btn btn--primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Nova unidade
+        </button>
+      </div>
+    </header>
+
+    <!-- Stats -->
+    <section class="stats" aria-label="Resumo da rede física">
+      <div class="stat">
+        <span class="stat__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path><path d="M9 22v-4h6v4"></path></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Unidades ativas</div>
+          <div class="stat__val mono">124<span style="color:var(--ink-500); font-size:1rem; font-weight:500; margin-left:4px;">/128</span></div>
+          <div class="stat__sub">2 em manutenção · 2 obras</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12c4 2 14 2 18 0"></path><path d="M12 3c2.5 3 2.5 15 0 18"></path><path d="M12 3c-2.5 3-2.5 15 0 18"></path></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">UBS &amp; CSF</div>
+          <div class="stat__val mono">94</div>
+          <div class="stat__sub">73,4% da rede · atenção básica</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon stat__icon--purple" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">UPA / Hospital / CAPS</div>
+          <div class="stat__val mono">18</div>
+          <div class="stat__sub">5 UPA · 4 CAPS · 9 espec.</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon stat__icon--warn" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9"></path></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Em manutenção / obras</div>
+          <div class="stat__val mono">4</div>
+          <div class="stat__sub">previsão de retorno: 12/jun</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter -->
+    <div class="filterbar" role="region" aria-label="Filtros">
+      <label class="search">
+        <span class="sr-only">Buscar unidade</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="search" placeholder="Buscar por nome, CNES, bairro ou endereço…" />
+      </label>
+      <button class="pill active">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+        Regional: Centro <span class="x" aria-hidden="true">×</span>
+      </button>
+      <button class="pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path></svg>
+        Tipo
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <button class="pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+        Status
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div class="seg" role="group" aria-label="Visualização">
+        <button aria-pressed="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          Mapa
+        </button>
+        <button aria-pressed="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          Lista
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== Map + list split ===== -->
+    <section class="split">
+
+      <!-- Map -->
+      <div class="card map-card">
+        <svg class="map-svg" viewBox="0 0 600 480" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Mapa esquemático do município com 14 unidades de saúde">
+          <defs>
+            <pattern id="streets" width="40" height="40" patternUnits="userSpaceOnUse">
+              <rect width="40" height="40" fill="#eef3f9"></rect>
+              <line x1="0" y1="20" x2="40" y2="20" stroke="#dde5f0" stroke-width="0.6"></line>
+              <line x1="20" y1="0" x2="20" y2="40" stroke="#dde5f0" stroke-width="0.6"></line>
+            </pattern>
+            <linearGradient id="mapShade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#eef3f9"></stop>
+              <stop offset="100%" stop-color="#e5edf7"></stop>
+            </linearGradient>
+          </defs>
+
+          <!-- Base + grid -->
+          <rect width="600" height="480" fill="url(#mapShade)"></rect>
+          <rect width="600" height="480" fill="url(#streets)" opacity="0.6"></rect>
+
+          <!-- Districts (subtle different shades) -->
+          <rect x="30" y="40" width="220" height="160" fill="#e3ecf6" opacity="0.7" rx="2"></rect>
+          <rect x="280" y="60" width="180" height="140" fill="#e9f0f9" opacity="0.7" rx="2"></rect>
+          <rect x="460" y="30" width="120" height="180" fill="#dde7f3" opacity="0.6" rx="2"></rect>
+          <rect x="40" y="240" width="180" height="200" fill="#e7eef7" opacity="0.7" rx="2"></rect>
+          <rect x="250" y="240" width="160" height="170" fill="#dde7f3" opacity="0.6" rx="2"></rect>
+          <rect x="430" y="240" width="150" height="220" fill="#e3ecf6" opacity="0.7" rx="2"></rect>
+
+          <!-- River / main avenue -->
+          <path d="M0,300 C100,260 220,340 320,290 C420,240 500,310 600,260" stroke="#bcd3e8" stroke-width="14" fill="none" opacity="0.6" stroke-linecap="round"></path>
+          <path d="M0,300 C100,260 220,340 320,290 C420,240 500,310 600,260" stroke="#a8c4dd" stroke-width="2" fill="none" opacity="0.5" stroke-dasharray="4 4"></path>
+
+          <!-- Main avenues -->
+          <line x1="0" y1="120" x2="600" y2="120" stroke="#cdd9e8" stroke-width="3"></line>
+          <line x1="200" y1="0" x2="200" y2="480" stroke="#cdd9e8" stroke-width="3"></line>
+          <line x1="420" y1="0" x2="420" y2="480" stroke="#cdd9e8" stroke-width="3"></line>
+
+          <!-- District labels -->
+          <g fill="#9fb0c4" font-family="IBM Plex Mono, monospace" font-size="9" font-weight="500">
+            <text x="40" y="55">CENTRO HISTÓRICO</text>
+            <text x="290" y="75">JARDIM DAS FLORES</text>
+            <text x="468" y="48">VILA NOVA</text>
+            <text x="50" y="255">BELA VISTA</text>
+            <text x="260" y="255">VILA ESPERANÇA</text>
+            <text x="438" y="255">BOA ESPERANÇA</text>
+          </g>
+
+          <!-- Pin: helper macro via groups -->
+          <!-- Pin 1 — UBS Centro (active) -->
+          <g class="pin" data-id="1" tabindex="0">
+            <circle cx="135" cy="105" r="11" fill="#1351b4" stroke="#fff" stroke-width="2.5"></circle>
+            <text x="135" y="109" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="IBM Plex Mono, monospace">04</text>
+          </g>
+          <!-- Pin 2 — UBS Jardim das Flores -->
+          <g class="pin" data-id="2" tabindex="0">
+            <circle cx="350" cy="135" r="11" fill="#1351b4" stroke="#fff" stroke-width="2.5"></circle>
+            <text x="350" y="139" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="IBM Plex Mono, monospace">07</text>
+          </g>
+          <!-- Pin 3 — UPA São Pedro -->
+          <g class="pin" data-id="3" tabindex="0">
+            <circle cx="520" cy="100" r="13" fill="#6936c2" stroke="#fff" stroke-width="2.5"></circle>
+            <text x="520" y="104" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="IBM Plex Mono, monospace">UPA</text>
+          </g>
+          <!-- Pin 4 — CSF Bela Vista -->
+          <g class="pin" data-id="4" tabindex="0">
+            <circle cx="115" cy="320" r="11" fill="#1351b4" stroke="#fff" stroke-width="2.5"></circle>
+            <text x="115" y="324" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="IBM Plex Mono, monospace">11</text>
+          </g>
+          <!-- Pin 5 — UBS Vila Esperança (SELECTED, bigger) -->
+          <g class="pin selected" data-id="5" tabindex="0">
+            <circle cx="315" cy="335" r="18" fill="#1351b4" stroke="#fff" stroke-width="3"></circle>
+            <circle cx="315" cy="335" r="22" fill="none" stroke="#1351b4" stroke-width="2" opacity="0.3"></circle>
+            <text x="315" y="340" text-anchor="middle" fill="#fff" font-size="11" font-weight="700" font-family="IBM Plex Mono, monospace">12</text>
+            <!-- label callout -->
+            <g transform="translate(345, 305)">
+              <rect x="0" y="0" width="170" height="56" rx="10" fill="#fff" stroke="#dde1e8" stroke-width="1"></rect>
+              <text x="12" y="20" fill="#0e1116" font-size="11" font-weight="600" font-family="IBM Plex Sans">UBS Vila Esperança</text>
+              <text x="12" y="34" fill="#5c6470" font-size="9" font-family="IBM Plex Mono, monospace">CNES 2 145 089 · 18 prof.</text>
+              <text x="12" y="48" fill="#1f8a5b" font-size="9" font-weight="600" font-family="IBM Plex Sans">● Em operação · 87%</text>
+            </g>
+          </g>
+          <!-- Pin 6 — CAPS Norte -->
+          <g class="pin" data-id="6" tabindex="0">
+            <circle cx="100" cy="190" r="11" fill="#1f8a5b" stroke="#fff" stroke-width="2.5"></circle>
+            <text x="100" y="194" text-anchor="middle" fill="#fff" font-size="9" font-weight="700" font-family="IBM Plex Mono, monospace">CAPS</text>
+          </g>
+          <!-- Pin 7 — CEO Regional -->
+          <g class="pin" data-id="7" tabindex="0">
+            <circle cx="380" cy="380" r="11" fill="#0b8a8a" stroke="#fff" stroke-width="2.5"></circle>
+            <text x="380" y="384" text-anchor="middle" fill="#fff" font-size="9" font-weight="700" font-family="IBM Plex Mono, monospace">CEO</text>
+          </g>
+          <!-- Pin 8 — UBS Boa Esperança -->
+          <g class="pin" data-id="8" tabindex="0">
+            <circle cx="495" cy="335" r="11" fill="#1351b4" stroke="#fff" stroke-width="2.5"></circle>
+            <text x="495" y="339" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="IBM Plex Mono, monospace">22</text>
+          </g>
+          <!-- Pin 9 — UBS em manutenção -->
+          <g class="pin" data-id="9" tabindex="0">
+            <circle cx="240" cy="180" r="11" fill="#b86b00" stroke="#fff" stroke-width="2.5"></circle>
+            <text x="240" y="184" text-anchor="middle" fill="#fff" font-size="9" font-weight="700" font-family="IBM Plex Mono, monospace">⚙</text>
+          </g>
+          <!-- Pin 10 — extra small pins -->
+          <g class="pin" data-id="10" tabindex="0">
+            <circle cx="180" cy="430" r="9" fill="#1351b4" stroke="#fff" stroke-width="2"></circle>
+          </g>
+          <g class="pin" data-id="11" tabindex="0">
+            <circle cx="440" cy="155" r="9" fill="#1351b4" stroke="#fff" stroke-width="2"></circle>
+          </g>
+          <g class="pin" data-id="12" tabindex="0">
+            <circle cx="560" cy="395" r="9" fill="#1351b4" stroke="#fff" stroke-width="2"></circle>
+          </g>
+          <g class="pin" data-id="13" tabindex="0">
+            <circle cx="65" cy="430" r="9" fill="#c0392b" stroke="#fff" stroke-width="2"></circle>
+          </g>
+          <g class="pin" data-id="14" tabindex="0">
+            <circle cx="290" cy="430" r="9" fill="#1351b4" stroke="#fff" stroke-width="2"></circle>
+          </g>
+        </svg>
+
+        <div class="map-overlay" role="region" aria-label="Legenda do mapa">
+          <h3>Tipo de unidade</h3>
+          <div class="map-legend">
+            <div class="map-legend-row"><span class="legend-pin pin--ubs" aria-hidden="true"></span> UBS / CSF · atenção básica</div>
+            <div class="map-legend-row"><span class="legend-pin pin--upa" aria-hidden="true"></span> UPA · 24h</div>
+            <div class="map-legend-row"><span class="legend-pin pin--ceo" aria-hidden="true"></span> CEO · odontologia</div>
+            <div class="map-legend-row"><span class="legend-pin pin--caps" aria-hidden="true"></span> CAPS · saúde mental</div>
+            <div class="map-legend-row"><span class="legend-pin pin--manut" aria-hidden="true"></span> Em manutenção</div>
+            <div class="map-legend-row"><span class="legend-pin pin--closed" aria-hidden="true"></span> Inoperante</div>
+          </div>
+        </div>
+
+        <div class="map-zoom" role="group" aria-label="Zoom do mapa">
+          <button aria-label="Aproximar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <button aria-label="Afastar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <button aria-label="Localizar minha unidade">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line></svg>
+          </button>
+        </div>
+
+        <div class="map-compass" aria-hidden="true">N ↑ · 1:18.000</div>
+      </div>
+
+      <!-- Unit list -->
+      <div class="card list-card">
+        <div class="list-head">
+          <div>
+            <h2>Unidades</h2>
+            <div class="sub">14 na regional Centro</div>
+          </div>
+          <button class="btn" style="padding: 6px 10px; min-height: 32px; font-size: 0.78rem;">A–Z</button>
+        </div>
+        <div class="list-body" id="unit-list">
+          <button class="unit-row" data-id="5" aria-selected="true" type="button">
+            <span class="unit-pin" aria-hidden="true">12</span>
+            <div>
+              <div class="unit-name">UBS Vila Esperança</div>
+              <div class="unit-meta">UBS · 18 prof. · Rua das Acácias, 488</div>
+              <div class="unit-bar"><span style="width:87%"></span></div>
+            </div>
+            <div class="unit-right">Ocupação<span class="v">87%</span></div>
+          </button>
+          <button class="unit-row" data-id="3" type="button">
+            <span class="unit-pin t-upa" aria-hidden="true">U</span>
+            <div>
+              <div class="unit-name">UPA São Pedro 24h</div>
+              <div class="unit-meta">UPA · 41 prof. · Av. Tiradentes, 1.245</div>
+              <div class="unit-bar"><span class="hi" style="width:94%"></span></div>
+            </div>
+            <div class="unit-right">Ocupação<span class="v">94%</span></div>
+          </button>
+          <button class="unit-row" data-id="1" type="button">
+            <span class="unit-pin" aria-hidden="true">04</span>
+            <div>
+              <div class="unit-name">UBS Centro</div>
+              <div class="unit-meta">UBS · 28 prof. · Praça da Sé, 12</div>
+              <div class="unit-bar"><span style="width:78%"></span></div>
+            </div>
+            <div class="unit-right">Ocupação<span class="v">78%</span></div>
+          </button>
+          <button class="unit-row" data-id="2" type="button">
+            <span class="unit-pin" aria-hidden="true">07</span>
+            <div>
+              <div class="unit-name">UBS Jardim das Flores</div>
+              <div class="unit-meta">UBS · 15 prof. · R. das Hortênsias, 320</div>
+              <div class="unit-bar"><span style="width:71%"></span></div>
+            </div>
+            <div class="unit-right">Ocupação<span class="v">71%</span></div>
+          </button>
+          <button class="unit-row" data-id="4" type="button">
+            <span class="unit-pin" aria-hidden="true">11</span>
+            <div>
+              <div class="unit-name">CSF Bela Vista</div>
+              <div class="unit-meta">CSF · 22 prof. · R. dos Pinheiros, 81</div>
+              <div class="unit-bar"><span style="width:82%"></span></div>
+            </div>
+            <div class="unit-right">Ocupação<span class="v">82%</span></div>
+          </button>
+          <button class="unit-row" data-id="6" type="button">
+            <span class="unit-pin t-caps" aria-hidden="true">C</span>
+            <div>
+              <div class="unit-name">CAPS Norte</div>
+              <div class="unit-meta">CAPS · 16 prof. · Av. Castro Alves, 700</div>
+              <div class="unit-bar"><span class="lo" style="width:65%"></span></div>
+            </div>
+            <div class="unit-right">Ocupação<span class="v">65%</span></div>
+          </button>
+          <button class="unit-row" data-id="7" type="button">
+            <span class="unit-pin t-ceo" aria-hidden="true">C</span>
+            <div>
+              <div class="unit-name">CEO Regional Centro</div>
+              <div class="unit-meta">Odontologia · 12 prof. · R. dos Lírios, 145</div>
+              <div class="unit-bar"><span class="lo" style="width:54%"></span></div>
+            </div>
+            <div class="unit-right">Ocupação<span class="v">54%</span></div>
+          </button>
+          <button class="unit-row" data-id="8" type="button">
+            <span class="unit-pin" aria-hidden="true">22</span>
+            <div>
+              <div class="unit-name">UBS Boa Esperança</div>
+              <div class="unit-meta">UBS · 12 prof. · Av. Brasil, 4.812</div>
+              <div class="unit-bar"><span style="width:73%"></span></div>
+            </div>
+            <div class="unit-right">Ocupação<span class="v">73%</span></div>
+          </button>
+          <button class="unit-row" data-id="9" type="button">
+            <span class="unit-pin t-manut" aria-hidden="true">⚙</span>
+            <div>
+              <div class="unit-name">UBS Parque Industrial</div>
+              <div class="unit-meta">UBS · Em manutenção · retorno 12/jun</div>
+              <div class="unit-bar"><span class="crit" style="width:0%"></span></div>
+            </div>
+            <div class="unit-right">Status<span class="v" style="color:var(--warn);">Manut.</span></div>
+          </button>
+          <button class="unit-row" data-id="13" type="button">
+            <span class="unit-pin t-closed" aria-hidden="true">!</span>
+            <div>
+              <div class="unit-name">UBS Vila Antiga</div>
+              <div class="unit-meta">UBS · Obras estruturais · jun–set</div>
+              <div class="unit-bar"><span class="crit" style="width:0%"></span></div>
+            </div>
+            <div class="unit-right">Status<span class="v" style="color:var(--alert);">Fechada</span></div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Selected unit detail ===== -->
+    <section class="card detail-card" aria-labelledby="unit-detail-title">
+      <div class="detail-head">
+        <span class="detail-head__mark" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path><path d="M9 22v-4h6v4"></path></svg>
+        </span>
+        <div class="detail-head__info">
+          <h2 id="unit-detail-title">UBS Vila Esperança</h2>
+          <div style="color:var(--ink-500); font-size:0.875rem; margin-top: 2px;">
+            CNES <strong style="color:var(--ink-900); font-family:'IBM Plex Mono', monospace;">2 145 089</strong> · Regional Centro · Coord. Mariana Souza
+          </div>
+          <div class="detail-head__chips">
+            <span class="tag tag--md">Unidade Básica de Saúde</span>
+            <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Em operação</span>
+            <span class="tag tag--md">Estratégia Saúde da Família</span>
+            <span class="tag tag--md">Imunização</span>
+          </div>
+        </div>
+        <div class="detail-head__actions">
+          <button class="btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+            Editar
+          </button>
+          <a href="Profissionais.html" class="btn">Ver profissionais</a>
+          <a href="Agenda.html" class="btn btn--primary">Ver agenda</a>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Seções da unidade">
+        <button role="tab" aria-selected="true">Dados gerais</button>
+        <button role="tab" aria-selected="false">Operacional</button>
+        <button role="tab" aria-selected="false">Equipes</button>
+        <button role="tab" aria-selected="false">Vinculações</button>
+        <button role="tab" aria-selected="false">Histórico</button>
+      </div>
+
+      <!-- Dados Gerais + Operacional + Localização -->
+      <div class="info-grid">
+        <!-- Dados Gerais -->
+        <div class="info-block">
+          <h3>Dados gerais</h3>
+          <dl class="info-list">
+            <div>
+              <dt>Nome / Razão social</dt>
+              <dd>Unidade Básica de Saúde Vila Esperança</dd>
+            </div>
+            <div>
+              <dt>CNES</dt>
+              <dd class="mono-data">2 145 089</dd>
+            </div>
+            <div>
+              <dt>Tipo de equipamento</dt>
+              <dd>UBS · Estratégia Saúde da Família</dd>
+            </div>
+            <div>
+              <dt>Endereço</dt>
+              <dd>Rua das Acácias, 488 — Vila Esperança<br/>CEP 04501-200 · São Paulo / SP</dd>
+            </div>
+            <div>
+              <dt>Contato</dt>
+              <dd>(11) 3812-4400 · vila.esperanca@saude.gov.br</dd>
+            </div>
+            <div>
+              <dt>Coordenação responsável</dt>
+              <dd>Mariana Souza — Regional Centro</dd>
+            </div>
+          </dl>
+        </div>
+
+        <!-- Operacional -->
+        <div class="info-block">
+          <h3>Operacional</h3>
+          <table class="hours-table" aria-label="Horário de funcionamento">
+            <tbody>
+              <tr><td>Segunda</td><td>07h00 — 19h00</td></tr>
+              <tr><td>Terça</td><td>07h00 — 19h00</td></tr>
+              <tr class="is-today"><td>Quarta · hoje</td><td>07h00 — 19h00</td></tr>
+              <tr><td>Quinta</td><td>07h00 — 19h00</td></tr>
+              <tr><td>Sexta</td><td>07h00 — 17h00</td></tr>
+              <tr><td>Sábado</td><td>08h00 — 12h00</td></tr>
+              <tr class="closed"><td>Domingo</td><td>Fechado</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: var(--s-5);">Capacidade</h3>
+          <div class="cap-grid">
+            <div class="cap-row">
+              <span class="lbl">Consultórios</span>
+              <span class="bar"><span style="width:90%"></span></span>
+              <span class="val">9/10</span>
+            </div>
+            <div class="cap-row">
+              <span class="lbl">Vagas semanais</span>
+              <span class="bar"><span style="width:87%"></span></span>
+              <span class="val">87%</span>
+            </div>
+            <div class="cap-row">
+              <span class="lbl">Vacinação</span>
+              <span class="bar"><span class="lo" style="width:62%"></span></span>
+              <span class="val">62%</span>
+            </div>
+            <div class="cap-row">
+              <span class="lbl">Procedimentos</span>
+              <span class="bar"><span class="hi" style="width:91%"></span></span>
+              <span class="val">91%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status + Localização -->
+        <div class="info-block">
+          <h3>Status &amp; localização</h3>
+          <dl class="info-list">
+            <div>
+              <dt>Status operacional</dt>
+              <dd><span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Em operação</span></dd>
+            </div>
+            <div>
+              <dt>Última inspeção</dt>
+              <dd class="mono-data">12 mai · 2026 · sem ocorrências</dd>
+            </div>
+            <div>
+              <dt>Coordenadas</dt>
+              <dd class="mono-data">−23,564 / −46,652</dd>
+            </div>
+            <div>
+              <dt>Microáreas cobertas</dt>
+              <dd>14, 15, 17, 18, 23, 24, 25 (7 microáreas · 4.812 famílias)</dd>
+            </div>
+            <div>
+              <dt>Acessibilidade</dt>
+              <dd>Rampa · banheiro adaptado · sinalização visual</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Equipes -->
+      <div class="teams" aria-label="Equipes vinculadas à unidade">
+        <div class="team-card">
+          <h4>Equipe SF-12 · Saúde da Família</h4>
+          <div class="meta">7 profissionais · 1.420 famílias adscritas</div>
+          <div class="team-stack">
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">HR</span>
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#0b8a8a,#38b2b2);">PS</span>
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#6936c2,#9c6ce8);">AT</span>
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1f8a5b,#4cb083);">MM</span>
+            <span class="more">+3</span>
+          </div>
+        </div>
+        <div class="team-card">
+          <h4>Equipe SF-15 · Saúde da Família</h4>
+          <div class="meta">8 profissionais · 1.612 famílias adscritas</div>
+          <div class="team-stack">
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">MF</span>
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#0b8a8a,#38b2b2);">JC</span>
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#6936c2,#9c6ce8);">RV</span>
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1f8a5b,#4cb083);">FL</span>
+            <span class="more">+4</span>
+          </div>
+        </div>
+        <div class="team-card">
+          <h4>Saúde Bucal — UBS Vila Esperança</h4>
+          <div class="meta">3 profissionais · 312 vagas/sem</div>
+          <div class="team-stack">
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">BC</span>
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#6936c2,#9c6ce8);">CL</span>
+            <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#0b8a8a,#38b2b2);">JM</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p style="text-align: center; color: var(--ink-400); font-size: 0.75rem; margin-top: var(--s-8);">
+      Mais Saúde Pública · vínculo CNES sincronizado · dados auditados
+    </p>
+  </main>
+</div>
+
+<script>
+  // Mobile sidebar
+  (function () {
+    const btn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn || !sidebar) return;
+    btn.addEventListener('click', () => {
+      const open = sidebar.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth > 980) return;
+      if (!sidebar.classList.contains('is-open')) return;
+      if (sidebar.contains(e.target) || btn.contains(e.target)) return;
+      sidebar.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  })();
+  // Tabs + seg
+  (function () {
+    document.querySelectorAll('[role="tablist"], .seg').forEach(group => {
+      const sel = group.matches('[role="tablist"]') ? '[role="tab"]' : 'button';
+      const attr = group.matches('[role="tablist"]') ? 'aria-selected' : 'aria-pressed';
+      group.querySelectorAll(sel).forEach(t => {
+        t.addEventListener('click', () => {
+          group.querySelectorAll(sel).forEach(x => x.setAttribute(attr, 'false'));
+          t.setAttribute(attr, 'true');
+        });
+      });
+    });
+  })();
+  // Unit row selection
+  (function () {
+    document.querySelectorAll('#unit-list .unit-row').forEach(row => {
+      row.addEventListener('click', () => {
+        document.querySelectorAll('#unit-list .unit-row').forEach(r => r.removeAttribute('aria-selected'));
+        row.setAttribute('aria-selected', 'true');
+      });
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Entrar — Mais Saúde Pública</title>
+<meta name="description" content="Acesso ao sistema Mais Saúde Pública para profissionais e gestores da rede municipal de saúde." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ===== Design tokens (shared with Landing Page) ===== */
+  :root {
+    --blue-900: #0a2540;
+    --blue-800: #0c3170;
+    --blue-700: #1351b4;
+    --blue-600: #1e6fd9;
+    --blue-500: #2f8de4;
+    --blue-400: #5aa9ee;
+    --blue-100: #e7f0fb;
+    --blue-50:  #f3f7fd;
+
+    --ink-900: #0e1116;
+    --ink-700: #2a3140;
+    --ink-500: #5c6470;
+    --ink-400: #7a8392;
+    --ink-300: #b6bdc9;
+    --ink-200: #dde1e8;
+    --ink-100: #eef1f5;
+    --ink-50:  #f7f8fb;
+    --white:   #ffffff;
+
+    --ok:      #1f8a5b;
+    --warn:    #b86b00;
+    --alert:   #c0392b;
+
+    --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 24px;
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px;
+    --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px; --s-16: 64px;
+
+    --container: 1200px;
+    --shadow-sm: 0 1px 2px rgba(14,17,22,0.04), 0 1px 1px rgba(14,17,22,0.04);
+    --shadow-md: 0 1px 2px rgba(14,17,22,0.05), 0 6px 18px rgba(14,17,22,0.06);
+    --shadow-lg: 0 10px 30px rgba(14,17,22,0.10);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--white);
+    color: var(--ink-900);
+    font-family: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-size: 1rem;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: var(--blue-700); text-underline-offset: 3px; }
+  h1, h2, h3 { margin: 0; letter-spacing: -0.01em; line-height: 1.18; font-weight: 600; }
+  p { margin: 0; }
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--blue-500); outline-offset: 2px; border-radius: 4px; }
+
+  .skip-link {
+    position: absolute; left: 8px; top: -100px;
+    background: var(--blue-700); color: #fff;
+    padding: 10px 14px; border-radius: 6px;
+    font-weight: 600; z-index: 100; transition: top 0.15s;
+  }
+  .skip-link:focus { top: 8px; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* ============ Layout ============ */
+  .login-shell {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    min-height: 100vh;
+  }
+  @media (max-width: 920px) {
+    .login-shell { grid-template-columns: 1fr; }
+  }
+
+  /* ============ Left brand panel ============ */
+  .brand-panel {
+    position: relative;
+    background:
+      radial-gradient(80% 60% at 100% 0%, rgba(255,255,255,0.10), transparent 70%),
+      radial-gradient(60% 60% at 0% 100%, rgba(255,255,255,0.08), transparent 70%),
+      linear-gradient(160deg, var(--blue-800) 0%, var(--blue-700) 60%, #1a5fc4 100%);
+    color: #fff;
+    padding: var(--s-10) var(--s-12);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  @media (max-width: 920px) {
+    .brand-panel { padding: var(--s-8) var(--s-6) var(--s-10); }
+  }
+  /* Subtle plus pattern */
+  .brand-panel::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.08) 1px, transparent 1.2px);
+    background-size: 28px 28px;
+    background-position: 0 0;
+    opacity: 0.6;
+    mask-image: radial-gradient(ellipse at top right, #000 30%, transparent 75%);
+    pointer-events: none;
+  }
+  .bp-back {
+    color: rgba(255,255,255,0.85); text-decoration: none;
+    font-size: 0.875rem; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px;
+    margin-left: calc(var(--s-3) * -1);
+    width: max-content;
+    transition: background 0.15s;
+    position: relative; z-index: 1;
+  }
+  .bp-back:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+  .bp-brand {
+    margin-top: var(--s-10);
+    display: flex; align-items: center; gap: 12px;
+    position: relative; z-index: 1;
+  }
+  .bp-brand__mark {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: #fff; color: var(--blue-700);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .bp-brand__name { font-weight: 600; font-size: 1.25rem; letter-spacing: -0.01em; line-height: 1.1; white-space: nowrap; }
+  .bp-brand__sub { font-size: 0.75rem; color: rgba(255,255,255,0.7); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+
+  .bp-content { margin-top: auto; position: relative; z-index: 1; }
+  .bp-headline {
+    font-size: clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: #fff;
+    max-width: 18ch;
+    text-wrap: balance;
+  }
+  .bp-headline em { font-style: normal; color: #b8d1f4; }
+  .bp-lead {
+    margin-top: var(--s-5);
+    color: rgba(255,255,255,0.78);
+    font-size: 1rem;
+    max-width: 44ch;
+  }
+
+  .bp-features {
+    margin-top: var(--s-10);
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: var(--s-4);
+    max-width: 520px;
+  }
+  @media (max-width: 480px) { .bp-features { grid-template-columns: 1fr; } }
+  .bp-feat { display: flex; gap: 10px; align-items: flex-start; }
+  .bp-feat__icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(255,255,255,0.12);
+    display: grid; place-items: center; flex-shrink: 0;
+    color: #fff;
+  }
+  .bp-feat__title { font-weight: 600; font-size: 0.9375rem; color: #fff; }
+  .bp-feat__desc { color: rgba(255,255,255,0.65); font-size: 0.8125rem; margin-top: 2px; }
+
+  .bp-foot {
+    margin-top: var(--s-10);
+    display: flex; gap: var(--s-3); flex-wrap: wrap;
+    position: relative; z-index: 1;
+  }
+  .bp-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    color: rgba(255,255,255,0.85);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.75rem; font-weight: 500;
+  }
+
+  /* ============ Right form panel ============ */
+  .form-panel {
+    background: var(--white);
+    padding: var(--s-10) var(--s-12);
+    display: flex; flex-direction: column;
+    min-height: 100vh;
+  }
+  @media (max-width: 920px) { .form-panel { padding: var(--s-8) var(--s-6); min-height: auto; } }
+
+  .form-panel__top {
+    display: flex; justify-content: flex-end; gap: var(--s-2);
+    margin-bottom: var(--s-6);
+  }
+  .top-btn {
+    background: transparent; border: 1px solid var(--ink-200);
+    color: var(--ink-700);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.8125rem; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .top-btn:hover { background: var(--ink-50); }
+  .top-btn[aria-pressed="true"] { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+
+  .form-wrap {
+    width: 100%; max-width: 420px;
+    margin: auto;
+    padding: var(--s-6) 0;
+  }
+  .form-wrap h1 {
+    font-size: clamp(1.5rem, 1.2rem + 0.6vw, 1.875rem);
+    color: var(--ink-900);
+  }
+  .form-wrap p.lead {
+    margin-top: var(--s-3);
+    color: var(--ink-500);
+    font-size: 0.9375rem;
+  }
+
+  /* Tabs */
+  .seg {
+    margin-top: var(--s-8);
+    background: var(--ink-50);
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    padding: 4px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+  .seg__btn {
+    appearance: none; background: transparent; border: 0;
+    padding: 8px 10px; border-radius: 7px;
+    font-weight: 500; color: var(--ink-500);
+    font-size: 0.875rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 36px;
+  }
+  .seg__btn[aria-selected="true"] {
+    background: #fff; color: var(--blue-700);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Form */
+  form { margin-top: var(--s-6); display: grid; gap: var(--s-4); }
+  .field { display: grid; gap: 6px; }
+  .field__row { display: flex; justify-content: space-between; align-items: center; }
+  .field label { font-weight: 500; font-size: 0.875rem; color: var(--ink-700); }
+  .field .hint { color: var(--ink-500); font-size: 0.78125rem; }
+  .field a.hint { color: var(--blue-700); text-decoration: none; font-weight: 500; }
+  .field a.hint:hover { text-decoration: underline; }
+
+  .input-wrap {
+    position: relative;
+    display: flex; align-items: center;
+    background: #fff;
+    border: 1.5px solid var(--ink-200);
+    border-radius: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .input-wrap:focus-within {
+    border-color: var(--blue-700);
+    box-shadow: 0 0 0 4px rgba(19,81,180,0.12);
+  }
+  .input-wrap.has-error {
+    border-color: var(--alert);
+    box-shadow: 0 0 0 4px rgba(192,57,43,0.10);
+  }
+  .input-wrap__icon {
+    padding: 0 12px;
+    color: var(--ink-400);
+    display: grid; place-items: center;
+  }
+  .input-wrap input {
+    flex: 1;
+    border: 0; background: transparent; outline: none;
+    padding: 14px 14px 14px 0;
+    font: inherit;
+    color: var(--ink-900);
+    min-height: 22px;
+    font-variant-numeric: tabular-nums;
+  }
+  .input-wrap input::placeholder { color: var(--ink-400); }
+  .input-wrap__action {
+    background: transparent; border: 0;
+    color: var(--ink-500);
+    padding: 0 12px; height: 44px;
+    display: grid; place-items: center;
+    border-radius: 8px;
+  }
+  .input-wrap__action:hover { color: var(--blue-700); }
+
+  .error-msg {
+    color: var(--alert); font-size: 0.8125rem;
+    display: none;
+    align-items: center; gap: 6px; margin-top: 2px;
+  }
+  .field.has-error .error-msg { display: inline-flex; }
+
+  /* Checkbox */
+  .check-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--s-2); }
+  .check {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 0.875rem; color: var(--ink-700);
+    cursor: pointer;
+    user-select: none;
+  }
+  .check input { position: absolute; opacity: 0; pointer-events: none; }
+  .check__box {
+    width: 18px; height: 18px;
+    border: 1.5px solid var(--ink-300);
+    border-radius: 4px;
+    display: grid; place-items: center;
+    background: #fff;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .check__box svg { opacity: 0; color: #fff; }
+  .check input:checked + .check__box { background: var(--blue-700); border-color: var(--blue-700); }
+  .check input:checked + .check__box svg { opacity: 1; }
+  .check input:focus-visible + .check__box { box-shadow: 0 0 0 3px rgba(19,81,180,0.25); }
+
+  /* Buttons */
+  .btn {
+    appearance: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1.5px solid var(--blue-700);
+    background: var(--blue-700);
+    color: #fff;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    min-height: 48px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.06s;
+  }
+  .btn:hover { background: var(--blue-800); border-color: var(--blue-800); }
+  .btn:active { transform: translateY(1px); }
+  .btn--ghost { background: transparent; color: var(--blue-700); border-color: var(--ink-200); }
+  .btn--ghost:hover { background: var(--blue-50); border-color: var(--blue-700); color: var(--blue-700); }
+  .btn--block { width: 100%; }
+
+  /* Divider */
+  .divider {
+    margin: var(--s-6) 0 var(--s-4);
+    display: flex; align-items: center; gap: var(--s-3);
+    color: var(--ink-400); font-size: 0.78125rem;
+  }
+  .divider::before, .divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--ink-200);
+  }
+
+  /* gov.br button */
+  .gov-btn {
+    width: 100%;
+    background: #fff; color: var(--ink-900);
+    border: 1.5px solid var(--ink-200);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    font-weight: 500; font-size: 0.9375rem;
+    min-height: 48px;
+    text-decoration: none;
+  }
+  .gov-btn:hover { border-color: var(--blue-700); background: var(--blue-50); }
+  .gov-pill {
+    background: var(--blue-700); color: #fff;
+    font-weight: 700; font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    padding: 2px 8px; border-radius: 4px;
+  }
+
+  /* Security notice */
+  .security-note {
+    margin-top: var(--s-6);
+    background: var(--ink-50);
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    padding: var(--s-4);
+    display: flex; gap: 10px;
+    align-items: flex-start;
+    font-size: 0.8125rem;
+    color: var(--ink-500);
+    line-height: 1.5;
+  }
+  .security-note svg { color: var(--blue-700); flex-shrink: 0; margin-top: 2px; }
+  .security-note strong { color: var(--ink-900); font-weight: 600; }
+
+  /* Bottom form bar */
+  .form-panel__bottom {
+    margin-top: auto;
+    padding-top: var(--s-6);
+    display: flex; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap;
+    color: var(--ink-500);
+    font-size: 0.78125rem;
+  }
+  .form-panel__bottom a { color: var(--ink-500); text-decoration: none; }
+  .form-panel__bottom a:hover { color: var(--blue-700); text-decoration: underline; }
+
+  /* High-contrast & font sizing */
+  body.hc { --ink-200: #000; --ink-500: #1a1a1a; --blue-700: #0033a0; --blue-800: #00266e; }
+  body.fs-lg { font-size: 1.125rem; }
+  body.fs-xl { font-size: 1.25rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div role="note" style="position:relative;z-index:200;background:#fff4d6;color:#5c4200;border-bottom:1px solid #f0d58c;padding:8px 16px;font:500 13px/1.45 'IBM Plex Sans',system-ui,sans-serif;text-align:center">Protótipo navegável do <strong>Mais Saúde Pública</strong>: telas de referência com dados fictícios, não é o sistema em produção. <a href="https://github.com/dufelizardo/mais_saude_publica" style="color:inherit;text-decoration:underline">Ver o código no GitHub</a></div>
+
+<a href="#main" class="skip-link">Pular para o formulário</a>
+
+<div class="login-shell">
+
+  <!-- =========== Left brand panel =========== -->
+  <aside class="brand-panel" aria-labelledby="bp-title">
+    <a href="index.html" class="bp-back">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      Voltar ao portal
+    </a>
+
+    <div class="bp-brand">
+      <span class="bp-brand__mark" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <div>
+        <div class="bp-brand__name">Mais Saúde Pública</div>
+        <div class="bp-brand__sub">Portal Integrado</div>
+      </div>
+    </div>
+
+    <div class="bp-content">
+      <h1 id="bp-title" class="bp-headline">A rede municipal de saúde em <em>um único sistema.</em></h1>
+      <p class="bp-lead">Profissionais, gestores e coordenações acessam aqui a sala de situação, agendas, pacientes e escalas da sua unidade.</p>
+
+      <div class="bp-features">
+        <div class="bp-feat">
+          <span class="bp-feat__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>
+          </span>
+          <div>
+            <div class="bp-feat__title">Acesso seguro</div>
+            <div class="bp-feat__desc">JWT, RBAC e bloqueio por tentativas.</div>
+          </div>
+        </div>
+        <div class="bp-feat">
+          <span class="bp-feat__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+          </span>
+          <div>
+            <div class="bp-feat__title">Tempo real</div>
+            <div class="bp-feat__desc">Indicadores atualizados a cada minuto.</div>
+          </div>
+        </div>
+        <div class="bp-feat">
+          <span class="bp-feat__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="m7 14 4-4 4 4 5-5"></path></svg>
+          </span>
+          <div>
+            <div class="bp-feat__title">Decisão por dados</div>
+            <div class="bp-feat__desc">Sala de situação operacional e estratégica.</div>
+          </div>
+        </div>
+        <div class="bp-feat">
+          <span class="bp-feat__icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"></circle><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </span>
+          <div>
+            <div class="bp-feat__title">Toda a equipe</div>
+            <div class="bp-feat__desc">Recepção, enfermagem, médicos e gestão.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bp-foot">
+        <span class="bp-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          LGPD
+        </span>
+        <span class="bp-badge">WCAG 2.2 AA</span>
+        <span class="bp-badge">CNES Integrado</span>
+        <span class="bp-badge">SUS</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========== Right form panel =========== -->
+  <section class="form-panel" aria-labelledby="form-title">
+
+    <!-- Accessibility tools -->
+    <div class="form-panel__top" role="toolbar" aria-label="Ferramentas de acessibilidade">
+      <button class="top-btn" data-fs="default" aria-pressed="true" aria-label="Tamanho padrão de fonte">A</button>
+      <button class="top-btn" data-fs="lg" aria-pressed="false" aria-label="Aumentar fonte">A+</button>
+      <button class="top-btn" data-fs="xl" aria-pressed="false" aria-label="Aumentar mais a fonte">A++</button>
+      <button class="top-btn" data-hc="toggle" aria-pressed="false" aria-label="Alto contraste">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 0 0 20"></path></svg>
+        Contraste
+      </button>
+    </div>
+
+    <main id="main" class="form-wrap" role="main">
+      <h1 id="form-title">Entrar no sistema</h1>
+      <p class="lead">Acesso restrito a profissionais e gestores da rede municipal. Use seu CPF ou matrícula funcional.</p>
+
+      <!-- Tabs -->
+      <div class="seg" role="tablist" aria-label="Tipo de acesso">
+        <button class="seg__btn" role="tab" aria-selected="true" data-tab="cpf" id="tab-cpf" aria-controls="login-form">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M5 18a4 4 0 0 1 8 0"></path><line x1="15" y1="9" x2="19" y2="9"></line><line x1="15" y1="13" x2="19" y2="13"></line></svg>
+          CPF
+        </button>
+        <button class="seg__btn" role="tab" aria-selected="false" data-tab="mat" id="tab-mat" aria-controls="login-form">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="7" y1="15" x2="11" y2="15"></line><line x1="14" y1="15" x2="17" y2="15"></line></svg>
+          Matrícula
+        </button>
+      </div>
+
+      <form id="login-form" novalidate>
+        <!-- Identifier -->
+        <div class="field" id="field-id">
+          <label for="identifier" id="identifier-label">CPF</label>
+          <div class="input-wrap">
+            <span class="input-wrap__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+            </span>
+            <input
+              id="identifier"
+              name="identifier"
+              type="text"
+              autocomplete="username"
+              inputmode="numeric"
+              placeholder="000.000.000-00"
+              aria-describedby="identifier-error"
+              required
+            />
+          </div>
+          <span class="error-msg" id="identifier-error" role="alert">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            Informe um CPF válido (11 dígitos).
+          </span>
+        </div>
+
+        <!-- Password -->
+        <div class="field" id="field-pwd">
+          <div class="field__row">
+            <label for="password">Senha</label>
+            <a href="#recuperar" class="hint">Esqueci minha senha</a>
+          </div>
+          <div class="input-wrap">
+            <span class="input-wrap__icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </span>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Digite sua senha"
+              aria-describedby="password-error password-hint"
+              required
+              minlength="8"
+            />
+            <button type="button" class="input-wrap__action" id="toggle-pwd" aria-pressed="false" aria-label="Mostrar senha">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" id="eye-icon"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+          <span class="error-msg" id="password-error" role="alert">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            A senha deve ter ao menos 8 caracteres.
+          </span>
+        </div>
+
+        <div class="check-row">
+          <label class="check">
+            <input type="checkbox" name="remember" />
+            <span class="check__box" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </span>
+            Manter conectado neste dispositivo
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn--block" id="submit-btn">
+          Entrar
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+      </form>
+
+      <div class="divider"><span>ou</span></div>
+
+      <a href="#govbr" class="gov-btn">
+        <span class="gov-pill" aria-hidden="true">gov.br</span>
+        Entrar com sua conta gov.br
+      </a>
+
+      <div class="security-note" role="note">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+        <div>
+          <strong>Acesso protegido.</strong> Suas credenciais trafegam por conexão criptografada. Sessões expiram após inatividade e tentativas inválidas bloqueiam temporariamente o acesso (LGPD &middot; auditoria de logs ativa).
+        </div>
+      </div>
+
+      <p style="margin-top: var(--s-6); color: var(--ink-500); font-size: 0.875rem; text-align: center;">
+        Não tem cadastro? Procure a coordenação da sua unidade ou abra um chamado no <a href="#suporte">suporte técnico</a>.
+      </p>
+    </main>
+
+    <footer class="form-panel__bottom">
+      <span>© 2026 Secretaria Municipal de Saúde · Versão 2026.1</span>
+      <div style="display:flex; gap:12px;">
+        <a href="#">Termos de uso</a>
+        <a href="#">Privacidade</a>
+        <a href="#suporte">Suporte</a>
+      </div>
+    </footer>
+  </section>
+
+</div>
+
+<script>
+  // ====== Accessibility toolbar ======
+  (function () {
+    const body = document.body;
+    const fsButtons = document.querySelectorAll('[data-fs]');
+    const applyFs = (val) => {
+      body.classList.remove('fs-lg', 'fs-xl');
+      if (val === 'lg') body.classList.add('fs-lg');
+      if (val === 'xl') body.classList.add('fs-xl');
+      fsButtons.forEach(b => b.setAttribute('aria-pressed', b.dataset.fs === val ? 'true' : 'false'));
+      try { localStorage.setItem('msp-fs', val); } catch (e) {}
+    };
+    fsButtons.forEach(b => b.addEventListener('click', () => applyFs(b.dataset.fs)));
+    try {
+      const saved = localStorage.getItem('msp-fs');
+      if (saved) applyFs(saved);
+    } catch (e) {}
+
+    const hcBtn = document.querySelector('[data-hc="toggle"]');
+    const applyHc = (on) => {
+      body.classList.toggle('hc', on);
+      hcBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      try { localStorage.setItem('msp-hc', on ? '1' : '0'); } catch (e) {}
+    };
+    hcBtn.addEventListener('click', () => applyHc(!body.classList.contains('hc')));
+    try { if (localStorage.getItem('msp-hc') === '1') applyHc(true); } catch (e) {}
+  })();
+
+  // ====== Tab switch ======
+  (function () {
+    const tabs = document.querySelectorAll('[role="tab"]');
+    const idInput = document.getElementById('identifier');
+    const idLabel = document.getElementById('identifier-label');
+    const idErr = document.getElementById('identifier-error');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.setAttribute('aria-selected', t === tab ? 'true' : 'false'));
+        const kind = tab.dataset.tab;
+        if (kind === 'cpf') {
+          idLabel.textContent = 'CPF';
+          idInput.placeholder = '000.000.000-00';
+          idInput.inputMode = 'numeric';
+          idInput.value = '';
+          idErr.textContent = '';
+          idErr.append(' Informe um CPF válido (11 dígitos).');
+        } else {
+          idLabel.textContent = 'Matrícula funcional';
+          idInput.placeholder = 'Ex: 458320';
+          idInput.inputMode = 'text';
+          idInput.value = '';
+          idErr.textContent = '';
+          idErr.append(' Informe uma matrícula válida.');
+        }
+        idInput.focus();
+      });
+    });
+  })();
+
+  // ====== CPF mask + basic validation ======
+  (function () {
+    const idInput = document.getElementById('identifier');
+    const idField = document.getElementById('field-id');
+    const idWrap = idField.querySelector('.input-wrap');
+
+    idInput.addEventListener('input', (e) => {
+      const isCpf = document.getElementById('tab-cpf').getAttribute('aria-selected') === 'true';
+      if (isCpf) {
+        let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+        if (v.length > 9) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2}).*/, '$1.$2.$3-$4');
+        else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{1,3}).*/, '$1.$2.$3');
+        else if (v.length > 3) v = v.replace(/^(\d{3})(\d{1,3}).*/, '$1.$2');
+        e.target.value = v;
+      }
+      idField.classList.remove('has-error');
+      idWrap.classList.remove('has-error');
+    });
+  })();
+
+  // ====== Password toggle ======
+  (function () {
+    const btn = document.getElementById('toggle-pwd');
+    const input = document.getElementById('password');
+    btn.addEventListener('click', () => {
+      const isVisible = input.type === 'text';
+      input.type = isVisible ? 'password' : 'text';
+      btn.setAttribute('aria-pressed', isVisible ? 'false' : 'true');
+      btn.setAttribute('aria-label', isVisible ? 'Mostrar senha' : 'Ocultar senha');
+      btn.innerHTML = isVisible
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-10-7-10-7a18.5 18.5 0 0 1 4.06-5.94"></path><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 10 7 10 7a18.6 18.6 0 0 1-3.18 4.36"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+    });
+  })();
+
+  // ====== Submit (validation only, no real backend) ======
+  (function () {
+    const form = document.getElementById('login-form');
+    const idInput = document.getElementById('identifier');
+    const idField = document.getElementById('field-id');
+    const idWrap = idField.querySelector('.input-wrap');
+    const pwdInput = document.getElementById('password');
+    const pwdField = document.getElementById('field-pwd');
+    const pwdWrap = pwdField.querySelector('.input-wrap');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      let ok = true;
+
+      idField.classList.remove('has-error');
+      idWrap.classList.remove('has-error');
+      pwdField.classList.remove('has-error');
+      pwdWrap.classList.remove('has-error');
+
+      const isCpf = document.getElementById('tab-cpf').getAttribute('aria-selected') === 'true';
+      const idVal = idInput.value.replace(/\D/g, '');
+      if (isCpf && idVal.length !== 11) {
+        idField.classList.add('has-error');
+        idWrap.classList.add('has-error');
+        ok = false;
+      } else if (!isCpf && idInput.value.trim().length < 3) {
+        idField.classList.add('has-error');
+        idWrap.classList.add('has-error');
+        ok = false;
+      }
+
+      if (pwdInput.value.length < 8) {
+        pwdField.classList.add('has-error');
+        pwdWrap.classList.add('has-error');
+        ok = false;
+      }
+
+      if (ok) {
+        // Go to dashboard (placeholder — to be built next)
+        window.location.href = 'Painel.html';
+      } else {
+        const firstError = form.querySelector('.field.has-error input');
+        if (firstError) firstError.focus();
+      }
+    });
+  })();
+</script>
+</body>
+</html>

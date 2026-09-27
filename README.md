@@ -6,6 +6,10 @@ API REST para gestão da hierarquia de unidades de saúde do SUS — Federal, Es
 Regional —, construída em Spring Boot. Cada esfera expõe CRUD completo (criação, busca, listagem,
 atualização de dados de contato/horários e desabilitação) sobre suas próprias instituições.
 
+> **Quer ver como o sistema vai ficar?** Navegue pelo
+> [protótipo das telas](https://dufelizardo.github.io/mais_saude_publica/): páginas estáticas com
+> dados fictícios, sem precisar instalar nada (detalhes em [`prototipo/`](prototipo/)).
+
 ## Domínio
 
 A hierarquia é modelada como uma única entidade autorreferenciada (`UnidadeDeSaude`, ver
