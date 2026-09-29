@@ -25,4 +25,6 @@ export interface LoteResponseDto {
   validade: string;
   /** Saldo atual, mantido pelo livro de movimentação. */
   quantidade: number;
+  /** Preenchido quando o lote foi incorporado a outro da mesma remessa na unidade (ADR-0060). */
+  loteIncorporadorId?: string | null;
 }

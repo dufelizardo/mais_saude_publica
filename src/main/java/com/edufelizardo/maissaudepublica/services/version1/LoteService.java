@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.Lote;
 import com.edufelizardo.maissaudepublica.models.Medicamento;
 import com.edufelizardo.maissaudepublica.models.Profissional;
@@ -44,23 +45,59 @@ public class LoteService {
     @Autowired
     private MovimentacaoFarmaciaService movimentacaoFarmaciaService;
 
-    /** O lote nasce com saldo zero e a quantidade recebida entra como lançamento de ENTRADA (ADR-0057). */
+    /** Resultado da entrada de lote: {@code loteNovo} é falso quando a remessa já tinha lote na unidade. */
+    public record EntradaDeLote(LoteResponseDto lote, boolean loteNovo) {
+    }
+
+    /**
+     * Registra a entrada de uma remessa numa unidade. Uma remessa (medicamento, número e validade) tem
+     * um único lote por unidade (ADR-0060): se ele já existe, a quantidade entra nele como novo
+     * lançamento de ENTRADA; se não, o lote nasce com saldo zero e recebe a ENTRADA (ADR-0057).
+     */
     @Transactional
-    public LoteResponseDto criar(LoteRequestDto dto) {
+    public EntradaDeLote criar(LoteRequestDto dto) {
         Medicamento medicamento = buscarMedicamentoPorId(dto.getMedicamentoId());
-        UnidadeDeSaude unidade = buscarUnidadePorId(dto.getUnidadeId());
+        UnidadeDeSaude unidade = travarUnidade(dto.getUnidadeId());
         Profissional responsavel = buscarProfissionalSeInformado(dto.getProfissionalMatricula());
+
+        UUID existenteId = loteRepository.findIdsDaRemessaNaUnidade(medicamento.getUuid(), unidade.getUuid(),
+                dto.getNumeroLote(), dto.getValidade()).stream().findFirst().orElse(null);
+        if (existenteId != null) {
+            Lote lote = loteRepository.findByIdParaMovimentar(existenteId).orElseThrow();
+            if (dto.getQuantidade() > 0) {
+                movimentacaoFarmaciaService.lancar(lote, TipoMovimentacaoFarmacia.ENTRADA, dto.getQuantidade(),
+                        responsavel, null, null, null);
+            }
+            return new EntradaDeLote(LoteResponseDto.fromLote(lote), false);
+        }
 
         Lote lote = loteRepository.save(new Lote(medicamento, unidade, dto.getNumeroLote(), dto.getValidade(), 0));
         movimentacaoFarmaciaService.lancar(lote, TipoMovimentacaoFarmacia.ENTRADA, dto.getQuantidade(), responsavel,
                 null, null, null);
-        return LoteResponseDto.fromLote(lote);
+        return new EntradaDeLote(LoteResponseDto.fromLote(lote), true);
     }
 
-    /** Só número do lote e validade — ver {@link LoteAtualizacaoRequestDto}. */
+    /**
+     * Só número do lote e validade — ver {@link LoteAtualizacaoRequestDto}. A correção não pode
+     * transformar o lote em outro lote já existente da mesma remessa na unidade (ADR-0060).
+     */
     @Transactional
     public LoteResponseDto atualizar(UUID uuid, LoteAtualizacaoRequestDto dto) {
-        Lote lote = buscarEntidadePorId(uuid);
+        Lote atual = buscarEntidadePorId(uuid);
+        travarUnidade(atual.getUnidade().getUuid());
+        Lote lote = loteRepository.findByIdParaMovimentar(uuid).orElseThrow();
+        if (lote.getLoteIncorporador() != null) {
+            throw new ResourceUnprocessableEntityException(
+                    "O lote " + lote.getNumeroLote() + " foi incorporado a outro lote e não pode mais ser corrigido.");
+        }
+        boolean outroLoteDaMesmaRemessa = loteRepository.findIdsDaRemessaNaUnidade(lote.getMedicamento().getUuid(),
+                        lote.getUnidade().getUuid(), dto.getNumeroLote(), dto.getValidade())
+                .stream().anyMatch(id -> !id.equals(uuid));
+        if (outroLoteDaMesmaRemessa) {
+            throw new ResourceUnprocessableEntityException(
+                    "Já existe nesta unidade um lote " + dto.getNumeroLote() + " com validade " + dto.getValidade()
+                            + " deste medicamento. Registre as quantidades nele em vez de corrigir este lote para a mesma remessa.");
+        }
         lote.setNumeroLote(dto.getNumeroLote());
         lote.setValidade(dto.getValidade());
         lote = loteRepository.save(lote);
@@ -76,8 +113,9 @@ public class LoteService {
                         "Não foi possível encontrar um profissional com a matrícula " + matricula + " em nossos registros."));
     }
 
+    /** Só lotes ativos — os incorporados a outro lote (ADR-0060) continuam acessíveis pelo id. */
     public List<LoteResponseDto> listar() {
-        return loteRepository.findAll()
+        return loteRepository.findByLoteIncorporadorIsNull()
                 .stream()
                 .map(LoteResponseDto::fromLote)
                 .collect(Collectors.toList());
@@ -99,8 +137,9 @@ public class LoteService {
                         "Não foi possível encontrar um medicamento com o id " + uuid + " em nossos registros."));
     }
 
-    private UnidadeDeSaude buscarUnidadePorId(UUID uuid) {
-        return unidadeDeSaudeRepository.findById(uuid)
+    /** Trava a unidade antes de procurar a remessa nela (ADR-0060). */
+    private UnidadeDeSaude travarUnidade(UUID uuid) {
+        return unidadeDeSaudeRepository.findByIdParaMovimentarEstoque(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar uma unidade de saúde com o id " + uuid + " em nossos registros."));
     }

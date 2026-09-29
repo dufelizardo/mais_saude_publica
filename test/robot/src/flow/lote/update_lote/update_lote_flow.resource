@@ -58,6 +58,31 @@ PATCH Update Lote - Status Code 404
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+PATCH Update Lote - Status Code 422 - Remessa Ja Existente
+    [Documentation]    Seeds two Lotes of the same medicamento in the same unit and tries to correct the second
+    ...    one into the first one's remessa, expecting HTTP 422 and no change (ADR-0060).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${loteId}    ${medicamentoId}    ${unidadeId}=    Seed Um Lote
+    ${loteA}=    Call GET Get Lote By Id    ${loteId}
+    ${payloadB}    ${numeroLoteB}=    Build Lote Payload    ${medicamentoId}    ${unidadeId}
+    ${criado}=    POST Create Lote    ${payloadB}
+    Should Be Equal As Integers    ${criado.status_code}    201
+    ${loteBId}=    Buscar Lote Uuid Por NumeroLote    ${numeroLoteB}
+
+    ${correcao}=    Create Dictionary
+    ...    numeroLote=${loteA.json()['numeroLote']}
+    ...    validade=${loteA.json()['validade']}
+    ${response}=    Call PATCH Update Lote    ${loteBId}    ${correcao}
+    Should Be Equal As Integers    ${response.status_code}    422
+    Validate Object Schema    ${response.json()}    ${ERROR_RESPONSE_SCHEMA}
+
+    ${loteB}=    Call GET Get Lote By Id    ${loteBId}
+    Should Be Equal    ${loteB.json()['numeroLote']}    ${numeroLoteB}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Lote - Update - PATCH - By HTTP Status Code
     [Documentation]    Executes the appropriate Update Lote test scenario based on the provided HTTP
     ...    status code.
@@ -65,6 +90,7 @@ Lote - Update - PATCH - By HTTP Status Code
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Run Keyword If    '${meuHTTP}' == '200'    PATCH Update Lote - Status Code 200
     ...    ELSE IF    '${meuHTTP}' == '404'    PATCH Update Lote - Status Code 404
+    ...    ELSE IF    '${meuHTTP}' == '422'    PATCH Update Lote - Status Code 422 - Remessa Ja Existente
     ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Update Lote test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

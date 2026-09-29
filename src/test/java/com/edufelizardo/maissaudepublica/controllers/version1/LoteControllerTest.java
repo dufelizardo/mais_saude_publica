@@ -330,4 +330,64 @@ class LoteControllerTest {
         assertThat(extrato.get(0).getSaldoApos()).isEqualTo(120);
         assertThat(extrato.get(0).getRegistradoEm()).isNotNull();
     }
+
+    @Test
+    void deveSomarEntradaNoLoteExistenteDaMesmaRemessa() throws Exception {
+        LoteSeed seed = criarDependenciasDeLote("07");
+        UUID uuid = criarLoteEBuscarUuid(seed, "L007", 100);
+
+        // Mesma remessa (medicamento, número e validade) na mesma unidade: soma no lote existente (ADR-0060).
+        mockMvc.perform(post(LOTE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoLote(seed.medicamentoId(), seed.unidadeId(), "L007", 40)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Entrada registrada no lote já existente!"));
+
+        List<Lote> lotesDoMedicamento = loteRepository.findByMedicamentoUuid(seed.medicamentoId());
+        assertThat(lotesDoMedicamento).hasSize(1);
+        assertThat(lotesDoMedicamento.get(0).getQuantidade()).isEqualTo(140);
+        assertThat(movimentacaoFarmaciaRepository.findByLote_UuidOrderByRegistradoEmAsc(uuid))
+                .extracting(MovimentacaoFarmacia::getQuantidade)
+                .containsExactly(100, 40);
+    }
+
+    @Test
+    void deveCriarOutroLoteQuandoAValidadeDaRemessaMuda() throws Exception {
+        LoteSeed seed = criarDependenciasDeLote("08");
+        criarLoteEBuscarUuid(seed, "L008", 100);
+
+        mockMvc.perform(post(LOTE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "medicamentoId": "%s", "unidadeId": "%s", "numeroLote": "L008", "validade": "2028-01-01",
+                                  "quantidade": 10 }
+                                """.formatted(seed.medicamentoId(), seed.unidadeId())))
+                .andExpect(status().isCreated());
+
+        assertThat(loteRepository.findByMedicamentoUuid(seed.medicamentoId())).hasSize(2);
+    }
+
+    @Test
+    void deveRecusarCorrecaoQueTransformaOLoteEmOutraRemessaExistente() throws Exception {
+        LoteSeed seed = criarDependenciasDeLote("09");
+        criarLoteEBuscarUuid(seed, "L009-A", 100);
+        mockMvc.perform(post(LOTE_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoLote(seed.medicamentoId(), seed.unidadeId(), "L009-B", 30)))
+                .andExpect(status().isCreated());
+        UUID loteB = loteRepository.findByMedicamentoUuid(seed.medicamentoId()).stream()
+                .filter(l -> "L009-B".equals(l.getNumeroLote()))
+                .findFirst()
+                .orElseThrow()
+                .getUuid();
+
+        mockMvc.perform(patch(LOTE_URL + loteB)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "numeroLote": "L009-A", "validade": "2027-01-01" }
+                                """))
+                .andExpect(status().isUnprocessableEntity());
+
+        assertThat(loteRepository.findById(loteB).orElseThrow().getNumeroLote()).isEqualTo("L009-B");
+    }
 }

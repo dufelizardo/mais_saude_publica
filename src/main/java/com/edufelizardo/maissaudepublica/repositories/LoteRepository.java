@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,7 +37,18 @@ public interface LoteRepository extends JpaRepository<Lote, UUID> {
      */
     @Query("select d.uuid from Lote d, Lote o where o.uuid = :origemId and d.unidade.uuid = :unidadeDestinoId "
             + "and d.medicamento = o.medicamento and d.numeroLote = o.numeroLote and d.validade = o.validade "
-            + "order by d.uuid")
+            + "and d.loteIncorporador is null order by d.uuid")
     List<UUID> findIdsDaMesmaRemessaNaUnidade(@Param("origemId") UUID origemId,
                                                @Param("unidadeDestinoId") UUID unidadeDestinoId);
+
+    /** Id do lote ativo de uma remessa numa unidade — no máximo um (ADR-0060). */
+    @Query("select l.uuid from Lote l where l.medicamento.uuid = :medicamentoId and l.unidade.uuid = :unidadeId "
+            + "and l.numeroLote = :numeroLote and l.validade = :validade and l.loteIncorporador is null order by l.uuid")
+    List<UUID> findIdsDaRemessaNaUnidade(@Param("medicamentoId") UUID medicamentoId,
+                                         @Param("unidadeId") UUID unidadeId,
+                                         @Param("numeroLote") String numeroLote,
+                                         @Param("validade") LocalDate validade);
+
+    /** Lotes ativos — os incorporados a outro lote (ADR-0060) ficam de fora. */
+    List<Lote> findByLoteIncorporadorIsNull();
 }

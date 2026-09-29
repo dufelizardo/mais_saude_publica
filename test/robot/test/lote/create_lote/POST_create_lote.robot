@@ -50,3 +50,12 @@ CT-004 - Validate POST Create Lote - HTTP 404 NOT FOUND (Unidade Inexistente)
     LOTE - CREATE - POST - Unidade Inexistente
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-005 - Validate POST Create Lote - HTTP 200 OK (Mesma Remessa Na Mesma Unidade)
+    [Documentation]    Test case to validate that a second entry of the same remessa in the same unit adds to
+    ...    the existing Lote instead of creating another one.
+    [Tags]    POST    CreateLote    HTTP200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    LOTE - CREATE - POST    200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

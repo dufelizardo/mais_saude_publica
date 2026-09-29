@@ -65,8 +65,10 @@ public class LoteController {
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Cria um lote",
-            description = "Registra um lote de um medicamento em estoque em uma unidade de saúde.",
+    @Operation(summary = "Registra a entrada de um lote",
+            description = "Registra a entrada de uma remessa (medicamento, número do lote e validade) em uma unidade de saúde. "
+                    + "Cada remessa tem um único lote por unidade: se ele já existe, a quantidade é somada a ele e a resposta é 200; "
+                    + "se não, o lote é criado e a resposta é 201 (ver docs/adr/0060-uma-remessa-um-lote-por-unidade.md).",
             tags = "Lote")
     @ApiResponse(responseCode = "201", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
@@ -77,12 +79,15 @@ public class LoteController {
     })
     @ApiErrorResponsesMutacao
     public ResponseEntity<SuccessResponseDto> create(@Valid @RequestBody LoteRequestDto dto) {
-        LoteResponseDto responseDto = service.criar(dto);
+        LoteService.EntradaDeLote entrada = service.criar(dto);
+        LoteResponseDto responseDto = entrada.lote();
 
-        String successMessage = "Lote criado com sucesso!";
         String details = "Medicamento: " + responseDto.getMedicamentoNome() + ", Quantidade: " + responseDto.getQuantidade();
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
+        if (!entrada.loteNovo()) {
+            // Mesma remessa já tinha lote nesta unidade: a entrada somou nele (ADR-0060).
+            return ResponseEntity.ok(new SuccessResponseDto("Entrada registrada no lote já existente!", details));
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto("Lote criado com sucesso!", details));
     }
 
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)

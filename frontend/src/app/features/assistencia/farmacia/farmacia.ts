@@ -47,6 +47,8 @@ const TIPOS: Record<TipoMovimentacaoFarmacia, { classe: string; rotulo: string }
   AJUSTE_INVENTARIO: { classe: 'warn', rotulo: 'Ajuste de inventário' },
   TRANSFERENCIA_SAIDA: { classe: 'muted', rotulo: 'Transferência enviada' },
   TRANSFERENCIA_ENTRADA: { classe: 'muted', rotulo: 'Transferência recebida' },
+  INCORPORACAO_SAIDA: { classe: 'purple', rotulo: 'Incorporado a outro lote' },
+  INCORPORACAO_ENTRADA: { classe: 'purple', rotulo: 'Lote duplicado incorporado' },
 };
 
 /**
@@ -335,6 +337,9 @@ export class Farmacia {
       case 'TRANSFERENCIA_SAIDA':
       case 'TRANSFERENCIA_ENTRADA':
         return m.justificativa || 'Transferência entre unidades';
+      case 'INCORPORACAO_SAIDA':
+      case 'INCORPORACAO_ENTRADA':
+        return 'Mesma remessa cadastrada duas vezes na unidade';
       default:
         return 'Entrada do lote';
     }
