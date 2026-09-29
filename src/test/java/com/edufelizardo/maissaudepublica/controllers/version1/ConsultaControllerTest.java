@@ -23,7 +23,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -74,6 +73,7 @@ class ConsultaControllerTest {
         // LAZY fora de transação (mesmo raciocínio do AtendimentoControllerTest). Este é o único
         // teste que cria Consulta, então apagar tudo é seguro. Consulta sai primeiro: ela referencia
         // Atendimento, então apagar Atendimento antes seria bloqueado pela FK.
+        consultaRepository.deleteAll(consultaRepository.findAll().stream().filter(r -> r.getRetificacaoDe() != null).toList());
         consultaRepository.deleteAll();
         atendimentoRepository.deleteAll();
 
@@ -353,38 +353,91 @@ class ConsultaControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    void deveAtualizarDiagnostico() throws Exception {
-        AtendimentoSeed seed = criarAtendimentoEBuscarUuid("05");
-
+    private UUID criarOriginal(AtendimentoSeed seed, String valor) throws Exception {
         mockMvc.perform(post(CONSULTA_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoConsulta(seed.atendimentoId(), seed.profissionalMatricula(), "PRIMEIRA")))
+                        .content(corpoConsulta(seed.atendimentoId(), seed.profissionalMatricula(), valor)))
                 .andExpect(status().isCreated());
-
-        UUID uuid = consultaRepository.findAll().stream()
-                .filter(c -> c.getAtendimento().getUuid().equals(seed.atendimentoId()))
+        return consultaRepository.findAll().stream()
+                .filter(r -> r.getRetificacaoDe() == null && r.getAtendimento().getUuid().equals(seed.atendimentoId()))
                 .findFirst()
                 .orElseThrow()
                 .getUuid();
+    }
 
-        String bodyAtualizado = """
-                {
-                  "atendimentoId": "%s",
-                  "profissionalMatricula": "%s",
-                  "dataHora": "2026-01-01T08:30:00",
-                  "tipoConsulta": "PRIMEIRA",
-                  "diagnostico": "Enxaqueca",
-                  "retorno": "2026-02-15"
-                }
-                """.formatted(seed.atendimentoId(), seed.profissionalMatricula());
+    /** O mesmo corpo da criação, mais o motivo da retificação (ADR-0062). */
+    private static String comMotivo(String corpo, String motivo) {
+        return corpo.replaceFirst("\\{", "{ \"motivoRetificacao\": " + (motivo == null ? "null" : "\"" + motivo + "\"") + ",");
+    }
 
-        mockMvc.perform(patch(CONSULTA_URL + uuid)
+    @Test
+    void deveRetificarGravandoNovaVersaoSemAlterarAOriginal() throws Exception {
+        AtendimentoSeed seed = criarAtendimentoEBuscarUuid("31");
+        UUID original = criarOriginal(seed, "PRIMEIRA");
+
+        mockMvc.perform(post(CONSULTA_URL + original + "/retificacao")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bodyAtualizado))
-                .andExpect(status().isOk());
+                        .content(comMotivo(corpoConsulta(seed.atendimentoId(), seed.profissionalMatricula(), "RETORNO"), "Valor registrado errado")))
+                .andExpect(status().isCreated());
 
-        Consulta atualizada = consultaRepository.findById(uuid).orElseThrow();
-        assertThat(atualizada.getDiagnostico()).isEqualTo("Enxaqueca");
+        assertThat(consultaRepository.findById(original).orElseThrow().getTipoConsulta().name()).isEqualTo("PRIMEIRA");
+        UUID nova = consultaRepository.findAll().stream()
+                .filter(r -> !r.getUuid().equals(original) && r.getAtendimento().getUuid().equals(seed.atendimentoId()))
+                .findFirst()
+                .orElseThrow()
+                .getUuid();
+        assertThat(consultaRepository.findById(nova).orElseThrow().getTipoConsulta().name()).isEqualTo("RETORNO");
+
+        mockMvc.perform(get(CONSULTA_URL + original))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.retificado").value(true))
+                .andExpect(jsonPath("$.retificadoPorUuid").value(nova.toString()));
+        mockMvc.perform(get(CONSULTA_URL + nova))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.retificado").value(false))
+                .andExpect(jsonPath("$.retificacaoDeUuid").value(original.toString()))
+                .andExpect(jsonPath("$.motivoRetificacao").value("Valor registrado errado"))
+                .andExpect(jsonPath("$.registradoEm").isNotEmpty());
+    }
+
+    @Test
+    void deveRecusarRetificarVersaoQueJaFoiRetificada() throws Exception {
+        AtendimentoSeed seed = criarAtendimentoEBuscarUuid("32");
+        UUID original = criarOriginal(seed, "PRIMEIRA");
+        String retificacao = comMotivo(corpoConsulta(seed.atendimentoId(), seed.profissionalMatricula(), "RETORNO"), "Correção");
+
+        mockMvc.perform(post(CONSULTA_URL + original + "/retificacao").contentType(MediaType.APPLICATION_JSON).content(retificacao))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post(CONSULTA_URL + original + "/retificacao").contentType(MediaType.APPLICATION_JSON).content(retificacao))
+                .andExpect(status().isUnprocessableEntity());
+
+        assertThat(consultaRepository.findAll().stream().filter(r -> r.getAtendimento().getUuid().equals(seed.atendimentoId())).count())
+                .isEqualTo(2);
+    }
+
+    @Test
+    void deveExigirMotivoNaRetificacao() throws Exception {
+        AtendimentoSeed seed = criarAtendimentoEBuscarUuid("33");
+        UUID original = criarOriginal(seed, "PRIMEIRA");
+
+        mockMvc.perform(post(CONSULTA_URL + original + "/retificacao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(comMotivo(corpoConsulta(seed.atendimentoId(), seed.profissionalMatricula(), "RETORNO"), null)))
+                .andExpect(status().isBadRequest());
+
+        assertThat(consultaRepository.findAll().stream().filter(r -> r.getAtendimento().getUuid().equals(seed.atendimentoId())).count())
+                .isEqualTo(1);
+    }
+
+    @Test
+    void deveRecusarRetificacaoQueTrocaOAtendimento() throws Exception {
+        AtendimentoSeed seed = criarAtendimentoEBuscarUuid("34");
+        AtendimentoSeed outro = criarAtendimentoEBuscarUuid("35");
+        UUID original = criarOriginal(seed, "PRIMEIRA");
+
+        mockMvc.perform(post(CONSULTA_URL + original + "/retificacao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(comMotivo(corpoConsulta(outro.atendimentoId(), seed.profissionalMatricula(), "RETORNO"), "Registro no lugar errado")))
+                .andExpect(status().isBadRequest());
     }
 }

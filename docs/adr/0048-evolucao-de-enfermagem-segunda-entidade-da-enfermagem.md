@@ -4,6 +4,9 @@
 
 Aceita e implementada.
 
+> **Revista pela [ADR-0062](./0062-registros-clinicos-imutaveis-com-retificacao.md):** este registro clínico
+> não é mais editado por `PATCH`; correções são retificações (nova versão ligada à anterior, com motivo).
+
 ## Contexto
 
 Com `Triagem` (ADR-0047) implementada, o `DER.md` (seção "Prontuário", nota sobre candidatos sem

@@ -1,5 +1,12 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import com.edufelizardo.maissaudepublica.models.Procedimento;
+import com.edufelizardo.maissaudepublica.models.EvolucaoEnfermagem;
+import com.edufelizardo.maissaudepublica.models.Triagem;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.Consulta;
@@ -67,22 +74,39 @@ public class ProntuarioService {
         return response;
     }
 
+    /**
+     * Todas as versões de cada registro clínico vêm no prontuário (ADR-0062): as retificadas marcadas com
+     * {@code retificado} e o id da versão que as corrige. Como a retificação mantém o atendimento, basta
+     * olhar os registros do próprio atendimento para saber quem corrige quem.
+     */
     private ProntuarioAtendimentoDto montarAtendimento(Atendimento atendimento) {
         AtendimentoResponseDto atendimentoDto = AtendimentoResponseDto.fromAtendimento(atendimento);
 
-        List<TriagemResponseDto> triagens = triagemRepository.findByAtendimentoUuid(atendimento.getUuid())
-                .stream()
-                .map(TriagemResponseDto::fromTriagem)
+        List<Triagem> triagensDoAtendimento = triagemRepository.findByAtendimentoUuid(atendimento.getUuid());
+        Map<UUID, UUID> sucessorTriagem = sucessores(triagensDoAtendimento, Triagem::getUuid, Triagem::getRetificacaoDe);
+        List<TriagemResponseDto> triagens = triagensDoAtendimento.stream()
+                .map(t -> TriagemResponseDto.fromTriagem(t, sucessorTriagem.get(t.getUuid())))
                 .collect(Collectors.toList());
 
-        List<EvolucaoEnfermagemResponseDto> evolucoes = evolucaoEnfermagemRepository.findByAtendimentoUuid(atendimento.getUuid())
-                .stream()
-                .map(EvolucaoEnfermagemResponseDto::fromEvolucaoEnfermagem)
+        List<EvolucaoEnfermagem> evolucoesDoAtendimento = evolucaoEnfermagemRepository.findByAtendimentoUuid(atendimento.getUuid());
+        Map<UUID, UUID> sucessorEvolucao = sucessores(evolucoesDoAtendimento, EvolucaoEnfermagem::getUuid,
+                EvolucaoEnfermagem::getRetificacaoDe);
+        List<EvolucaoEnfermagemResponseDto> evolucoes = evolucoesDoAtendimento.stream()
+                .map(e -> EvolucaoEnfermagemResponseDto.fromEvolucaoEnfermagem(e, sucessorEvolucao.get(e.getUuid())))
                 .collect(Collectors.toList());
 
-        List<ProntuarioConsultaDto> consultas = consultaRepository.findByAtendimentoUuid(atendimento.getUuid())
-                .stream()
-                .map(this::montarConsulta)
+        List<Consulta> consultasDoAtendimento = consultaRepository.findByAtendimentoUuid(atendimento.getUuid());
+        Map<UUID, UUID> sucessorConsulta = sucessores(consultasDoAtendimento, Consulta::getUuid, Consulta::getRetificacaoDe);
+        // Procedimentos de uma consulta retificada aparecem na versão vigente dela.
+        Map<UUID, List<Procedimento>> procedimentosPorConsultaVigente = new HashMap<>();
+        for (Consulta consulta : consultasDoAtendimento) {
+            UUID vigente = vigente(consulta.getUuid(), sucessorConsulta);
+            procedimentosPorConsultaVigente.computeIfAbsent(vigente, k -> new ArrayList<>())
+                    .addAll(procedimentoRepository.findByConsultaUuid(consulta.getUuid()));
+        }
+        List<ProntuarioConsultaDto> consultas = consultasDoAtendimento.stream()
+                .map(c -> montarConsulta(c, sucessorConsulta.get(c.getUuid()),
+                        procedimentosPorConsultaVigente.getOrDefault(c.getUuid(), List.of())))
                 .collect(Collectors.toList());
 
         ProntuarioAtendimentoDto dto = new ProntuarioAtendimentoDto();
@@ -93,17 +117,36 @@ public class ProntuarioService {
         return dto;
     }
 
-    private ProntuarioConsultaDto montarConsulta(Consulta consulta) {
-        ConsultaResponseDto consultaDto = ConsultaResponseDto.fromConsulta(consulta);
-
-        List<ProcedimentoResponseDto> procedimentos = procedimentoRepository.findByConsultaUuid(consulta.getUuid())
-                .stream()
-                .map(ProcedimentoResponseDto::fromProcedimento)
+    private ProntuarioConsultaDto montarConsulta(Consulta consulta, UUID sucessor, List<Procedimento> procedimentosDaConsulta) {
+        Map<UUID, UUID> sucessorProcedimento = sucessores(procedimentosDaConsulta, Procedimento::getUuid,
+                Procedimento::getRetificacaoDe);
+        List<ProcedimentoResponseDto> procedimentos = procedimentosDaConsulta.stream()
+                .map(p -> ProcedimentoResponseDto.fromProcedimento(p, sucessorProcedimento.get(p.getUuid())))
                 .collect(Collectors.toList());
 
         ProntuarioConsultaDto dto = new ProntuarioConsultaDto();
-        dto.setConsulta(consultaDto);
+        dto.setConsulta(ConsultaResponseDto.fromConsulta(consulta, sucessor));
         dto.setProcedimentos(procedimentos);
         return dto;
+    }
+
+    /** registro corrigido → versão que o corrige, entre os registros informados. */
+    private static <T> Map<UUID, UUID> sucessores(List<T> registros, Function<T, UUID> id, Function<T, T> retificacaoDe) {
+        Map<UUID, UUID> mapa = new HashMap<>();
+        for (T registro : registros) {
+            T anterior = retificacaoDe.apply(registro);
+            if (anterior != null) {
+                mapa.put(id.apply(anterior), id.apply(registro));
+            }
+        }
+        return mapa;
+    }
+
+    private static UUID vigente(UUID id, Map<UUID, UUID> sucessores) {
+        UUID atual = id;
+        while (sucessores.containsKey(atual)) {
+            atual = sucessores.get(atual);
+        }
+        return atual;
     }
 }

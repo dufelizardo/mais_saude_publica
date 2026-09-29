@@ -1,5 +1,12 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoTriagemRequestDto;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
+import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.Map;
+import java.time.Instant;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.Profissional;
@@ -33,6 +40,7 @@ public class TriagemService {
     @Autowired
     private ProfissionalRepository profissionalRepository;
 
+    @Transactional
     public TriagemResponseDto criar(TriagemRequestDto dto) {
         Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
@@ -40,38 +48,58 @@ public class TriagemService {
         Triagem triagem = new Triagem(atendimento, profissional, dto.getDataHora(), dto.getPressaoArterial(),
                 dto.getTemperatura(), dto.getSaturacaoOxigenio(), dto.getFrequenciaCardiaca(), dto.getPeso(),
                 dto.getClassificacaoRisco(), dto.getObservacoes());
+        triagem.setRegistradoEm(Instant.now());
+        triagem.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         triagem = triagemRepository.save(triagem);
         return TriagemResponseDto.fromTriagem(triagem);
     }
 
-    public TriagemResponseDto atualizar(UUID uuid, TriagemRequestDto dto) {
-        Triagem triagem = buscarEntidadePorId(uuid);
-        Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
+    /**
+     * Retificação (ADR-0062): grava uma nova versão ligada à anterior, que continua no prontuário. Só a
+     * versão vigente pode ser retificada, e a triagem continua no mesmo atendimento.
+     */
+    @Transactional
+    public TriagemResponseDto retificar(UUID uuid, RetificacaoTriagemRequestDto dto) {
+        Triagem original = triagemRepository.findByIdParaRetificar(uuid)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Não foi possível encontrar uma triagem com o id " + uuid + " em nossos registros."));
+        UUID vigente = sucessores().get(uuid);
+        if (vigente != null) {
+            throw new ResourceUnprocessableEntityException("Esta triagem já foi retificada pela versão " + vigente
+                    + ": retifique a versão vigente.");
+        }
+        if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())) {
+            throw new ResourceBadRequestException("A retificação precisa manter o mesmo atendimento do registro original.");
+        }
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
 
-        triagem.setAtendimento(atendimento);
-        triagem.setProfissional(profissional);
-        triagem.setDataHora(dto.getDataHora());
-        triagem.setPressaoArterial(dto.getPressaoArterial());
-        triagem.setTemperatura(dto.getTemperatura());
-        triagem.setSaturacaoOxigenio(dto.getSaturacaoOxigenio());
-        triagem.setFrequenciaCardiaca(dto.getFrequenciaCardiaca());
-        triagem.setPeso(dto.getPeso());
-        triagem.setClassificacaoRisco(dto.getClassificacaoRisco());
-        triagem.setObservacoes(dto.getObservacoes());
+        Triagem triagem = new Triagem(original.getAtendimento(), profissional, dto.getDataHora(), dto.getPressaoArterial(),
+                dto.getTemperatura(), dto.getSaturacaoOxigenio(), dto.getFrequenciaCardiaca(), dto.getPeso(),
+                dto.getClassificacaoRisco(), dto.getObservacoes());
+        triagem.setRetificacaoDe(original);
+        triagem.setMotivoRetificacao(dto.getMotivoRetificacao().trim());
+        triagem.setRegistradoEm(Instant.now());
+        triagem.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         triagem = triagemRepository.save(triagem);
-        return TriagemResponseDto.fromTriagem(triagem);
+        return TriagemResponseDto.fromTriagem(triagem, null);
+    }
+
+    /** Versão que corrige cada registro retificado (registro → sucessor). */
+    private Map<UUID, UUID> sucessores() {
+        return triagemRepository.findParesDeRetificacao().stream()
+                .collect(Collectors.toMap(par -> (UUID) par[0], par -> (UUID) par[1]));
     }
 
     public List<TriagemResponseDto> listar() {
+        Map<UUID, UUID> sucessores = sucessores();
         return triagemRepository.findAll()
                 .stream()
-                .map(TriagemResponseDto::fromTriagem)
+                .map(r -> TriagemResponseDto.fromTriagem(r, sucessores.get(r.getUuid())))
                 .collect(Collectors.toList());
     }
 
     public TriagemResponseDto buscarPorId(UUID uuid) {
-        return TriagemResponseDto.fromTriagem(buscarEntidadePorId(uuid));
+        return TriagemResponseDto.fromTriagem(buscarEntidadePorId(uuid), sucessores().get(uuid));
     }
 
     private Triagem buscarEntidadePorId(UUID uuid) {

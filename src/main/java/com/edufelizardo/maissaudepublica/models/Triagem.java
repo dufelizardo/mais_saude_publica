@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.models;
 
+import java.time.Instant;
 import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoRisco;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -56,6 +57,25 @@ public class Triagem implements Serializable {
     private ClassificacaoRisco classificacaoRisco;
 
     private String observacoes;
+
+    /**
+     * Registro que esta versão corrige (ADR-0062). Nulo no registro original. Registros clínicos não
+     * são editados: uma correção é uma nova versão ligada à anterior, que continua no prontuário.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "retificacao_de_id", referencedColumnName = "uuid", updatable = false)
+    private Triagem retificacaoDe;
+
+    @Column(length = 1000, updatable = false)
+    private String motivoRetificacao;
+
+    /** Hora do servidor em que o registro foi gravado (ADR-0062); nula em registros anteriores. */
+    @Column(updatable = false)
+    private Instant registradoEm;
+
+    /** CPF do usuário autenticado quando o toggle de segurança está ligado (ADR-0055). */
+    @Column(updatable = false)
+    private String registradoPorCpf;
 
     public Triagem(Atendimento atendimento, Profissional profissional, LocalDateTime dataHora,
                     String pressaoArterial, Double temperatura, Double saturacaoOxigenio,

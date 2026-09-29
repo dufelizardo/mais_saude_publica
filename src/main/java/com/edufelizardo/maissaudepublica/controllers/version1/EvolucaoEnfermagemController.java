@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoEvolucaoEnfermagemRequestDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -84,24 +85,26 @@ public class EvolucaoEnfermagemController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
-    @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza uma evolução de enfermagem",
-            description = "Substitui os campos editáveis por inteiro — cobre corrigir a descrição da evolução.",
+    @PostMapping(value = "{uuid}/retificacao", produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Retifica uma evolução de enfermagem",
+            description = "Registro clínico não é editado (ADR-0062): a retificação grava uma nova versão com os campos "
+                    + "corrigidos e o motivo, ligada à anterior, que continua no prontuário. Só a versão vigente pode ser "
+                    + "retificada (422); o atendimento precisa ser o mesmo do registro original (400).",
             tags = "Evolução de Enfermagem")
-    @ApiResponse(responseCode = "200", description = "Success:", content = {
+    @ApiResponse(responseCode = "201", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
                     schema = @Schema(implementation = SuccessResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
                     summary = "SuccessResponse",
-                    value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE))
+                    value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> update(@PathVariable UUID uuid, @Valid @RequestBody EvolucaoEnfermagemRequestDto dto) {
-        EvolucaoEnfermagemResponseDto responseDto = service.atualizar(uuid, dto);
+    public ResponseEntity<SuccessResponseDto> retificar(@PathVariable UUID uuid,
+                                                        @Valid @RequestBody RetificacaoEvolucaoEnfermagemRequestDto dto) {
+        EvolucaoEnfermagemResponseDto responseDto = service.retificar(uuid, dto);
 
-        String successMessage = "Evolução de enfermagem atualizada com sucesso!";
-        String details = "Profissional: " + responseDto.getProfissionalNome();
-
-        return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
+        String details = "Nova versão: " + responseDto.getUuid() + ", Corrige: " + responseDto.getRetificacaoDeUuid();
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto("Evolução de enfermagem retificada com sucesso!", details));
     }
 }
