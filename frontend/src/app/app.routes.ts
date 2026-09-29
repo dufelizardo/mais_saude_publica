@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Routes, Params, Router } from '@angular/router';
 import { LandingPage } from './features/landing/landing-page';
 import { ProfissionaisLista } from './features/profissionais-lista/profissionais-lista';
 import { ProfissionalCadastro } from './features/profissional-cadastro/profissional-cadastro';
@@ -24,10 +25,6 @@ import { ResponsabilidadesAdministrativas } from './features/administrativo/resp
 import { NecessidadesDePessoal } from './features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal';
 import { Pacientes } from './features/assistencia/pacientes/pacientes';
 import { Atendimentos } from './features/assistencia/atendimentos/atendimentos';
-import { Agendamentos } from './features/assistencia/agendamentos/agendamentos';
-import { Consultas } from './features/assistencia/consultas/consultas';
-import { Procedimentos } from './features/assistencia/procedimentos/procedimentos';
-import { Prontuario } from './features/assistencia/prontuario/prontuario';
 import { Farmacia } from './features/assistencia/farmacia/farmacia';
 import { AppShell } from './shared/app-shell/app-shell';
 import { Login } from './features/auth/login/login';
@@ -65,11 +62,16 @@ export const routes: Routes = [
       { path: 'administrativo/necessidades-de-pessoal', component: NecessidadesDePessoal, data: { breadcrumb: 'Necessidades de pessoal', area: 'Administrativo' } },
       { path: 'assistencia/pacientes', component: Pacientes, data: { breadcrumb: 'Pacientes', area: 'Assistência' } },
       { path: 'assistencia/atendimentos', component: Atendimentos, data: { breadcrumb: 'Atendimentos', area: 'Assistência' } },
-      { path: 'assistencia/agendamentos', component: Agendamentos, data: { breadcrumb: 'Agendamentos', area: 'Assistência' } },
-      { path: 'assistencia/consultas', component: Consultas, data: { breadcrumb: 'Consultas', area: 'Assistência' } },
-      { path: 'assistencia/procedimentos', component: Procedimentos, data: { breadcrumb: 'Procedimentos', area: 'Assistência' } },
-      { path: 'assistencia/prontuario', component: Prontuario, data: { breadcrumb: 'Prontuário', area: 'Assistência' } },
+      // Agendamentos, Consultas, Procedimentos e Prontuário viraram abas/seções da tela Atendimentos (ADR-0063).
+      { path: 'assistencia/agendamentos', redirectTo: ({ queryParams }) => paraAtendimentos('ag', queryParams) },
+      { path: 'assistencia/consultas', redirectTo: ({ queryParams }) => paraAtendimentos('atend', queryParams) },
+      { path: 'assistencia/procedimentos', redirectTo: ({ queryParams }) => paraAtendimentos('atend', queryParams) },
+      { path: 'assistencia/prontuario', redirectTo: ({ queryParams }) => paraAtendimentos('pront', queryParams) },
       { path: 'assistencia/farmacia', component: Farmacia, data: { breadcrumb: 'Farmácia', area: 'Assistência' } },
     ],
   },
 ];
+
+function paraAtendimentos(aba: string, queryParams: Params) {
+  return inject(Router).createUrlTree(['/assistencia/atendimentos'], { queryParams: { ...queryParams, aba } });
+}

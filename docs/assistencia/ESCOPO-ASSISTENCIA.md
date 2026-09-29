@@ -50,7 +50,7 @@ Onda backend completa — ver [`MAPA-DE-DOMINIOS.md`](../MAPA-DE-DOMINIOS.md) pr
 | 4 | `Consulta`, CRUD em `/api/v1/consulta/`, testes JUnit + Robot (ver [ADR-0043](../adr/0043-consulta-registrada-durante-o-atendimento.md)) | [#212](https://github.com/dufelizardo/mais_saude_publica/pull/212) | ✅ |
 | 5 | `Procedimento`, CRUD em `/api/v1/procedimento/`, testes JUnit + Robot (ver [ADR-0044](../adr/0044-procedimento-realizado-durante-a-consulta.md)) | [#213](https://github.com/dufelizardo/mais_saude_publica/pull/213) | ✅ |
 | 6 | `Prontuário`, `GET /api/v1/prontuario/{pacienteId}` (agregação de leitura), testes JUnit + Robot (ver [ADR-0045](../adr/0045-prontuario-agregacao-de-leitura.md)) | [#214](https://github.com/dufelizardo/mais_saude_publica/pull/214) | ✅ |
-| 7 | Registros clínicos imutáveis: `PATCH` de consulta e procedimento substituído por retificação (`POST /{id}/retificacao`, nova versão com motivo), desfecho do procedimento em `POST /procedimento/{id}/status`, resumo clínico na busca de atendimentos, agendamento de origem marcado como realizado, troca de paciente bloqueada com registro clínico (ver [ADR-0062](../adr/0062-registros-clinicos-imutaveis-com-retificacao.md)) | *(em aberto)* | 🔵 |
+| 7 | Registros clínicos imutáveis: `PATCH` de consulta e procedimento substituído por retificação (`POST /{id}/retificacao`, nova versão com motivo), desfecho do procedimento em `POST /procedimento/{id}/status`, resumo clínico na busca de atendimentos, agendamento de origem marcado como realizado, troca de paciente bloqueada com registro clínico (ver [ADR-0062](../adr/0062-registros-clinicos-imutaveis-com-retificacao.md)) | [#251](https://github.com/dufelizardo/mais_saude_publica/pull/251) | ✅ |
 
 As fases 1 a 6 estão mergeadas em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
 solicitada.
@@ -64,12 +64,13 @@ pras decisões de frontend específicas deste módulo).
 | Fase | Escopo | PR(s) | Status |
 |---|---|---|---|
 | F1 | Tela **Pacientes** (`assistencia/pacientes`) + grupo de menu "Assistência" no `AppShell` + ADR-0046 | [#215](https://github.com/dufelizardo/mais_saude_publica/pull/215) | ✅ |
-| F2 | Tela **Atendimentos** (`assistencia/atendimentos`) | [#216](https://github.com/dufelizardo/mais_saude_publica/pull/216) | ✅ |
-| F3 | Tela **Agendamentos** (`assistencia/agendamentos`) | [#217](https://github.com/dufelizardo/mais_saude_publica/pull/217) | ✅ |
-| F4 | Tela **Consultas** (`assistencia/consultas`) | [#218](https://github.com/dufelizardo/mais_saude_publica/pull/218) | ✅ |
-| F5 | Tela **Procedimentos** (`assistencia/procedimentos`) | [#219](https://github.com/dufelizardo/mais_saude_publica/pull/219) | ✅ |
-| F6 | Tela **Prontuário** (`assistencia/prontuario`, somente leitura) | [#220](https://github.com/dufelizardo/mais_saude_publica/pull/220) | ✅ |
+| F2 | Tela **Atendimentos** (`assistencia/atendimentos`) | [#216](https://github.com/dufelizardo/mais_saude_publica/pull/216) | ✅ → absorvida pela F8 |
+| F3 | Tela **Agendamentos** (`assistencia/agendamentos`) | [#217](https://github.com/dufelizardo/mais_saude_publica/pull/217) | ✅ → absorvida pela F8 |
+| F4 | Tela **Consultas** (`assistencia/consultas`) | [#218](https://github.com/dufelizardo/mais_saude_publica/pull/218) | ✅ → absorvida pela F8 |
+| F5 | Tela **Procedimentos** (`assistencia/procedimentos`) | [#219](https://github.com/dufelizardo/mais_saude_publica/pull/219) | ✅ → absorvida pela F8 |
+| F6 | Tela **Prontuário** (`assistencia/prontuario`, somente leitura) | [#220](https://github.com/dufelizardo/mais_saude_publica/pull/220) | ✅ → absorvida pela F8 |
 | F7 | Redesenho de **Pacientes** — layout lista + painel de detalhe (KPIs, filtros, abas Resumo/Histórico/Programas/Vacinação/Anexos), estados "Em breve" para o que não tem backend ainda; expõe `Triagem`/`EvolucaoEnfermagem` no frontend pela primeira vez, ver [ADR-0052](../adr/0052-tela-de-pacientes-lista-mais-painel-de-detalhe.md) | *(em aberto)* | 🔵 |
+| F8 | Tela **Atendimentos** unificada (`assistencia/atendimentos`), portada do mockup `Atendimentos.html`: abas Atendimentos (resumo clínico por linha), Agendamentos e Prontuário (busca por CPF/Cartão SUS), atendimento em gaveta larga com fluxo e registros, retificação no lugar de edição, desfecho do procedimento e **Acolhimento** (busca → atendimento → triagem). Substitui F2–F6; rotas antigas redirecionam (ver [ADR-0063](../adr/0063-tela-atendimentos-do-agendamento-ao-prontuario.md)) | *(em aberto)* | 🔵 |
 
 As 6 telas mergeadas em `developer` fecham a ADR-0046. Melhoria compartilhada com os demais
 módulos (não específica da Assistência): acordeão nos grupos do menu lateral, documentado como

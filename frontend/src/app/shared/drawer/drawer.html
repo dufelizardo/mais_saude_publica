@@ -1,5 +1,5 @@
 <div class="drawer-bg" (click)="fechar.emit()"></div>
-<div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-titulo">
+<div class="drawer" [class.drawer--larga]="larga" role="dialog" aria-modal="true" aria-labelledby="drawer-titulo">
   <header class="dw-head">
     <h2 id="drawer-titulo">{{ titulo }}</h2>
     <button type="button" class="icon-btn" aria-label="Fechar" (click)="fechar.emit()">

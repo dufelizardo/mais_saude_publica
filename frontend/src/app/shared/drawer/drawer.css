@@ -22,6 +22,10 @@
   flex-direction: column;
 }
 
+.drawer--larga {
+  width: min(760px, 100%);
+}
+
 .dw-head {
   padding: var(--s-5);
   border-bottom: 1px solid var(--ink-100);

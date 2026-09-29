@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ProcedimentoRequestDto, ProcedimentoResponseDto } from '../models/procedimento';
+import { ProcedimentoRequestDto, ProcedimentoResponseDto, StatusProcedimentoRequestDto } from '../models/procedimento';
 import { SuccessResponseDto } from '../models/profissional';
 
 @Injectable({ providedIn: 'root' })
@@ -19,6 +19,11 @@ export class ProcedimentoService {
 
   criar(dto: ProcedimentoRequestDto): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/`, dto);
+  }
+
+  /** Desfecho de um procedimento agendado — uma vez, de AGENDADO para REALIZADO ou CANCELADO (ADR-0062). */
+  alterarStatus(uuid: string, dto: StatusProcedimentoRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.baseUrl}/${uuid}/status`, dto);
   }
 
   /** Registro clínico não é editado: a retificação grava uma nova versão ligada à anterior (ADR-0062). */
