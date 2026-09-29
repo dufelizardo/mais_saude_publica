@@ -40,18 +40,15 @@ os dois viraram tipos de lançamento do mesmo livro (ADR-0057).
 
 ### Próximos passos (ordem combinada)
 
-1. **Telas da Farmácia** (frontend, ver seção 5).
+1. ~~**Telas da Farmácia**~~ — feito, ver seção 5.
 2. **Transferência entre unidades** (backend) — saída no lote de origem e entrada no lote de destino,
    como dois lançamentos ligados no livro da fase 4, numa transação só.
 
 ## 5. Estado do frontend
 
-Não iniciado. Próxima fatia do domínio, nesta ordem de telas:
-
-- catálogo de medicamentos;
-- estoque por unidade, com o extrato de movimentação de cada lote;
-- dispensação;
-- registro de perda e ajuste de inventário.
+| Fase | Escopo | ADR | PR(s) | Status |
+|---|---|---|---|---|
+| F1 | Tela `assistencia/farmacia` portada do mockup `Farmacia.html`: resumo, abas Estoque por lote (filtro por unidade e vencimento), Dispensações, Medicamentos e Livro de estoque (extrato); gavetas de novo/editar medicamento, entrada e correção de lote, dispensação, perda/ajuste e detalhe da dispensação; `pacienteCpf` na resposta da dispensação | [0058](../adr/0058-tela-da-farmacia-abas-gaveta-lateral-e-livro-de-estoque.md) | *(em aberto)* | 🔵 |
 
 ## 6. Referências
 

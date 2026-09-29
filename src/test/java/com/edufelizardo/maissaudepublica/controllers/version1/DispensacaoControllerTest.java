@@ -394,6 +394,7 @@ class DispensacaoControllerTest {
         mockMvc.perform(get(DISPENSACAO_URL + uuid))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.quantidade").value(20))
+                .andExpect(jsonPath("$.pacienteCpf").value(PREFIXO_CPF_TESTE + "04"))
                 .andExpect(jsonPath("$.consultaUuid").value(org.hamcrest.Matchers.nullValue()));
     }
 

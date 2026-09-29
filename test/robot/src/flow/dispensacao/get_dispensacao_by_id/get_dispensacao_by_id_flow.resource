@@ -28,6 +28,8 @@ GET Get Dispensacao By Id - Status Code 200
     ${response}=    Call GET Get Dispensacao By Id    ${uuid}
     Should Be Equal As Integers    ${response.status_code}    200
     Validate Object Schema    ${response.json()}    ${DISPENSACAO_SCHEMA}
+    # CPF do paciente exibido na lista de dispensações da tela de Farmácia
+    Should Not Be Empty    ${response.json()}[pacienteCpf]
 
     RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════

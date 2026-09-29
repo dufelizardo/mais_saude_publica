@@ -1,0 +1,758 @@
+<header class="page-head">
+  <div>
+    <h1>Farmácia</h1>
+    <p>Estoque por lote, dispensação e livro de movimentações da rede municipal</p>
+  </div>
+  <div class="page-actions">
+    <button type="button" class="btn btn--ghost" (click)="abrirMedicamento()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      Novo medicamento
+    </button>
+    <button type="button" class="btn btn--ghost" (click)="abrirDispensacao()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg>
+      Dispensar
+    </button>
+    <button type="button" class="btn" (click)="abrirEntradaLote()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8V21H3V8"></path><rect x="1" y="3" width="22" height="5"></rect><line x1="12" y1="12" x2="12" y2="17"></line><line x1="9.5" y1="14.5" x2="14.5" y2="14.5"></line></svg>
+      Entrada de lote
+    </button>
+  </div>
+</header>
+
+<section class="stats" aria-label="Resumo da farmácia">
+  <div class="stat">
+    <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Medicamentos ativos</div>
+      <div class="stat__val mono">{{ resumo().ativos }}</div>
+      <div class="stat__sub">{{ resumo().inativos }} inativo(s) no catálogo</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><rect x="1" y="3" width="22" height="5"></rect></svg></span>
+    <div>
+      <div class="stat__lbl">Lotes com saldo</div>
+      <div class="stat__val mono">{{ resumo().lotesComSaldo }}</div>
+      <div class="stat__sub">{{ formatarNumero(resumo().unidadesEmEstoque) }} unidades em estoque</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Vencem em até 90 dias</div>
+      <div class="stat__val mono">{{ resumo().vencendo }}</div>
+      <div class="stat__sub">{{ resumo().vencidos }} lote(s) vencido(s) com saldo</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+    <div>
+      <div class="stat__lbl">Dispensações hoje</div>
+      <div class="stat__val mono">{{ resumo().dispHoje }}</div>
+      <div class="stat__sub">{{ formatarNumero(resumo().unidadesEntreguesHoje) }} unidades entregues</div>
+    </div>
+  </div>
+</section>
+
+<div class="page-tabs" role="tablist" aria-label="Seções da farmácia">
+  @for (a of abas; track a.id; let i = $index) {
+    <button
+      type="button"
+      role="tab"
+      [id]="'tab-' + a.id"
+      [attr.aria-controls]="'pn-' + a.id"
+      [attr.aria-selected]="aba() === a.id"
+      [tabIndex]="aba() === a.id ? 0 : -1"
+      (click)="selecionarAba(a.id)"
+      (keydown)="navegarAbas($event, i)"
+    >
+      {{ a.rotulo }}
+      @if (contagem(a.id) !== null) {
+        <span class="cnt">{{ contagem(a.id) }}</span>
+      }
+    </button>
+  }
+</div>
+
+<!-- ── Estoque por lote ─────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'estoque') {
+  <section class="card" id="pn-estoque" role="tabpanel" aria-labelledby="tab-estoque">
+    <div class="card__head">
+      <div>
+        <h2>Estoque por lote</h2>
+        <p class="sub">Saldo mantido pelo livro de movimentações</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar medicamento ou lote</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Medicamento, princípio ativo ou lote…" [value]="buscaEstoque()" (input)="buscaEstoque.set($any($event.target).value)" />
+        </label>
+        <select class="sel" aria-label="Filtrar por unidade" [value]="filtroUnidade()" (change)="filtroUnidade.set($any($event.target).value)">
+          <option value="">Todas as unidades</option>
+          @for (u of unidades(); track u.uuid) {
+            <option [value]="u.uuid">{{ u.nome }}</option>
+          }
+        </select>
+        <button type="button" class="chip" [attr.aria-pressed]="filtroVencimento()" (click)="filtroVencimento.set(!filtroVencimento())">Vence em até 90 dias</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Medicamento</th>
+            <th scope="col">Lote</th>
+            <th scope="col">Unidade</th>
+            <th scope="col">Validade</th>
+            <th scope="col" class="num">Saldo</th>
+            <th scope="col" class="num">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (i of lotesFiltrados(); track i.lote.uuid) {
+            <tr>
+              <td>
+                <span class="cell-main">{{ i.lote.medicamentoNome }}</span>
+                <span class="cell-sub">{{ i.medicamento?.apresentacao || '—' }}@if (i.medicamento && !i.medicamento.ativo) { · <b>inativo</b> }</span>
+              </td>
+              <td class="mono">{{ i.lote.numeroLote }}</td>
+              <td>{{ i.lote.unidadeNome }}</td>
+              <td>
+                @if (i.dias < 0) {
+                  <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span>Vencido · {{ formatarData(i.lote.validade) }}</span>
+                } @else if (i.dias <= 90) {
+                  <span class="badge badge--warn"><span class="dot" aria-hidden="true"></span>{{ formatarData(i.lote.validade) }} · {{ i.dias }} dias</span>
+                } @else {
+                  <span class="badge badge--ok">{{ formatarData(i.lote.validade) }}</span>
+                }
+              </td>
+              <td class="num"><span class="saldo" [class.zero]="!i.lote.quantidade">{{ formatarNumero(i.lote.quantidade) }}</span></td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="btn btn--ghost btn--sm" [disabled]="!i.lote.quantidade" (click)="abrirDispensacao(i.lote.uuid)">Dispensar</button>
+                  <button type="button" class="icon-btn" [attr.aria-label]="'Registrar perda ou ajuste — lote ' + i.lote.numeroLote" title="Perda ou ajuste" (click)="abrirMovimentacao(i.lote.uuid)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V10"></path><path d="M18 20V4"></path><path d="M6 20v-4"></path></svg>
+                  </button>
+                  <button type="button" class="icon-btn" [attr.aria-label]="'Ver extrato do lote ' + i.lote.numeroLote" title="Extrato do lote" (click)="verExtrato(i.lote.uuid)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                  </button>
+                  <button type="button" class="icon-btn" [attr.aria-label]="'Corrigir número e validade do lote ' + i.lote.numeroLote" title="Corrigir lote" (click)="abrirCorrecaoLote(i)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty">
+                  <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8V21H3V8"></path><rect x="1" y="3" width="22" height="5"></rect></svg></span>
+                  <strong>{{ carregando() ? 'Carregando lotes…' : 'Nenhum lote encontrado' }}</strong>
+                  @if (!carregando()) {
+                    <span>Ajuste os filtros ou registre uma entrada de lote.</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Dispensações ─────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'disp') {
+  <section class="card" id="pn-disp" role="tabpanel" aria-labelledby="tab-disp">
+    <div class="card__head">
+      <div>
+        <h2>Dispensações</h2>
+        <p class="sub">Cada dispensação baixa o lote no livro de estoque</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar dispensação</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Paciente, medicamento ou lote…" [value]="buscaDisp()" (input)="buscaDisp.set($any($event.target).value)" />
+        </label>
+      </div>
+    </div>
+    <div class="lock-note">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      Registros imutáveis: dispensações não podem ser editadas nem excluídas. Correções de saldo entram como ajuste de inventário.
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Data e hora</th>
+            <th scope="col">Paciente</th>
+            <th scope="col">Medicamento · lote</th>
+            <th scope="col" class="num">Qtd.</th>
+            <th scope="col">Profissional</th>
+            <th scope="col">Consulta</th>
+            <th scope="col" class="num"><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of dispFiltradas(); track d.uuid) {
+            <tr>
+              <td class="mono">{{ formatarDataHora(d.dataHora) }}</td>
+              <td>
+                <span class="cell-main">{{ d.pacienteNome }}</span>
+                @if (d.pacienteCpf) {
+                  <span class="cell-sub">CPF {{ formatCpf(d.pacienteCpf) }}</span>
+                }
+              </td>
+              <td>
+                <span class="cell-main">{{ d.medicamentoNome }}</span>
+                <span class="cell-sub mono">{{ d.loteNumeroLote }} · {{ unidadeDaDispensacao(d) }}</span>
+              </td>
+              <td class="num"><span class="saldo">{{ formatarNumero(d.quantidade) }}</span></td>
+              <td>
+                <span class="cell-main">{{ d.profissionalNome }}</span>
+                <span class="cell-sub mono">{{ d.profissionalMatricula }}</span>
+              </td>
+              <td>
+                @if (d.consultaUuid) {
+                  <span class="badge badge--info">Vinculada</span>
+                } @else {
+                  <span class="badge badge--muted">Sem consulta</span>
+                }
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="icon-btn" [attr.aria-label]="'Ver dispensação de ' + d.pacienteNome" title="Ver detalhes" (click)="verDispensacao(d)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="empty">
+                  <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg></span>
+                  <strong>{{ carregando() ? 'Carregando dispensações…' : 'Nenhuma dispensação encontrada' }}</strong>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Medicamentos ─────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'med') {
+  <section class="card" id="pn-med" role="tabpanel" aria-labelledby="tab-med">
+    <div class="card__head">
+      <div>
+        <h2>Medicamentos</h2>
+        <p class="sub">Catálogo usado nas entradas de lote</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar medicamento</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Nome, princípio ativo ou código…" [value]="buscaMed()" (input)="buscaMed.set($any($event.target).value)" />
+        </label>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Nome</th>
+            <th scope="col">Princípio ativo</th>
+            <th scope="col">Apresentação</th>
+            <th scope="col">Código</th>
+            <th scope="col" class="num">Saldo total</th>
+            <th scope="col">Situação</th>
+            <th scope="col" class="num"><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of medsFiltrados(); track r.med.uuid) {
+            <tr>
+              <td><span class="cell-main">{{ r.med.nome }}</span></td>
+              <td>{{ r.med.principioAtivo || '—' }}</td>
+              <td>{{ r.med.apresentacao || '—' }}</td>
+              <td class="mono">{{ r.med.codigo || '—' }}</td>
+              <td class="num"><span class="saldo" [class.zero]="!r.saldo">{{ formatarNumero(r.saldo) }}</span></td>
+              <td>
+                @if (r.med.ativo) {
+                  <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span>Ativo</span>
+                } @else {
+                  <span class="badge badge--muted"><span class="dot" aria-hidden="true"></span>Inativo</span>
+                }
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Editar ' + r.med.nome" (click)="abrirMedicamento(r.med)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    Editar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="empty"><strong>{{ carregando() ? 'Carregando medicamentos…' : 'Nenhum medicamento encontrado' }}</strong></div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Livro de estoque ─────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'livro') {
+  <section class="card" id="pn-livro" role="tabpanel" aria-labelledby="tab-livro">
+    <div class="card__head">
+      <div>
+        <h2>Livro de estoque</h2>
+        <p class="sub">Extrato do lote, do registro mais antigo ao mais recente</p>
+      </div>
+      <div class="filters">
+        <select class="sel" aria-label="Selecionar lote" [value]="livroLoteId() ?? ''" (change)="trocarLoteDoLivro($any($event.target).value)">
+          @for (i of lotesInfo(); track i.lote.uuid) {
+            <option [value]="i.lote.uuid">{{ rotuloLote(i) }}</option>
+          }
+        </select>
+        <button type="button" class="btn btn--ghost btn--sm" [disabled]="!livroLoteId()" (click)="abrirMovimentacao(livroLoteId() ?? '')">Registrar perda ou ajuste</button>
+      </div>
+    </div>
+
+    @if (livroLote(); as i) {
+      <div class="lote-sum">
+        <div><div class="lbl">Medicamento</div><div class="val">{{ i.lote.medicamentoNome }}</div></div>
+        <div><div class="lbl">Lote · unidade</div><div class="val mono">{{ i.lote.numeroLote }}</div><div class="cell-sub">{{ i.lote.unidadeNome }}</div></div>
+        <div>
+          <div class="lbl">Validade</div>
+          <div class="val">
+            @if (i.dias < 0) {
+              <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span>Vencido · {{ formatarData(i.lote.validade) }}</span>
+            } @else if (i.dias <= 90) {
+              <span class="badge badge--warn"><span class="dot" aria-hidden="true"></span>{{ formatarData(i.lote.validade) }} · {{ i.dias }} dias</span>
+            } @else {
+              <span class="badge badge--ok">{{ formatarData(i.lote.validade) }}</span>
+            }
+          </div>
+        </div>
+        <div><div class="lbl">Saldo atual</div><div class="val saldo">{{ formatarNumero(i.lote.quantidade) }}</div></div>
+      </div>
+
+      @if (extrato().length) {
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Data e hora</th>
+                <th scope="col">Tipo</th>
+                <th scope="col">Detalhe</th>
+                <th scope="col">Responsável</th>
+                <th scope="col" class="num">Movimento</th>
+                <th scope="col" class="num">Saldo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of extrato(); track m.uuid) {
+                <tr>
+                  <td class="mono">{{ formatarInstante(m.registradoEm) }}</td>
+                  <td>
+                    <span class="badge" [class]="'badge badge--' + tipos[m.tipo].classe">{{ tipos[m.tipo].rotulo }}@if (m.tipo === 'PERDA') { · {{ rotuloMotivo(m.motivoPerda) }} }</span>
+                  </td>
+                  <td>{{ detalheMovimento(m) }}</td>
+                  <td>
+                    @if (m.profissionalMatricula) {
+                      <span class="cell-main">{{ m.profissionalNome }}</span>
+                      <span class="cell-sub mono">{{ m.profissionalMatricula }}</span>
+                    } @else if (m.registradoPorCpf) {
+                      <span class="cell-main">Usuário do sistema</span>
+                      <span class="cell-sub mono">CPF {{ formatCpf(m.registradoPorCpf) }}</span>
+                    } @else {
+                      <span class="cell-sub">não informado</span>
+                    }
+                  </td>
+                  <td class="num"><span [class]="classeDelta(m.quantidade)">{{ sinal(m.quantidade) }}</span></td>
+                  <td class="num"><span class="saldo">{{ formatarNumero(m.saldoApos) }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <div class="empty">
+          <span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg></span>
+          <strong>{{ extratoCarregando() ? 'Carregando extrato…' : 'Lote sem registros no livro' }}</strong>
+          @if (!extratoCarregando()) {
+            <span>Não há movimentações para este lote.</span>
+          }
+        </div>
+      }
+    } @else {
+      <div class="empty">
+        <strong>{{ carregando() ? 'Carregando lotes…' : 'Nenhum lote cadastrado' }}</strong>
+        @if (!carregando()) {
+          <span>Registre uma entrada de lote para começar o livro de estoque.</span>
+        }
+      </div>
+    }
+  </section>
+}
+
+<!-- ── Gavetas ──────────────────────────────────────────────────────────────────────────────── -->
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="tituloGaveta(g)" (fechar)="fecharGaveta()">
+    @switch (g.tipo) {
+      @case ('med') {
+        <form class="dw-form" [formGroup]="medForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) {
+              <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div>
+            }
+            <div class="dw-field">
+              <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nome" type="text" formControlName="nome" autocomplete="off" placeholder="Ex.: Dipirona 500mg" [attr.aria-invalid]="!!erro('nome')" aria-describedby="e-nome" />
+              @if (erro('nome')) { <p class="dw-err" id="e-nome">{{ erro('nome') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-principioAtivo">Princípio ativo<span class="opt">opcional</span></label>
+              <input id="f-principioAtivo" type="text" formControlName="principioAtivo" placeholder="Ex.: Dipirona sódica" />
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-apresentacao">Apresentação<span class="opt">opcional</span></label>
+                <input id="f-apresentacao" type="text" formControlName="apresentacao" placeholder="Comprimido" />
+              </div>
+              <div class="dw-field">
+                <label for="f-codigo">Código<span class="opt">opcional</span></label>
+                <input id="f-codigo" type="text" class="mono" formControlName="codigo" placeholder="BR0267614" />
+              </div>
+            </div>
+            <div class="dw-field">
+              <label class="switch" for="f-ativo">
+                <span>
+                  <b style="font-weight: 500;">Ativo</b> <span class="req" aria-hidden="true">*</span>
+                  <span class="cell-sub" id="h-ativo">Inativos não aparecem em novas entradas de lote</span>
+                </span>
+                <input type="checkbox" role="switch" id="f-ativo" formControlName="ativo" aria-describedby="h-ativo" />
+              </label>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.med ? 'Salvar alterações' : 'Cadastrar') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('lote') {
+        <form class="dw-form" [formGroup]="loteForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) {
+              <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div>
+            }
+            <div class="box box--info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              <div>A entrada é registrada automaticamente no <strong>livro de estoque</strong>.</div>
+            </div>
+            <div class="dw-field">
+              <label for="f-medicamentoId">Medicamento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-medicamentoId" formControlName="medicamentoId" [attr.aria-invalid]="!!erro('medicamentoId')" aria-describedby="e-medicamentoId">
+                <option value="">Selecione…</option>
+                @for (m of medicamentosAtivos(); track m.uuid) {
+                  <option [value]="m.uuid">{{ m.nome }}{{ m.apresentacao ? ' · ' + m.apresentacao : '' }}</option>
+                }
+              </select>
+              @if (erro('medicamentoId')) { <p class="dw-err" id="e-medicamentoId">{{ erro('medicamentoId') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-unidadeId">Unidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-unidadeId" formControlName="unidadeId" [attr.aria-invalid]="!!erro('unidadeId')" aria-describedby="e-unidadeId">
+                <option value="">Selecione…</option>
+                @for (u of unidades(); track u.uuid) {
+                  <option [value]="u.uuid">{{ u.nome }}</option>
+                }
+              </select>
+              @if (erro('unidadeId')) { <p class="dw-err" id="e-unidadeId">{{ erro('unidadeId') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-numeroLote">Número do lote <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-numeroLote" type="text" formControlName="numeroLote" placeholder="L2026-01" autocomplete="off" [attr.aria-invalid]="!!erro('numeroLote')" aria-describedby="e-numeroLote" />
+                @if (erro('numeroLote')) { <p class="dw-err" id="e-numeroLote">{{ erro('numeroLote') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-validade">Validade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-validade" type="date" formControlName="validade" [attr.aria-invalid]="!!erro('validade')" aria-describedby="e-validade" />
+                @if (erro('validade')) { <p class="dw-err" id="e-validade">{{ erro('validade') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-quantidade">Quantidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-quantidade" type="number" min="0" step="1" inputmode="numeric" formControlName="quantidade" [attr.aria-invalid]="!!erro('quantidade')" aria-describedby="h-quantidade e-quantidade" />
+                <p class="dw-hint" id="h-quantidade">Pode ser zero.</p>
+                @if (erro('quantidade')) { <p class="dw-err" id="e-quantidade">{{ erro('quantidade') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-profissionalMatricula">Matrícula do responsável<span class="opt">opcional</span></label>
+                <input id="f-profissionalMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" aria-describedby="h-profissionalMatricula" />
+                <p class="dw-hint" id="h-profissionalMatricula">Registrada como responsável pela entrada.</p>
+              </div>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar entrada' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('lote-edit') {
+        <form class="dw-form" [formGroup]="loteEditForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) {
+              <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div>
+            }
+            <dl class="ro">
+              <div><dt>Medicamento</dt><dd>{{ g.lote.lote.medicamentoNome }}</dd></div>
+              <div><dt>Unidade</dt><dd>{{ g.lote.lote.unidadeNome }}</dd></div>
+              <div><dt>Saldo no livro</dt><dd class="mono">{{ formatarNumero(g.lote.lote.quantidade) }}</dd></div>
+              <div><dt>Validade atual</dt><dd>{{ formatarData(g.lote.lote.validade) }}</dd></div>
+            </dl>
+            <div class="box box--info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <div>Aqui se corrige apenas o <strong>número do lote</strong> e a <strong>validade</strong>. Para mudar o saldo, registre uma perda ou um ajuste de inventário.</div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-numeroLote">Número do lote <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-numeroLote" type="text" formControlName="numeroLote" autocomplete="off" [attr.aria-invalid]="!!erro('numeroLote')" aria-describedby="e-numeroLote" />
+                @if (erro('numeroLote')) { <p class="dw-err" id="e-numeroLote">{{ erro('numeroLote') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-validade">Validade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-validade" type="date" formControlName="validade" [attr.aria-invalid]="!!erro('validade')" aria-describedby="e-validade" />
+                @if (erro('validade')) { <p class="dw-err" id="e-validade">{{ erro('validade') }}</p> }
+              </div>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Salvar correção' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('disp') {
+        <form class="dw-form" [formGroup]="dispForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) {
+              <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div>
+            }
+            <div class="box box--warn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <div>Dispensações <strong>não podem ser editadas nem excluídas</strong>. Confira lote, paciente e quantidade antes de registrar.</div>
+            </div>
+            <div class="dw-field">
+              <label for="f-loteId">Lote <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-loteId" formControlName="loteId" [attr.aria-invalid]="!!erro('loteId')" aria-describedby="h-loteId e-loteId">
+                <option value="">Selecione…</option>
+                @for (i of lotesComSaldo(); track i.lote.uuid) {
+                  <option [value]="i.lote.uuid">{{ rotuloLote(i) }}</option>
+                }
+              </select>
+              <p class="dw-hint" id="h-loteId">Somente lotes com saldo.</p>
+              @if (erro('loteId')) { <p class="dw-err" id="e-loteId">{{ erro('loteId') }}</p> }
+            </div>
+            @if (loteSelecionado(dispForm.controls.loteId.value); as i) {
+              @if (i.dias < 0) {
+                <div class="box box--err">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  <div><strong>Lote vencido em {{ formatarData(i.lote.validade) }}.</strong> Considere registrar perda por vencimento.</div>
+                </div>
+              } @else if (i.dias <= 90) {
+                <div class="box box--warn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  <div>Lote vence em {{ i.dias }} dias ({{ formatarData(i.lote.validade) }}). Saldo disponível: <strong>{{ formatarNumero(i.lote.quantidade) }}</strong>.</div>
+                </div>
+              } @else {
+                <div class="box box--info">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8V21H3V8"></path><rect x="1" y="3" width="22" height="5"></rect></svg>
+                  <div>Saldo disponível: <strong>{{ formatarNumero(i.lote.quantidade) }}</strong> unidades.</div>
+                </div>
+              }
+            }
+            <div class="dw-field">
+              <label for="f-buscaPaciente">Paciente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-buscaPaciente" type="search" formControlName="buscaPaciente" autocomplete="off" placeholder="Buscar por nome ou CPF…" aria-describedby="h-pacienteId" />
+              <select id="f-pacienteId" formControlName="pacienteId" aria-label="Paciente" [attr.aria-invalid]="!!erro('pacienteId')" aria-describedby="e-pacienteId">
+                <option value="">Selecione…</option>
+                @for (p of pacientesFiltrados(); track p.uuid) {
+                  <option [value]="p.uuid">{{ p.nome }} · CPF {{ formatCpf(p.cpf) }}</option>
+                }
+              </select>
+              <p class="dw-hint" id="h-pacienteId">Digite parte do nome ou do CPF para filtrar a lista.</p>
+              @if (erro('pacienteId')) { <p class="dw-err" id="e-pacienteId">{{ erro('pacienteId') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-quantidade">Quantidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-quantidade" type="number" min="1" step="1" inputmode="numeric" formControlName="quantidade" [attr.aria-invalid]="!!erro('quantidade')" aria-describedby="h-quantidade e-quantidade" />
+                <p class="dw-hint" id="h-quantidade">Maior que zero.</p>
+                @if (erro('quantidade')) { <p class="dw-err" id="e-quantidade">{{ erro('quantidade') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-dataHora">Data e hora <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataHora" type="datetime-local" formControlName="dataHora" [attr.aria-invalid]="!!erro('dataHora')" aria-describedby="e-dataHora" />
+                @if (erro('dataHora')) { <p class="dw-err" id="e-dataHora">{{ erro('dataHora') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-profissionalMatricula">Matrícula do profissional <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-profissionalMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />
+                @if (erro('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erro('profissionalMatricula') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-consultaId">ID da consulta<span class="opt">opcional</span></label>
+                <input id="f-consultaId" type="text" autocomplete="off" placeholder="uuid" formControlName="consultaId" aria-describedby="h-consultaId" />
+                <p class="dw-hint" id="h-consultaId">Vincula à consulta de origem.</p>
+              </div>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar dispensação' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('mov') {
+        <form class="dw-form" [formGroup]="movForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) {
+              <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div>
+            }
+            <fieldset class="dw-field">
+              <legend>Tipo de registro <span class="req" aria-hidden="true">*</span></legend>
+              <div class="seg2">
+                <label><input type="radio" formControlName="tipo" value="PERDA" />Perda</label>
+                <label><input type="radio" formControlName="tipo" value="AJUSTE_INVENTARIO" />Ajuste de inventário</label>
+              </div>
+            </fieldset>
+            <div class="dw-field">
+              <label for="f-loteId">Lote <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-loteId" formControlName="loteId" [attr.aria-invalid]="!!erro('loteId')" aria-describedby="e-loteId">
+                <option value="">Selecione…</option>
+                @for (i of lotesInfo(); track i.lote.uuid) {
+                  <option [value]="i.lote.uuid">{{ rotuloLote(i) }}</option>
+                }
+              </select>
+              @if (erro('loteId')) { <p class="dw-err" id="e-loteId">{{ erro('loteId') }}</p> }
+            </div>
+
+            @if (movForm.controls.tipo.value === 'PERDA') {
+              <div class="dw-field">
+                <label for="f-quantidade">Quantidade perdida <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-quantidade" type="number" min="1" step="1" inputmode="numeric" formControlName="quantidade" [attr.aria-invalid]="!!erro('quantidade')" aria-describedby="e-quantidade" />
+                @if (erro('quantidade')) { <p class="dw-err" id="e-quantidade">{{ erro('quantidade') }}</p> }
+              </div>
+              <fieldset class="dw-field">
+                <legend>Motivo da perda <span class="req" aria-hidden="true">*</span></legend>
+                <div class="radios" role="radiogroup" aria-describedby="e-motivoPerda">
+                  @for (m of motivos; track m.valor) {
+                    <label><input type="radio" formControlName="motivoPerda" [value]="m.valor" [id]="$first ? 'f-motivoPerda' : null" />{{ m.rotulo }}</label>
+                  }
+                </div>
+                @if (erro('motivoPerda')) { <p class="dw-err" id="e-motivoPerda">{{ erro('motivoPerda') }}</p> }
+              </fieldset>
+            } @else {
+              <div class="dw-field">
+                <label for="f-saldoContado">Saldo contado fisicamente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-saldoContado" type="number" min="0" step="1" inputmode="numeric" formControlName="saldoContado" [attr.aria-invalid]="!!erro('saldoContado')" aria-describedby="h-saldoContado e-saldoContado" />
+                <p class="dw-hint" id="h-saldoContado">O sistema calcula a diferença em relação ao livro.</p>
+                @if (erro('saldoContado')) { <p class="dw-err" id="e-saldoContado">{{ erro('saldoContado') }}</p> }
+              </div>
+              <div class="calc" aria-live="polite">
+                <div><div class="lbl">No livro</div><div class="v">{{ saldoNoLivro() === null ? '—' : formatarNumero(saldoNoLivro()!) }}</div></div>
+                <div><div class="lbl">Contado</div><div class="v">{{ movForm.controls.saldoContado.value === '' ? '—' : formatarNumero(+movForm.controls.saldoContado.value) }}</div></div>
+                <div>
+                  <div class="lbl">Diferença</div>
+                  @if (diferencaAjuste(); as dif) {
+                    <div class="v" [class]="'v ' + classeDelta(dif)">{{ sinal(dif) }}</div>
+                  } @else {
+                    <div class="v" [class.delta-zero]="diferencaAjuste() === 0">{{ diferencaAjuste() === 0 ? '0' : '—' }}</div>
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="dw-field">
+              <label for="f-justificativa">
+                Justificativa
+                @if (justificativaObrigatoria()) {
+                  <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span>
+                } @else {
+                  <span class="opt">opcional</span>
+                }
+              </label>
+              <textarea id="f-justificativa" formControlName="justificativa" [attr.aria-required]="justificativaObrigatoria()" [attr.aria-invalid]="!!erro('justificativa')" aria-describedby="h-justificativa e-justificativa"></textarea>
+              <p class="dw-hint" id="h-justificativa">Obrigatória no ajuste e na perda com motivo “Outro”.</p>
+              @if (erro('justificativa')) { <p class="dw-err" id="e-justificativa">{{ erro('justificativa') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-profissionalMatricula">Matrícula do profissional <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-profissionalMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />
+              @if (erro('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erro('profissionalMatricula') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar no livro' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('disp-view') {
+        <div class="dw-form">
+          <div class="dw-body">
+            <dl class="ro">
+              <div><dt>Paciente</dt><dd>{{ g.disp.pacienteNome }}</dd></div>
+              <div><dt>CPF</dt><dd class="mono">{{ g.disp.pacienteCpf ? formatCpf(g.disp.pacienteCpf) : '—' }}</dd></div>
+              <div><dt>Medicamento</dt><dd>{{ g.disp.medicamentoNome }}</dd></div>
+              <div><dt>Lote</dt><dd class="mono">{{ g.disp.loteNumeroLote }}</dd></div>
+              <div><dt>Quantidade</dt><dd class="mono">{{ formatarNumero(g.disp.quantidade) }}</dd></div>
+              <div><dt>Data e hora</dt><dd class="mono">{{ formatarDataHora(g.disp.dataHora) }}</dd></div>
+              <div><dt>Profissional</dt><dd>{{ g.disp.profissionalNome }} <span class="cell-sub mono">{{ g.disp.profissionalMatricula }}</span></dd></div>
+              <div><dt>Unidade</dt><dd>{{ unidadeDaDispensacao(g.disp) }}</dd></div>
+              <div style="grid-column: 1 / -1;"><dt>Consulta</dt><dd class="mono" style="word-break: break-all;">{{ g.disp.consultaUuid || 'Sem vínculo' }}</dd></div>
+            </dl>
+            <div class="box box--info">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <div>Registro imutável. Para corrigir o saldo do lote, registre um ajuste de inventário.</div>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button>
+          </footer>
+        </div>
+      }
+    }
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}

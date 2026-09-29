@@ -28,6 +28,7 @@ import { Agendamentos } from './features/assistencia/agendamentos/agendamentos';
 import { Consultas } from './features/assistencia/consultas/consultas';
 import { Procedimentos } from './features/assistencia/procedimentos/procedimentos';
 import { Prontuario } from './features/assistencia/prontuario/prontuario';
+import { Farmacia } from './features/assistencia/farmacia/farmacia';
 import { AppShell } from './shared/app-shell/app-shell';
 import { Login } from './features/auth/login/login';
 import { authGuard } from './core/guards/auth-guard';
@@ -68,6 +69,7 @@ export const routes: Routes = [
       { path: 'assistencia/consultas', component: Consultas, data: { breadcrumb: 'Consultas', area: 'Assistência' } },
       { path: 'assistencia/procedimentos', component: Procedimentos, data: { breadcrumb: 'Procedimentos', area: 'Assistência' } },
       { path: 'assistencia/prontuario', component: Prontuario, data: { breadcrumb: 'Prontuário', area: 'Assistência' } },
+      { path: 'assistencia/farmacia', component: Farmacia, data: { breadcrumb: 'Farmácia', area: 'Assistência' } },
     ],
   },
 ];
