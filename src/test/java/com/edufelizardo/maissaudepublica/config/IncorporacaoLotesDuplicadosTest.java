@@ -81,8 +81,9 @@ class IncorporacaoLotesDuplicadosTest {
     @AfterEach
     void limparDadosDeTeste() {
         movimentacaoFarmaciaRepository.deleteAll();
-        // O lote incorporado referencia o que ficou: desfaz a ligação antes de apagar.
-        jdbcTemplate.update("update tb_lote set lote_incorporador_id = null where lote_incorporador_id is not null");
+        // O lote incorporado referencia o que ficou: sai primeiro. (Desfazer a ligação o tornaria ativo de
+        // novo e violaria o índice único.)
+        jdbcTemplate.update("delete from tb_lote where lote_incorporador_id is not null");
         loteRepository.deleteAll();
 
         List<Medicamento> medicamentos = medicamentoRepository.findAll().stream()
