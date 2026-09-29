@@ -1,5 +1,7 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UsuarioAtualResponseDto;
+import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnauthorizedException;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Usuario;
@@ -101,5 +103,25 @@ public class AuthService {
             usuario.setTentativasFalhas(0);
         }
         usuarioRepository.save(usuario);
+    }
+
+    /**
+     * Quem está logado (ADR-0065), com o profissional ativo de mesmo CPF quando existir. Sem usuário
+     * autenticado — inclusive com o toggle de segurança desligado, em que toda requisição é anônima —
+     * responde 401.
+     */
+    public UsuarioAtualResponseDto usuarioAtual() {
+        String cpf = UsuarioAutenticado.cpf();
+        if (cpf == null) {
+            throw new ResourceUnauthorizedException("Nenhum usuário autenticado.");
+        }
+        Usuario usuario = usuarioRepository.findByCpf(cpf)
+                .filter(Usuario::isAtivo)
+                .orElseThrow(() -> new ResourceUnauthorizedException("Nenhum usuário autenticado."));
+        Profissional profissional = profissionalRepository.findByCpfAndAtivoTrue(cpf).orElse(null);
+        return new UsuarioAtualResponseDto(usuario.getCpf(), usuario.getNome(),
+                profissional != null ? profissional.getUuid() : null,
+                profissional != null ? profissional.getMatricula() : null,
+                profissional != null ? profissional.getNome() : null);
     }
 }

@@ -1,5 +1,7 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UsuarioAtualResponseDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.LoginRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.LoginResponseDto;
@@ -48,5 +50,19 @@ public class AuthController {
     })
     public ResponseEntity<SecurityStatusResponseDto> status() {
         return ResponseEntity.ok(new SecurityStatusResponseDto(authService.isSecurityEnabled()));
+    }
+
+    @GetMapping(value = "eu", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Informa quem está logado",
+            description = "Usuário do token e, quando existe, o profissional ativo com o mesmo CPF — as telas usam a "
+                    + "matrícula para preencher o profissional dos registros (ver ADR-0065). Sem token válido, ou com o "
+                    + "toggle de segurança desligado, responde 401.",
+            tags = "Auth")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioAtualResponseDto.class))
+    })
+    @ApiErrorResponsesBusca
+    public ResponseEntity<UsuarioAtualResponseDto> eu() {
+        return ResponseEntity.ok(authService.usuarioAtual());
     }
 }
