@@ -274,7 +274,7 @@
                     <div class="next-row__what">{{ tipoAgendamento(agendamento.tipo) }}@if (agendamento.status === 'CONFIRMADO') { · confirmado}</div>
                     <div class="next-row__where">{{ agendamento.profissionalNome }} · {{ agendamento.dataHora | date: 'HH:mm' }}</div>
                   </div>
-                  <a routerLink="/assistencia/agendamentos" class="next-row__action">Agenda →</a>
+                  <a routerLink="/assistencia/atendimentos" [queryParams]="{ aba: 'ag', pacienteId: p.uuid }" class="next-row__action">Agenda →</a>
                 </div>
               }
             </div>
@@ -327,7 +327,7 @@
           } @else {
             <p style="color: var(--ink-500); font-size: 0.8125rem;">Nenhum registro clínico ainda.</p>
           }
-          <a [routerLink]="['/assistencia/prontuario']" [queryParams]="{ pacienteId: p.uuid }" class="btn btn--ghost btn--block" style="margin-top: var(--s-3);">Ver prontuário completo</a>
+          <a [routerLink]="['/assistencia/atendimentos']" [queryParams]="{ aba: 'pront', pacienteId: p.uuid }" class="btn btn--ghost btn--block" style="margin-top: var(--s-3);">Ver prontuário completo</a>
         </div>
       }
 

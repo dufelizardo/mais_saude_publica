@@ -13,6 +13,8 @@ import { Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, Ou
 })
 export class Drawer implements OnDestroy {
   @Input({ required: true }) titulo!: string;
+  /** Gaveta larga (760px), para painéis de leitura com várias seções — ex.: o atendimento (ADR-0063). */
+  @Input() larga = false;
   @Output() fechar = new EventEmitter<void>();
 
   private readonly host = inject(ElementRef<HTMLElement>);

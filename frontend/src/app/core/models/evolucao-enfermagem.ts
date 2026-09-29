@@ -1,3 +1,10 @@
+export interface EvolucaoEnfermagemRequestDto {
+  atendimentoId: string;
+  profissionalMatricula: string;
+  dataHora: string;
+  descricao: string;
+}
+
 export interface EvolucaoEnfermagemResponseDto {
   uuid: string;
   atendimentoUuid: string;

@@ -1,5 +1,13 @@
 export type StatusProcedimento = 'AGENDADO' | 'REALIZADO' | 'CANCELADO';
 
+/** Desfecho de um procedimento agendado, uma única vez (ADR-0062). */
+export interface StatusProcedimentoRequestDto {
+  status: 'REALIZADO' | 'CANCELADO';
+  profissionalMatricula: string;
+  dataRealizacao?: string;
+  justificativa?: string;
+}
+
 export interface ProcedimentoRequestDto {
   consultaId: string;
   profissionalMatricula: string;

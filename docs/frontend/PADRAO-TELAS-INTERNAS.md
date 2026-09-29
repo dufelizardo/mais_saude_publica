@@ -130,6 +130,8 @@ sidebar e cabeçalho continuam fixos, só a tabela rola.
 </app-drawer>
 ```
 
+Para painéis de leitura com várias seções (ex.: o atendimento, ADR-0063), use `<app-drawer [larga]="true">` (760px). Gavetas de registro abertas de dentro dele voltam para ele ao salvar ou cancelar.
+
 Nomes que parecem iguais mas não são: `.page-tabs` (abas em pílula no nível da página) ≠ `.tabs`
 (abas sublinhadas dentro de um card de detalhe); `.dw-field` (campo de gaveta) ≠ `.field` (tela de
 Login) ≠ `.form-group` (formulário dentro do `<app-modal>`).

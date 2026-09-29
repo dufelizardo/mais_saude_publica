@@ -1,5 +1,18 @@
 export type ClassificacaoRisco = 'AZUL' | 'VERDE' | 'AMARELO' | 'LARANJA' | 'VERMELHO';
 
+export interface TriagemRequestDto {
+  atendimentoId: string;
+  profissionalMatricula: string;
+  dataHora: string;
+  pressaoArterial?: string;
+  temperatura?: number;
+  saturacaoOxigenio?: number;
+  frequenciaCardiaca?: number;
+  peso?: number;
+  classificacaoRisco: ClassificacaoRisco;
+  observacoes?: string;
+}
+
 export interface TriagemResponseDto {
   uuid: string;
   atendimentoUuid: string;

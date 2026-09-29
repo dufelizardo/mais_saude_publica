@@ -33,7 +33,7 @@ Atendimento.
 |---|---|---|---|---|
 | 1 | `Triagem`, CRUD em `/api/v1/triagem/`, testes JUnit + Robot, extensão do Prontuário | [0047](../adr/0047-triagem-primeira-entidade-da-enfermagem.md) | [#226](https://github.com/dufelizardo/mais_saude_publica/pull/226) | ✅ |
 | 2 | `EvolucaoEnfermagem`, CRUD em `/api/v1/evolucao-enfermagem/`, testes JUnit + Robot, extensão do Prontuário | [0048](../adr/0048-evolucao-de-enfermagem-segunda-entidade-da-enfermagem.md) | [#227](https://github.com/dufelizardo/mais_saude_publica/pull/227) | ✅ |
-| 3 | Triagem e evolução imutáveis: `PATCH` substituído por retificação (`POST /{id}/retificacao`, nova versão com motivo), com hora do servidor e CPF do usuário em cada registro | [0062](../adr/0062-registros-clinicos-imutaveis-com-retificacao.md) | *(em aberto)* | 🔵 |
+| 3 | Triagem e evolução imutáveis: `PATCH` substituído por retificação (`POST /{id}/retificacao`, nova versão com motivo), com hora do servidor e CPF do usuário em cada registro | [0062](../adr/0062-registros-clinicos-imutaveis-com-retificacao.md) | [#251](https://github.com/dufelizardo/mais_saude_publica/pull/251) | ✅ |
 
 Ambas as fases mergeadas (ou em PR) em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
 solicitada.
@@ -43,7 +43,7 @@ primeiro —, `Cuidado`, `Escala`) — sem ADR, sem implementação, só quando 
 
 ## 5. Estado do frontend
 
-Não iniciado — nenhuma tela para Triagem ainda.
+Triagem e evolução de enfermagem são registradas (e retificadas) dentro do atendimento, na tela Atendimentos — ver [ADR-0063](../adr/0063-tela-atendimentos-do-agendamento-ao-prontuario.md). O **Acolhimento** abre o atendimento e segue direto para a triagem.
 
 ## 6. Referências
 
