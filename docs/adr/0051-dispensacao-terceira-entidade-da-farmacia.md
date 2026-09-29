@@ -4,6 +4,10 @@
 
 Aceita e implementada.
 
+> **Complementada pela [ADR-0057](./0057-livro-de-movimentacao-do-estoque-da-farmacia.md):** o débito
+> do lote passa a ser um lançamento `DISPENSACAO` no livro de movimentação, com trava de linha no lote
+> contra dispensações simultâneas.
+
 ## Contexto
 
 `Medicamento` (ADR-0049) e `Lote` (ADR-0050) já estão implementados. Seguindo a disciplina

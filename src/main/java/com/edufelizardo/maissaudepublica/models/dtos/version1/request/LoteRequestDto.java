@@ -31,7 +31,11 @@ public class LoteRequestDto implements Serializable {
     @NotNull
     private LocalDate validade;
 
+    /** Vira o lançamento de ENTRADA do livro de movimentação (ADR-0057). */
     @NotNull
     @PositiveOrZero
     private Integer quantidade;
+
+    /** Responsável pelo recebimento, registrado na entrada. Opcional para não quebrar quem já cadastra lotes. */
+    private String profissionalMatricula;
 }

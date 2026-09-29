@@ -1,70 +1,52 @@
 *** Settings ***
-Resource    ../../../pom/lote/update_lote/update_lote_pom.resource
-Resource    ../create_lote/create_lote_flow.resource
-Resource    ../get_lote_by_id/get_lote_by_id_flow.resource
+Resource    ../../../pom/movimentacao_farmacia/get_extrato_lote/get_extrato_lote_pom.resource
+Resource    ../create_movimentacao_farmacia/create_movimentacao_farmacia_flow.resource
 Resource    ../../common/schema_validation_flow.resource
 Resource    ../../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
-    Desde a ADR-0057, o PATCH de Lote só corrige numeroLote e validade. Quantidade muda apenas pelo livro de
-    movimentação (/movimentacao-farmacia), e medicamento/unidade não mudam — o cenário 200 envia quantidade de
-    propósito, para provar que ela é ignorada.
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
-Call PATCH Update Lote
-    [Documentation]    Calls the PATCH Update Lote keyword from the POM.
-    [Arguments]    ${uuid}    ${payload}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${response}=    PATCH Update Lote    ${uuid}    ${payload}
-
-    RETURN    ${response}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-PATCH Update Lote - Status Code 200
-    [Documentation]    Seeds a fresh Lote (quantidade 100) and corrects its numeroLote and validade, sending a
-    ...    different quantidade that must be ignored.
+GET Get Extrato Do Lote - Status Code 200
+    [Documentation]    Seeds a Lote (entrada de 100), registers a PERDA of 5 and checks the ledger lists both, in
+    ...    order, with the resulting balances.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${loteId}    ${medicamentoId}    ${unidadeId}=    Seed Um Lote
-    ${payload}    ${numeroLote}=    Build Lote Payload    ${medicamentoId}    ${unidadeId}    validade=2028-06-30
-    ...    quantidade=${42}
+    ${matricula}=    Seed A Profissional Matricula
+    ${payload}=    Build Perda Payload    ${loteId}    ${matricula}
+    ${perda}=    POST Create Movimentacao Farmacia    ${payload}
+    Should Be Equal As Integers    ${perda.status_code}    201
 
-    ${response}=    Call PATCH Update Lote    ${loteId}    ${payload}
+    ${response}=    GET Get Extrato Do Lote    ${loteId}
     Should Be Equal As Integers    ${response.status_code}    200
+    Validate Array Schema    ${response.json()}    ${MOVIMENTACAO_FARMACIA_SCHEMA}
 
-    ${getResponse}=    Call GET Get Lote By Id    ${loteId}
-    Should Be Equal As Integers    ${getResponse.status_code}    200
-    Should Be Equal    ${getResponse.json()['numeroLote']}    ${numeroLote}
-    Should Be Equal    ${getResponse.json()['validade']}    2028-06-30
-    Should Be Equal As Integers    ${getResponse.json()['quantidade']}    100
+    ${tipos}=    Evaluate    [m['tipo'] for m in $response.json()]
+    ${saldos}=    Evaluate    [m['saldoApos'] for m in $response.json()]
+    Should Be Equal    ${tipos}    ${{['ENTRADA', 'PERDA']}}
+    Should Be Equal    ${saldos}    ${{[100, 95]}}
 
     RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-PATCH Update Lote - Status Code 404
-    [Documentation]    Attempts to update a Lote identified by a random, non-existent uuid, expecting
-    ...    HTTP 404.
+GET Get Extrato Do Lote - Status Code 404
+    [Documentation]    Asks for the ledger of a random, non-existent Lote, expecting HTTP 404.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${medicamentoId}    ${nomeMedicamento}=    Seed Um Medicamento
-    ${unidadeId}=    Seed A Unidade De Saude Uuid
-    ${payload}    ${numeroLote}=    Build Lote Payload    ${medicamentoId}    ${unidadeId}
     ${uuidInexistente}=    Evaluate    str(uuid.uuid4())    modules=uuid
-
-    ${response}=    Call PATCH Update Lote    ${uuidInexistente}    ${payload}
+    ${response}=    GET Get Extrato Do Lote    ${uuidInexistente}
     Should Be Equal As Integers    ${response.status_code}    404
 
     RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-Lote - Update - PATCH - By HTTP Status Code
-    [Documentation]    Executes the appropriate Update Lote test scenario based on the provided HTTP
-    ...    status code.
+Movimentacao Farmacia - Extrato Do Lote - GET - By HTTP Status Code
+    [Documentation]    Executes the appropriate Extrato Do Lote test scenario based on the provided HTTP status code.
     [Arguments]    ${meuHTTP}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Run Keyword If    '${meuHTTP}' == '200'    PATCH Update Lote - Status Code 200
-    ...    ELSE IF    '${meuHTTP}' == '404'    PATCH Update Lote - Status Code 404
-    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Update Lote test scenario.
+    Run Keyword If    '${meuHTTP}' == '200'    GET Get Extrato Do Lote - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '404'    GET Get Extrato Do Lote - Status Code 404
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Extrato Do Lote test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

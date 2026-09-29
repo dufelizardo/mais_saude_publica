@@ -2,9 +2,12 @@ package com.edufelizardo.maissaudepublica.controllers.version1;
 
 import com.edufelizardo.maissaudepublica.models.Lote;
 import com.edufelizardo.maissaudepublica.models.Medicamento;
+import com.edufelizardo.maissaudepublica.models.MovimentacaoFarmacia;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoMovimentacaoFarmacia;
 import com.edufelizardo.maissaudepublica.repositories.LoteRepository;
 import com.edufelizardo.maissaudepublica.repositories.MedicamentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.MovimentacaoFarmaciaRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -57,11 +60,15 @@ class LoteControllerTest {
     @Autowired
     private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
 
+    @Autowired
+    private MovimentacaoFarmaciaRepository movimentacaoFarmaciaRepository;
+
     @AfterEach
     void limparDadosDeTeste() {
         // Lote não tem campo de teste próprio para filtrar sem navegar associações LAZY fora de
         // transação (mesmo raciocínio do TriagemControllerTest). Este é o único teste que cria
-        // Lote, então apagar tudo é seguro.
+        // Lote, então apagar tudo é seguro. O livro sai primeiro: referencia Lote.
+        movimentacaoFarmaciaRepository.deleteAll();
         loteRepository.deleteAll();
 
         List<Medicamento> medicamentos = medicamentoRepository.findAll().stream()
@@ -275,29 +282,52 @@ class LoteControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    void deveAtualizarQuantidade() throws Exception {
-        LoteSeed seed = criarDependenciasDeLote("05");
-
+    private UUID criarLoteEBuscarUuid(LoteSeed seed, String numeroLote, int quantidade) throws Exception {
         mockMvc.perform(post(LOTE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoLote(seed.medicamentoId(), seed.unidadeId(), "L005", 100)))
+                        .content(corpoLote(seed.medicamentoId(), seed.unidadeId(), numeroLote, quantidade)))
                 .andExpect(status().isCreated());
 
-        UUID uuid = loteRepository.findAll().stream()
+        return loteRepository.findAll().stream()
                 .filter(l -> l.getMedicamento().getUuid().equals(seed.medicamentoId()))
                 .findFirst()
                 .orElseThrow()
                 .getUuid();
+    }
 
-        String bodyAtualizado = corpoLote(seed.medicamentoId(), seed.unidadeId(), "L005", 80);
+    @Test
+    void deveCorrigirNumeroEValidadeSemAlterarQuantidade() throws Exception {
+        LoteSeed seed = criarDependenciasDeLote("05");
+        UUID uuid = criarLoteEBuscarUuid(seed, "L005", 100);
 
+        // Mesmo que o cliente mande quantidade, ela não muda pela edição (ADR-0057).
         mockMvc.perform(patch(LOTE_URL + uuid)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bodyAtualizado))
+                        .content("""
+                                {
+                                  "numeroLote": "L005-B",
+                                  "validade": "2028-06-30",
+                                  "quantidade": 80
+                                }
+                                """))
                 .andExpect(status().isOk());
 
         Lote atualizado = loteRepository.findById(uuid).orElseThrow();
-        assertThat(atualizado.getQuantidade()).isEqualTo(80);
+        assertThat(atualizado.getNumeroLote()).isEqualTo("L005-B");
+        assertThat(atualizado.getValidade()).isEqualTo(java.time.LocalDate.of(2028, 6, 30));
+        assertThat(atualizado.getQuantidade()).isEqualTo(100);
+    }
+
+    @Test
+    void deveRegistrarEntradaNoLivroAoCriarLote() throws Exception {
+        LoteSeed seed = criarDependenciasDeLote("06");
+        UUID uuid = criarLoteEBuscarUuid(seed, "L006", 120);
+
+        List<MovimentacaoFarmacia> extrato = movimentacaoFarmaciaRepository.findByLote_UuidOrderByRegistradoEmAsc(uuid);
+        assertThat(extrato).hasSize(1);
+        assertThat(extrato.get(0).getTipo()).isEqualTo(TipoMovimentacaoFarmacia.ENTRADA);
+        assertThat(extrato.get(0).getQuantidade()).isEqualTo(120);
+        assertThat(extrato.get(0).getSaldoApos()).isEqualTo(120);
+        assertThat(extrato.get(0).getRegistradoEm()).isNotNull();
     }
 }

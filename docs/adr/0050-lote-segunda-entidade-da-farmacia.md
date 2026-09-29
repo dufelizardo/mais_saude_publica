@@ -4,6 +4,10 @@
 
 Aceita e implementada.
 
+> **Revista em parte pela [ADR-0057](./0057-livro-de-movimentacao-do-estoque-da-farmacia.md):**
+> `Lote.quantidade` deixa de ser um contador editável e passa a mudar só pelo livro de movimentação;
+> a edição do lote corrige apenas número do lote e validade.
+
 ## Contexto
 
 `Medicamento` (ADR-0049) já está implementado — catálogo raiz do domínio Farmácia, sem FK. O

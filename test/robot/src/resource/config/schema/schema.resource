@@ -49,3 +49,5 @@ Resource    ../../schema/lote/lote_schema.resource
 Resource    ../../schema/dispensacao/dispensacao_schema.resource
 # AUTH
 Resource    ../../schema/auth/auth_schema.resource
+# MOVIMENTACAO FARMACIA
+Resource    ../../schema/movimentacao_farmacia/movimentacao_farmacia_schema.resource

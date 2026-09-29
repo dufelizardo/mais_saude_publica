@@ -1,7 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
-import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.Consulta;
 import com.edufelizardo.maissaudepublica.models.Dispensacao;
 import com.edufelizardo.maissaudepublica.models.Lote;
@@ -9,6 +8,7 @@ import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.DispensacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.DispensacaoResponseDto;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoMovimentacaoFarmacia;
 import com.edufelizardo.maissaudepublica.repositories.ConsultaRepository;
 import com.edufelizardo.maissaudepublica.repositories.DispensacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.LoteRepository;
@@ -24,8 +24,9 @@ import java.util.stream.Collectors;
 
 /**
  * CRUD (só criação e leitura, ver ADR-0051) da Dispensação (Farmácia — MAPA-DE-DOMINIOS.md #9).
- * Criar uma Dispensação decrementa {@code Lote.quantidade} como efeito colateral, validando estoque
- * suficiente (422, não 400 — é uma regra de negócio, não um erro de payload).
+ * Criar uma Dispensação lança uma saída no livro de movimentação ({@link MovimentacaoFarmaciaService},
+ * ADR-0057), com o lote travado, validando estoque suficiente (422, não 400 — é uma regra de negócio,
+ * não um erro de payload).
  */
 @Service
 public class DispensacaoService {
@@ -35,6 +36,9 @@ public class DispensacaoService {
 
     @Autowired
     private LoteRepository loteRepository;
+
+    @Autowired
+    private MovimentacaoFarmaciaService movimentacaoFarmaciaService;
 
     @Autowired
     private PacienteRepository pacienteRepository;
@@ -52,17 +56,12 @@ public class DispensacaoService {
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
         Consulta consulta = buscarConsultaSeInformada(dto.getConsultaId());
 
-        if (lote.getQuantidade() < dto.getQuantidade()) {
-            throw new ResourceUnprocessableEntityException(
-                    "Estoque insuficiente no lote " + lote.getNumeroLote() + ": disponível " + lote.getQuantidade()
-                            + ", solicitado " + dto.getQuantidade() + ".");
-        }
-        lote.setQuantidade(lote.getQuantidade() - dto.getQuantidade());
-        loteRepository.save(lote);
-
         Dispensacao dispensacao = new Dispensacao(lote, paciente, profissional, consulta, dto.getQuantidade(),
                 dto.getDataHora());
         dispensacao = dispensacaoRepository.save(dispensacao);
+        // Estoque insuficiente lança 422 aqui e desfaz a transação inteira, dispensação incluída.
+        movimentacaoFarmaciaService.lancar(lote, TipoMovimentacaoFarmacia.DISPENSACAO, -dto.getQuantidade(),
+                profissional, null, null, dispensacao);
         return DispensacaoResponseDto.fromDispensacao(dispensacao);
     }
 
@@ -84,7 +83,7 @@ public class DispensacaoService {
     }
 
     private Lote buscarLotePorId(UUID uuid) {
-        return loteRepository.findById(uuid)
+        return loteRepository.findByIdParaMovimentar(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar um lote com o id " + uuid + " em nossos registros."));
     }

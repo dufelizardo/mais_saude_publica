@@ -1,70 +1,40 @@
 *** Settings ***
-Resource    ../../../pom/lote/update_lote/update_lote_pom.resource
-Resource    ../create_lote/create_lote_flow.resource
-Resource    ../get_lote_by_id/get_lote_by_id_flow.resource
-Resource    ../../common/schema_validation_flow.resource
-Resource    ../../../resource/config/schema/schema.resource
+Resource    ../../../src/scenario/movimentacao_farmacia/create_movimentacao_farmacia/create_movimentacao_farmacia_scenario.resource
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Metadata    Test Suite - POST Create Movimentacao Farmacia
+Metadata    Test Suite Description        This test suite validates the POST stock movement endpoint (livro de movimentação da Farmácia) of the Mais Saúde Pública API.
+Metadata    Test Suite Owner              Eduardo Felizardo
+Metadata    Test Suite Version            1.0
+Metadata    Test Suite Tags               POST    CreateMovimentacaoFarmacia    MaisSaudePublicaAPI
+Metadata    Test Suite Created On         2026-09-28
+Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Project                       Layered Keyword Driven Framework (LKDF)
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
-    Desde a ADR-0057, o PATCH de Lote só corrige numeroLote e validade. Quantidade muda apenas pelo livro de
-    movimentação (/movimentacao-farmacia), e medicamento/unidade não mudam — o cenário 200 envia quantidade de
-    propósito, para provar que ela é ignorada.
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-*** Keywords ***
-Call PATCH Update Lote
-    [Documentation]    Calls the PATCH Update Lote keyword from the POM.
-    [Arguments]    ${uuid}    ${payload}
+*** Variables ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Test Cases ***
+CT-001 - Validate POST Create Movimentacao Farmacia - HTTP 201 CREATED (Perda)
+    [Documentation]    Test case to validate that a PERDA is registered and deducted from the Lote's balance.
+    [Tags]    POST    CreateMovimentacaoFarmacia    HTTP201
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${response}=    PATCH Update Lote    ${uuid}    ${payload}
-
-    RETURN    ${response}
+    MOVIMENTACAO FARMACIA - CREATE - POST    201
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-PATCH Update Lote - Status Code 200
-    [Documentation]    Seeds a fresh Lote (quantidade 100) and corrects its numeroLote and validade, sending a
-    ...    different quantidade that must be ignored.
+CT-002 - Validate POST Create Movimentacao Farmacia - HTTP 400 BAD REQUEST (Perda Sem Motivo)
+    [Documentation]    Test case to validate that a PERDA without motivoPerda is rejected and the balance is kept.
+    [Tags]    POST    CreateMovimentacaoFarmacia    HTTP400
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${loteId}    ${medicamentoId}    ${unidadeId}=    Seed Um Lote
-    ${payload}    ${numeroLote}=    Build Lote Payload    ${medicamentoId}    ${unidadeId}    validade=2028-06-30
-    ...    quantidade=${42}
-
-    ${response}=    Call PATCH Update Lote    ${loteId}    ${payload}
-    Should Be Equal As Integers    ${response.status_code}    200
-
-    ${getResponse}=    Call GET Get Lote By Id    ${loteId}
-    Should Be Equal As Integers    ${getResponse.status_code}    200
-    Should Be Equal    ${getResponse.json()['numeroLote']}    ${numeroLote}
-    Should Be Equal    ${getResponse.json()['validade']}    2028-06-30
-    Should Be Equal As Integers    ${getResponse.json()['quantidade']}    100
-
-    RETURN    ${response}
+    MOVIMENTACAO FARMACIA - CREATE - POST    400
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-PATCH Update Lote - Status Code 404
-    [Documentation]    Attempts to update a Lote identified by a random, non-existent uuid, expecting
-    ...    HTTP 404.
+CT-003 - Validate POST Create Movimentacao Farmacia - HTTP 422 UNPROCESSABLE ENTITY (Perda Maior Que O Saldo)
+    [Documentation]    Test case to validate that a PERDA larger than the balance is rejected and the balance is kept.
+    [Tags]    POST    CreateMovimentacaoFarmacia    HTTP422
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${medicamentoId}    ${nomeMedicamento}=    Seed Um Medicamento
-    ${unidadeId}=    Seed A Unidade De Saude Uuid
-    ${payload}    ${numeroLote}=    Build Lote Payload    ${medicamentoId}    ${unidadeId}
-    ${uuidInexistente}=    Evaluate    str(uuid.uuid4())    modules=uuid
-
-    ${response}=    Call PATCH Update Lote    ${uuidInexistente}    ${payload}
-    Should Be Equal As Integers    ${response.status_code}    404
-
-    RETURN    ${response}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-Lote - Update - PATCH - By HTTP Status Code
-    [Documentation]    Executes the appropriate Update Lote test scenario based on the provided HTTP
-    ...    status code.
-    [Arguments]    ${meuHTTP}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Run Keyword If    '${meuHTTP}' == '200'    PATCH Update Lote - Status Code 200
-    ...    ELSE IF    '${meuHTTP}' == '404'    PATCH Update Lote - Status Code 404
-    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Update Lote test scenario.
+    MOVIMENTACAO FARMACIA - CREATE - POST    422
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
