@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
+import { AuthService } from '../../../core/services/auth';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -118,6 +119,10 @@ const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
 })
 export class Atendimentos {
   private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+
+  /** Matrícula do profissional logado (ADR-0065): valor inicial do profissional nos registros novos. */
+  protected readonly matriculaPadrao = signal('');
   private readonly atendimentoService = inject(AtendimentoService);
   private readonly agendamentoService = inject(AgendamentoService);
   private readonly pacienteService = inject(PacienteService);
@@ -356,6 +361,7 @@ export class Atendimentos {
   protected readonly prontPaciente = computed(() => this.pacientes().find((p) => p.uuid === this.prontPacienteId()) ?? null);
 
   constructor() {
+    this.authService.usuarioAtual().subscribe((u) => this.matriculaPadrao.set(u?.profissionalMatricula ?? ''));
     this.carregarTudo();
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
     this.unidadeSaudeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
@@ -652,7 +658,7 @@ export class Atendimentos {
 
   protected abrirAcolhimento(): void {
     this.acolhimentoPaciente.set(null);
-    this.acolhimentoForm.reset({ busca: 'cpf', documento: '', unidadeId: '', setorId: '', profissionalMatricula: '', tipo: 'CONSULTA' });
+    this.acolhimentoForm.reset({ busca: 'cpf', documento: '', unidadeId: '', setorId: '', profissionalMatricula: this.matriculaPadrao(), tipo: 'CONSULTA' });
     this.abrir({ tipo: 'acolhimento' });
   }
 
@@ -677,7 +683,7 @@ export class Atendimentos {
       buscaPaciente: '',
       pacienteId: ag?.pacienteUuid ?? pacienteId,
       dataHora: ag?.dataHora?.slice(0, 16) ?? '',
-      profissionalMatricula: ag?.profissionalMatricula ?? '',
+      profissionalMatricula: ag?.profissionalMatricula ?? this.matriculaPadrao(),
       tipo: ag?.tipo ?? 'CONSULTA',
       status: ag?.status ?? 'AGENDADO',
       observacao: ag?.observacao ?? '',
@@ -693,7 +699,7 @@ export class Atendimentos {
       unidadeId: '',
       setorId: '',
       dataHora: agoraLocal(),
-      profissionalMatricula: ag?.profissionalMatricula ?? '',
+      profissionalMatricula: ag?.profissionalMatricula ?? this.matriculaPadrao(),
       tipo: 'CONSULTA',
       status: 'EM_ANDAMENTO',
     });
@@ -729,7 +735,7 @@ export class Atendimentos {
   protected abrirTriagem(atId: string, original: TriagemResponseDto | null = null): void {
     this.triForm.reset({
       dataHora: original?.dataHora?.slice(0, 16) ?? agoraLocal(),
-      profissionalMatricula: original?.profissionalMatricula ?? '',
+      profissionalMatricula: original?.profissionalMatricula ?? this.matriculaPadrao(),
       classificacaoRisco: original?.classificacaoRisco ?? '',
       pressaoArterial: original?.pressaoArterial ?? '',
       temperatura: original?.temperatura?.toString() ?? '',
@@ -745,7 +751,7 @@ export class Atendimentos {
   protected abrirConsulta(atId: string, original: ConsultaResponseDto | null = null): void {
     this.consForm.reset({
       dataHora: original?.dataHora?.slice(0, 16) ?? agoraLocal(),
-      profissionalMatricula: original?.profissionalMatricula ?? '',
+      profissionalMatricula: original?.profissionalMatricula ?? this.matriculaPadrao(),
       tipoConsulta: original?.tipoConsulta ?? '',
       queixaPrincipal: original?.queixaPrincipal ?? '',
       diagnostico: original?.diagnostico ?? '',
@@ -761,7 +767,7 @@ export class Atendimentos {
     this.procForm.reset({
       tipo: original?.tipo ?? '',
       dataRealizacao: original?.dataRealizacao?.slice(0, 16) ?? agoraLocal(),
-      profissionalMatricula: original?.profissionalMatricula ?? '',
+      profissionalMatricula: original?.profissionalMatricula ?? this.matriculaPadrao(),
       status: original?.status ?? 'REALIZADO',
       descricao: original?.descricao ?? '',
       motivoRetificacao: '',
@@ -770,14 +776,14 @@ export class Atendimentos {
   }
 
   protected abrirDesfecho(atId: string, proc: ProcedimentoResponseDto): void {
-    this.procStatusForm.reset({ status: 'REALIZADO', dataRealizacao: agoraLocal(), justificativa: '', profissionalMatricula: '' });
+    this.procStatusForm.reset({ status: 'REALIZADO', dataRealizacao: agoraLocal(), justificativa: '', profissionalMatricula: this.matriculaPadrao() });
     this.abrir({ tipo: 'proc-status', atId, proc });
   }
 
   protected abrirEvolucao(atId: string, original: EvolucaoEnfermagemResponseDto | null = null): void {
     this.evoForm.reset({
       dataHora: original?.dataHora?.slice(0, 16) ?? agoraLocal(),
-      profissionalMatricula: original?.profissionalMatricula ?? '',
+      profissionalMatricula: original?.profissionalMatricula ?? this.matriculaPadrao(),
       descricao: original?.descricao ?? '',
       motivoRetificacao: '',
     });
@@ -801,7 +807,7 @@ export class Atendimentos {
       motivoNaoAdministracao: original?.motivoNaoAdministracao ?? '',
       observacao: original?.observacao ?? '',
       dataHora: original?.dataHora?.slice(0, 16) ?? agoraLocal(),
-      profissionalMatricula: original?.profissionalMatricula ?? '',
+      profissionalMatricula: original?.profissionalMatricula ?? this.matriculaPadrao(),
       motivoRetificacao: '',
     });
     this.abrir({ tipo: 'adm', atId, original, voltar });

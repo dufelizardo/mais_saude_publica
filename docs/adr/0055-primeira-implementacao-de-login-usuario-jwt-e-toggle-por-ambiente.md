@@ -144,6 +144,12 @@ Papel/Permissao ainda, nenhum segredo commitado no git, tela fiel ao mockup forn
   namespace `mais-saude-dev` para o login realmente funcionar em `dev` — ver comando na Decisão,
   item 8. `qaa`/`homologacao`/`prod` recebem o mesmo tratamento quando forem promovidos.
 
+## Adendo — quem está logado (ADR-0065)
+
+`GET /api/v1/auth/eu` devolve o usuário do token e o profissional ativo de mesmo CPF (o vínculo fraco
+descrito acima); as telas usam a matrícula para preencher o profissional dos registros. Ver
+[ADR-0065](./0065-profissional-preenchido-a-partir-do-login.md).
+
 ## Referências
 
 - [ADR-0006](./0006-seguranca-jwt.md) — mecanismo JWT, substituído em parte pela ADR-0054/0055.

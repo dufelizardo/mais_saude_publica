@@ -9,6 +9,7 @@ import {
 } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
+import { UsuarioAtualResponseDto } from '../../core/models/auth';
 
 @Component({
   selector: 'app-shell',
@@ -20,6 +21,9 @@ export class AppShell {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+
+  /** Quem está logado (ADR-0065); nulo com o login desligado. */
+  protected readonly usuario = signal<UsuarioAtualResponseDto | null>(null);
 
   protected readonly breadcrumb = signal('');
   protected readonly area = signal('');
@@ -36,6 +40,7 @@ export class AppShell {
   );
 
   constructor() {
+    this.authService.usuarioAtual().subscribe((u) => this.usuario.set(u));
     this.atualizarBreadcrumb();
     this.router.events.pipe(filter((evento) => evento instanceof NavigationEnd)).subscribe(() => {
       this.atualizarBreadcrumb();

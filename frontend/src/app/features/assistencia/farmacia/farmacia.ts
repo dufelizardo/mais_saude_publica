@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
+import { AuthService } from '../../../core/services/auth';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -86,6 +87,10 @@ const STATUS_TRANSFERENCIA: Record<StatusTransferenciaFarmacia, { classe: string
 })
 export class Farmacia {
   private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+
+  /** Matrícula do profissional logado (ADR-0065): valor inicial do profissional nos registros novos. */
+  protected readonly matriculaPadrao = signal('');
   private readonly medicamentoService = inject(MedicamentoService);
   private readonly loteService = inject(LoteService);
   private readonly dispensacaoService = inject(DispensacaoService);
@@ -286,6 +291,7 @@ export class Farmacia {
   protected readonly medicamentosAtivos = computed(() => this.medicamentos().filter((m) => m.ativo));
 
   constructor() {
+    this.authService.usuarioAtual().subscribe((u) => this.matriculaPadrao.set(u?.profissionalMatricula ?? ''));
     this.carregarTudo();
     this.unidadeSaudeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
@@ -487,7 +493,7 @@ export class Farmacia {
   }
 
   protected abrirEntradaLote(): void {
-    this.loteForm.reset({ medicamentoId: '', unidadeId: '', numeroLote: '', validade: '', quantidade: '0', profissionalMatricula: '' });
+    this.loteForm.reset({ medicamentoId: '', unidadeId: '', numeroLote: '', validade: '', quantidade: '0', profissionalMatricula: this.matriculaPadrao() });
     this.abrir({ tipo: 'lote' });
   }
 
@@ -503,7 +509,7 @@ export class Farmacia {
       pacienteId: '',
       quantidade: '',
       dataHora: agoraLocal(),
-      profissionalMatricula: '',
+      profissionalMatricula: this.matriculaPadrao(),
       consultaId: '',
     });
     this.abrir({ tipo: 'disp' });
@@ -517,7 +523,7 @@ export class Farmacia {
       motivoPerda: '',
       saldoContado: '',
       justificativa: '',
-      profissionalMatricula: '',
+      profissionalMatricula: this.matriculaPadrao(),
     });
     this.abrir({ tipo: 'mov' });
   }
@@ -527,14 +533,14 @@ export class Farmacia {
   }
 
   protected abrirTransferencia(loteId = ''): void {
-    this.transfForm.reset({ loteId, unidadeDestinoId: '', quantidade: '', profissionalMatricula: '', observacao: '' });
+    this.transfForm.reset({ loteId, unidadeDestinoId: '', quantidade: '', profissionalMatricula: this.matriculaPadrao(), observacao: '' });
     this.abrir({ tipo: 'transf' });
   }
 
   protected abrirRecebimento(transf: TransferenciaFarmaciaResponseDto): void {
     this.receberForm.reset({
       quantidadeRecebida: String(transf.quantidade),
-      profissionalMatricula: '',
+      profissionalMatricula: this.matriculaPadrao(),
       motivoDivergencia: '',
       justificativaDivergencia: '',
     });
@@ -542,7 +548,7 @@ export class Farmacia {
   }
 
   protected abrirCancelamento(transf: TransferenciaFarmaciaResponseDto): void {
-    this.cancelarForm.reset({ profissionalMatricula: '', motivo: '' });
+    this.cancelarForm.reset({ profissionalMatricula: this.matriculaPadrao(), motivo: '' });
     this.abrir({ tipo: 'cancelar', transf });
   }
 

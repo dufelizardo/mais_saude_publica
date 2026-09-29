@@ -14,6 +14,15 @@ export interface LoginResponseDto {
   cpf: string;
 }
 
+/** Quem está logado e o profissional de mesmo CPF, quando existe (ADR-0065). */
+export interface UsuarioAtualResponseDto {
+  cpf: string;
+  nome: string;
+  profissionalUuid?: string | null;
+  profissionalMatricula?: string | null;
+  profissionalNome?: string | null;
+}
+
 export interface SecurityStatusResponseDto {
   securityEnabled: boolean;
 }

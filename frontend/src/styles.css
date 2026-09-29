@@ -1146,6 +1146,12 @@ tbody tr:hover { background: var(--ink-50); }
 .med-item__body { display: grid; grid-template-columns: 1fr 1.4fr; gap: var(--s-4); }
 @media (max-width: 900px) { .med-item__body { grid-template-columns: 1fr; } }
 
+/* Quem está logado, na barra superior (ADR-0065) */
+.top-user { display: grid; text-align: right; line-height: 1.15; padding: 0 var(--s-2); }
+.top-user__nome { font-size: 0.8125rem; font-weight: 600; color: var(--ink-900); white-space: nowrap; }
+.top-user__sub { font-size: 0.7rem; color: var(--ink-500); }
+@media (max-width: 700px) { .top-user { display: none; } }
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }

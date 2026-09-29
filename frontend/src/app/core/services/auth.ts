@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
-import { LoginRequestDto, LoginResponseDto, SecurityStatusResponseDto } from '../models/auth';
+import { LoginRequestDto, LoginResponseDto, SecurityStatusResponseDto, UsuarioAtualResponseDto } from '../models/auth';
 
 const TOKEN_KEY = 'msp_token';
 
@@ -17,14 +17,19 @@ export class AuthService {
   private readonly baseUrl = '/api/v1/auth';
 
   private securityEnabled$?: Observable<boolean>;
+  private usuarioAtual$?: Observable<UsuarioAtualResponseDto | null>;
 
   login(dto: LoginRequestDto): Observable<LoginResponseDto> {
     return this.http.post<LoginResponseDto>(`${this.baseUrl}/login`, dto).pipe(
-      tap((resposta) => this.armazenarToken(resposta.token, dto.manterConectado)),
+      tap((resposta) => {
+        this.armazenarToken(resposta.token, dto.manterConectado);
+        this.usuarioAtual$ = undefined;
+      }),
     );
   }
 
   logout(): void {
+    this.usuarioAtual$ = undefined;
     try {
       localStorage.removeItem(TOKEN_KEY);
       sessionStorage.removeItem(TOKEN_KEY);
@@ -61,6 +66,23 @@ export class AuthService {
       );
     }
     return this.securityEnabled$;
+  }
+
+  /**
+   * Quem está logado (ADR-0065), com a matrícula do profissional de mesmo CPF — as telas usam para
+   * preencher o profissional dos registros. Nulo sem login (inclusive com o toggle desligado, em que o
+   * backend responde 401). Cacheado até o próximo login/logout.
+   */
+  usuarioAtual(): Observable<UsuarioAtualResponseDto | null> {
+    if (!this.usuarioAtual$) {
+      this.usuarioAtual$ = this.estaAutenticado()
+        ? this.http.get<UsuarioAtualResponseDto>(`${this.baseUrl}/eu`).pipe(
+            catchError(() => of(null)),
+            shareReplay(1),
+          )
+        : of(null);
+    }
+    return this.usuarioAtual$;
   }
 
   private armazenarToken(token: string, manterConectado: boolean): void {

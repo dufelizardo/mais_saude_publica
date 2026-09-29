@@ -158,4 +158,27 @@ class AuthControllerTest {
 
         assertThat(statusCode).isNotEqualTo(401);
     }
+
+    @Test
+    void deveInformarQuemEstaLogadoComOProfissionalDeMesmoCpf() throws Exception {
+        String responseBody = mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoLogin("CPF", CPF_TESTE, SENHA_TESTE)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String token = JsonPath.read(responseBody, "$.token");
+
+        mockMvc.perform(get("/api/v1/auth/eu").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cpf").value(CPF_TESTE))
+                .andExpect(jsonPath("$.nome").value("Usuario Teste Auth"))
+                .andExpect(jsonPath("$.profissionalMatricula").value(MATRICULA_TESTE))
+                .andExpect(jsonPath("$.profissionalNome").value("Profissional Teste Auth"));
+    }
+
+    @Test
+    void deveRetornarUnauthorizedAoPerguntarQuemEstaLogadoSemToken() throws Exception {
+        mockMvc.perform(get("/api/v1/auth/eu"))
+                .andExpect(status().isUnauthorized());
+    }
 }
