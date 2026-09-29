@@ -24,6 +24,7 @@ public class DispensacaoResponseDto implements Serializable {
     private String medicamentoNome;
     private UUID pacienteUuid;
     private String pacienteNome;
+    private String pacienteCpf;
     private String profissionalMatricula;
     private String profissionalNome;
     private UUID consultaUuid;
@@ -38,6 +39,7 @@ public class DispensacaoResponseDto implements Serializable {
                 dispensacao.getLote().getMedicamento().getNome(),
                 dispensacao.getPaciente().getUuid(),
                 dispensacao.getPaciente().getNome(),
+                dispensacao.getPaciente().getCpf(),
                 dispensacao.getProfissional().getMatricula(),
                 dispensacao.getProfissional().getNome(),
                 dispensacao.getConsulta() != null ? dispensacao.getConsulta().getUuid() : null,

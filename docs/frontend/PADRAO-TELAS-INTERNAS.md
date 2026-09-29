@@ -103,7 +103,38 @@ sidebar e cabeçalho continuam fixos, só a tabela rola.
 `overflow-x: auto` (nunca `overflow: hidden`) — geralmente o próprio `.card` que a envolve, ou o
 `<div style="padding: var(--s-5);">` de uma aba do perfil quando não há `.card` por perto.
 
-## 7. Referências
+## 7. Modal ou gaveta lateral
+
+- **`<app-modal>`** (`shared/modal`) — padrão das telas de cadastro simples: poucos campos, abre no
+  centro.
+- **`<app-drawer>`** (`shared/drawer`) — painel à direita, para formulários com mais campos ou
+  avisos contextuais, quando vale manter a tabela visível ao lado (primeiro uso: Farmácia,
+  ADR-0058). O conteúdo projetado segue esta estrutura, para o `<form>` envolver corpo e rodapé:
+
+```html
+<app-drawer titulo="Registrar dispensação" (fechar)="fechar()">
+  <form class="dw-form" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+    <div class="dw-body">
+      <div class="dw-field">
+        <label for="f-campo">Campo <span class="req" aria-hidden="true">*</span></label>
+        <input id="f-campo" formControlName="campo" />
+        <p class="dw-hint">Dica</p>
+        <p class="dw-err">Erro</p>
+      </div>
+    </div>
+    <footer class="dw-foot">
+      <button type="button" class="btn btn--ghost" (click)="fechar()">Cancelar</button>
+      <button type="submit" class="btn">Salvar</button>
+    </footer>
+  </form>
+</app-drawer>
+```
+
+Nomes que parecem iguais mas não são: `.page-tabs` (abas em pílula no nível da página) ≠ `.tabs`
+(abas sublinhadas dentro de um card de detalhe); `.dw-field` (campo de gaveta) ≠ `.field` (tela de
+Login) ≠ `.form-group` (formulário dentro do `<app-modal>`).
+
+## 8. Referências
 
 - [ADR-0018](../adr/0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) — decisão original do
   `AppShell` e histórico das correções que motivaram este documento.
