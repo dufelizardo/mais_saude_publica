@@ -1,5 +1,8 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.repositories.AdministracaoMedicamentoRepository;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AdministracaoMedicamentoResponseDto;
+import com.edufelizardo.maissaudepublica.models.AdministracaoMedicamento;
 import java.util.function.Function;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,6 +60,9 @@ public class ProntuarioService {
     @Autowired
     private EvolucaoEnfermagemRepository evolucaoEnfermagemRepository;
 
+    @Autowired
+    private AdministracaoMedicamentoRepository administracaoMedicamentoRepository;
+
     public ProntuarioResponseDto buscarPorPacienteId(UUID pacienteId) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -109,8 +115,17 @@ public class ProntuarioService {
                         procedimentosPorConsultaVigente.getOrDefault(c.getUuid(), List.of())))
                 .collect(Collectors.toList());
 
+        List<AdministracaoMedicamento> administracoesDoAtendimento =
+                administracaoMedicamentoRepository.findByAtendimentoUuid(atendimento.getUuid());
+        Map<UUID, UUID> sucessorAdministracao = sucessores(administracoesDoAtendimento, AdministracaoMedicamento::getUuid,
+                AdministracaoMedicamento::getRetificacaoDe);
+        List<AdministracaoMedicamentoResponseDto> administracoes = administracoesDoAtendimento.stream()
+                .map(a -> AdministracaoMedicamentoResponseDto.fromAdministracao(a, sucessorAdministracao.get(a.getUuid())))
+                .collect(Collectors.toList());
+
         ProntuarioAtendimentoDto dto = new ProntuarioAtendimentoDto();
         dto.setAtendimento(atendimentoDto);
+        dto.setAdministracoes(administracoes);
         dto.setTriagens(triagens);
         dto.setEvolucoes(evolucoes);
         dto.setConsultas(consultas);

@@ -80,6 +80,15 @@ o registro clínico acontece dentro do atendimento, sem edição sem rastro.
 - Pacientes com muitos cadastros: os seletores ainda carregam a lista completa (mesma pendência de
   busca paginada registrada na ADR-0058).
 
+## Adendo — aba Medicação (ADR-0064)
+
+Quarta aba, entre Agendamentos e Prontuário: a fila da sala de medicação. Lista os atendimentos com
+prescrição (consulta vigente), em aberto por padrão e com filtro por unidade; cada um mostra o
+receituário e as checagens, com "Registrar checagem" e "Retificar". O contador da aba conta os
+atendimentos em aberto com prescrição. A mesma checagem aparece como seção Medicação dentro do
+atendimento (só com consulta registrada) e como grupo no prontuário; a coluna Registros ganhou "M".
+A gaveta de checagem aberta pela aba fecha ao salvar; aberta de dentro do atendimento, volta para ele.
+
 ## Referências
 
 - [ADR-0062](./0062-registros-clinicos-imutaveis-com-retificacao.md) — registros clínicos imutáveis, resumo do atendimento e fechamento do agendamento.

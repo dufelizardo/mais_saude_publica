@@ -48,6 +48,9 @@ os dois viraram tipos de lançamento do mesmo livro (ADR-0057).
 3. ~~**Transferência em duas etapas**~~ — feito, fase 7.
 4. ~~**Gaveta de transferência**~~ — feito, fase F2 do frontend.
 
+O livro também recebe as administrações da Enfermagem (`ADMINISTRACAO` e `ADMINISTRACAO_ESTORNO`), que
+baixam o lote da unidade do atendimento — ver [ADR-0064](../adr/0064-administracao-de-medicamento-enfermagem-e-farmacia.md).
+
 ## 5. Estado do frontend
 
 | Fase | Escopo | ADR | PR(s) | Status |

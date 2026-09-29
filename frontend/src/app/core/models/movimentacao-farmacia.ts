@@ -10,7 +10,9 @@ export type TipoMovimentacaoFarmacia =
   | 'TRANSFERENCIA_ENTRADA'
   | 'TRANSFERENCIA_ESTORNO'
   | 'INCORPORACAO_SAIDA'
-  | 'INCORPORACAO_ENTRADA';
+  | 'INCORPORACAO_ENTRADA'
+  | 'ADMINISTRACAO'
+  | 'ADMINISTRACAO_ESTORNO';
 
 export type MotivoPerda = 'VENCIMENTO' | 'AVARIA' | 'EXTRAVIO' | 'OUTRO';
 
@@ -41,6 +43,8 @@ export interface MovimentacaoFarmaciaResponseDto {
   dispensacaoId?: string | null;
   /** Transferência entre unidades que originou o lançamento (ADR-0059). */
   transferenciaId?: string | null;
+  /** Administração ao paciente que originou o lançamento (ADR-0064). */
+  administracaoId?: string | null;
   registradoEm: string;
   registradoPorCpf?: string | null;
 }

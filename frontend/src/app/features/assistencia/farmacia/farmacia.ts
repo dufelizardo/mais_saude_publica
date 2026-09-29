@@ -62,6 +62,8 @@ const TIPOS: Record<TipoMovimentacaoFarmacia, { classe: string; rotulo: string }
   TRANSFERENCIA_ESTORNO: { classe: 'muted', rotulo: 'Transferência cancelada' },
   INCORPORACAO_SAIDA: { classe: 'purple', rotulo: 'Incorporado a outro lote' },
   INCORPORACAO_ENTRADA: { classe: 'purple', rotulo: 'Lote duplicado incorporado' },
+  ADMINISTRACAO: { classe: 'info', rotulo: 'Administração ao paciente' },
+  ADMINISTRACAO_ESTORNO: { classe: 'muted', rotulo: 'Administração retificada' },
 };
 
 const STATUS_TRANSFERENCIA: Record<StatusTransferenciaFarmacia, { classe: string; rotulo: string }> = {
@@ -409,6 +411,9 @@ export class Farmacia {
       case 'TRANSFERENCIA_ENTRADA':
       case 'TRANSFERENCIA_ESTORNO':
         return m.justificativa || 'Transferência entre unidades';
+      case 'ADMINISTRACAO':
+      case 'ADMINISTRACAO_ESTORNO':
+        return m.justificativa || 'Administração ao paciente';
       case 'INCORPORACAO_SAIDA':
       case 'INCORPORACAO_ENTRADA':
         return 'Mesma remessa cadastrada duas vezes na unidade';

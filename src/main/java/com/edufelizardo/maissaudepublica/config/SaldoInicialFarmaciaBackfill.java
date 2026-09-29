@@ -41,7 +41,7 @@ public class SaldoInicialFarmaciaBackfill implements ApplicationRunner {
                 continue;
             }
             movimentacaoRepository.save(new MovimentacaoFarmacia(null, lote, TipoMovimentacaoFarmacia.SALDO_INICIAL,
-                    lote.getQuantidade(), lote.getQuantidade(), null, JUSTIFICATIVA, null, null, null, Instant.now(), null));
+                    lote.getQuantidade(), lote.getQuantidade(), null, JUSTIFICATIVA, null, null, null, null, Instant.now(), null));
             criados++;
         }
         if (criados > 0) {

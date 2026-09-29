@@ -74,6 +74,11 @@ public class MovimentacaoFarmacia implements Serializable {
     @JoinColumn(name = "transferencia_id", referencedColumnName = "uuid", updatable = false)
     private TransferenciaFarmacia transferencia;
 
+    /** Administração ao paciente que originou o lançamento (ADR-0064). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "administracao_id", referencedColumnName = "uuid", updatable = false)
+    private AdministracaoMedicamento administracao;
+
     /** Hora do servidor, nunca informada pelo cliente. */
     @NotNull
     @Column(updatable = false)
