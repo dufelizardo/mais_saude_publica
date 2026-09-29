@@ -2,7 +2,9 @@
 
 ## Status
 
-Aceita e implementada.
+Aceita e implementada. **Revista pela [ADR-0061](./0061-transferencia-em-duas-etapas-envio-e-recebimento.md):**
+a transferência passou a ter duas etapas (envio em trânsito e recebimento conferido por outro
+profissional); a decisão 3 ("transferência imediata") não vale mais.
 
 ## Contexto
 

@@ -47,6 +47,7 @@ const TIPOS: Record<TipoMovimentacaoFarmacia, { classe: string; rotulo: string }
   AJUSTE_INVENTARIO: { classe: 'warn', rotulo: 'Ajuste de inventário' },
   TRANSFERENCIA_SAIDA: { classe: 'muted', rotulo: 'Transferência enviada' },
   TRANSFERENCIA_ENTRADA: { classe: 'muted', rotulo: 'Transferência recebida' },
+  TRANSFERENCIA_ESTORNO: { classe: 'muted', rotulo: 'Transferência cancelada' },
   INCORPORACAO_SAIDA: { classe: 'purple', rotulo: 'Incorporado a outro lote' },
   INCORPORACAO_ENTRADA: { classe: 'purple', rotulo: 'Lote duplicado incorporado' },
 };
@@ -336,6 +337,7 @@ export class Farmacia {
         return 'Saldo do lote antes do livro existir';
       case 'TRANSFERENCIA_SAIDA':
       case 'TRANSFERENCIA_ENTRADA':
+      case 'TRANSFERENCIA_ESTORNO':
         return m.justificativa || 'Transferência entre unidades';
       case 'INCORPORACAO_SAIDA':
       case 'INCORPORACAO_ENTRADA':
