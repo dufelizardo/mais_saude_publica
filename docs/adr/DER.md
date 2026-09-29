@@ -745,7 +745,11 @@ medicamento tem lote/validade/controle de dispensação que material de almoxari
 > [ADR-0059](./0059-transferencia-de-estoque-entre-unidades.md). FKs obrigatórias a `Lote` (origem e
 > destino) e `Profissional`; gera dois lançamentos no livro (`TRANSFERENCIA_SAIDA` e
 > `TRANSFERENCIA_ENTRADA`), ligados a ela por `MovimentacaoFarmacia.transferencia`. O lote de destino é
-> o da mesma remessa (medicamento, número, validade) na unidade de destino.
+> o da mesma remessa (medicamento, número, validade) na unidade de destino. Desde a
+> [ADR-0061](./0061-transferencia-em-duas-etapas-envio-e-recebimento.md), em duas etapas: `status`
+> (`EM_TRANSITO`, `RECEBIDA`, `RECEBIDA_COM_DIVERGENCIA`, `CANCELADA`), `unidadeDestino` desde o envio,
+> `loteDestino` só no recebimento, e dados de recebimento (quantidade, divergência, profissional) e de
+> cancelamento (motivo, profissional) — com `TRANSFERENCIA_ESTORNO` no livro ao cancelar.
 >
 > **Uma remessa, um lote ativo por unidade** ([ADR-0060](./0060-uma-remessa-um-lote-por-unidade.md)):
 > `Lote.loteIncorporador` (auto-referência, opcional) e `incorporadoEm` marcam um lote duplicado

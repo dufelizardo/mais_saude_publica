@@ -5,6 +5,7 @@ import com.edufelizardo.maissaudepublica.models.Medicamento;
 import com.edufelizardo.maissaudepublica.models.MovimentacaoFarmacia;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusTransferenciaFarmacia;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoMovimentacaoFarmacia;
 import com.edufelizardo.maissaudepublica.repositories.LoteRepository;
 import com.edufelizardo.maissaudepublica.repositories.MedicamentoRepository;
@@ -32,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Testes da transferência de estoque entre unidades (ADR-0059). Mesmo padrão dos testes do livro
+ * Testes da transferência de estoque entre unidades em duas etapas (ADR-0059, ADR-0061). Mesmo padrão dos testes do livro
  * (ADR-0057): SEM {@code @Transactional} na classe, limpeza manual no {@code @AfterEach} — livro,
  * depois transferências, depois lotes.
  */
@@ -161,17 +162,22 @@ class TransferenciaFarmaciaControllerTest {
         return profissionalRepository.findByCpfAndAtivoTrue(cpf).orElseThrow().getMatricula();
     }
 
-    private record Cenario(UUID medicamentoId, UUID loteOrigemId, UUID unidadeDestinoId, String matricula) {
+    private record Cenario(UUID medicamentoId, UUID loteOrigemId, UUID unidadeDestinoId, String matriculaEnvio,
+                           String matriculaRecebimento) {
     }
 
-    /** Lote com saldo na UBS {@code sufixo}, mais uma segunda UBS ({@code sufixo + "D"}) como destino. */
+    /**
+     * Lote com saldo na UBS {@code sufixo}, uma segunda UBS ({@code sufixo + "D"}) como destino, e dois
+     * profissionais — quem envia e quem confere no destino.
+     */
     private Cenario criarCenario(String sufixo, int quantidade, String validade) throws Exception {
         UUID medicamentoId = criarMedicamentoEBuscarUuid(sufixo);
         UUID unidadeOrigemId = criarUnidadeSaudeUbs(sufixo);
         UUID unidadeDestinoId = criarUnidadeSaudeUbs(sufixo + "D");
-        String matricula = criarProfissionalEBuscarMatricula(sufixo);
-        UUID loteId = criarLote(medicamentoId, unidadeOrigemId, "T" + sufixo, validade, quantidade, matricula);
-        return new Cenario(medicamentoId, loteId, unidadeDestinoId, matricula);
+        String matriculaEnvio = criarProfissionalEBuscarMatricula(sufixo);
+        String matriculaRecebimento = criarProfissionalEBuscarMatricula(String.valueOf(Integer.parseInt(sufixo) + 50));
+        UUID loteId = criarLote(medicamentoId, unidadeOrigemId, "T" + sufixo, validade, quantidade, matriculaEnvio);
+        return new Cenario(medicamentoId, loteId, unidadeDestinoId, matriculaEnvio, matriculaRecebimento);
     }
 
     private UUID criarLote(UUID medicamentoId, UUID unidadeId, String numeroLote, String validade, int quantidade,
@@ -184,11 +190,31 @@ class TransferenciaFarmaciaControllerTest {
         return lotesDoMedicamentoNaUnidade(medicamentoId, unidadeId).get(0).getUuid();
     }
 
-    private String corpoTransferencia(UUID loteOrigemId, UUID unidadeDestinoId, Integer quantidade, String matricula) {
+    private String corpoEnvio(UUID loteOrigemId, UUID unidadeDestinoId, Integer quantidade, String matricula) {
         return """
                 { "loteOrigemId": "%s", "unidadeDestinoId": "%s", "quantidade": %s, "profissionalMatricula": "%s",
                   "observacao": "Remanejamento para cobrir falta" }
                 """.formatted(loteOrigemId, unidadeDestinoId, quantidade, matricula);
+    }
+
+    private String corpoRecebimento(Integer quantidadeRecebida, String matricula, String motivo, String justificativa) {
+        return """
+                { "quantidadeRecebida": %s, "profissionalMatricula": "%s", "motivoDivergencia": %s,
+                  "justificativaDivergencia": %s }
+                """.formatted(quantidadeRecebida, matricula, json(motivo), json(justificativa));
+    }
+
+    private static String json(String valor) {
+        return valor == null ? "null" : "\"" + valor + "\"";
+    }
+
+    /** Envia {@code quantidade} e devolve o id da transferência. */
+    private UUID enviar(Cenario c, int quantidade) throws Exception {
+        mockMvc.perform(post(TRANSFERENCIA_URL).contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoEnvio(c.loteOrigemId(), c.unidadeDestinoId(), quantidade, c.matriculaEnvio())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("Transferência enviada com sucesso!"));
+        return transferenciaFarmaciaRepository.findAll().get(0).getUuid();
     }
 
     private int saldo(UUID loteId) {
@@ -205,72 +231,44 @@ class TransferenciaFarmaciaControllerTest {
                 .toList();
     }
 
+    private StatusTransferenciaFarmacia statusDaTransferencia(UUID transferenciaId) {
+        return transferenciaFarmaciaRepository.findById(transferenciaId).orElseThrow().getStatus();
+    }
+
+    // ── Envio ──────────────────────────────────────────────────────────────────────────────────────
+
     @Test
-    void deveTransferirCriandoLoteDaMesmaRemessaNoDestino() throws Exception {
+    void deveEnviarDeixandoEmTransitoSemEntradaNoDestino() throws Exception {
         Cenario c = criarCenario("01", 100, "2027-01-01");
 
-        mockMvc.perform(post(TRANSFERENCIA_URL).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoTransferencia(c.loteOrigemId(), c.unidadeDestinoId(), 30, c.matricula())))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("Transferência registrada com sucesso!"));
+        UUID id = enviar(c, 30);
 
+        assertThat(statusDaTransferencia(id)).isEqualTo(StatusTransferenciaFarmacia.EM_TRANSITO);
         assertThat(saldo(c.loteOrigemId())).isEqualTo(70);
-        List<Lote> destinos = lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId());
-        assertThat(destinos).hasSize(1);
-        Lote destino = destinos.get(0);
-        assertThat(destino.getQuantidade()).isEqualTo(30);
-        assertThat(destino.getNumeroLote()).isEqualTo("T01");
-        assertThat(destino.getValidade()).isEqualTo(LocalDate.of(2027, 1, 1));
-
-        MovimentacaoFarmacia saida = extrato(c.loteOrigemId()).get(1);
-        assertThat(saida.getTipo()).isEqualTo(TipoMovimentacaoFarmacia.TRANSFERENCIA_SAIDA);
-        assertThat(saida.getQuantidade()).isEqualTo(-30);
-        assertThat(saida.getSaldoApos()).isEqualTo(70);
-        List<MovimentacaoFarmacia> extratoDestino = extrato(destino.getUuid());
-        assertThat(extratoDestino).hasSize(1);
-        MovimentacaoFarmacia entrada = extratoDestino.get(0);
-        assertThat(entrada.getTipo()).isEqualTo(TipoMovimentacaoFarmacia.TRANSFERENCIA_ENTRADA);
-        assertThat(entrada.getQuantidade()).isEqualTo(30);
-        assertThat(entrada.getSaldoApos()).isEqualTo(30);
-        assertThat(transferenciaFarmaciaRepository.count()).isEqualTo(1);
+        assertThat(extrato(c.loteOrigemId())).extracting(MovimentacaoFarmacia::getTipo)
+                .containsExactly(TipoMovimentacaoFarmacia.ENTRADA, TipoMovimentacaoFarmacia.TRANSFERENCIA_SAIDA);
+        assertThat(lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId())).isEmpty();
     }
 
     @Test
-    void deveSomarNoLoteDaMesmaRemessaQueJaExisteNoDestino() throws Exception {
-        Cenario c = criarCenario("02", 100, "2027-01-01");
-        UUID destinoId = criarLote(c.medicamentoId(), c.unidadeDestinoId(), "T02", "2027-01-01", 5, c.matricula());
+    void deveRecusarEnvioMaiorQueOSaldoSemGravarNada() throws Exception {
+        Cenario c = criarCenario("02", 10, "2027-01-01");
 
         mockMvc.perform(post(TRANSFERENCIA_URL).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoTransferencia(c.loteOrigemId(), c.unidadeDestinoId(), 20, c.matricula())))
-                .andExpect(status().isCreated());
-
-        assertThat(lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId())).hasSize(1);
-        assertThat(saldo(destinoId)).isEqualTo(25);
-        assertThat(saldo(c.loteOrigemId())).isEqualTo(80);
-        assertThat(extrato(destinoId)).extracting(MovimentacaoFarmacia::getTipo)
-                .containsExactly(TipoMovimentacaoFarmacia.ENTRADA, TipoMovimentacaoFarmacia.TRANSFERENCIA_ENTRADA);
-    }
-
-    @Test
-    void deveRecusarTransferenciaMaiorQueOSaldoSemCriarNada() throws Exception {
-        Cenario c = criarCenario("03", 10, "2027-01-01");
-
-        mockMvc.perform(post(TRANSFERENCIA_URL).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoTransferencia(c.loteOrigemId(), c.unidadeDestinoId(), 50, c.matricula())))
+                        .content(corpoEnvio(c.loteOrigemId(), c.unidadeDestinoId(), 50, c.matriculaEnvio())))
                 .andExpect(status().isUnprocessableEntity());
 
         assertThat(saldo(c.loteOrigemId())).isEqualTo(10);
         assertThat(extrato(c.loteOrigemId())).hasSize(1);
-        assertThat(lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId())).isEmpty();
         assertThat(transferenciaFarmaciaRepository.count()).isZero();
     }
 
     @Test
-    void deveRecusarTransferenciaDeLoteVencido() throws Exception {
-        Cenario c = criarCenario("04", 10, "2020-01-01");
+    void deveRecusarEnvioDeLoteVencido() throws Exception {
+        Cenario c = criarCenario("03", 10, "2020-01-01");
 
         mockMvc.perform(post(TRANSFERENCIA_URL).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoTransferencia(c.loteOrigemId(), c.unidadeDestinoId(), 5, c.matricula())))
+                        .content(corpoEnvio(c.loteOrigemId(), c.unidadeDestinoId(), 5, c.matriculaEnvio())))
                 .andExpect(status().isUnprocessableEntity());
 
         assertThat(saldo(c.loteOrigemId())).isEqualTo(10);
@@ -278,12 +276,12 @@ class TransferenciaFarmaciaControllerTest {
     }
 
     @Test
-    void deveRecusarTransferenciaParaAMesmaUnidade() throws Exception {
-        Cenario c = criarCenario("05", 10, "2027-01-01");
+    void deveRecusarEnvioParaAMesmaUnidade() throws Exception {
+        Cenario c = criarCenario("04", 10, "2027-01-01");
         UUID unidadeOrigemId = loteRepository.findById(c.loteOrigemId()).orElseThrow().getUnidade().getUuid();
 
         mockMvc.perform(post(TRANSFERENCIA_URL).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoTransferencia(c.loteOrigemId(), unidadeOrigemId, 5, c.matricula())))
+                        .content(corpoEnvio(c.loteOrigemId(), unidadeOrigemId, 5, c.matriculaEnvio())))
                 .andExpect(status().isBadRequest());
 
         assertThat(saldo(c.loteOrigemId())).isEqualTo(10);
@@ -298,55 +296,230 @@ class TransferenciaFarmaciaControllerTest {
     }
 
     @Test
-    void deveRetornarNotFoundQuandoLoteNaoExiste() throws Exception {
-        UUID unidadeId = criarUnidadeSaudeUbs("06");
-        String matricula = criarProfissionalEBuscarMatricula("06");
+    void deveRetornarNotFoundQuandoLoteOuUnidadeNaoExistem() throws Exception {
+        Cenario c = criarCenario("05", 10, "2027-01-01");
 
         mockMvc.perform(post(TRANSFERENCIA_URL).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoTransferencia(UUID.randomUUID(), unidadeId, 5, matricula)))
+                        .content(corpoEnvio(UUID.randomUUID(), c.unidadeDestinoId(), 5, c.matriculaEnvio())))
                 .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void deveRetornarNotFoundQuandoUnidadeDestinoNaoExiste() throws Exception {
-        Cenario c = criarCenario("07", 10, "2027-01-01");
-
         mockMvc.perform(post(TRANSFERENCIA_URL).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoTransferencia(c.loteOrigemId(), UUID.randomUUID(), 5, c.matricula())))
+                        .content(corpoEnvio(c.loteOrigemId(), UUID.randomUUID(), 5, c.matriculaEnvio())))
                 .andExpect(status().isNotFound());
         assertThat(saldo(c.loteOrigemId())).isEqualTo(10);
     }
 
+    // ── Recebimento ────────────────────────────────────────────────────────────────────────────────
+
     @Test
-    void deveListarBuscarPorIdELigarAoLivro() throws Exception {
-        Cenario c = criarCenario("08", 40, "2027-01-01");
-        mockMvc.perform(post(TRANSFERENCIA_URL).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoTransferencia(c.loteOrigemId(), c.unidadeDestinoId(), 15, c.matricula())))
-                .andExpect(status().isCreated());
-        UUID uuid = transferenciaFarmaciaRepository.findAll().get(0).getUuid();
+    void deveReceberCriandoLoteDaMesmaRemessaNoDestino() throws Exception {
+        Cenario c = criarCenario("06", 100, "2027-01-01");
+        UUID id = enviar(c, 30);
 
-        mockMvc.perform(get(TRANSFERENCIA_URL))
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(30, c.matriculaRecebimento(), null, null)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].uuid").value(uuid.toString()));
+                .andExpect(jsonPath("$.message").value("Recebimento registrado com sucesso!"));
 
-        mockMvc.perform(get(TRANSFERENCIA_URL + uuid))
+        assertThat(statusDaTransferencia(id)).isEqualTo(StatusTransferenciaFarmacia.RECEBIDA);
+        List<Lote> destinos = lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId());
+        assertThat(destinos).hasSize(1);
+        Lote destino = destinos.get(0);
+        assertThat(destino.getQuantidade()).isEqualTo(30);
+        assertThat(destino.getNumeroLote()).isEqualTo("T06");
+        assertThat(destino.getValidade()).isEqualTo(LocalDate.of(2027, 1, 1));
+
+        List<MovimentacaoFarmacia> extratoDestino = extrato(destino.getUuid());
+        assertThat(extratoDestino).hasSize(1);
+        assertThat(extratoDestino.get(0).getTipo()).isEqualTo(TipoMovimentacaoFarmacia.TRANSFERENCIA_ENTRADA);
+        assertThat(extratoDestino.get(0).getQuantidade()).isEqualTo(30);
+
+        mockMvc.perform(get(TRANSFERENCIA_URL + id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.quantidade").value(15))
-                .andExpect(jsonPath("$.numeroLote").value("T08"))
-                .andExpect(jsonPath("$.loteOrigemId").value(c.loteOrigemId().toString()))
-                .andExpect(jsonPath("$.unidadeDestinoId").value(c.unidadeDestinoId().toString()))
-                .andExpect(jsonPath("$.profissionalMatricula").value(c.matricula()))
-                .andExpect(jsonPath("$.observacao").value("Remanejamento para cobrir falta"));
+                .andExpect(jsonPath("$.status").value("RECEBIDA"))
+                .andExpect(jsonPath("$.quantidadeRecebida").value(30))
+                .andExpect(jsonPath("$.quantidadeDivergente").value(0))
+                .andExpect(jsonPath("$.loteDestinoId").value(destino.getUuid().toString()))
+                .andExpect(jsonPath("$.profissionalMatricula").value(c.matriculaEnvio()))
+                .andExpect(jsonPath("$.profissionalRecebimentoMatricula").value(c.matriculaRecebimento()))
+                .andExpect(jsonPath("$.recebidoEm").isNotEmpty());
+    }
+
+    @Test
+    void deveSomarNoLoteDaMesmaRemessaQueJaExisteNoDestino() throws Exception {
+        Cenario c = criarCenario("07", 100, "2027-01-01");
+        UUID destinoId = criarLote(c.medicamentoId(), c.unidadeDestinoId(), "T07", "2027-01-01", 5, c.matriculaEnvio());
+        UUID id = enviar(c, 20);
+
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(20, c.matriculaRecebimento(), null, null)))
+                .andExpect(status().isOk());
+
+        assertThat(lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId())).hasSize(1);
+        assertThat(saldo(destinoId)).isEqualTo(25);
+        assertThat(saldo(c.loteOrigemId())).isEqualTo(80);
+    }
+
+    @Test
+    void deveReceberComDivergenciaRegistrandoMotivoEDiferenca() throws Exception {
+        Cenario c = criarCenario("08", 100, "2027-01-01");
+        UUID id = enviar(c, 30);
+
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(27, c.matriculaRecebimento(), "AVARIA", "3 frascos quebrados na caixa")))
+                .andExpect(status().isOk());
+
+        assertThat(lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId()).get(0).getQuantidade())
+                .isEqualTo(27);
+        mockMvc.perform(get(TRANSFERENCIA_URL + id))
+                .andExpect(jsonPath("$.status").value("RECEBIDA_COM_DIVERGENCIA"))
+                .andExpect(jsonPath("$.quantidade").value(30))
+                .andExpect(jsonPath("$.quantidadeRecebida").value(27))
+                .andExpect(jsonPath("$.quantidadeDivergente").value(3))
+                .andExpect(jsonPath("$.motivoDivergencia").value("AVARIA"))
+                .andExpect(jsonPath("$.justificativaDivergencia").value("3 frascos quebrados na caixa"));
+    }
+
+    @Test
+    void deveRegistrarDivergenciaTotalQuandoNadaChega() throws Exception {
+        Cenario c = criarCenario("09", 100, "2027-01-01");
+        UUID id = enviar(c, 10);
+
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(0, c.matriculaRecebimento(), "EXTRAVIO", "Caixa não chegou")))
+                .andExpect(status().isOk());
+
+        assertThat(statusDaTransferencia(id)).isEqualTo(StatusTransferenciaFarmacia.RECEBIDA_COM_DIVERGENCIA);
+        assertThat(lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId())).isEmpty();
+        assertThat(saldo(c.loteOrigemId())).isEqualTo(90);
+    }
+
+    @Test
+    void deveExigirMotivoEJustificativaNaDivergencia() throws Exception {
+        Cenario c = criarCenario("10", 100, "2027-01-01");
+        UUID id = enviar(c, 30);
+
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(27, c.matriculaRecebimento(), null, null)))
+                .andExpect(status().isBadRequest());
+
+        assertThat(statusDaTransferencia(id)).isEqualTo(StatusTransferenciaFarmacia.EM_TRANSITO);
+        assertThat(lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId())).isEmpty();
+    }
+
+    @Test
+    void deveRecusarRecebimentoPorQuemEnviou() throws Exception {
+        Cenario c = criarCenario("11", 100, "2027-01-01");
+        UUID id = enviar(c, 30);
+
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(30, c.matriculaEnvio(), null, null)))
+                .andExpect(status().isUnprocessableEntity());
+
+        assertThat(statusDaTransferencia(id)).isEqualTo(StatusTransferenciaFarmacia.EM_TRANSITO);
+    }
+
+    @Test
+    void deveRecusarReceberMaisQueOEnviado() throws Exception {
+        Cenario c = criarCenario("12", 100, "2027-01-01");
+        UUID id = enviar(c, 30);
+
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(31, c.matriculaRecebimento(), null, null)))
+                .andExpect(status().isUnprocessableEntity());
+
+        assertThat(statusDaTransferencia(id)).isEqualTo(StatusTransferenciaFarmacia.EM_TRANSITO);
+    }
+
+    @Test
+    void deveRecusarReceberDuasVezes() throws Exception {
+        Cenario c = criarCenario("13", 100, "2027-01-01");
+        UUID id = enviar(c, 30);
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(30, c.matriculaRecebimento(), null, null)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(30, c.matriculaRecebimento(), null, null)))
+                .andExpect(status().isUnprocessableEntity());
+
+        assertThat(lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId()).get(0).getQuantidade())
+                .isEqualTo(30);
+    }
+
+    // ── Cancelamento ───────────────────────────────────────────────────────────────────────────────
+
+    @Test
+    void deveCancelarEstornandoOSaldoAOrigem() throws Exception {
+        Cenario c = criarCenario("14", 100, "2027-01-01");
+        UUID id = enviar(c, 30);
+
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/cancelamento").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "profissionalMatricula": "%s", "motivo": "Unidade de destino recebeu doação" }
+                                """.formatted(c.matriculaEnvio())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Transferência cancelada com sucesso!"));
+
+        assertThat(statusDaTransferencia(id)).isEqualTo(StatusTransferenciaFarmacia.CANCELADA);
+        assertThat(saldo(c.loteOrigemId())).isEqualTo(100);
+        assertThat(extrato(c.loteOrigemId())).extracting(MovimentacaoFarmacia::getTipo)
+                .containsExactly(TipoMovimentacaoFarmacia.ENTRADA, TipoMovimentacaoFarmacia.TRANSFERENCIA_SAIDA,
+                        TipoMovimentacaoFarmacia.TRANSFERENCIA_ESTORNO);
+
+        // Cancelada não pode mais ser recebida.
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(30, c.matriculaRecebimento(), null, null)))
+                .andExpect(status().isUnprocessableEntity());
+        assertThat(lotesDoMedicamentoNaUnidade(c.medicamentoId(), c.unidadeDestinoId())).isEmpty();
+    }
+
+    @Test
+    void deveExigirMotivoNoCancelamento() throws Exception {
+        Cenario c = criarCenario("15", 100, "2027-01-01");
+        UUID id = enviar(c, 30);
+
+        mockMvc.perform(post(TRANSFERENCIA_URL + id + "/cancelamento").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "profissionalMatricula": "%s", "motivo": " " }
+                                """.formatted(c.matriculaEnvio())))
+                .andExpect(status().isBadRequest());
+
+        assertThat(statusDaTransferencia(id)).isEqualTo(StatusTransferenciaFarmacia.EM_TRANSITO);
+        assertThat(saldo(c.loteOrigemId())).isEqualTo(70);
+    }
+
+    // ── Consulta ───────────────────────────────────────────────────────────────────────────────────
+
+    @Test
+    void deveListarFiltrandoEmTransitoParaAUnidadeELigarAoLivro() throws Exception {
+        Cenario c = criarCenario("16", 40, "2027-01-01");
+        UUID id = enviar(c, 15);
+
+        mockMvc.perform(get(TRANSFERENCIA_URL)
+                        .param("status", "EM_TRANSITO")
+                        .param("unidadeDestinoId", c.unidadeDestinoId().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].uuid").value(id.toString()))
+                .andExpect(jsonPath("$[0].status").value("EM_TRANSITO"))
+                .andExpect(jsonPath("$[0].loteDestinoId").doesNotExist());
+        mockMvc.perform(get(TRANSFERENCIA_URL).param("status", "RECEBIDA")
+                        .param("unidadeDestinoId", c.unidadeDestinoId().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
 
         mockMvc.perform(get(MOVIMENTACAO_URL + "lote/" + c.loteOrigemId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[1].tipo").value("TRANSFERENCIA_SAIDA"))
-                .andExpect(jsonPath("$[1].transferenciaId").value(uuid.toString()));
+                .andExpect(jsonPath("$[1].transferenciaId").value(id.toString()));
     }
 
     @Test
-    void deveRetornarNotFoundAoBuscarIdInexistente() throws Exception {
+    void deveRetornarNotFoundParaTransferenciaInexistente() throws Exception {
         mockMvc.perform(get(TRANSFERENCIA_URL + UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(post(TRANSFERENCIA_URL + UUID.randomUUID() + "/recebimento").contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoRecebimento(1, "000000", null, null)))
                 .andExpect(status().isNotFound());
     }
 }
