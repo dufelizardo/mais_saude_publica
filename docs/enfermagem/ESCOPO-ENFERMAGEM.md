@@ -32,7 +32,8 @@ Atendimento.
 | Fase | Escopo | ADR | PR(s) | Status |
 |---|---|---|---|---|
 | 1 | `Triagem`, CRUD em `/api/v1/triagem/`, testes JUnit + Robot, extensão do Prontuário | [0047](../adr/0047-triagem-primeira-entidade-da-enfermagem.md) | [#226](https://github.com/dufelizardo/mais_saude_publica/pull/226) | ✅ |
-| 2 | `EvolucaoEnfermagem`, CRUD em `/api/v1/evolucao-enfermagem/`, testes JUnit + Robot, extensão do Prontuário | [0048](../adr/0048-evolucao-de-enfermagem-segunda-entidade-da-enfermagem.md) | *(em aberto)* | 🔵 |
+| 2 | `EvolucaoEnfermagem`, CRUD em `/api/v1/evolucao-enfermagem/`, testes JUnit + Robot, extensão do Prontuário | [0048](../adr/0048-evolucao-de-enfermagem-segunda-entidade-da-enfermagem.md) | [#227](https://github.com/dufelizardo/mais_saude_publica/pull/227) | ✅ |
+| 3 | Triagem e evolução imutáveis: `PATCH` substituído por retificação (`POST /{id}/retificacao`, nova versão com motivo), com hora do servidor e CPF do usuário em cada registro | [0062](../adr/0062-registros-clinicos-imutaveis-com-retificacao.md) | *(em aberto)* | 🔵 |
 
 Ambas as fases mergeadas (ou em PR) em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
 solicitada.

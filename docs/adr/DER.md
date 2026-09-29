@@ -720,6 +720,8 @@ Processos de enfermagem, com peso maior em UPA/Hospital que em UBS.
 Paciente → Triagem (sinais vitais) → Classificação de risco → Atendimento médico/enfermagem
 ```
 
+> **Registros clínicos imutáveis** ([ADR-0062](./0062-registros-clinicos-imutaveis-com-retificacao.md)): `Triagem`, `EvolucaoEnfermagem`, `Consulta` e `Procedimento` ganham `retificacaoDe` (auto-referência à versão que corrigem), `motivoRetificacao`, `registradoEm` e `registradoPorCpf`; `Procedimento` guarda também o desfecho (`dataPrevista`, `statusAlteradoEm`, `profissionalStatus`, `justificativaStatus`).
+
 ### Farmácia (#9)
 
 Medicamentos e dispensação — regras próprias, deliberadamente **separado de Estoque** (#13):

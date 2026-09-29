@@ -1,5 +1,7 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
+import java.time.LocalDate;
+import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoRisco;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoAtendimento;
@@ -34,6 +36,17 @@ public class AtendimentoResponseDto implements Serializable {
     private StatusAtendimento status;
     private LocalDateTime dataHora;
 
+    // Paciente e resumo clínico para a listagem (ADR-0062). O resumo só é preenchido nas buscas de
+    // atendimento; no prontuário os registros já vêm por inteiro.
+    private String pacienteCpf;
+    private LocalDate pacienteDataNascimento;
+    /** Classificação de risco da triagem vigente mais recente; nula se não houve triagem. */
+    private ClassificacaoRisco classificacaoRiscoAtual;
+    private Long totalTriagens;
+    private Long totalConsultas;
+    private Long totalProcedimentos;
+    private Long totalEvolucoes;
+
     public static AtendimentoResponseDto fromAtendimento(Atendimento atendimento) {
         UUID setorUuid = null;
         String setorNome = null;
@@ -58,7 +71,10 @@ public class AtendimentoResponseDto implements Serializable {
                 agendamentoUuid,
                 atendimento.getTipo(),
                 atendimento.getStatus(),
-                atendimento.getDataHora()
+                atendimento.getDataHora(),
+                atendimento.getPaciente().getCpf(),
+                atendimento.getPaciente().getDataNascimento(),
+                null, null, null, null, null
         );
     }
 }

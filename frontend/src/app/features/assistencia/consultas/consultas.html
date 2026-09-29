@@ -27,7 +27,7 @@
           <td>{{ consulta.dataHora }}</td>
           <td>{{ consulta.diagnostico || '—' }}</td>
           <td style="text-align: right; white-space: nowrap;">
-            <button type="button" class="btn btn--ghost" (click)="abrirEdicao(consulta)">Editar</button>
+            <button type="button" class="btn btn--ghost" (click)="abrirEdicao(consulta)">Retificar</button>
           </td>
         </tr>
       }
@@ -39,7 +39,7 @@
 </div>
 
 @if (modalAberto()) {
-  <app-modal [titulo]="editando() ? 'Editar consulta' : 'Nova consulta'" (fechar)="fecharModal()">
+  <app-modal [titulo]="editando() ? 'Retificar consulta' : 'Nova consulta'" (fechar)="fecharModal()">
     @if (errorMessage()) {
       <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
     }
@@ -110,6 +110,14 @@
         <label for="retorno">Data de retorno</label>
         <input id="retorno" type="date" formControlName="retorno" />
       </div>
+
+      @if (editando()) {
+        <div class="form-group">
+          <label for="motivoRetificacao">Motivo da retificação *</label>
+          <input id="motivoRetificacao" type="text" formControlName="motivoRetificacao" placeholder="O que está sendo corrigido e por quê" />
+          <span style="font-size: var(--fs-xs); color: var(--ink-500);">A versão anterior continua no prontuário, marcada como retificada.</span>
+        </div>
+      }
 
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>

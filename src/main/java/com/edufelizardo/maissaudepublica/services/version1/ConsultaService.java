@@ -1,5 +1,12 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoConsultaRequestDto;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
+import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.Map;
+import java.time.Instant;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.Consulta;
@@ -33,6 +40,7 @@ public class ConsultaService {
     @Autowired
     private ProfissionalRepository profissionalRepository;
 
+    @Transactional
     public ConsultaResponseDto criar(ConsultaRequestDto dto) {
         Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
@@ -40,37 +48,58 @@ public class ConsultaService {
         Consulta consulta = new Consulta(atendimento, profissional, dto.getDataHora(), dto.getTipoConsulta(),
                 dto.getQueixaPrincipal(), dto.getDiagnostico(), dto.getReceituario(),
                 dto.getExamesSolicitados(), dto.getRetorno());
+        consulta.setRegistradoEm(Instant.now());
+        consulta.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         consulta = consultaRepository.save(consulta);
         return ConsultaResponseDto.fromConsulta(consulta);
     }
 
-    public ConsultaResponseDto atualizar(UUID uuid, ConsultaRequestDto dto) {
-        Consulta consulta = buscarEntidadePorId(uuid);
-        Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
+    /**
+     * Retificação (ADR-0062): grava uma nova versão ligada à anterior, que continua no prontuário. Só a
+     * versão vigente pode ser retificada, e a consulta continua no mesmo atendimento.
+     */
+    @Transactional
+    public ConsultaResponseDto retificar(UUID uuid, RetificacaoConsultaRequestDto dto) {
+        Consulta original = consultaRepository.findByIdParaRetificar(uuid)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Não foi possível encontrar uma consulta com o id " + uuid + " em nossos registros."));
+        UUID vigente = sucessores().get(uuid);
+        if (vigente != null) {
+            throw new ResourceUnprocessableEntityException("Esta consulta já foi retificada pela versão " + vigente
+                    + ": retifique a versão vigente.");
+        }
+        if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())) {
+            throw new ResourceBadRequestException("A retificação precisa manter o mesmo atendimento do registro original.");
+        }
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
 
-        consulta.setAtendimento(atendimento);
-        consulta.setProfissional(profissional);
-        consulta.setDataHora(dto.getDataHora());
-        consulta.setTipoConsulta(dto.getTipoConsulta());
-        consulta.setQueixaPrincipal(dto.getQueixaPrincipal());
-        consulta.setDiagnostico(dto.getDiagnostico());
-        consulta.setReceituario(dto.getReceituario());
-        consulta.setExamesSolicitados(dto.getExamesSolicitados());
-        consulta.setRetorno(dto.getRetorno());
+        Consulta consulta = new Consulta(original.getAtendimento(), profissional, dto.getDataHora(), dto.getTipoConsulta(),
+                dto.getQueixaPrincipal(), dto.getDiagnostico(), dto.getReceituario(),
+                dto.getExamesSolicitados(), dto.getRetorno());
+        consulta.setRetificacaoDe(original);
+        consulta.setMotivoRetificacao(dto.getMotivoRetificacao().trim());
+        consulta.setRegistradoEm(Instant.now());
+        consulta.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         consulta = consultaRepository.save(consulta);
-        return ConsultaResponseDto.fromConsulta(consulta);
+        return ConsultaResponseDto.fromConsulta(consulta, null);
+    }
+
+    /** Versão que corrige cada registro retificado (registro → sucessor). */
+    private Map<UUID, UUID> sucessores() {
+        return consultaRepository.findParesDeRetificacao().stream()
+                .collect(Collectors.toMap(par -> (UUID) par[0], par -> (UUID) par[1]));
     }
 
     public List<ConsultaResponseDto> listar() {
+        Map<UUID, UUID> sucessores = sucessores();
         return consultaRepository.findAll()
                 .stream()
-                .map(ConsultaResponseDto::fromConsulta)
+                .map(r -> ConsultaResponseDto.fromConsulta(r, sucessores.get(r.getUuid())))
                 .collect(Collectors.toList());
     }
 
     public ConsultaResponseDto buscarPorId(UUID uuid) {
-        return ConsultaResponseDto.fromConsulta(buscarEntidadePorId(uuid));
+        return ConsultaResponseDto.fromConsulta(buscarEntidadePorId(uuid), sucessores().get(uuid));
     }
 
     private Consulta buscarEntidadePorId(UUID uuid) {

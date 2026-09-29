@@ -27,7 +27,7 @@
           <td>{{ procedimento.status }}</td>
           <td>{{ procedimento.dataRealizacao }}</td>
           <td style="text-align: right; white-space: nowrap;">
-            <button type="button" class="btn btn--ghost" (click)="abrirEdicao(procedimento)">Editar</button>
+            <button type="button" class="btn btn--ghost" (click)="abrirEdicao(procedimento)">Retificar</button>
           </td>
         </tr>
       }
@@ -39,7 +39,7 @@
 </div>
 
 @if (modalAberto()) {
-  <app-modal [titulo]="editando() ? 'Editar procedimento' : 'Novo procedimento'" (fechar)="fecharModal()">
+  <app-modal [titulo]="editando() ? 'Retificar procedimento' : 'Novo procedimento'" (fechar)="fecharModal()">
     @if (errorMessage()) {
       <div class="form-banner form-banner--error" role="alert">{{ errorMessage() }}</div>
     }
@@ -98,6 +98,14 @@
           <span class="form-error">Data de realização é obrigatória.</span>
         }
       </div>
+
+      @if (editando()) {
+        <div class="form-group">
+          <label for="motivoRetificacao">Motivo da retificação *</label>
+          <input id="motivoRetificacao" type="text" formControlName="motivoRetificacao" placeholder="O que está sendo corrigido e por quê" />
+          <span style="font-size: var(--fs-xs); color: var(--ink-500);">A versão anterior continua no prontuário, marcada como retificada.</span>
+        </div>
+      }
 
       <div class="form-actions">
         <button type="button" class="btn btn--ghost" (click)="fecharModal()">Cancelar</button>

@@ -72,7 +72,8 @@ export class Pacientes {
     if (!prontuario) {
       return null;
     }
-    const todasTriagens = prontuario.atendimentos.flatMap((a) => a.triagens);
+    // Versões retificadas continuam no prontuário, mas não são o dado vigente (ADR-0062).
+    const todasTriagens = prontuario.atendimentos.flatMap((a) => a.triagens).filter((t) => !t.retificado);
     if (todasTriagens.length === 0) {
       return null;
     }
@@ -86,7 +87,7 @@ export class Pacientes {
     }
     const itens: TimelineItem[] = [];
     for (const atendimento of prontuario.atendimentos) {
-      for (const triagem of atendimento.triagens) {
+      for (const triagem of atendimento.triagens.filter((t) => !t.retificado)) {
         itens.push({
           data: triagem.dataHora,
           tipo: 'triagem',
@@ -94,7 +95,7 @@ export class Pacientes {
           descricao: triagem.observacoes,
         });
       }
-      for (const evolucao of atendimento.evolucoes) {
+      for (const evolucao of atendimento.evolucoes.filter((e) => !e.retificado)) {
         itens.push({
           data: evolucao.dataHora,
           tipo: 'evolucao',
@@ -102,14 +103,14 @@ export class Pacientes {
           descricao: evolucao.descricao,
         });
       }
-      for (const item of atendimento.consultas) {
+      for (const item of atendimento.consultas.filter((c) => !c.consulta.retificado)) {
         itens.push({
           data: item.consulta.dataHora,
           tipo: 'consulta',
           titulo: `Consulta · ${item.consulta.tipoConsulta}`,
           descricao: item.consulta.diagnostico,
         });
-        for (const procedimento of item.procedimentos) {
+        for (const procedimento of item.procedimentos.filter((p) => !p.retificado)) {
           itens.push({
             data: procedimento.dataRealizacao,
             tipo: 'procedimento',

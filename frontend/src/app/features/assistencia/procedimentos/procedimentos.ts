@@ -37,6 +37,7 @@ export class Procedimentos {
     descricao: [''],
     dataRealizacao: ['', [Validators.required]],
     status: ['AGENDADO' as StatusProcedimento, [Validators.required]],
+    motivoRetificacao: [''],
   });
 
   constructor() {
@@ -51,7 +52,7 @@ export class Procedimentos {
     this.carregando.set(true);
     this.procedimentoService.listar().subscribe({
       next: (procedimentos) => {
-        this.procedimentos.set(procedimentos);
+        this.procedimentos.set(procedimentos.filter((r) => !r.retificado));
         this.carregando.set(false);
       },
       error: () => {
@@ -69,6 +70,7 @@ export class Procedimentos {
   protected abrirNovo(): void {
     this.editando.set(null);
     this.form.reset({
+      motivoRetificacao: '',
       consultaId: '',
       profissionalMatricula: '',
       tipo: '',
@@ -83,6 +85,7 @@ export class Procedimentos {
   protected abrirEdicao(procedimento: ProcedimentoResponseDto): void {
     this.editando.set(procedimento);
     this.form.reset({
+      motivoRetificacao: '',
       consultaId: procedimento.consultaUuid,
       profissionalMatricula: procedimento.profissionalMatricula,
       tipo: procedimento.tipo,
@@ -103,6 +106,10 @@ export class Procedimentos {
       this.form.markAllAsTouched();
       return;
     }
+    if (this.editando() && !this.form.controls.motivoRetificacao.value.trim()) {
+      this.errorMessage.set('Informe o motivo da retificação.');
+      return;
+    }
 
     this.submitting.set(true);
     this.errorMessage.set(null);
@@ -119,7 +126,7 @@ export class Procedimentos {
 
     const editando = this.editando();
     const request = editando
-      ? this.procedimentoService.atualizar(editando.uuid, dto)
+      ? this.procedimentoService.retificar(editando.uuid, { ...dto, motivoRetificacao: raw.motivoRetificacao.trim() })
       : this.procedimentoService.criar(dto);
 
     request.subscribe({

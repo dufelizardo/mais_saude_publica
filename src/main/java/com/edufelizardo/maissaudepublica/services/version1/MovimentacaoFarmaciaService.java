@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
@@ -16,9 +17,6 @@ import com.edufelizardo.maissaudepublica.repositories.LoteRepository;
 import com.edufelizardo.maissaudepublica.repositories.MovimentacaoFarmaciaRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -139,12 +137,8 @@ public class MovimentacaoFarmaciaService {
                         "Não foi possível encontrar uma movimentação com o id " + uuid + " em nossos registros."));
     }
 
-    /** Principal colocado pelo JwtAuthenticationFilter; com o toggle desligado a requisição é anônima. */
+    /** CPF do usuário autenticado — ver {@link UsuarioAutenticado}. */
     String cpfDoUsuarioAutenticado() {
-        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
-        if (autenticacao instanceof UsernamePasswordAuthenticationToken && autenticacao.getPrincipal() instanceof String cpf) {
-            return cpf;
-        }
-        return null;
+        return UsuarioAutenticado.cpf();
     }
 }

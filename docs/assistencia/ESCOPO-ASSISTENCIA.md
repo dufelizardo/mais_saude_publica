@@ -50,8 +50,9 @@ Onda backend completa — ver [`MAPA-DE-DOMINIOS.md`](../MAPA-DE-DOMINIOS.md) pr
 | 4 | `Consulta`, CRUD em `/api/v1/consulta/`, testes JUnit + Robot (ver [ADR-0043](../adr/0043-consulta-registrada-durante-o-atendimento.md)) | [#212](https://github.com/dufelizardo/mais_saude_publica/pull/212) | ✅ |
 | 5 | `Procedimento`, CRUD em `/api/v1/procedimento/`, testes JUnit + Robot (ver [ADR-0044](../adr/0044-procedimento-realizado-durante-a-consulta.md)) | [#213](https://github.com/dufelizardo/mais_saude_publica/pull/213) | ✅ |
 | 6 | `Prontuário`, `GET /api/v1/prontuario/{pacienteId}` (agregação de leitura), testes JUnit + Robot (ver [ADR-0045](../adr/0045-prontuario-agregacao-de-leitura.md)) | [#214](https://github.com/dufelizardo/mais_saude_publica/pull/214) | ✅ |
+| 7 | Registros clínicos imutáveis: `PATCH` de consulta e procedimento substituído por retificação (`POST /{id}/retificacao`, nova versão com motivo), desfecho do procedimento em `POST /procedimento/{id}/status`, resumo clínico na busca de atendimentos, agendamento de origem marcado como realizado, troca de paciente bloqueada com registro clínico (ver [ADR-0062](../adr/0062-registros-clinicos-imutaveis-com-retificacao.md)) | *(em aberto)* | 🔵 |
 
-Todas as 6 fases mergeadas em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
+As fases 1 a 6 estão mergeadas em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
 solicitada.
 
 ## 6. Estado do frontend

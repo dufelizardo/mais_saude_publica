@@ -40,6 +40,7 @@ export class Consultas {
     receituario: [''],
     examesSolicitados: [''],
     retorno: [''],
+    motivoRetificacao: [''],
   });
 
   constructor() {
@@ -54,7 +55,7 @@ export class Consultas {
     this.carregando.set(true);
     this.consultaService.listar().subscribe({
       next: (consultas) => {
-        this.consultas.set(consultas);
+        this.consultas.set(consultas.filter((r) => !r.retificado));
         this.carregando.set(false);
       },
       error: () => {
@@ -67,6 +68,7 @@ export class Consultas {
   protected abrirNovo(): void {
     this.editando.set(null);
     this.form.reset({
+      motivoRetificacao: '',
       atendimentoId: '',
       profissionalMatricula: '',
       dataHora: '',
@@ -84,6 +86,7 @@ export class Consultas {
   protected abrirEdicao(consulta: ConsultaResponseDto): void {
     this.editando.set(consulta);
     this.form.reset({
+      motivoRetificacao: '',
       atendimentoId: consulta.atendimentoUuid,
       profissionalMatricula: consulta.profissionalMatricula,
       dataHora: consulta.dataHora,
@@ -112,6 +115,10 @@ export class Consultas {
       this.form.markAllAsTouched();
       return;
     }
+    if (this.editando() && !this.form.controls.motivoRetificacao.value.trim()) {
+      this.errorMessage.set('Informe o motivo da retificação.');
+      return;
+    }
 
     this.submitting.set(true);
     this.errorMessage.set(null);
@@ -131,7 +138,7 @@ export class Consultas {
 
     const editando = this.editando();
     const request = editando
-      ? this.consultaService.atualizar(editando.uuid, dto)
+      ? this.consultaService.retificar(editando.uuid, { ...dto, motivoRetificacao: raw.motivoRetificacao.trim() })
       : this.consultaService.criar(dto);
 
     request.subscribe({
