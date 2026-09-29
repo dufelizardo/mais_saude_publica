@@ -87,8 +87,32 @@ correção de lotes, dispensação, perda, ajuste de inventário e extrato de ca
   de orçamento já existia antes desta tela).
 - A matrícula do profissional ainda é digitada à mão, como nas outras telas de Assistência; com o
   login ligado, dá para sugerir a do usuário autenticado.
-- **Transferência entre unidades** continua sendo a próxima fatia de backend
-  (`ESCOPO-FARMACIA.md`).
+- ~~**Transferência entre unidades**~~ — feita (ADRs 0059 e 0061), com tela no adendo abaixo.
+
+## Adendo — aba Transferências (ADRs 0059 e 0061)
+
+A transferência entre unidades ganhou tela seguindo as decisões acima, sem mockup próprio:
+
+- **Nova aba "Transferências"** entre Dispensações e Medicamentos. O contador da aba mostra quantas
+  estão **em trânsito**, não o total — é o que pede ação. Abre filtrada por "Em trânsito"; os filtros
+  são situação (em trânsito, recebidas, com divergência, canceladas, todas) e unidade de destino, que
+  funciona como a lista "a receber" de uma unidade.
+- **Botão "Transferir"** na linha do lote, desabilitado sem saldo ou com o lote vencido (lote vencido
+  vai para perda, ADR-0059).
+- **Três gavetas novas**, no padrão das demais:
+  - *Transferir*: lote de origem, unidade de destino (a unidade do lote fica de fora da lista),
+    quantidade, matrícula de quem envia e observação; aviso de que a quantidade sai agora e fica em
+    trânsito.
+  - *Conferir recebimento*: resumo do envio, quantidade que chegou (já preenchida com a enviada),
+    matrícula de quem conferiu e a conta enviada × recebida × não chegou. Motivo e "o que aconteceu"
+    só aparecem, obrigatórios, quando chegou menos. A tela já recusa a matrícula de quem enviou; o
+    backend confirma (422).
+  - *Cancelar transferência*: resumo, aviso de que a quantidade volta à origem, motivo e matrícula.
+- **Detalhe da transferência** com as três etapas (envio, recebimento, cancelamento) e seus
+  responsáveis.
+- O componente continua um só (ver "Trade-offs"): as transferências usam as mesmas listas de lotes e
+  unidades e as mesmas gavetas das outras abas. Se a Farmácia ganhar mais uma área desse porte, é o
+  momento de separar cada aba em componente filho.
 
 ## Referências
 

@@ -80,7 +80,8 @@ estornada —, com responsáveis diferentes para envio e recebimento e o estoque
 - Conferir que o recebedor pertence à unidade de destino depende do escopo por unidade (ADR-0054).
 - Não há alerta para transferência parada em trânsito por muito tempo; a listagem filtrada permite
   acompanhar, e um alerta pode vir com o módulo de notificações.
-- A gaveta de transferência na tela da Farmácia (envio, "a receber" e conferência) é a próxima fatia.
+- ~~A gaveta de transferência na tela da Farmácia~~ — feita, ver o adendo da
+  [ADR-0058](./0058-tela-da-farmacia-abas-gaveta-lateral-e-livro-de-estoque.md).
 
 ## Referências
 
