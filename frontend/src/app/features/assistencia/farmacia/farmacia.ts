@@ -10,6 +10,11 @@ import { LoteResponseDto } from '../../../core/models/lote';
 import { MedicamentoResponseDto } from '../../../core/models/medicamento';
 import { MotivoPerda, MovimentacaoFarmaciaResponseDto, TipoMovimentacaoFarmacia } from '../../../core/models/movimentacao-farmacia';
 import { PacienteResponseDto } from '../../../core/models/paciente';
+import {
+  MotivoDivergenciaTransferencia,
+  StatusTransferenciaFarmacia,
+  TransferenciaFarmaciaResponseDto,
+} from '../../../core/models/transferencia-farmacia';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { DispensacaoService } from '../../../core/services/dispensacao';
@@ -17,9 +22,10 @@ import { LoteService } from '../../../core/services/lote';
 import { MedicamentoService } from '../../../core/services/medicamento';
 import { MovimentacaoFarmaciaService } from '../../../core/services/movimentacao-farmacia';
 import { PacienteService } from '../../../core/services/paciente';
+import { TransferenciaFarmaciaService } from '../../../core/services/transferencia-farmacia';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 
-type Aba = 'estoque' | 'disp' | 'med' | 'livro';
+type Aba = 'estoque' | 'disp' | 'transf' | 'med' | 'livro';
 
 type Gaveta =
   | { tipo: 'med'; med: MedicamentoResponseDto | null }
@@ -27,7 +33,13 @@ type Gaveta =
   | { tipo: 'lote-edit'; lote: LoteInfo }
   | { tipo: 'disp' }
   | { tipo: 'mov' }
-  | { tipo: 'disp-view'; disp: DispensacaoResponseDto };
+  | { tipo: 'disp-view'; disp: DispensacaoResponseDto }
+  | { tipo: 'transf' }
+  | { tipo: 'receber'; transf: TransferenciaFarmaciaResponseDto }
+  | { tipo: 'cancelar'; transf: TransferenciaFarmaciaResponseDto }
+  | { tipo: 'transf-view'; transf: TransferenciaFarmaciaResponseDto };
+
+type FiltroStatusTransferencia = StatusTransferenciaFarmacia | 'TODAS';
 
 interface LoteInfo {
   lote: LoteResponseDto;
@@ -52,6 +64,13 @@ const TIPOS: Record<TipoMovimentacaoFarmacia, { classe: string; rotulo: string }
   INCORPORACAO_ENTRADA: { classe: 'purple', rotulo: 'Lote duplicado incorporado' },
 };
 
+const STATUS_TRANSFERENCIA: Record<StatusTransferenciaFarmacia, { classe: string; rotulo: string }> = {
+  EM_TRANSITO: { classe: 'warn', rotulo: 'Em trânsito' },
+  RECEBIDA: { classe: 'ok', rotulo: 'Recebida' },
+  RECEBIDA_COM_DIVERGENCIA: { classe: 'alert', rotulo: 'Recebida com divergência' },
+  CANCELADA: { classe: 'muted', rotulo: 'Cancelada' },
+};
+
 /**
  * Tela da Farmácia (domínio #9) — estoque por lote, dispensações, catálogo de medicamentos e o
  * livro de estoque de cada lote, portada do mockup Farmacia.html. Ver ADR-0058 (frontend) e
@@ -71,9 +90,23 @@ export class Farmacia {
   private readonly movimentacaoService = inject(MovimentacaoFarmaciaService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
   private readonly pacienteService = inject(PacienteService);
+  private readonly transferenciaService = inject(TransferenciaFarmaciaService);
 
   protected readonly formatCpf = formatCpf;
   protected readonly tipos = TIPOS;
+  protected readonly statusTransferencia = STATUS_TRANSFERENCIA;
+  protected readonly filtrosStatusTransferencia: { valor: FiltroStatusTransferencia; rotulo: string }[] = [
+    { valor: 'EM_TRANSITO', rotulo: 'Em trânsito' },
+    { valor: 'RECEBIDA', rotulo: 'Recebidas' },
+    { valor: 'RECEBIDA_COM_DIVERGENCIA', rotulo: 'Com divergência' },
+    { valor: 'CANCELADA', rotulo: 'Canceladas' },
+    { valor: 'TODAS', rotulo: 'Todas' },
+  ];
+  protected readonly motivosDivergencia: { valor: MotivoDivergenciaTransferencia; rotulo: string }[] = [
+    { valor: 'AVARIA', rotulo: 'Avaria' },
+    { valor: 'EXTRAVIO', rotulo: 'Extravio' },
+    { valor: 'OUTRO', rotulo: 'Outro' },
+  ];
   protected readonly motivos: { valor: MotivoPerda; rotulo: string }[] = [
     { valor: 'VENCIMENTO', rotulo: 'Vencimento' },
     { valor: 'AVARIA', rotulo: 'Avaria' },
@@ -86,6 +119,7 @@ export class Farmacia {
   protected readonly dispensacoes = signal<DispensacaoResponseDto[]>([]);
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly pacientes = signal<PacienteResponseDto[]>([]);
+  protected readonly transferencias = signal<TransferenciaFarmaciaResponseDto[]>([]);
   protected readonly carregando = signal(true);
 
   protected readonly aba = signal<Aba>('estoque');
@@ -94,6 +128,8 @@ export class Farmacia {
   protected readonly filtroVencimento = signal(false);
   protected readonly buscaDisp = signal('');
   protected readonly buscaMed = signal('');
+  protected readonly filtroStatusTransf = signal<FiltroStatusTransferencia>('EM_TRANSITO');
+  protected readonly filtroDestinoTransf = signal('');
 
   protected readonly livroLoteId = signal<string | null>(null);
   protected readonly extrato = signal<MovimentacaoFarmaciaResponseDto[]>([]);
@@ -146,6 +182,26 @@ export class Farmacia {
     saldoContado: [''],
     justificativa: [''],
     profissionalMatricula: [''],
+  });
+
+  protected readonly transfForm = this.fb.nonNullable.group({
+    loteId: [''],
+    unidadeDestinoId: [''],
+    quantidade: [''],
+    profissionalMatricula: [''],
+    observacao: [''],
+  });
+
+  protected readonly receberForm = this.fb.nonNullable.group({
+    quantidadeRecebida: [''],
+    profissionalMatricula: [''],
+    motivoDivergencia: ['' as MotivoDivergenciaTransferencia | ''],
+    justificativaDivergencia: [''],
+  });
+
+  protected readonly cancelarForm = this.fb.nonNullable.group({
+    profissionalMatricula: [''],
+    motivo: [''],
   });
 
   // ── Dados derivados ────────────────────────────────────────────────────────────────────────────
@@ -215,6 +271,16 @@ export class Farmacia {
 
   private readonly dispensacaoPorId = computed(() => new Map(this.dispensacoes().map((d) => [d.uuid, d])));
 
+  protected readonly emTransito = computed(() => this.transferencias().filter((t) => t.status === 'EM_TRANSITO').length);
+
+  protected readonly transfFiltradas = computed(() => {
+    const status = this.filtroStatusTransf();
+    const destino = this.filtroDestinoTransf();
+    return this.transferencias()
+      .filter((t) => status === 'TODAS' || t.status === status)
+      .filter((t) => !destino || t.unidadeDestinoId === destino);
+  });
+
   protected readonly medicamentosAtivos = computed(() => this.medicamentos().filter((m) => m.ativo));
 
   constructor() {
@@ -230,10 +296,12 @@ export class Farmacia {
       medicamentos: this.medicamentoService.listar().pipe(catchError(() => of([]))),
       lotes: this.loteService.listar().pipe(catchError(() => of([]))),
       dispensacoes: this.dispensacaoService.listar().pipe(catchError(() => of([]))),
-    }).subscribe(({ medicamentos, lotes, dispensacoes }) => {
+      transferencias: this.transferenciaService.listar().pipe(catchError(() => of([]))),
+    }).subscribe(({ medicamentos, lotes, dispensacoes, transferencias }) => {
       this.medicamentos.set(medicamentos);
       this.lotes.set(lotes);
       this.dispensacoes.set(dispensacoes);
+      this.transferencias.set(transferencias);
       this.carregando.set(false);
       if (this.aba() === 'livro') this.carregarExtrato();
     });
@@ -244,6 +312,7 @@ export class Farmacia {
   protected readonly abas: { id: Aba; rotulo: string }[] = [
     { id: 'estoque', rotulo: 'Estoque por lote' },
     { id: 'disp', rotulo: 'Dispensações' },
+    { id: 'transf', rotulo: 'Transferências' },
     { id: 'med', rotulo: 'Medicamentos' },
     { id: 'livro', rotulo: 'Livro de estoque' },
   ];
@@ -251,6 +320,7 @@ export class Farmacia {
   protected contagem(aba: Aba): number | null {
     if (aba === 'estoque') return this.lotes().length;
     if (aba === 'disp') return this.dispensacoes().length;
+    if (aba === 'transf') return this.emTransito();
     if (aba === 'med') return this.medicamentos().length;
     return null;
   }
@@ -347,6 +417,10 @@ export class Farmacia {
     }
   }
 
+  protected rotuloDivergencia(motivo: MotivoDivergenciaTransferencia | null | undefined): string {
+    return this.motivosDivergencia.find((m) => m.valor === motivo)?.rotulo ?? '—';
+  }
+
   protected classeDelta(v: number): string {
     return v > 0 ? 'delta-pos' : v < 0 ? 'delta-neg' : 'delta-zero';
   }
@@ -375,6 +449,14 @@ export class Farmacia {
         return 'Perda ou ajuste de inventário';
       case 'disp-view':
         return 'Dispensação';
+      case 'transf':
+        return 'Transferir para outra unidade';
+      case 'receber':
+        return 'Conferir recebimento';
+      case 'cancelar':
+        return 'Cancelar transferência';
+      case 'transf-view':
+        return 'Transferência';
     }
   }
 
@@ -439,6 +521,47 @@ export class Farmacia {
     this.abrir({ tipo: 'disp-view', disp });
   }
 
+  protected abrirTransferencia(loteId = ''): void {
+    this.transfForm.reset({ loteId, unidadeDestinoId: '', quantidade: '', profissionalMatricula: '', observacao: '' });
+    this.abrir({ tipo: 'transf' });
+  }
+
+  protected abrirRecebimento(transf: TransferenciaFarmaciaResponseDto): void {
+    this.receberForm.reset({
+      quantidadeRecebida: String(transf.quantidade),
+      profissionalMatricula: '',
+      motivoDivergencia: '',
+      justificativaDivergencia: '',
+    });
+    this.abrir({ tipo: 'receber', transf });
+  }
+
+  protected abrirCancelamento(transf: TransferenciaFarmaciaResponseDto): void {
+    this.cancelarForm.reset({ profissionalMatricula: '', motivo: '' });
+    this.abrir({ tipo: 'cancelar', transf });
+  }
+
+  protected verTransferencia(transf: TransferenciaFarmaciaResponseDto): void {
+    this.abrir({ tipo: 'transf-view', transf });
+  }
+
+  /** Só lotes com saldo e dentro da validade — lote vencido vai para perda, não circula (ADR-0059). */
+  protected lotesTransferiveis(): LoteInfo[] {
+    return this.lotesInfo().filter((i) => i.lote.quantidade > 0 && i.dias >= 0);
+  }
+
+  protected unidadesDestino(): UnidadeSaudeResponseDto[] {
+    const origem = this.loteSelecionado(this.transfForm.controls.loteId.value)?.lote.unidadeUuid;
+    return this.unidades().filter((u) => u.uuid !== origem);
+  }
+
+  /** Enviado − recebido na gaveta de conferência; nulo enquanto a quantidade não é válida. */
+  protected divergenciaRecebimento(t: TransferenciaFarmaciaResponseDto): number | null {
+    const v = this.receberForm.controls.quantidadeRecebida.value;
+    const recebida = Number(v);
+    return v === '' || !Number.isInteger(recebida) || recebida < 0 ? null : t.quantidade - recebida;
+  }
+
   protected lotesComSaldo(): LoteInfo[] {
     return this.lotesInfo().filter((i) => i.lote.quantidade > 0);
   }
@@ -498,6 +621,12 @@ export class Farmacia {
         return this.salvarDispensacao();
       case 'mov':
         return this.salvarMovimentacao();
+      case 'transf':
+        return this.salvarTransferencia();
+      case 'receber':
+        return this.salvarRecebimento(g.transf);
+      case 'cancelar':
+        return this.salvarCancelamento(g.transf);
     }
   }
 
@@ -638,6 +767,79 @@ export class Farmacia {
       }),
       'Ajuste de inventário registrado',
       `Diferença ${this.sinal(diferenca)}`,
+    );
+  }
+
+  private salvarTransferencia(): void {
+    const v = this.transfForm.getRawValue();
+    const qtd = Number(v.quantidade);
+    const erros: Record<string, string> = {};
+    if (!v.loteId) erros['loteId'] = 'Selecione o lote.';
+    if (!v.unidadeDestinoId) erros['unidadeDestinoId'] = 'Selecione a unidade de destino.';
+    if (v.quantidade === '' || !Number.isInteger(qtd) || qtd <= 0) erros['quantidade'] = 'A quantidade precisa ser maior que zero.';
+    if (!v.profissionalMatricula.trim()) erros['profissionalMatricula'] = 'Informe a matrícula de quem envia.';
+    const lote = this.loteSelecionado(v.loteId);
+    if (!erros['quantidade'] && lote && qtd > lote.lote.quantidade) {
+      erros['quantidade'] = `Máximo disponível: ${this.formatarNumero(lote.lote.quantidade)}.`;
+    }
+    if (!this.validar(erros)) return;
+    const destino = this.unidades().find((u) => u.uuid === v.unidadeDestinoId);
+    this.enviar(
+      this.transferenciaService.enviar({
+        loteOrigemId: v.loteId,
+        unidadeDestinoId: v.unidadeDestinoId,
+        quantidade: qtd,
+        profissionalMatricula: v.profissionalMatricula.trim(),
+        observacao: v.observacao.trim() || undefined,
+      }),
+      'Transferência enviada',
+      `${this.formatarNumero(qtd)} un. em trânsito para ${destino?.nome ?? 'a unidade de destino'}`,
+    );
+  }
+
+  private salvarRecebimento(t: TransferenciaFarmaciaResponseDto): void {
+    const v = this.receberForm.getRawValue();
+    const recebida = Number(v.quantidadeRecebida);
+    const justificativa = v.justificativaDivergencia.trim();
+    const erros: Record<string, string> = {};
+    if (v.quantidadeRecebida === '' || !Number.isInteger(recebida) || recebida < 0) {
+      erros['quantidadeRecebida'] = 'Informe a quantidade que chegou (0 ou mais).';
+    } else if (recebida > t.quantidade) {
+      erros['quantidadeRecebida'] = `Foram enviadas ${this.formatarNumero(t.quantidade)} unidades.`;
+    }
+    const matricula = v.profissionalMatricula.trim();
+    if (!matricula) erros['profissionalMatricula'] = 'Informe a matrícula de quem conferiu.';
+    else if (matricula === t.profissionalMatricula) {
+      erros['profissionalMatricula'] = 'O recebimento precisa ser conferido por outro profissional, não por quem enviou.';
+    }
+    const divergente = !erros['quantidadeRecebida'] && recebida < t.quantidade;
+    if (divergente && !v.motivoDivergencia) erros['motivoDivergencia'] = 'Selecione o motivo da divergência.';
+    if (divergente && !justificativa) erros['justificativaDivergencia'] = 'Descreva o que aconteceu com o que não chegou.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.transferenciaService.receber(t.uuid, {
+        quantidadeRecebida: recebida,
+        profissionalMatricula: matricula,
+        motivoDivergencia: divergente ? (v.motivoDivergencia as MotivoDivergenciaTransferencia) : undefined,
+        justificativaDivergencia: divergente ? justificativa : undefined,
+      }),
+      divergente ? 'Recebimento registrado com divergência' : 'Recebimento registrado',
+      divergente
+        ? `${this.formatarNumero(recebida)} de ${this.formatarNumero(t.quantidade)} un. · ${this.formatarNumero(t.quantidade - recebida)} não chegaram`
+        : `${this.formatarNumero(recebida)} un. em ${t.unidadeDestinoNome}`,
+    );
+  }
+
+  private salvarCancelamento(t: TransferenciaFarmaciaResponseDto): void {
+    const v = this.cancelarForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.motivo.trim()) erros['motivo'] = 'Informe o motivo do cancelamento.';
+    if (!v.profissionalMatricula.trim()) erros['profissionalMatricula'] = 'Informe a matrícula.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.transferenciaService.cancelar(t.uuid, { profissionalMatricula: v.profissionalMatricula.trim(), motivo: v.motivo.trim() }),
+      'Transferência cancelada',
+      `${this.formatarNumero(t.quantidade)} un. voltaram ao lote ${t.numeroLote} em ${t.unidadeOrigemNome}`,
     );
   }
 

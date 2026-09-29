@@ -32,8 +32,8 @@ por depender desta entidade existir primeiro. Nenhuma implementação ainda refe
 | 3 | `Dispensacao`, só criação/leitura em `/api/v1/dispensacao/` (sem PATCH — imutável), debita `Lote.quantidade`, testes JUnit + Robot | [0051](../adr/0051-dispensacao-terceira-entidade-da-farmacia.md) | [#230](https://github.com/dufelizardo/mais_saude_publica/pull/230) | ✅ |
 | 4 | Livro de movimentação (`MovimentacaoFarmacia`): entrada, dispensação, perda (com motivo) e ajuste de inventário lançados num histórico imutável com saldo resultante, responsável e hora do servidor; `Lote.quantidade` só muda pelo livro; edição de lote restrita a número/validade; trava de linha contra venda dupla; saldo inicial dos lotes antigos; extrato por lote em `/api/v1/movimentacao-farmacia/`; testes JUnit + Robot | [0057](../adr/0057-livro-de-movimentacao-do-estoque-da-farmacia.md) | [#245](https://github.com/dufelizardo/mais_saude_publica/pull/245) | ✅ |
 | 5 | `TransferenciaFarmacia`: transferência de parte do saldo de um lote para outra unidade — saída e entrada ligadas no livro (`TRANSFERENCIA_SAIDA`/`TRANSFERENCIA_ENTRADA`), lote da mesma remessa no destino (criado se não existir), bloqueio de lote vencido, travas em ordem fixa; `/api/v1/transferencia-farmacia/`; testes JUnit + Robot | [0059](../adr/0059-transferencia-de-estoque-entre-unidades.md) | [#247](https://github.com/dufelizardo/mais_saude_publica/pull/247) | ✅ |
-| 6 | Uma remessa, um lote por unidade: entrada da mesma remessa soma no lote existente (200), correção que duplicaria remessa → 422, trava da unidade antes de procurar a remessa (entrada, correção, transferência), índice único parcial e incorporação auditável de duplicados antigos (`INCORPORACAO_SAIDA`/`INCORPORACAO_ENTRADA`) | [0060](../adr/0060-uma-remessa-um-lote-por-unidade.md) | *(em aberto)* | 🔵 |
-| 7 | Transferência em duas etapas: envio (`EM_TRANSITO`), recebimento conferido por outro profissional (`RECEBIDA` / `RECEBIDA_COM_DIVERGENCIA` com motivo e justificativa) ou cancelamento com `TRANSFERENCIA_ESTORNO`; listagem filtrável por status e unidade; transferências imediatas antigas viram `RECEBIDA` | [0061](../adr/0061-transferencia-em-duas-etapas-envio-e-recebimento.md) | *(em aberto)* | 🔵 |
+| 6 | Uma remessa, um lote por unidade: entrada da mesma remessa soma no lote existente (200), correção que duplicaria remessa → 422, trava da unidade antes de procurar a remessa (entrada, correção, transferência), índice único parcial e incorporação auditável de duplicados antigos (`INCORPORACAO_SAIDA`/`INCORPORACAO_ENTRADA`) | [0060](../adr/0060-uma-remessa-um-lote-por-unidade.md) | [#248](https://github.com/dufelizardo/mais_saude_publica/pull/248) | ✅ |
+| 7 | Transferência em duas etapas: envio (`EM_TRANSITO`), recebimento conferido por outro profissional (`RECEBIDA` / `RECEBIDA_COM_DIVERGENCIA` com motivo e justificativa) ou cancelamento com `TRANSFERENCIA_ESTORNO`; listagem filtrável por status e unidade; transferências imediatas antigas viram `RECEBIDA` | [0061](../adr/0061-transferencia-em-duas-etapas-envio-e-recebimento.md) | [#249](https://github.com/dufelizardo/mais_saude_publica/pull/249) | ✅ |
 
 Todas as fases mergeadas (ou em PR) em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
 solicitada.
@@ -46,13 +46,14 @@ os dois viraram tipos de lançamento do mesmo livro (ADR-0057).
 1. ~~**Telas da Farmácia**~~ — feito, ver seção 5.
 2. ~~**Transferência entre unidades**~~ (backend) — feito, fase 5.
 3. ~~**Transferência em duas etapas**~~ — feito, fase 7.
-4. **Gaveta de transferência** na tela da Farmácia (frontend), já no fluxo de envio e recebimento.
+4. ~~**Gaveta de transferência**~~ — feito, fase F2 do frontend.
 
 ## 5. Estado do frontend
 
 | Fase | Escopo | ADR | PR(s) | Status |
 |---|---|---|---|---|
 | F1 | Tela `assistencia/farmacia` portada do mockup `Farmacia.html`: resumo, abas Estoque por lote (filtro por unidade e vencimento), Dispensações, Medicamentos e Livro de estoque (extrato); gavetas de novo/editar medicamento, entrada e correção de lote, dispensação, perda/ajuste e detalhe da dispensação; `pacienteCpf` na resposta da dispensação | [0058](../adr/0058-tela-da-farmacia-abas-gaveta-lateral-e-livro-de-estoque.md) | [#246](https://github.com/dufelizardo/mais_saude_publica/pull/246) | ✅ |
+| F2 | Aba Transferências (contador de em trânsito, filtros por situação e unidade de destino), botão "Transferir" na linha do lote e gavetas de envio, conferência de recebimento (com divergência) e cancelamento, mais o detalhe das três etapas | [0058](../adr/0058-tela-da-farmacia-abas-gaveta-lateral-e-livro-de-estoque.md) (adendo) | *(em aberto)* | 🔵 |
 
 ## 6. Referências
 
