@@ -88,6 +88,8 @@ public class IncorporacaoLotesDuplicados implements ApplicationRunner {
                     incorporados);
         }
 
+        // O índice é criado por JDBC, fora do Hibernate: a incorporação precisa já estar no banco.
+        loteRepository.flush();
         jdbcTemplate.execute("CREATE UNIQUE INDEX IF NOT EXISTS " + INDICE_REMESSA_UNICA
                 + " ON tb_lote (medicamento_id, unidade_id, numero_lote, validade) WHERE lote_incorporador_id IS NULL");
     }
