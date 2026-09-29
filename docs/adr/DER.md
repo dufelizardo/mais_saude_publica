@@ -732,8 +732,15 @@ medicamento tem lote/validade/controle de dispensação que material de almoxari
 > `UnidadeDeSaude` (estoque rastreado por unidade, não um estoque único da rede). `Dispensacao`
 > referencia `Lote`/`Paciente`/`Profissional` (e opcionalmente `Consulta`), é **create-only** (sem
 > PATCH — histórico imutável) e debita `Lote.quantidade` como efeito colateral do create.
-> `MovimentacaoFarmacia`, `TransferenciaEntreUnidades`, `Perda` e `InventarioFarmacia` continuam
-> como esboço, não implementados.
+>
+> **`MovimentacaoFarmacia` também foi implementada** — ver
+> [ADR-0057](./0057-livro-de-movimentacao-do-estoque-da-farmacia.md). É o livro imutável de cada
+> `Lote` (FK obrigatória), com FKs opcionais a `Profissional` e `Dispensacao`; tipos `SALDO_INICIAL`,
+> `ENTRADA`, `DISPENSACAO`, `PERDA` (com `MotivoPerda`) e `AJUSTE_INVENTARIO`, variação com sinal e
+> `saldoApos`. `Perda` e `InventarioFarmacia` deixaram de ser entidades candidatas — viraram tipos de
+> lançamento. `Lote.quantidade` continua existindo como saldo atual, mas só muda pelo livro (revisão
+> da simplificação "contador simples" da ADR-0050). `TransferenciaEntreUnidades` continua como
+> esboço.
 
 - `Medicamento`, `Lote` (validade, quantidade), `Dispensacao`, `MovimentacaoFarmacia`,
   `TransferenciaEntreUnidades`, `Perda`, `InventarioFarmacia`.

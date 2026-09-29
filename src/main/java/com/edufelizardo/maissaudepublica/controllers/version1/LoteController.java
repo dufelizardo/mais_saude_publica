@@ -5,6 +5,7 @@ import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorR
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.LoteAtualizacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.LoteRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.LoteResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
@@ -85,8 +86,9 @@ public class LoteController {
     }
 
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza um lote",
-            description = "Substitui os campos editáveis por inteiro — cobre corrigir quantidade após dispensação ou perda.",
+    @Operation(summary = "Corrige número do lote e validade",
+            description = "Só corrige o que foi digitado errado na entrada. Quantidade muda apenas pelo livro de "
+                    + "movimentação (/api/v1/movimentacao-farmacia/); medicamento e unidade não mudam (ADR-0057).",
             tags = "Lote")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
@@ -96,11 +98,11 @@ public class LoteController {
                     value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> update(@PathVariable UUID uuid, @Valid @RequestBody LoteRequestDto dto) {
+    public ResponseEntity<SuccessResponseDto> update(@PathVariable UUID uuid, @Valid @RequestBody LoteAtualizacaoRequestDto dto) {
         LoteResponseDto responseDto = service.atualizar(uuid, dto);
 
         String successMessage = "Lote atualizado com sucesso!";
-        String details = "Quantidade: " + responseDto.getQuantidade();
+        String details = "Lote: " + responseDto.getNumeroLote() + ", Validade: " + responseDto.getValidade();
 
         return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
     }

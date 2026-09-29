@@ -29,17 +29,29 @@ por depender desta entidade existir primeiro. Nenhuma implementação ainda refe
 |---|---|---|---|---|
 | 1 | `Medicamento`, CRUD em `/api/v1/medicamento/`, testes JUnit + Robot | [0049](../adr/0049-medicamento-primeira-entidade-da-farmacia.md) | [#228](https://github.com/dufelizardo/mais_saude_publica/pull/228) | ✅ |
 | 2 | `Lote`, CRUD em `/api/v1/lote/` (FKs a Medicamento e UnidadeDeSaude), testes JUnit + Robot | [0050](../adr/0050-lote-segunda-entidade-da-farmacia.md) | [#229](https://github.com/dufelizardo/mais_saude_publica/pull/229) | ✅ |
-| 3 | `Dispensacao`, só criação/leitura em `/api/v1/dispensacao/` (sem PATCH — imutável), debita `Lote.quantidade`, testes JUnit + Robot | [0051](../adr/0051-dispensacao-terceira-entidade-da-farmacia.md) | *(em aberto)* | 🔵 |
+| 3 | `Dispensacao`, só criação/leitura em `/api/v1/dispensacao/` (sem PATCH — imutável), debita `Lote.quantidade`, testes JUnit + Robot | [0051](../adr/0051-dispensacao-terceira-entidade-da-farmacia.md) | [#230](https://github.com/dufelizardo/mais_saude_publica/pull/230) | ✅ |
+| 4 | Livro de movimentação (`MovimentacaoFarmacia`): entrada, dispensação, perda (com motivo) e ajuste de inventário lançados num histórico imutável com saldo resultante, responsável e hora do servidor; `Lote.quantidade` só muda pelo livro; edição de lote restrita a número/validade; trava de linha contra venda dupla; saldo inicial dos lotes antigos; extrato por lote em `/api/v1/movimentacao-farmacia/`; testes JUnit + Robot | [0057](../adr/0057-livro-de-movimentacao-do-estoque-da-farmacia.md) | *(em aberto)* | 🔵 |
 
 Todas as fases mergeadas (ou em PR) em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
 solicitada.
 
-Próximos candidatos do domínio (`MovimentacaoFarmacia`, `TransferenciaEntreUnidades`, `Perda`,
-`InventarioFarmacia`) — sem ADR, sem implementação, só quando houver requisito real.
+A fase 4 cobre o que antes estava listado como candidatos separados `Perda` e `InventarioFarmacia`:
+os dois viraram tipos de lançamento do mesmo livro (ADR-0057).
+
+### Próximos passos (ordem combinada)
+
+1. **Telas da Farmácia** (frontend, ver seção 5).
+2. **Transferência entre unidades** (backend) — saída no lote de origem e entrada no lote de destino,
+   como dois lançamentos ligados no livro da fase 4, numa transação só.
 
 ## 5. Estado do frontend
 
-Não iniciado — nenhuma tela para Medicamento ainda.
+Não iniciado. Próxima fatia do domínio, nesta ordem de telas:
+
+- catálogo de medicamentos;
+- estoque por unidade, com o extrato de movimentação de cada lote;
+- dispensação;
+- registro de perda e ajuste de inventário.
 
 ## 6. Referências
 
@@ -52,3 +64,5 @@ Não iniciado — nenhuma tela para Medicamento ainda.
   (`Lote`), incluindo a nota sobre a colisão de nome com o candidato `Lote` do domínio Estoque (#13).
 - [ADR-0051](../adr/0051-dispensacao-terceira-entidade-da-farmacia.md) — decisão de design da fase 3
   (`Dispensacao`), incluindo a decisão de ser create-only (sem PATCH) e debitar `Lote.quantidade`.
+- [ADR-0057](../adr/0057-livro-de-movimentacao-do-estoque-da-farmacia.md) — decisão de design da fase 4
+  (livro de movimentação), que revê o contador simples da ADR-0050.

@@ -2,11 +2,14 @@ package com.edufelizardo.maissaudepublica.controllers.version1;
 
 import com.edufelizardo.maissaudepublica.models.Lote;
 import com.edufelizardo.maissaudepublica.models.Medicamento;
+import com.edufelizardo.maissaudepublica.models.MovimentacaoFarmacia;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoMovimentacaoFarmacia;
 import com.edufelizardo.maissaudepublica.repositories.DispensacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.LoteRepository;
+import com.edufelizardo.maissaudepublica.repositories.MovimentacaoFarmaciaRepository;
 import com.edufelizardo.maissaudepublica.repositories.MedicamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
@@ -62,6 +65,9 @@ class DispensacaoControllerTest {
     private LoteRepository loteRepository;
 
     @Autowired
+    private MovimentacaoFarmaciaRepository movimentacaoFarmaciaRepository;
+
+    @Autowired
     private MedicamentoRepository medicamentoRepository;
 
     @Autowired
@@ -77,7 +83,8 @@ class DispensacaoControllerTest {
     void limparDadosDeTeste() {
         // Dispensacao/Lote não têm campo de teste próprio para filtrar sem navegar associações LAZY
         // fora de transação. Este é o único teste que os cria, então apagar tudo é seguro.
-        // Dispensacao sai primeiro: referencia Lote, que seria bloqueado pela FK.
+        // O livro sai primeiro (referencia Dispensacao e Lote), depois Dispensacao (referencia Lote).
+        movimentacaoFarmaciaRepository.deleteAll();
         dispensacaoRepository.deleteAll();
         loteRepository.deleteAll();
 
@@ -320,6 +327,15 @@ class DispensacaoControllerTest {
 
         Lote lote = loteRepository.findById(seed.loteId()).orElseThrow();
         assertThat(lote.getQuantidade()).isEqualTo(70);
+
+        List<MovimentacaoFarmacia> extrato = movimentacaoFarmaciaRepository.findByLote_UuidOrderByRegistradoEmAsc(seed.loteId());
+        assertThat(extrato).extracting(MovimentacaoFarmacia::getTipo)
+                .containsExactly(TipoMovimentacaoFarmacia.ENTRADA, TipoMovimentacaoFarmacia.DISPENSACAO);
+        MovimentacaoFarmacia saida = extrato.get(1);
+        assertThat(saida.getQuantidade()).isEqualTo(-30);
+        assertThat(saida.getSaldoApos()).isEqualTo(70);
+        assertThat(saida.getDispensacao()).isNotNull();
+        assertThat(saida.getProfissional()).isNotNull();
     }
 
     @Test
@@ -355,6 +371,9 @@ class DispensacaoControllerTest {
 
         Lote lote = loteRepository.findById(seed.loteId()).orElseThrow();
         assertThat(lote.getQuantidade()).isEqualTo(10);
+        // A dispensação é gravada antes do lançamento; o 422 precisa desfazer a transação inteira.
+        assertThat(dispensacaoRepository.count()).isZero();
+        assertThat(movimentacaoFarmaciaRepository.findByLote_UuidOrderByRegistradoEmAsc(seed.loteId())).hasSize(1);
     }
 
     @Test
