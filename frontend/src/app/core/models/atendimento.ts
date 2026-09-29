@@ -36,4 +36,5 @@ export interface AtendimentoResponseDto {
   totalConsultas?: number;
   totalProcedimentos?: number;
   totalEvolucoes?: number;
+  totalAdministracoes?: number;
 }

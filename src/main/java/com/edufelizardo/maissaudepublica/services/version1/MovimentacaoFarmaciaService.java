@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.models.AdministracaoMedicamento;
 import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
@@ -54,11 +55,26 @@ public class MovimentacaoFarmaciaService {
         return lancar(lote, tipo, variacao, profissional, motivoPerda, justificativa, dispensacao, null);
     }
 
-    /** Mesmo que o anterior, ligando o lançamento à transferência que o originou (ADR-0059). */
+    /** Lançamento de uma administração ao paciente, ou do seu estorno (ADR-0064). */
+    @Transactional
+    public MovimentacaoFarmacia lancarAdministracao(Lote lote, TipoMovimentacaoFarmacia tipo, int variacao,
+                                                    Profissional profissional, String justificativa,
+                                                    AdministracaoMedicamento administracao) {
+        return lancar(lote, tipo, variacao, profissional, null, justificativa, null, null, administracao);
+    }
+
     @Transactional
     public MovimentacaoFarmacia lancar(Lote lote, TipoMovimentacaoFarmacia tipo, int variacao, Profissional profissional,
                                        MotivoPerda motivoPerda, String justificativa, Dispensacao dispensacao,
                                        TransferenciaFarmacia transferencia) {
+        return lancar(lote, tipo, variacao, profissional, motivoPerda, justificativa, dispensacao, transferencia, null);
+    }
+
+    /** Forma completa: liga o lançamento à transferência (ADR-0059) ou à administração (ADR-0064) que o originou. */
+    @Transactional
+    public MovimentacaoFarmacia lancar(Lote lote, TipoMovimentacaoFarmacia tipo, int variacao, Profissional profissional,
+                                       MotivoPerda motivoPerda, String justificativa, Dispensacao dispensacao,
+                                       TransferenciaFarmacia transferencia, AdministracaoMedicamento administracao) {
         if (lote.getLoteIncorporador() != null) {
             throw new ResourceUnprocessableEntityException(
                     "O lote " + lote.getNumeroLote() + " foi incorporado ao lote " + lote.getLoteIncorporador().getUuid()
@@ -74,7 +90,8 @@ public class MovimentacaoFarmaciaService {
         loteRepository.save(lote);
 
         MovimentacaoFarmacia movimentacao = new MovimentacaoFarmacia(null, lote, tipo, variacao, saldoApos,
-                motivoPerda, justificativa, profissional, dispensacao, transferencia, Instant.now(), cpfDoUsuarioAutenticado());
+                motivoPerda, justificativa, profissional, dispensacao, transferencia, administracao, Instant.now(),
+                cpfDoUsuarioAutenticado());
         return movimentacaoRepository.save(movimentacao);
     }
 
@@ -83,7 +100,7 @@ public class MovimentacaoFarmaciaService {
         TipoMovimentacaoFarmacia tipo = dto.getTipo();
         if (tipo != TipoMovimentacaoFarmacia.PERDA && tipo != TipoMovimentacaoFarmacia.AJUSTE_INVENTARIO) {
             throw new ResourceBadRequestException(
-                    "Só é possível lançar PERDA ou AJUSTE_INVENTARIO: entrada, dispensação e transferência são registradas pelo próprio sistema.");
+                    "Só é possível lançar PERDA ou AJUSTE_INVENTARIO: entrada, dispensação, transferência e administração são registradas pelo próprio sistema.");
         }
 
         Lote lote = loteRepository.findByIdParaMovimentar(dto.getLoteId())

@@ -46,6 +46,7 @@ public class AtendimentoResponseDto implements Serializable {
     private Long totalConsultas;
     private Long totalProcedimentos;
     private Long totalEvolucoes;
+    private Long totalAdministracoes;
 
     public static AtendimentoResponseDto fromAtendimento(Atendimento atendimento) {
         UUID setorUuid = null;
@@ -74,7 +75,7 @@ public class AtendimentoResponseDto implements Serializable {
                 atendimento.getDataHora(),
                 atendimento.getPaciente().getCpf(),
                 atendimento.getPaciente().getDataNascimento(),
-                null, null, null, null, null
+                null, null, null, null, null, null
         );
     }
 }

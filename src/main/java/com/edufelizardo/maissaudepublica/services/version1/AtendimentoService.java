@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.repositories.AdministracaoMedicamentoRepository;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,6 +72,9 @@ public class AtendimentoService {
     @Autowired
     private EvolucaoEnfermagemRepository evolucaoEnfermagemRepository;
 
+    @Autowired
+    private AdministracaoMedicamentoRepository administracaoMedicamentoRepository;
+
     /**
      * Um atendimento aberto a partir de um agendamento marca o agendamento como REALIZADO na mesma
      * transação (ADR-0062) — não há mais duas chamadas que possam falhar pela metade.
@@ -141,7 +145,8 @@ public class AtendimentoService {
 
     /** Contagem de registros vigentes e risco da triagem mais recente, por atendimento. */
     private record ResumoClinico(Map<UUID, ClassificacaoRisco> risco, Map<UUID, Long> triagens,
-                                 Map<UUID, Long> consultas, Map<UUID, Long> procedimentos, Map<UUID, Long> evolucoes) {
+                                 Map<UUID, Long> consultas, Map<UUID, Long> procedimentos, Map<UUID, Long> evolucoes,
+                                 Map<UUID, Long> administracoes) {
         AtendimentoResponseDto aplicar(AtendimentoResponseDto dto) {
             UUID id = dto.getUuid();
             dto.setClassificacaoRiscoAtual(risco.get(id));
@@ -149,6 +154,7 @@ public class AtendimentoService {
             dto.setTotalConsultas(consultas.getOrDefault(id, 0L));
             dto.setTotalProcedimentos(procedimentos.getOrDefault(id, 0L));
             dto.setTotalEvolucoes(evolucoes.getOrDefault(id, 0L));
+            dto.setTotalAdministracoes(administracoes.getOrDefault(id, 0L));
             return dto;
         }
     }
@@ -161,7 +167,8 @@ public class AtendimentoService {
         return new ResumoClinico(risco, contagens(triagemRepository.contarVigentesPorAtendimento()),
                 contagens(consultaRepository.contarVigentesPorAtendimento()),
                 contagens(procedimentoRepository.contarVigentesPorAtendimento()),
-                contagens(evolucaoEnfermagemRepository.contarVigentesPorAtendimento()));
+                contagens(evolucaoEnfermagemRepository.contarVigentesPorAtendimento()),
+                contagens(administracaoMedicamentoRepository.contarVigentesPorAtendimento()));
     }
 
     private static Map<UUID, Long> contagens(List<Object[]> linhas) {
@@ -171,7 +178,8 @@ public class AtendimentoService {
     private boolean temRegistroClinico(UUID atendimentoId) {
         return !triagemRepository.findByAtendimentoUuid(atendimentoId).isEmpty()
                 || !consultaRepository.findByAtendimentoUuid(atendimentoId).isEmpty()
-                || !evolucaoEnfermagemRepository.findByAtendimentoUuid(atendimentoId).isEmpty();
+                || !evolucaoEnfermagemRepository.findByAtendimentoUuid(atendimentoId).isEmpty()
+                || !administracaoMedicamentoRepository.findByAtendimentoUuid(atendimentoId).isEmpty();
     }
 
     /** O agendamento precisa ser do mesmo paciente e ainda estar em aberto; vira REALIZADO. */

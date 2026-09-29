@@ -7,10 +7,18 @@ import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
+import {
+  AdministracaoMedicamentoResponseDto,
+  MotivoNaoAdministracao,
+  SituacaoAdministracao,
+  ViaAdministracao,
+} from '../../../core/models/administracao-medicamento';
 import { AgendamentoResponseDto, StatusAgendamento, TipoAgendamento } from '../../../core/models/agendamento';
 import { AtendimentoResponseDto, StatusAtendimento, TipoAtendimento } from '../../../core/models/atendimento';
 import { ConsultaResponseDto, TipoConsulta } from '../../../core/models/consulta';
 import { EvolucaoEnfermagemResponseDto } from '../../../core/models/evolucao-enfermagem';
+import { LoteResponseDto } from '../../../core/models/lote';
+import { MedicamentoResponseDto } from '../../../core/models/medicamento';
 import { PacienteResponseDto } from '../../../core/models/paciente';
 import { ProcedimentoResponseDto, StatusProcedimento } from '../../../core/models/procedimento';
 import { ErrorResponseDto, SuccessResponseDto } from '../../../core/models/profissional';
@@ -18,10 +26,13 @@ import { ProntuarioAtendimentoDto, ProntuarioResponseDto } from '../../../core/m
 import { SetorResponseDto } from '../../../core/models/setor';
 import { ClassificacaoRisco, TriagemResponseDto } from '../../../core/models/triagem';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
+import { AdministracaoMedicamentoService } from '../../../core/services/administracao-medicamento';
 import { AgendamentoService } from '../../../core/services/agendamento';
 import { AtendimentoService } from '../../../core/services/atendimento';
 import { ConsultaService } from '../../../core/services/consulta';
 import { EvolucaoEnfermagemService } from '../../../core/services/evolucao-enfermagem';
+import { LoteService } from '../../../core/services/lote';
+import { MedicamentoService } from '../../../core/services/medicamento';
 import { PacienteService } from '../../../core/services/paciente';
 import { ProcedimentoService } from '../../../core/services/procedimento';
 import { ProntuarioService } from '../../../core/services/prontuario';
@@ -29,7 +40,7 @@ import { SetorService } from '../../../core/services/setor';
 import { TriagemService } from '../../../core/services/triagem';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 
-type Aba = 'atend' | 'ag' | 'pront';
+type Aba = 'atend' | 'ag' | 'med' | 'pront';
 
 /**
  * Gaveta aberta. As de registro clínico (triagem, consulta, procedimento, evolução, desfecho) e a
@@ -44,7 +55,8 @@ type Gaveta =
   | { tipo: 'cons'; atId: string; original: ConsultaResponseDto | null }
   | { tipo: 'proc'; atId: string; consultaId: string; original: ProcedimentoResponseDto | null }
   | { tipo: 'proc-status'; atId: string; proc: ProcedimentoResponseDto }
-  | { tipo: 'evo'; atId: string; original: EvolucaoEnfermagemResponseDto | null };
+  | { tipo: 'evo'; atId: string; original: EvolucaoEnfermagemResponseDto | null }
+  | { tipo: 'adm'; atId: string; original: AdministracaoMedicamentoResponseDto | null; voltar: boolean };
 
 const RISCO: Record<ClassificacaoRisco, string> = {
   AZUL: 'Azul · não urgente',
@@ -73,6 +85,26 @@ const PROC_STATUS: Record<StatusProcedimento, { classe: string; rotulo: string }
   CANCELADO: { classe: 'alert', rotulo: 'Cancelado' },
 };
 
+const VIAS: { valor: ViaAdministracao; rotulo: string }[] = [
+  { valor: 'ORAL', rotulo: 'Oral' },
+  { valor: 'SUBLINGUAL', rotulo: 'Sublingual' },
+  { valor: 'INTRAMUSCULAR', rotulo: 'Intramuscular' },
+  { valor: 'INTRAVENOSA', rotulo: 'Intravenosa' },
+  { valor: 'SUBCUTANEA', rotulo: 'Subcutânea' },
+  { valor: 'TOPICA', rotulo: 'Tópica' },
+  { valor: 'INALATORIA', rotulo: 'Inalatória' },
+  { valor: 'RETAL', rotulo: 'Retal' },
+  { valor: 'OUTRA', rotulo: 'Outra' },
+];
+
+const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
+  { valor: 'RECUSA_DO_PACIENTE', rotulo: 'Recusa do paciente' },
+  { valor: 'PACIENTE_AUSENTE', rotulo: 'Paciente ausente' },
+  { valor: 'MEDICAMENTO_EM_FALTA', rotulo: 'Medicamento em falta' },
+  { valor: 'SUSPENSO_PELO_MEDICO', rotulo: 'Suspenso pelo médico' },
+  { valor: 'OUTRO', rotulo: 'Outro' },
+];
+
 /**
  * Tela Atendimentos — do agendamento ao prontuário, portada do mockup Atendimentos.html (ADR-0063).
  * Substitui as telas separadas de Atendimentos, Agendamentos, Consultas, Procedimentos e Prontuário.
@@ -96,6 +128,9 @@ export class Atendimentos {
   private readonly consultaService = inject(ConsultaService);
   private readonly procedimentoService = inject(ProcedimentoService);
   private readonly evolucaoService = inject(EvolucaoEnfermagemService);
+  private readonly administracaoService = inject(AdministracaoMedicamentoService);
+  private readonly loteService = inject(LoteService);
+  private readonly medicamentoService = inject(MedicamentoService);
   private readonly route = inject(ActivatedRoute);
 
   protected readonly formatCpf = formatCpf;
@@ -122,6 +157,8 @@ export class Atendimentos {
     { valor: 'URGENCIA', rotulo: 'Urgência' },
   ];
   protected readonly procStatusLista = Object.keys(PROC_STATUS) as StatusProcedimento[];
+  protected readonly vias = VIAS;
+  protected readonly motivosNao = MOTIVOS_NAO;
   protected readonly filtrosStatus: { valor: StatusAtendimento | ''; rotulo: string }[] = [
     { valor: '', rotulo: 'Todos' },
     { valor: 'AGENDADO', rotulo: 'Aguardando' },
@@ -134,12 +171,18 @@ export class Atendimentos {
   protected readonly pacientes = signal<PacienteResponseDto[]>([]);
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly setores = signal<SetorResponseDto[]>([]);
+  protected readonly consultas = signal<ConsultaResponseDto[]>([]);
+  protected readonly administracoes = signal<AdministracaoMedicamentoResponseDto[]>([]);
+  protected readonly lotes = signal<LoteResponseDto[]>([]);
+  protected readonly medicamentos = signal<MedicamentoResponseDto[]>([]);
   protected readonly carregando = signal(true);
 
   protected readonly aba = signal<Aba>('atend');
   protected readonly buscaAtend = signal('');
   protected readonly filtroStatus = signal<StatusAtendimento | ''>('');
   protected readonly filtroAgPaciente = signal('');
+  protected readonly filtroMedUnidade = signal('');
+  protected readonly medSoAbertos = signal(true);
 
   protected readonly prontPacienteId = signal<string | null>(null);
   protected readonly prontuario = signal<ProntuarioResponseDto | null>(null);
@@ -233,6 +276,21 @@ export class Atendimentos {
     profissionalMatricula: [''],
   });
 
+  protected readonly admForm = this.fb.nonNullable.group({
+    consultaId: [''],
+    medicamentoId: [''],
+    situacao: ['ADMINISTRADO' as SituacaoAdministracao],
+    loteId: [''],
+    dose: [''],
+    via: ['' as ViaAdministracao | ''],
+    quantidade: ['1'],
+    motivoNaoAdministracao: ['' as MotivoNaoAdministracao | ''],
+    observacao: [''],
+    dataHora: [''],
+    profissionalMatricula: [''],
+    motivoRetificacao: [''],
+  });
+
   protected readonly evoForm = this.fb.nonNullable.group({
     dataHora: [''],
     profissionalMatricula: [''],
@@ -280,6 +338,21 @@ export class Atendimentos {
     return mapa;
   });
 
+  /**
+   * Fila da sala de medicação: atendimentos com prescrição (consulta vigente), em aberto por padrão,
+   * do mais recente para o mais antigo.
+   */
+  protected readonly filaMedicacao = computed(() => {
+    const unidade = this.filtroMedUnidade();
+    const soAbertos = this.medSoAbertos();
+    const comPrescricao = new Set(this.consultas().filter((c) => !c.retificado).map((c) => c.atendimentoUuid));
+    return this.atendimentos()
+      .filter((a) => comPrescricao.has(a.uuid))
+      .filter((a) => !soAbertos || a.status !== 'CONCLUIDO')
+      .filter((a) => !unidade || a.unidadeUuid === unidade)
+      .sort((a, b) => b.dataHora.localeCompare(a.dataHora));
+  });
+
   protected readonly prontPaciente = computed(() => this.pacientes().find((p) => p.uuid === this.prontPacienteId()) ?? null);
 
   constructor() {
@@ -287,12 +360,13 @@ export class Atendimentos {
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
     this.unidadeSaudeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
     this.setorService.listar().pipe(catchError(() => of([]))).subscribe((s) => this.setores.set(s));
+    this.medicamentoService.listar().pipe(catchError(() => of([]))).subscribe((m) => this.medicamentos.set(m));
 
     // Links de outras telas (e das rotas antigas): ?aba=ag|pront e ?pacienteId=
     const params = this.route.snapshot.queryParamMap;
     const aba = params.get('aba');
     const pacienteId = params.get('pacienteId');
-    if (aba === 'ag' || aba === 'pront' || aba === 'atend') this.aba.set(aba);
+    if (aba === 'ag' || aba === 'pront' || aba === 'atend' || aba === 'med') this.aba.set(aba);
     if (pacienteId && aba === 'pront') this.carregarProntuario(pacienteId);
     if (pacienteId && aba === 'ag') this.filtroAgPaciente.set(pacienteId);
   }
@@ -303,9 +377,15 @@ export class Atendimentos {
     forkJoin({
       atendimentos: this.atendimentoService.listar().pipe(catchError(() => of([]))),
       agendamentos: this.agendamentoService.listar().pipe(catchError(() => of([]))),
-    }).subscribe(({ atendimentos, agendamentos }) => {
+      consultas: this.consultaService.listar().pipe(catchError(() => of([]))),
+      administracoes: this.administracaoService.listar().pipe(catchError(() => of([]))),
+      lotes: this.loteService.listar().pipe(catchError(() => of([]))),
+    }).subscribe(({ atendimentos, agendamentos, consultas, administracoes, lotes }) => {
       this.atendimentos.set(atendimentos);
       this.agendamentos.set(agendamentos);
+      this.consultas.set(consultas);
+      this.administracoes.set(administracoes);
+      this.lotes.set(lotes);
       this.carregando.set(false);
       depois?.();
     });
@@ -316,12 +396,14 @@ export class Atendimentos {
   protected readonly abas: { id: Aba; rotulo: string }[] = [
     { id: 'atend', rotulo: 'Atendimentos' },
     { id: 'ag', rotulo: 'Agendamentos' },
+    { id: 'med', rotulo: 'Medicação' },
     { id: 'pront', rotulo: 'Prontuário' },
   ];
 
   protected contagem(aba: Aba): number | null {
     if (aba === 'atend') return this.atendimentos().length;
     if (aba === 'ag') return this.agendamentos().length;
+    if (aba === 'med') return this.filaMedicacao().filter((a) => a.status !== 'CONCLUIDO').length;
     return null;
   }
 
@@ -404,6 +486,39 @@ export class Atendimentos {
 
   protected evolucoesVigentes(r: ProntuarioAtendimentoDto | null): EvolucaoEnfermagemResponseDto[] {
     return (r?.evolucoes ?? []).filter((e) => !e.retificado).sort((a, b) => a.dataHora.localeCompare(b.dataHora));
+  }
+
+  protected administracoesVigentes(r: ProntuarioAtendimentoDto | null): AdministracaoMedicamentoResponseDto[] {
+    return (r?.administracoes ?? []).filter((a) => !a.retificado).sort((a, b) => a.dataHora.localeCompare(b.dataHora));
+  }
+
+  /** Prescrições (consultas vigentes) de um atendimento, a partir da lista carregada. */
+  protected prescricoes(atId: string): ConsultaResponseDto[] {
+    return this.consultas()
+      .filter((c) => c.atendimentoUuid === atId && !c.retificado)
+      .sort((a, b) => a.dataHora.localeCompare(b.dataHora));
+  }
+
+  /** Checagens vigentes de um atendimento, a partir da lista carregada (aba Medicação). */
+  protected checagens(atId: string): AdministracaoMedicamentoResponseDto[] {
+    return this.administracoes()
+      .filter((a) => a.atendimentoUuid === atId && !a.retificado)
+      .sort((a, b) => a.dataHora.localeCompare(b.dataHora));
+  }
+
+  /** Lotes do medicamento escolhido na unidade do atendimento, com saldo e dentro da validade (ADR-0064). */
+  protected lotesParaAdministrar(atId: string): LoteResponseDto[] {
+    const unidade = this.atendimento(atId)?.unidadeUuid;
+    const medicamento = this.admForm.controls.medicamentoId.value;
+    const hoje = hojeIso();
+    return this.lotes()
+      .filter((l) => l.unidadeUuid === unidade && l.medicamentoUuid === medicamento && l.validade >= hoje)
+      .filter((l) => l.quantidade > 0 || l.uuid === this.admForm.controls.loteId.value)
+      .sort((a, b) => a.validade.localeCompare(b.validade));
+  }
+
+  protected medicamentosAtivos(): MedicamentoResponseDto[] {
+    return this.medicamentos().filter((m) => m.ativo);
   }
 
   protected riscoAtual(r: ProntuarioAtendimentoDto): ClassificacaoRisco | null {
@@ -512,6 +627,8 @@ export class Atendimentos {
         return 'Desfecho do procedimento';
       case 'evo':
         return g.original ? 'Retificar evolução' : 'Nova evolução de enfermagem';
+      case 'adm':
+        return g.original ? 'Retificar checagem' : 'Checagem de medicação';
     }
   }
 
@@ -524,7 +641,8 @@ export class Atendimentos {
   /** Fecha a gaveta; as que abriram de dentro do atendimento voltam para ele. */
   protected fecharGaveta(): void {
     const g = this.gaveta();
-    const atId = g && 'atId' in g && g.tipo !== 'at-view' ? g.atId : g?.tipo === 'at' && g.voltar && g.at ? g.at.uuid : null;
+    const voltaParaAtendimento = g && 'atId' in g && g.tipo !== 'at-view' && !(g.tipo === 'adm' && !g.voltar);
+    const atId = voltaParaAtendimento ? g.atId : g?.tipo === 'at' && g.voltar && g.at ? g.at.uuid : null;
     if (atId) {
       this.abrirAtendimento(atId);
       return;
@@ -666,6 +784,29 @@ export class Atendimentos {
     this.abrir({ tipo: 'evo', atId, original });
   }
 
+  /**
+   * Checagem de medicação. {@code voltar}: aberta de dentro do atendimento (volta para ele) ou da aba
+   * Medicação (fecha).
+   */
+  protected abrirAdministracao(atId: string, original: AdministracaoMedicamentoResponseDto | null = null, voltar = true): void {
+    const prescricoes = this.prescricoes(atId);
+    this.admForm.reset({
+      consultaId: original?.consultaUuid ?? prescricoes[prescricoes.length - 1]?.uuid ?? '',
+      medicamentoId: original?.medicamentoUuid ?? '',
+      situacao: original?.situacao ?? 'ADMINISTRADO',
+      loteId: original?.loteUuid ?? '',
+      dose: original?.dose ?? '',
+      via: original?.via ?? '',
+      quantidade: original?.quantidade?.toString() ?? '1',
+      motivoNaoAdministracao: original?.motivoNaoAdministracao ?? '',
+      observacao: original?.observacao ?? '',
+      dataHora: original?.dataHora?.slice(0, 16) ?? agoraLocal(),
+      profissionalMatricula: original?.profissionalMatricula ?? '',
+      motivoRetificacao: '',
+    });
+    this.abrir({ tipo: 'adm', atId, original, voltar });
+  }
+
   protected concluirAtendimento(at: AtendimentoResponseDto): void {
     this.submitting.set(true);
     this.atendimentoService
@@ -716,6 +857,8 @@ export class Atendimentos {
         return this.salvarDesfecho(g.atId, g.proc);
       case 'evo':
         return this.salvarEvolucao(g.atId, g.original);
+      case 'adm':
+        return this.salvarAdministracao(g.atId, g.original, g.voltar);
       default:
         return;
     }
@@ -958,6 +1101,57 @@ export class Atendimentos {
         : this.evolucaoService.criar(dto),
       original ? 'Evolução retificada' : 'Evolução registrada',
       this.atendimento(atId)?.pacienteNome ?? '',
+    );
+  }
+
+  private salvarAdministracao(atId: string, original: AdministracaoMedicamentoResponseDto | null, voltar: boolean): void {
+    const v = this.admForm.getRawValue();
+    const erros = this.exigir(v, {
+      consultaId: 'Selecione a prescrição.',
+      medicamentoId: 'Selecione o medicamento.',
+      dataHora: 'Informe data e hora.',
+      profissionalMatricula: 'Informe a matrícula.',
+    });
+    const administrado = v.situacao === 'ADMINISTRADO';
+    const quantidade = Number(v.quantidade);
+    if (administrado) {
+      if (!v.loteId) erros['loteId'] = 'Selecione o lote.';
+      if (!v.dose.trim()) erros['dose'] = 'Informe a dose.';
+      if (!v.via) erros['via'] = 'Selecione a via.';
+      if (!Number.isInteger(quantidade) || quantidade <= 0) erros['quantidade'] = 'A quantidade precisa ser maior que zero.';
+      const lote = this.lotes().find((l) => l.uuid === v.loteId);
+      const devolvido = original?.loteUuid === v.loteId ? (original?.quantidade ?? 0) : 0;
+      if (!erros['quantidade'] && lote && quantidade > lote.quantidade + devolvido) {
+        erros['quantidade'] = `Disponível no lote: ${lote.quantidade + devolvido}.`;
+      }
+    } else {
+      if (!v.motivoNaoAdministracao) erros['motivoNaoAdministracao'] = 'Selecione o motivo.';
+      if (v.motivoNaoAdministracao === 'OUTRO' && !v.observacao.trim()) erros['observacao'] = 'Com motivo “Outro”, descreva na observação.';
+    }
+    this.exigirMotivo(original, v.motivoRetificacao, erros);
+    if (!this.validar(erros)) return;
+    const dto = {
+      atendimentoId: atId,
+      consultaId: v.consultaId,
+      medicamentoId: v.medicamentoId,
+      situacao: v.situacao,
+      loteId: administrado ? v.loteId : undefined,
+      dose: administrado ? v.dose.trim() : undefined,
+      via: administrado ? (v.via as ViaAdministracao) : undefined,
+      quantidade: administrado ? quantidade : undefined,
+      motivoNaoAdministracao: administrado ? undefined : (v.motivoNaoAdministracao as MotivoNaoAdministracao),
+      observacao: v.observacao.trim() || undefined,
+      dataHora: v.dataHora,
+      profissionalMatricula: v.profissionalMatricula.trim(),
+    };
+    const medicamento = this.medicamentos().find((m) => m.uuid === v.medicamentoId)?.nome ?? '';
+    this.enviar(
+      original
+        ? this.administracaoService.retificar(original.uuid, { ...dto, motivoRetificacao: v.motivoRetificacao.trim() })
+        : this.administracaoService.registrar(dto),
+      original ? 'Checagem retificada' : administrado ? 'Medicação administrada' : 'Não administrado registrado',
+      administrado ? `${medicamento} · ${dto.dose} · ${this.rotulo(VIAS, dto.via)}` : `${medicamento} · ${this.rotulo(MOTIVOS_NAO, dto.motivoNaoAdministracao)}`,
+      voltar ? () => this.abrirAtendimento(atId) : undefined,
     );
   }
 

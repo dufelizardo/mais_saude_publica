@@ -1,3 +1,4 @@
+import { AdministracaoMedicamentoResponseDto } from './administracao-medicamento';
 import { AtendimentoResponseDto } from './atendimento';
 import { ConsultaResponseDto } from './consulta';
 import { EvolucaoEnfermagemResponseDto } from './evolucao-enfermagem';
@@ -14,6 +15,8 @@ export interface ProntuarioAtendimentoDto {
   triagens: TriagemResponseDto[];
   evolucoes: EvolucaoEnfermagemResponseDto[];
   consultas: ProntuarioConsultaDto[];
+  /** Checagens de medicamento (ADR-0064); ausente em respostas anteriores. */
+  administracoes?: AdministracaoMedicamentoResponseDto[];
 }
 
 export interface ProntuarioResponseDto {

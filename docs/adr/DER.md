@@ -722,6 +722,8 @@ Paciente → Triagem (sinais vitais) → Classificação de risco → Atendiment
 
 > **Registros clínicos imutáveis** ([ADR-0062](./0062-registros-clinicos-imutaveis-com-retificacao.md)): `Triagem`, `EvolucaoEnfermagem`, `Consulta` e `Procedimento` ganham `retificacaoDe` (auto-referência à versão que corrigem), `motivoRetificacao`, `registradoEm` e `registradoPorCpf`; `Procedimento` guarda também o desfecho (`dataPrevista`, `statusAlteradoEm`, `profissionalStatus`, `justificativaStatus`).
 
+> **`AdministracaoMedicamento` implementada** ([ADR-0064](./0064-administracao-de-medicamento-enfermagem-e-farmacia.md)): FKs a `Atendimento`, `Consulta` (a prescrição), `Medicamento`, `Lote` (opcional) e `Profissional`; `situacao`, dose, via, quantidade, motivo de não administração e os campos de retificação da ADR-0062. `MovimentacaoFarmacia.administracao` liga a baixa (`ADMINISTRACAO`) e o estorno (`ADMINISTRACAO_ESTORNO`) à checagem.
+
 ### Farmácia (#9)
 
 Medicamentos e dispensação — regras próprias, deliberadamente **separado de Estoque** (#13):
