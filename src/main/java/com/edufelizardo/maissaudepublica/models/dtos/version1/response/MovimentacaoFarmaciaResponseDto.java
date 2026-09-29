@@ -32,6 +32,7 @@ public class MovimentacaoFarmaciaResponseDto implements Serializable {
     private String profissionalMatricula;
     private String profissionalNome;
     private UUID dispensacaoId;
+    private UUID transferenciaId;
     private Instant registradoEm;
     private String registradoPorCpf;
 
@@ -49,6 +50,7 @@ public class MovimentacaoFarmaciaResponseDto implements Serializable {
                 m.getProfissional() != null ? m.getProfissional().getMatricula() : null,
                 m.getProfissional() != null ? m.getProfissional().getNome() : null,
                 m.getDispensacao() != null ? m.getDispensacao().getUuid() : null,
+                m.getTransferencia() != null ? m.getTransferencia().getUuid() : null,
                 m.getRegistradoEm(),
                 m.getRegistradoPorCpf()
         );

@@ -7,6 +7,7 @@ import com.edufelizardo.maissaudepublica.models.Dispensacao;
 import com.edufelizardo.maissaudepublica.models.Lote;
 import com.edufelizardo.maissaudepublica.models.MovimentacaoFarmacia;
 import com.edufelizardo.maissaudepublica.models.Profissional;
+import com.edufelizardo.maissaudepublica.models.TransferenciaFarmacia;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MovimentacaoFarmaciaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.MovimentacaoFarmaciaResponseDto;
 import com.edufelizardo.maissaudepublica.models.enuns.MotivoPerda;
@@ -28,8 +29,9 @@ import java.util.stream.Collectors;
 
 /**
  * Livro de movimentação do estoque de lotes (ADR-0057) — único ponto que altera
- * {@code Lote.quantidade}. {@link LoteService} (entrada) e {@link DispensacaoService} (dispensação)
- * lançam por {@link #lancar}; perdas e ajustes de inventário chegam por {@link #registrar}.
+ * {@code Lote.quantidade}. {@link LoteService} (entrada), {@link DispensacaoService} (dispensação) e
+ * {@link TransferenciaFarmaciaService} (transferência entre unidades, ADR-0059) lançam por
+ * {@link #lancar}; perdas e ajustes de inventário chegam por {@link #registrar}.
  */
 @Service
 public class MovimentacaoFarmaciaService {
@@ -51,6 +53,14 @@ public class MovimentacaoFarmaciaService {
     @Transactional
     public MovimentacaoFarmacia lancar(Lote lote, TipoMovimentacaoFarmacia tipo, int variacao, Profissional profissional,
                                        MotivoPerda motivoPerda, String justificativa, Dispensacao dispensacao) {
+        return lancar(lote, tipo, variacao, profissional, motivoPerda, justificativa, dispensacao, null);
+    }
+
+    /** Mesmo que o anterior, ligando o lançamento à transferência que o originou (ADR-0059). */
+    @Transactional
+    public MovimentacaoFarmacia lancar(Lote lote, TipoMovimentacaoFarmacia tipo, int variacao, Profissional profissional,
+                                       MotivoPerda motivoPerda, String justificativa, Dispensacao dispensacao,
+                                       TransferenciaFarmacia transferencia) {
         int saldoApos = lote.getQuantidade() + variacao;
         if (saldoApos < 0) {
             throw new ResourceUnprocessableEntityException(
@@ -61,7 +71,7 @@ public class MovimentacaoFarmaciaService {
         loteRepository.save(lote);
 
         MovimentacaoFarmacia movimentacao = new MovimentacaoFarmacia(null, lote, tipo, variacao, saldoApos,
-                motivoPerda, justificativa, profissional, dispensacao, Instant.now(), cpfDoUsuarioAutenticado());
+                motivoPerda, justificativa, profissional, dispensacao, transferencia, Instant.now(), cpfDoUsuarioAutenticado());
         return movimentacaoRepository.save(movimentacao);
     }
 
@@ -70,7 +80,7 @@ public class MovimentacaoFarmaciaService {
         TipoMovimentacaoFarmacia tipo = dto.getTipo();
         if (tipo != TipoMovimentacaoFarmacia.PERDA && tipo != TipoMovimentacaoFarmacia.AJUSTE_INVENTARIO) {
             throw new ResourceBadRequestException(
-                    "Só é possível lançar PERDA ou AJUSTE_INVENTARIO: entrada e dispensação são registradas pelo próprio sistema.");
+                    "Só é possível lançar PERDA ou AJUSTE_INVENTARIO: entrada, dispensação e transferência são registradas pelo próprio sistema.");
         }
 
         Lote lote = loteRepository.findByIdParaMovimentar(dto.getLoteId())
@@ -125,7 +135,7 @@ public class MovimentacaoFarmaciaService {
     }
 
     /** Principal colocado pelo JwtAuthenticationFilter; com o toggle desligado a requisição é anônima. */
-    private String cpfDoUsuarioAutenticado() {
+    String cpfDoUsuarioAutenticado() {
         Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
         if (autenticacao instanceof UsernamePasswordAuthenticationToken && autenticacao.getPrincipal() instanceof String cpf) {
             return cpf;

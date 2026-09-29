@@ -739,8 +739,13 @@ medicamento tem lote/validade/controle de dispensação que material de almoxari
 > `ENTRADA`, `DISPENSACAO`, `PERDA` (com `MotivoPerda`) e `AJUSTE_INVENTARIO`, variação com sinal e
 > `saldoApos`. `Perda` e `InventarioFarmacia` deixaram de ser entidades candidatas — viraram tipos de
 > lançamento. `Lote.quantidade` continua existindo como saldo atual, mas só muda pelo livro (revisão
-> da simplificação "contador simples" da ADR-0050). `TransferenciaEntreUnidades` continua como
-> esboço.
+> da simplificação "contador simples" da ADR-0050).
+>
+> **`TransferenciaFarmacia` também foi implementada** (o esboço `TransferenciaEntreUnidades`) — ver
+> [ADR-0059](./0059-transferencia-de-estoque-entre-unidades.md). FKs obrigatórias a `Lote` (origem e
+> destino) e `Profissional`; gera dois lançamentos no livro (`TRANSFERENCIA_SAIDA` e
+> `TRANSFERENCIA_ENTRADA`), ligados a ela por `MovimentacaoFarmacia.transferencia`. O lote de destino é
+> o da mesma remessa (medicamento, número, validade) na unidade de destino.
 
 - `Medicamento`, `Lote` (validade, quantidade), `Dispensacao`, `MovimentacaoFarmacia`,
   `TransferenciaEntreUnidades`, `Perda`, `InventarioFarmacia`.

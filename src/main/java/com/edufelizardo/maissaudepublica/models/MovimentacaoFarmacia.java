@@ -69,6 +69,11 @@ public class MovimentacaoFarmacia implements Serializable {
     @JoinColumn(name = "dispensacao_id", referencedColumnName = "uuid", updatable = false)
     private Dispensacao dispensacao;
 
+    /** Transferência que originou o lançamento — liga a saída da origem à entrada no destino (ADR-0059). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transferencia_id", referencedColumnName = "uuid", updatable = false)
+    private TransferenciaFarmacia transferencia;
+
     /** Hora do servidor, nunca informada pelo cliente. */
     @NotNull
     @Column(updatable = false)
