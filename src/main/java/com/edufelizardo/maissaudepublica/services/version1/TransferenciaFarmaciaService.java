@@ -51,7 +51,9 @@ public class TransferenciaFarmaciaService {
         UUID origemId = dto.getLoteOrigemId();
         UUID unidadeDestinoId = dto.getUnidadeDestinoId();
 
-        UnidadeDeSaude unidadeDestino = unidadeDeSaudeRepository.findById(unidadeDestinoId)
+        // A trava da unidade de destino vem antes de procurar a remessa: uma segunda operação simultânea
+        // para a mesma unidade espera e já encontra o lote criado pela primeira (ADR-0060).
+        UnidadeDeSaude unidadeDestino = unidadeDeSaudeRepository.findByIdParaMovimentarEstoque(unidadeDestinoId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar uma unidade de saúde com o id " + unidadeDestinoId + " em nossos registros."));
         Profissional profissional = profissionalRepository.findByMatricula(dto.getProfissionalMatricula())

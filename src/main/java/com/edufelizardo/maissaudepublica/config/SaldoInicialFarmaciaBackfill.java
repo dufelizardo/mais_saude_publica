@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -19,6 +20,7 @@ import java.time.Instant;
  * conhecido. Idempotente: lotes que já têm qualquer lançamento são ignorados.
  */
 @Component
+@Order(1)
 @Slf4j
 public class SaldoInicialFarmaciaBackfill implements ApplicationRunner {
 

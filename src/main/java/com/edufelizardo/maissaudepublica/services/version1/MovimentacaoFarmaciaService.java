@@ -61,6 +61,11 @@ public class MovimentacaoFarmaciaService {
     public MovimentacaoFarmacia lancar(Lote lote, TipoMovimentacaoFarmacia tipo, int variacao, Profissional profissional,
                                        MotivoPerda motivoPerda, String justificativa, Dispensacao dispensacao,
                                        TransferenciaFarmacia transferencia) {
+        if (lote.getLoteIncorporador() != null) {
+            throw new ResourceUnprocessableEntityException(
+                    "O lote " + lote.getNumeroLote() + " foi incorporado ao lote " + lote.getLoteIncorporador().getUuid()
+                            + " (mesma remessa na mesma unidade) e não aceita mais movimentação.");
+        }
         int saldoApos = lote.getQuantidade() + variacao;
         if (saldoApos < 0) {
             throw new ResourceUnprocessableEntityException(

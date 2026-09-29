@@ -75,9 +75,10 @@ quanto, quem e quando —, e os dois extratos contam a mesma história.
 **Negativas / pendências:**
 - **Gaveta de transferência na tela da Farmácia** ainda não existe; por enquanto a transferência é
   feita pela API.
-- Duas transferências simultâneas para uma unidade que ainda não tem a remessa podem criar dois lotes
-  de destino da mesma remessa (não há restrição de unicidade no banco). É raro e não perde saldo; se
-  aparecer, uma restrição única em (medicamento, unidade, número, validade) resolve.
+- ~~Duas transferências simultâneas para uma unidade que ainda não tem a remessa podem criar dois lotes
+  de destino da mesma remessa.~~ Resolvido pela [ADR-0060](./0060-uma-remessa-um-lote-por-unidade.md)
+  (trava da unidade de destino + índice único), que também fechou o mesmo problema na entrada e na
+  correção de lote.
 - Transferência em duas etapas, se virar requisito (ver trade-offs).
 
 ## Referências

@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -17,7 +18,8 @@ import java.util.UUID;
  * de {@code Atendimento.unidade}, ADR-0041): a mesma remessa de um medicamento pode estar
  * fisicamente em unidades diferentes, cada uma com sua própria validade/quantidade.
  * {@code quantidade} é o saldo atual e só muda pelo livro de movimentação
- * ({@code MovimentacaoFarmaciaService.lancar}, ADR-0057). Sem campo de status: vencimento e
+ * ({@code MovimentacaoFarmaciaService.lancar}, ADR-0057). Uma remessa (medicamento, número e
+ * validade) tem um único lote ativo por unidade (ADR-0060). Sem campo de status: vencimento e
  * esgotamento são derivados de {@code validade}/{@code quantidade}, não armazenados.
  */
 @Entity
@@ -57,6 +59,17 @@ public class Lote implements Serializable {
     @NotNull
     @PositiveOrZero
     private Integer quantidade;
+
+    /**
+     * Lote que absorveu este, quando os dois eram a mesma remessa na mesma unidade (ADR-0060). Um lote
+     * incorporado fica com saldo zero, some da listagem e não aceita mais movimentação; o extrato dele
+     * continua disponível.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lote_incorporador_id", referencedColumnName = "uuid")
+    private Lote loteIncorporador;
+
+    private Instant incorporadoEm;
 
     public Lote(Medicamento medicamento, UnidadeDeSaude unidade, String numeroLote, LocalDate validade,
                 Integer quantidade) {

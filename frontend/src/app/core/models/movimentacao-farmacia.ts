@@ -7,7 +7,9 @@ export type TipoMovimentacaoFarmacia =
   | 'PERDA'
   | 'AJUSTE_INVENTARIO'
   | 'TRANSFERENCIA_SAIDA'
-  | 'TRANSFERENCIA_ENTRADA';
+  | 'TRANSFERENCIA_ENTRADA'
+  | 'INCORPORACAO_SAIDA'
+  | 'INCORPORACAO_ENTRADA';
 
 export type MotivoPerda = 'VENCIMENTO' | 'AVARIA' | 'EXTRAVIO' | 'OUTRO';
 

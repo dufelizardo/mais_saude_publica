@@ -125,12 +125,38 @@ POST Create Lote - Status Code 400 - Campos Obrigatorios Em Branco
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+POST Create Lote - Status Code 200 - Mesma Remessa
+    [Documentation]    Registers the same remessa (medicamento, numeroLote, validade) twice in the same unit:
+    ...    the second entry must add to the existing Lote (HTTP 200) instead of creating another (ADR-0060).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${medicamentoId}    ${nomeMedicamento}=    Seed Um Medicamento
+    ${unidadeId}=    Seed A Unidade De Saude Uuid
+    ${payload}    ${numeroLote}=    Build Lote Payload    ${medicamentoId}    ${unidadeId}
+    ${primeira}=    POST Create Lote    ${payload}
+    Should Be Equal As Integers    ${primeira.status_code}    201
+
+    ${payload}    ${numeroLote}=    Build Lote Payload    ${medicamentoId}    ${unidadeId}    numeroLote=${numeroLote}
+    ...    quantidade=${40}
+    ${response}=    POST Create Lote    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Validate Object Schema    ${response.json()}    ${SUCCESS_RESPONSE_SCHEMA}
+
+    ${lista}=    GET Get All Lotes
+    ${mesmos}=    Evaluate    [l for l in $lista.json() if l['numeroLote'] == $numeroLote]
+    Length Should Be    ${mesmos}    1
+    Should Be Equal As Integers    ${mesmos}[0][quantidade]    140
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Lote - Create - POST - By HTTP Status Code
     [Documentation]    Executes the appropriate Create Lote test scenario based on the provided HTTP
     ...    status code.
     [Arguments]    ${meuHTTP}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Run Keyword If    '${meuHTTP}' == '201'    POST Create Lote - Status Code 201
+    ...    ELSE IF    '${meuHTTP}' == '200'    POST Create Lote - Status Code 200 - Mesma Remessa
     ...    ELSE IF    '${meuHTTP}' == '400'    POST Create Lote - Status Code 400 - Campos Obrigatorios Em Branco
     ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Create Lote test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════

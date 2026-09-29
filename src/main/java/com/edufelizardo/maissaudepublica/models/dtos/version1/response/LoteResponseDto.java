@@ -26,6 +26,7 @@ public class LoteResponseDto implements Serializable {
     private String numeroLote;
     private LocalDate validade;
     private Integer quantidade;
+    private UUID loteIncorporadorId;
 
     public static LoteResponseDto fromLote(Lote lote) {
         return new LoteResponseDto(
@@ -36,7 +37,8 @@ public class LoteResponseDto implements Serializable {
                 lote.getUnidade().getNome(),
                 lote.getNumeroLote(),
                 lote.getValidade(),
-                lote.getQuantidade()
+                lote.getQuantidade(),
+                lote.getLoteIncorporador() != null ? lote.getLoteIncorporador().getUuid() : null
         );
     }
 }

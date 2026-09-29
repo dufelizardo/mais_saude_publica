@@ -746,6 +746,11 @@ medicamento tem lote/validade/controle de dispensação que material de almoxari
 > destino) e `Profissional`; gera dois lançamentos no livro (`TRANSFERENCIA_SAIDA` e
 > `TRANSFERENCIA_ENTRADA`), ligados a ela por `MovimentacaoFarmacia.transferencia`. O lote de destino é
 > o da mesma remessa (medicamento, número, validade) na unidade de destino.
+>
+> **Uma remessa, um lote ativo por unidade** ([ADR-0060](./0060-uma-remessa-um-lote-por-unidade.md)):
+> `Lote.loteIncorporador` (auto-referência, opcional) e `incorporadoEm` marcam um lote duplicado
+> incorporado a outro; índice único parcial em (medicamento, unidade, número, validade) para lotes
+> não incorporados.
 
 - `Medicamento`, `Lote` (validade, quantidade), `Dispensacao`, `MovimentacaoFarmacia`,
   `TransferenciaEntreUnidades`, `Perda`, `InventarioFarmacia`.
