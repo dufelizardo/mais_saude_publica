@@ -45,6 +45,8 @@ const TIPOS: Record<TipoMovimentacaoFarmacia, { classe: string; rotulo: string }
   DISPENSACAO: { classe: 'info', rotulo: 'Dispensação' },
   PERDA: { classe: 'alert', rotulo: 'Perda' },
   AJUSTE_INVENTARIO: { classe: 'warn', rotulo: 'Ajuste de inventário' },
+  TRANSFERENCIA_SAIDA: { classe: 'muted', rotulo: 'Transferência enviada' },
+  TRANSFERENCIA_ENTRADA: { classe: 'muted', rotulo: 'Transferência recebida' },
 };
 
 /**
@@ -330,6 +332,9 @@ export class Farmacia {
         return `Contado ${this.formatarNumero(m.saldoApos)} · ${m.justificativa ?? ''}`;
       case 'SALDO_INICIAL':
         return 'Saldo do lote antes do livro existir';
+      case 'TRANSFERENCIA_SAIDA':
+      case 'TRANSFERENCIA_ENTRADA':
+        return m.justificativa || 'Transferência entre unidades';
       default:
         return 'Entrada do lote';
     }

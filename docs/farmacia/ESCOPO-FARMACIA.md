@@ -30,7 +30,8 @@ por depender desta entidade existir primeiro. Nenhuma implementação ainda refe
 | 1 | `Medicamento`, CRUD em `/api/v1/medicamento/`, testes JUnit + Robot | [0049](../adr/0049-medicamento-primeira-entidade-da-farmacia.md) | [#228](https://github.com/dufelizardo/mais_saude_publica/pull/228) | ✅ |
 | 2 | `Lote`, CRUD em `/api/v1/lote/` (FKs a Medicamento e UnidadeDeSaude), testes JUnit + Robot | [0050](../adr/0050-lote-segunda-entidade-da-farmacia.md) | [#229](https://github.com/dufelizardo/mais_saude_publica/pull/229) | ✅ |
 | 3 | `Dispensacao`, só criação/leitura em `/api/v1/dispensacao/` (sem PATCH — imutável), debita `Lote.quantidade`, testes JUnit + Robot | [0051](../adr/0051-dispensacao-terceira-entidade-da-farmacia.md) | [#230](https://github.com/dufelizardo/mais_saude_publica/pull/230) | ✅ |
-| 4 | Livro de movimentação (`MovimentacaoFarmacia`): entrada, dispensação, perda (com motivo) e ajuste de inventário lançados num histórico imutável com saldo resultante, responsável e hora do servidor; `Lote.quantidade` só muda pelo livro; edição de lote restrita a número/validade; trava de linha contra venda dupla; saldo inicial dos lotes antigos; extrato por lote em `/api/v1/movimentacao-farmacia/`; testes JUnit + Robot | [0057](../adr/0057-livro-de-movimentacao-do-estoque-da-farmacia.md) | *(em aberto)* | 🔵 |
+| 4 | Livro de movimentação (`MovimentacaoFarmacia`): entrada, dispensação, perda (com motivo) e ajuste de inventário lançados num histórico imutável com saldo resultante, responsável e hora do servidor; `Lote.quantidade` só muda pelo livro; edição de lote restrita a número/validade; trava de linha contra venda dupla; saldo inicial dos lotes antigos; extrato por lote em `/api/v1/movimentacao-farmacia/`; testes JUnit + Robot | [0057](../adr/0057-livro-de-movimentacao-do-estoque-da-farmacia.md) | [#245](https://github.com/dufelizardo/mais_saude_publica/pull/245) | ✅ |
+| 5 | `TransferenciaFarmacia`: transferência de parte do saldo de um lote para outra unidade — saída e entrada ligadas no livro (`TRANSFERENCIA_SAIDA`/`TRANSFERENCIA_ENTRADA`), lote da mesma remessa no destino (criado se não existir), bloqueio de lote vencido, travas em ordem fixa; `/api/v1/transferencia-farmacia/`; testes JUnit + Robot | [0059](../adr/0059-transferencia-de-estoque-entre-unidades.md) | *(em aberto)* | 🔵 |
 
 Todas as fases mergeadas (ou em PR) em `developer`. Promoção a `qaa`/`homologacao`/`main` ainda não
 solicitada.
@@ -41,14 +42,14 @@ os dois viraram tipos de lançamento do mesmo livro (ADR-0057).
 ### Próximos passos (ordem combinada)
 
 1. ~~**Telas da Farmácia**~~ — feito, ver seção 5.
-2. **Transferência entre unidades** (backend) — saída no lote de origem e entrada no lote de destino,
-   como dois lançamentos ligados no livro da fase 4, numa transação só.
+2. ~~**Transferência entre unidades**~~ (backend) — feito, fase 5.
+3. **Gaveta de transferência** na tela da Farmácia (frontend).
 
 ## 5. Estado do frontend
 
 | Fase | Escopo | ADR | PR(s) | Status |
 |---|---|---|---|---|
-| F1 | Tela `assistencia/farmacia` portada do mockup `Farmacia.html`: resumo, abas Estoque por lote (filtro por unidade e vencimento), Dispensações, Medicamentos e Livro de estoque (extrato); gavetas de novo/editar medicamento, entrada e correção de lote, dispensação, perda/ajuste e detalhe da dispensação; `pacienteCpf` na resposta da dispensação | [0058](../adr/0058-tela-da-farmacia-abas-gaveta-lateral-e-livro-de-estoque.md) | *(em aberto)* | 🔵 |
+| F1 | Tela `assistencia/farmacia` portada do mockup `Farmacia.html`: resumo, abas Estoque por lote (filtro por unidade e vencimento), Dispensações, Medicamentos e Livro de estoque (extrato); gavetas de novo/editar medicamento, entrada e correção de lote, dispensação, perda/ajuste e detalhe da dispensação; `pacienteCpf` na resposta da dispensação | [0058](../adr/0058-tela-da-farmacia-abas-gaveta-lateral-e-livro-de-estoque.md) | [#246](https://github.com/dufelizardo/mais_saude_publica/pull/246) | ✅ |
 
 ## 6. Referências
 
@@ -63,3 +64,7 @@ os dois viraram tipos de lançamento do mesmo livro (ADR-0057).
   (`Dispensacao`), incluindo a decisão de ser create-only (sem PATCH) e debitar `Lote.quantidade`.
 - [ADR-0057](../adr/0057-livro-de-movimentacao-do-estoque-da-farmacia.md) — decisão de design da fase 4
   (livro de movimentação), que revê o contador simples da ADR-0050.
+- [ADR-0058](../adr/0058-tela-da-farmacia-abas-gaveta-lateral-e-livro-de-estoque.md) — tela da Farmácia
+  (fase F1 do frontend).
+- [ADR-0059](../adr/0059-transferencia-de-estoque-entre-unidades.md) — decisão de design da fase 5
+  (transferência entre unidades).

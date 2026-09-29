@@ -16,9 +16,9 @@ import java.util.UUID;
  * domínio Farmácia (ver MAPA-DE-DOMINIOS.md #9, ADR-0050). Duas FKs diretas por uuid (mesmo padrão
  * de {@code Atendimento.unidade}, ADR-0041): a mesma remessa de um medicamento pode estar
  * fisicamente em unidades diferentes, cada uma com sua própria validade/quantidade.
- * {@code quantidade} é um contador simples, editável via PATCH — não uma soma calculada a partir de
- * um ledger de movimentações (que ainda não existe, ver ADR-0050). Sem campo de status: vencimento
- * e esgotamento são derivados de {@code validade}/{@code quantidade}, não armazenados.
+ * {@code quantidade} é o saldo atual e só muda pelo livro de movimentação
+ * ({@code MovimentacaoFarmaciaService.lancar}, ADR-0057). Sem campo de status: vencimento e
+ * esgotamento são derivados de {@code validade}/{@code quantidade}, não armazenados.
  */
 @Entity
 @Table(name = "TB_LOTE")

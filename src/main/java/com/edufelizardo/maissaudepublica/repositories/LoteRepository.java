@@ -26,4 +26,17 @@ public interface LoteRepository extends JpaRepository<Lote, UUID> {
      * deste medicamento por unidade" (ver ADR-0050).
      */
     List<Lote> findByMedicamentoUuid(UUID medicamentoUuid);
+
+    /**
+     * Ids dos lotes da mesma remessa (medicamento, número e validade) de {@code origemId} que já
+     * existem na unidade de destino — alvo de uma transferência entre unidades (ADR-0059). Devolve só
+     * ids, sem carregar entidades, para que origem e destino sejam travados depois por
+     * {@link #findByIdParaMovimentar} sempre na mesma ordem (evita impasse entre transferências
+     * cruzadas A→B e B→A).
+     */
+    @Query("select d.uuid from Lote d, Lote o where o.uuid = :origemId and d.unidade.uuid = :unidadeDestinoId "
+            + "and d.medicamento = o.medicamento and d.numeroLote = o.numeroLote and d.validade = o.validade "
+            + "order by d.uuid")
+    List<UUID> findIdsDaMesmaRemessaNaUnidade(@Param("origemId") UUID origemId,
+                                               @Param("unidadeDestinoId") UUID unidadeDestinoId);
 }

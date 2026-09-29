@@ -1,6 +1,13 @@
 /** Farmácia (#9) — livro de movimentação do estoque (ADR-0057). */
 
-export type TipoMovimentacaoFarmacia = 'SALDO_INICIAL' | 'ENTRADA' | 'DISPENSACAO' | 'PERDA' | 'AJUSTE_INVENTARIO';
+export type TipoMovimentacaoFarmacia =
+  | 'SALDO_INICIAL'
+  | 'ENTRADA'
+  | 'DISPENSACAO'
+  | 'PERDA'
+  | 'AJUSTE_INVENTARIO'
+  | 'TRANSFERENCIA_SAIDA'
+  | 'TRANSFERENCIA_ENTRADA';
 
 export type MotivoPerda = 'VENCIMENTO' | 'AVARIA' | 'EXTRAVIO' | 'OUTRO';
 
@@ -29,6 +36,8 @@ export interface MovimentacaoFarmaciaResponseDto {
   profissionalMatricula?: string | null;
   profissionalNome?: string | null;
   dispensacaoId?: string | null;
+  /** Transferência entre unidades que originou o lançamento (ADR-0059). */
+  transferenciaId?: string | null;
   registradoEm: string;
   registradoPorCpf?: string | null;
 }
