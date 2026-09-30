@@ -23,6 +23,10 @@ public class AutorizacaoInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // Senha provisória (ADR-0069): vale com ou sem a autorização ligada — basta o login.
+        if (UsuarioAutenticado.trocaDeSenhaPendente() && !request.getRequestURI().startsWith("/api/v1/auth/")) {
+            throw new ResourceForbiddenException("Troque a senha provisória antes de continuar.");
+        }
         if (!controleDeAcesso.ativo() || !(handler instanceof HandlerMethod metodo)) {
             return true;
         }

@@ -12,6 +12,14 @@ export interface LoginResponseDto {
   expiraEm: string;
   nome: string;
   cpf: string;
+  /** Senha provisória: vai direto para a troca (ADR-0069). */
+  trocarSenha?: boolean;
+}
+
+export interface TrocaSenhaRequestDto {
+  senhaAtual: string;
+  novaSenha: string;
+  manterConectado: boolean;
 }
 
 /** Quem está logado e o profissional de mesmo CPF, quando existe (ADR-0065). */
@@ -25,6 +33,8 @@ export interface UsuarioAtualResponseDto {
   acessos?: AcessoVigente[];
   /** Permissões efetivas (RECURSO.ACAO) — ADR-0066. */
   permissoes?: string[];
+  /** Senha provisória pendente de troca (ADR-0069). */
+  trocarSenha?: boolean;
 }
 
 export interface AcessoVigente {

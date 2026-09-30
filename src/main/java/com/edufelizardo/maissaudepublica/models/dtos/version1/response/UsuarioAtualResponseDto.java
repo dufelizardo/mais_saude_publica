@@ -35,6 +35,8 @@ public class UsuarioAtualResponseDto implements Serializable {
     private List<AcessoVigente> acessos;
     /** União das permissões dos papéis vigentes (qualquer escopo), em ordem alfabética. */
     private List<String> permissoes;
+    /** Senha provisória pendente de troca (ADR-0069). */
+    private boolean trocarSenha;
 
     /** Um papel vigente num escopo; unidade nula = rede inteira. */
     @Getter

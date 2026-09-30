@@ -1,7 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, combineLatest, map, of, shareReplay, tap } from 'rxjs';
-import { AcessoDaInterface, LoginRequestDto, LoginResponseDto, SecurityStatusResponseDto, UsuarioAtualResponseDto } from '../models/auth';
+import {
+  AcessoDaInterface,
+  LoginRequestDto,
+  LoginResponseDto,
+  SecurityStatusResponseDto,
+  TrocaSenhaRequestDto,
+  UsuarioAtualResponseDto,
+} from '../models/auth';
 
 const TOKEN_KEY = 'msp_token';
 
@@ -25,6 +32,26 @@ export class AuthService {
         this.usuarioAtual$ = undefined;
       }),
     );
+  }
+
+  /**
+   * Troca a própria senha (ADR-0069). O token novo — sem a restrição de senha provisória — fica no mesmo
+   * lugar do anterior, mantendo a escolha "manter conectado" do login.
+   */
+  trocarSenha(senhaAtual: string, novaSenha: string): Observable<LoginResponseDto> {
+    const manterConectado = this.tokenPersistente();
+    const dto: TrocaSenhaRequestDto = { senhaAtual, novaSenha, manterConectado };
+    return this.http.post<LoginResponseDto>(`${this.baseUrl}/senha`, dto).pipe(
+      tap((resposta) => this.armazenarToken(resposta.token, manterConectado)),
+    );
+  }
+
+  private tokenPersistente(): boolean {
+    try {
+      return localStorage.getItem(TOKEN_KEY) !== null;
+    } catch {
+      return false;
+    }
   }
 
   logout(): void {

@@ -1243,6 +1243,14 @@ tr.row-link:focus-visible { outline: 2px solid var(--blue-700); outline-offset: 
 .perm-check__txt { font-size: 0.8125rem; color: var(--ink-900); }
 .perm-check__cod { font-size: 0.68rem; color: var(--ink-500); }
 
+/* ====== Troca de senha (ver ADR-0069) — reaproveita o formulário do Login, em coluna única ====== */
+.login-shell--solo { grid-template-columns: 1fr; }
+.login-shell--solo .form-panel { background: var(--ink-50); }
+.login-shell--solo .form-wrap { background: var(--white); border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-8); }
+.senha-mark { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: var(--blue-50); color: var(--blue-700); margin-bottom: var(--s-4); }
+.senha-req { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.8125rem; color: var(--ink-500); }
+.senha-req li.ok { color: var(--ok); }
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }

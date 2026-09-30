@@ -25,6 +25,7 @@ type Gaveta =
   | { tipo: 'usuario'; usuarioId: string }
   | { tipo: 'novo-usuario' }
   | { tipo: 'editar-usuario'; usuario: UsuarioResponseDto }
+  | { tipo: 'senha'; usuario: UsuarioResponseDto }
   | { tipo: 'conceder'; usuario: UsuarioResponseDto }
   | { tipo: 'revogar'; usuario: UsuarioResponseDto; atribuicao: AtribuicaoAcessoResponseDto }
   | { tipo: 'papel'; papel: PapelResponseDto | null; base: PapelResponseDto | null };
@@ -175,6 +176,8 @@ export class Usuarios {
   });
 
   protected readonly revogarForm = this.fb.nonNullable.group({ motivo: [''] });
+
+  protected readonly senhaForm = this.fb.nonNullable.group({ senha: [''], confirmacao: [''] });
 
   protected readonly papelForm = this.fb.nonNullable.group({
     codigo: [''],
@@ -515,6 +518,7 @@ export class Usuarios {
       case 'usuario': return this.usuarioDaGaveta(g.usuarioId)?.usuario.nome ?? 'Usuário';
       case 'novo-usuario': return 'Novo usuário';
       case 'editar-usuario': return 'Editar usuário';
+      case 'senha': return 'Definir senha provisória';
       case 'conceder': return 'Conceder acesso';
       case 'revogar': return 'Revogar acesso';
       case 'papel': return g.papel ? 'Editar perfil' : g.base ? 'Duplicar perfil' : 'Novo perfil';
@@ -571,6 +575,18 @@ export class Usuarios {
   protected abrirEditarUsuario(u: UsuarioResponseDto): void {
     this.editarUsuarioForm.reset({ nome: u.nome, ativo: u.ativo });
     this.abrir({ tipo: 'editar-usuario', usuario: u });
+  }
+
+  protected abrirSenha(u: UsuarioResponseDto): void {
+    this.senhaForm.reset({ senha: '', confirmacao: '' });
+    this.abrir({ tipo: 'senha', usuario: u });
+  }
+
+  /** Situação da senha na gaveta do usuário (ADR-0069). */
+  protected situacaoSenha(u: UsuarioResponseDto): string {
+    if (u.trocarSenha) return 'Provisória — troca no próximo acesso';
+    if (u.senhaAlteradaEm) return `Trocada em ${this.formatarInstante(u.senhaAlteradaEm)}`;
+    return 'Definida no cadastro';
   }
 
   protected abrirConceder(u: UsuarioResponseDto): void {
@@ -654,6 +670,7 @@ export class Usuarios {
     switch (g.tipo) {
       case 'novo-usuario': return this.salvarNovoUsuario();
       case 'editar-usuario': return this.salvarEdicaoUsuario(g.usuario);
+      case 'senha': return this.salvarSenha(g.usuario);
       case 'conceder': return this.salvarConcessao(g.usuario);
       case 'revogar': return this.salvarRevogacao(g.usuario, g.atribuicao);
       case 'papel': return this.salvarPapel(g.papel);
@@ -688,6 +705,20 @@ export class Usuarios {
       this.acessoService.atualizarUsuario(u.uuid, { nome: v.nome.trim(), ativo: v.ativo }),
       'Usuário atualizado',
       `${v.nome.trim()} · ${v.ativo ? 'ativo' : 'desativado'}`,
+      () => ({ tipo: 'usuario', usuarioId: u.uuid }),
+    );
+  }
+
+  private salvarSenha(u: UsuarioResponseDto): void {
+    const v = this.senhaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (v.senha.length < 8 || v.senha.length > 72) erros['senha'] = 'A senha provisória precisa ter de 8 a 72 caracteres.';
+    else if (v.senha !== v.confirmacao) erros['confirmacao'] = 'A confirmação não confere com a senha.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.acessoService.redefinirSenha(u.uuid, v.senha),
+      'Senha provisória definida',
+      `${u.nome} · troca no próximo acesso`,
       () => ({ tipo: 'usuario', usuarioId: u.uuid }),
     );
   }

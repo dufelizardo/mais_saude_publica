@@ -65,6 +65,11 @@ export class AcessoService {
     return this.http.patch<SuccessResponseDto>(`${this.api}/usuario/${uuid}`, dto);
   }
 
+  /** Senha provisória: a pessoa troca no próximo acesso (ADR-0069). */
+  redefinirSenha(uuid: string, senhaProvisoria: string): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.api}/usuario/${uuid}/redefinicao-senha`, { senhaProvisoria });
+  }
+
   desbloquearUsuario(uuid: string): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.api}/usuario/${uuid}/desbloqueio`, null);
   }

@@ -11,7 +11,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
  */
 public final class UsuarioAutenticado {
 
+    /** Autoridade do token de senha provisória (ADR-0069). */
+    public static final String SENHA_PROVISORIA = "SENHA_PROVISORIA";
+
     private UsuarioAutenticado() {
+    }
+
+    /** A sessão é de senha provisória: só a troca de senha e as rotas de /auth são atendidas. */
+    public static boolean trocaDeSenhaPendente() {
+        Authentication autenticacao = SecurityContextHolder.getContext().getAuthentication();
+        return autenticacao != null && autenticacao.getAuthorities().stream()
+                .anyMatch(a -> SENHA_PROVISORIA.equals(a.getAuthority()));
     }
 
     public static String cpf() {

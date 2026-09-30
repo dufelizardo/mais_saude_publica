@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.config;
 
 import com.edufelizardo.maissaudepublica.services.version1.JwtService;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,12 +9,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 /**
  * Só roda quando {@code app.security.enabled=true} (ver {@link SecurityConfig}, que só registra
@@ -34,9 +36,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring("Bearer ".length());
-            String cpf = jwtService.validarESubject(token);
+            Claims claims = jwtService.validar(token);
+            String cpf = claims != null ? claims.getSubject() : null;
             if (cpf != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                var authentication = new UsernamePasswordAuthenticationToken(cpf, null, Collections.emptyList());
+                // Senha provisória (ADR-0069): a sessão só serve para trocar a senha.
+                var autoridades = Boolean.TRUE.equals(claims.get(JwtService.CLAIM_TROCAR_SENHA, Boolean.class))
+                        ? List.of(new SimpleGrantedAuthority(UsuarioAutenticado.SENHA_PROVISORIA))
+                        : List.<SimpleGrantedAuthority>of();
+                var authentication = new UsernamePasswordAuthenticationToken(cpf, null, autoridades);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }

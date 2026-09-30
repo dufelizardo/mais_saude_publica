@@ -28,11 +28,13 @@ import { Atendimentos } from './features/assistencia/atendimentos/atendimentos';
 import { Farmacia } from './features/assistencia/farmacia/farmacia';
 import { AppShell } from './shared/app-shell/app-shell';
 import { Login } from './features/auth/login/login';
-import { authGuard } from './core/guards/auth-guard';
+import { authGuard, trocaDeSenhaGuard } from './core/guards/auth-guard';
+import { TrocarSenha } from './features/auth/trocar-senha/trocar-senha';
 
 export const routes: Routes = [
   { path: '', component: LandingPage },
   { path: 'login', component: Login },
+  { path: 'trocar-senha', component: TrocarSenha, canActivate: [trocaDeSenhaGuard] },
   {
     path: '',
     component: AppShell,

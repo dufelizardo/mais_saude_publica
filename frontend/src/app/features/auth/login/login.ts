@@ -116,8 +116,13 @@ export class Login {
         manterConectado: this.form.controls.manterConectado.value,
       })
       .subscribe({
-        next: () => {
+        next: (resposta) => {
           this.enviando.set(false);
+          if (resposta.trocarSenha) {
+            // Senha provisória (ADR-0069): a troca vem antes de qualquer tela.
+            this.router.navigate(['/trocar-senha'], { queryParams: { returnUrl: this.destinoAposLogin() } });
+            return;
+          }
           this.router.navigateByUrl(this.destinoAposLogin());
         },
         error: (erro) => {

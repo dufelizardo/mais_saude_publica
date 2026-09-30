@@ -538,3 +538,50 @@ Acesso - Escopos - GET - By HTTP Status Code
     ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for List Escopos Acesso test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Redefinir Senha Usuario - Status Code 200
+    [Documentation]    Sets a provisional password for a fresh Usuario, expecting HTTP 200 and the user marked to change it.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${cpf}=    Seed Um Usuario
+    ${payload}=    Create Dictionary    senhaProvisoria=Provisoria123
+    ${response}=    POST Redefinir Senha Usuario    ${uuid}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Validate Object Schema    ${response.json()}    ${SUCCESS_RESPONSE_SCHEMA}
+    ${usuario}=    GET Get Usuario By Id    ${uuid}
+    Should Be True    ${usuario.json()}[trocarSenha]
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Redefinir Senha Usuario - Status Code 404
+    [Documentation]    Sets a provisional password for a random, non-existent Usuario, expecting HTTP 404.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuidInexistente}=    Evaluate    str(uuid.uuid4())    modules=uuid
+    ${payload}=    Create Dictionary    senhaProvisoria=Provisoria123
+    ${response}=    POST Redefinir Senha Usuario    ${uuidInexistente}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    404
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Redefinir Senha Usuario - Status Code 400
+    [Documentation]    Sets a too-short provisional password, expecting HTTP 400.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuidInexistente}=    Evaluate    str(uuid.uuid4())    modules=uuid
+    ${payload}=    Create Dictionary    senhaProvisoria=curta
+    ${response}=    POST Redefinir Senha Usuario    ${uuidInexistente}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    400
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Acesso - Redefinicao Senha - POST - By HTTP Status Code
+    [Documentation]    Executes the appropriate Redefinir Senha Usuario test scenario based on the provided HTTP status code.
+    [Arguments]    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Run Keyword If    '${meuHTTP}' == '200'    POST Redefinir Senha Usuario - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '404'    POST Redefinir Senha Usuario - Status Code 404
+    ...    ELSE IF    '${meuHTTP}' == '400'    POST Redefinir Senha Usuario - Status Code 400
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Redefinir Senha Usuario test scenario.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
