@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.AuditarLeitura;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
@@ -59,6 +60,7 @@ public class DispensacaoController {
     }
 
     @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR"})
+    @AuditarLeitura
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma dispensação pelo id", tags = "Dispensação")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.AuditarLeitura;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.StatusProcedimentoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoProcedimentoRequestDto;
@@ -57,6 +58,7 @@ public class ProcedimentoController {
     }
 
     @RequerPermissao({"PRONTUARIO.CONSULTAR"})
+    @AuditarLeitura
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um procedimento pelo id", tags = "Procedimento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

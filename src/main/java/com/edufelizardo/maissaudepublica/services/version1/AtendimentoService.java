@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.repositories.AdministracaoMedicamentoRepository;
 import java.util.HashMap;
 import java.util.Map;
@@ -89,6 +90,7 @@ public class AtendimentoService {
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
         UnidadeDeSaude unidade = buscarUnidadePorId(dto.getUnidadeId());
         controleDeAcesso.exigir("ATENDIMENTO.GERENCIAR", unidade);
+        ContextoAuditoria.paciente(paciente.getUuid());
         Setor setor = buscarSetorSeInformado(dto.getSetorId());
         Agendamento agendamento = buscarAgendamentoSeInformado(dto.getAgendamentoId());
         realizarAgendamento(agendamento, paciente);
@@ -96,6 +98,7 @@ public class AtendimentoService {
         Atendimento atendimento = new Atendimento(paciente, profissional, unidade, setor, agendamento,
                 dto.getTipo(), dto.getStatus(), dto.getDataHora());
         atendimento = atendimentoRepository.save(atendimento);
+        ContextoAuditoria.registro(atendimento.getUuid());
         return AtendimentoResponseDto.fromAtendimento(atendimento);
     }
 
@@ -108,6 +111,7 @@ public class AtendimentoService {
     public AtendimentoResponseDto atualizar(UUID uuid, AtendimentoRequestDto dto) {
         Atendimento atendimento = buscarEntidadePorId(uuid);
         controleDeAcesso.exigir("ATENDIMENTO.GERENCIAR", atendimento.getUnidade());
+        ContextoAuditoria.paciente(atendimento.getPaciente().getUuid());
         if (!atendimento.getPaciente().getUuid().equals(dto.getPacienteId()) && temRegistroClinico(uuid)) {
             throw new ResourceUnprocessableEntityException(
                     "Este atendimento já tem registro clínico: o paciente não pode ser trocado.");
@@ -132,6 +136,7 @@ public class AtendimentoService {
         atendimento.setStatus(dto.getStatus());
         atendimento.setDataHora(dto.getDataHora());
         atendimento = atendimentoRepository.save(atendimento);
+        ContextoAuditoria.registro(atendimento.getUuid());
         return AtendimentoResponseDto.fromAtendimento(atendimento);
     }
 
@@ -149,6 +154,7 @@ public class AtendimentoService {
     public AtendimentoResponseDto buscarPorId(UUID uuid) {
         Atendimento atendimento = buscarEntidadePorId(uuid);
         controleDeAcesso.exigirVisivel(atendimento.getUnidade(), "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR");
+        ContextoAuditoria.paciente(atendimento.getPaciente().getUuid());
         return resumoClinico().aplicar(AtendimentoResponseDto.fromAtendimento(atendimento));
     }
 

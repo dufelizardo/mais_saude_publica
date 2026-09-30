@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoEvolucaoEnfermagemRequestDto;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
@@ -48,6 +49,7 @@ public class EvolucaoEnfermagemService {
     public EvolucaoEnfermagemResponseDto criar(EvolucaoEnfermagemRequestDto dto) {
         Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
         controleDeAcesso.exigir("EVOLUCAO.REGISTRAR", atendimento.getUnidade());
+        ContextoAuditoria.paciente(atendimento.getPaciente().getUuid());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
 
         EvolucaoEnfermagem evolucao = new EvolucaoEnfermagem(atendimento, profissional, dto.getDataHora(),
@@ -55,6 +57,7 @@ public class EvolucaoEnfermagemService {
         evolucao.setRegistradoEm(Instant.now());
         evolucao.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         evolucao = evolucaoEnfermagemRepository.save(evolucao);
+        ContextoAuditoria.registro(evolucao.getUuid());
         return EvolucaoEnfermagemResponseDto.fromEvolucaoEnfermagem(evolucao);
     }
 
@@ -73,6 +76,7 @@ public class EvolucaoEnfermagemService {
                     + ": retifique a versão vigente.");
         }
         controleDeAcesso.exigir("EVOLUCAO.REGISTRAR", original.getAtendimento().getUnidade());
+        ContextoAuditoria.paciente(original.getAtendimento().getPaciente().getUuid());
         controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getAtendimento().getUnidade());
         if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())) {
             throw new ResourceBadRequestException("A retificação precisa manter o mesmo atendimento do registro original.");
@@ -86,6 +90,7 @@ public class EvolucaoEnfermagemService {
         evolucao.setRegistradoEm(Instant.now());
         evolucao.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         evolucao = evolucaoEnfermagemRepository.save(evolucao);
+        ContextoAuditoria.registro(evolucao.getUuid());
         return EvolucaoEnfermagemResponseDto.fromEvolucaoEnfermagem(evolucao, null);
     }
 
@@ -106,6 +111,7 @@ public class EvolucaoEnfermagemService {
     public EvolucaoEnfermagemResponseDto buscarPorId(UUID uuid) {
         EvolucaoEnfermagem registro = buscarEntidadePorId(uuid);
         controleDeAcesso.exigirVisivel(registro.getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR", "EVOLUCAO.REGISTRAR");
+        ContextoAuditoria.paciente(registro.getAtendimento().getPaciente().getUuid());
         return EvolucaoEnfermagemResponseDto.fromEvolucaoEnfermagem(registro, sucessores().get(uuid));
     }
 

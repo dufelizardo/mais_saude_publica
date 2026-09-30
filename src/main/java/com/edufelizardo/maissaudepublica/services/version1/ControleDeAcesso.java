@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceForbiddenException;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
@@ -51,6 +52,7 @@ public class ControleDeAcesso {
 
     /** A permissão num escopo que cubra a unidade; sem unidade, na rede inteira. */
     public void exigir(String permissao, UnidadeDeSaude unidade) {
+        ContextoAuditoria.unidade(unidade);
         if (!ativo()) {
             return;
         }
@@ -107,6 +109,7 @@ public class ControleDeAcesso {
 
     /** Confere que o registro está numa unidade visível; fora dela, 403. */
     public void exigirVisivel(UnidadeDeSaude unidade, String... permissoes) {
+        ContextoAuditoria.unidade(unidade);
         Optional<Set<UUID>> visiveis = unidadesVisiveis(permissoes);
         if (visiveis.isPresent() && (unidade == null || !visiveis.get().contains(unidade.getUuid()))) {
             throw new ResourceForbiddenException("Este registro é de uma unidade fora do seu acesso.");

@@ -9,7 +9,8 @@ implementação intencionalmente adiada (ver Contexto).
 > [ADR-0055](./0055-primeira-implementacao-de-login-usuario-jwt-e-toggle-por-ambiente.md) (`Usuario`, login, JWT), e a
 > de autorização (itens 2, 3, 5 e a separação administrador × dado de saúde) pela
 > [ADR-0066](./0066-papeis-permissoes-e-escopo-por-unidade.md), em fatias — o escopo usa `UnidadeDeSaude` (sem
-> `Setor` por enquanto). A auditoria enriquecida (item 6) continua pendente.
+> `Setor` por enquanto). A auditoria enriquecida (item 6) começou pela
+> [ADR-0070](./0070-trilha-de-auditoria.md) (registro; a consulta vem a seguir).
 
 ## Contexto
 

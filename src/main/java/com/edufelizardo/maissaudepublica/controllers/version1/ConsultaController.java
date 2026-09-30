@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.AuditarLeitura;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoConsultaRequestDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
@@ -56,6 +57,7 @@ public class ConsultaController {
     }
 
     @RequerPermissao({"PRONTUARIO.CONSULTAR"})
+    @AuditarLeitura
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma consulta pelo id", tags = "Consulta")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

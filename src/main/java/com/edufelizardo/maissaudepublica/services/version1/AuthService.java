@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UsuarioAtualResponseDto;
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnauthorizedException;
@@ -62,6 +63,7 @@ public class AuthService {
 
     public LoginResponseDto login(LoginRequestDto dto) {
         String cpf = resolverCpf(dto);
+        ContextoAuditoria.usuario(cpf);
 
         Usuario usuario = usuarioRepository.findByCpf(cpf)
                 .orElseThrow(() -> new ResourceUnauthorizedException(MENSAGEM_GENERICA));

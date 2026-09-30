@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.Consulta;
 import com.edufelizardo.maissaudepublica.models.Dispensacao;
@@ -58,12 +59,14 @@ public class DispensacaoService {
         Lote lote = buscarLotePorId(dto.getLoteId());
         controleDeAcesso.exigir("FARMACIA.DISPENSAR", lote.getUnidade());
         Paciente paciente = buscarPacientePorId(dto.getPacienteId());
+        ContextoAuditoria.paciente(paciente.getUuid());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
         Consulta consulta = buscarConsultaSeInformada(dto.getConsultaId());
 
         Dispensacao dispensacao = new Dispensacao(lote, paciente, profissional, consulta, dto.getQuantidade(),
                 dto.getDataHora());
         dispensacao = dispensacaoRepository.save(dispensacao);
+        ContextoAuditoria.registro(dispensacao.getUuid());
         // Estoque insuficiente lança 422 aqui e desfaz a transação inteira, dispensação incluída.
         movimentacaoFarmaciaService.lancar(lote, TipoMovimentacaoFarmacia.DISPENSACAO, -dto.getQuantidade(),
                 profissional, null, null, dispensacao);
@@ -80,6 +83,7 @@ public class DispensacaoService {
     public DispensacaoResponseDto buscarPorId(UUID uuid) {
         Dispensacao dispensacao = buscarEntidadePorId(uuid);
         controleDeAcesso.exigirVisivel(dispensacao.getLote().getUnidade(), "FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR");
+        ContextoAuditoria.paciente(dispensacao.getPaciente().getUuid());
         return DispensacaoResponseDto.fromDispensacao(dispensacao);
     }
 

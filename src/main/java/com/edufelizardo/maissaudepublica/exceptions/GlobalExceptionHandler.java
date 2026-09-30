@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.exceptions;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ResourceForbiddenException.class)
     public ResponseEntity<ErrorExceptionResponse> handleResourceForbidden(ResourceForbiddenException ex) {
+        ContextoAuditoria.detalhe(ex.getMessage());
         ErrorExceptionResponse error = new ErrorExceptionResponse("Forbidden", ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }

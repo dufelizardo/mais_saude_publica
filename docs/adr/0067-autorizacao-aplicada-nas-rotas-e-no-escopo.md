@@ -127,7 +127,8 @@ pendentes quatro regras:
   Até lá, com a exigência ligada, uma tela sem permissão mostra o erro 403 da API.
 - Algumas telas combinam áreas. A recepção, por exemplo, abre Atendimentos, mas não lê triagem. Nesse
   caso a tela mostra só parte do conteúdo até ser adaptada na fatia 3.
-- Auditoria de leitura de prontuário (ADR-0054, item 6).
+- Auditoria de leitura de prontuário (ADR-0054, item 6): registro feito pela
+  [ADR-0070](./0070-trilha-de-auditoria.md); a consulta vem na fatia seguinte.
 
 ## Referências
 
