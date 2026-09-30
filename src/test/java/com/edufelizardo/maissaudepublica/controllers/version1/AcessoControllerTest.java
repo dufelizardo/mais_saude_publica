@@ -126,12 +126,13 @@ class AcessoControllerTest {
 
     /** Concede pela API e devolve o id da atribuição vigente criada. */
     private String conceder(UUID usuarioId, String papel, UUID unidadeId) throws Exception {
+        UUID papelId = papelId(papel);
         mockMvc.perform(post(ATRIBUICAO_URL).contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoAtribuicao(usuarioId, papelId(papel), unidadeId, null, null)))
+                        .content(corpoAtribuicao(usuarioId, papelId, unidadeId, null, null)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Acesso concedido com sucesso!"));
         return atribuicaoRepository.findByUsuarioUuid(usuarioId).stream()
-                .filter(a -> a.getRevogadoEm() == null && a.getPapel().getCodigo().equals(papel)
+                .filter(a -> a.getRevogadoEm() == null && a.getPapel().getUuid().equals(papelId)
                         && java.util.Objects.equals(a.getUnidade() != null ? a.getUnidade().getUuid() : null, unidadeId))
                 .findFirst().orElseThrow().getUuid().toString();
     }
