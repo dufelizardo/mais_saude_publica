@@ -194,7 +194,13 @@
 > explícita. Esta tabela (com a coluna `roles` de 4 valores fixos) fica como registro da proposta
 > **original**, substituída pelo modelo de `Papel`/`Permissao`/`Escopo` da
 > [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md) — ver o esboço expandido em
-> "Identidade e Acesso" no apêndice. Continua não sendo algo a implementar agora.
+> "Identidade e Acesso" no apêndice.
+>
+> **Atualização:** `Usuario` foi implementado pela ADR-0055 (`TB_USUARIO`: cpf único, nome, senhaHash, ativo,
+> tentativasFalhas, bloqueadoAte, ultimoAcessoEm — sem coluna de roles), e o acesso pela ADR-0066:
+> `TB_PERMISSAO` (codigo, descricao, dimensao), `TB_PAPEL` (codigo, nome, descricao, ativo) com `TB_PAPEL_PERMISSAO`,
+> e `TB_ATRIBUICAO_ACESSO` (usuario_id, papel_id, unidade_id nulo = rede inteira, inicio, fim, concedidoEm/PorCpf,
+> revogadoEm/PorCpf, motivoRevogacao).
 
 Armazena as credenciais e perfis de acesso ao sistema.
 

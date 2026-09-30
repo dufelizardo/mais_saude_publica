@@ -14,9 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Autenticação (você está logado ou não) — corte da ADR-0055, subconjunto do modelo completo da
@@ -44,6 +46,9 @@ public class AuthService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private AutorizacaoService autorizacaoService;
 
     @Value("${app.security.enabled:false}")
     private boolean securityEnabled;
@@ -108,8 +113,9 @@ public class AuthService {
     /**
      * Quem está logado (ADR-0065), com o profissional ativo de mesmo CPF quando existir. Sem usuário
      * autenticado — inclusive com o toggle de segurança desligado, em que toda requisição é anônima —
-     * responde 401.
+     * responde 401. Inclui papéis vigentes e permissões efetivas (ADR-0066).
      */
+    @Transactional(readOnly = true)
     public UsuarioAtualResponseDto usuarioAtual() {
         String cpf = UsuarioAutenticado.cpf();
         if (cpf == null) {
@@ -122,6 +128,13 @@ public class AuthService {
         return new UsuarioAtualResponseDto(usuario.getCpf(), usuario.getNome(),
                 profissional != null ? profissional.getUuid() : null,
                 profissional != null ? profissional.getMatricula() : null,
-                profissional != null ? profissional.getNome() : null);
+                profissional != null ? profissional.getNome() : null,
+                autorizacaoService.vigentes(cpf).stream()
+                        .filter(a -> a.getPapel().isAtivo())
+                        .map(a -> new UsuarioAtualResponseDto.AcessoVigente(a.getPapel().getCodigo(), a.getPapel().getNome(),
+                                a.getUnidade() != null ? a.getUnidade().getUuid() : null,
+                                a.getUnidade() != null ? a.getUnidade().getNome() : null))
+                        .toList(),
+                List.copyOf(autorizacaoService.permissoes(cpf)));
     }
 }

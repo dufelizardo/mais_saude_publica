@@ -1,7 +1,10 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.models.AtribuicaoAcesso;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Usuario;
+import com.edufelizardo.maissaudepublica.repositories.AtribuicaoAcessoRepository;
+import com.edufelizardo.maissaudepublica.repositories.PapelRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
 import com.jayway.jsonpath.JsonPath;
@@ -18,7 +21,11 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import java.time.Instant;
+
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -55,6 +62,12 @@ class AuthControllerTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private PapelRepository papelRepository;
+
+    @Autowired
+    private AtribuicaoAcessoRepository atribuicaoAcessoRepository;
+
     @BeforeEach
     void seed() {
         limpar();
@@ -72,6 +85,7 @@ class AuthControllerTest {
 
     @AfterEach
     void limpar() {
+        atribuicaoAcessoRepository.deleteAll(atribuicaoAcessoRepository.findByUsuarioCpf(CPF_TESTE));
         usuarioRepository.findByCpf(CPF_TESTE).ifPresent(usuarioRepository::delete);
         profissionalRepository.findByMatricula(MATRICULA_TESTE).ifPresent(profissionalRepository::delete);
     }
@@ -180,5 +194,28 @@ class AuthControllerTest {
     void deveRetornarUnauthorizedAoPerguntarQuemEstaLogadoSemToken() throws Exception {
         mockMvc.perform(get("/api/v1/auth/eu"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deveInformarPapeisEPermissoesVigentesDeQuemEstaLogado() throws Exception {
+        AtribuicaoAcesso atribuicao = new AtribuicaoAcesso();
+        atribuicao.setUsuario(usuarioRepository.findByCpf(CPF_TESTE).orElseThrow());
+        atribuicao.setPapel(papelRepository.findByCodigo("TECNICO_DE_ENFERMAGEM").orElseThrow());
+        atribuicao.setConcedidoEm(Instant.now());
+        atribuicaoAcessoRepository.save(atribuicao);
+
+        String responseBody = mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoLogin("CPF", CPF_TESTE, SENHA_TESTE)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String token = JsonPath.read(responseBody, "$.token");
+
+        mockMvc.perform(get("/api/v1/auth/eu").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.acessos[0].papelCodigo").value("TECNICO_DE_ENFERMAGEM"))
+                .andExpect(jsonPath("$.acessos[0].unidadeUuid").doesNotExist())
+                .andExpect(jsonPath("$.permissoes", hasItem("MEDICACAO.ADMINISTRAR")))
+                .andExpect(jsonPath("$.permissoes", not(hasItem("TRIAGEM.REGISTRAR"))));
     }
 }
