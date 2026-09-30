@@ -136,8 +136,23 @@ Nomes que parecem iguais mas não são: `.page-tabs` (abas em pílula no nível 
 (abas sublinhadas dentro de um card de detalhe); `.dw-field` (campo de gaveta) ≠ `.field` (tela de
 Login) ≠ `.form-group` (formulário dentro do `<app-modal>`).
 
-## 8. Referências
+## 8. Menu conforme as permissões (ADR-0068)
+
+Toda tela nova no menu do `AppShell` precisa de uma entrada na tabela `MENU` de
+`shared/app-shell/app-shell.ts`, com as permissões que a liberam (basta uma), e o `<a>` do item vai dentro de
+`@if (podeVer('/rota'))`. Sem entrada, o item fica aberto a qualquer usuário logado. Isso é certo só para
+estrutura e para o quadro de profissionais, que a API também libera (`@LiberadoParaAutenticados`, ADR-0067).
+Com a autorização desligada, `podeVer` é sempre verdadeiro.
+
+Dentro da tela, ações que exigem permissão usam o mesmo `AuthService.acessoDaInterface()` (ver
+`pode(...)` em `features/administracao/usuarios`). Esconder nunca substitui a checagem da API.
+
+Telas de administração, pouco usadas, entram por `loadComponent` (sob demanda), para não pesar no
+bundle inicial, que tem orçamento de 1 MB.
+
+## 9. Referências
 
 - [ADR-0018](../adr/0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) — decisão original do
   `AppShell` e histórico das correções que motivaram este documento.
-- `modelo_front/Usuarios.html` — mockup de referência mais completo pro padrão de listagem.
+- `modelo_front/Usuarios.html` — mockup de referência mais completo pro padrão de listagem, portado
+  como a tela Usuários & Perfis ([ADR-0068](../adr/0068-tela-usuarios-e-perfis.md)).

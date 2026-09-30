@@ -27,6 +27,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -104,7 +105,8 @@ class AuthControllerTest {
     void deveRetornarStatusDoToggleLigado() throws Exception {
         mockMvc.perform(get(STATUS_URL))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.securityEnabled").value(true));
+                .andExpect(jsonPath("$.securityEnabled").value(true))
+                .andExpect(jsonPath("$.authorizationEnabled").value(false));
     }
 
     @Test
@@ -188,6 +190,24 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.nome").value("Usuario Teste Auth"))
                 .andExpect(jsonPath("$.profissionalMatricula").value(MATRICULA_TESTE))
                 .andExpect(jsonPath("$.profissionalNome").value("Profissional Teste Auth"));
+    }
+
+    @Test
+    void naoDeveDesativarOProprioUsuario() throws Exception {
+        String responseBody = mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoLogin("CPF", CPF_TESTE, SENHA_TESTE)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String token = JsonPath.read(responseBody, "$.token");
+        String id = usuarioRepository.findByCpf(CPF_TESTE).orElseThrow().getUuid().toString();
+
+        mockMvc.perform(patch("/api/v1/usuario/" + id).header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nome": "Usuario Teste Auth", "ativo": false}
+                                """))
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test

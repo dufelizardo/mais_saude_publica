@@ -68,6 +68,12 @@ export const routes: Routes = [
       { path: 'assistencia/procedimentos', redirectTo: ({ queryParams }) => paraAtendimentos('atend', queryParams) },
       { path: 'assistencia/prontuario', redirectTo: ({ queryParams }) => paraAtendimentos('pront', queryParams) },
       { path: 'assistencia/farmacia', component: Farmacia, data: { breadcrumb: 'Farmácia', area: 'Assistência' } },
+      {
+        path: 'administracao/usuarios',
+        // Sob demanda: tela de administração, fora do bundle inicial (orçamento de 1 MB).
+        loadComponent: () => import('./features/administracao/usuarios/usuarios').then((m) => m.Usuarios),
+        data: { breadcrumb: 'Usuários & Perfis', area: 'Administração' },
+      },
     ],
   },
 ];

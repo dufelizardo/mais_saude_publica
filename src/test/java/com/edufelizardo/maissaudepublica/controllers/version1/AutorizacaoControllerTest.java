@@ -320,6 +320,7 @@ class AutorizacaoControllerTest {
     void estruturaEQuemEstaLogadoSaoLiberadosParaQualquerAutenticado() throws Exception {
         mockMvc.perform(como(SEM_PAPEL, get("/api/v1/unidade-saude/"))).andExpect(status().is(not403()));
         mockMvc.perform(como(SEM_PAPEL, get("/api/v1/auth/eu"))).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/auth/status")).andExpect(jsonPath("$.authorizationEnabled").value(true));
     }
 
     private static org.hamcrest.Matcher<Integer> not403() {

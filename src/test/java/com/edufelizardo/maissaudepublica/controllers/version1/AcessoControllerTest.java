@@ -47,6 +47,7 @@ class AcessoControllerTest {
     private static final String ATRIBUICAO_URL = "/api/v1/atribuicao-acesso/";
     private static final String CPF_A = "11144477735";
     private static final String CPF_B = "39053344705";
+    private static final String CPF_NOVO = "93541134780";
     private static final String PREFIXO_PAPEL = "TESTE_ACESSO_";
     private static final String PREFIXO_UNIDADE = "Teste Acesso ";
 
@@ -86,7 +87,7 @@ class AcessoControllerTest {
 
     @AfterEach
     void limpar() {
-        for (String cpf : new String[]{CPF_A, CPF_B}) {
+        for (String cpf : new String[]{CPF_A, CPF_B, CPF_NOVO}) {
             atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
             usuarioRepository.findByCpf(cpf).ifPresent(usuarioRepository::delete);
         }
@@ -321,6 +322,14 @@ class AcessoControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void deveListarEscoposDeTodosOsNiveis() throws Exception {
+        mockMvc.perform(get(ATRIBUICAO_URL + "escopos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.nome=='Teste Acesso UBS')].unidadeSuperiorUuid").value(regional.getUuid().toString()))
+                .andExpect(jsonPath("$[*].uuid", hasItems(regional.getUuid().toString(), outraUbs.getUuid().toString())));
+    }
+
     // ── Cálculo de autorização ─────────────────────────────────────────────────────────────────
 
     @Test
@@ -381,6 +390,71 @@ class AcessoControllerTest {
     }
 
     // ── Usuários ───────────────────────────────────────────────────────────────────────────────
+
+    @Test
+    void deveCadastrarUsuarioComCpfValidoEUnico() throws Exception {
+        mockMvc.perform(post("/api/v1/usuario/").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"cpf": "935.411.347-80", "nome": "Usuario Novo", "senha": "SenhaInicial1"}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("Usuário cadastrado com sucesso!"));
+        Usuario novo = usuarioRepository.findByCpf(CPF_NOVO).orElseThrow();
+        assertThat(novo.isAtivo()).isTrue();
+        assertThat(novo.getSenhaHash()).isNotEqualTo("SenhaInicial1");
+
+        mockMvc.perform(post("/api/v1/usuario/").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"cpf": "93541134780", "nome": "Outro", "senha": "SenhaInicial1"}
+                                """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void deveRecusarCpfInvalidoOuSenhaCurta() throws Exception {
+        mockMvc.perform(post("/api/v1/usuario/").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"cpf": "93541134781", "nome": "Digito errado", "senha": "SenhaInicial1"}
+                                """))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/v1/usuario/").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"cpf": "11111111111", "nome": "Repetido", "senha": "SenhaInicial1"}
+                                """))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/v1/usuario/").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"cpf": "93541134780", "nome": "Senha curta", "senha": "curta"}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deveDesativarEReativarUsuario() throws Exception {
+        mockMvc.perform(patch("/api/v1/usuario/" + usuarioA.getUuid()).contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"nome": "Usuario Acesso A Renomeado", "ativo": false}
+                                """))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/usuario/" + usuarioA.getUuid()))
+                .andExpect(jsonPath("$.ativo").value(false))
+                .andExpect(jsonPath("$.nome").value("Usuario Acesso A Renomeado"));
+    }
+
+    @Test
+    void deveDesbloquearSoQuemEstaBloqueado() throws Exception {
+        mockMvc.perform(post("/api/v1/usuario/" + usuarioA.getUuid() + "/desbloqueio"))
+                .andExpect(status().isUnprocessableEntity());
+
+        usuarioA.setBloqueadoAte(Instant.now().plusSeconds(600));
+        usuarioA.setTentativasFalhas(5);
+        usuarioRepository.save(usuarioA);
+        mockMvc.perform(get("/api/v1/usuario/" + usuarioA.getUuid())).andExpect(jsonPath("$.bloqueado").value(true));
+
+        mockMvc.perform(post("/api/v1/usuario/" + usuarioA.getUuid() + "/desbloqueio"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/usuario/" + usuarioA.getUuid())).andExpect(jsonPath("$.bloqueado").value(false));
+    }
 
     @Test
     void deveListarUsuariosSemOHashDaSenha() throws Exception {

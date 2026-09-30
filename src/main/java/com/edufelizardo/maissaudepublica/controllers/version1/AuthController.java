@@ -7,6 +7,7 @@ import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorR
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.LoginRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.LoginResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SecurityStatusResponseDto;
+import com.edufelizardo.maissaudepublica.services.version1.ControleDeAcesso;
 import com.edufelizardo.maissaudepublica.services.version1.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,6 +33,9 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private ControleDeAcesso controleDeAcesso;
+
     @PostMapping(value = "login", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Autentica por CPF ou matrícula funcional", tags = "Auth")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -51,7 +55,7 @@ public class AuthController {
             @Content(mediaType = "application/json", schema = @Schema(implementation = SecurityStatusResponseDto.class))
     })
     public ResponseEntity<SecurityStatusResponseDto> status() {
-        return ResponseEntity.ok(new SecurityStatusResponseDto(authService.isSecurityEnabled()));
+        return ResponseEntity.ok(new SecurityStatusResponseDto(authService.isSecurityEnabled(), controleDeAcesso.ativo()));
     }
 
     @GetMapping(value = "eu", produces = MediaType.APPLICATION_JSON_VALUE)

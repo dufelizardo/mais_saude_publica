@@ -25,8 +25,12 @@ public class UsuarioResponseDto implements Serializable {
     private boolean ativo;
     private Instant bloqueadoAte;
     private Instant ultimoAcessoEm;
+    /** Bloqueio temporário por tentativas de senha em vigor agora. */
+    private boolean bloqueado;
 
     public static UsuarioResponseDto fromUsuario(Usuario u) {
-        return new UsuarioResponseDto(u.getUuid(), u.getCpf(), u.getNome(), u.isAtivo(), u.getBloqueadoAte(), u.getUltimoAcessoEm());
+        boolean bloqueado = u.getBloqueadoAte() != null && u.getBloqueadoAte().isAfter(Instant.now());
+        return new UsuarioResponseDto(u.getUuid(), u.getCpf(), u.getNome(), u.isAtivo(), u.getBloqueadoAte(),
+                u.getUltimoAcessoEm(), bloqueado);
     }
 }

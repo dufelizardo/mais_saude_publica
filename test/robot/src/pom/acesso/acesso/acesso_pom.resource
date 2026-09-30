@@ -209,3 +209,83 @@ GET Get Usuario By Id
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+POST Create Usuario
+    [Documentation]    Sends a POST request creating a Usuario and returns the response.
+    [Arguments]    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+
+    ${headers}=    Create Dictionary
+    ...    Content-Type=${CONTENT_TYPE}
+
+    ${response}=    Post On Session
+    ...    msp_session
+    ...    ${BASE_URL}${USUARIO_ENDPOINT}/
+    ...    json=${payload}
+    ...    headers=${headers}
+    ...    expected_status=ANY
+
+    Log    ${response.status_code}
+    Log    ${response.text}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+PATCH Update Usuario
+    [Documentation]    Sends a PATCH request updating a Usuario name and status and returns the response.
+    [Arguments]    ${uuid}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+
+    ${headers}=    Create Dictionary
+    ...    Content-Type=${CONTENT_TYPE}
+
+    ${response}=    Patch On Session
+    ...    msp_session
+    ...    ${BASE_URL}${USUARIO_ENDPOINT}/${uuid}
+    ...    json=${payload}
+    ...    headers=${headers}
+    ...    expected_status=ANY
+
+    Log    ${response.status_code}
+    Log    ${response.text}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Desbloquear Usuario
+    [Documentation]    Sends a POST request unlocking a Usuario and returns the response.
+    [Arguments]    ${uuid}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+
+    ${response}=    Post On Session
+    ...    msp_session
+    ...    ${BASE_URL}${USUARIO_ENDPOINT}/${uuid}/desbloqueio
+    ...    expected_status=ANY
+
+    Log    ${response.status_code}
+    Log    ${response.text}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+GET List Escopos Acesso
+    [Documentation]    Sends a GET request listing the units where an access can be granted and returns the response.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+
+    ${response}=    GET On Session
+    ...    msp_session
+    ...    ${BASE_URL}${ATRIBUICAO_ACESSO_ENDPOINT}/escopos
+    ...    expected_status=ANY
+
+    Log    ${response.status_code}
+    Log    ${response.text}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

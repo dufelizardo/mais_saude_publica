@@ -9,7 +9,34 @@ import {
 } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
-import { UsuarioAtualResponseDto } from '../../core/models/auth';
+import { AcessoDaInterface, UsuarioAtualResponseDto } from '../../core/models/auth';
+
+const RH = ['RH.CONSULTAR', 'RH.GERENCIAR'];
+const ADMINISTRATIVO = ['ADMINISTRATIVO.CONSULTAR', 'ADMINISTRATIVO.GERENCIAR'];
+
+/**
+ * Permissões que mostram cada item do menu (ADR-0068) — basta uma. Sem entrada, o item é aberto a todo
+ * usuário logado (estrutura e quadro de profissionais, ADR-0067). A API continua decidindo; o menu só
+ * não oferece o que responderia 403.
+ */
+const MENU: Record<string, string[]> = {
+  '/profissionais/novo': ['RH.GERENCIAR'],
+  '/profissionais/desligar': ['RH.GERENCIAR'],
+  '/rh': RH,
+  '/administrativo': ADMINISTRATIVO,
+  '/administrativo/setores': [],
+  '/administrativo/necessidades-de-pessoal': [...ADMINISTRATIVO, ...RH],
+  '/assistencia/pacientes': ['PACIENTE.CONSULTAR'],
+  '/assistencia/atendimentos': ['ATENDIMENTO.GERENCIAR', 'PRONTUARIO.CONSULTAR', 'AGENDAMENTO.GERENCIAR'],
+  '/assistencia/farmacia': ['FARMACIA.CONSULTAR', 'FARMACIA.DISPENSAR', 'FARMACIA.TRANSFERIR', 'FARMACIA.GERENCIAR_ESTOQUE'],
+  '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],
+};
+
+/** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
+const GRUPOS: Record<string, string[]> = {
+  Assistência: ['/assistencia/pacientes', '/assistencia/atendimentos', '/assistencia/farmacia'],
+  Administração: ['/administracao/usuarios'],
+};
 
 @Component({
   selector: 'app-shell',
@@ -25,6 +52,9 @@ export class AppShell {
   /** Quem está logado (ADR-0065); nulo com o login desligado. */
   protected readonly usuario = signal<UsuarioAtualResponseDto | null>(null);
 
+  /** O que o menu mostra (ADR-0068): tudo, com a autorização desligada. */
+  private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
+
   protected readonly breadcrumb = signal('');
   protected readonly area = signal('');
   protected readonly sidebarAberta = signal(false);
@@ -36,11 +66,12 @@ export class AppShell {
    * dentro da mesma sessão.
    */
   protected readonly gruposExpandidos = signal<ReadonlySet<string>>(
-    new Set(['Recursos Humanos', 'Administrativo', 'Assistência']),
+    new Set(['Recursos Humanos', 'Administrativo', 'Assistência', 'Administração']),
   );
 
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.usuario.set(u));
+    this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.atualizarBreadcrumb();
     this.router.events.pipe(filter((evento) => evento instanceof NavigationEnd)).subscribe(() => {
       this.atualizarBreadcrumb();
@@ -55,6 +86,22 @@ export class AppShell {
     }
     this.breadcrumb.set((rota.data['breadcrumb'] as string) ?? '');
     this.area.set((rota.data['area'] as string) ?? '');
+  }
+
+  /** Item do menu visível: a entrada mais específica de MENU que casa com a rota decide. */
+  protected podeVer(rota: string): boolean {
+    const acesso = this.acesso();
+    if (!acesso.restrito) return true;
+    const chave = Object.keys(MENU)
+      .filter((k) => rota === k || rota.startsWith(k + '/'))
+      .sort((x, y) => y.length - x.length)[0];
+    const permissoes = chave ? MENU[chave] : [];
+    return !permissoes.length || permissoes.some((p) => acesso.permissoes.has(p));
+  }
+
+  protected grupoVisivel(grupo: string): boolean {
+    const itens = GRUPOS[grupo];
+    return !itens || itens.some((rota) => this.podeVer(rota));
   }
 
   protected toggleSidebar(): void {
