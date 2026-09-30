@@ -15,7 +15,7 @@ import { ProfissionalService } from '../../core/services/profissional';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 import { Drawer } from '../../shared/drawer/drawer';
 import { formatCpf, formatTelefone } from '../../shared/format-mask';
-import { CATEGORIAS_PROFISSIONAL, CategoriaProfissional, categoriaDoProfissional, situacaoDoProfissional } from '../../shared/profissional-categoria';
+import { CATEGORIAS_PROFISSIONAL, CategoriaProfissional, categoriaDoProfissional, situacaoDoProfissional, iniciaisDoNome } from '../../shared/profissional-categoria';
 
 type Visao = 'cartoes' | 'lista';
 type FiltroSituacao = '' | 'ativos' | 'afastados' | 'sem-lotacao' | 'desligados';
@@ -264,8 +264,7 @@ export class ProfissionaisLista {
   // ── Apoio de exibição ──────────────────────────────────────────────────────────────────────────
 
   protected iniciais(nome: string): string {
-    const partes = nome.replace(/^(dra?\.?|enf\.?|t[eé]c\.?)\s+/i, '').trim().split(/\s+/).filter((p) => p.length > 2);
-    return ((partes[0]?.[0] ?? '?') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
+    return iniciaisDoNome(nome);
   }
 
   protected conselhoDe(i: QuadroProfissionalResponseDto): string | null {

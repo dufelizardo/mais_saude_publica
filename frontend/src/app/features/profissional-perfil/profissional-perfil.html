@@ -1,52 +1,68 @@
 <header class="page-head">
   <div>
+    <a class="voltar" routerLink="/profissionais">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      Profissionais
+    </a>
     <h1>Perfil do profissional</h1>
-    <p>Busque pelo CPF para ver dados, lotação e histórico.</p>
+    <p>Dados, lotação e histórico funcional</p>
   </div>
+  <form class="page-actions filters" role="search" aria-label="Buscar profissional por CPF" [formGroup]="cpfForm" (ngSubmit)="buscar()" novalidate>
+    <label class="search">
+      <span class="sr-only">CPF do profissional</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input id="cpf" type="text" formControlName="cpf" placeholder="Outro profissional pelo CPF…" autocomplete="off" inputmode="numeric" maxlength="14" (input)="onCpfInput($event)"
+        [attr.aria-invalid]="(cpfForm.controls.cpf.invalid && cpfForm.controls.cpf.touched) || naoEncontrado()" aria-describedby="e-cpf" />
+    </label>
+    <button type="submit" class="btn btn--ghost" [disabled]="buscando()">{{ buscando() ? 'Buscando…' : 'Buscar' }}</button>
+  </form>
 </header>
 
-<div class="card" style="padding: var(--s-5) var(--s-6); margin-bottom: var(--s-4);">
-  <form [formGroup]="cpfForm" (ngSubmit)="buscar()" class="form" style="margin-top: 0;" novalidate>
-    <div class="form-row" style="align-items: end;">
-      <div class="form-group">
-        <label for="cpf">CPF *</label>
-        <input id="cpf" type="text" formControlName="cpf" autocomplete="off" inputmode="numeric" maxlength="14" (input)="onCpfInput($event)" />
-        @if (cpfForm.controls.cpf.invalid && cpfForm.controls.cpf.touched) {
-          <span class="form-error">CPF é obrigatório.</span>
-        }
-        @if (naoEncontrado()) {
-          <span class="form-error">Profissional não encontrado.</span>
-        }
-      </div>
-      <div class="form-group">
-        <button type="submit" class="btn" [disabled]="buscando()">
-          {{ buscando() ? 'Buscando…' : 'Buscar' }}
-        </button>
-      </div>
+<p class="perfil-busca-msg" id="e-cpf" aria-live="polite">
+  @if (cpfForm.controls.cpf.invalid && cpfForm.controls.cpf.touched) { Informe o CPF. }
+  @if (naoEncontrado()) { Nenhum profissional com esse CPF. }
+</p>
+
+@if (!profissional() && !buscando()) {
+  <section class="card">
+    <div class="empty">
+      <span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
+      <strong>Nenhum profissional aberto</strong>
+      <span>Abra pelo cartão na tela Profissionais ou busque pelo CPF acima.</span>
+      <a class="btn btn--ghost btn--sm" routerLink="/profissionais">Ir para Profissionais</a>
     </div>
-  </form>
-</div>
+  </section>
+}
 
 @if (profissional(); as p) {
   <section class="card detail-card">
-    <div class="detail-head">
-      <span class="detail-head__mark" aria-hidden="true">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-      </span>
-      <div class="detail-head__info">
-        <h2>{{ p.nome }}</h2>
-        <div style="color: var(--ink-500); font-size: 0.875rem; margin-top: 2px;">
-          Matrícula {{ p.matricula }} · CPF {{ p.cpf }}
+    @if (cabecalho(); as c) {
+      <div class="detail-head">
+        <div [class]="'prof__avatar cat-' + c.categoria.classe" aria-hidden="true">
+          {{ c.iniciais }}
+          @if (c.situacao) { <span [class]="'prof__status' + (c.situacao.ponto ? ' prof__status--' + c.situacao.ponto : '')"></span> }
         </div>
-        <div class="detail-head__chips">
-          @if (p.ativo) {
-            <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Ativo</span>
-          } @else {
-            <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Desligado {{ p.dataDesligamento ? ('em ' + (p.dataDesligamento | date: 'dd/MM/yyyy')) : '' }}</span>
-          }
+        <div class="detail-head__info">
+          <h2>{{ p.nome }}</h2>
+          <div class="prof__role">
+            @if (lotacaoVigente(); as l) { {{ l.cargoNome }} · {{ l.unidadeNome }} }
+            @else if (!carregandoLotacao()) { Sem lotação vigente }
+          </div>
+          <div class="detail-head__chips">
+            <span [class]="'tag tag--' + c.categoria.classe">{{ c.categoria.etiqueta }}</span>
+            @if (c.situacao) { <span [class]="'tag tag--' + c.situacao.classe"><span class="dot" aria-hidden="true"></span> {{ c.situacao.rotulo }}</span> }
+          </div>
+          <div class="detail-head__ids">
+            <span>Matrícula <strong class="mono">{{ p.matricula }}</strong></span>
+            <span>CPF <strong class="mono">{{ p.cpf }}</strong></span>
+            <span>Conselho @if (c.conselho) { <strong class="mono">{{ c.conselho }}</strong> } @else { <span class="pending">sem conselho</span> }</span>
+            @if (lotacaoVigente()?.jornadaSemanalHoras; as h) { <span>Jornada <strong class="mono">{{ h }} h/semana</strong></span> }
+            @if (c.telefone) { <span>Telefone <strong class="mono">{{ c.telefone }}</strong></span> }
+            @if (p.dataAdmissao) { <span>Admissão <strong class="mono">{{ p.dataAdmissao | date: 'dd/MM/yyyy' }}</strong></span> }
+          </div>
         </div>
       </div>
-    </div>
+    }
 
     <div class="tabs" role="tablist" aria-label="Seções do profissional">
       <button type="button" role="tab" [attr.aria-selected]="abaAtiva() === 'dados'" (click)="selecionarAba('dados')">Dados</button>
