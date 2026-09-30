@@ -2,8 +2,6 @@ import { inject } from '@angular/core';
 import { Routes, Params, Router } from '@angular/router';
 import { LandingPage } from './features/landing/landing-page';
 import { ProfissionaisLista } from './features/profissionais-lista/profissionais-lista';
-import { ProfissionalCadastro } from './features/profissional-cadastro/profissional-cadastro';
-import { ProfissionalDesligar } from './features/profissional-desligar/profissional-desligar';
 import { ProfissionalPerfil } from './features/profissional-perfil/profissional-perfil';
 import { CategoriasSalariais } from './features/rh/categorias-salariais/categorias-salariais';
 import { Cargos } from './features/rh/cargos/cargos';
@@ -40,9 +38,13 @@ export const routes: Routes = [
     component: AppShell,
     canActivate: [authGuard],
     children: [
-      { path: 'profissionais', component: ProfissionaisLista, data: { breadcrumb: 'Profissionais', area: 'Recursos Humanos' } },
-      { path: 'profissionais/novo', component: ProfissionalCadastro, data: { breadcrumb: 'Cadastrar profissional', area: 'Recursos Humanos' } },
-      { path: 'profissionais/desligar', component: ProfissionalDesligar, data: { breadcrumb: 'Desligar profissional', area: 'Recursos Humanos' } },
+      { path: 'profissionais', component: ProfissionaisLista, data: { breadcrumb: 'Profissionais da Saúde', area: 'Recursos Humanos' } },
+      // Cadastro e desligamento viraram gavetas da tela Profissionais (ADR-0072).
+      { path: 'profissionais/novo', redirectTo: () => inject(Router).createUrlTree(['/profissionais'], { queryParams: { acao: 'novo' } }) },
+      {
+        path: 'profissionais/desligar',
+        redirectTo: ({ queryParams }) => inject(Router).createUrlTree(['/profissionais'], { queryParams: { acao: 'desligar', ...queryParams } }),
+      },
       { path: 'profissionais/perfil', component: ProfissionalPerfil, data: { breadcrumb: 'Perfil do profissional', area: 'Recursos Humanos' } },
       { path: 'rh/categorias-salariais', component: CategoriasSalariais, data: { breadcrumb: 'Categorias salariais', area: 'Recursos Humanos' } },
       { path: 'rh/cargos', component: Cargos, data: { breadcrumb: 'Cargos', area: 'Recursos Humanos' } },

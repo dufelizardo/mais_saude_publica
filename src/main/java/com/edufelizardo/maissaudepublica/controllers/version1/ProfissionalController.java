@@ -14,6 +14,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Profission
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalContatoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProfissionalResponseDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.QuadroProfissionalResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
 import com.edufelizardo.maissaudepublica.services.version1.ProfissionalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,6 +62,24 @@ public class ProfissionalController {
             throw new ResourceNotFoundException("Nenhum item foi encontrado.");
         }
         return ResponseEntity.ok(responseDtos);
+    }
+
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
+    @GetMapping(value = "quadro", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Quadro de profissionais com lotação e afastamento vigentes",
+            description = "Cada profissional com a lotação vigente (unidade, cargo, jornada semanal) e o afastamento em curso "
+                    + "hoje (aprovado ou em andamento), em ordem de nome — a tela Profissionais (ADR-0072). Lista vazia → 404.",
+            tags = "Profissional")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = QuadroProfissionalResponseDto.class)))
+    })
+    @ApiErrorResponsesListagem
+    public ResponseEntity<List<QuadroProfissionalResponseDto>> quadro() {
+        List<QuadroProfissionalResponseDto> quadro = service.quadro();
+        if (quadro.isEmpty()) {
+            throw new ResourceNotFoundException("Nenhum item foi encontrado.");
+        }
+        return ResponseEntity.ok(quadro);
     }
 
     @LiberadoParaAutenticados

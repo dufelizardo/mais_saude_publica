@@ -150,7 +150,16 @@ Dentro da tela, ações que exigem permissão usam o mesmo `AuthService.acessoDa
 Telas de administração, pouco usadas, entram por `loadComponent` (sob demanda), para não pesar no
 bundle inicial, que tem orçamento de 1 MB.
 
-## 9. Referências
+## 9. Listagem de pessoas em cartões (ADR-0072)
+
+Para quadros de pessoas (profissionais), a visão padrão é a **grade de cartões** do protótipo
+`Profissionais.html` (`.cards` > `.prof`), com alternância para lista (`.seg`) guardada no navegador. Cada cartão
+tem avatar com a cor da categoria (`.prof__avatar.cat-*`) e ponto de situação (`.prof__status--*`), etiquetas,
+linhas de metadado (`.meta-row`), um bloco de destaque (`.prof__load`) e ações; o menu "⋯" (`.prof__popover`)
+leva as ações secundárias. Abas de categoria com contagem usam `.cats` > `.cat`. Categoria e situação vêm de
+`shared/profissional-categoria.ts` — não recalcular em cada tela.
+
+## 10. Referências
 
 - [ADR-0018](../adr/0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) — decisão original do
   `AppShell` e histórico das correções que motivaram este documento.

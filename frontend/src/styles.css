@@ -1264,6 +1264,66 @@ tr.row-link:focus-visible { outline: 2px solid var(--blue-700); outline-offset: 
 .aud-carregando { opacity: 0.6; transition: opacity 0.15s; }
 .aud-rec { padding: 8px 12px; }
 
+/* ====== Profissionais — portado do mockup Profissionais.html (ver ADR-0072) ======
+   .toolbar e .seg já existem (Pacientes); aqui só o que a grade de cartões acrescenta. */
+.cats { display: flex; gap: 4px; overflow-x: auto; margin-bottom: var(--s-4); padding-bottom: 4px; }
+.cat { appearance: none; background: var(--white); border: 1px solid var(--ink-200); border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 0.8125rem; font-weight: 500; color: var(--ink-700); white-space: nowrap; min-height: 38px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.cat:hover { border-color: var(--blue-700); color: var(--blue-700); }
+.cat[aria-pressed="true"] { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+.cat[aria-pressed="true"] .cat__count { background: rgba(255,255,255,0.2); color: #fff; }
+.cat__count { background: var(--ink-100); color: var(--ink-500); font-size: 0.7rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; }
+.toolbar-row { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); margin-bottom: var(--s-3); flex-wrap: wrap; }
+.results { font-size: 0.8125rem; color: var(--ink-500); }
+.results strong { color: var(--ink-900); font-weight: 600; }
+.seg button { display: inline-flex; align-items: center; gap: 6px; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); }
+@media (max-width: 1280px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+.prof { background: var(--white); border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-4); display: grid; gap: var(--s-3); align-content: start; }
+.prof:hover { border-color: var(--blue-700); box-shadow: var(--shadow-md); }
+.prof__head { display: flex; gap: 12px; align-items: flex-start; }
+.prof__avatar { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 1rem; flex-shrink: 0; position: relative; }
+.prof__avatar.cat-md { background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); }
+.prof__avatar.cat-enf { background: linear-gradient(135deg, var(--teal), #38b2b2); }
+.prof__avatar.cat-tec { background: linear-gradient(135deg, var(--purple), #9c6ce8); }
+.prof__avatar.cat-adm { background: linear-gradient(135deg, var(--ink-700), var(--ink-500)); }
+.prof__avatar.cat-acs { background: linear-gradient(135deg, var(--ok), #4cb083); }
+.who__avatar.prof__avatar { width: 32px; height: 32px; border-radius: 50%; font-size: 0.78rem; }
+.prof__status { position: absolute; bottom: -2px; right: -2px; width: 14px; height: 14px; border-radius: 50%; background: var(--ok); border: 2px solid #fff; }
+.prof__status--away { background: var(--warn); }
+.prof__status--off { background: var(--ink-300); }
+.prof__status--leave { background: var(--alert); }
+.prof__id { flex: 1; min-width: 0; }
+.prof__name { font-weight: 600; font-size: 1rem; line-height: 1.2; }
+.prof__role { font-size: 0.78rem; color: var(--ink-500); margin-top: 2px; }
+.prof__menu-wrap { position: relative; }
+.prof__menu { background: transparent; border: 0; color: var(--ink-400); width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; flex-shrink: 0; cursor: pointer; }
+.prof__menu:hover, .prof__menu[aria-expanded="true"] { background: var(--ink-100); color: var(--ink-900); }
+.prof__popover { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 160px; background: var(--white); border: 1px solid var(--ink-200); border-radius: var(--r-md); box-shadow: var(--shadow-md); padding: 4px; display: grid; }
+.prof__popover button { background: transparent; border: 0; text-align: left; padding: 8px 10px; border-radius: 6px; font: inherit; font-size: 0.8125rem; color: var(--ink-700); cursor: pointer; }
+.prof__popover button:hover, .prof__popover button:focus-visible { background: var(--blue-50); color: var(--blue-700); }
+.prof__popover button.perigo { color: var(--alert); }
+.prof__popover button.perigo:hover { background: var(--alert-bg); }
+.prof__tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag--md { background: var(--blue-50); color: var(--blue-800); }
+.tag--enf { background: var(--teal-bg); color: var(--teal); }
+.tag--tec { background: var(--purple-bg); color: var(--purple); }
+.tag--acs { background: var(--ok-bg); color: var(--ok); }
+.tag--adm { background: var(--ink-100); color: var(--ink-700); }
+.prof__meta { display: grid; gap: 8px; font-size: 0.8125rem; }
+.meta-row { display: flex; align-items: center; gap: 8px; color: var(--ink-700); min-width: 0; }
+.meta-row svg { color: var(--ink-400); flex-shrink: 0; }
+.meta-row .v { font-family: 'IBM Plex Mono', monospace; color: var(--ink-900); }
+.prof__load { background: var(--ink-50); border: 1px solid var(--ink-200); border-radius: 10px; padding: 10px 12px; }
+.prof__load-top { display: flex; justify-content: space-between; align-items: baseline; }
+.prof__load-lbl { font-size: 0.7rem; color: var(--ink-500); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.prof__load-val { font-weight: 600; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+.prof__load-val small { color: var(--ink-500); font-weight: 500; font-size: 0.78rem; }
+.prof__load-sub { font-size: 0.72rem; color: var(--ink-500); margin-top: 6px; }
+.prof__actions { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 4px; }
+.prof__actions .btn { padding: 7px 12px; min-height: 36px; font-size: 0.8125rem; }
+.pagination--solta { border: 1px solid var(--ink-200); border-radius: var(--r-lg); background: var(--white); margin-top: var(--s-3); }
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }

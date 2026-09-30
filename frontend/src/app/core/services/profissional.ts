@@ -1,12 +1,23 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ProfissionalContatoRequestDto, ProfissionalRequestDto, ProfissionalResponseDto, SuccessResponseDto } from '../models/profissional';
+import {
+  ProfissionalContatoRequestDto,
+  ProfissionalRequestDto,
+  ProfissionalResponseDto,
+  QuadroProfissionalResponseDto,
+  SuccessResponseDto,
+} from '../models/profissional';
 
 @Injectable({ providedIn: 'root' })
 export class ProfissionalService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/v1/profissional';
+
+  /** Quadro com lotação e afastamento vigentes (ADR-0072) — exige RH.CONSULTAR com a autorização ligada. */
+  quadro(): Observable<QuadroProfissionalResponseDto[]> {
+    return this.http.get<QuadroProfissionalResponseDto[]>(`${this.baseUrl}/quadro`);
+  }
 
   listar(): Observable<ProfissionalResponseDto[]> {
     return this.http.get<ProfissionalResponseDto[]>(`${this.baseUrl}/`);
