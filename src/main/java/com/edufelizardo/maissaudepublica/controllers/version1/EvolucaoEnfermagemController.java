@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoEvolucaoEnfermagemRequestDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
@@ -35,6 +36,7 @@ public class EvolucaoEnfermagemController {
     @Autowired
     private EvolucaoEnfermagemService service;
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as evoluções de enfermagem cadastradas", tags = "Evolução de Enfermagem")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -53,6 +55,7 @@ public class EvolucaoEnfermagemController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma evolução de enfermagem pelo id", tags = "Evolução de Enfermagem")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -64,6 +67,7 @@ public class EvolucaoEnfermagemController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"EVOLUCAO.REGISTRAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma evolução de enfermagem",
             description = "Registra uma nota de evolução de enfermagem ao longo de um atendimento, com um profissional (por matrícula, ver ADR-0034).",
@@ -85,6 +89,7 @@ public class EvolucaoEnfermagemController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"EVOLUCAO.REGISTRAR"})
     @PostMapping(value = "{uuid}/retificacao", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Retifica uma evolução de enfermagem",

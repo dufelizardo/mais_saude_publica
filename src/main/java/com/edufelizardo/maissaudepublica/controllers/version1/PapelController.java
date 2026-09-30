@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.PapelAtualizacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.PapelRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PapelResponseDto;
@@ -34,6 +35,7 @@ public class PapelController {
     @Autowired
     private AcessoService service;
 
+    @RequerPermissao({"ACESSO.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os papéis com suas permissões", tags = "Acesso")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -44,6 +46,7 @@ public class PapelController {
         return ResponseEntity.ok(service.listarPapeis());
     }
 
+    @RequerPermissao({"ACESSO.GERENCIAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um papel pelo id", tags = "Acesso")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -54,6 +57,7 @@ public class PapelController {
         return ResponseEntity.ok(service.buscarPapel(uuid));
     }
 
+    @RequerPermissao({"ACESSO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um papel",
             description = "Código em maiúsculas, único (409 se repetido); permissões do catálogo (400 se desconhecida).",
@@ -71,6 +75,7 @@ public class PapelController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto("Papel criado com sucesso!", details));
     }
 
+    @RequerPermissao({"ACESSO.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza nome, descrição, situação e permissões de um papel",
             description = "O código não muda. O administrador da plataforma não pode ser desativado nem perder ACESSO.GERENCIAR (422).",

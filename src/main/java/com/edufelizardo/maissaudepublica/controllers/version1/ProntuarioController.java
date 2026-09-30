@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioResponseDto;
 import com.edufelizardo.maissaudepublica.services.version1.ProntuarioService;
@@ -31,6 +32,7 @@ public class ProntuarioController {
     @Autowired
     private ProntuarioService service;
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(value = "{pacienteId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca o prontuário consolidado de um paciente",
             description = "Agrega os Atendimentos do paciente, cada um com suas Triagens e Evoluções de enfermagem e suas Consultas, cada uma com seus Procedimentos.",

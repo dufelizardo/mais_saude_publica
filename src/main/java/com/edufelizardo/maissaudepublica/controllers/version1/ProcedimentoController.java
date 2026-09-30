@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.StatusProcedimentoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoProcedimentoRequestDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
@@ -36,6 +37,7 @@ public class ProcedimentoController {
     @Autowired
     private ProcedimentoService service;
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os procedimentos cadastrados", tags = "Procedimento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -54,6 +56,7 @@ public class ProcedimentoController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um procedimento pelo id", tags = "Procedimento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -65,6 +68,7 @@ public class ProcedimentoController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"PROCEDIMENTO.REGISTRAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um procedimento",
             description = "Registra um procedimento realizado durante uma consulta, com um profissional (por matrícula, ver ADR-0034).",
@@ -86,6 +90,7 @@ public class ProcedimentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"PROCEDIMENTO.REGISTRAR"})
     @PostMapping(value = "{uuid}/status", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra o desfecho de um procedimento agendado",
@@ -108,6 +113,7 @@ public class ProcedimentoController {
         return ResponseEntity.ok(new SuccessResponseDto("Status do procedimento registrado com sucesso!", details));
     }
 
+    @RequerPermissao({"PROCEDIMENTO.REGISTRAR"})
     @PostMapping(value = "{uuid}/retificacao", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Retifica um procedimento",

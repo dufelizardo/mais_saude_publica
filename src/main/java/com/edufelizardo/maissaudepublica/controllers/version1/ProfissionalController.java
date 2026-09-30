@@ -1,5 +1,7 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.LiberadoParaAutenticados;
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -39,6 +41,7 @@ public class ProfissionalController {
     @Autowired
     private ProfissionalService service;
 
+    @LiberadoParaAutenticados
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca os Profissionais cadastrados",
             description = "Verifica a existencia de Profissionais.",
@@ -60,6 +63,7 @@ public class ProfissionalController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @LiberadoParaAutenticados
     @GetMapping(value = "{cpf}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um Profissional pelo seu CPF.",
             description = "Verifica a existencia de um Profissional.",
@@ -78,6 +82,7 @@ public class ProfissionalController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @LiberadoParaAutenticados
     @GetMapping(value = "matricula/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um Profissional pela sua matrícula.",
             description = "Verifica a existência de um Profissional pela matrícula (chave única de verdade do domínio, ver ADR-0017) — usado por domínios fora do RH que referenciam Profissional só por matrícula (ver ADR-0034).",
@@ -96,6 +101,7 @@ public class ProfissionalController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um Profissional.",
             description = "Cria um Profissional e reconcilia automaticamente o vínculo com Unidades de Saúde pendentes que já referenciavam este CPF.",
@@ -132,6 +138,7 @@ public class ProfissionalController {
         }
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PatchMapping(value = "contato/{cpf}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza os contatos de um Profissional.",
             description = "Atualiza os contatos de um Profissional.",
@@ -156,6 +163,7 @@ public class ProfissionalController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @DeleteMapping(value = "des-habilitar/{cpf}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Desabilita ou Habilita um Profissional.",
             description = "Informar dataDesligamento desliga o profissional (ativo=false) e grava a data; "

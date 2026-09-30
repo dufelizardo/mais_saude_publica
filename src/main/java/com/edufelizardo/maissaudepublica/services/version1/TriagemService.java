@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * CRUD da Triagem (Enfermagem — ver MAPA-DE-DOMINIOS.md #8, ADR-0047). {@code profissionalMatricula}
@@ -35,6 +36,9 @@ public class TriagemService {
     private TriagemRepository triagemRepository;
 
     @Autowired
+    private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
     private AtendimentoRepository atendimentoRepository;
 
     @Autowired
@@ -43,6 +47,7 @@ public class TriagemService {
     @Transactional
     public TriagemResponseDto criar(TriagemRequestDto dto) {
         Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
+        controleDeAcesso.exigir("TRIAGEM.REGISTRAR", atendimento.getUnidade());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
 
         Triagem triagem = new Triagem(atendimento, profissional, dto.getDataHora(), dto.getPressaoArterial(),
@@ -68,6 +73,8 @@ public class TriagemService {
             throw new ResourceUnprocessableEntityException("Esta triagem já foi retificada pela versão " + vigente
                     + ": retifique a versão vigente.");
         }
+        controleDeAcesso.exigir("TRIAGEM.REGISTRAR", original.getAtendimento().getUnidade());
+        controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getAtendimento().getUnidade());
         if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())) {
             throw new ResourceBadRequestException("A retificação precisa manter o mesmo atendimento do registro original.");
         }
@@ -92,14 +99,16 @@ public class TriagemService {
 
     public List<TriagemResponseDto> listar() {
         Map<UUID, UUID> sucessores = sucessores();
-        return triagemRepository.findAll()
-                .stream()
+        return controleDeAcesso.filtrar(triagemRepository.findAll().stream(), r -> Stream.of(r.getAtendimento().getUnidade()),
+                        "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR")
                 .map(r -> TriagemResponseDto.fromTriagem(r, sucessores.get(r.getUuid())))
                 .collect(Collectors.toList());
     }
 
     public TriagemResponseDto buscarPorId(UUID uuid) {
-        return TriagemResponseDto.fromTriagem(buscarEntidadePorId(uuid), sucessores().get(uuid));
+        Triagem registro = buscarEntidadePorId(uuid);
+        controleDeAcesso.exigirVisivel(registro.getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR");
+        return TriagemResponseDto.fromTriagem(registro, sucessores().get(uuid));
     }
 
     private Triagem buscarEntidadePorId(UUID uuid) {

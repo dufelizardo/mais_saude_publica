@@ -90,7 +90,9 @@ atendido pela API.
   As telas antigas de Consultas e Procedimentos passaram a "Retificar" (com motivo); elas serão
   substituídas pela tela Atendimentos.
 - Registros anteriores a esta ADR não têm `registradoEm`/`registradoPorCpf`.
-- Restringir a retificação ao autor depende do RBAC (ADR-0054).
+- Restringir a retificação ao autor depende do RBAC (ADR-0054). **Resolvido pela
+  [ADR-0067](./0067-autorizacao-aplicada-nas-rotas-e-no-escopo.md)**: só o autor ou quem tem
+  `REGISTRO_CLINICO.RETIFICAR_DE_OUTROS` na unidade (com a autorização ligada).
 - Atendimento e agendamento continuam editáveis por `PATCH`: são registros administrativos, não
   clínicos. Revisitar se algum campo deles passar a ter valor clínico.
 

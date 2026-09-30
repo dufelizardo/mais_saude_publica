@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -35,6 +36,7 @@ public class RegistroPontoController {
     @Autowired
     private RegistroPontoService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de registros de ponto de um profissional",
             description = "Sem dataInicio/dataFim, lista tudo. Com os dois, filtra o período (inclusive).",
@@ -54,6 +56,7 @@ public class RegistroPontoController {
         return ResponseEntity.ok(service.listarHistorico(matricula, dataInicio, dataFim));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um registro de ponto", tags = "RegistroPonto")
     @ApiResponse(responseCode = "201", description = "Success:", content = {
@@ -73,6 +76,7 @@ public class RegistroPontoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PatchMapping(value = "{uuid}/solicitar-correcao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Solicita a correção de um registro de ponto",
             description = "Fica pendente de aprovação do gestor -- não altera dataHora/tipo até ser aprovada. Recusa (409) se já houver uma correção pendente.",
@@ -94,6 +98,7 @@ public class RegistroPontoController {
         return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PatchMapping(value = "{uuid}/aprovar-correcao", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Aprova a correção pendente de um registro de ponto",
             description = "Aplica a data/hora e o tipo propostos e limpa a pendência. Recusa (409) se não houver correção pendente.",
@@ -115,6 +120,7 @@ public class RegistroPontoController {
         return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PatchMapping(value = "{uuid}/rejeitar-correcao", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Rejeita a correção pendente de um registro de ponto",
             description = "Descarta a proposta e mantém o registro original. Recusa (409) se não houver correção pendente.",

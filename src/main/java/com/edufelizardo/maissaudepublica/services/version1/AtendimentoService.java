@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * CRUD do Atendimento (Assistência — ver ADR-0039/ADR-0041). {@code profissionalMatricula} é
@@ -44,6 +45,9 @@ public class AtendimentoService {
 
     @Autowired
     private AtendimentoRepository atendimentoRepository;
+
+    @Autowired
+    private ControleDeAcesso controleDeAcesso;
 
     @Autowired
     private PacienteRepository pacienteRepository;
@@ -84,6 +88,7 @@ public class AtendimentoService {
         Paciente paciente = buscarPacientePorId(dto.getPacienteId());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
         UnidadeDeSaude unidade = buscarUnidadePorId(dto.getUnidadeId());
+        controleDeAcesso.exigir("ATENDIMENTO.GERENCIAR", unidade);
         Setor setor = buscarSetorSeInformado(dto.getSetorId());
         Agendamento agendamento = buscarAgendamentoSeInformado(dto.getAgendamentoId());
         realizarAgendamento(agendamento, paciente);
@@ -102,6 +107,7 @@ public class AtendimentoService {
     @Transactional
     public AtendimentoResponseDto atualizar(UUID uuid, AtendimentoRequestDto dto) {
         Atendimento atendimento = buscarEntidadePorId(uuid);
+        controleDeAcesso.exigir("ATENDIMENTO.GERENCIAR", atendimento.getUnidade());
         if (!atendimento.getPaciente().getUuid().equals(dto.getPacienteId()) && temRegistroClinico(uuid)) {
             throw new ResourceUnprocessableEntityException(
                     "Este atendimento já tem registro clínico: o paciente não pode ser trocado.");
@@ -109,6 +115,7 @@ public class AtendimentoService {
         Paciente paciente = buscarPacientePorId(dto.getPacienteId());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
         UnidadeDeSaude unidade = buscarUnidadePorId(dto.getUnidadeId());
+        controleDeAcesso.exigir("ATENDIMENTO.GERENCIAR", unidade);
         Setor setor = buscarSetorSeInformado(dto.getSetorId());
         Agendamento agendamento = buscarAgendamentoSeInformado(dto.getAgendamentoId());
         UUID agendamentoAtual = atendimento.getAgendamento() != null ? atendimento.getAgendamento().getUuid() : null;
@@ -132,15 +139,17 @@ public class AtendimentoService {
     @Transactional(readOnly = true)
     public List<AtendimentoResponseDto> listar() {
         ResumoClinico resumo = resumoClinico();
-        return atendimentoRepository.findAll()
-                .stream()
+        return controleDeAcesso.filtrar(atendimentoRepository.findAll().stream(), a -> Stream.of(a.getUnidade()),
+                        "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR")
                 .map(a -> resumo.aplicar(AtendimentoResponseDto.fromAtendimento(a)))
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public AtendimentoResponseDto buscarPorId(UUID uuid) {
-        return resumoClinico().aplicar(AtendimentoResponseDto.fromAtendimento(buscarEntidadePorId(uuid)));
+        Atendimento atendimento = buscarEntidadePorId(uuid);
+        controleDeAcesso.exigirVisivel(atendimento.getUnidade(), "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR");
+        return resumoClinico().aplicar(AtendimentoResponseDto.fromAtendimento(atendimento));
     }
 
     /** Contagem de registros vigentes e risco da triagem mais recente, por atendimento. */

@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceForbiddenException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.Lote;
@@ -26,6 +27,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Transferência de estoque entre unidades em duas etapas (ADR-0059, revista pela ADR-0061): envio
@@ -40,6 +42,9 @@ public class TransferenciaFarmaciaService {
 
     @Autowired
     private TransferenciaFarmaciaRepository transferenciaRepository;
+
+    @Autowired
+    private ControleDeAcesso controleDeAcesso;
 
     @Autowired
     private LoteRepository loteRepository;
@@ -62,6 +67,7 @@ public class TransferenciaFarmaciaService {
                                 + " em nossos registros."));
         Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
         Lote origem = travarLote(dto.getLoteOrigemId());
+        controleDeAcesso.exigir("FARMACIA.TRANSFERIR", origem.getUnidade());
 
         if (origem.getUnidade().getUuid().equals(unidadeDestino.getUuid())) {
             throw new ResourceBadRequestException("A unidade de destino precisa ser diferente da unidade do lote de origem.");
@@ -91,6 +97,8 @@ public class TransferenciaFarmaciaService {
     @Transactional
     public TransferenciaFarmaciaResponseDto receber(UUID uuid, RecebimentoTransferenciaRequestDto dto) {
         TransferenciaFarmacia transferencia = travarEmTransito(uuid, "receber");
+        // Só quem responde pela unidade de destino confere o que chegou (ADR-0061, ADR-0067).
+        controleDeAcesso.exigir("FARMACIA.TRANSFERIR", transferencia.getUnidadeDestino());
         Profissional recebedor = buscarProfissional(dto.getProfissionalMatricula());
         if (recebedor.getUuid().equals(transferencia.getProfissional().getUuid())) {
             throw new ResourceUnprocessableEntityException(
@@ -144,6 +152,7 @@ public class TransferenciaFarmaciaService {
     @Transactional
     public TransferenciaFarmaciaResponseDto cancelar(UUID uuid, CancelamentoTransferenciaRequestDto dto) {
         TransferenciaFarmacia transferencia = travarEmTransito(uuid, "cancelar");
+        controleDeAcesso.exigir("FARMACIA.TRANSFERIR", transferencia.getLoteOrigem().getUnidade());
         Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
         String motivo = dto.getMotivo().trim();
 
@@ -164,8 +173,8 @@ public class TransferenciaFarmaciaService {
     @Transactional(readOnly = true)
     public List<TransferenciaFarmaciaResponseDto> listar(StatusTransferenciaFarmacia status, UUID unidadeOrigemId,
                                                          UUID unidadeDestinoId) {
-        return transferenciaRepository.findAllByOrderByRegistradoEmDesc()
-                .stream()
+        return controleDeAcesso.filtrar(transferenciaRepository.findAllByOrderByRegistradoEmDesc().stream(),
+                        t -> Stream.of(t.getLoteOrigem().getUnidade(), t.getUnidadeDestino()), "FARMACIA.CONSULTAR", "FARMACIA.TRANSFERIR")
                 .filter(t -> status == null || t.getStatus() == status)
                 .filter(t -> unidadeOrigemId == null || t.getLoteOrigem().getUnidade().getUuid().equals(unidadeOrigemId))
                 .filter(t -> unidadeDestinoId == null
@@ -177,7 +186,13 @@ public class TransferenciaFarmaciaService {
     @Transactional(readOnly = true)
     public TransferenciaFarmaciaResponseDto buscarPorId(UUID uuid) {
         return transferenciaRepository.findById(uuid)
-                .map(TransferenciaFarmaciaResponseDto::fromTransferencia)
+                .map(t -> {
+                    controleDeAcesso.filtrar(Stream.of(t), x -> Stream.of(x.getLoteOrigem().getUnidade(), x.getUnidadeDestino()),
+                                    "FARMACIA.CONSULTAR", "FARMACIA.TRANSFERIR")
+                            .findAny()
+                            .orElseThrow(() -> new ResourceForbiddenException("Esta transferência é de unidades fora do seu acesso."));
+                    return TransferenciaFarmaciaResponseDto.fromTransferencia(t);
+                })
                 .orElseThrow(() -> naoEncontrada(uuid));
     }
 

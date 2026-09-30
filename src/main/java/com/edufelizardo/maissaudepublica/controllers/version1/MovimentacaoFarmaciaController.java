@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -32,6 +33,7 @@ public class MovimentacaoFarmaciaController {
     @Autowired
     private MovimentacaoFarmaciaService service;
 
+    @RequerPermissao({"FARMACIA.GERENCIAR_ESTOQUE"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra uma perda ou um ajuste de inventário",
             description = "PERDA: quantidade e motivoPerda (OUTRO exige justificativa). AJUSTE_INVENTARIO: saldoContado "
@@ -55,6 +57,7 @@ public class MovimentacaoFarmaciaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"FARMACIA.CONSULTAR"})
     @GetMapping(value = "lote/{loteId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Extrato de um lote, do lançamento mais antigo ao mais recente", tags = "Movimentação de Farmácia")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -66,6 +69,7 @@ public class MovimentacaoFarmaciaController {
         return ResponseEntity.ok(service.extratoDoLote(loteId));
     }
 
+    @RequerPermissao({"FARMACIA.CONSULTAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma movimentação pelo id", tags = "Movimentação de Farmácia")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

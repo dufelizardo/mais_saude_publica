@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * CRUD do Procedimento (Assistência — ver ADR-0039/ADR-0044). {@code profissionalMatricula} é
@@ -37,6 +38,9 @@ public class ProcedimentoService {
     private ProcedimentoRepository procedimentoRepository;
 
     @Autowired
+    private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
     private ConsultaRepository consultaRepository;
 
     @Autowired
@@ -45,6 +49,7 @@ public class ProcedimentoService {
     @Transactional
     public ProcedimentoResponseDto criar(ProcedimentoRequestDto dto) {
         Consulta consulta = buscarConsultaPorId(dto.getConsultaId());
+        controleDeAcesso.exigir("PROCEDIMENTO.REGISTRAR", consulta.getAtendimento().getUnidade());
         if (consultaRepository.existsByRetificacaoDe_Uuid(consulta.getUuid())) {
             throw new ResourceUnprocessableEntityException("Esta consulta foi retificada: registre o procedimento na versão vigente.");
         }
@@ -72,6 +77,8 @@ public class ProcedimentoService {
             throw new ResourceUnprocessableEntityException("Este procedimento já foi retificado pela versão " + vigente
                     + ": retifique a versão vigente.");
         }
+        controleDeAcesso.exigir("PROCEDIMENTO.REGISTRAR", original.getConsulta().getAtendimento().getUnidade());
+        controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getConsulta().getAtendimento().getUnidade());
         if (!original.getConsulta().getUuid().equals(dto.getConsultaId())) {
             throw new ResourceBadRequestException("A retificação precisa manter o mesmo consulta do registro original.");
         }
@@ -96,6 +103,7 @@ public class ProcedimentoService {
         Procedimento procedimento = procedimentoRepository.findByIdParaRetificar(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar um procedimento com o id " + uuid + " em nossos registros."));
+        controleDeAcesso.exigir("PROCEDIMENTO.REGISTRAR", procedimento.getConsulta().getAtendimento().getUnidade());
         if (sucessores().containsKey(uuid)) {
             throw new ResourceUnprocessableEntityException(
                     "Este procedimento foi retificado: altere o status da versão vigente.");
@@ -141,14 +149,17 @@ public class ProcedimentoService {
 
     public List<ProcedimentoResponseDto> listar() {
         Map<UUID, UUID> sucessores = sucessores();
-        return procedimentoRepository.findAll()
-                .stream()
+        return controleDeAcesso.filtrar(procedimentoRepository.findAll().stream(),
+                        r -> Stream.of(r.getConsulta().getAtendimento().getUnidade()), "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR")
                 .map(r -> ProcedimentoResponseDto.fromProcedimento(r, sucessores.get(r.getUuid())))
                 .collect(Collectors.toList());
     }
 
     public ProcedimentoResponseDto buscarPorId(UUID uuid) {
-        return ProcedimentoResponseDto.fromProcedimento(buscarEntidadePorId(uuid), sucessores().get(uuid));
+        Procedimento registro = buscarEntidadePorId(uuid);
+        controleDeAcesso.exigirVisivel(registro.getConsulta().getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR",
+                "PROCEDIMENTO.REGISTRAR");
+        return ProcedimentoResponseDto.fromProcedimento(registro, sucessores().get(uuid));
     }
 
     private Procedimento buscarEntidadePorId(UUID uuid) {

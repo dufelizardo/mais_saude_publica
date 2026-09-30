@@ -35,6 +35,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(ResourceForbiddenException.class)
+    public ResponseEntity<ErrorExceptionResponse> handleResourceForbidden(ResourceForbiddenException ex) {
+        ErrorExceptionResponse error = new ErrorExceptionResponse("Forbidden", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(ResourceConflictException.class)
     public ResponseEntity<ErrorExceptionResponse> handleResourceConflict(ResourceConflictException ex) {
         ErrorExceptionResponse error = new ErrorExceptionResponse("Conflict", ex.getMessage());

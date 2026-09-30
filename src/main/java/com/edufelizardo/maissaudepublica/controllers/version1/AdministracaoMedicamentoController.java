@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +35,7 @@ public class AdministracaoMedicamentoController {
     @Autowired
     private AdministracaoMedicamentoService service;
 
+    @RequerPermissao({"MEDICACAO.ADMINISTRAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra a checagem de um medicamento prescrito",
             description = "ADMINISTRADO: loteId, dose, via e quantidade; o lote precisa ser do medicamento (400), da unidade do "
@@ -57,6 +59,7 @@ public class AdministracaoMedicamentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto("Administração registrada com sucesso!", details));
     }
 
+    @RequerPermissao({"MEDICACAO.ADMINISTRAR"})
     @PostMapping(value = "{uuid}/retificacao", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Retifica uma administração de medicamento",
@@ -79,6 +82,7 @@ public class AdministracaoMedicamentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto("Administração retificada com sucesso!", details));
     }
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as administrações, da mais recente para a mais antiga", tags = "Administração de Medicamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -90,6 +94,7 @@ public class AdministracaoMedicamentoController {
         return ResponseEntity.ok(service.listar());
     }
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(value = "atendimento/{atendimentoId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as administrações de um atendimento", tags = "Administração de Medicamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -101,6 +106,7 @@ public class AdministracaoMedicamentoController {
         return ResponseEntity.ok(service.listarPorAtendimento(atendimentoId));
     }
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma administração pelo id", tags = "Administração de Medicamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -36,6 +37,7 @@ public class TransferenciaFarmaciaController {
     @Autowired
     private TransferenciaFarmaciaService service;
 
+    @RequerPermissao({"FARMACIA.TRANSFERIR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Envia parte do saldo de um lote para outra unidade",
             description = "Lança TRANSFERENCIA_SAIDA no lote de origem e deixa a transferência EM_TRANSITO até o "
@@ -60,6 +62,7 @@ public class TransferenciaFarmaciaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"FARMACIA.TRANSFERIR"})
     @PostMapping(value = "{uuid}/recebimento", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra o recebimento conferido de uma transferência em trânsito",
@@ -83,6 +86,7 @@ public class TransferenciaFarmaciaController {
         return ResponseEntity.ok(new SuccessResponseDto("Recebimento registrado com sucesso!", details));
     }
 
+    @RequerPermissao({"FARMACIA.TRANSFERIR"})
     @PostMapping(value = "{uuid}/cancelamento", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cancela uma transferência em trânsito",
@@ -104,6 +108,7 @@ public class TransferenciaFarmaciaController {
         return ResponseEntity.ok(new SuccessResponseDto("Transferência cancelada com sucesso!", details));
     }
 
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.TRANSFERIR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as transferências, da mais recente para a mais antiga",
             description = "Filtros opcionais: status (ex.: EM_TRANSITO), unidadeOrigemId e unidadeDestinoId — "
@@ -121,6 +126,7 @@ public class TransferenciaFarmaciaController {
         return ResponseEntity.ok(service.listar(status, unidadeOrigemId, unidadeDestinoId));
     }
 
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.TRANSFERIR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma transferência pelo id", tags = "Transferência de Farmácia")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

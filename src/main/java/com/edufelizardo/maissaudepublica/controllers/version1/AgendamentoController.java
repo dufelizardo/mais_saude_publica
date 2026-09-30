@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +35,7 @@ public class AgendamentoController {
     @Autowired
     private AgendamentoService service;
 
+    @RequerPermissao({"AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os agendamentos cadastrados", tags = "Agendamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +54,7 @@ public class AgendamentoController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR"})
     @GetMapping(value = "paciente/{pacienteId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os agendamentos de um paciente, do mais antigo ao mais recente", tags = "Agendamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -66,6 +69,7 @@ public class AgendamentoController {
         return ResponseEntity.ok(service.listarPorPaciente(pacienteId));
     }
 
+    @RequerPermissao({"AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um agendamento pelo id", tags = "Agendamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -77,6 +81,7 @@ public class AgendamentoController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"AGENDAMENTO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um agendamento",
             description = "Agenda um paciente com um profissional (por matrícula, ver ADR-0034) — independente de um Atendimento existir (ver ADR-0042).",
@@ -98,6 +103,7 @@ public class AgendamentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"AGENDAMENTO.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza um agendamento",
             description = "Substitui os campos editáveis por inteiro — cobre tanto corrigir dados quanto avançar o status (AGENDADO/CONFIRMADO/REALIZADO/CANCELADO).",

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UsuarioResponseDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
@@ -29,6 +30,7 @@ public class UsuarioController {
     @Autowired
     private AcessoService service;
 
+    @RequerPermissao({"ACESSO.GERENCIAR", "USUARIO.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os usuários (sem dado sensível)", tags = "Acesso")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -39,6 +41,7 @@ public class UsuarioController {
         return ResponseEntity.ok(service.listarUsuarios());
     }
 
+    @RequerPermissao({"ACESSO.GERENCIAR", "USUARIO.GERENCIAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um usuário pelo id", tags = "Acesso")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

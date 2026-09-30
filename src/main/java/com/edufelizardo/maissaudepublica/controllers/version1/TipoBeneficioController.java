@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +35,7 @@ public class TipoBeneficioController {
     @Autowired
     private TipoBeneficioService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os tipos de benefício cadastrados", tags = "TipoBeneficio")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +54,7 @@ public class TipoBeneficioController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um tipo de benefício pelo id", tags = "TipoBeneficio")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -63,6 +66,7 @@ public class TipoBeneficioController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um tipo de benefício", tags = "TipoBeneficio")
     @ApiResponse(responseCode = "201", description = "Success:", content = {

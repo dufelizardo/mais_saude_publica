@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Livro de movimentação do estoque de lotes (ADR-0057) — único ponto que altera
@@ -37,6 +38,9 @@ public class MovimentacaoFarmaciaService {
 
     @Autowired
     private MovimentacaoFarmaciaRepository movimentacaoRepository;
+
+    @Autowired
+    private ControleDeAcesso controleDeAcesso;
 
     @Autowired
     private LoteRepository loteRepository;
@@ -106,6 +110,7 @@ public class MovimentacaoFarmaciaService {
         Lote lote = loteRepository.findByIdParaMovimentar(dto.getLoteId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar um lote com o id " + dto.getLoteId() + " em nossos registros."));
+        controleDeAcesso.exigir("FARMACIA.GERENCIAR_ESTOQUE", lote.getUnidade());
         Profissional profissional = profissionalRepository.findByMatricula(dto.getProfissionalMatricula())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar um profissional com a matrícula " + dto.getProfissionalMatricula()
@@ -135,8 +140,9 @@ public class MovimentacaoFarmaciaService {
     /** Extrato do lote, do lançamento mais antigo ao mais recente. */
     @Transactional(readOnly = true)
     public List<MovimentacaoFarmaciaResponseDto> extratoDoLote(UUID loteId) {
-        List<MovimentacaoFarmaciaResponseDto> extrato = movimentacaoRepository.findByLote_UuidOrderByRegistradoEmAsc(loteId)
-                .stream()
+        List<MovimentacaoFarmaciaResponseDto> extrato = controleDeAcesso.filtrar(
+                        movimentacaoRepository.findByLote_UuidOrderByRegistradoEmAsc(loteId).stream(),
+                        m -> Stream.of(m.getLote().getUnidade()), "FARMACIA.CONSULTAR")
                 .map(MovimentacaoFarmaciaResponseDto::fromMovimentacao)
                 .collect(Collectors.toList());
         if (extrato.isEmpty()) {
@@ -149,7 +155,10 @@ public class MovimentacaoFarmaciaService {
     @Transactional(readOnly = true)
     public MovimentacaoFarmaciaResponseDto buscarPorId(UUID uuid) {
         return movimentacaoRepository.findById(uuid)
-                .map(MovimentacaoFarmaciaResponseDto::fromMovimentacao)
+                .map(m -> {
+                    controleDeAcesso.exigirVisivel(m.getLote().getUnidade(), "FARMACIA.CONSULTAR");
+                    return MovimentacaoFarmaciaResponseDto.fromMovimentacao(m);
+                })
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar uma movimentação com o id " + uuid + " em nossos registros."));
     }

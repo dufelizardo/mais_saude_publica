@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AtribuicaoAcessoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RevogacaoAcessoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AtribuicaoAcessoResponseDto;
@@ -34,6 +35,7 @@ public class AtribuicaoAcessoController {
     @Autowired
     private AcessoService service;
 
+    @RequerPermissao({"ACESSO.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as atribuições de acesso, da mais recente para a mais antiga",
             description = "Filtro opcional por usuarioId. Revogadas continuam na lista, marcadas (vigente = false).",
@@ -46,6 +48,7 @@ public class AtribuicaoAcessoController {
         return ResponseEntity.ok(service.listarAtribuicoes(usuarioId));
     }
 
+    @RequerPermissao({"ACESSO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Concede um papel a um usuário num escopo",
             description = "Sem unidade = rede inteira; a unidade vale também para as que estão abaixo dela. Período opcional "
@@ -65,6 +68,7 @@ public class AtribuicaoAcessoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto("Acesso concedido com sucesso!", details));
     }
 
+    @RequerPermissao({"ACESSO.GERENCIAR"})
     @PostMapping(value = "{uuid}/revogacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Revoga um acesso",
             description = "Não apaga: guarda motivo, autor e hora. Já revogado → 422.", tags = "Acesso")

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -38,6 +39,7 @@ public class DispensacaoController {
     @Autowired
     private DispensacaoService service;
 
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as dispensações registradas", tags = "Dispensação")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -56,6 +58,7 @@ public class DispensacaoController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma dispensação pelo id", tags = "Dispensação")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -67,6 +70,7 @@ public class DispensacaoController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"FARMACIA.DISPENSAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra uma dispensação",
             description = "Registra a dispensação de um lote de medicamento a um paciente, debitando a quantidade do lote. Retorna 422 se o estoque do lote for insuficiente.",
