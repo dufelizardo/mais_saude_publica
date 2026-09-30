@@ -10,7 +10,8 @@ import { PacienteResponseDto, Sexo } from '../../../core/models/paciente';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { PacienteService } from '../../../core/services/paciente';
 import { CepService } from '../../../core/services/cep';
-import { ProntuarioService } from '../../../core/services/prontuario';
+import { ProntuarioService, semVinculo } from '../../../core/services/prontuario';
+import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-prontuario';
 import { ProntuarioResponseDto } from '../../../core/models/prontuario';
 import { TriagemResponseDto } from '../../../core/models/triagem';
 import { AgendamentoResponseDto } from '../../../core/models/agendamento';
@@ -30,7 +31,7 @@ interface TimelineItem {
 
 @Component({
   selector: 'app-pacientes',
-  imports: [ReactiveFormsModule, RouterLink, Modal, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, Modal, DatePipe, AcessoProntuario],
   templateUrl: './pacientes.html',
   styleUrl: './pacientes.css',
 })
@@ -66,6 +67,8 @@ export class Pacientes {
 
   protected readonly prontuario = signal<ProntuarioResponseDto | null>(null);
   protected readonly carregandoProntuario = signal(false);
+  /** Recusa por falta de vínculo assistencial (ADR-0076); null quando não houve. */
+  protected readonly prontuarioBloqueio = signal<string | null>(null);
 
   protected readonly ultimaTriagem = computed<TriagemResponseDto | null>(() => {
     const prontuario = this.prontuario();
@@ -306,15 +309,17 @@ export class Pacientes {
     this.abaDetalhe.set(aba);
   }
 
-  private carregarProntuario(pacienteId: string): void {
+  protected carregarProntuario(pacienteId: string): void {
     this.carregandoProntuario.set(true);
+    this.prontuarioBloqueio.set(null);
     this.prontuarioService.buscarPorPacienteId(pacienteId).subscribe({
       next: (prontuario) => {
         this.prontuario.set(prontuario);
         this.carregandoProntuario.set(false);
       },
-      error: () => {
+      error: (e) => {
         this.prontuario.set(null);
+        this.prontuarioBloqueio.set(semVinculo(e));
         this.carregandoProntuario.set(false);
       },
     });

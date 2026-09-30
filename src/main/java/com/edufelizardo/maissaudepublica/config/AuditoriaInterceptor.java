@@ -90,6 +90,7 @@ public class AuditoriaInterceptor implements HandlerInterceptor {
             case "POST":
                 if (rota.endsWith("/retificacao")) return AcaoAuditoria.RETIFICACAO;
                 if (rota.endsWith("/revogacao")) return AcaoAuditoria.REVOGACAO;
+                if (rota.endsWith("/acesso-justificado")) return AcaoAuditoria.ACESSO_JUSTIFICADO;
                 // POST na coleção cria; POST numa ação do registro (recebimento, desbloqueio…) altera.
                 return rota.contains("{") ? AcaoAuditoria.ALTERACAO : AcaoAuditoria.CRIACAO;
             default:

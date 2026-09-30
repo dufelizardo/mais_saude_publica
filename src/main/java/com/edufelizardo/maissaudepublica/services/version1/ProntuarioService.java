@@ -21,6 +21,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.Prontuari
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EvolucaoEnfermagemResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioConsultaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioResponseDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcessoProntuarioDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TriagemResponseDto;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.ConsultaRepository;
@@ -63,10 +64,15 @@ public class ProntuarioService {
     @Autowired
     private AdministracaoMedicamentoRepository administracaoMedicamentoRepository;
 
+    @Autowired
+    private VinculoAssistencialService vinculoAssistencialService;
+
     public ProntuarioResponseDto buscarPorPacienteId(UUID pacienteId) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar um paciente com o id " + pacienteId + " em nossos registros."));
+        // Histórico da rede inteira, mas só com vínculo assistencial (ADR-0076).
+        AcessoProntuarioDto acesso = vinculoAssistencialService.exigirVinculo(pacienteId);
 
         List<ProntuarioAtendimentoDto> atendimentos = atendimentoRepository.findByPacienteUuid(pacienteId)
                 .stream()
@@ -77,6 +83,7 @@ public class ProntuarioService {
         response.setPacienteUuid(paciente.getUuid());
         response.setPacienteNome(paciente.getNome());
         response.setAtendimentos(atendimentos);
+        response.setAcesso(acesso);
         return response;
     }
 

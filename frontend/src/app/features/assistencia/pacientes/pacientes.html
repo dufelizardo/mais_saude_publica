@@ -214,6 +214,12 @@
         <button type="button" role="tab" [attr.aria-selected]="abaDetalhe() === 'anexos'" (click)="selecionarAba('anexos')">Anexos</button>
       </div>
 
+      @if (prontuarioBloqueio() || prontuario()?.acesso?.base === 'JUSTIFICADO') {
+        <div style="padding: var(--s-4) var(--s-5) 0;">
+          <app-acesso-prontuario [pacienteId]="p.uuid" [bloqueio]="prontuarioBloqueio()" [acesso]="prontuario()?.acesso" (liberado)="carregarProntuario(p.uuid)" />
+        </div>
+      }
+
       @if (abaDetalhe() === 'resumo') {
         <div style="padding: var(--s-5);">
           <div class="section-title" style="font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px;">
@@ -221,6 +227,8 @@
           </div>
           @if (carregandoProntuario()) {
             <p style="color: var(--ink-500); font-size: 0.8125rem;">Carregando…</p>
+          } @else if (prontuarioBloqueio()) {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Sem acesso ao prontuário deste paciente.</p>
           } @else if (ultimaTriagem(); as t) {
             <div class="vitals">
               <div class="vital">
@@ -289,6 +297,8 @@
         <div style="padding: 0 var(--s-5) var(--s-5);">
           @if (carregandoProntuario()) {
             <p style="color: var(--ink-500); font-size: 0.8125rem;">Carregando…</p>
+          } @else if (prontuarioBloqueio()) {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Sem acesso ao prontuário deste paciente.</p>
           } @else if (timelinePreview().length > 0) {
             <div class="tl">
               @for (item of timelinePreview(); track item.data + item.titulo) {
@@ -312,6 +322,8 @@
         <div style="padding: var(--s-5);">
           @if (carregandoProntuario()) {
             <p style="color: var(--ink-500); font-size: 0.8125rem;">Carregando…</p>
+          } @else if (prontuarioBloqueio()) {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Sem acesso ao prontuário deste paciente.</p>
           } @else if (timeline().length > 0) {
             <div class="tl">
               @for (item of timeline(); track item.data + item.titulo) {

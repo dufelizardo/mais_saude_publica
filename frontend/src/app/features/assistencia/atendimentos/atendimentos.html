@@ -358,8 +358,13 @@
           <button type="button" class="btn btn--sm" (click)="abrirNovoAtendimento(p.uuid)">Iniciar atendimento</button>
         </div>
       </div>
+      @if (prontuario()?.acesso?.base === 'JUSTIFICADO') {
+        <app-acesso-prontuario [pacienteId]="p.uuid" [acesso]="prontuario()?.acesso" />
+      }
       @if (prontuarioCarregando()) {
         <div class="empty"><strong>Carregando prontuário…</strong></div>
+      } @else if (prontuarioBloqueio()) {
+        <app-acesso-prontuario [pacienteId]="p.uuid" [bloqueio]="prontuarioBloqueio()" (liberado)="carregarProntuario(p.uuid)" />
       } @else if (atendimentosDoProntuario().length) {
         <ol class="pront-tl">
           @for (r of atendimentosDoProntuario(); track r.atendimento.uuid) {
@@ -581,7 +586,9 @@
                 <button type="button" class="btn btn--ghost btn--sm" (click)="verProntuario(a.pacienteUuid)">Ver prontuário</button>
               </div>
 
-              @if (registros() === null) {
+              @if (registrosBloqueio()) {
+                <app-acesso-prontuario [pacienteId]="a.pacienteUuid" [bloqueio]="registrosBloqueio()" (liberado)="abrirAtendimento(a.uuid)" />
+              } @else if (registros() === null) {
                 <p class="cell-sub">Carregando registros…</p>
               } @else {
                 <section class="dsec">

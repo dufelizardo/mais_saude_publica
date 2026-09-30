@@ -8,12 +8,13 @@ e a unidade dela permitem". As decisões por trás deste guia estão nas ADRs
 
 ## Como está hoje
 
-São dois interruptores, e o segundo só funciona com o primeiro ligado:
+São três interruptores, e cada um só funciona com o anterior ligado:
 
 | Variável (overlay do ambiente) | O que faz | `dev` | `qaa` / `homologacao` / `prod` |
 |---|---|---|---|
 | `APP_SECURITY_ENABLED` | Exige login (ADR-0055) | ligado | desligado |
 | `APP_SECURITY_AUTHORIZATION_ENABLED` | Exige permissão por perfil e unidade | desligado | desligado |
+| `APP_SECURITY_PRONTUARIO_POR_VINCULO_ENABLED` | Exige vínculo assistencial para abrir o prontuário (ADR-0076) | desligado | desligado |
 
 Com o segundo desligado, nada do que está neste guia é obrigatório. A tela Usuários & Perfis já funciona
 e os acessos concedidos ficam guardados, mas ainda não restringem nada.
@@ -26,7 +27,7 @@ e os acessos concedidos ficam guardados, mas ainda não restringem nada.
   cobre as UBS dela.
 - **Listas** de atendimentos, registros clínicos, lotes, dispensações e transferências mostram só as
   unidades do acesso. O **prontuário do paciente** continua visível na rede inteira, para quem tem
-  permissão de consultar prontuário, por continuidade do cuidado.
+  permissão de consultar prontuário, por continuidade do cuidado — até ligar o vínculo (seção abaixo).
 - **Retificar** um registro clínico: só quem registrou, ou a coordenação de enfermagem da unidade.
 - **Receber** uma transferência: só quem tem acesso na unidade de destino.
 - **O menu** mostra só o que as permissões de cada pessoa liberam.
@@ -140,6 +141,28 @@ liberação explícita do responsável.
   com a permissão que faltou.
 - Entre com a sua conta de administrador e confira que a tela Usuários & Perfis abre.
 
+## Depois: exigir vínculo assistencial no prontuário (ADR-0076)
+
+É um passo separado, feito **depois** que a exigência de permissão estiver funcionando.
+
+**O que muda:**
+- Para abrir o prontuário completo de um paciente, é preciso ter vínculo com ele. Há vínculo quando:
+  - o paciente tem atendimento em aberto, ou nos últimos 30 dias, numa unidade do acesso da pessoa; ou
+  - a pessoa é a profissional de um atendimento recente dele; ou
+  - a pessoa é a profissional de um agendamento próximo dele (até 30 dias antes ou depois).
+- Sem vínculo, a tela mostra **"Sem vínculo assistencial com este paciente"** e o botão
+  **Acessar com justificativa**. A pessoa informa o motivo e um texto, e o acesso vale por 4 horas, só
+  para ela.
+- Cada acesso justificado aparece na tela **Auditoria**, filtrando a ação por **Acesso justificado**. A
+  supervisão deve revisar esses acessos periodicamente.
+- Quem faz auditoria clínica ou regulação precisa de um perfil com a permissão
+  `PRONTUARIO.CONSULTAR_SEM_VINCULO`, que nenhum perfil padrão tem. Crie um perfil próprio na aba
+  Perfis & permissões.
+
+**Como ligar:** acrescente `APP_SECURITY_PRONTUARIO_POR_VINCULO_ENABLED=true` no mesmo overlay do
+Passo 4 e siga o mesmo fluxo de PR. Para desligar, remova a linha. Os acessos justificados continuam
+guardados.
+
 ## Como desligar (voltar atrás)
 
 Remova a linha `APP_SECURITY_AUTHORIZATION_ENABLED=true` do overlay, ou troque o valor para `false`, e
@@ -158,6 +181,7 @@ quando a exigência for religada.
 | "Conta temporariamente bloqueada" no login | 5 senhas erradas seguidas (ADR-0055) | abrir a pessoa → **Desbloquear**, ou esperar o prazo |
 | Pessoa esqueceu a senha | não há recuperação por e-mail ainda | abrir a pessoa → **Definir senha provisória**; ela troca no próximo acesso (ADR-0069) |
 | "Troque a senha provisória antes de continuar" | a pessoa entrou com senha provisória | ela conclui a troca na tela que o sistema abre sozinho |
+| "Sem vínculo assistencial com este paciente" | o vínculo está ligado e a pessoa não tem atendimento nem agendamento com o paciente | registrar o atendimento ou o agendamento, ou usar **Acessar com justificativa** |
 | Menu mostra tudo mesmo com a exigência ligada | a tela foi aberta antes do deploy | sair e entrar de novo, ou recarregar a página |
 
 ## Pendências conhecidas

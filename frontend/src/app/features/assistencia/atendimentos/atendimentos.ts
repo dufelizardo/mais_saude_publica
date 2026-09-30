@@ -38,7 +38,8 @@ import { LoteService } from '../../../core/services/lote';
 import { MedicamentoService } from '../../../core/services/medicamento';
 import { PacienteService } from '../../../core/services/paciente';
 import { ProcedimentoService } from '../../../core/services/procedimento';
-import { ProntuarioService } from '../../../core/services/prontuario';
+import { ProntuarioService, semVinculo } from '../../../core/services/prontuario';
+import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-prontuario';
 import { SetorService } from '../../../core/services/setor';
 import { TriagemService } from '../../../core/services/triagem';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
@@ -115,7 +116,7 @@ const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
  */
 @Component({
   selector: 'app-atendimentos',
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer],
+  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario],
   templateUrl: './atendimentos.html',
   styleUrl: './atendimentos.css',
 })
@@ -202,6 +203,9 @@ export class Atendimentos {
   protected readonly prontPacienteId = signal<string | null>(null);
   protected readonly prontuario = signal<ProntuarioResponseDto | null>(null);
   protected readonly prontuarioCarregando = signal(false);
+  /** Recusas por falta de vínculo assistencial (ADR-0076): na aba Prontuário e na gaveta do atendimento. */
+  protected readonly prontuarioBloqueio = signal<string | null>(null);
+  protected readonly registrosBloqueio = signal<string | null>(null);
   protected readonly buscaPor = signal<'cpf' | 'sus'>('cpf');
   protected readonly buscaDocumento = signal('');
   protected readonly buscaMensagem = signal<{ tipo: 'err' | 'warn'; texto: string } | null>(null);
@@ -449,10 +453,17 @@ export class Atendimentos {
     this.prontPacienteId.set(pacienteId || null);
     this.prontuario.set(null);
     if (!pacienteId) return;
+    this.prontuarioBloqueio.set(null);
     this.prontuarioCarregando.set(true);
-    this.prontuarioService.buscarPorPacienteId(pacienteId).pipe(catchError(() => of(null))).subscribe((p) => {
-      this.prontuario.set(p);
-      this.prontuarioCarregando.set(false);
+    this.prontuarioService.buscarPorPacienteId(pacienteId).subscribe({
+      next: (p) => {
+        this.prontuario.set(p);
+        this.prontuarioCarregando.set(false);
+      },
+      error: (e) => {
+        this.prontuarioBloqueio.set(semVinculo(e));
+        this.prontuarioCarregando.set(false);
+      },
     });
   }
 
@@ -736,11 +747,13 @@ export class Atendimentos {
   protected abrirAtendimento(atId: string): void {
     const at = this.atendimento(atId);
     this.registros.set(null);
+    this.registrosBloqueio.set(null);
     this.quemAcessou.set(null);
     this.abrir({ tipo: 'at-view', atId });
     if (!at) return;
-    this.prontuarioService.buscarPorPacienteId(at.pacienteUuid).pipe(catchError(() => of(null))).subscribe((p) => {
-      this.registros.set(p?.atendimentos.find((a) => a.atendimento.uuid === atId) ?? null);
+    this.prontuarioService.buscarPorPacienteId(at.pacienteUuid).subscribe({
+      next: (p) => this.registros.set(p.atendimentos.find((a) => a.atendimento.uuid === atId) ?? null),
+      error: (e) => this.registrosBloqueio.set(semVinculo(e)),
     });
   }
 

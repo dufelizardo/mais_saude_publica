@@ -8,6 +8,7 @@ export type AcaoAuditoria =
   | 'ALTERACAO'
   | 'RETIFICACAO'
   | 'REVOGACAO'
+  | 'ACESSO_JUSTIFICADO'
   | 'EXCLUSAO';
 
 export type ResultadoAuditoria = 'PERMITIDO' | 'NEGADO';
@@ -62,6 +63,7 @@ export const ACOES_AUDITORIA: Record<AcaoAuditoria, { rotulo: string; classe: st
   ALTERACAO: { rotulo: 'Alteração', classe: 'warn' },
   RETIFICACAO: { rotulo: 'Retificação', classe: 'warn' },
   REVOGACAO: { rotulo: 'Revogação', classe: 'alert' },
+  ACESSO_JUSTIFICADO: { rotulo: 'Acesso justificado', classe: 'warn' },
   EXCLUSAO: { rotulo: 'Exclusão', classe: 'alert' },
 };
 
