@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoConsultaRequestDto;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
@@ -48,6 +49,7 @@ public class ConsultaService {
     public ConsultaResponseDto criar(ConsultaRequestDto dto) {
         Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
         controleDeAcesso.exigir("CONSULTA.REGISTRAR", atendimento.getUnidade());
+        ContextoAuditoria.paciente(atendimento.getPaciente().getUuid());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
 
         Consulta consulta = new Consulta(atendimento, profissional, dto.getDataHora(), dto.getTipoConsulta(),
@@ -56,6 +58,7 @@ public class ConsultaService {
         consulta.setRegistradoEm(Instant.now());
         consulta.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         consulta = consultaRepository.save(consulta);
+        ContextoAuditoria.registro(consulta.getUuid());
         return ConsultaResponseDto.fromConsulta(consulta);
     }
 
@@ -74,6 +77,7 @@ public class ConsultaService {
                     + ": retifique a versão vigente.");
         }
         controleDeAcesso.exigir("CONSULTA.REGISTRAR", original.getAtendimento().getUnidade());
+        ContextoAuditoria.paciente(original.getAtendimento().getPaciente().getUuid());
         controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getAtendimento().getUnidade());
         if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())) {
             throw new ResourceBadRequestException("A retificação precisa manter o mesmo atendimento do registro original.");
@@ -88,6 +92,7 @@ public class ConsultaService {
         consulta.setRegistradoEm(Instant.now());
         consulta.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         consulta = consultaRepository.save(consulta);
+        ContextoAuditoria.registro(consulta.getUuid());
         return ConsultaResponseDto.fromConsulta(consulta, null);
     }
 
@@ -108,6 +113,7 @@ public class ConsultaService {
     public ConsultaResponseDto buscarPorId(UUID uuid) {
         Consulta registro = buscarEntidadePorId(uuid);
         controleDeAcesso.exigirVisivel(registro.getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR", "CONSULTA.REGISTRAR");
+        ContextoAuditoria.paciente(registro.getAtendimento().getPaciente().getUuid());
         return ConsultaResponseDto.fromConsulta(registro, sucessores().get(uuid));
     }
 

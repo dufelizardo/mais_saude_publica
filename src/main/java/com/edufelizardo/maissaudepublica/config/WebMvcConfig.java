@@ -9,10 +9,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Autowired
+    private AuditoriaInterceptor auditoriaInterceptor;
+
+    @Autowired
     private AutorizacaoInterceptor autorizacaoInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // Auditoria primeiro: o afterCompletion dela roda mesmo quando a autorização recusa a rota (ADR-0070).
+        registry.addInterceptor(auditoriaInterceptor).addPathPatterns("/api/**");
         registry.addInterceptor(autorizacaoInterceptor).addPathPatterns("/api/**");
     }
 }

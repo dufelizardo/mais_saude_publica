@@ -4,6 +4,7 @@ import com.edufelizardo.maissaudepublica.config.LiberadoParaAutenticados;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.AtribuicaoAcesso;
+import com.edufelizardo.maissaudepublica.models.EventoAuditoria;
 import com.edufelizardo.maissaudepublica.models.Lote;
 import com.edufelizardo.maissaudepublica.models.Medicamento;
 import com.edufelizardo.maissaudepublica.models.Paciente;
@@ -12,11 +13,14 @@ import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Triagem;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.Usuario;
+import com.edufelizardo.maissaudepublica.models.enuns.AcaoAuditoria;
+import com.edufelizardo.maissaudepublica.models.enuns.ResultadoAuditoria;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtribuicaoAcessoRepository;
+import com.edufelizardo.maissaudepublica.repositories.EventoAuditoriaRepository;
 import com.edufelizardo.maissaudepublica.repositories.LoteRepository;
 import com.edufelizardo.maissaudepublica.repositories.MedicamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.MovimentacaoFarmaciaRepository;
@@ -48,6 +52,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -136,6 +141,9 @@ class AutorizacaoControllerTest {
 
     @Autowired
     private TransferenciaFarmaciaRepository transferenciaRepository;
+
+    @Autowired
+    private EventoAuditoriaRepository auditoriaRepository;
 
     private UnidadeDeSaude regional;
     private UnidadeDeSaude ubsA;
@@ -414,6 +422,67 @@ class AutorizacaoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].uuid", hasItem(loteA.getUuid().toString())));
         mockMvc.perform(como(FARM_A, get("/api/v1/lote/" + loteA.getUuid()))).andExpect(status().isOk());
+    }
+
+    // ── Trilha de auditoria (ADR-0070) ─────────────────────────────────────────────────────────
+
+    private List<EventoAuditoria> eventosDe(String cpf, Instant desde) {
+        return auditoriaRepository.findByUsuarioCpfAndOcorridoEmGreaterThanEqualOrderByOcorridoEmAsc(cpf, desde);
+    }
+
+    @Test
+    void registroClinicoEntraNaTrilhaComPacienteUnidadeERegistro() throws Exception {
+        Instant inicio = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        mockMvc.perform(como(ENF_A, post("/api/v1/triagem/")).contentType(MediaType.APPLICATION_JSON)
+                        .content(triagem(atendimentoA.getUuid(), "AUTZ-ENF-A", "")))
+                .andExpect(status().isCreated());
+        UUID triagem = triagemVigenteDe(atendimentoA.getUuid());
+
+        List<EventoAuditoria> eventos = eventosDe(ENF_A, inicio);
+        assertThat(eventos).hasSize(1);
+        EventoAuditoria e = eventos.get(0);
+        assertThat(e.getAcao()).isEqualTo(AcaoAuditoria.CRIACAO);
+        assertThat(e.getResultado()).isEqualTo(ResultadoAuditoria.PERMITIDO);
+        assertThat(e.getRecurso()).isEqualTo("TRIAGEM");
+        assertThat(e.getRota()).isEqualTo("/api/v1/triagem");
+        assertThat(e.getRegistroId()).isEqualTo(triagem);
+        assertThat(e.getPacienteId()).isEqualTo(atendimentoA.getPaciente().getUuid());
+        assertThat(e.getUnidadeId()).isEqualTo(ubsA.getUuid());
+    }
+
+    @Test
+    void leituraDoDetalheEntraNaTrilhaEListagemNao() throws Exception {
+        Instant inicio = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        mockMvc.perform(como(ENF_A, get("/api/v1/atendimento/"))).andExpect(status().isOk());
+        mockMvc.perform(como(ENF_A, get("/api/v1/atendimento/" + atendimentoA.getUuid()))).andExpect(status().isOk());
+
+        List<EventoAuditoria> eventos = eventosDe(ENF_A, inicio);
+        assertThat(eventos).hasSize(1);
+        assertThat(eventos.get(0).getAcao()).isEqualTo(AcaoAuditoria.LEITURA);
+        assertThat(eventos.get(0).getRecurso()).isEqualTo("ATENDIMENTO");
+        assertThat(eventos.get(0).getRegistroId()).isEqualTo(atendimentoA.getUuid());
+        assertThat(eventos.get(0).getPacienteId()).isEqualTo(atendimentoA.getPaciente().getUuid());
+    }
+
+    @Test
+    void recusaEntraNaTrilhaComOMotivo() throws Exception {
+        Instant inicio = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        mockMvc.perform(como(RECEP_A, get("/api/v1/triagem/"))).andExpect(status().isForbidden());
+        mockMvc.perform(como(ENF_A, post("/api/v1/triagem/")).contentType(MediaType.APPLICATION_JSON)
+                        .content(triagem(atendimentoB.getUuid(), "AUTZ-ENF-A", "")))
+                .andExpect(status().isForbidden());
+
+        EventoAuditoria rota = eventosDe(RECEP_A, inicio).get(0);
+        assertThat(rota.getResultado()).isEqualTo(ResultadoAuditoria.NEGADO);
+        assertThat(rota.getAcao()).isEqualTo(AcaoAuditoria.LEITURA);
+        assertThat(rota.getStatusHttp()).isEqualTo(403);
+        assertThat(rota.getDetalhe()).contains("PRONTUARIO.CONSULTAR");
+
+        EventoAuditoria escopo = eventosDe(ENF_A, inicio).get(0);
+        assertThat(escopo.getResultado()).isEqualTo(ResultadoAuditoria.NEGADO);
+        assertThat(escopo.getAcao()).isEqualTo(AcaoAuditoria.CRIACAO);
+        assertThat(escopo.getUnidadeId()).isEqualTo(ubsB.getUuid());
+        assertThat(escopo.getDetalhe()).contains(ubsB.getNome());
     }
 
     // ── Concessão de acesso ────────────────────────────────────────────────────────────────────

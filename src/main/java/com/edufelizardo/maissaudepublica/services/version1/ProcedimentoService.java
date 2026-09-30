@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusProcedimento;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.StatusProcedimentoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoProcedimentoRequestDto;
@@ -50,6 +51,7 @@ public class ProcedimentoService {
     public ProcedimentoResponseDto criar(ProcedimentoRequestDto dto) {
         Consulta consulta = buscarConsultaPorId(dto.getConsultaId());
         controleDeAcesso.exigir("PROCEDIMENTO.REGISTRAR", consulta.getAtendimento().getUnidade());
+        ContextoAuditoria.paciente(consulta.getAtendimento().getPaciente().getUuid());
         if (consultaRepository.existsByRetificacaoDe_Uuid(consulta.getUuid())) {
             throw new ResourceUnprocessableEntityException("Esta consulta foi retificada: registre o procedimento na versão vigente.");
         }
@@ -60,6 +62,7 @@ public class ProcedimentoService {
         procedimento.setRegistradoEm(Instant.now());
         procedimento.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         procedimento = procedimentoRepository.save(procedimento);
+        ContextoAuditoria.registro(procedimento.getUuid());
         return ProcedimentoResponseDto.fromProcedimento(procedimento);
     }
 
@@ -78,6 +81,7 @@ public class ProcedimentoService {
                     + ": retifique a versão vigente.");
         }
         controleDeAcesso.exigir("PROCEDIMENTO.REGISTRAR", original.getConsulta().getAtendimento().getUnidade());
+        ContextoAuditoria.paciente(original.getConsulta().getAtendimento().getPaciente().getUuid());
         controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getConsulta().getAtendimento().getUnidade());
         if (!original.getConsulta().getUuid().equals(dto.getConsultaId())) {
             throw new ResourceBadRequestException("A retificação precisa manter o mesmo consulta do registro original.");
@@ -91,6 +95,7 @@ public class ProcedimentoService {
         procedimento.setRegistradoEm(Instant.now());
         procedimento.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         procedimento = procedimentoRepository.save(procedimento);
+        ContextoAuditoria.registro(procedimento.getUuid());
         return ProcedimentoResponseDto.fromProcedimento(procedimento, null);
     }
 
@@ -104,6 +109,7 @@ public class ProcedimentoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar um procedimento com o id " + uuid + " em nossos registros."));
         controleDeAcesso.exigir("PROCEDIMENTO.REGISTRAR", procedimento.getConsulta().getAtendimento().getUnidade());
+        ContextoAuditoria.paciente(procedimento.getConsulta().getAtendimento().getPaciente().getUuid());
         if (sucessores().containsKey(uuid)) {
             throw new ResourceUnprocessableEntityException(
                     "Este procedimento foi retificado: altere o status da versão vigente.");
@@ -159,6 +165,7 @@ public class ProcedimentoService {
         Procedimento registro = buscarEntidadePorId(uuid);
         controleDeAcesso.exigirVisivel(registro.getConsulta().getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR",
                 "PROCEDIMENTO.REGISTRAR");
+        ContextoAuditoria.paciente(registro.getConsulta().getAtendimento().getPaciente().getUuid());
         return ProcedimentoResponseDto.fromProcedimento(registro, sucessores().get(uuid));
     }
 

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
@@ -73,6 +74,7 @@ public class AdministracaoMedicamentoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar um atendimento com o id " + dto.getAtendimentoId() + " em nossos registros."));
         controleDeAcesso.exigir("MEDICACAO.ADMINISTRAR", atendimento.getUnidade());
+        ContextoAuditoria.paciente(atendimento.getPaciente().getUuid());
         Consulta consulta = consultaRepository.findById(dto.getConsultaId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar uma consulta com o id " + dto.getConsultaId() + " em nossos registros."));
@@ -86,6 +88,7 @@ public class AdministracaoMedicamentoService {
         Map<UUID, Lote> lotes = travarLotes(dto.getLoteId());
         AdministracaoMedicamento administracao = montar(dto, atendimento, consulta, lotes);
         administracao = administracaoRepository.save(administracao);
+        ContextoAuditoria.registro(administracao.getUuid());
         baixar(administracao);
         return AdministracaoMedicamentoResponseDto.fromAdministracao(administracao, null);
     }
@@ -100,6 +103,7 @@ public class AdministracaoMedicamentoService {
                     + ": retifique a versão vigente.");
         }
         controleDeAcesso.exigir("MEDICACAO.ADMINISTRAR", original.getAtendimento().getUnidade());
+        ContextoAuditoria.paciente(original.getAtendimento().getPaciente().getUuid());
         controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getAtendimento().getUnidade());
         if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())
                 || !original.getConsulta().getUuid().equals(dto.getConsultaId())) {
@@ -114,6 +118,7 @@ public class AdministracaoMedicamentoService {
         nova.setRetificacaoDe(original);
         nova.setMotivoRetificacao(dto.getMotivoRetificacao().trim());
         nova = administracaoRepository.save(nova);
+        ContextoAuditoria.registro(nova.getUuid());
 
         // A baixa anterior volta ao lote antes da nova — o livro mostra as duas operações.
         if (loteAnterior != null) {
@@ -157,6 +162,7 @@ public class AdministracaoMedicamentoService {
     public AdministracaoMedicamentoResponseDto buscarPorId(UUID uuid) {
         AdministracaoMedicamento a = administracaoRepository.findById(uuid).orElseThrow(() -> naoEncontrada(uuid));
         controleDeAcesso.exigirVisivel(a.getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR", "MEDICACAO.ADMINISTRAR");
+        ContextoAuditoria.paciente(a.getAtendimento().getPaciente().getUuid());
         return AdministracaoMedicamentoResponseDto.fromAdministracao(a, sucessores().get(uuid));
     }
 

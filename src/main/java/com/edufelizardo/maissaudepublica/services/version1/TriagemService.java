@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoTriagemRequestDto;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
@@ -48,6 +49,7 @@ public class TriagemService {
     public TriagemResponseDto criar(TriagemRequestDto dto) {
         Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
         controleDeAcesso.exigir("TRIAGEM.REGISTRAR", atendimento.getUnidade());
+        ContextoAuditoria.paciente(atendimento.getPaciente().getUuid());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
 
         Triagem triagem = new Triagem(atendimento, profissional, dto.getDataHora(), dto.getPressaoArterial(),
@@ -56,6 +58,7 @@ public class TriagemService {
         triagem.setRegistradoEm(Instant.now());
         triagem.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         triagem = triagemRepository.save(triagem);
+        ContextoAuditoria.registro(triagem.getUuid());
         return TriagemResponseDto.fromTriagem(triagem);
     }
 
@@ -74,6 +77,7 @@ public class TriagemService {
                     + ": retifique a versão vigente.");
         }
         controleDeAcesso.exigir("TRIAGEM.REGISTRAR", original.getAtendimento().getUnidade());
+        ContextoAuditoria.paciente(original.getAtendimento().getPaciente().getUuid());
         controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getAtendimento().getUnidade());
         if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())) {
             throw new ResourceBadRequestException("A retificação precisa manter o mesmo atendimento do registro original.");
@@ -88,6 +92,7 @@ public class TriagemService {
         triagem.setRegistradoEm(Instant.now());
         triagem.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         triagem = triagemRepository.save(triagem);
+        ContextoAuditoria.registro(triagem.getUuid());
         return TriagemResponseDto.fromTriagem(triagem, null);
     }
 
@@ -108,6 +113,7 @@ public class TriagemService {
     public TriagemResponseDto buscarPorId(UUID uuid) {
         Triagem registro = buscarEntidadePorId(uuid);
         controleDeAcesso.exigirVisivel(registro.getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR");
+        ContextoAuditoria.paciente(registro.getAtendimento().getPaciente().getUuid());
         return TriagemResponseDto.fromTriagem(registro, sucessores().get(uuid));
     }
 

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.AuditarLeitura;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
@@ -95,6 +96,7 @@ public class AdministracaoMedicamentoController {
     }
 
     @RequerPermissao({"PRONTUARIO.CONSULTAR"})
+    @AuditarLeitura
     @GetMapping(value = "atendimento/{atendimentoId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as administrações de um atendimento", tags = "Administração de Medicamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -107,6 +109,7 @@ public class AdministracaoMedicamentoController {
     }
 
     @RequerPermissao({"PRONTUARIO.CONSULTAR"})
+    @AuditarLeitura
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma administração pelo id", tags = "Administração de Medicamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

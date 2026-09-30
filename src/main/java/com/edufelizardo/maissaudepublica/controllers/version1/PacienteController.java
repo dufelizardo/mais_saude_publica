@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.AuditarLeitura;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
@@ -55,6 +56,7 @@ public class PacienteController {
     }
 
     @RequerPermissao({"PACIENTE.CONSULTAR"})
+    @AuditarLeitura
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um paciente pelo id", tags = "Paciente")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -67,6 +69,7 @@ public class PacienteController {
     }
 
     @RequerPermissao({"PACIENTE.CONSULTAR"})
+    @AuditarLeitura
     @GetMapping(value = "cpf/{cpf}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca pacientes pelo CPF",
             description = "CPF não é único (ver ADR-0017, mesmo raciocínio aplicado ao Paciente) — pode haver mais de um registro.",
@@ -84,6 +87,7 @@ public class PacienteController {
     }
 
     @RequerPermissao({"PACIENTE.CONSULTAR"})
+    @AuditarLeitura
     @GetMapping(value = "cartao-sus/{cartaoSus}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca pacientes pelo Cartão Nacional de Saúde (CNS)", tags = "Paciente")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

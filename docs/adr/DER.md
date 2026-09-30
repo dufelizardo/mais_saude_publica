@@ -542,6 +542,11 @@ Notificações para usuários do sistema.
 > Esboço original, ainda compatível com o modelo adotado pela
 > [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md) — ver a versão enriquecida
 > (unidade/contexto) em "Auditoria" no apêndice.
+>
+> **Atualização:** implementada pela [ADR-0070](./0070-trilha-de-auditoria.md) como `TB_EVENTO_AUDITORIA`
+> (ocorridoEm, usuarioCpf, acao, resultado, recurso, metodo, rota, statusHttp, registroId, pacienteId, unidadeId,
+> origemIp, detalhe). Sem FK para usuário (guarda o CPF, inclusive o tentado num login recusado) e **sem**
+> valores antes/depois: os registros clínicos já são imutáveis (ADR-0062).
 
 Log de auditoria de ações no sistema.
 

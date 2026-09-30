@@ -1,9 +1,13 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
 import com.edufelizardo.maissaudepublica.models.AtribuicaoAcesso;
+import com.edufelizardo.maissaudepublica.models.EventoAuditoria;
+import com.edufelizardo.maissaudepublica.models.enuns.AcaoAuditoria;
+import com.edufelizardo.maissaudepublica.models.enuns.ResultadoAuditoria;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Usuario;
 import com.edufelizardo.maissaudepublica.repositories.AtribuicaoAcessoRepository;
+import com.edufelizardo.maissaudepublica.repositories.EventoAuditoriaRepository;
 import com.edufelizardo.maissaudepublica.repositories.PapelRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
@@ -22,6 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
@@ -71,6 +77,9 @@ class AuthControllerTest {
 
     @Autowired
     private AtribuicaoAcessoRepository atribuicaoAcessoRepository;
+
+    @Autowired
+    private EventoAuditoriaRepository auditoriaRepository;
 
     @BeforeEach
     void seed() {
@@ -273,6 +282,33 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/v1/auth/senha")
                         .contentType(MediaType.APPLICATION_JSON).content(corpoTroca(SENHA_TESTE, "OutraSenha123")))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void loginAceitoERecusadoEntramNaTrilhaSemASenha() throws Exception {
+        Instant inicio = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        mockMvc.perform(post(LOGIN_URL).contentType(MediaType.APPLICATION_JSON).content(corpoLogin("CPF", CPF_TESTE, SENHA_TESTE)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post(LOGIN_URL).contentType(MediaType.APPLICATION_JSON).content(corpoLogin("CPF", CPF_TESTE, "senhaErrada")))
+                .andExpect(status().isUnauthorized());
+
+        List<EventoAuditoria> eventos = auditoriaRepository.findByUsuarioCpfAndOcorridoEmGreaterThanEqualOrderByOcorridoEmAsc(CPF_TESTE, inicio);
+        assertThat(eventos).extracting(EventoAuditoria::getAcao).containsExactly(AcaoAuditoria.LOGIN, AcaoAuditoria.LOGIN);
+        assertThat(eventos).extracting(EventoAuditoria::getResultado)
+                .containsExactly(ResultadoAuditoria.PERMITIDO, ResultadoAuditoria.NEGADO);
+        assertThat(eventos).allSatisfy(e -> assertThat(String.valueOf(e.getDetalhe())).doesNotContain(SENHA_TESTE));
+    }
+
+    @Test
+    void trocaDeSenhaEntraNaTrilha() throws Exception {
+        String token = tokenDe(CPF_PROVISORIO, SENHA_PROVISORIA);
+        Instant inicio = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        mockMvc.perform(post("/api/v1/auth/senha").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(corpoTroca(SENHA_PROVISORIA, "MinhaSenhaNova9")))
+                .andExpect(status().isOk());
+
+        List<EventoAuditoria> eventos = auditoriaRepository.findByUsuarioCpfAndOcorridoEmGreaterThanEqualOrderByOcorridoEmAsc(CPF_PROVISORIO, inicio);
+        assertThat(eventos).extracting(EventoAuditoria::getAcao).containsExactly(AcaoAuditoria.TROCA_DE_SENHA);
     }
 
     @Test
