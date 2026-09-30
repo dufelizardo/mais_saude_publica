@@ -26,6 +26,9 @@ configMapGenerator:
       # (jwt-secret, bootstrap-cpf, bootstrap-senha) provisionado no namespace mais-saude-dev,
       # senao ninguem consegue logar (sem crash, so sem ninguem cadastrado).
       - APP_SECURITY_ENABLED=true
+      # Exigir permissao por perfil e unidade (ADR-0067) fica DESLIGADO ate os acessos serem
+      # concedidos — ver docs/acesso/GUIA-LIGAR-AUTORIZACAO.md antes de acrescentar
+      # APP_SECURITY_AUTHORIZATION_ENABLED=true aqui.
   - name: db-config
     literals:
       - POSTGRES_DB=saudepublica_dev
