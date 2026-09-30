@@ -224,8 +224,10 @@ class ProntuarioVinculoControllerTest {
                         """.formatted(motivo, texto));
     }
 
+    /** Eventos do usuário sobre o paciente deste teste (cada teste cria o seu), na ordem em que ocorreram. */
     private List<EventoAuditoria> eventosDe(String cpf, Instant desde) {
-        return auditoriaRepository.findByUsuarioCpfAndOcorridoEmGreaterThanEqualOrderByOcorridoEmAsc(cpf, desde);
+        return auditoriaRepository.findByUsuarioCpfAndOcorridoEmGreaterThanEqualOrderByOcorridoEmAsc(cpf, desde).stream()
+                .filter(e -> paciente.getUuid().equals(e.getPacienteId())).toList();
     }
 
     // ── Vínculo ────────────────────────────────────────────────────────────────────────────────
