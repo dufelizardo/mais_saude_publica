@@ -26,6 +26,8 @@ import java.util.Date;
 @Slf4j
 public class JwtService {
 
+    public static final String CLAIM_TROCAR_SENHA = "trocarSenha";
+
     @Value("${app.security.jwt-secret:}")
     private String configuredSecret;
 
@@ -51,6 +53,14 @@ public class JwtService {
     }
 
     public String gerarToken(String cpf, String nome, boolean manterConectado) {
+        return gerarToken(cpf, nome, manterConectado, false);
+    }
+
+    /**
+     * Com {@code trocarSenha}, o token leva o claim que limita a sessão à troca de senha (ADR-0069) — um
+     * token novo, sem o claim, é emitido quando a troca acontece.
+     */
+    public String gerarToken(String cpf, String nome, boolean manterConectado, boolean trocarSenha) {
         Instant agora = Instant.now();
         Instant expiraEm = agora.plus(Duration.ofHours(
                 manterConectado ? expirationHoursRememberMe : expirationHours));
@@ -58,6 +68,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(cpf)
                 .claim("nome", nome)
+                .claim(CLAIM_TROCAR_SENHA, trocarSenha)
                 .issuedAt(Date.from(agora))
                 .expiration(Date.from(expiraEm))
                 .signWith(key)
@@ -76,6 +87,15 @@ public class JwtService {
      * @return o cpf (subject) do token se válido, ou {@code null} se inválido/expirado/malformado —
      *     o filtro decide o que fazer com um {@code null} (não autenticar a requisição).
      */
+    /** Claims do token se válido; {@code null} se inválido, expirado ou malformado. */
+    public Claims validar(String token) {
+        try {
+            return extrairClaims(token);
+        } catch (RuntimeException ex) {
+            return null;
+        }
+    }
+
     public String validarESubject(String token) {
         try {
             return extrairCpf(token);

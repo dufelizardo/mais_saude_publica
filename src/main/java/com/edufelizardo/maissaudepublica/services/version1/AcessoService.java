@@ -14,6 +14,7 @@ import com.edufelizardo.maissaudepublica.models.Usuario;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AtribuicaoAcessoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.PapelAtualizacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.PapelRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RedefinicaoSenhaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RevogacaoAcessoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.UsuarioAtualizacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.UsuarioRequestDto;
@@ -214,6 +215,8 @@ public class AcessoService {
             throw new ResourceConflictException("Já existe um usuário com este CPF.");
         }
         Usuario usuario = new Usuario(cpf, dto.getNome().trim(), passwordEncoder.encode(dto.getSenha()));
+        // Quem cadastra conhece a senha inicial: ela é provisória (ADR-0069).
+        usuario.setTrocarSenha(true);
         return UsuarioResponseDto.fromUsuario(usuarioRepository.save(usuario));
     }
 
@@ -226,6 +229,24 @@ public class AcessoService {
         }
         usuario.setNome(dto.getNome().trim());
         usuario.setAtivo(dto.getAtivo());
+        return UsuarioResponseDto.fromUsuario(usuarioRepository.save(usuario));
+    }
+
+    /**
+     * Senha provisória definida pela administração — o "esqueci minha senha" enquanto não há recuperação por
+     * e-mail (ADR-0069). Também desbloqueia. A própria senha se troca pela rota de /auth, não por aqui.
+     */
+    @Transactional
+    public UsuarioResponseDto redefinirSenha(UUID uuid, RedefinicaoSenhaRequestDto dto) {
+        Usuario usuario = usuario(uuid);
+        if (usuario.getCpf().equals(UsuarioAutenticado.cpf())) {
+            throw new ResourceUnprocessableEntityException("Para trocar a sua própria senha, use Trocar senha.");
+        }
+        usuario.setSenhaHash(passwordEncoder.encode(dto.getSenhaProvisoria()));
+        usuario.setTrocarSenha(true);
+        usuario.setSenhaAlteradaEm(Instant.now());
+        usuario.setBloqueadoAte(null);
+        usuario.setTentativasFalhas(0);
         return UsuarioResponseDto.fromUsuario(usuarioRepository.save(usuario));
     }
 

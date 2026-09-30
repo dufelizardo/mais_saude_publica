@@ -45,7 +45,7 @@ const GRUPOS: Record<string, string[]> = {
   styleUrl: './app-shell.css',
 })
 export class AppShell {
-  private readonly router = inject(Router);
+  protected readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
 

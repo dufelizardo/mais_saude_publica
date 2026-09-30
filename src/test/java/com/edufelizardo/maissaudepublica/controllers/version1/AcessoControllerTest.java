@@ -401,6 +401,8 @@ class AcessoControllerTest {
                 .andExpect(jsonPath("$.message").value("Usuário cadastrado com sucesso!"));
         Usuario novo = usuarioRepository.findByCpf(CPF_NOVO).orElseThrow();
         assertThat(novo.isAtivo()).isTrue();
+        // Quem cadastra conhece a senha inicial: ela é provisória (ADR-0069).
+        assertThat(novo.isTrocarSenha()).isTrue();
         assertThat(novo.getSenhaHash()).isNotEqualTo("SenhaInicial1");
 
         mockMvc.perform(post("/api/v1/usuario/").contentType(MediaType.APPLICATION_JSON)
@@ -439,6 +441,34 @@ class AcessoControllerTest {
         mockMvc.perform(get("/api/v1/usuario/" + usuarioA.getUuid()))
                 .andExpect(jsonPath("$.ativo").value(false))
                 .andExpect(jsonPath("$.nome").value("Usuario Acesso A Renomeado"));
+    }
+
+    @Test
+    void deveDefinirSenhaProvisoriaEDesbloquear() throws Exception {
+        usuarioA.setBloqueadoAte(Instant.now().plusSeconds(600));
+        usuarioRepository.save(usuarioA);
+
+        mockMvc.perform(post("/api/v1/usuario/" + usuarioA.getUuid() + "/redefinicao-senha").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"senhaProvisoria": "Provisoria123"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Senha provisória definida com sucesso!"));
+        mockMvc.perform(get("/api/v1/usuario/" + usuarioA.getUuid()))
+                .andExpect(jsonPath("$.trocarSenha").value(true))
+                .andExpect(jsonPath("$.bloqueado").value(false));
+        assertThat(usuarioRepository.findByCpf(CPF_A).orElseThrow().getSenhaHash()).isNotEqualTo("hash-irrelevante");
+
+        mockMvc.perform(post("/api/v1/usuario/" + usuarioA.getUuid() + "/redefinicao-senha").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"senhaProvisoria": "curta"}
+                                """))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/v1/usuario/" + UUID.randomUUID() + "/redefinicao-senha").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"senhaProvisoria": "Provisoria123"}
+                                """))
+                .andExpect(status().isNotFound());
     }
 
     @Test

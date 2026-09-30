@@ -71,6 +71,9 @@ export interface UsuarioResponseDto {
   bloqueadoAte?: string | null;
   ultimoAcessoEm?: string | null;
   bloqueado: boolean;
+  /** Senha provisória ainda não trocada (ADR-0069). */
+  trocarSenha: boolean;
+  senhaAlteradaEm?: string | null;
 }
 
 export interface UsuarioRequestDto {

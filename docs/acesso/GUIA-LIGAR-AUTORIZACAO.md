@@ -42,23 +42,20 @@ Por isso a ordem é sempre esta: **conceder os acessos primeiro, ligar depois**.
 - **Os acessos são dados do banco de cada ambiente.** O que foi concedido no `dev` não vai para o
   `qaa`, a `homologacao` ou a `prod`. Este guia é repetido em cada ambiente.
 
-## Passo 0 — Trocar a conta do administrador inicial (recomendado)
+## Passo 0 — Trocar a senha do administrador inicial (recomendado)
 
 O administrador inicial nasce do `Secret` (`bootstrap-cpf` e `bootstrap-senha`), mas **só na primeira
 subida**: se o usuário já existe, o bootstrap não mexe nele. Por isso, **trocar a senha no `Secret` não
-troca a senha de quem já existe.** O sistema ainda não tem tela de troca de senha. O caminho seguro é
-substituir a conta:
+troca a senha de quem já existe.** Troque pela própria tela (ADR-0069):
 
-1. Entre com o administrador inicial e abra **Administração → Usuários & Perfis**.
-2. Clique em **Novo usuário** e cadastre a sua conta pessoal. Se você está no quadro de profissionais,
-   use **Buscar** pela matrícula para preencher CPF e nome.
-3. Abra o seu usuário e clique em **+ Conceder acesso** → perfil **Administrador da plataforma**,
-   escopo **Rede inteira**.
-4. Saia e entre com a conta nova.
-5. Abra o administrador inicial → **Editar usuário** → desligue **Ativo**. O sistema não deixa ninguém
-   desativar o próprio usuário, e é por isso que a desativação é feita a partir da conta nova.
+1. Entre com o administrador inicial.
+2. Na barra superior, clique no ícone de **chave** (Trocar senha).
+3. Informe a senha atual e a nova. A senha antiga deixa de valer na hora.
 
-Depois disso, a senha que circulou deixa de funcionar. A conta inicial continua no histórico.
+Se preferir ter a sua conta pessoal separada da conta de instalação: cadastre-a em **Usuários & Perfis →
+Novo usuário**, conceda **Administrador da plataforma** na **Rede inteira**, entre com ela (o sistema pede
+para trocar a senha provisória) e desative a conta inicial em **Editar usuário**. Ninguém consegue
+desativar o próprio usuário; por isso a desativação é feita a partir da conta nova.
 
 > O perfil Administrador da plataforma **não dá acesso a dado de saúde** (ADR-0054). Se você também
 > usa as telas clínicas para testar, conceda à sua conta outros perfis além dele (ex.: Coordenador de
@@ -92,8 +89,9 @@ parecido, use **Duplicar**. Só quem gerencia acesso na rede inteira cria ou alt
 
 Em **Usuários & Perfis**:
 
-1. **A pessoa ainda não tem login:** use **Novo usuário**. Ela nasce *sem acesso*. Entregue a senha
-   inicial por um canal próprio, nunca junto com o CPF.
+1. **A pessoa ainda não tem login:** use **Novo usuário**. Ela nasce *sem acesso* e com **senha
+   provisória**: no primeiro acesso, o sistema pede que ela crie a própria senha antes de qualquer tela.
+   Entregue a senha inicial por um canal próprio, nunca junto com o CPF.
 2. Abra a pessoa na tabela → **+ Conceder acesso** → perfil, escopo e, se houver, período.
 3. Repita para cada pessoa. O gestor de uma unidade também pode conceder na unidade dele.
 
@@ -154,12 +152,14 @@ quando a exigência for religada.
 | Gestor não consegue conceder Administrador da plataforma | por desenho: perfil com administração do sistema só é concedido por quem tem acesso na rede inteira | um administrador da plataforma concede |
 | "Você não pode desativar o seu próprio usuário" | proteção contra trancar a administração | desativar a partir de outra conta de administrador |
 | "Conta temporariamente bloqueada" no login | 5 senhas erradas seguidas (ADR-0055) | abrir a pessoa → **Desbloquear**, ou esperar o prazo |
+| Pessoa esqueceu a senha | não há recuperação por e-mail ainda | abrir a pessoa → **Definir senha provisória**; ela troca no próximo acesso (ADR-0069) |
+| "Troque a senha provisória antes de continuar" | a pessoa entrou com senha provisória | ela conclui a troca na tela que o sistema abre sozinho |
 | Menu mostra tudo mesmo com a exigência ligada | a tela foi aberta antes do deploy | sair e entrar de novo, ou recarregar a página |
 
 ## Pendências conhecidas
 
-- Não existe troca de senha pelo próprio usuário, nem troca obrigatória no primeiro acesso. Por isso,
-  por enquanto, quem cadastra conhece a senha inicial.
+- Recuperação de senha sem a administração (e-mail ou gov.br) e invalidação das sessões ativas ao
+  redefinir a senha ou desativar o usuário (ADR-0069).
 - Dentro das telas, alguns botões de registro continuam visíveis para quem não tem a permissão. A API
   bloqueia com 403 e mensagem clara.
 - MFA, sessões ativas e política de senha aparecem como "Em breve" na tela.

@@ -2,11 +2,14 @@ package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UsuarioAtualResponseDto;
 import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnauthorizedException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Usuario;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoIdentificadorLogin;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.LoginRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TrocaSenhaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.LoginResponseDto;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
@@ -82,8 +85,40 @@ public class AuthService {
         usuario.setUltimoAcessoEm(Instant.now());
         usuarioRepository.save(usuario);
 
-        String token = jwtService.gerarToken(usuario.getCpf(), usuario.getNome(), dto.isManterConectado());
-        return new LoginResponseDto(token, jwtService.extrairExpiracao(token), usuario.getNome(), usuario.getCpf());
+        return emitir(usuario, dto.isManterConectado());
+    }
+
+    private LoginResponseDto emitir(Usuario usuario, boolean manterConectado) {
+        String token = jwtService.gerarToken(usuario.getCpf(), usuario.getNome(), manterConectado, usuario.isTrocarSenha());
+        return new LoginResponseDto(token, jwtService.extrairExpiracao(token), usuario.getNome(), usuario.getCpf(),
+                usuario.isTrocarSenha());
+    }
+
+    /**
+     * Troca da própria senha (ADR-0069): confere a atual, exige uma nova diferente dela e do CPF, e devolve um
+     * token novo — sem a restrição de senha provisória.
+     */
+    @Transactional
+    public LoginResponseDto trocarSenha(TrocaSenhaRequestDto dto) {
+        String cpf = UsuarioAutenticado.cpf();
+        Usuario usuario = cpf == null ? null : usuarioRepository.findByCpf(cpf).filter(Usuario::isAtivo).orElse(null);
+        if (usuario == null) {
+            throw new ResourceUnauthorizedException("Nenhum usuário autenticado.");
+        }
+        if (!passwordEncoder.matches(dto.getSenhaAtual(), usuario.getSenhaHash())) {
+            throw new ResourceUnprocessableEntityException("A senha atual não confere.");
+        }
+        if (dto.getNovaSenha().equals(dto.getSenhaAtual())) {
+            throw new ResourceBadRequestException("A nova senha precisa ser diferente da atual.");
+        }
+        if (dto.getNovaSenha().replaceAll("\\D", "").equals(usuario.getCpf()) && dto.getNovaSenha().matches("[\\d.\\-\\s]+")) {
+            throw new ResourceBadRequestException("A nova senha não pode ser o CPF.");
+        }
+        usuario.setSenhaHash(passwordEncoder.encode(dto.getNovaSenha()));
+        usuario.setTrocarSenha(false);
+        usuario.setSenhaAlteradaEm(Instant.now());
+        usuarioRepository.save(usuario);
+        return emitir(usuario, dto.isManterConectado());
     }
 
     private String resolverCpf(LoginRequestDto dto) {
@@ -135,6 +170,7 @@ public class AuthService {
                                 a.getUnidade() != null ? a.getUnidade().getUuid() : null,
                                 a.getUnidade() != null ? a.getUnidade().getNome() : null))
                         .toList(),
-                List.copyOf(autorizacaoService.permissoes(cpf)));
+                List.copyOf(autorizacaoService.permissoes(cpf)),
+                usuario.isTrocarSenha());
     }
 }

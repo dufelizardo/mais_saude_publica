@@ -126,7 +126,9 @@ permissões**
 - O menu passa a acompanhar os acessos de cada pessoa.
 
 **Negativas / pendências:**
-- Troca de senha obrigatória no primeiro acesso, e "Esqueci minha senha" (ADR-0055).
+- ~~Troca de senha obrigatória no primeiro acesso~~ — feita pela [ADR-0069](./0069-troca-de-senha-e-senha-provisoria.md),
+  que também dá à administração a redefinição de senha. "Esqueci minha senha" sem a administração continua
+  pendente (ADR-0055).
 - MFA, sessões ativas, política de senha, exportação e ações em massa continuam "Em breve".
 - Os botões de registro dentro das outras telas (ex.: "+ Triagem" para quem não é enfermeiro)
   continuam visíveis, e a API responde 403 com uma mensagem clara. Escondê-los tela a tela é

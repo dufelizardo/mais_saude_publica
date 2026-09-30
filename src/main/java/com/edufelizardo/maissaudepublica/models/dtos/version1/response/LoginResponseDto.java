@@ -25,4 +25,6 @@ public class LoginResponseDto implements Serializable {
     private Instant expiraEm;
     private String nome;
     private String cpf;
+    /** Senha provisória: a tela leva direto para a troca, e a API só atende /auth até ela acontecer (ADR-0069). */
+    private boolean trocarSenha;
 }

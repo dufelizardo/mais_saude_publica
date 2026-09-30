@@ -50,6 +50,9 @@ class AuthControllerTest {
     private static final String CPF_TESTE = "52998224725";
     private static final String MATRICULA_TESTE = "AUTHTEST-0001";
     private static final String SENHA_TESTE = "SenhaForte123";
+    // Usuário com senha provisória (ADR-0069).
+    private static final String CPF_PROVISORIO = "20476853117";
+    private static final String SENHA_PROVISORIA = "Provisoria123";
 
     @Autowired
     private MockMvc mockMvc;
@@ -76,6 +79,10 @@ class AuthControllerTest {
         Usuario usuario = new Usuario(CPF_TESTE, "Usuario Teste Auth", passwordEncoder.encode(SENHA_TESTE));
         usuarioRepository.save(usuario);
 
+        Usuario provisorio = new Usuario(CPF_PROVISORIO, "Usuario Senha Provisoria", passwordEncoder.encode(SENHA_PROVISORIA));
+        provisorio.setTrocarSenha(true);
+        usuarioRepository.save(provisorio);
+
         Profissional profissional = new Profissional();
         profissional.setMatricula(MATRICULA_TESTE);
         profissional.setCpf(CPF_TESTE);
@@ -88,6 +95,7 @@ class AuthControllerTest {
     void limpar() {
         atribuicaoAcessoRepository.deleteAll(atribuicaoAcessoRepository.findByUsuarioCpf(CPF_TESTE));
         usuarioRepository.findByCpf(CPF_TESTE).ifPresent(usuarioRepository::delete);
+        usuarioRepository.findByCpf(CPF_PROVISORIO).ifPresent(usuarioRepository::delete);
         profissionalRepository.findByMatricula(MATRICULA_TESTE).ifPresent(profissionalRepository::delete);
     }
 
@@ -190,6 +198,81 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.nome").value("Usuario Teste Auth"))
                 .andExpect(jsonPath("$.profissionalMatricula").value(MATRICULA_TESTE))
                 .andExpect(jsonPath("$.profissionalNome").value("Profissional Teste Auth"));
+    }
+
+    private String tokenDe(String cpf, String senha) throws Exception {
+        String body = mockMvc.perform(post(LOGIN_URL).contentType(MediaType.APPLICATION_JSON).content(corpoLogin("CPF", cpf, senha)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        return JsonPath.read(body, "$.token");
+    }
+
+    private String corpoTroca(String atual, String nova) {
+        return """
+                {"senhaAtual": "%s", "novaSenha": "%s"}
+                """.formatted(atual, nova);
+    }
+
+    @Test
+    void comSenhaProvisoriaSoAsRotasDeAuthSaoAtendidas() throws Exception {
+        mockMvc.perform(post(LOGIN_URL).contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoLogin("CPF", CPF_PROVISORIO, SENHA_PROVISORIA)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trocarSenha").value(true));
+        String token = tokenDe(CPF_PROVISORIO, SENHA_PROVISORIA);
+
+        mockMvc.perform(get("/api/v1/medicamento/").header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message", containsString("senha provisória")));
+        mockMvc.perform(get("/api/v1/auth/eu").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trocarSenha").value(true));
+    }
+
+    @Test
+    void deveTrocarASenhaProvisoriaELiberarASessao() throws Exception {
+        String token = tokenDe(CPF_PROVISORIO, SENHA_PROVISORIA);
+
+        String body = mockMvc.perform(post("/api/v1/auth/senha").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(corpoTroca(SENHA_PROVISORIA, "MinhaSenhaNova9")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trocarSenha").value(false))
+                .andReturn().getResponse().getContentAsString();
+        String novo = JsonPath.read(body, "$.token");
+
+        int statusCode = mockMvc.perform(get("/api/v1/medicamento/").header("Authorization", "Bearer " + novo))
+                .andReturn().getResponse().getStatus();
+        assertThat(statusCode).isNotIn(401, 403);
+        assertThat(usuarioRepository.findByCpf(CPF_PROVISORIO).orElseThrow().getSenhaAlteradaEm()).isNotNull();
+
+        // A senha provisória deixa de valer; a nova entra direto.
+        mockMvc.perform(post(LOGIN_URL).contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoLogin("CPF", CPF_PROVISORIO, SENHA_PROVISORIA)))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post(LOGIN_URL).contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoLogin("CPF", CPF_PROVISORIO, "MinhaSenhaNova9")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.trocarSenha").value(false));
+    }
+
+    @Test
+    void deveRecusarTrocaDeSenhaInvalida() throws Exception {
+        String token = tokenDe(CPF_TESTE, SENHA_TESTE);
+        mockMvc.perform(post("/api/v1/auth/senha").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(corpoTroca("SenhaErrada1", "OutraSenha123")))
+                .andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(post("/api/v1/auth/senha").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(corpoTroca(SENHA_TESTE, SENHA_TESTE)))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/v1/auth/senha").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(corpoTroca(SENHA_TESTE, "529.982.247-25")))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/v1/auth/senha").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(corpoTroca(SENHA_TESTE, "curta")))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/v1/auth/senha")
+                        .contentType(MediaType.APPLICATION_JSON).content(corpoTroca(SENHA_TESTE, "OutraSenha123")))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

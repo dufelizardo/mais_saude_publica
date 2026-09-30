@@ -5,6 +5,7 @@ import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorR
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UsuarioAtualResponseDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.LoginRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TrocaSenhaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.LoginResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SecurityStatusResponseDto;
 import com.edufelizardo.maissaudepublica.services.version1.ControleDeAcesso;
@@ -70,5 +71,19 @@ public class AuthController {
     @ApiErrorResponsesBusca
     public ResponseEntity<UsuarioAtualResponseDto> eu() {
         return ResponseEntity.ok(authService.usuarioAtual());
+    }
+
+    @PostMapping(value = "senha", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Troca a própria senha",
+            description = "Confere a senha atual (422 se não confere), exige uma nova de 8 a 72 caracteres, diferente da atual "
+                    + "e do CPF (400), e devolve um token novo. É o único caminho para sair da senha provisória (ADR-0069). "
+                    + "Sem login, 401.",
+            tags = "Auth")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponseDto.class))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<LoginResponseDto> trocarSenha(@Valid @RequestBody TrocaSenhaRequestDto dto) {
+        return ResponseEntity.ok(authService.trocarSenha(dto));
     }
 }

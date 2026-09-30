@@ -76,6 +76,16 @@ public class Usuario implements Serializable {
 
     private Instant ultimoAcessoEm;
 
+    /**
+     * Senha provisória — cadastrada ou redefinida pela administração: a pessoa troca no próximo acesso e,
+     * até trocar, a API só atende {@code /api/v1/auth/**} (ADR-0069). Default no banco para as linhas que
+     * já existiam.
+     */
+    @Column(columnDefinition = "boolean not null default false")
+    private boolean trocarSenha;
+
+    private Instant senhaAlteradaEm;
+
     public Usuario(String cpf, String nome, String senhaHash) {
         this.cpf = cpf;
         this.nome = nome;

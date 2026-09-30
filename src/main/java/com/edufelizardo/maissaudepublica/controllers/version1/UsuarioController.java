@@ -3,6 +3,7 @@ package com.edufelizardo.maissaudepublica.controllers.version1;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RedefinicaoSenhaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.UsuarioAtualizacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.UsuarioRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
@@ -109,5 +110,24 @@ public class UsuarioController {
         UsuarioResponseDto r = service.desbloquearUsuario(uuid);
 
         return ResponseEntity.ok(new SuccessResponseDto("Usuário desbloqueado com sucesso!", "Usuário: " + r.getNome()));
+    }
+
+    @RequerPermissao({"USUARIO.GERENCIAR"})
+    @PostMapping(value = "{uuid}/redefinicao-senha", produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Define uma senha provisória para o usuário",
+            description = "A pessoa troca no próximo acesso; também desbloqueia. Para a própria senha, use /auth/senha (422).",
+            tags = "Acesso")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> redefinirSenha(@PathVariable UUID uuid, @Valid @RequestBody RedefinicaoSenhaRequestDto dto) {
+        UsuarioResponseDto r = service.redefinirSenha(uuid, dto);
+
+        return ResponseEntity.ok(new SuccessResponseDto("Senha provisória definida com sucesso!",
+                "Usuário: " + r.getNome() + ", troca no próximo acesso"));
     }
 }
