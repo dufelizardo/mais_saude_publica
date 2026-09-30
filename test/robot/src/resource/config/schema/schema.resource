@@ -53,3 +53,5 @@ Resource    ../../schema/auth/auth_schema.resource
 Resource    ../../schema/movimentacao_farmacia/movimentacao_farmacia_schema.resource
 Resource    ../../schema/transferencia_farmacia/transferencia_farmacia_schema.resource
 Resource    ../../schema/administracao_medicamento/administracao_medicamento_schema.resource
+# ACESSO (ADR-0066)
+Resource    ../../schema/acesso/acesso_schema.resource

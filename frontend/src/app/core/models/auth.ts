@@ -21,6 +21,17 @@ export interface UsuarioAtualResponseDto {
   profissionalUuid?: string | null;
   profissionalMatricula?: string | null;
   profissionalNome?: string | null;
+  /** Papéis vigentes com o escopo (unidade nula = rede inteira) — ADR-0066. */
+  acessos?: AcessoVigente[];
+  /** Permissões efetivas (RECURSO.ACAO) — ADR-0066. */
+  permissoes?: string[];
+}
+
+export interface AcessoVigente {
+  papelCodigo: string;
+  papelNome: string;
+  unidadeUuid?: string | null;
+  unidadeNome?: string | null;
 }
 
 export interface SecurityStatusResponseDto {

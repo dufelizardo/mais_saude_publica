@@ -5,6 +5,12 @@
 Proposta. Mesmo status da ADR-0006, que esta ADR substitui: decisão de **forma** tomada,
 implementação intencionalmente adiada (ver Contexto).
 
+> **Adendo (2026-09-30):** a parte de identidade foi implementada pela
+> [ADR-0055](./0055-primeira-implementacao-de-login-usuario-jwt-e-toggle-por-ambiente.md) (`Usuario`, login, JWT), e a
+> de autorização (itens 2, 3, 5 e a separação administrador × dado de saúde) pela
+> [ADR-0066](./0066-papeis-permissoes-e-escopo-por-unidade.md), em fatias — o escopo usa `UnidadeDeSaude` (sem
+> `Setor` por enquanto). A auditoria enriquecida (item 6) continua pendente.
+
 ## Contexto
 
 O usuário trouxe [`docs/pm/sistema_de_acesso.md`](../pm/sistema_de_acesso.md), um desenho detalhado
