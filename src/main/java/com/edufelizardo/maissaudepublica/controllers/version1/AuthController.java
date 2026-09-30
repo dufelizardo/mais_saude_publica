@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.LiberadoParaAutenticados;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UsuarioAtualResponseDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@LiberadoParaAutenticados
 @RestController
 @RequestMapping(value = "/api/v1/auth/")
 @Tag(name = "Auth", description = "Login e status do toggle de segurança (ver docs/adr/0055-primeira-implementacao-de-login-usuario-jwt-e-toggle-por-ambiente.md).")

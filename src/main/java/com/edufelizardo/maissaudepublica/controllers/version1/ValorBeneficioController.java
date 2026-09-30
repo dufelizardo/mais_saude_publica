@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -34,6 +35,7 @@ public class ValorBeneficioController {
     @Autowired
     private ValorBeneficioService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "tipo/{tipoBeneficioId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de valores de um tipo de benefício", tags = "ValorBeneficio")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -48,6 +50,7 @@ public class ValorBeneficioController {
         return ResponseEntity.ok(service.listarPorTipo(tipoBeneficioId));
     }
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "tipo/{tipoBeneficioId}/vigente", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca o valor vigente de um tipo de benefício numa data (padrão: hoje)", tags = "ValorBeneficio")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -61,6 +64,7 @@ public class ValorBeneficioController {
         return ResponseEntity.ok(service.buscarVigente(tipoBeneficioId, data));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um novo valor para um tipo de benefício", tags = "ValorBeneficio")
     @ApiResponse(responseCode = "201", description = "Success:", content = {

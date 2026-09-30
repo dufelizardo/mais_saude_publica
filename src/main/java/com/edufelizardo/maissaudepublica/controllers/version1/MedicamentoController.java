@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +35,7 @@ public class MedicamentoController {
     @Autowired
     private MedicamentoService service;
 
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "CONSULTA.REGISTRAR", "MEDICACAO.ADMINISTRAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os medicamentos cadastrados", tags = "Medicamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +54,7 @@ public class MedicamentoController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "CONSULTA.REGISTRAR", "MEDICACAO.ADMINISTRAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um medicamento pelo id", tags = "Medicamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -63,6 +66,7 @@ public class MedicamentoController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"FARMACIA.GERENCIAR_ESTOQUE"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um medicamento",
             description = "Cadastra um medicamento no catálogo.",
@@ -84,6 +88,7 @@ public class MedicamentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"FARMACIA.GERENCIAR_ESTOQUE"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza um medicamento",
             description = "Substitui os campos editáveis por inteiro.",

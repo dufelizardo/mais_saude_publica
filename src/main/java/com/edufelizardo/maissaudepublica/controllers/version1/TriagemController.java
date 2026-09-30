@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoTriagemRequestDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
@@ -35,6 +36,7 @@ public class TriagemController {
     @Autowired
     private TriagemService service;
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as triagens cadastradas", tags = "Triagem")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -53,6 +55,7 @@ public class TriagemController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma triagem pelo id", tags = "Triagem")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -64,6 +67,7 @@ public class TriagemController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"TRIAGEM.REGISTRAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma triagem",
             description = "Registra uma triagem de enfermagem realizada durante um atendimento, com um profissional (por matrícula, ver ADR-0034).",
@@ -85,6 +89,7 @@ public class TriagemController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"TRIAGEM.REGISTRAR"})
     @PostMapping(value = "{uuid}/retificacao", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Retifica uma triagem",

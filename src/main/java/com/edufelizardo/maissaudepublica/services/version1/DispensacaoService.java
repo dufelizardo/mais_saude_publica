@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * CRUD (só criação e leitura, ver ADR-0051) da Dispensação (Farmácia — MAPA-DE-DOMINIOS.md #9).
@@ -33,6 +34,9 @@ public class DispensacaoService {
 
     @Autowired
     private DispensacaoRepository dispensacaoRepository;
+
+    @Autowired
+    private ControleDeAcesso controleDeAcesso;
 
     @Autowired
     private LoteRepository loteRepository;
@@ -52,6 +56,7 @@ public class DispensacaoService {
     @Transactional
     public DispensacaoResponseDto criar(DispensacaoRequestDto dto) {
         Lote lote = buscarLotePorId(dto.getLoteId());
+        controleDeAcesso.exigir("FARMACIA.DISPENSAR", lote.getUnidade());
         Paciente paciente = buscarPacientePorId(dto.getPacienteId());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
         Consulta consulta = buscarConsultaSeInformada(dto.getConsultaId());
@@ -66,14 +71,16 @@ public class DispensacaoService {
     }
 
     public List<DispensacaoResponseDto> listar() {
-        return dispensacaoRepository.findAll()
-                .stream()
+        return controleDeAcesso.filtrar(dispensacaoRepository.findAll().stream(), d -> Stream.of(d.getLote().getUnidade()),
+                        "FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR")
                 .map(DispensacaoResponseDto::fromDispensacao)
                 .collect(Collectors.toList());
     }
 
     public DispensacaoResponseDto buscarPorId(UUID uuid) {
-        return DispensacaoResponseDto.fromDispensacao(buscarEntidadePorId(uuid));
+        Dispensacao dispensacao = buscarEntidadePorId(uuid);
+        controleDeAcesso.exigirVisivel(dispensacao.getLote().getUnidade(), "FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR");
+        return DispensacaoResponseDto.fromDispensacao(dispensacao);
     }
 
     private Dispensacao buscarEntidadePorId(UUID uuid) {

@@ -78,6 +78,8 @@ estornada —, com responsáveis diferentes para envio e recebimento e o estoque
 - **Contrato alterado:** o `POST` de transferência deixa de dar entrada no destino; quem integrava com
   ele precisa chamar o recebimento. Nenhuma tela usava ainda.
 - Conferir que o recebedor pertence à unidade de destino depende do escopo por unidade (ADR-0054).
+  **Resolvido pela [ADR-0067](./0067-autorizacao-aplicada-nas-rotas-e-no-escopo.md)**: o recebimento exige
+  `FARMACIA.TRANSFERIR` na unidade de destino (com a autorização ligada).
 - Não há alerta para transferência parada em trânsito por muito tempo; a listagem filtrada permite
   acompanhar, e um alerta pode vir com o módulo de notificações.
 - ~~A gaveta de transferência na tela da Farmácia~~ — feita, ver o adendo da

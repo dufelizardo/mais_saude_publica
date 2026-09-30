@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * CRUD da Evolução de Enfermagem (Enfermagem — ver MAPA-DE-DOMINIOS.md #8, ADR-0048).
@@ -35,6 +36,9 @@ public class EvolucaoEnfermagemService {
     private EvolucaoEnfermagemRepository evolucaoEnfermagemRepository;
 
     @Autowired
+    private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
     private AtendimentoRepository atendimentoRepository;
 
     @Autowired
@@ -43,6 +47,7 @@ public class EvolucaoEnfermagemService {
     @Transactional
     public EvolucaoEnfermagemResponseDto criar(EvolucaoEnfermagemRequestDto dto) {
         Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
+        controleDeAcesso.exigir("EVOLUCAO.REGISTRAR", atendimento.getUnidade());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
 
         EvolucaoEnfermagem evolucao = new EvolucaoEnfermagem(atendimento, profissional, dto.getDataHora(),
@@ -67,6 +72,8 @@ public class EvolucaoEnfermagemService {
             throw new ResourceUnprocessableEntityException("Esta evolução de enfermagem já foi retificada pela versão " + vigente
                     + ": retifique a versão vigente.");
         }
+        controleDeAcesso.exigir("EVOLUCAO.REGISTRAR", original.getAtendimento().getUnidade());
+        controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getAtendimento().getUnidade());
         if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())) {
             throw new ResourceBadRequestException("A retificação precisa manter o mesmo atendimento do registro original.");
         }
@@ -90,14 +97,16 @@ public class EvolucaoEnfermagemService {
 
     public List<EvolucaoEnfermagemResponseDto> listar() {
         Map<UUID, UUID> sucessores = sucessores();
-        return evolucaoEnfermagemRepository.findAll()
-                .stream()
+        return controleDeAcesso.filtrar(evolucaoEnfermagemRepository.findAll().stream(), r -> Stream.of(r.getAtendimento().getUnidade()),
+                        "PRONTUARIO.CONSULTAR", "EVOLUCAO.REGISTRAR")
                 .map(r -> EvolucaoEnfermagemResponseDto.fromEvolucaoEnfermagem(r, sucessores.get(r.getUuid())))
                 .collect(Collectors.toList());
     }
 
     public EvolucaoEnfermagemResponseDto buscarPorId(UUID uuid) {
-        return EvolucaoEnfermagemResponseDto.fromEvolucaoEnfermagem(buscarEntidadePorId(uuid), sucessores().get(uuid));
+        EvolucaoEnfermagem registro = buscarEntidadePorId(uuid);
+        controleDeAcesso.exigirVisivel(registro.getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR", "EVOLUCAO.REGISTRAR");
+        return EvolucaoEnfermagemResponseDto.fromEvolucaoEnfermagem(registro, sucessores().get(uuid));
     }
 
     private EvolucaoEnfermagem buscarEntidadePorId(UUID uuid) {

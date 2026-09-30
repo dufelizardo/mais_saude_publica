@@ -24,6 +24,7 @@ import com.edufelizardo.maissaudepublica.repositories.PapelRepository;
 import com.edufelizardo.maissaudepublica.repositories.PermissaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
+import com.edufelizardo.maissaudepublica.models.enuns.DimensaoPermissao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * Catálogo de permissões, papéis e atribuições de acesso (ADR-0054, ADR-0066). Nesta fatia a API
@@ -44,6 +46,8 @@ import java.util.UUID;
  */
 @Service
 public class AcessoService {
+
+    private static final String ACESSO_GERENCIAR = "ACESSO.GERENCIAR";
 
     @Autowired
     private PermissaoRepository permissaoRepository;
@@ -59,6 +63,9 @@ public class AcessoService {
 
     @Autowired
     private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
+
+    @Autowired
+    private ControleDeAcesso controleDeAcesso;
 
     // ── Permissões ─────────────────────────────────────────────────────────────────────────────
 
@@ -87,6 +94,8 @@ public class AcessoService {
 
     @Transactional
     public PapelResponseDto criarPapel(PapelRequestDto dto) {
+        // Papel vale para toda a rede: só quem gerencia acesso na rede inteira o define (ADR-0067).
+        controleDeAcesso.exigir(ACESSO_GERENCIAR, null);
         String codigo = dto.getCodigo().trim().toUpperCase();
         if (papelRepository.findByCodigo(codigo).isPresent()) {
             throw new ResourceConflictException("Já existe um papel com o código " + codigo + ".");
@@ -97,6 +106,7 @@ public class AcessoService {
 
     @Transactional
     public PapelResponseDto atualizarPapel(UUID uuid, PapelAtualizacaoRequestDto dto) {
+        controleDeAcesso.exigir(ACESSO_GERENCIAR, null);
         Papel papel = papel(uuid);
         Set<Permissao> permissoes = permissoes(dto.getPermissoes());
         if (CatalogoDeAcesso.ADMINISTRADOR_PLATAFORMA.equals(papel.getCodigo())
@@ -118,7 +128,7 @@ public class AcessoService {
     public List<AtribuicaoAcessoResponseDto> listarAtribuicoes(UUID usuarioId) {
         List<AtribuicaoAcesso> lista = usuarioId == null ? atribuicaoRepository.findAll()
                 : atribuicaoRepository.findByUsuarioUuid(usuarioId);
-        return lista.stream()
+        return controleDeAcesso.filtrar(lista.stream(), a -> Stream.of(a.getUnidade()), ACESSO_GERENCIAR)
                 .sorted(Comparator.comparing(AtribuicaoAcesso::getConcedidoEm).reversed())
                 .map(AtribuicaoAcessoResponseDto::fromAtribuicao)
                 .toList();
@@ -136,6 +146,7 @@ public class AcessoService {
         UnidadeDeSaude unidade = dto.getUnidadeId() == null ? null : unidadeDeSaudeRepository.findById(dto.getUnidadeId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar uma unidade de saúde com o id " + dto.getUnidadeId() + " em nossos registros."));
+        exigirPodeConceder(papel, unidade);
         if (dto.getInicio() != null && dto.getFim() != null && dto.getFim().isBefore(dto.getInicio())) {
             throw new ResourceBadRequestException("O fim do acesso não pode ser antes do início.");
         }
@@ -164,6 +175,7 @@ public class AcessoService {
         AtribuicaoAcesso a = atribuicaoRepository.findById(uuid)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar uma atribuição de acesso com o id " + uuid + " em nossos registros."));
+        exigirPodeConceder(a.getPapel(), a.getUnidade());
         if (a.getRevogadoEm() != null) {
             throw new ResourceUnprocessableEntityException("Este acesso já foi revogado.");
         }
@@ -188,6 +200,18 @@ public class AcessoService {
         return usuarioRepository.findById(uuid).map(UsuarioResponseDto::fromUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar um usuário com o id " + uuid + " em nossos registros."));
+    }
+
+    /**
+     * Conceder ou revogar: ACESSO.GERENCIAR num escopo que cubra a unidade (sem unidade, na rede inteira).
+     * Papel com permissão de administração do sistema só por quem gerencia acesso na rede inteira — um
+     * gestor de unidade não cria outro administrador (ADR-0067).
+     */
+    private void exigirPodeConceder(Papel papel, UnidadeDeSaude unidade) {
+        controleDeAcesso.exigir(ACESSO_GERENCIAR, unidade);
+        if (papel.getPermissoes().stream().anyMatch(p -> p.getDimensao() == DimensaoPermissao.ADMINISTRACAO_DO_SISTEMA)) {
+            controleDeAcesso.exigir(ACESSO_GERENCIAR, null);
+        }
     }
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────

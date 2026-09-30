@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PermissaoResponseDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
@@ -29,6 +30,7 @@ public class PermissaoController {
     @Autowired
     private AcessoService service;
 
+    @RequerPermissao({"ACESSO.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o catálogo de permissões (RECURSO.ACAO)", tags = "Acesso")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

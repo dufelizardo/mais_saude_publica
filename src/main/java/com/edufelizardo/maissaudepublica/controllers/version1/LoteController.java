@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -35,6 +36,7 @@ public class LoteController {
     @Autowired
     private LoteService service;
 
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "MEDICACAO.ADMINISTRAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os lotes cadastrados", tags = "Lote")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -53,6 +55,7 @@ public class LoteController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "MEDICACAO.ADMINISTRAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um lote pelo id", tags = "Lote")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -64,6 +67,7 @@ public class LoteController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"FARMACIA.GERENCIAR_ESTOQUE"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra a entrada de um lote",
             description = "Registra a entrada de uma remessa (medicamento, número do lote e validade) em uma unidade de saúde. "
@@ -90,6 +94,7 @@ public class LoteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto("Lote criado com sucesso!", details));
     }
 
+    @RequerPermissao({"FARMACIA.GERENCIAR_ESTOQUE"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Corrige número do lote e validade",
             description = "Só corrige o que foi digitado errado na entrada. Quantidade muda apenas pelo livro de "

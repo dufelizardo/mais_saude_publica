@@ -2,7 +2,8 @@
 
 ## Status
 
-Aceita e implementada (fatia 1 de 3: modelo, catálogo e cálculo). Implementa a forma da ADR-0054
+Aceita e implementada (fatia 1 de 3: modelo, catálogo e cálculo). A fatia 2 está na
+[ADR-0067](./0067-autorizacao-aplicada-nas-rotas-e-no-escopo.md). Implementa a forma da ADR-0054
 para autorização. Exigir permissão nas rotas é a fatia 2, e a tela Usuários & Perfis é a fatia 3.
 
 ## Contexto

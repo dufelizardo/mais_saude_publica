@@ -47,6 +47,9 @@ public class AdministracaoMedicamentoService {
     private AdministracaoMedicamentoRepository administracaoRepository;
 
     @Autowired
+    private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
     private AtendimentoRepository atendimentoRepository;
 
     @Autowired
@@ -69,6 +72,7 @@ public class AdministracaoMedicamentoService {
         Atendimento atendimento = atendimentoRepository.findById(dto.getAtendimentoId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar um atendimento com o id " + dto.getAtendimentoId() + " em nossos registros."));
+        controleDeAcesso.exigir("MEDICACAO.ADMINISTRAR", atendimento.getUnidade());
         Consulta consulta = consultaRepository.findById(dto.getConsultaId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar uma consulta com o id " + dto.getConsultaId() + " em nossos registros."));
@@ -95,6 +99,8 @@ public class AdministracaoMedicamentoService {
             throw new ResourceUnprocessableEntityException("Esta administração já foi retificada pela versão " + vigente
                     + ": retifique a versão vigente.");
         }
+        controleDeAcesso.exigir("MEDICACAO.ADMINISTRAR", original.getAtendimento().getUnidade());
+        controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getAtendimento().getUnidade());
         if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())
                 || !original.getConsulta().getUuid().equals(dto.getConsultaId())) {
             throw new ResourceBadRequestException(
@@ -123,7 +129,8 @@ public class AdministracaoMedicamentoService {
     @Transactional(readOnly = true)
     public List<AdministracaoMedicamentoResponseDto> listar() {
         Map<UUID, UUID> sucessores = sucessores();
-        return administracaoRepository.findAll().stream()
+        return controleDeAcesso.filtrar(administracaoRepository.findAll().stream(),
+                        a -> Stream.of(a.getAtendimento().getUnidade()), "PRONTUARIO.CONSULTAR", "MEDICACAO.ADMINISTRAR")
                 .sorted((a, b) -> b.getDataHora().compareTo(a.getDataHora()))
                 .map(a -> AdministracaoMedicamentoResponseDto.fromAdministracao(a, sucessores.get(a.getUuid())))
                 .collect(Collectors.toList());
@@ -133,7 +140,9 @@ public class AdministracaoMedicamentoService {
     @Transactional(readOnly = true)
     public List<AdministracaoMedicamentoResponseDto> listarPorAtendimento(UUID atendimentoId) {
         Map<UUID, UUID> sucessores = sucessores();
-        List<AdministracaoMedicamentoResponseDto> lista = administracaoRepository.findByAtendimentoUuid(atendimentoId).stream()
+        List<AdministracaoMedicamentoResponseDto> lista = controleDeAcesso.filtrar(
+                        administracaoRepository.findByAtendimentoUuid(atendimentoId).stream(),
+                        a -> Stream.of(a.getAtendimento().getUnidade()), "PRONTUARIO.CONSULTAR", "MEDICACAO.ADMINISTRAR")
                 .sorted((a, b) -> a.getDataHora().compareTo(b.getDataHora()))
                 .map(a -> AdministracaoMedicamentoResponseDto.fromAdministracao(a, sucessores.get(a.getUuid())))
                 .collect(Collectors.toList());
@@ -147,6 +156,7 @@ public class AdministracaoMedicamentoService {
     @Transactional(readOnly = true)
     public AdministracaoMedicamentoResponseDto buscarPorId(UUID uuid) {
         AdministracaoMedicamento a = administracaoRepository.findById(uuid).orElseThrow(() -> naoEncontrada(uuid));
+        controleDeAcesso.exigirVisivel(a.getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR", "MEDICACAO.ADMINISTRAR");
         return AdministracaoMedicamentoResponseDto.fromAdministracao(a, sucessores().get(uuid));
     }
 

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * CRUD da Consulta (Assistência — ver ADR-0039/ADR-0043). {@code profissionalMatricula} é
@@ -35,6 +36,9 @@ public class ConsultaService {
     private ConsultaRepository consultaRepository;
 
     @Autowired
+    private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
     private AtendimentoRepository atendimentoRepository;
 
     @Autowired
@@ -43,6 +47,7 @@ public class ConsultaService {
     @Transactional
     public ConsultaResponseDto criar(ConsultaRequestDto dto) {
         Atendimento atendimento = buscarAtendimentoPorId(dto.getAtendimentoId());
+        controleDeAcesso.exigir("CONSULTA.REGISTRAR", atendimento.getUnidade());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
 
         Consulta consulta = new Consulta(atendimento, profissional, dto.getDataHora(), dto.getTipoConsulta(),
@@ -68,6 +73,8 @@ public class ConsultaService {
             throw new ResourceUnprocessableEntityException("Esta consulta já foi retificada pela versão " + vigente
                     + ": retifique a versão vigente.");
         }
+        controleDeAcesso.exigir("CONSULTA.REGISTRAR", original.getAtendimento().getUnidade());
+        controleDeAcesso.exigirAutoriaOuSupervisao(original.getRegistradoPorCpf(), original.getAtendimento().getUnidade());
         if (!original.getAtendimento().getUuid().equals(dto.getAtendimentoId())) {
             throw new ResourceBadRequestException("A retificação precisa manter o mesmo atendimento do registro original.");
         }
@@ -92,14 +99,16 @@ public class ConsultaService {
 
     public List<ConsultaResponseDto> listar() {
         Map<UUID, UUID> sucessores = sucessores();
-        return consultaRepository.findAll()
-                .stream()
+        return controleDeAcesso.filtrar(consultaRepository.findAll().stream(), r -> Stream.of(r.getAtendimento().getUnidade()),
+                        "PRONTUARIO.CONSULTAR", "CONSULTA.REGISTRAR")
                 .map(r -> ConsultaResponseDto.fromConsulta(r, sucessores.get(r.getUuid())))
                 .collect(Collectors.toList());
     }
 
     public ConsultaResponseDto buscarPorId(UUID uuid) {
-        return ConsultaResponseDto.fromConsulta(buscarEntidadePorId(uuid), sucessores().get(uuid));
+        Consulta registro = buscarEntidadePorId(uuid);
+        controleDeAcesso.exigirVisivel(registro.getAtendimento().getUnidade(), "PRONTUARIO.CONSULTAR", "CONSULTA.REGISTRAR");
+        return ConsultaResponseDto.fromConsulta(registro, sucessores().get(uuid));
     }
 
     private Consulta buscarEntidadePorId(UUID uuid) {

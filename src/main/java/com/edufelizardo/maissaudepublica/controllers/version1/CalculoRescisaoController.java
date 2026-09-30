@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -31,6 +32,7 @@ public class CalculoRescisaoController {
     @Autowired
     private CalculoRescisaoService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de cálculos de rescisão de um profissional", tags = "CalculoRescisao")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -45,6 +47,7 @@ public class CalculoRescisaoController {
         return ResponseEntity.ok(service.listarHistorico(matricula));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra um cálculo de rescisão",
             description = "Os valores são informados por quem já calculou fora do sistema (contador/DP) — não são calculados aqui.",

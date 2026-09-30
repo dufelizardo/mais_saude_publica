@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * CRUD do Lote (Farmácia, segunda fatia do domínio — ver MAPA-DE-DOMINIOS.md #9, ADR-0050).
@@ -32,6 +33,9 @@ public class LoteService {
 
     @Autowired
     private LoteRepository loteRepository;
+
+    @Autowired
+    private ControleDeAcesso controleDeAcesso;
 
     @Autowired
     private MedicamentoRepository medicamentoRepository;
@@ -58,6 +62,7 @@ public class LoteService {
     public EntradaDeLote criar(LoteRequestDto dto) {
         Medicamento medicamento = buscarMedicamentoPorId(dto.getMedicamentoId());
         UnidadeDeSaude unidade = travarUnidade(dto.getUnidadeId());
+        controleDeAcesso.exigir("FARMACIA.GERENCIAR_ESTOQUE", unidade);
         Profissional responsavel = buscarProfissionalSeInformado(dto.getProfissionalMatricula());
 
         UUID existenteId = loteRepository.findIdsDaRemessaNaUnidade(medicamento.getUuid(), unidade.getUuid(),
@@ -84,6 +89,7 @@ public class LoteService {
     @Transactional
     public LoteResponseDto atualizar(UUID uuid, LoteAtualizacaoRequestDto dto) {
         Lote atual = buscarEntidadePorId(uuid);
+        controleDeAcesso.exigir("FARMACIA.GERENCIAR_ESTOQUE", atual.getUnidade());
         travarUnidade(atual.getUnidade().getUuid());
         Lote lote = loteRepository.findByIdParaMovimentar(uuid).orElseThrow();
         if (lote.getLoteIncorporador() != null) {
@@ -115,14 +121,16 @@ public class LoteService {
 
     /** Só lotes ativos — os incorporados a outro lote (ADR-0060) continuam acessíveis pelo id. */
     public List<LoteResponseDto> listar() {
-        return loteRepository.findByLoteIncorporadorIsNull()
-                .stream()
+        return controleDeAcesso.filtrar(loteRepository.findByLoteIncorporadorIsNull().stream(), l -> Stream.of(l.getUnidade()),
+                        "FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "FARMACIA.GERENCIAR_ESTOQUE", "MEDICACAO.ADMINISTRAR")
                 .map(LoteResponseDto::fromLote)
                 .collect(Collectors.toList());
     }
 
     public LoteResponseDto buscarPorId(UUID uuid) {
-        return LoteResponseDto.fromLote(buscarEntidadePorId(uuid));
+        Lote lote = buscarEntidadePorId(uuid);
+        controleDeAcesso.exigirVisivel(lote.getUnidade(), "FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "FARMACIA.GERENCIAR_ESTOQUE", "MEDICACAO.ADMINISTRAR");
+        return LoteResponseDto.fromLote(lote);
     }
 
     private Lote buscarEntidadePorId(UUID uuid) {
