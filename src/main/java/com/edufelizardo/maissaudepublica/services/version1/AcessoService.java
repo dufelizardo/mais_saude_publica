@@ -15,7 +15,10 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Atribuicao
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.PapelAtualizacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.PapelRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RevogacaoAcessoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.UsuarioAtualizacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.UsuarioRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AtribuicaoAcessoResponseDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EscopoAcessoResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PapelResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PermissaoResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UsuarioResponseDto;
@@ -26,6 +29,7 @@ import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
 import com.edufelizardo.maissaudepublica.models.enuns.DimensaoPermissao;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +70,9 @@ public class AcessoService {
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     // ── Permissões ─────────────────────────────────────────────────────────────────────────────
 
@@ -134,6 +141,15 @@ public class AcessoService {
                 .toList();
     }
 
+    /** Unidades de todos os níveis onde quem consulta pode conceder acesso, em ordem alfabética. */
+    @Transactional(readOnly = true)
+    public List<EscopoAcessoResponseDto> listarEscopos() {
+        return controleDeAcesso.filtrar(unidadeDeSaudeRepository.findAll().stream(), u -> Stream.of(u), ACESSO_GERENCIAR)
+                .sorted(Comparator.comparing(UnidadeDeSaude::getNome))
+                .map(EscopoAcessoResponseDto::fromUnidade)
+                .toList();
+    }
+
     @Transactional
     public AtribuicaoAcessoResponseDto conceder(AtribuicaoAcessoRequestDto dto) {
         Usuario usuario = usuarioRepository.findById(dto.getUsuarioId())
@@ -185,7 +201,69 @@ public class AcessoService {
         return AtribuicaoAcessoResponseDto.fromAtribuicao(atribuicaoRepository.save(a));
     }
 
-    // ── Usuários (leitura; cadastro e bloqueio entram com a tela Usuários & Perfis) ────────────
+    // ── Usuários ────────────────────────────────────────────────────────────────────────────────
+
+    /** Nova identidade de login (ADR-0068): CPF válido e único; o acesso vem depois, por atribuição. */
+    @Transactional
+    public UsuarioResponseDto criarUsuario(UsuarioRequestDto dto) {
+        String cpf = dto.getCpf().replaceAll("\\D", "");
+        if (!cpfValido(cpf)) {
+            throw new ResourceBadRequestException("CPF inválido.");
+        }
+        if (usuarioRepository.findByCpf(cpf).isPresent()) {
+            throw new ResourceConflictException("Já existe um usuário com este CPF.");
+        }
+        Usuario usuario = new Usuario(cpf, dto.getNome().trim(), passwordEncoder.encode(dto.getSenha()));
+        return UsuarioResponseDto.fromUsuario(usuarioRepository.save(usuario));
+    }
+
+    /** Nome e situação. Ninguém desativa o próprio usuário — evita trancar a administração por engano. */
+    @Transactional
+    public UsuarioResponseDto atualizarUsuario(UUID uuid, UsuarioAtualizacaoRequestDto dto) {
+        Usuario usuario = usuario(uuid);
+        if (!dto.getAtivo() && usuario.getCpf().equals(UsuarioAutenticado.cpf())) {
+            throw new ResourceUnprocessableEntityException("Você não pode desativar o seu próprio usuário.");
+        }
+        usuario.setNome(dto.getNome().trim());
+        usuario.setAtivo(dto.getAtivo());
+        return UsuarioResponseDto.fromUsuario(usuarioRepository.save(usuario));
+    }
+
+    /** Libera antes do prazo o bloqueio por tentativas de senha (ADR-0055). */
+    @Transactional
+    public UsuarioResponseDto desbloquearUsuario(UUID uuid) {
+        Usuario usuario = usuario(uuid);
+        if (usuario.getBloqueadoAte() == null || !usuario.getBloqueadoAte().isAfter(Instant.now())) {
+            throw new ResourceUnprocessableEntityException("Este usuário não está bloqueado.");
+        }
+        usuario.setBloqueadoAte(null);
+        usuario.setTentativasFalhas(0);
+        return UsuarioResponseDto.fromUsuario(usuarioRepository.save(usuario));
+    }
+
+    private Usuario usuario(UUID uuid) {
+        return usuarioRepository.findById(uuid)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Não foi possível encontrar um usuário com o id " + uuid + " em nossos registros."));
+    }
+
+    /** Onze dígitos, não todos iguais, com os dois dígitos verificadores corretos. */
+    static boolean cpfValido(String cpf) {
+        if (cpf == null || !cpf.matches("\\d{11}") || cpf.chars().distinct().count() == 1) {
+            return false;
+        }
+        for (int posicao = 9; posicao <= 10; posicao++) {
+            int soma = 0;
+            for (int i = 0; i < posicao; i++) {
+                soma += (cpf.charAt(i) - '0') * (posicao + 1 - i);
+            }
+            int digito = (soma * 10) % 11 % 10;
+            if (digito != cpf.charAt(posicao) - '0') {
+                return false;
+            }
+        }
+        return true;
+    }
 
     @Transactional(readOnly = true)
     public List<UsuarioResponseDto> listarUsuarios() {

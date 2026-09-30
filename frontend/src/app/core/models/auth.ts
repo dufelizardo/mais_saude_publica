@@ -36,4 +36,12 @@ export interface AcessoVigente {
 
 export interface SecurityStatusResponseDto {
   securityEnabled: boolean;
+  /** Exigência de permissão por papel e escopo ligada (ADR-0067). */
+  authorizationEnabled?: boolean;
+}
+
+/** O que a interface pode mostrar: sem restrição, ou só o que as permissões do usuário liberam (ADR-0068). */
+export interface AcessoDaInterface {
+  restrito: boolean;
+  permissoes: ReadonlySet<string>;
 }

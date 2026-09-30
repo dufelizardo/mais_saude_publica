@@ -2,7 +2,8 @@
 
 ## Status
 
-Aceita e implementada. É a fatia 2 de 3 da [ADR-0066](./0066-papeis-permissoes-e-escopo-por-unidade.md).
+Aceita e implementada. É a fatia 2 de 3 da [ADR-0066](./0066-papeis-permissoes-e-escopo-por-unidade.md);
+a fatia 3 (tela e menu) é a [ADR-0068](./0068-tela-usuarios-e-perfis.md).
 O código está pronto, mas a exigência de permissão fica **desligada em todos os ambientes** até ser
 ligada de propósito (ver decisão 1).
 

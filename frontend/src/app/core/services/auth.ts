@@ -1,22 +1,21 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
-import { LoginRequestDto, LoginResponseDto, SecurityStatusResponseDto, UsuarioAtualResponseDto } from '../models/auth';
+import { Observable, catchError, combineLatest, map, of, shareReplay, tap } from 'rxjs';
+import { AcessoDaInterface, LoginRequestDto, LoginResponseDto, SecurityStatusResponseDto, UsuarioAtualResponseDto } from '../models/auth';
 
 const TOKEN_KEY = 'msp_token';
 
 /**
  * Autenticação (ADR-0055) — login, armazenamento do token e a fonte única de verdade
- * (`GET /auth/status`) que diz se o toggle `app.security.enabled` está ligado neste ambiente.
- * Sem RBAC ainda: só "autenticado ou não" (ver ADR-0054 para o modelo completo, ainda não
- * implementado).
+ * (`GET /auth/status`) que diz se o toggle `app.security.enabled` está ligado neste ambiente — e, com a
+ * autorização ligada (ADR-0067), as permissões que decidem o que a interface mostra (ADR-0068).
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/v1/auth';
 
-  private securityEnabled$?: Observable<boolean>;
+  private status$?: Observable<SecurityStatusResponseDto>;
   private usuarioAtual$?: Observable<UsuarioAtualResponseDto | null>;
 
   login(dto: LoginRequestDto): Observable<LoginResponseDto> {
@@ -58,14 +57,31 @@ export class AuthService {
    * o backend responde `false` de propósito.
    */
   securityEnabled(): Observable<boolean> {
-    if (!this.securityEnabled$) {
-      this.securityEnabled$ = this.http.get<SecurityStatusResponseDto>(`${this.baseUrl}/status`).pipe(
-        map((resposta) => resposta.securityEnabled),
-        catchError(() => of(false)),
+    return this.status().pipe(map((s) => s.securityEnabled));
+  }
+
+  private status(): Observable<SecurityStatusResponseDto> {
+    if (!this.status$) {
+      this.status$ = this.http.get<SecurityStatusResponseDto>(`${this.baseUrl}/status`).pipe(
+        catchError(() => of({ securityEnabled: false, authorizationEnabled: false })),
         shareReplay(1),
       );
     }
-    return this.securityEnabled$;
+    return this.status$;
+  }
+
+  /**
+   * O que a interface mostra (ADR-0068). Com a autorização desligada — local, CI e ambientes que ainda não
+   * ligaram — nada é escondido; ligada, só o que as permissões de `/auth/eu` liberam. Quem decide continua
+   * sendo a API: esconder só evita oferecer o que responderia 403.
+   */
+  acessoDaInterface(): Observable<AcessoDaInterface> {
+    return combineLatest([this.status(), this.usuarioAtual()]).pipe(
+      map(([status, usuario]) => ({
+        restrito: !!status.securityEnabled && !!status.authorizationEnabled,
+        permissoes: new Set(usuario?.permissoes ?? []),
+      })),
+    );
   }
 
   /**

@@ -25,4 +25,6 @@ public class SecurityStatusResponseDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private boolean securityEnabled;
+    /** Exigência de permissão por papel e escopo ligada (ADR-0067); o frontend só esconde o que não pode com ela ligada. */
+    private boolean authorizationEnabled;
 }

@@ -4,6 +4,7 @@ import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AtribuicaoAcessoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RevogacaoAcessoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AtribuicaoAcessoResponseDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EscopoAcessoResponseDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -46,6 +47,19 @@ public class AtribuicaoAcessoController {
     @ApiErrorResponsesListagem
     public ResponseEntity<List<AtribuicaoAcessoResponseDto>> findAll(@RequestParam(required = false) UUID usuarioId) {
         return ResponseEntity.ok(service.listarAtribuicoes(usuarioId));
+    }
+
+    @RequerPermissao({"ACESSO.GERENCIAR"})
+    @GetMapping(value = "escopos", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Lista as unidades em que um acesso pode ser concedido",
+            description = "Todos os níveis da hierarquia (Federal a UBS), só os que estão no escopo de quem consulta.",
+            tags = "Acesso")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = EscopoAcessoResponseDto.class)))
+    })
+    @ApiErrorResponsesListagem
+    public ResponseEntity<List<EscopoAcessoResponseDto>> escopos() {
+        return ResponseEntity.ok(service.listarEscopos());
     }
 
     @RequerPermissao({"ACESSO.GERENCIAR"})

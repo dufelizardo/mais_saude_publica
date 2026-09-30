@@ -369,3 +369,172 @@ Acesso - Usuarios - GET - By HTTP Status Code
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+CPF Valido Aleatorio
+    [Documentation]    Returns a random CPF with valid check digits.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${cpf}=    Evaluate    (lambda b: (lambda c: c + str((sum(int(c[i]) * (11 - i) for i in range(10)) * 10) % 11 % 10))(b + str((sum(int(b[i]) * (10 - i) for i in range(9)) * 10) % 11 % 10)))(''.join(random.choice('0123456789') for _ in range(9)))    modules=random
+    RETURN    ${cpf}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Seed Um Usuario
+    [Documentation]    Creates a Usuario with a random valid CPF and returns its uuid and CPF.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${cpf}=    CPF Valido Aleatorio
+    ${payload}=    Create Dictionary    cpf=${cpf}    nome=Usuario Robot ${cpf}    senha=SenhaRobot123
+    ${criado}=    POST Create Usuario    ${payload}
+    Should Be Equal As Integers    ${criado.status_code}    201
+    ${lista}=    GET List Usuarios
+    ${uuid}=    Evaluate    [u['uuid'] for u in $lista.json() if u['cpf'] == $cpf][0]
+    RETURN    ${uuid}    ${cpf}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Create Usuario - Status Code 201
+    [Documentation]    Creates a Usuario, expecting HTTP 201 and the user listed as active and not blocked.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${cpf}=    CPF Valido Aleatorio
+    ${payload}=    Create Dictionary    cpf=${cpf}    nome=Usuario Robot ${cpf}    senha=SenhaRobot123
+    ${response}=    POST Create Usuario    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    201
+    Validate Object Schema    ${response.json()}    ${SUCCESS_RESPONSE_SCHEMA}
+    ${lista}=    GET List Usuarios
+    ${usuario}=    Evaluate    [u for u in $lista.json() if u['cpf'] == $cpf][0]
+    Should Be True    ${usuario}[ativo]
+    Should Not Be True    ${usuario}[bloqueado]
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Create Usuario - Status Code 409
+    [Documentation]    Creates a Usuario with an existing CPF, expecting HTTP 409.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${cpf}=    Seed Um Usuario
+    ${payload}=    Create Dictionary    cpf=${cpf}    nome=Repetido    senha=SenhaRobot123
+    ${response}=    POST Create Usuario    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    409
+    Validate Object Schema    ${response.json()}    ${ERROR_RESPONSE_SCHEMA}
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Create Usuario - Status Code 400
+    [Documentation]    Creates a Usuario with an invalid CPF, expecting HTTP 400.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${payload}=    Create Dictionary    cpf=11111111111    nome=Invalido    senha=SenhaRobot123
+    ${response}=    POST Create Usuario    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    400
+    Validate Object Schema    ${response.json()}    ${ERROR_RESPONSE_SCHEMA}
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Acesso - Usuario - POST - By HTTP Status Code
+    [Documentation]    Executes the appropriate Create Usuario test scenario based on the provided HTTP status code.
+    [Arguments]    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Run Keyword If    '${meuHTTP}' == '201'    POST Create Usuario - Status Code 201
+    ...    ELSE IF    '${meuHTTP}' == '409'    POST Create Usuario - Status Code 409
+    ...    ELSE IF    '${meuHTTP}' == '400'    POST Create Usuario - Status Code 400
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Create Usuario test scenario.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+PATCH Update Usuario - Status Code 200
+    [Documentation]    Deactivates a fresh Usuario, expecting HTTP 200 and the change persisted.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${cpf}=    Seed Um Usuario
+    ${payload}=    Create Dictionary    nome=Usuario Robot Desativado    ativo=${False}
+    ${response}=    PATCH Update Usuario    ${uuid}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Validate Object Schema    ${response.json()}    ${SUCCESS_RESPONSE_SCHEMA}
+    ${usuario}=    GET Get Usuario By Id    ${uuid}
+    Should Not Be True    ${usuario.json()}[ativo]
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+PATCH Update Usuario - Status Code 404
+    [Documentation]    Updates a random, non-existent Usuario, expecting HTTP 404.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuidInexistente}=    Evaluate    str(uuid.uuid4())    modules=uuid
+    ${payload}=    Create Dictionary    nome=Qualquer    ativo=${True}
+    ${response}=    PATCH Update Usuario    ${uuidInexistente}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    404
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+PATCH Update Usuario - Status Code 400
+    [Documentation]    Updates a Usuario without the status, expecting HTTP 400.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuidInexistente}=    Evaluate    str(uuid.uuid4())    modules=uuid
+    ${payload}=    Create Dictionary    nome=Sem situacao
+    ${response}=    PATCH Update Usuario    ${uuidInexistente}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    400
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Acesso - Usuario - PATCH - By HTTP Status Code
+    [Documentation]    Executes the appropriate Update Usuario test scenario based on the provided HTTP status code.
+    [Arguments]    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Run Keyword If    '${meuHTTP}' == '200'    PATCH Update Usuario - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '404'    PATCH Update Usuario - Status Code 404
+    ...    ELSE IF    '${meuHTTP}' == '400'    PATCH Update Usuario - Status Code 400
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Update Usuario test scenario.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Desbloquear Usuario - Status Code 422
+    [Documentation]    Unlocks a Usuario that is not blocked, expecting HTTP 422.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${cpf}=    Seed Um Usuario
+    ${response}=    POST Desbloquear Usuario    ${uuid}
+    Should Be Equal As Integers    ${response.status_code}    422
+    Validate Object Schema    ${response.json()}    ${ERROR_RESPONSE_SCHEMA}
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Desbloquear Usuario - Status Code 404
+    [Documentation]    Unlocks a random, non-existent Usuario, expecting HTTP 404.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuidInexistente}=    Evaluate    str(uuid.uuid4())    modules=uuid
+    ${response}=    POST Desbloquear Usuario    ${uuidInexistente}
+    Should Be Equal As Integers    ${response.status_code}    404
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Acesso - Desbloqueio - POST - By HTTP Status Code
+    [Documentation]    Executes the appropriate Desbloquear Usuario test scenario based on the provided HTTP status code.
+    [Arguments]    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Run Keyword If    '${meuHTTP}' == '422'    POST Desbloquear Usuario - Status Code 422
+    ...    ELSE IF    '${meuHTTP}' == '404'    POST Desbloquear Usuario - Status Code 404
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Desbloquear Usuario test scenario.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+GET List Escopos Acesso - Status Code 200
+    [Documentation]    Lists the grantable units, expecting HTTP 200 (or 404 when the environment has no unit).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${response}=    GET List Escopos Acesso
+    Should Be True    ${response.status_code} in (200, 404)
+    IF    ${response.status_code} == 200
+        Validate Array Schema    ${response.json()}    ${ESCOPO_ACESSO_SCHEMA}
+    END
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Acesso - Escopos - GET - By HTTP Status Code
+    [Documentation]    Executes the appropriate List Escopos Acesso test scenario based on the provided HTTP status code.
+    [Arguments]    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Run Keyword If    '${meuHTTP}' == '200'    GET List Escopos Acesso - Status Code 200
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for List Escopos Acesso test scenario.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
