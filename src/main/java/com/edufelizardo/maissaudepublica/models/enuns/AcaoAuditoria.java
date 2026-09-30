@@ -10,5 +10,7 @@ public enum AcaoAuditoria {
     ALTERACAO,
     RETIFICACAO,
     REVOGACAO,
+    /** Acesso ao prontuário sem vínculo assistencial, declarado com motivo (ADR-0076). */
+    ACESSO_JUSTIFICADO,
     EXCLUSAO
 }

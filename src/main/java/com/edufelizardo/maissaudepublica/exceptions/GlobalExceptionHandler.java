@@ -36,6 +36,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(VinculoAssistencialAusenteException.class)
+    public ResponseEntity<ErrorExceptionResponse> handleVinculoAusente(VinculoAssistencialAusenteException ex) {
+        ContextoAuditoria.detalhe(ex.getMessage());
+        ErrorExceptionResponse error = new ErrorExceptionResponse(VinculoAssistencialAusenteException.CODIGO, ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(ResourceForbiddenException.class)
     public ResponseEntity<ErrorExceptionResponse> handleResourceForbidden(ResourceForbiddenException ex) {
         ContextoAuditoria.detalhe(ex.getMessage());

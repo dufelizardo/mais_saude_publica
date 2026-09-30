@@ -61,6 +61,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("FARMACIA.DISPENSAR", new Def("Dispensar medicamento ao paciente", OPERACAO));
         PERMISSOES.put("FARMACIA.TRANSFERIR", new Def("Enviar, receber e cancelar transferências", OPERACAO));
         PERMISSOES.put("PRONTUARIO.CONSULTAR", new Def("Ler o prontuário e os registros clínicos", ACESSO_AO_DADO_DE_SAUDE));
+        // Fora de todos os papéis padrão (ADR-0076): auditoria clínica e regulação, com toda leitura auditada.
+        PERMISSOES.put("PRONTUARIO.CONSULTAR_SEM_VINCULO",
+                new Def("Ler o prontuário de qualquer paciente, sem vínculo assistencial", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("TRIAGEM.REGISTRAR", new Def("Classificação de risco (privativa do enfermeiro)", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("EVOLUCAO.REGISTRAR", new Def("Evolução de enfermagem (privativa do enfermeiro)", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("CONSULTA.REGISTRAR", new Def("Consulta médica e prescrição", ACESSO_AO_DADO_DE_SAUDE));

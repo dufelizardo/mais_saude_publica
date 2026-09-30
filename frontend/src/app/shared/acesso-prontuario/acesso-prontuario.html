@@ -1,0 +1,43 @@
+@if (bloqueio) {
+  <div class="acesso-pront">
+    <div class="box box--warn" role="status">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      <span>
+        <strong>Sem vínculo assistencial com este paciente</strong><br />
+        {{ bloqueio }}
+      </span>
+    </div>
+
+    @if (!aberto()) {
+      <div>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="abrir()">Acessar com justificativa</button>
+      </div>
+    } @else {
+      <form class="acesso-pront__form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+        @if (erro()) { <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div> }
+        <div class="dw-field">
+          <label [for]="'f-acesso-motivo-' + pacienteId">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+          <select [id]="'f-acesso-motivo-' + pacienteId" formControlName="motivo">
+            @for (m of motivos; track m.valor) { <option [value]="m.valor">{{ m.rotulo }}</option> }
+          </select>
+        </div>
+        <div class="dw-field">
+          <label [for]="'f-acesso-texto-' + pacienteId">Justificativa <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+          <textarea [id]="'f-acesso-texto-' + pacienteId" rows="3" formControlName="justificativa" maxlength="1000"
+            [attr.aria-invalid]="!!erroTexto()" [attr.aria-describedby]="'h-acesso-' + pacienteId + ' e-acesso-' + pacienteId"></textarea>
+          <p class="dw-hint" [id]="'h-acesso-' + pacienteId">Por que você precisa ver o histórico deste paciente agora. Pelo menos {{ minimo }} caracteres. Vale por 4 horas, só para você, e fica registrado na auditoria.</p>
+          @if (erroTexto()) { <p class="dw-err" [id]="'e-acesso-' + pacienteId">{{ erroTexto() }}</p> }
+        </div>
+        <div class="dw-actions">
+          <button type="button" class="btn btn--ghost btn--sm" (click)="aberto.set(false)">Cancelar</button>
+          <button type="submit" class="btn btn--sm" [disabled]="enviando()">{{ enviando() ? 'Registrando…' : 'Registrar e abrir prontuário' }}</button>
+        </div>
+      </form>
+    }
+  </div>
+} @else if (acesso?.base === 'JUSTIFICADO') {
+  <div class="box box--info acesso-pront__faixa" role="status">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+    <span>Acesso justificado até <strong class="mono">{{ hora(acesso?.expiraEm) }}</strong> — registrado na auditoria.</span>
+  </div>
+}
