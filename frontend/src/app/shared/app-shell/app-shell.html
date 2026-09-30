@@ -25,67 +25,34 @@
               <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
               <span class="nav-item__label">Profissionais</span>
             </a>
-
-
-
-            <a routerLink="/profissionais/perfil" routerLinkActive #rlaPerfil="routerLinkActive" [attr.aria-current]="rlaPerfil.isActive ? 'page' : null" class="nav-item">
-              <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
-              <span class="nav-item__label">Perfil do profissional</span>
-            </a>
-
-            @if (podeVer('/rh/categorias-salariais')) {
-              <a routerLink="/rh/categorias-salariais" routerLinkActive #rlaCategorias="routerLinkActive" [attr.aria-current]="rlaCategorias.isActive ? 'page' : null" class="nav-item">
-                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
-                <span class="nav-item__label">Categorias salariais</span>
-              </a>
-            }
-
-            @if (podeVer('/rh/cargos')) {
-              <a routerLink="/rh/cargos" routerLinkActive #rlaCargos="routerLinkActive" [attr.aria-current]="rlaCargos.isActive ? 'page' : null" class="nav-item">
+            @if (podeVer('/rh/cargos-e-salarios')) {
+              <a routerLink="/rh/cargos-e-salarios" routerLinkActive #rlaCargosSalarios="routerLinkActive" [attr.aria-current]="rlaCargosSalarios.isActive ? 'page' : null" class="nav-item">
                 <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                <span class="nav-item__label">Cargos</span>
+                <span class="nav-item__label">Cargos &amp; salários</span>
               </a>
             }
-
-            @if (podeVer('/rh/regras-anuenio')) {
-              <a routerLink="/rh/regras-anuenio" routerLinkActive #rlaRegras="routerLinkActive" [attr.aria-current]="rlaRegras.isActive ? 'page' : null" class="nav-item">
-                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span class="nav-item__label">Regras de anuênio</span>
+            @if (podeVer('/rh/beneficios')) {
+              <a routerLink="/rh/beneficios" routerLinkActive #rlaBeneficios="routerLinkActive" [attr.aria-current]="rlaBeneficios.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"></path><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path></svg>
+                <span class="nav-item__label">Benefícios</span>
               </a>
             }
-
+            @if (podeVer('/rh/desenvolvimento')) {
+              <a routerLink="/rh/desenvolvimento" routerLinkActive #rlaDesenvolvimento="routerLinkActive" [attr.aria-current]="rlaDesenvolvimento.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                <span class="nav-item__label">Desenvolvimento</span>
+              </a>
+            }
+            @if (podeVer('/rh/recrutamento')) {
+              <a routerLink="/rh/recrutamento" routerLinkActive #rlaRecrutamento="routerLinkActive" [attr.aria-current]="rlaRecrutamento.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path><path d="M11 8v6M8 11h6"></path></svg>
+                <span class="nav-item__label">Recrutamento</span>
+              </a>
+            }
             @if (podeVer('/rh/folha-pagamento')) {
               <a routerLink="/rh/folha-pagamento" routerLinkActive #rlaFolha="routerLinkActive" [attr.aria-current]="rlaFolha.isActive ? 'page' : null" class="nav-item">
                 <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
                 <span class="nav-item__label">Folha de pagamento</span>
-              </a>
-            }
-
-            @if (podeVer('/rh/treinamentos')) {
-              <a routerLink="/rh/treinamentos" routerLinkActive #rlaTreinamentos="routerLinkActive" [attr.aria-current]="rlaTreinamentos.isActive ? 'page' : null" class="nav-item">
-                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                <span class="nav-item__label">Catálogo de treinamentos</span>
-              </a>
-            }
-
-            @if (podeVer('/rh/ciclos-avaliacao')) {
-              <a routerLink="/rh/ciclos-avaliacao" routerLinkActive #rlaCiclos="routerLinkActive" [attr.aria-current]="rlaCiclos.isActive ? 'page' : null" class="nav-item">
-                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <span class="nav-item__label">Ciclos de avaliação</span>
-              </a>
-            }
-
-            @if (podeVer('/rh/vagas')) {
-              <a routerLink="/rh/vagas" routerLinkActive #rlaVagas="routerLinkActive" [attr.aria-current]="rlaVagas.isActive ? 'page' : null" class="nav-item">
-                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                <span class="nav-item__label">Vagas</span>
-              </a>
-            }
-
-            @if (podeVer('/rh/tipos-beneficio')) {
-              <a routerLink="/rh/tipos-beneficio" routerLinkActive #rlaBeneficios="routerLinkActive" [attr.aria-current]="rlaBeneficios.isActive ? 'page' : null" class="nav-item">
-                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"></path><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path></svg>
-                <span class="nav-item__label">Tipos de benefício</span>
               </a>
             }
           </div>

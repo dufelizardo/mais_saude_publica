@@ -105,8 +105,10 @@ sidebar e cabeçalho continuam fixos, só a tabela rola.
 
 ## 7. Modal ou gaveta lateral
 
-- **`<app-modal>`** (`shared/modal`) — padrão das telas de cadastro simples: poucos campos, abre no
-  centro.
+- **`<app-drawer>` é o padrão para tela nova ou refeita**, inclusive cadastro simples de catálogo
+  (ADR-0073): uma forma só no sistema, a lista continua visível e cabe histórico junto do formulário.
+- **`<app-modal>`** (`shared/modal`) — só nas telas da primeira geração que ainda não foram refeitas
+  (ex.: abas do perfil do profissional). Não usar em tela nova.
 - **`<app-drawer>`** (`shared/drawer`) — painel à direita, para formulários com mais campos ou
   avisos contextuais, quando vale manter a tabela visível ao lado (primeiro uso: Farmácia,
   ADR-0058). O conteúdo projetado segue esta estrutura, para o `<form>` envolver corpo e rodapé:
