@@ -131,6 +131,7 @@ pendentes quatro regras:
 
 ## Referências
 
+- [`docs/acesso/GUIA-LIGAR-AUTORIZACAO.md`](../acesso/GUIA-LIGAR-AUTORIZACAO.md): passo a passo para ligar num ambiente.
 - [ADR-0066](./0066-papeis-permissoes-e-escopo-por-unidade.md): modelo e cálculo (fatia 1).
 - [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md): forma do modelo.
 - [ADR-0055](./0055-primeira-implementacao-de-login-usuario-jwt-e-toggle-por-ambiente.md): toggle de login.

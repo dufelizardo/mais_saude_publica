@@ -134,6 +134,7 @@ permissões**
 
 ## Referências
 
+- [`docs/acesso/GUIA-LIGAR-AUTORIZACAO.md`](../acesso/GUIA-LIGAR-AUTORIZACAO.md): passo a passo para ligar a exigência num ambiente.
 - [ADR-0066](./0066-papeis-permissoes-e-escopo-por-unidade.md): modelo e catálogo.
 - [ADR-0067](./0067-autorizacao-aplicada-nas-rotas-e-no-escopo.md): aplicação nas rotas e no escopo.
 - [ADR-0055](./0055-primeira-implementacao-de-login-usuario-jwt-e-toggle-por-ambiente.md): usuário, login e bloqueio.
