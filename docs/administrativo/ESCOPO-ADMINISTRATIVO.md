@@ -125,6 +125,7 @@ pras decisões de frontend específicas deste módulo).
 | F4 | Tela **Processos Administrativos** (`administrativo/processos`) | [#198](https://github.com/dufelizardo/mais_saude_publica/pull/198) | ✅ |
 | F5 | Tela **Responsabilidades Administrativas** (`administrativo/responsabilidades`) | [#199](https://github.com/dufelizardo/mais_saude_publica/pull/199) | ✅ |
 | F6 | Tela **Necessidades de Pessoal** (`administrativo/necessidades-de-pessoal`) | [#200](https://github.com/dufelizardo/mais_saude_publica/pull/200) | ✅ |
+| F7 | Telas agrupadas no layout recente (ADR-0074): **Setores** com a aba Responsabilidades, **Modelo administrativo** (Capacidades, Processos, Perfis, Perfil por tipo de unidade) e **Necessidades de pessoal** refeita; rotas antigas redirecionam; menu com 3 itens | — | ✅ |
 
 ## 7. Referências
 

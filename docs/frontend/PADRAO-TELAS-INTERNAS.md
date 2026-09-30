@@ -106,7 +106,7 @@ sidebar e cabeçalho continuam fixos, só a tabela rola.
 ## 7. Modal ou gaveta lateral
 
 - **`<app-drawer>` é o padrão para tela nova ou refeita**, inclusive cadastro simples de catálogo
-  (ADR-0073): uma forma só no sistema, a lista continua visível e cabe histórico junto do formulário.
+  (ADR-0073, ADR-0074): uma forma só no sistema, a lista continua visível e cabe histórico junto do formulário.
 - **`<app-modal>`** (`shared/modal`) — só nas telas da primeira geração que ainda não foram refeitas
   (ex.: abas do perfil do profissional). Não usar em tela nova.
 - **`<app-drawer>`** (`shared/drawer`) — painel à direita, para formulários com mais campos ou

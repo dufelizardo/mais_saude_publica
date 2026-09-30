@@ -1342,6 +1342,11 @@ tr.row-link:focus-visible { outline: 2px solid var(--blue-700); outline-offset: 
 tfoot .linha-total th, tfoot .linha-total td { border-top: 2px solid var(--ink-200); background: var(--ink-50); font-weight: 600; }
 tfoot .linha-total th { text-align: left; }
 
+/* Administrativo agrupado (ADR-0074): unidade pequena ao lado do número do indicador e o cabeçalho do
+   profissional escolhido na aba Responsabilidades. */
+.stat__unid { font-size: 0.8125rem; font-weight: 400; color: var(--ink-500); }
+.resp-profissional { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; padding: var(--s-4) var(--s-5); border-bottom: 1px solid var(--ink-100); }
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
