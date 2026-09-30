@@ -80,6 +80,10 @@ mockup pixel a pixel neste ponto específico.
    e conferir o **valor exato** (font-size, padding, cor) antes de escrever a regra — não
    implementar de memória de uma leitura anterior.
 
+6. A tela tem **teste Robot de interface** no mesmo PR (`test/robot/.../ui/<tela>/`, ADR-0077)? Os campos
+   têm `id` `f-<campo>` e as abas e botões de ícone têm nome acessível, para o teste não depender de
+   classe CSS.
+
 ## 6. Tabelas largas — nunca `overflow: hidden`, sempre `overflow-x: auto`
 
 Achado num levantamento de usabilidade: 12 telas (mais 14 pontos dentro do perfil do profissional)

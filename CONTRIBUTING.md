@@ -42,9 +42,12 @@ Todo PR passa automaticamente pelas duas suítes na pipeline — não é obrigat
 | Suíte | Local | Como rodar |
 |---|---|---|
 | **JUnit** | `src/test/java` | `./mvnw test` |
-| **Robot Framework** (118 casos de aceitação) | `test/robot/` | ver [test/robot/README.md](test/robot/README.md) |
+| **Robot Framework** (aceitação da API e do frontend, padrão LKDF) | `test/robot/` | ver [test/robot/README.md](test/robot/README.md) |
 
-Novos recursos ou correções devem vir acompanhados de teste correspondente.
+Novos recursos ou correções devem vir acompanhados de teste correspondente:
+
+- **endpoint novo:** JUnit e Robot de API;
+- **tela nova ou refeita:** Robot de interface, no mesmo padrão LKDF ([ADR-0077](docs/adr/0077-testes-de-frontend-com-robot-framework.md)). O frontend não usa Playwright isolado, `ng e2e` nem `.spec.ts` como teste de aceitação.
 
 ## Reporte de issues
 
