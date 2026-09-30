@@ -82,6 +82,10 @@ Para cada pessoa, decida:
   Prefira o escopo mais estreito que resolve.
 - **O período, se for temporário:** plantão ou cobertura de férias. Sem fim, vale até ser revogado.
 
+**Auditoria:** nenhum perfil pronto consulta a trilha de auditoria — nem o Administrador da plataforma
+(ADR-0071). Para quem fiscaliza (ouvidoria, controle interno), crie um perfil "Auditor" com a permissão
+**Consultar a trilha de auditoria** e conceda-o no escopo que essa pessoa fiscaliza.
+
 Um perfil que não existe pode ser criado na aba **Perfis & permissões → Novo**. Para partir de um
 parecido, use **Duplicar**. Só quem gerencia acesso na rede inteira cria ou altera perfis.
 

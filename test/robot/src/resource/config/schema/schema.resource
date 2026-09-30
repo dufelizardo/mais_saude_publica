@@ -55,3 +55,5 @@ Resource    ../../schema/transferencia_farmacia/transferencia_farmacia_schema.re
 Resource    ../../schema/administracao_medicamento/administracao_medicamento_schema.resource
 # ACESSO (ADR-0066)
 Resource    ../../schema/acesso/acesso_schema.resource
+# AUDITORIA (ADR-0070/0071)
+Resource    ../../schema/auditoria/auditoria_schema.resource

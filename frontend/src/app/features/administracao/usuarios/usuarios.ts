@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import {
@@ -92,6 +93,7 @@ const MODULOS: Modulo[] = [
   { nome: 'Setor administrativo', sub: 'capacidades, processos, responsabilidades', ver: ['ADMINISTRATIVO.CONSULTAR'], registrar: [], gerenciar: ['ADMINISTRATIVO.GERENCIAR'] },
   { nome: 'Estrutura da rede', sub: 'unidades de saúde e setores', ver: [], registrar: [], gerenciar: ['ORGANIZACAO.GERENCIAR'], verLiberado: true },
   { nome: 'Usuários & acessos', sub: 'identidades, papéis, concessões', ver: [], registrar: [], gerenciar: ['USUARIO.GERENCIAR', 'ACESSO.GERENCIAR'] },
+  { nome: 'Auditoria', sub: 'quem acessou e alterou o quê', ver: ['AUDITORIA.CONSULTAR'], registrar: [], gerenciar: [] },
 ];
 
 type Celula = { estado: 'allow' | 'partial' | 'deny' | 'na'; titulo: string };
@@ -122,6 +124,7 @@ export class Usuarios {
   private readonly acessoService = inject(AcessoService);
   private readonly authService = inject(AuthService);
   private readonly profissionalService = inject(ProfissionalService);
+  private readonly router = inject(Router);
 
   protected readonly formatCpf = formatCpf;
   protected readonly modulos = MODULOS;
@@ -628,6 +631,12 @@ export class Usuarios {
   }
 
   // ── Ações diretas ──────────────────────────────────────────────────────────────────────────────
+
+  /** A trilha de auditoria desta pessoa (ADR-0071). */
+  protected verNaAuditoria(u: UsuarioResponseDto): void {
+    this.gaveta.set(null);
+    this.router.navigate(['/administracao/auditoria'], { queryParams: { usuarioCpf: u.cpf } });
+  }
 
   protected desbloquear(u: UsuarioResponseDto): void {
     this.enviar(this.acessoService.desbloquearUsuario(u.uuid), 'Usuário desbloqueado', u.nome,

@@ -10,7 +10,7 @@ implementação intencionalmente adiada (ver Contexto).
 > de autorização (itens 2, 3, 5 e a separação administrador × dado de saúde) pela
 > [ADR-0066](./0066-papeis-permissoes-e-escopo-por-unidade.md), em fatias — o escopo usa `UnidadeDeSaude` (sem
 > `Setor` por enquanto). A auditoria enriquecida (item 6) começou pela
-> [ADR-0070](./0070-trilha-de-auditoria.md) (registro; a consulta vem a seguir).
+> [ADR-0070](./0070-trilha-de-auditoria.md) (registro) e pela [ADR-0071](./0071-consulta-da-trilha-de-auditoria.md) (consulta).
 
 ## Contexto
 

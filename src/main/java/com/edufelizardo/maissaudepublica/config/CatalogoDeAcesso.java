@@ -68,6 +68,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("MEDICACAO.ADMINISTRAR", new Def("Checagem de medicação prescrita", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("REGISTRO_CLINICO.RETIFICAR_DE_OUTROS",
                 new Def("Retificar registro clínico feito por outro profissional (supervisão)", ACESSO_AO_DADO_DE_SAUDE));
+        // Fora de todos os papéis padrão (ADR-0071): quem administra o sistema não audita a si mesmo.
+        PERMISSOES.put("AUDITORIA.CONSULTAR", new Def("Consultar a trilha de auditoria", ADMINISTRACAO_DO_SISTEMA));
     }
 
     private record PapelPadrao(String nome, String descricao, List<String> permissoes) {

@@ -8,6 +8,7 @@ import com.edufelizardo.maissaudepublica.models.EventoAuditoria;
 import com.edufelizardo.maissaudepublica.models.Lote;
 import com.edufelizardo.maissaudepublica.models.Medicamento;
 import com.edufelizardo.maissaudepublica.models.Paciente;
+import com.edufelizardo.maissaudepublica.models.Papel;
 import com.edufelizardo.maissaudepublica.models.Permissao;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Triagem;
@@ -220,6 +221,7 @@ class AutorizacaoControllerTest {
             atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
             usuarioRepository.findByCpf(cpf).ifPresent(usuarioRepository::delete);
         }
+        papelRepository.findByCodigo("AUTZ_AUDITOR").ifPresent(papelRepository::delete);
         profissionalRepository.deleteAll(profissionalRepository.findAll().stream()
                 .filter(p -> p.getMatricula() != null && p.getMatricula().startsWith("AUTZ-")).toList());
         List<UnidadeDeSaude> nossas = unidadeDeSaudeRepository.findAll().stream()
@@ -483,6 +485,38 @@ class AutorizacaoControllerTest {
         assertThat(escopo.getAcao()).isEqualTo(AcaoAuditoria.CRIACAO);
         assertThat(escopo.getUnidadeId()).isEqualTo(ubsB.getUuid());
         assertThat(escopo.getDetalhe()).contains(ubsB.getNome());
+    }
+
+    @Test
+    void consultaDaAuditoriaRespeitaOEscopo() throws Exception {
+        // Nenhum papel padrão audita: nem o enfermeiro, nem a coordenação.
+        mockMvc.perform(como(ENF_A, get("/api/v1/auditoria/"))).andExpect(status().isForbidden());
+        mockMvc.perform(como(COORD_R, get("/api/v1/auditoria/"))).andExpect(status().isForbidden());
+
+        // Eventos na UBS A (registro) e na UBS B (recusa por escopo).
+        mockMvc.perform(como(ENF_A, post("/api/v1/triagem/")).contentType(MediaType.APPLICATION_JSON)
+                        .content(triagem(atendimentoA.getUuid(), "AUTZ-ENF-A", "")))
+                .andExpect(status().isCreated());
+        mockMvc.perform(como(ENF_A, post("/api/v1/triagem/")).contentType(MediaType.APPLICATION_JSON)
+                        .content(triagem(atendimentoB.getUuid(), "AUTZ-ENF-A", "")))
+                .andExpect(status().isForbidden());
+
+        // Auditor só da UBS B vê só os eventos da UBS B.
+        Permissao auditoria = permissaoRepository.findByCodigo("AUDITORIA.CONSULTAR").orElseThrow();
+        Papel auditor = papelRepository.save(new Papel("AUTZ_AUDITOR", "Auditor de teste", null, new java.util.HashSet<>(Set.of(auditoria))));
+        AtribuicaoAcesso a = new AtribuicaoAcesso();
+        a.setUsuario(usuarioRepository.findByCpf(SEM_PAPEL).orElseThrow());
+        a.setPapel(auditor);
+        a.setUnidade(ubsB);
+        a.setConcedidoEm(Instant.now());
+        atribuicaoRepository.save(a);
+
+        mockMvc.perform(como(SEM_PAPEL, get("/api/v1/auditoria/").param("usuarioCpf", ENF_A)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.itens[0].unidadeId").value(ubsB.getUuid().toString()))
+                .andExpect(jsonPath("$.itens[0].resultado").value("NEGADO"))
+                .andExpect(jsonPath("$.itens[0].unidadeNome").value(ubsB.getNome()));
     }
 
     // ── Concessão de acesso ────────────────────────────────────────────────────────────────────

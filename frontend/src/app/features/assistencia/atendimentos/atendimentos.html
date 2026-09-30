@@ -626,6 +626,32 @@
                   } @empty { <p class="cell-sub">Nenhum registro.</p> }
                 </section>
               }
+              @if (podeAuditar()) {
+                <section class="dsec">
+                  <div class="dsec__h">
+                    <h3>Quem acessou os dados deste paciente @if (quemAcessou()) { <span class="cnt">{{ quemAcessouTotal() }}</span> }</h3>
+                    @if (quemAcessou() === null) {
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="carregarQuemAcessou(a.pacienteUuid)">Ver</button>
+                    } @else {
+                      <a class="btn btn--ghost btn--sm" routerLink="/administracao/auditoria" [queryParams]="{ pacienteId: a.pacienteUuid }">Ver tudo na auditoria</a>
+                    }
+                  </div>
+                  @if (quemAcessou(); as eventos) {
+                    @for (ev of eventos; track ev.uuid) {
+                      <div class="rec aud-rec">
+                        <div class="rec__head">
+                          <span class="dw-meta">
+                            <span class="badge" [class]="'badge badge--' + acoesAuditoria[ev.acao].classe">{{ acoesAuditoria[ev.acao].rotulo }}</span>
+                            <strong>{{ ev.usuarioNome || 'Sem login' }}</strong>
+                            <span class="cell-sub" style="display: inline;">{{ rotuloRecurso(ev.recurso) }}@if (ev.unidadeNome) { · {{ ev.unidadeNome }} }</span>
+                          </span>
+                          <span class="cell-sub mono" style="display: inline;">{{ quandoAcesso(ev.ocorridoEm) }}@if (ev.resultado === 'NEGADO') { · <b class="delta-neg">negado</b> }</span>
+                        </div>
+                      </div>
+                    } @empty { <p class="cell-sub">Nenhum acesso registrado.</p> }
+                  }
+                </section>
+              }
             }
           </div>
           <footer class="dw-foot">
