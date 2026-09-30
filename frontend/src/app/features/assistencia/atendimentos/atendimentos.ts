@@ -1,4 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { ACOES_AUDITORIA, EventoAuditoriaResponseDto, rotuloRecurso } from '../../../core/models/auditoria';
+import { AuditoriaService } from '../../../core/services/auditoria';
 import { Component, computed, inject, signal } from '@angular/core';
 import { AuthService } from '../../../core/services/auth';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -137,6 +139,14 @@ export class Atendimentos {
   private readonly loteService = inject(LoteService);
   private readonly medicamentoService = inject(MedicamentoService);
   private readonly route = inject(ActivatedRoute);
+  private readonly auditoriaService = inject(AuditoriaService);
+  protected readonly acoesAuditoria = ACOES_AUDITORIA;
+  protected readonly rotuloRecurso = rotuloRecurso;
+  /** Pode consultar a auditoria (ADR-0071); com a autorização desligada, sim. */
+  protected readonly podeAuditar = signal(false);
+  /** "Quem acessou" do paciente do atendimento aberto; nulo = ainda não carregado. */
+  protected readonly quemAcessou = signal<EventoAuditoriaResponseDto[] | null>(null);
+  protected readonly quemAcessouTotal = signal(0);
 
   protected readonly formatCpf = formatCpf;
   protected readonly risco = RISCO;
@@ -362,6 +372,7 @@ export class Atendimentos {
 
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.matriculaPadrao.set(u?.profissionalMatricula ?? ''));
+    this.authService.acessoDaInterface().subscribe((a) => this.podeAuditar.set(!a.restrito || a.permissoes.has('AUDITORIA.CONSULTAR')));
     this.carregarTudo();
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
     this.unidadeSaudeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
@@ -725,11 +736,25 @@ export class Atendimentos {
   protected abrirAtendimento(atId: string): void {
     const at = this.atendimento(atId);
     this.registros.set(null);
+    this.quemAcessou.set(null);
     this.abrir({ tipo: 'at-view', atId });
     if (!at) return;
     this.prontuarioService.buscarPorPacienteId(at.pacienteUuid).pipe(catchError(() => of(null))).subscribe((p) => {
       this.registros.set(p?.atendimentos.find((a) => a.atendimento.uuid === atId) ?? null);
     });
+  }
+
+  /** Últimos acessos aos dados do paciente, pela trilha de auditoria (ADR-0071) — carregados sob pedido. */
+  protected carregarQuemAcessou(pacienteId: string): void {
+    this.auditoriaService.consultar({ pacienteId, tamanho: 10 }).pipe(catchError(() => of(null))).subscribe((p) => {
+      this.quemAcessou.set(p?.itens ?? []);
+      this.quemAcessouTotal.set(p?.total ?? 0);
+    });
+  }
+
+  protected quandoAcesso(iso: string): string {
+    const d = new Date(iso);
+    return `${d.toLocaleDateString('pt-BR')} · ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
   }
 
   protected abrirTriagem(atId: string, original: TriagemResponseDto | null = null): void {

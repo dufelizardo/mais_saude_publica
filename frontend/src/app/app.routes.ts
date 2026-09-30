@@ -76,6 +76,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administracao/usuarios/usuarios').then((m) => m.Usuarios),
         data: { breadcrumb: 'Usuários & Perfis', area: 'Administração' },
       },
+      {
+        path: 'administracao/auditoria',
+        loadComponent: () => import('./features/administracao/auditoria/auditoria').then((m) => m.Auditoria),
+        data: { breadcrumb: 'Auditoria', area: 'Administração' },
+      },
     ],
   },
 ];

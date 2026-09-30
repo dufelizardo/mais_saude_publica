@@ -2,8 +2,8 @@
 
 ## Status
 
-Aceita e implementada (fatia 1 de 2: registro). A consulta (tela Auditoria, aba "Quem acessou" no
-atendimento e permissão `AUDITORIA.CONSULTAR`) é a fatia 2. Implementa o item 6 da
+Aceita e implementada (fatia 1 de 2: registro). A consulta (tela Auditoria, "Quem acessou" no
+atendimento e permissão `AUDITORIA.CONSULTAR`) é a [ADR-0071](./0071-consulta-da-trilha-de-auditoria.md). Implementa o item 6 da
 [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md).
 
 ## Contexto

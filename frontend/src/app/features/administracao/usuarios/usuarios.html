@@ -364,6 +364,11 @@
                   }
                 </div>
               }
+              @if (pode('AUDITORIA.CONSULTAR')) {
+                <div class="dw-actions">
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="verNaAuditoria(l.usuario)">Ver na auditoria</button>
+                </div>
+              }
               @if (erroApi()) {
                 <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div>
               }
