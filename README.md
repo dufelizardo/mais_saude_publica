@@ -114,8 +114,9 @@ docker run -p 8080:8080 \
 ## Testes
 
 - **JUnit** (`src/test/java`, roda in-process contra a aplicação): `./mvnw test`
-- **Robot Framework** (`test/robot/`, roda de fora pra dentro via HTTP contra a aplicação real —
-  118 casos de aceitação): ver [test/robot/README.md](test/robot/README.md)
+- **Robot Framework** (`test/robot/`, roda de fora pra dentro contra a aplicação real, no padrão LKDF):
+  testes de aceitação da **API** (via HTTP) e do **frontend** (via navegador, Browser library —
+  [ADR-0077](docs/adr/0077-testes-de-frontend-com-robot-framework.md)). Ver [test/robot/README.md](test/robot/README.md)
 
 ## Branches e pipeline de CI/CD
 

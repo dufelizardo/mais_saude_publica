@@ -1,4 +1,4 @@
-# Testes de aceitação (Robot Framework) — Mais Saúde Pública API
+# Testes de aceitação (Robot Framework) — Mais Saúde Pública (API e frontend)
 
 Suíte de testes de aceitação/API em [Robot Framework](https://robotframework.org/), seguindo o
 **Layered Keyword-Driven Framework (LKDF)**: [dufelizardo/Layered-Keyword-Driven-Framework-LKDF](https://github.com/dufelizardo/Layered-Keyword-Driven-Framework-LKDF).
@@ -20,6 +20,35 @@ RH (Cargo, Categoria Salarial, Lotação, Vaga, Tabela Salarial, Benefícios, Re
 ficaram sem nenhum teste Robot, só JUnit.** Não foi uma decisão de arquitetura deliberada, foi a
 suíte parando de crescer junto com o backend. "Suíte completa" descreve o escopo histórico
 coberto, não uma licença para pular Robot em domínios novos.
+
+## ⚠️ Regra: toda tela nova ou refeita precisa de teste Robot de interface
+
+O frontend também é testado aqui, com Robot Framework e o mesmo LKDF
+([ADR-0077](../../docs/adr/0077-testes-de-frontend-com-robot-framework.md)). O navegador é controlado pela
+[Browser library](https://robotframework-browser.org/), que roda o Playwright por baixo. Playwright isolado,
+`ng e2e` e `.spec.ts` não servem como teste de aceitação de tela.
+
+- **Onde:**
+  - `src/pom/ui/<tela>/`: seletores e ações cruas, sem asserção;
+  - `src/flow/ui/<tela>/`: jornada e asserções;
+  - `src/scenario/ui/<tela>/`;
+  - `test/ui/<tela>/`.
+- **Seletores**, nesta ordem:
+  - o `id` dos campos (`f-<campo>`);
+  - papel e nome acessível (`role=tab[name="…"]`, `aria-label`);
+  - texto visível.
+
+  Classes CSS nunca, porque mudam com o visual.
+- **Dados:** semeados pelas keywords dos FLOWs de API (ex.: `Seed A Paciente`), não cadastrados clicando.
+- **Mínimo por tela:**
+  - abre;
+  - o fluxo principal funciona (gaveta de cadastro ou edição);
+  - a validação aparece;
+  - o estado vazio aparece;
+  - com autorização ligada, o que muda por permissão.
+- **Estado atual:** a base de interface ainda não existe. Faltam `robotframework-browser` em
+  `requirements.txt`, `rfbrowser init`, a sessão com login, a URL do frontend e o job no CI. As telas
+  entregues até a ADR-0076 estão sem cobertura de interface (lista na ADR-0077).
 
 ## Camadas (POM → FLOW → SCENARIO → TEST)
 
