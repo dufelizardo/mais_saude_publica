@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.models.Endereco;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -42,6 +43,15 @@ class AuditoriaControllerTest {
         Paciente p = new Paciente();
         p.setNome(NOME);
         p.setAtivo(true);
+        // O DTO de paciente exige endereço.
+        Endereco endereco = new Endereco();
+        endereco.setCep("01001-000");
+        endereco.setLogradouro("Praça da Sé");
+        endereco.setNumeroLogradouro("1");
+        endereco.setBairro("Sé");
+        endereco.setCidade("São Paulo");
+        endereco.setEstado("SP");
+        p.setEndereco(endereco);
         paciente = pacienteRepository.save(p);
     }
 

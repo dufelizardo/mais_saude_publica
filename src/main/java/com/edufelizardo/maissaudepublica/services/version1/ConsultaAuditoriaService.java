@@ -2,9 +2,6 @@ package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.models.EventoAuditoria;
-import com.edufelizardo.maissaudepublica.models.Paciente;
-import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
-import com.edufelizardo.maissaudepublica.models.Usuario;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EventoAuditoriaResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PaginaAuditoriaResponseDto;
 import com.edufelizardo.maissaudepublica.models.enuns.AcaoAuditoria;
@@ -26,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -131,12 +129,13 @@ public class ConsultaAuditoriaService {
         Set<String> cpfs = eventos.stream().map(EventoAuditoria::getUsuarioCpf).filter(Objects::nonNull).collect(Collectors.toSet());
         Set<UUID> pacientes = eventos.stream().map(EventoAuditoria::getPacienteId).filter(Objects::nonNull).collect(Collectors.toSet());
         Set<UUID> unidades = eventos.stream().map(EventoAuditoria::getUnidadeId).filter(Objects::nonNull).collect(Collectors.toSet());
-        Map<String, String> nomeUsuario = cpfs.isEmpty() ? Map.of() : usuarioRepository.findByCpfIn(cpfs).stream()
-                .collect(Collectors.toMap(Usuario::getCpf, Usuario::getNome, (a, b) -> a));
-        Map<UUID, String> nomePaciente = pacientes.isEmpty() ? Map.of() : pacienteRepository.findAllById(pacientes).stream()
-                .collect(Collectors.toMap(Paciente::getUuid, Paciente::getNome));
-        Map<UUID, String> nomeUnidade = unidades.isEmpty() ? Map.of() : unidadeDeSaudeRepository.findAllById(unidades).stream()
-                .collect(Collectors.toMap(UnidadeDeSaude::getUuid, UnidadeDeSaude::getNome));
+        // HashMap: eventos sem usuário, paciente ou unidade consultam com chave nula (Map.of() recusaria).
+        Map<String, String> nomeUsuario = new HashMap<>();
+        if (!cpfs.isEmpty()) usuarioRepository.findByCpfIn(cpfs).forEach(u -> nomeUsuario.putIfAbsent(u.getCpf(), u.getNome()));
+        Map<UUID, String> nomePaciente = new HashMap<>();
+        if (!pacientes.isEmpty()) pacienteRepository.findAllById(pacientes).forEach(p -> nomePaciente.put(p.getUuid(), p.getNome()));
+        Map<UUID, String> nomeUnidade = new HashMap<>();
+        if (!unidades.isEmpty()) unidadeDeSaudeRepository.findAllById(unidades).forEach(u -> nomeUnidade.put(u.getUuid(), u.getNome()));
         Function<EventoAuditoria, EventoAuditoriaResponseDto> dto = e -> EventoAuditoriaResponseDto.fromEvento(e,
                 nomeUsuario.get(e.getUsuarioCpf()), nomePaciente.get(e.getPacienteId()), nomeUnidade.get(e.getUnidadeId()));
         return eventos.stream().map(dto).toList();
