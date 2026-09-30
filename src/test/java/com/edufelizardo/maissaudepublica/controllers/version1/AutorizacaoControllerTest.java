@@ -56,6 +56,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -310,7 +311,7 @@ class AutorizacaoControllerTest {
     @Test
     void semAPermissaoDaRotaResponde403() throws Exception {
         mockMvc.perform(como(RECEP_A, get("/api/v1/triagem/"))).andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Forbidden"));
+                .andExpect(jsonPath("$.message", containsString("PRONTUARIO.CONSULTAR")));
         mockMvc.perform(como(SEM_PAPEL, get("/api/v1/paciente/"))).andExpect(status().isForbidden());
         mockMvc.perform(como(FARM_A, get("/api/v1/papel/"))).andExpect(status().isForbidden());
     }
@@ -406,9 +407,11 @@ class AutorizacaoControllerTest {
     @Test
     void farmaceuticoDeOutraUnidadeNaoDispensaNemVeOLote() throws Exception {
         mockMvc.perform(como(FARM_B, get("/api/v1/lote/" + loteA.getUuid()))).andExpect(status().isForbidden());
-        mockMvc.perform(como(FARM_B, get("/api/v1/lote/")))
+        // Sem lote na unidade do acesso, a listagem fica vazia — 404, convenção da listagem de lotes.
+        mockMvc.perform(como(FARM_B, get("/api/v1/lote/"))).andExpect(status().isNotFound());
+        mockMvc.perform(como(FARM_A, get("/api/v1/lote/")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].uuid", not(hasItem(loteA.getUuid().toString()))));
+                .andExpect(jsonPath("$[*].uuid", hasItem(loteA.getUuid().toString())));
         mockMvc.perform(como(FARM_A, get("/api/v1/lote/" + loteA.getUuid()))).andExpect(status().isOk());
     }
 
