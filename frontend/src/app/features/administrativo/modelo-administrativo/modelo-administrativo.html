@@ -1,0 +1,317 @@
+<header class="page-head">
+  <div>
+    <h1>Modelo administrativo</h1>
+    <p>O que cada tipo de unidade faz administrativamente: capacidades, processos, perfis e o perfil de cada tipo</p>
+  </div>
+  @if (pode('ADMINISTRATIVO.GERENCIAR')) {
+    <div class="page-actions">
+      <button type="button" class="btn" (click)="novoNaAba()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        {{ rotuloNovo() }}
+      </button>
+    </div>
+  }
+</header>
+
+<section class="stats" aria-label="Resumo do modelo administrativo">
+  <div class="stat">
+    <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Capacidades ativas</div>
+      <div class="stat__val mono">{{ resumo().capacidades }}</div>
+      <div class="stat__sub">{{ resumo().capacidadesInativas }} inativa(s)</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></span>
+    <div>
+      <div class="stat__lbl">Processos ativos</div>
+      <div class="stat__val mono">{{ resumo().processos }}</div>
+      <div class="stat__sub">{{ resumo().capacidadesSemProcesso }} capacidade(s) sem processo detalhado</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Perfis ativos</div>
+      <div class="stat__val mono">{{ resumo().perfis }}</div>
+      <div class="stat__sub">modelos de estrutura administrativa</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"></path><path d="M9 21v-6h6v6"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Tipos de unidade com perfil</div>
+      <div class="stat__val mono">{{ resumo().tiposComPerfil }}<small class="stat__unid"> de {{ tiposUnidade.length }}</small></div>
+      <div class="stat__sub">UBS, UPA, hospital, CAPS…</div>
+    </div>
+  </div>
+</section>
+
+<div class="page-tabs" role="tablist" aria-label="Seções do modelo administrativo">
+  @for (a of abas; track a.id) {
+    <button type="button" role="tab" [id]="'tab-' + a.id" [attr.aria-controls]="'pn-' + a.id" [attr.aria-selected]="aba() === a.id" [tabIndex]="aba() === a.id ? 0 : -1" (click)="selecionarAba(a.id)" (keydown)="navegarAbas($event)">
+      {{ a.rotulo }} <span class="cnt">{{ contagem(a.id) }}</span>
+    </button>
+  }
+</div>
+
+<!-- ── Capacidades ──────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'capacidades') {
+  <section class="card" id="pn-capacidades" role="tabpanel" aria-labelledby="tab-capacidades">
+    <div class="card__head">
+      <div>
+        <h2>Capacidades administrativas</h2>
+        <p class="sub">O que uma unidade pode ter de estrutura administrativa (ex.: compras, estoque, faturamento)</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar capacidade</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Código, nome ou descrição…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+      </div>
+    </div>
+    @if (carregando()) {
+      <p class="cell-sub" style="padding: var(--s-5);">Carregando…</p>
+    } @else if (!capacidadesFiltradas().length) {
+      <div class="empty"><strong>{{ capacidades().length ? 'Nenhuma capacidade com essa busca' : 'Nenhuma capacidade cadastrada' }}</strong></div>
+    } @else {
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th scope="col">Capacidade</th><th scope="col" class="num">Processos</th><th scope="col">Situação</th><th scope="col" class="num">Ações</th></tr></thead>
+          <tbody>
+            @for (c of capacidadesFiltradas(); track c.uuid) {
+              <tr>
+                <td>
+                  <span class="cell-main">{{ c.nome }} <span class="cell-sub mono" style="display: inline;">{{ c.codigo }}</span></span>
+                  @if (c.descricao) { <span class="cell-sub">{{ c.descricao }}</span> }
+                </td>
+                <td class="num mono">{{ processosPorCapacidade().get(c.uuid) ?? 0 }}</td>
+                <td>
+                  @if (c.ativo) { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Ativa</span> } @else { <span class="badge badge--muted">Inativa</span> }
+                </td>
+                <td class="num">
+                  <div class="row-actions">
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="verProcessos(c)">Processos</button>
+                    @if (pode('ADMINISTRATIVO.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirCatalogo('capacidade', c)">Editar</button> }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
+
+<!-- ── Processos ────────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'processos') {
+  <section class="card" id="pn-processos" role="tabpanel" aria-labelledby="tab-processos">
+    <div class="card__head">
+      <div>
+        <h2>Processos administrativos</h2>
+        <p class="sub">Detalhamento opcional de cada capacidade</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar processo</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Código, nome ou descrição…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+        <select class="sel" aria-label="Filtrar por capacidade" [value]="filtroCapacidade()" (change)="filtroCapacidade.set($any($event.target).value)">
+          <option value="">Todas as capacidades</option>
+          @for (c of capacidades(); track c.uuid) { <option [value]="c.uuid">{{ c.nome }}</option> }
+        </select>
+      </div>
+    </div>
+    @if (!processosFiltrados().length) {
+      <div class="empty"><strong>{{ processos().length ? 'Nenhum processo com esses filtros' : 'Nenhum processo cadastrado' }}</strong><span>Processos são opcionais: a capacidade vale mesmo sem eles.</span></div>
+    } @else {
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th scope="col">Processo</th><th scope="col">Capacidade</th><th scope="col">Situação</th>@if (pode('ADMINISTRATIVO.GERENCIAR')) { <th scope="col" class="num">Ações</th> }</tr></thead>
+          <tbody>
+            @for (p of processosFiltrados(); track p.uuid) {
+              <tr>
+                <td>
+                  <span class="cell-main">{{ p.nome }} <span class="cell-sub mono" style="display: inline;">{{ p.codigo }}</span></span>
+                  @if (p.descricao) { <span class="cell-sub">{{ p.descricao }}</span> }
+                </td>
+                <td>{{ p.capacidadeNome }}</td>
+                <td>@if (p.ativo) { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Ativo</span> } @else { <span class="badge badge--muted">Inativo</span> }</td>
+                @if (pode('ADMINISTRATIVO.GERENCIAR')) {
+                  <td class="num"><button type="button" class="btn btn--ghost btn--sm" (click)="abrirCatalogo('processo', p)">Editar</button></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
+
+<!-- ── Perfis ───────────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'perfis') {
+  <section class="card" id="pn-perfis" role="tabpanel" aria-labelledby="tab-perfis">
+    <div class="card__head">
+      <div>
+        <h2>Perfis administrativos</h2>
+        <p class="sub">Modelos de estrutura administrativa, atribuídos a tipos de unidade</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar perfil</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Código, nome ou descrição…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+      </div>
+    </div>
+    @if (!perfisFiltrados().length) {
+      <div class="empty"><strong>{{ perfis().length ? 'Nenhum perfil com essa busca' : 'Nenhum perfil cadastrado' }}</strong></div>
+    } @else {
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th scope="col">Perfil</th><th scope="col">Usado por</th><th scope="col">Situação</th>@if (pode('ADMINISTRATIVO.GERENCIAR')) { <th scope="col" class="num">Ações</th> }</tr></thead>
+          <tbody>
+            @for (p of perfisFiltrados(); track p.uuid) {
+              <tr>
+                <td>
+                  <span class="cell-main">{{ p.nome }} <span class="cell-sub mono" style="display: inline;">{{ p.codigo }}</span></span>
+                  @if (p.descricao) { <span class="cell-sub">{{ p.descricao }}</span> }
+                </td>
+                <td>
+                  @for (t of tiposPorPerfil().get(p.uuid) ?? []; track t) { <span class="badge badge--info" style="margin: 1px;">{{ t }}</span> }
+                  @empty { <span class="cell-sub">nenhum tipo de unidade</span> }
+                </td>
+                <td>@if (p.ativo) { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Ativo</span> } @else { <span class="badge badge--muted">Inativo</span> }</td>
+                @if (pode('ADMINISTRATIVO.GERENCIAR')) {
+                  <td class="num"><button type="button" class="btn btn--ghost btn--sm" (click)="abrirCatalogo('perfil', p)">Editar</button></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
+
+<!-- ── Perfil por tipo de unidade ───────────────────────────────────────────────────────────── -->
+@if (aba() === 'tipos') {
+  <section class="card" id="pn-tipos" role="tabpanel" aria-labelledby="tab-tipos">
+    <div class="card__head">
+      <div>
+        <h2>Perfil por tipo de unidade</h2>
+        <p class="sub">Cada tipo de unidade de saúde usa um perfil administrativo. Os níveis de gestão (federal a regional) não entram.</p>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th scope="col">Tipo de unidade</th><th scope="col">Perfil administrativo</th>@if (pode('ADMINISTRATIVO.GERENCIAR')) { <th scope="col" class="num">Ações</th> }</tr></thead>
+        <tbody>
+          @for (t of tiposUnidade; track t.valor) {
+            @let m = mapeamentoPorTipo().get(t.valor);
+            <tr>
+              <td class="cell-main">{{ t.rotulo }}</td>
+              <td>
+                @if (m) { {{ m.perfilAdministrativoNome }} <span class="cell-sub mono" style="display: inline;">{{ m.perfilAdministrativoCodigo }}</span> }
+                @else { <span class="badge badge--warn">Sem perfil</span> }
+              </td>
+              @if (pode('ADMINISTRATIVO.GERENCIAR')) {
+                <td class="num">
+                  @if (m) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirMapeamento(m)">Trocar</button> }
+                  @else { <button type="button" class="btn btn--ghost btn--sm" [disabled]="!perfis().length" (click)="abrirMapeamento(null, t.valor)">Definir</button> }
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Gavetas ──────────────────────────────────────────────────────────────────────────────── -->
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="tituloGaveta(g)" (fechar)="fecharGaveta()">
+    @if (g.tipo === 'mapeamento') {
+      <form class="dw-form" [formGroup]="mapeamentoForm" (ngSubmit)="salvar()" novalidate>
+        <div class="dw-body">
+          @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+          <div class="dw-field">
+            <label for="f-tipo">Tipo de unidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+            <select id="f-tipo" formControlName="tipo" [attr.aria-invalid]="!!erro('tipo')" aria-describedby="e-tipo">
+              <option value="">Selecione…</option>
+              @for (t of tiposDisponiveis(); track t.valor) { <option [value]="t.valor">{{ t.rotulo }}</option> }
+            </select>
+            @if (erro('tipo')) { <p class="dw-err" id="e-tipo">{{ erro('tipo') }}</p> }
+          </div>
+          <div class="dw-field">
+            <label for="f-perfilAdministrativoId">Perfil administrativo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+            <select id="f-perfilAdministrativoId" formControlName="perfilAdministrativoId" [attr.aria-invalid]="!!erro('perfilAdministrativoId')" aria-describedby="e-perfilAdministrativoId">
+              <option value="">Selecione…</option>
+              @for (p of perfis(); track p.uuid) { <option [value]="p.uuid">{{ p.nome }} ({{ p.codigo }})@if (!p.ativo) { · inativo }</option> }
+            </select>
+            @if (erro('perfilAdministrativoId')) { <p class="dw-err" id="e-perfilAdministrativoId">{{ erro('perfilAdministrativoId') }}</p> }
+          </div>
+        </div>
+        <footer class="dw-foot">
+          <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+          <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Salvar' }}</button>
+        </footer>
+      </form>
+    } @else {
+      <form class="dw-form" [formGroup]="catalogoForm" (ngSubmit)="salvar()" novalidate>
+        <div class="dw-body">
+          @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+          @if (g.tipo === 'processo') {
+            <div class="dw-field">
+              <label for="f-capacidadeId">Capacidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-capacidadeId" formControlName="capacidadeId" [attr.aria-invalid]="!!erro('capacidadeId')" aria-describedby="e-capacidadeId">
+                <option value="">Selecione…</option>
+                @for (c of capacidades(); track c.uuid) { <option [value]="c.uuid">{{ c.nome }} ({{ c.codigo }})</option> }
+              </select>
+              @if (erro('capacidadeId')) { <p class="dw-err" id="e-capacidadeId">{{ erro('capacidadeId') }}</p> }
+            </div>
+          }
+          <div class="dw-row">
+            <div class="dw-field">
+              <label for="f-codigo">Código <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-codigo" type="text" class="mono" formControlName="codigo" autocomplete="off" [attr.aria-invalid]="!!erro('codigo')" aria-describedby="e-codigo" />
+              @if (erro('codigo')) { <p class="dw-err" id="e-codigo">{{ erro('codigo') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nome" type="text" formControlName="nome" autocomplete="off" [attr.aria-invalid]="!!erro('nome')" aria-describedby="e-nome" />
+              @if (erro('nome')) { <p class="dw-err" id="e-nome">{{ erro('nome') }}</p> }
+            </div>
+          </div>
+          <div class="dw-field">
+            <label for="f-descricao">Descrição<span class="opt">opcional</span></label>
+            <textarea id="f-descricao" rows="3" formControlName="descricao"></textarea>
+          </div>
+          <div class="dw-field">
+            <label class="switch" for="f-ativo">
+              <span><b style="font-weight: 500;">Ativo</b><span class="cell-sub" id="h-ativo">Inativo, continua no catálogo mas não é oferecido para escolha</span></span>
+              <input type="checkbox" role="switch" id="f-ativo" formControlName="ativo" aria-describedby="h-ativo" />
+            </label>
+          </div>
+        </div>
+        <footer class="dw-foot">
+          <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+          <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.item ? 'Salvar alterações' : 'Cadastrar') }}</button>
+        </footer>
+      </form>
+    }
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}

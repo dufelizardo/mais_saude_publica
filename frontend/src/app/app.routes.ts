@@ -5,12 +5,6 @@ import { ProfissionaisLista } from './features/profissionais-lista/profissionais
 import { ProfissionalPerfil } from './features/profissional-perfil/profissional-perfil';
 import { FolhaPagamento } from './features/rh/folha-pagamento/folha-pagamento';
 import { Setores } from './features/administrativo/setores/setores';
-import { CapacidadesAdministrativas } from './features/administrativo/capacidades-administrativas/capacidades-administrativas';
-import { PerfisAdministrativos } from './features/administrativo/perfis-administrativos/perfis-administrativos';
-import { PerfisPorTipoUnidade } from './features/administrativo/perfis-por-tipo-unidade/perfis-por-tipo-unidade';
-import { ProcessosAdministrativos } from './features/administrativo/processos-administrativos/processos-administrativos';
-import { ResponsabilidadesAdministrativas } from './features/administrativo/responsabilidades-administrativas/responsabilidades-administrativas';
-import { NecessidadesDePessoal } from './features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal';
 import { Pacientes } from './features/assistencia/pacientes/pacientes';
 import { Atendimentos } from './features/assistencia/atendimentos/atendimentos';
 import { Farmacia } from './features/assistencia/farmacia/farmacia';
@@ -70,12 +64,22 @@ export const routes: Routes = [
       { path: 'rh/vagas', redirectTo: () => para('/rh/recrutamento', {}) },
       { path: 'rh/vagas/:vagaId/candidatos', redirectTo: ({ params }) => para('/rh/recrutamento', { vaga: params['vagaId'] }) },
       { path: 'administrativo/setores', component: Setores, data: { breadcrumb: 'Setores', area: 'Administrativo' } },
-      { path: 'administrativo/capacidades', component: CapacidadesAdministrativas, data: { breadcrumb: 'Capacidades administrativas', area: 'Administrativo' } },
-      { path: 'administrativo/perfis', component: PerfisAdministrativos, data: { breadcrumb: 'Perfis administrativos', area: 'Administrativo' } },
-      { path: 'administrativo/perfis-por-tipo-unidade', component: PerfisPorTipoUnidade, data: { breadcrumb: 'Perfil por tipo de unidade', area: 'Administrativo' } },
-      { path: 'administrativo/processos', component: ProcessosAdministrativos, data: { breadcrumb: 'Processos administrativos', area: 'Administrativo' } },
-      { path: 'administrativo/responsabilidades', component: ResponsabilidadesAdministrativas, data: { breadcrumb: 'Responsabilidades administrativas', area: 'Administrativo' } },
-      { path: 'administrativo/necessidades-de-pessoal', component: NecessidadesDePessoal, data: { breadcrumb: 'Necessidades de pessoal', area: 'Administrativo' } },
+      {
+        path: 'administrativo/modelo',
+        loadComponent: () => import('./features/administrativo/modelo-administrativo/modelo-administrativo').then((m) => m.ModeloAdministrativo),
+        data: { breadcrumb: 'Modelo administrativo', area: 'Administrativo' },
+      },
+      {
+        path: 'administrativo/necessidades-de-pessoal',
+        loadComponent: () => import('./features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal').then((m) => m.NecessidadesDePessoal),
+        data: { breadcrumb: 'Necessidades de pessoal', area: 'Administrativo' },
+      },
+      // Telas antigas do Administrativo → a aba certa nas telas agrupadas (ADR-0074).
+      { path: 'administrativo/responsabilidades', redirectTo: ({ queryParams }) => para('/administrativo/setores', { ...queryParams, aba: 'responsabilidades' }) },
+      { path: 'administrativo/capacidades', redirectTo: () => para('/administrativo/modelo', { aba: 'capacidades' }) },
+      { path: 'administrativo/processos', redirectTo: () => para('/administrativo/modelo', { aba: 'processos' }) },
+      { path: 'administrativo/perfis', redirectTo: () => para('/administrativo/modelo', { aba: 'perfis' }) },
+      { path: 'administrativo/perfis-por-tipo-unidade', redirectTo: () => para('/administrativo/modelo', { aba: 'tipos' }) },
       { path: 'assistencia/pacientes', component: Pacientes, data: { breadcrumb: 'Pacientes', area: 'Assistência' } },
       { path: 'assistencia/atendimentos', component: Atendimentos, data: { breadcrumb: 'Atendimentos', area: 'Assistência' } },
       // Agendamentos, Consultas, Procedimentos e Prontuário viraram abas/seções da tela Atendimentos (ADR-0063).
