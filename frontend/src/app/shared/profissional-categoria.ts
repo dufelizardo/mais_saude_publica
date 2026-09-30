@@ -1,4 +1,5 @@
-import { ProfissionalResponseDto, QuadroProfissionalResponseDto } from '../core/models/profissional';
+import { TipoAfastamento } from '../core/models/afastamento';
+import { ProfissionalResponseDto } from '../core/models/profissional';
 
 /**
  * Categoria do profissional pelo conselho de classe (ADR-0072) — usada na tela Profissionais e no cabeçalho do
@@ -29,11 +30,24 @@ export function categoriaDoProfissional(p: ProfissionalResponseDto): CategoriaPr
   return CATEGORIAS_PROFISSIONAL.find((c) => c.id === id)!;
 }
 
+/** "Dra. Ana Paula Souza" → "AS" (ignora tratamento e partículas curtas). */
+export function iniciaisDoNome(nome: string): string {
+  const partes = nome.replace(/^(dra?\.?|enf\.?|t[eé]c\.?)\s+/i, '').trim().split(/\s+/).filter((p) => p.length > 2);
+  return ((partes[0]?.[0] ?? '?') + (partes.length > 1 ? partes[partes.length - 1][0] : '')).toUpperCase();
+}
+
+/** O que a situação precisa: o item do quadro ou, no perfil, a lotação e o afastamento vigentes. */
+export interface EntradaSituacao {
+  profissional: ProfissionalResponseDto;
+  lotacao?: unknown;
+  afastamento?: { tipo: TipoAfastamento; dataFim: string } | null;
+}
+
 /**
  * Situação para a etiqueta e o ponto do avatar. Licença médica não é nomeada — motivo de saúde é dado sensível
  * (ADR-0072): aparece só "Afastado até".
  */
-export function situacaoDoProfissional(i: QuadroProfissionalResponseDto): { rotulo: string; classe: string; ponto: '' | 'away' | 'leave' | 'off' } {
+export function situacaoDoProfissional(i: EntradaSituacao): { rotulo: string; classe: string; ponto: '' | 'away' | 'leave' | 'off' } {
   const p = i.profissional;
   if (!p.ativo) return { rotulo: `Desligado${p.dataDesligamento ? ' em ' + dataCurta(p.dataDesligamento, true) : ''}`, classe: 'muted', ponto: 'off' };
   if (i.afastamento?.tipo === 'FERIAS') return { rotulo: `Em férias até ${dataCurta(i.afastamento.dataFim)}`, classe: 'warn', ponto: 'away' };
