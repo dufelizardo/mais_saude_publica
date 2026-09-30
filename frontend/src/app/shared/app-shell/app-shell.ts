@@ -20,8 +20,6 @@ const ADMINISTRATIVO = ['ADMINISTRATIVO.CONSULTAR', 'ADMINISTRATIVO.GERENCIAR'];
  * não oferece o que responderia 403.
  */
 const MENU: Record<string, string[]> = {
-  '/profissionais/novo': ['RH.GERENCIAR'],
-  '/profissionais/desligar': ['RH.GERENCIAR'],
   '/rh': RH,
   '/administrativo': ADMINISTRATIVO,
   '/administrativo/setores': [],
