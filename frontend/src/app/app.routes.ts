@@ -3,17 +3,7 @@ import { Routes, Params, Router } from '@angular/router';
 import { LandingPage } from './features/landing/landing-page';
 import { ProfissionaisLista } from './features/profissionais-lista/profissionais-lista';
 import { ProfissionalPerfil } from './features/profissional-perfil/profissional-perfil';
-import { CategoriasSalariais } from './features/rh/categorias-salariais/categorias-salariais';
-import { Cargos } from './features/rh/cargos/cargos';
-import { CargoTabelaSalarial } from './features/rh/cargo-tabela-salarial/cargo-tabela-salarial';
-import { RegrasAnuenio } from './features/rh/regras-anuenio/regras-anuenio';
 import { FolhaPagamento } from './features/rh/folha-pagamento/folha-pagamento';
-import { Treinamentos } from './features/rh/treinamentos/treinamentos';
-import { CiclosAvaliacao } from './features/rh/ciclos-avaliacao/ciclos-avaliacao';
-import { Vagas } from './features/rh/vagas/vagas';
-import { VagaCandidatos } from './features/rh/vaga-candidatos/vaga-candidatos';
-import { TiposBeneficio } from './features/rh/tipos-beneficio/tipos-beneficio';
-import { TipoBeneficioValores } from './features/rh/tipo-beneficio-valores/tipo-beneficio-valores';
 import { Setores } from './features/administrativo/setores/setores';
 import { CapacidadesAdministrativas } from './features/administrativo/capacidades-administrativas/capacidades-administrativas';
 import { PerfisAdministrativos } from './features/administrativo/perfis-administrativos/perfis-administrativos';
@@ -46,17 +36,39 @@ export const routes: Routes = [
         redirectTo: ({ queryParams }) => inject(Router).createUrlTree(['/profissionais'], { queryParams: { acao: 'desligar', ...queryParams } }),
       },
       { path: 'profissionais/perfil', component: ProfissionalPerfil, data: { breadcrumb: 'Perfil do profissional', area: 'Recursos Humanos' } },
-      { path: 'rh/categorias-salariais', component: CategoriasSalariais, data: { breadcrumb: 'Categorias salariais', area: 'Recursos Humanos' } },
-      { path: 'rh/cargos', component: Cargos, data: { breadcrumb: 'Cargos', area: 'Recursos Humanos' } },
-      { path: 'rh/cargos/:cargoId/tabela-salarial', component: CargoTabelaSalarial, data: { breadcrumb: 'Tabela salarial', area: 'Recursos Humanos' } },
-      { path: 'rh/regras-anuenio', component: RegrasAnuenio, data: { breadcrumb: 'Regras de anuênio', area: 'Recursos Humanos' } },
+      // Catálogos de RH agrupados em telas com abas (ADR-0073), carregadas sob demanda.
+      {
+        path: 'rh/cargos-e-salarios',
+        loadComponent: () => import('./features/rh/cargos-e-salarios/cargos-e-salarios').then((m) => m.CargosESalarios),
+        data: { breadcrumb: 'Cargos & salários', area: 'Recursos Humanos' },
+      },
+      {
+        path: 'rh/beneficios',
+        loadComponent: () => import('./features/rh/beneficios/beneficios').then((m) => m.Beneficios),
+        data: { breadcrumb: 'Benefícios', area: 'Recursos Humanos' },
+      },
+      {
+        path: 'rh/desenvolvimento',
+        loadComponent: () => import('./features/rh/desenvolvimento/desenvolvimento').then((m) => m.Desenvolvimento),
+        data: { breadcrumb: 'Desenvolvimento', area: 'Recursos Humanos' },
+      },
+      {
+        path: 'rh/recrutamento',
+        loadComponent: () => import('./features/rh/recrutamento/recrutamento').then((m) => m.Recrutamento),
+        data: { breadcrumb: 'Recrutamento', area: 'Recursos Humanos' },
+      },
       { path: 'rh/folha-pagamento', component: FolhaPagamento, data: { breadcrumb: 'Folha de pagamento', area: 'Recursos Humanos' } },
-      { path: 'rh/treinamentos', component: Treinamentos, data: { breadcrumb: 'Catálogo de treinamentos', area: 'Recursos Humanos' } },
-      { path: 'rh/ciclos-avaliacao', component: CiclosAvaliacao, data: { breadcrumb: 'Ciclos de avaliação', area: 'Recursos Humanos' } },
-      { path: 'rh/vagas', component: Vagas, data: { breadcrumb: 'Vagas', area: 'Recursos Humanos' } },
-      { path: 'rh/vagas/:vagaId/candidatos', component: VagaCandidatos, data: { breadcrumb: 'Candidatos', area: 'Recursos Humanos' } },
-      { path: 'rh/tipos-beneficio', component: TiposBeneficio, data: { breadcrumb: 'Tipos de benefício', area: 'Recursos Humanos' } },
-      { path: 'rh/tipos-beneficio/:tipoId/valores', component: TipoBeneficioValores, data: { breadcrumb: 'Valores do benefício', area: 'Recursos Humanos' } },
+      // Rotas antigas dos catálogos → a aba (ou a gaveta) certa na tela nova.
+      { path: 'rh/categorias-salariais', redirectTo: () => para('/rh/cargos-e-salarios', { aba: 'categorias' }) },
+      { path: 'rh/cargos', redirectTo: () => para('/rh/cargos-e-salarios', {}) },
+      { path: 'rh/cargos/:cargoId/tabela-salarial', redirectTo: ({ params }) => para('/rh/cargos-e-salarios', { cargo: params['cargoId'] }) },
+      { path: 'rh/regras-anuenio', redirectTo: () => para('/rh/cargos-e-salarios', { aba: 'anuenio' }) },
+      { path: 'rh/tipos-beneficio', redirectTo: () => para('/rh/beneficios', {}) },
+      { path: 'rh/tipos-beneficio/:tipoId/valores', redirectTo: ({ params }) => para('/rh/beneficios', { tipo: params['tipoId'] }) },
+      { path: 'rh/treinamentos', redirectTo: () => para('/rh/desenvolvimento', {}) },
+      { path: 'rh/ciclos-avaliacao', redirectTo: () => para('/rh/desenvolvimento', { aba: 'ciclos' }) },
+      { path: 'rh/vagas', redirectTo: () => para('/rh/recrutamento', {}) },
+      { path: 'rh/vagas/:vagaId/candidatos', redirectTo: ({ params }) => para('/rh/recrutamento', { vaga: params['vagaId'] }) },
       { path: 'administrativo/setores', component: Setores, data: { breadcrumb: 'Setores', area: 'Administrativo' } },
       { path: 'administrativo/capacidades', component: CapacidadesAdministrativas, data: { breadcrumb: 'Capacidades administrativas', area: 'Administrativo' } },
       { path: 'administrativo/perfis', component: PerfisAdministrativos, data: { breadcrumb: 'Perfis administrativos', area: 'Administrativo' } },
@@ -86,6 +98,10 @@ export const routes: Routes = [
     ],
   },
 ];
+
+function para(caminho: string, queryParams: Params) {
+  return inject(Router).createUrlTree([caminho], { queryParams });
+}
 
 function paraAtendimentos(aba: string, queryParams: Params) {
   return inject(Router).createUrlTree(['/assistencia/atendimentos'], { queryParams: { ...queryParams, aba } });

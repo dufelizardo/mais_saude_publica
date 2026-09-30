@@ -1324,6 +1324,24 @@ tr.row-link:focus-visible { outline: 2px solid var(--blue-700); outline-offset: 
 .prof__actions .btn { padding: 7px 12px; min-height: 36px; font-size: 0.8125rem; }
 .pagination--solta { border: 1px solid var(--ink-200); border-radius: var(--r-lg); background: var(--white); margin-top: var(--s-3); }
 
+/* ====== Catálogos de RH (ver ADR-0073) ====== */
+.valor-vigente { display: grid; gap: 2px; background: var(--ok-bg); border: 1px solid rgba(31,138,91,0.25); border-radius: 10px; padding: 12px 14px; }
+.valor-vigente__lbl { font-size: 0.7rem; color: var(--ok); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.valor-vigente__val { font-size: 1.5rem; font-weight: 600; color: var(--ink-900); font-variant-numeric: tabular-nums; }
+.opcoes-custeio { display: grid; gap: 6px; }
+.opcao-custeio { display: flex; gap: 10px; align-items: flex-start; border: 1.5px solid var(--ink-200); border-radius: 10px; padding: 10px 12px; cursor: pointer; }
+.opcao-custeio:has(input:checked) { border-color: var(--blue-700); background: var(--blue-50); }
+.opcao-custeio input { margin-top: 3px; accent-color: var(--blue-700); min-height: 0; }
+.opcao-custeio > span { display: grid; gap: 2px; }
+.competencia { display: inline-flex; align-items: center; gap: 6px; background: var(--white); border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: 6px; margin-bottom: var(--s-4); }
+.competencia__campo { position: relative; display: inline-flex; align-items: center; min-width: 190px; justify-content: center; }
+.competencia__rotulo { font-weight: 600; font-size: 0.9375rem; padding: 6px 10px; pointer-events: none; }
+.competencia__campo input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.competencia:focus-within { border-color: var(--blue-700); }
+.stat__val--moeda { font-size: 1.25rem; }
+tfoot .linha-total th, tfoot .linha-total td { border-top: 2px solid var(--ink-200); background: var(--ink-50); font-weight: 600; }
+tfoot .linha-total th { text-align: left; }
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }

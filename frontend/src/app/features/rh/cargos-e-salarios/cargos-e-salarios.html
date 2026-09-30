@@ -1,0 +1,409 @@
+<header class="page-head">
+  <div>
+    <h1>Cargos &amp; salários</h1>
+    <p>Estrutura de remuneração: categorias salariais, cargos com a tabela salarial e regras de anuênio</p>
+  </div>
+  @if (pode('RH.GERENCIAR')) {
+    <div class="page-actions">
+      <button type="button" class="btn btn--ghost" (click)="abrirCategoria(null)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Nova categoria
+      </button>
+      <button type="button" class="btn" (click)="abrirCargo(null)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+        Novo cargo
+      </button>
+    </div>
+  }
+</header>
+
+<section class="stats" aria-label="Resumo da estrutura de remuneração">
+  <div class="stat">
+    <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Categorias salariais</div>
+      <div class="stat__val mono">{{ resumo().categorias }}</div>
+      <div class="stat__sub">{{ resumo().convencoes }} convenção(ões) coletiva(s)</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Cargos</div>
+      <div class="stat__val mono">{{ resumo().cargos }}</div>
+      <div class="stat__sub">{{ resumo().semDescricao }} sem descrição</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+    <div>
+      <div class="stat__lbl">Regras de anuênio</div>
+      <div class="stat__val mono">{{ resumo().regras }}</div>
+      <div class="stat__sub">uma por categoria</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Categorias sem anuênio</div>
+      <div class="stat__val mono">{{ resumo().semRegra }}</div>
+      <div class="stat__sub">sem adicional por tempo de serviço</div>
+    </div>
+  </div>
+</section>
+
+<div class="page-tabs" role="tablist" aria-label="Seções de cargos e salários">
+  @for (a of abas; track a.id) {
+    <button type="button" role="tab" [id]="'tab-' + a.id" [attr.aria-controls]="'pn-' + a.id" [attr.aria-selected]="aba() === a.id" [tabIndex]="aba() === a.id ? 0 : -1" (click)="selecionarAba(a.id)" (keydown)="navegarAbas($event)">
+      {{ a.rotulo }} <span class="cnt">{{ contagem(a.id) }}</span>
+    </button>
+  }
+</div>
+
+<!-- ── Cargos ───────────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'cargos') {
+  <section class="card" id="pn-cargos" role="tabpanel" aria-labelledby="tab-cargos">
+    <div class="card__head">
+      <div>
+        <h2>Cargos</h2>
+        <p class="sub">Clique no cargo para ver e reajustar a tabela salarial</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar cargo</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Cargo ou descrição…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+        <select class="sel" aria-label="Filtrar por categoria" [value]="filtroCategoria()" (change)="filtroCategoria.set($any($event.target).value)">
+          <option value="">Todas as categorias</option>
+          @for (c of categorias(); track c.uuid) { <option [value]="c.uuid">{{ c.nome }}</option> }
+        </select>
+      </div>
+    </div>
+    @if (carregando()) {
+      <p class="cell-sub" style="padding: var(--s-5);">Carregando…</p>
+    } @else if (!cargosFiltrados().length) {
+      <div class="empty">
+        <strong>{{ cargos().length ? 'Nenhum cargo com esses filtros' : 'Nenhum cargo cadastrado' }}</strong>
+        @if (!cargos().length && pode('RH.GERENCIAR')) {
+          <span>{{ categorias().length ? 'Cadastre o primeiro cargo.' : 'Comece pela categoria salarial: todo cargo pertence a uma.' }}</span>
+        }
+      </div>
+    } @else {
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Cargo</th>
+              <th scope="col">Categoria salarial</th>
+              <th scope="col">Anuênio da categoria</th>
+              <th scope="col" class="num">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of cargosFiltrados(); track c.uuid) {
+              <tr class="row-link" tabindex="0" (click)="abrirTabela(c)" (keydown)="teclaNaLinha($event, c)" [attr.aria-label]="'Tabela salarial de ' + c.nome">
+                <td>
+                  <span class="cell-main">{{ c.nome }}</span>
+                  <span class="cell-sub">{{ c.descricao || 'Sem descrição' }}</span>
+                </td>
+                <td>{{ c.categoriaNome }}</td>
+                <td>
+                  @if (regraPorCategoria().get(c.categoriaUuid); as r) {
+                    <span class="badge badge--purple">{{ r.percentualPorAno }}% ao ano@if (r.tetoAnos) { · até {{ r.tetoAnos }} anos }</span>
+                  } @else { <span class="cell-sub">—</span> }
+                </td>
+                <td class="num">
+                  <div class="row-actions">
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="$event.stopPropagation(); abrirTabela(c)">Tabela salarial</button>
+                    @if (pode('RH.GERENCIAR')) {
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="$event.stopPropagation(); abrirCargo(c)">Editar</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
+
+<!-- ── Categorias salariais ─────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'categorias') {
+  <section class="card" id="pn-categorias" role="tabpanel" aria-labelledby="tab-categorias">
+    <div class="card__head">
+      <div>
+        <h2>Categorias salariais</h2>
+        <p class="sub">Nível em que um dissídio ou convenção coletiva se aplica</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar categoria</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Categoria ou convenção…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+      </div>
+    </div>
+    @if (!categoriasFiltradas().length) {
+      <div class="empty"><strong>{{ categorias().length ? 'Nenhuma categoria com essa busca' : 'Nenhuma categoria salarial cadastrada' }}</strong></div>
+    } @else {
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Categoria</th>
+              <th scope="col">Convenção coletiva</th>
+              <th scope="col" class="num">Cargos</th>
+              <th scope="col">Anuênio</th>
+              @if (pode('RH.GERENCIAR')) { <th scope="col" class="num">Ações</th> }
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of categoriasFiltradas(); track c.uuid) {
+              <tr>
+                <td class="cell-main">{{ c.nome }}</td>
+                <td>{{ c.convencaoColetiva || '—' }}</td>
+                <td class="num mono">{{ cargosPorCategoria().get(c.uuid) ?? 0 }}</td>
+                <td>
+                  @if (regraPorCategoria().get(c.uuid); as r) {
+                    <span class="badge badge--purple">{{ r.percentualPorAno }}% ao ano</span>
+                  } @else { <span class="badge badge--muted">Sem regra</span> }
+                </td>
+                @if (pode('RH.GERENCIAR')) {
+                  <td class="num"><button type="button" class="btn btn--ghost btn--sm" (click)="abrirCategoria(c)">Editar</button></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
+
+<!-- ── Regras de anuênio ────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'anuenio') {
+  <section class="card" id="pn-anuenio" role="tabpanel" aria-labelledby="tab-anuenio">
+    <div class="card__head">
+      <div>
+        <h2>Regras de anuênio</h2>
+        <p class="sub">Adicional por tempo de serviço, por categoria salarial — percentual por ano e teto opcional</p>
+      </div>
+      @if (pode('RH.GERENCIAR')) {
+        <button type="button" class="btn btn--ghost btn--sm" [disabled]="!categoriasSemRegra().length" [title]="categoriasSemRegra().length ? '' : 'Todas as categorias já têm regra'" (click)="abrirRegra(null)">+ Nova regra</button>
+      }
+    </div>
+    @if (!regrasOrdenadas().length) {
+      <div class="empty"><strong>Nenhuma regra de anuênio cadastrada</strong><span>Sem regra, a categoria não tem adicional por tempo de serviço.</span></div>
+    } @else {
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Categoria salarial</th>
+              <th scope="col" class="num">% ao ano</th>
+              <th scope="col" class="num">Teto</th>
+              @if (pode('RH.GERENCIAR')) { <th scope="col" class="num">Ações</th> }
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of regrasOrdenadas(); track r.uuid) {
+              <tr>
+                <td class="cell-main">{{ r.categoriaNome }}</td>
+                <td class="num mono">{{ r.percentualPorAno }}%</td>
+                <td class="num mono">{{ r.tetoAnos ? r.tetoAnos + ' anos' : 'sem teto' }}</td>
+                @if (pode('RH.GERENCIAR')) {
+                  <td class="num"><button type="button" class="btn btn--ghost btn--sm" (click)="abrirRegra(r)">Editar</button></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
+
+<!-- ── Gavetas ──────────────────────────────────────────────────────────────────────────────── -->
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="tituloGaveta(g)" [larga]="g.tipo === 'tabela'" (fechar)="fecharGaveta()">
+    @switch (g.tipo) {
+      @case ('cargo') {
+        <form class="dw-form" [formGroup]="cargoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-categoriaId">Categoria salarial <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-categoriaId" formControlName="categoriaId" [attr.aria-invalid]="!!erro('categoriaId')" aria-describedby="e-categoriaId">
+                <option value="">Selecione…</option>
+                @for (c of categorias(); track c.uuid) { <option [value]="c.uuid">{{ c.nome }}</option> }
+              </select>
+              @if (erro('categoriaId')) { <p class="dw-err" id="e-categoriaId">{{ erro('categoriaId') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-nome">Nome do cargo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nome" type="text" formControlName="nome" autocomplete="off" placeholder="Ex.: Enfermeiro" [attr.aria-invalid]="!!erro('nome')" aria-describedby="e-nome" />
+              @if (erro('nome')) { <p class="dw-err" id="e-nome">{{ erro('nome') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-descricao">Descrição<span class="opt">opcional</span></label>
+              <textarea id="f-descricao" rows="4" formControlName="descricao" placeholder="Atribuições do cargo — aparece também nas vagas"></textarea>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.cargo ? 'Salvar alterações' : 'Cadastrar cargo') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('categoria') {
+        <form class="dw-form" [formGroup]="categoriaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nome" type="text" formControlName="nome" autocomplete="off" placeholder="Ex.: Profissionais de enfermagem" [attr.aria-invalid]="!!erro('nome')" aria-describedby="e-nome" />
+              @if (erro('nome')) { <p class="dw-err" id="e-nome">{{ erro('nome') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-convencaoColetiva">Convenção coletiva<span class="opt">opcional</span></label>
+              <input id="f-convencaoColetiva" type="text" formControlName="convencaoColetiva" placeholder="Ex.: SINDSAUDE-SP 2026" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.categoria ? 'Salvar alterações' : 'Cadastrar categoria') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('regra') {
+        <form class="dw-form" [formGroup]="regraForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-categoriaId">Categoria salarial <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              @if (g.regra) {
+                <input id="f-categoriaId" type="text" [value]="g.regra.categoriaNome" disabled aria-describedby="h-categoria" />
+                <p class="dw-hint" id="h-categoria">A categoria de uma regra não muda.</p>
+              } @else {
+                <select id="f-categoriaId" formControlName="categoriaId" [attr.aria-invalid]="!!erro('categoriaId')" aria-describedby="e-categoriaId">
+                  <option value="">Selecione…</option>
+                  @for (c of categoriasSemRegra(); track c.uuid) { <option [value]="c.uuid">{{ c.nome }}</option> }
+                </select>
+                @if (erro('categoriaId')) { <p class="dw-err" id="e-categoriaId">{{ erro('categoriaId') }}</p> }
+              }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-percentualPorAno">% por ano <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-percentualPorAno" type="text" inputmode="decimal" class="mono" formControlName="percentualPorAno" placeholder="1" [attr.aria-invalid]="!!erro('percentualPorAno')" aria-describedby="e-percentualPorAno" />
+                @if (erro('percentualPorAno')) { <p class="dw-err" id="e-percentualPorAno">{{ erro('percentualPorAno') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-tetoAnos">Teto em anos<span class="opt">opcional</span></label>
+                <input id="f-tetoAnos" type="number" min="1" class="mono" formControlName="tetoAnos" placeholder="35" [attr.aria-invalid]="!!erro('tetoAnos')" aria-describedby="h-teto e-tetoAnos" />
+                <p class="dw-hint" id="h-teto">Sem teto, o adicional cresce enquanto houver tempo de serviço.</p>
+                @if (erro('tetoAnos')) { <p class="dw-err" id="e-tetoAnos">{{ erro('tetoAnos') }}</p> }
+              </div>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.regra ? 'Salvar alterações' : 'Cadastrar regra') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('tabela') {
+        <form class="dw-form" [formGroup]="valorForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            <dl class="ro">
+              <div><dt>Cargo</dt><dd>{{ g.cargo.nome }}</dd></div>
+              <div><dt>Categoria salarial</dt><dd>{{ g.cargo.categoriaNome }}</dd></div>
+              @if (g.cargo.descricao) { <div style="grid-column: 1 / -1;"><dt>Descrição</dt><dd style="font-weight: 400;">{{ g.cargo.descricao }}</dd></div> }
+            </dl>
+
+            @if (historico() === null) {
+              <p class="cell-sub">Carregando tabela salarial…</p>
+            } @else {
+              @if (vigente(); as v) {
+                <div class="valor-vigente">
+                  <span class="valor-vigente__lbl">Valor base vigente</span>
+                  <span class="valor-vigente__val mono">{{ moeda(v.valorBase) }}</span>
+                  <span class="cell-sub">desde {{ dataBr(v.dataVigencia) }} · {{ rotuloMotivo(v.motivo) }}</span>
+                </div>
+              } @else {
+                <div class="box box--warn"><span>Este cargo ainda não tem valor base vigente.</span></div>
+              }
+
+              <section class="dsec">
+                <div class="dsec__h"><h3>Histórico <span class="cnt">{{ historico()!.length }}</span></h3></div>
+                @if (historico()!.length) {
+                  <div class="tbl-wrap">
+                    <table>
+                      <thead><tr><th scope="col">Vigência</th><th scope="col" class="num">Valor base</th><th scope="col">Motivo</th></tr></thead>
+                      <tbody>
+                        @for (h of historico(); track h.uuid) {
+                          <tr>
+                            <td class="mono">{{ dataBr(h.dataVigencia) }}</td>
+                            <td class="num mono">{{ moeda(h.valorBase) }}</td>
+                            <td>{{ rotuloMotivo(h.motivo) }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                } @else { <p class="cell-sub">Nenhum valor registrado.</p> }
+              </section>
+            }
+
+            @if (pode('RH.GERENCIAR')) {
+              <section class="dsec">
+                <div class="dsec__h"><h3>Registrar novo valor</h3></div>
+                @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+                <div class="dw-row">
+                  <div class="dw-field">
+                    <label for="f-valorBase">Valor base (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                    <input id="f-valorBase" type="text" inputmode="decimal" class="mono" formControlName="valorBase" placeholder="4.850,00" [attr.aria-invalid]="!!erro('valorBase')" aria-describedby="e-valorBase" />
+                    @if (erro('valorBase')) { <p class="dw-err" id="e-valorBase">{{ erro('valorBase') }}</p> }
+                  </div>
+                  <div class="dw-field">
+                    <label for="f-dataVigencia">Vigência a partir de <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                    <input id="f-dataVigencia" type="date" formControlName="dataVigencia" [attr.aria-invalid]="!!erro('dataVigencia')" aria-describedby="e-dataVigencia" />
+                    @if (erro('dataVigencia')) { <p class="dw-err" id="e-dataVigencia">{{ erro('dataVigencia') }}</p> }
+                  </div>
+                </div>
+                <div class="dw-field">
+                  <label for="f-motivo">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <select id="f-motivo" formControlName="motivo" [attr.aria-invalid]="!!erro('motivo')" aria-describedby="e-motivo">
+                    <option value="">Selecione…</option>
+                    @for (m of motivos; track m.valor) { <option [value]="m.valor">{{ m.rotulo }}</option> }
+                  </select>
+                  @if (erro('motivo')) { <p class="dw-err" id="e-motivo">{{ erro('motivo') }}</p> }
+                </div>
+                <p class="dw-hint">O valor anterior continua no histórico; a folha usa o valor vigente na competência.</p>
+              </section>
+            }
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button>
+            @if (pode('RH.GERENCIAR')) {
+              <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Registrando…' : 'Registrar novo valor' }}</button>
+            }
+          </footer>
+        </form>
+      }
+    }
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}
