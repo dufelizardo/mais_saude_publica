@@ -6,7 +6,16 @@ Resource    ../../../pom/ui/shell/menu_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 Grupo Deve Estar
-    [Documentation]    Confere se o grupo está expandido (true) ou recolhido (false).
+    [Documentation]    Confere se o grupo está expandido (true) ou recolhido (false). Repete por alguns segundos,
+    ...    porque a tela atualiza o estado logo depois do clique, não no mesmo instante.
+    [Arguments]    ${grupo}    ${esperado}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Wait Until Keyword Succeeds    5s    200ms    Grupo Esta Agora    ${grupo}    ${esperado}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Grupo Esta Agora
+    [Documentation]    Lê o estado do grupo uma vez e compara.
     [Arguments]    ${grupo}    ${esperado}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${estado}=    UI Menu - Ler Estado Do Grupo    ${grupo}
