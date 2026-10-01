@@ -46,9 +46,42 @@ O frontend também é testado aqui, com Robot Framework e o mesmo LKDF
   - a validação aparece;
   - o estado vazio aparece;
   - com autorização ligada, o que muda por permissão.
-- **Estado atual:** a base de interface ainda não existe. Faltam `robotframework-browser` em
-  `requirements.txt`, `rfbrowser init`, a sessão com login, a URL do frontend e o job no CI. As telas
-  entregues até a ADR-0076 estão sem cobertura de interface (lista na ADR-0077).
+- **Tag `UI` em todo teste de interface.** Ela separa as duas suítes:
+  - o job `robot-ui` da pipeline roda só `--include UI`, em todo PR;
+  - a suíte de API (`run_tests.sh --exclude UI`) roda nos PRs de promoção e no health-check.
+- **Sessão:** `src/pom/common/mais_saude_publica_ui_common.resource`, que também traz as ações comuns.
+  - As ações comuns são abrir rota, clicar aba e botão, preencher e enviar a gaveta, e ler erro, título e
+    aviso.
+  - Sem `MSP_UI_CPF`/`MSP_UI_SENHA`, abre direto, porque o login fica desligado no CI e no local. Com
+    elas, entra pela tela de login.
+  - O Suite Setup e o Teardown de cada suíte chamam `UI - ABRIR SISTEMA` e `UI - FECHAR SISTEMA`
+    (`src/scenario/common/ui_sessao_scenario.resource`).
+- **Cobertura atual:**
+  - Setores;
+  - Modelo administrativo (abas, rotas antigas, validação e cadastro pela gaveta);
+  - abertura do prontuário em Pacientes com a regra de vínculo desligada.
+
+  O que falta está na ADR-0077.
+
+### Rodando os testes de interface localmente
+
+São três passos: subir a API, subir o frontend com proxy para ela e rodar só a tag `UI`.
+
+```bash
+pip install -r requirements.txt && rfbrowser init chromium     # uma vez
+# 1. API (perfil test) numa porta livre — aqui 8082, com um Postgres descartável na 55432:
+docker run -d --name msp-ui-postgres -e POSTGRES_DB=saudepublica_test -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres -p 55432:5432 postgres:16
+java -jar ../../target/mais_saude_publica-*.jar --spring.profiles.active=test --server.port=8082 \
+  --spring.datasource.url=jdbc:postgresql://localhost:55432/saudepublica_test
+# 2. Frontend com proxy para a 8082 (arquivo de proxy próprio, sem mexer no proxy.conf.json):
+#    {"/api": {"target": "http://localhost:8082", "secure": false, "changeOrigin": true}}
+npx ng serve --port 4200 --proxy-config <seu-proxy>.json      # dentro de frontend/
+# 3. Testes:
+MSP_HOST_URL=http://localhost:8082 MSP_FRONT_URL=http://localhost:4200 robot --include UI test
+```
+
+Use `MSP_UI_HEADLESS=false` para ver o navegador. Se um teste falhar, o screenshot fica no relatório.
 
 ## Camadas (POM → FLOW → SCENARIO → TEST)
 

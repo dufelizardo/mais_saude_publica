@@ -2,9 +2,10 @@
 
 ## Status
 
-Aceita. Substitui a parte de testes da [ADR-0008](./0008-frontend-angular.md), que previa Playwright
-isolado, e o item 9 da [ADR-0046](./0046-telas-de-frontend-da-onda-assistencia.md), que registrava "sem
-testes automatizados de frontend". A base da suíte de interface ainda não foi montada (ver Pendências).
+Aceita e implementada (base e primeiras telas). Substitui a parte de testes da
+[ADR-0008](./0008-frontend-angular.md), que previa Playwright isolado, e o item 9 da
+[ADR-0046](./0046-telas-de-frontend-da-onda-assistencia.md), que registrava "sem testes automatizados de
+frontend".
 
 ## Contexto
 
@@ -70,20 +71,31 @@ Ter uma ferramenta para a API e outra para a interface duplicaria linguagem, rel
 - A interface ganha verificação automatizada no mesmo gate da API.
 - A regra "tela nova vem com Robot" passa a valer como já vale para endpoint.
 
+**Base montada:**
+- `robotframework-browser` no `requirements.txt`;
+- sessão de navegador com login opcional;
+- `MSP_FRONT_URL`;
+- tag `UI`.
+
+O job `robot-ui` da pipeline roda em todo PR, inclusive para `developer`, sem Docker: sobe a API pelo jar
+(Postgres do próprio Actions) e o front pelo `ng serve`. A suíte de API passa a excluir a tag `UI`.
+
+**Primeiras telas cobertas:**
+- Setores;
+- Modelo administrativo;
+- abertura do prontuário em Pacientes, com a regra de vínculo desligada.
+
 **Pendências:**
-- **Montar a base:**
-  - `robotframework-browser` no `requirements.txt` e `rfbrowser init`;
-  - sessão com login;
-  - variável da URL do frontend;
-  - o job no CI.
-- **Cobrir as telas já existentes, começando pelas mais recentes:**
+- **O fluxo do prontuário com o vínculo ligado** (aviso, justificativa e faixa) precisa de uma API com
+  login, autorização e vínculo ligados, e de usuários com perfis. Isso pede uma segunda configuração da
+  API no job, com o bootstrap do administrador e a troca de senha feita pela API.
+- **Cobrir as demais telas já existentes, começando pelas mais recentes:**
   - prontuário por vínculo (ADR-0076);
   - Administrativo agrupado (ADR-0074);
   - catálogos de RH e perfil (ADRs 0073 e 0075);
   - Profissionais (ADR-0072);
   - Usuários & Perfis (ADR-0068);
   - Auditoria (ADR-0071).
-- Até a base existir, as telas continuam verificadas com `ng build` e conferência manual.
 
 ## Referências
 
