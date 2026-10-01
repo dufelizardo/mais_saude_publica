@@ -14,5 +14,7 @@ public enum AcaoAuditoria {
     REVOGACAO,
     /** Acesso ao prontuário sem vínculo assistencial, declarado com motivo (ADR-0076). */
     ACESSO_JUSTIFICADO,
+    /** Exportação da própria trilha (CSV), com os filtros usados (ADR-0082). */
+    EXPORTACAO,
     EXCLUSAO
 }
