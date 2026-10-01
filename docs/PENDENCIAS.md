@@ -81,7 +81,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - Encaminhamento e regulação ainda não geram vínculo, porque esses domínios não existem (ADR-0076).
 
 ### Telas
-- **Perfil do profissional:** as 13 abas seguem com modais da primeira geração (ADR-0075).
+- **Perfil do profissional:** Dados, Lotação, Composição e Ajustes já estão no padrão novo (ADR-0084).
+  Faltam Afastamentos, Ponto, Folha e SST (parte B) e Treinamentos, Avaliações, Benefícios,
+  Desligamento e Histórico (parte C).
 - ~~Responsáveis por setor~~ e ~~edição de treinamento, ciclo e tipo de benefício~~ — feitos pela ADR-0083.
 - Exportar e importar profissionais; **Equipes** e **Escalas**, que são domínios novos (ADR-0072).
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).

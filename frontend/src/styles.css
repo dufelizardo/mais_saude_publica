@@ -1353,6 +1353,13 @@ tfoot .linha-total th { text-align: left; }
 .page-actions.filters .search { min-width: 240px; }
 .perfil-busca-msg { color: var(--alert); font-size: 0.8125rem; font-weight: 500; margin: calc(var(--s-2) * -1) 0 var(--s-3); min-height: 0; }
 .perfil-busca-msg:empty { display: none; }
+/* Abas do perfil no padrão novo (ADR-0084): cabeçalho da seção, corpo e destaque (lotação vigente, total). */
+.perfil-sec { border-bottom: 0; padding-bottom: 0; }
+.perfil-corpo { padding: var(--s-4) var(--s-5) var(--s-5); display: grid; gap: var(--s-4); }
+.perfil-destaque { display: grid; gap: 2px; padding: var(--s-4); border: 1px solid var(--ink-100); border-radius: 10px; background: var(--ink-50); }
+.perfil-destaque__lbl { font-size: 0.75rem; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.perfil-destaque strong { font-size: 1.0625rem; }
+.perfil-destaque__valor { font-size: 1.5rem !important; }
 
 /* Prontuário por vínculo assistencial (ADR-0076): aviso, formulário do acesso justificado e faixa. */
 .acesso-pront { display: grid; gap: var(--s-3); }
