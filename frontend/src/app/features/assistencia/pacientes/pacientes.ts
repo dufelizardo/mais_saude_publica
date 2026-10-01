@@ -16,6 +16,8 @@ import { ProntuarioResponseDto } from '../../../core/models/prontuario';
 import { TriagemResponseDto } from '../../../core/models/triagem';
 import { AgendamentoResponseDto } from '../../../core/models/agendamento';
 import { AgendamentoService } from '../../../core/services/agendamento';
+import { AcessoDaInterface } from '../../../core/models/auth';
+import { AuthService } from '../../../core/services/auth';
 
 type AbaDetalhe = 'resumo' | 'historico' | 'programas' | 'vacinacao' | 'anexos';
 type ModoVisualizacao = 'lista' | 'cartoes';
@@ -192,13 +194,24 @@ export class Pacientes {
     estado: ['', [Validators.required]],
   });
 
+  private readonly authService = inject(AuthService);
+  /** O que a tela oferece (ADR-0079): sem a permissão, o botão nem aparece. A API continua decidindo. */
+  private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
+
   constructor() {
+    this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.form.controls.cep.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe((cep) => this.buscarCep(cep));
 
     this.carregarPacientes();
   }
+
+  protected pode(...permissoes: string[]): boolean {
+    const a = this.acesso();
+    return !a.restrito || permissoes.some((p) => a.permissoes.has(p));
+  }
+
 
   private carregarPacientes(): void {
     this.carregando.set(true);

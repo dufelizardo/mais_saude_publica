@@ -45,6 +45,8 @@ import { formatCpf, formatTelefone } from '../../shared/format-mask';
 import { Modal } from '../../shared/modal/modal';
 import { hojeIso } from '../../shared/formato';
 import { categoriaDoProfissional, iniciaisDoNome, situacaoDoProfissional } from '../../shared/profissional-categoria';
+import { AcessoDaInterface } from '../../core/models/auth';
+import { AuthService } from '../../core/services/auth';
 
 type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'sst' | 'treinamentos' | 'avaliacoes' | 'beneficios' | 'desligamento' | 'historico';
 type AbaSst = 'exames' | 'acidentes' | 'epis';
@@ -379,7 +381,12 @@ export class ProfissionalPerfil {
     documentoTrctUrl: [''],
   });
 
+  private readonly authService = inject(AuthService);
+  /** O que a tela oferece (ADR-0079): sem a permissão, o botão nem aparece. A API continua decidindo. */
+  private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
+
   constructor() {
+    this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.acidenteForm.controls.catEmitida.valueChanges.subscribe((catEmitida) => {
       const catUrlControl = this.acidenteForm.controls.catUrl;
       catUrlControl.setValidators(catEmitida ? [Validators.required] : []);
@@ -417,6 +424,12 @@ export class ProfissionalPerfil {
       this.buscar();
     }
   }
+
+  protected pode(...permissoes: string[]): boolean {
+    const a = this.acesso();
+    return !a.restrito || permissoes.some((p) => a.permissoes.has(p));
+  }
+
 
   protected onCpfInput(event: Event): void {
     const valor = formatCpf((event.target as HTMLInputElement).value);

@@ -189,6 +189,4 @@ quando a exigência for religada.
 
 - Recuperação de senha sem a administração (e-mail ou gov.br) (ADR-0069). As sessões ativas já caem
   na hora ao desativar, redefinir ou trocar a senha, e pelo botão **Encerrar sessões** (ADR-0078).
-- Dentro das telas, alguns botões de registro continuam visíveis para quem não tem a permissão. A API
-  bloqueia com 403 e mensagem clara.
 - MFA, sessões ativas e política de senha aparecem como "Em breve" na tela.

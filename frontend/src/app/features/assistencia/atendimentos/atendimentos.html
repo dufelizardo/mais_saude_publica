@@ -4,18 +4,18 @@
     <p>Do agendamento ao prontuário: triagem, consulta, procedimento e evolução de enfermagem</p>
   </div>
   <div class="page-actions">
-    <button type="button" class="btn btn--ghost" (click)="abrirAcolhimento()">
+    @if (pode('ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn btn--ghost" (click)="abrirAcolhimento()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
       Acolhimento
-    </button>
-    <button type="button" class="btn btn--ghost" (click)="abrirAgendamento()">
+    </button> }
+    @if (pode('AGENDAMENTO.GERENCIAR')) { <button type="button" class="btn btn--ghost" (click)="abrirAgendamento()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
       Agendar
-    </button>
-    <button type="button" class="btn" (click)="abrirNovoAtendimento()">
+    </button> }
+    @if (pode('ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn" (click)="abrirNovoAtendimento()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"></polygon></svg>
       Iniciar atendimento
-    </button>
+    </button> }
   </div>
 </header>
 
@@ -204,14 +204,14 @@
               <td>
                 <div class="row-actions">
                   @if (podeIniciar(g)) {
-                    <button type="button" class="btn btn--sm" [attr.aria-label]="'Iniciar atendimento de ' + g.pacienteNome" (click)="abrirNovoAtendimento('', g)">Iniciar</button>
+                    @if (pode('ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn btn--sm" [attr.aria-label]="'Iniciar atendimento de ' + g.pacienteNome" (click)="abrirNovoAtendimento('', g)">Iniciar</button> }
                   }
                   @if (atendimentoDoAgendamento(g.uuid); as at) {
                     <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAtendimento(at.uuid)">Atendimento</button>
                   }
-                  <button type="button" class="icon-btn" [attr.aria-label]="'Editar agendamento de ' + g.pacienteNome" title="Editar" (click)="abrirAgendamento(g)">
+                  @if (pode('AGENDAMENTO.GERENCIAR')) { <button type="button" class="icon-btn" [attr.aria-label]="'Editar agendamento de ' + g.pacienteNome" title="Editar" (click)="abrirAgendamento(g)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                  </button>
+                  </button> }
                 </div>
               </td>
             </tr>
@@ -223,8 +223,8 @@
                   @if (!carregando() && filtroAgPaciente()) {
                     <span>O agendamento é opcional: o atendimento pode começar direto.</span>
                     <div class="dw-actions" style="justify-content: center; margin-top: 6px;">
-                      <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAgendamento(null, filtroAgPaciente())">Agendar</button>
-                      <button type="button" class="btn btn--sm" (click)="abrirNovoAtendimento(filtroAgPaciente())">Iniciar atendimento</button>
+                      @if (pode('AGENDAMENTO.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAgendamento(null, filtroAgPaciente())">Agendar</button> }
+                      @if (pode('ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn btn--sm" (click)="abrirNovoAtendimento(filtroAgPaciente())">Iniciar atendimento</button> }
                     </div>
                   }
                 </div>
@@ -273,7 +273,7 @@
             }
             <span [class]="'badge badge--' + atStatus[a.status].classe"><span class="dot" aria-hidden="true"></span>{{ atStatus[a.status].rotulo }}</span>
             <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAtendimento(a.uuid)">Abrir atendimento</button>
-            <button type="button" class="btn btn--sm" (click)="abrirAdministracao(a.uuid, null, false)">Registrar checagem</button>
+            @if (pode('MEDICACAO.ADMINISTRAR')) { <button type="button" class="btn btn--sm" (click)="abrirAdministracao(a.uuid, null, false)">Registrar checagem</button> }
           </div>
         </div>
         <div class="med-item__body">
@@ -354,8 +354,8 @@
         </div>
         <div class="row-actions">
           <a class="btn btn--ghost btn--sm" routerLink="/assistencia/pacientes">Abrir em Pacientes</a>
-          <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAgendamento(null, p.uuid)">Agendar</button>
-          <button type="button" class="btn btn--sm" (click)="abrirNovoAtendimento(p.uuid)">Iniciar atendimento</button>
+          @if (pode('AGENDAMENTO.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAgendamento(null, p.uuid)">Agendar</button> }
+          @if (pode('ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn btn--sm" (click)="abrirNovoAtendimento(p.uuid)">Iniciar atendimento</button> }
         </div>
       </div>
       @if (prontuario()?.acesso?.base === 'JUSTIFICADO') {
@@ -435,7 +435,7 @@
         <span class="cell-sub" style="display: inline; margin-left: 6px;">{{ formatarDataHora(t.dataHora) }} · {{ t.profissionalNome }}</span>
       </div>
       @if (atId) {
-        <button type="button" class="btn btn--ghost btn--sm" (click)="abrirTriagem(atId, t)">Retificar</button>
+        @if (pode('TRIAGEM.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirTriagem(atId, t)">Retificar</button> }
       }
     </div>
     @if (t.pressaoArterial || t.temperatura || t.saturacaoOxigenio || t.frequenciaCardiaca || t.peso) {
@@ -460,7 +460,7 @@
         <span class="cell-sub">{{ formatarDataHora(c.consulta.dataHora) }} · {{ c.consulta.profissionalNome }}</span>
       </div>
       @if (atId) {
-        <button type="button" class="btn btn--ghost btn--sm" (click)="abrirConsulta(atId, c.consulta)">Retificar</button>
+        @if (pode('CONSULTA.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirConsulta(atId, c.consulta)">Retificar</button> }
       }
     </div>
     <dl class="kv">
@@ -475,7 +475,7 @@
       <div class="sub-sec__h">
         <span>Procedimentos · {{ procedimentosVigentes(c.procedimentos).length }}</span>
         @if (atId) {
-          <button type="button" class="btn btn--ghost btn--sm" (click)="abrirProcedimento(atId, c.consulta.uuid)">+ Procedimento</button>
+          @if (pode('PROCEDIMENTO.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirProcedimento(atId, c.consulta.uuid)">+ Procedimento</button> }
         }
       </div>
       @for (p of procedimentosVigentes(c.procedimentos); track p.uuid) {
@@ -489,10 +489,10 @@
           <div class="dw-actions" style="align-items: center;">
             <span [class]="'badge badge--' + procStatus[p.status].classe"><span class="dot" aria-hidden="true"></span>{{ procStatus[p.status].rotulo }}</span>
             @if (atId && p.status === 'AGENDADO') {
-              <button type="button" class="btn btn--sm" (click)="abrirDesfecho(atId, p)">Registrar desfecho</button>
+              @if (pode('PROCEDIMENTO.REGISTRAR')) { <button type="button" class="btn btn--sm" (click)="abrirDesfecho(atId, p)">Registrar desfecho</button> }
             }
             @if (atId) {
-              <button type="button" class="btn btn--ghost btn--sm" (click)="abrirProcedimento(atId, c.consulta.uuid, p)">Retificar</button>
+              @if (pode('PROCEDIMENTO.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirProcedimento(atId, c.consulta.uuid, p)">Retificar</button> }
             }
           </div>
         </div>
@@ -515,7 +515,7 @@
         <span class="cell-sub" style="display: inline; margin-left: 6px;">{{ formatarDataHora(m.dataHora) }} · {{ m.profissionalNome }}</span>
       </div>
       @if (atId) {
-        <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAdministracao(atId, m, voltar)">Retificar</button>
+        @if (pode('MEDICACAO.ADMINISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAdministracao(atId, m, voltar)">Retificar</button> }
       }
     </div>
     <p class="rec__txt">
@@ -536,7 +536,7 @@
     <div class="rec__head">
       <span class="cell-sub" style="display: inline;">{{ formatarDataHora(e.dataHora) }} · {{ e.profissionalNome }}</span>
       @if (atId) {
-        <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEvolucao(atId, e)">Retificar</button>
+        @if (pode('EVOLUCAO.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEvolucao(atId, e)">Retificar</button> }
       }
     </div>
     <p class="rec__txt">{{ e.descricao }}</p>
@@ -579,9 +579,9 @@
                 <div><dt>Agendamento</dt><dd>@if (agendamento(a.agendamentoUuid); as ag) { {{ rotulo(agTipos, ag.tipo) }} · {{ formatarDataHora(ag.dataHora) }} } @else { Demanda espontânea }</dd></div>
               </dl>
               <div class="dw-actions">
-                <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEdicaoAtendimento(a)">Editar atendimento</button>
+                @if (pode('ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEdicaoAtendimento(a)">Editar atendimento</button> }
                 @if (a.status !== 'CONCLUIDO') {
-                  <button type="button" class="btn btn--ghost btn--sm" [disabled]="submitting()" (click)="concluirAtendimento(a)">Concluir atendimento</button>
+                  @if (pode('ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" [disabled]="submitting()" (click)="concluirAtendimento(a)">Concluir atendimento</button> }
                 }
                 <button type="button" class="btn btn--ghost btn--sm" (click)="verProntuario(a.pacienteUuid)">Ver prontuário</button>
               </div>
@@ -594,7 +594,7 @@
                 <section class="dsec">
                   <div class="dsec__h">
                     <h3>Triagem <span class="cnt">{{ triagensVigentes(registros()).length }}</span></h3>
-                    <button type="button" class="btn btn--ghost btn--sm" (click)="abrirTriagem(a.uuid)">+ Triagem</button>
+                    @if (pode('TRIAGEM.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirTriagem(a.uuid)">+ Triagem</button> }
                   </div>
                   @for (t of triagensVigentes(registros()); track t.uuid) {
                     <ng-container *ngTemplateOutlet="recTriagem; context: { $implicit: t, atId: a.uuid }"></ng-container>
@@ -603,7 +603,7 @@
                 <section class="dsec">
                   <div class="dsec__h">
                     <h3>Consultas <span class="cnt">{{ consultasVigentes(registros()).length }}</span></h3>
-                    <button type="button" class="btn btn--ghost btn--sm" (click)="abrirConsulta(a.uuid)">+ Consulta</button>
+                    @if (pode('CONSULTA.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirConsulta(a.uuid)">+ Consulta</button> }
                   </div>
                   @for (c of consultasVigentes(registros()); track c.consulta.uuid) {
                     <ng-container *ngTemplateOutlet="recConsulta; context: { $implicit: c, atId: a.uuid }"></ng-container>
@@ -613,7 +613,7 @@
                   <div class="dsec__h">
                     <h3>Medicação <span class="cnt">{{ administracoesVigentes(registros()).length }}</span></h3>
                     @if (consultasVigentes(registros()).length) {
-                      <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAdministracao(a.uuid)">+ Checagem</button>
+                      @if (pode('MEDICACAO.ADMINISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAdministracao(a.uuid)">+ Checagem</button> }
                     }
                   </div>
                   @if (!consultasVigentes(registros()).length) {
@@ -626,7 +626,7 @@
                 <section class="dsec">
                   <div class="dsec__h">
                     <h3>Evolução de enfermagem <span class="cnt">{{ evolucoesVigentes(registros()).length }}</span></h3>
-                    <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEvolucao(a.uuid)">+ Evolução</button>
+                    @if (pode('EVOLUCAO.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEvolucao(a.uuid)">+ Evolução</button> }
                   </div>
                   @for (e of evolucoesVigentes(registros()); track e.uuid) {
                     <ng-container *ngTemplateOutlet="recEvolucao; context: { $implicit: e, atId: a.uuid }"></ng-container>
