@@ -156,6 +156,11 @@ Dentro da tela, ações que exigem permissão usam o mesmo `AuthService.acessoDa
 Telas de administração, pouco usadas, entram por `loadComponent` (sob demanda), para não pesar no
 bundle inicial, que tem orçamento de 1 MB.
 
+**Grupos do menu começam recolhidos.** Só o grupo da página atual abre sozinho, porque o `data.area` da
+rota tem o mesmo nome do grupo. Assim o item ativo nunca fica escondido. Os grupos que a pessoa abre
+continuam abertos enquanto ela navega, e o da página atual também pode ser recolhido. Uma rota nova
+precisa de `data.area` com o nome exato do grupo onde o item aparece.
+
 ## 9. Listagem de pessoas em cartões (ADR-0072)
 
 Para quadros de pessoas (profissionais), a visão padrão é a **grade de cartões** do protótipo

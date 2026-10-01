@@ -68,6 +68,7 @@ O frontend também é testado aqui, com Robot Framework e o mesmo LKDF
   - O Suite Setup e o Teardown de cada suíte chamam `UI - ABRIR SISTEMA` e `UI - FECHAR SISTEMA`
     (`src/scenario/common/ui_sessao_scenario.resource`).
 - **Cobertura atual:**
+  - menu lateral (recolhido por padrão, grupo da página aberto);
   - Setores;
   - Modelo administrativo (abas, rotas antigas, validação e cadastro pela gaveta);
   - abertura do prontuário em Pacientes com a regra de vínculo desligada;
