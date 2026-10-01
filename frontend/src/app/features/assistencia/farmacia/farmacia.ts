@@ -25,6 +25,7 @@ import { MovimentacaoFarmaciaService } from '../../../core/services/movimentacao
 import { PacienteService } from '../../../core/services/paciente';
 import { TransferenciaFarmaciaService } from '../../../core/services/transferencia-farmacia';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
+import { AcessoDaInterface } from '../../../core/models/auth';
 
 type Aba = 'estoque' | 'disp' | 'transf' | 'med' | 'livro';
 
@@ -88,6 +89,8 @@ const STATUS_TRANSFERENCIA: Record<StatusTransferenciaFarmacia, { classe: string
 export class Farmacia {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  /** O que a tela oferece (ADR-0079): sem a permissão, o botão nem aparece. A API continua decidindo. */
+  private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
 
   /** Matrícula do profissional logado (ADR-0065): valor inicial do profissional nos registros novos. */
   protected readonly matriculaPadrao = signal('');
@@ -292,10 +295,17 @@ export class Farmacia {
 
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.matriculaPadrao.set(u?.profissionalMatricula ?? ''));
+    this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.carregarTudo();
     this.unidadeSaudeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
   }
+
+  protected pode(...permissoes: string[]): boolean {
+    const a = this.acesso();
+    return !a.restrito || permissoes.some((p) => a.permissoes.has(p));
+  }
+
 
   /** Listagens vazias respondem 404 no backend — tratadas como lista vazia. */
   private carregarTudo(): void {

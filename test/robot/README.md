@@ -69,6 +69,7 @@ O frontend também é testado aqui, com Robot Framework e o mesmo LKDF
     (`src/scenario/common/ui_sessao_scenario.resource`).
 - **Cobertura atual:**
   - menu lateral (recolhido por padrão, grupo da página aberto);
+  - botões por permissão (`SEGURANCA`): técnico de enfermagem × recepção em Pacientes e Atendimentos;
   - Setores;
   - Modelo administrativo (abas, rotas antigas, validação e cadastro pela gaveta);
   - abertura do prontuário em Pacientes com a regra de vínculo desligada;

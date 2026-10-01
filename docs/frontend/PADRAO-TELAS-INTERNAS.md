@@ -151,7 +151,8 @@ estrutura e para o quadro de profissionais, que a API também libera (`@Liberado
 Com a autorização desligada, `podeVer` é sempre verdadeiro.
 
 Dentro da tela, ações que exigem permissão usam o mesmo `AuthService.acessoDaInterface()` (ver
-`pode(...)` em `features/administracao/usuarios`). Esconder nunca substitui a checagem da API.
+`pode(...)` em `features/administracao/usuarios`), com **a mesma permissão que a rota da API exige**
+(ADR-0079). Toda tela com ação de escrita faz isso. Esconder nunca substitui a checagem da API.
 
 Telas de administração, pouco usadas, entram por `loadComponent` (sob demanda), para não pesar no
 bundle inicial, que tem orçamento de 1 MB.

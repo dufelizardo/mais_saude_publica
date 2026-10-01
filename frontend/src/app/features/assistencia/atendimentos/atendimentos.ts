@@ -43,6 +43,7 @@ import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-pront
 import { SetorService } from '../../../core/services/setor';
 import { TriagemService } from '../../../core/services/triagem';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
+import { AcessoDaInterface } from '../../../core/models/auth';
 
 type Aba = 'atend' | 'ag' | 'med' | 'pront';
 
@@ -123,6 +124,8 @@ const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
 export class Atendimentos {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  /** O que a tela oferece (ADR-0079): sem a permissão, o botão nem aparece. A API continua decidindo. */
+  private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
 
   /** Matrícula do profissional logado (ADR-0065): valor inicial do profissional nos registros novos. */
   protected readonly matriculaPadrao = signal('');
@@ -376,7 +379,10 @@ export class Atendimentos {
 
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.matriculaPadrao.set(u?.profissionalMatricula ?? ''));
-    this.authService.acessoDaInterface().subscribe((a) => this.podeAuditar.set(!a.restrito || a.permissoes.has('AUDITORIA.CONSULTAR')));
+    this.authService.acessoDaInterface().subscribe((a) => {
+      this.acesso.set(a);
+      this.podeAuditar.set(!a.restrito || a.permissoes.has('AUDITORIA.CONSULTAR'));
+    });
     this.carregarTudo();
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
     this.unidadeSaudeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
@@ -601,6 +607,11 @@ export class Atendimentos {
 
   protected atendimentoDoAgendamento(agId: string): AtendimentoResponseDto | undefined {
     return this.atendimentoPorAgendamento().get(agId);
+  }
+
+  protected pode(...permissoes: string[]): boolean {
+    const a = this.acesso();
+    return !a.restrito || permissoes.some((p) => a.permissoes.has(p));
   }
 
   protected podeIniciar(ag: AgendamentoResponseDto): boolean {
