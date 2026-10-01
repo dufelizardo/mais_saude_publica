@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Programas de Saúde — Mais Saúde Pública</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --blue-900:#0a2540; --blue-800:#0c3170; --blue-700:#1351b4; --blue-600:#1e6fd9;
+    --blue-500:#2f8de4; --blue-400:#5aa9ee; --blue-200:#c7daf5; --blue-100:#e7f0fb; --blue-50:#f3f7fd;
+    --ink-900:#0e1116; --ink-700:#2a3140; --ink-500:#5c6470; --ink-400:#7a8392;
+    --ink-300:#b6bdc9; --ink-200:#dde1e8; --ink-100:#eef1f5; --ink-50:#f7f8fb;
+    --white:#fff;
+    --ok:#1f8a5b; --ok-bg:#e7f6ee; --warn:#b86b00; --warn-bg:#fdf4e3; --alert:#c0392b; --alert-bg:#fdecea;
+    --purple:#6936c2; --purple-bg:#f4ecff;
+    --teal:#0b8a8a; --teal-bg:#e3f4f4;
+    --pink:#c0388f; --pink-bg:#fbe7f3;
+    --amber:#a37200; --amber-bg:#fbf2d6;
+    --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:18px;
+    --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:20px; --s-6:24px; --s-8:32px;
+    --side-w:260px; --top-h:64px;
+    --shadow-sm:0 1px 2px rgba(14,17,22,0.05);
+    --shadow-md:0 1px 2px rgba(14,17,22,0.04), 0 6px 18px rgba(14,17,22,0.06);
+    --shadow-lg:0 10px 30px rgba(14,17,22,0.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin:0; background: var(--ink-50); color: var(--ink-900); font-family:'IBM Plex Sans', system-ui, -apple-system, sans-serif; font-size:0.9375rem; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x: hidden; }
+  a { color: var(--blue-700); text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+  h1,h2,h3,h4 { margin:0; letter-spacing:-0.01em; line-height:1.2; font-weight:600; }
+  p { margin:0; }
+  ul { margin:0; padding:0; list-style:none; }
+  .mono { font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 3px solid var(--blue-500); outline-offset: 2px; border-radius: 6px; }
+  .skip-link { position: absolute; left: 8px; top: -100px; background: var(--blue-700); color:#fff; padding: 10px 14px; border-radius: 6px; font-weight: 600; z-index: 200; }
+  .skip-link:focus { top: 8px; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  /* === Shell === */
+  .app { display: grid; grid-template-columns: var(--side-w) 1fr; grid-template-rows: var(--top-h) 1fr; grid-template-areas: "sidebar topbar" "sidebar content"; min-height: 100vh; }
+  @media (max-width: 980px) { .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "topbar" "content"; } }
+  .sidebar { grid-area: sidebar; background: #fff; border-right: 1px solid var(--ink-200); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  @media (max-width: 980px) {
+    .sidebar { display: none; }
+    .sidebar.is-open { display: flex; position: fixed; inset: 0 auto 0 0; width: 280px; z-index: 150; box-shadow: var(--shadow-lg); }
+  }
+  .sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--ink-100); height: var(--top-h); flex-shrink: 0; }
+  .sb-mark { width: 36px; height: 36px; border-radius: 9px; background: var(--blue-700); color: #fff; display: grid; place-items: center; flex-shrink: 0; }
+  .sb-name { font-weight: 600; font-size: 0.9375rem; line-height: 1.05; white-space: nowrap; }
+  .sb-sub { font-size: 0.66rem; color: var(--ink-500); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+  .sidebar__nav { padding: var(--s-3) 10px; flex: 1; }
+  .nav-group { margin-bottom: var(--s-4); }
+  .nav-group__label { font-size: 0.66rem; font-weight: 600; color: var(--ink-400); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 10px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--ink-700); font-size: 0.875rem; font-weight: 500; text-decoration: none; min-height: 36px; }
+  .nav-item:hover { background: var(--blue-50); color: var(--blue-700); }
+  .nav-item[aria-current="page"] { background: var(--blue-700); color: #fff; box-shadow: var(--shadow-sm); }
+  .nav-item[aria-current="page"] .nav-badge { background: rgba(255,255,255,0.2); color: #fff; }
+  .nav-item__icon { width: 18px; height: 18px; color: currentColor; flex-shrink: 0; }
+  .nav-item__label { flex: 1; }
+  .nav-badge { background: var(--ink-100); color: var(--ink-500); font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
+  .sidebar__foot { border-top: 1px solid var(--ink-100); padding: var(--s-3); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .who { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; padding: 4px 6px; border-radius: 8px; }
+  .who:hover { background: var(--ink-50); }
+  .who__avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 0.8125rem; flex-shrink: 0; }
+  .who__name { font-weight: 600; font-size: 0.8125rem; color: var(--ink-900); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who__role { font-size: 0.7rem; color: var(--ink-500); }
+  .icon-btn { background: transparent; border: 1px solid transparent; color: var(--ink-500); width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+  .icon-btn:hover { background: var(--ink-100); color: var(--ink-900); }
+
+  /* === Topbar === */
+  .topbar { grid-area: topbar; background: #fff; border-bottom: 1px solid var(--ink-200); height: var(--top-h); display: flex; align-items: center; padding: 0 var(--s-6); gap: var(--s-4); position: sticky; top: 0; z-index: 80; }
+  @media (max-width: 600px) { .topbar { padding: 0 var(--s-4); } }
+  .menu-btn { display: none; width: 40px; height: 40px; border-radius: 8px; background: transparent; border: 1px solid var(--ink-200); color: var(--ink-700); align-items: center; justify-content: center; }
+  @media (max-width: 980px) { .menu-btn { display: inline-flex; } }
+  .crumbs { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--ink-500); }
+  .crumbs strong { color: var(--ink-900); font-weight: 600; }
+  @media (max-width: 1024px) { .crumbs { display: none; } }
+  .topbar__search { margin-left: auto; position: relative; flex: 0 1 320px; min-width: 0; }
+  .topbar__search input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--ink-200); border-radius: 8px; background: var(--ink-50); font: inherit; font-size: 0.875rem; min-height: 40px; }
+  .topbar__search input:focus { background: #fff; }
+  .topbar__search > svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+  @media (max-width: 700px) { .topbar__search { display: none; } }
+  .top-actions { display: flex; align-items: center; gap: 4px; }
+  .top-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--ok-bg); color: var(--ok); padding: 5px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+  .top-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(31,138,91,0.18); }
+  @media (max-width: 700px) { .top-pill { display: none; } }
+  .top-btn { background: transparent; border: 1px solid transparent; color: var(--ink-700); width: 40px; height: 40px; border-radius: 8px; display: inline-grid; place-items: center; position: relative; }
+  .top-btn:hover { background: var(--ink-50); }
+  .top-btn .dot-alert { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--alert); border: 2px solid #fff; }
+
+  /* === Content === */
+  .content { grid-area: content; padding: var(--s-6); max-width: 1600px; }
+  @media (max-width: 600px) { .content { padding: var(--s-4); } }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s-4); flex-wrap: wrap; margin-bottom: var(--s-5); }
+  .page-head h1 { font-size: clamp(1.375rem, 1.1rem + 0.7vw, 1.75rem); }
+  .page-head p { color: var(--ink-500); font-size: 0.875rem; margin-top: 4px; }
+  .actions { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+  .btn { appearance:none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 14px; border-radius: 8px; border: 1.5px solid var(--ink-200); background: #fff; color: var(--ink-700); font-weight: 500; font-size: 0.875rem; min-height: 40px; text-decoration: none; }
+  .btn:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .btn--primary { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+  .btn--primary:hover { background: var(--blue-800); border-color: var(--blue-800); color: #fff; }
+
+  /* === Stats === */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); margin-bottom: var(--s-5); }
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .stats { grid-template-columns: minmax(0, 1fr); } }
+  .stat { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-4); display: flex; gap: 14px; align-items: center; }
+  .stat__icon { width: 42px; height: 42px; border-radius: 10px; background: var(--blue-50); color: var(--blue-700); display: grid; place-items: center; flex-shrink: 0; }
+  .stat__icon--warn { background: var(--warn-bg); color: var(--warn); }
+  .stat__icon--ok { background: var(--ok-bg); color: var(--ok); }
+  .stat__icon--purple { background: var(--purple-bg); color: var(--purple); }
+  .stat__lbl { color: var(--ink-500); font-size: 0.78rem; }
+  .stat__val { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.05; margin-top: 2px; }
+  .stat__sub { font-size: 0.72rem; color: var(--ink-500); margin-top: 2px; }
+
+  /* === Toolbar / filters === */
+  .toolbar { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-3) var(--s-4); display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; margin-bottom: var(--s-4); }
+  .toolbar .search { position: relative; flex: 1 1 280px; min-width: 200px; }
+  .toolbar .search input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--ink-200); border-radius: 8px; background: var(--ink-50); font: inherit; font-size: 0.875rem; min-height: 40px; }
+  .toolbar .search input:focus { background: #fff; }
+  .toolbar .search > svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--ink-200); padding: 7px 12px; border-radius: 8px; font-size: 0.8125rem; color: var(--ink-700); font-weight: 500; min-height: 36px; cursor: pointer; }
+  .pill:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .pill svg { color: var(--ink-400); }
+  .pill.active { background: var(--blue-50); border-color: var(--blue-200); color: var(--blue-700); }
+  .pill.active svg { color: var(--blue-700); }
+
+  /* === Programs grid === */
+  .pg-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); margin-bottom: var(--s-5); }
+  @media (max-width: 1280px) { .pg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 760px) { .pg-grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .program {
+    background: #fff;
+    border: 1px solid var(--ink-200);
+    border-radius: var(--r-lg);
+    padding: var(--s-4);
+    display: grid; gap: var(--s-3);
+    cursor: pointer;
+    position: relative;
+  }
+  .program:hover { border-color: var(--blue-700); box-shadow: var(--shadow-md); transform: translateY(-1px); transition: all 0.15s; }
+  .program[aria-selected="true"] {
+    border-color: var(--blue-700);
+    box-shadow: 0 0 0 3px rgba(19,81,180,0.10);
+  }
+
+  .pg__head {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .pg__icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .pg__icon--blue { background: var(--blue-50); color: var(--blue-700); }
+  .pg__icon--ok { background: var(--ok-bg); color: var(--ok); }
+  .pg__icon--pink { background: var(--pink-bg); color: var(--pink); }
+  .pg__icon--purple { background: var(--purple-bg); color: var(--purple); }
+  .pg__icon--teal { background: var(--teal-bg); color: var(--teal); }
+  .pg__icon--amber { background: var(--amber-bg); color: var(--amber); }
+  .pg__title { font-size: 1rem; font-weight: 600; }
+  .pg__sub { font-size: 0.72rem; color: var(--ink-500); margin-top: 1px; }
+  .pg__menu { background: transparent; border: 0; color: var(--ink-400); width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; margin-left: auto; flex-shrink: 0; }
+  .pg__menu:hover { background: var(--ink-100); color: var(--ink-900); }
+
+  .pg__counts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pg__count {
+    background: var(--ink-50);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+  .pg__count .lbl { font-size: 0.66rem; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .pg__count .val { font-weight: 600; font-size: 1.125rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .pg__count .v-sub { font-size: 0.7rem; color: var(--ink-500); font-weight: 500; margin-left: 2px; }
+
+  .pg__bar-wrap { display: grid; gap: 4px; }
+  .pg__bar-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.72rem; color: var(--ink-500); }
+  .pg__bar-top strong { color: var(--ink-900); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+  .pg__bar { height: 6px; background: var(--ink-100); border-radius: 999px; overflow: hidden; }
+  .pg__bar span { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; }
+  .pg__bar span.warn { background: var(--warn); }
+  .pg__bar span.alert { background: var(--alert); }
+  .pg__bar span.ok { background: var(--ok); }
+
+  .pg__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--ink-500); }
+  .pg__foot .delta { font-weight: 600; }
+  .pg__foot .delta.up { color: var(--ok); }
+  .pg__foot .delta.down { color: var(--alert); }
+  .pg__foot .resp { display: inline-flex; align-items: center; gap: 4px; }
+
+  /* === Detail card === */
+  .card { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); }
+  .detail { overflow: hidden; }
+  .detail__head {
+    padding: var(--s-5);
+    border-bottom: 1px solid var(--ink-100);
+    display: flex; gap: var(--s-4); align-items: flex-start;
+    flex-wrap: wrap;
+    background:
+      radial-gradient(60% 80% at 100% 0%, rgba(19,81,180,0.06), transparent 70%),
+      #fff;
+  }
+  .detail__icon {
+    width: 60px; height: 60px;
+    background: var(--blue-50); color: var(--blue-700);
+    border-radius: 16px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .detail__id { flex: 1; min-width: 240px; }
+  .detail__id h2 { font-size: 1.375rem; }
+  .detail__chips { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .detail__actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .tag { font-size: 0.7rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; }
+  .tag--info { background: var(--blue-50); color: var(--blue-800); }
+  .tag--ok { background: var(--ok-bg); color: var(--ok); }
+  .tag--warn { background: var(--warn-bg); color: var(--warn); }
+  .tag .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* Detail KPIs */
+  .detail__kpis {
+    padding: var(--s-5);
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-3);
+    border-bottom: 1px solid var(--ink-100);
+  }
+  @media (max-width: 900px) { .detail__kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .kpi {
+    background: var(--ink-50);
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .kpi__row { display: flex; justify-content: space-between; align-items: center; }
+  .kpi__icon { width: 30px; height: 30px; border-radius: 8px; background: var(--blue-100); color: var(--blue-700); display: grid; place-items: center; }
+  .kpi__delta { font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
+  .kpi__delta--up { color: var(--ok); background: var(--ok-bg); }
+  .kpi__delta--down { color: var(--alert); background: var(--alert-bg); }
+  .kpi__delta--neutral { color: var(--ink-500); background: var(--ink-100); }
+  .kpi__val { font-size: 1.375rem; font-weight: 600; margin-top: var(--s-3); letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .kpi__lbl { color: var(--ink-500); font-size: 0.72rem; margin-top: 4px; }
+
+  /* Section heading */
+  .section-h {
+    font-size: 0.7rem; font-weight: 600; color: var(--ink-500);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Two col below */
+  .two-col { display: grid; grid-template-columns: 1.5fr minmax(0, 1fr); gap: 0; }
+  @media (max-width: 1100px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+  .col-left { padding: var(--s-5); border-right: 1px solid var(--ink-100); }
+  @media (max-width: 1100px) { .col-left { border-right: 0; border-bottom: 1px solid var(--ink-100); } }
+  .col-right { padding: var(--s-5); }
+
+  /* Trend chart */
+  .trend-svg { width: 100%; height: 220px; display: block; }
+
+  /* Patient table */
+  table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  thead th { text-align: left; padding: 8px var(--s-4); font-size: 0.66rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--ink-200); background: var(--ink-50); }
+  tbody td { padding: 10px var(--s-4); border-bottom: 1px solid var(--ink-100); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: var(--ink-50); }
+  .who-cell { display: flex; align-items: center; gap: 10px; }
+  .who-cell .who__avatar { width: 28px; height: 28px; font-size: 0.7rem; }
+  .who-cell .n { font-weight: 600; display: block; }
+  .who-cell .r { display: block; color: var(--ink-500); font-size: 0.7rem; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+  .badge--ok { background: var(--ok-bg); color: var(--ok); }
+  .badge--warn { background: var(--warn-bg); color: var(--warn); }
+  .badge--alert { background: var(--alert-bg); color: var(--alert); }
+  .badge--info { background: var(--blue-50); color: var(--blue-700); }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* Tasks list */
+  .tasks { display: grid; gap: 10px; }
+  .task {
+    display: grid; grid-template-columns: 36px 1fr auto;
+    gap: 12px; align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--ink-200);
+    border-radius: 10px;
+  }
+  .task__icon { width: 36px; height: 36px; border-radius: 9px; background: var(--blue-50); color: var(--blue-700); display: grid; place-items: center; }
+  .task__icon--ok { background: var(--ok-bg); color: var(--ok); }
+  .task__icon--warn { background: var(--warn-bg); color: var(--warn); }
+  .task__icon--alert { background: var(--alert-bg); color: var(--alert); }
+  .task__title { font-weight: 600; font-size: 0.875rem; }
+  .task__meta { font-size: 0.72rem; color: var(--ink-500); margin-top: 2px; }
+  .task__when { text-align: right; font-size: 0.7rem; color: var(--ink-500); font-family: 'IBM Plex Mono', monospace; }
+  .task__when .due { color: var(--alert); font-weight: 600; }
+
+  /* Team avatars */
+  .team-stack { display: flex; margin-top: 4px; }
+  .team-stack .who__avatar { width: 26px; height: 26px; font-size: 0.65rem; border: 2px solid #fff; margin-left: -8px; }
+  .team-stack .who__avatar:first-child { margin-left: 0; }
+  .team-stack .more { width: 26px; height: 26px; border-radius: 50%; background: var(--ink-50); border: 2px solid #fff; color: var(--ink-500); display: grid; place-items: center; font-size: 0.65rem; font-weight: 600; margin-left: -8px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div role="note" style="position:relative;z-index:200;background:#fff4d6;color:#5c4200;border-bottom:1px solid #f0d58c;padding:8px 16px;font:500 13px/1.45 'IBM Plex Sans',system-ui,sans-serif;text-align:center">Protótipo navegável do <strong>Mais Saúde Pública</strong>: telas de referência com dados fictícios, não é o sistema em produção. <a href="https://github.com/dufelizardo/mais_saude_publica" style="color:inherit;text-decoration:underline">Ver o código no GitHub</a></div>
+
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+    <div class="sidebar__brand">
+      <span class="sb-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <div>
+        <div class="sb-name">Mais Saúde</div>
+        <div class="sb-sub">Sistema Integrado</div>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="nav-group">
+        <a href="Painel.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          <span class="nav-item__label">Sala de Situação</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Assistencial</div>
+        <a href="Pacientes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+          <span class="nav-item__label">Pacientes</span>
+        </a>
+        <a href="Programas.html" class="nav-item" aria-current="page">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+          <span class="nav-item__label">Programas de Saúde</span>
+          <span class="nav-badge">8</span>
+        </a>
+        <a href="Agenda.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span class="nav-item__label">Agenda</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Recursos Humanos</div>
+        <a href="Profissionais.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path></svg>
+          <span class="nav-item__label">Profissionais</span>
+        </a>
+        <a href="Equipes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+          <span class="nav-item__label">Equipes</span>
+        </a>
+        <a href="Escalas.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span class="nav-item__label">Escalas</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Gestão</div>
+        <a href="Equipamentos.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path><path d="M9 22v-4h6v4"></path></svg>
+          <span class="nav-item__label">Equipamentos</span>
+        </a>
+        <a href="Relatorios.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span class="nav-item__label">Relatórios</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar__foot">
+      <div class="who" tabindex="0">
+        <span class="who__avatar" aria-hidden="true">MS</span>
+        <div style="min-width:0;">
+          <div class="who__name">Mariana Souza</div>
+          <div class="who__role">Coordenação · Regional Centro</div>
+        </div>
+      </div>
+      <a href="Login.html" class="icon-btn" aria-label="Sair" title="Sair">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Topbar -->
+  <header class="topbar" role="banner">
+    <button class="menu-btn" id="menu-btn" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <nav class="crumbs" aria-label="Trilha">
+      <a href="Painel.html" style="color:var(--ink-500);">Início</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <span style="color:var(--ink-500);">Assistencial</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <strong>Programas de Saúde</strong>
+    </nav>
+
+    <label class="topbar__search" role="search">
+      <span class="sr-only">Buscar</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="search" placeholder="Buscar programa, paciente, unidade…" />
+    </label>
+
+    <div class="top-actions">
+      <span class="top-pill"><span class="dot" aria-hidden="true"></span> Dados ao vivo</span>
+      <button class="top-btn" aria-label="Notificações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="dot-alert" aria-hidden="true"></span>
+      </button>
+      <button class="top-btn" aria-label="Configurações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="content" id="main">
+
+    <header class="page-head">
+      <div>
+        <h1>Programas de Saúde</h1>
+        <p>8 programas ativos · 38.864 pacientes acompanhados · cobertura média 82%</p>
+      </div>
+      <div class="actions">
+        <button class="btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Exportar relatório
+        </button>
+        <button class="btn btn--primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Novo programa
+        </button>
+      </div>
+    </header>
+
+    <!-- Stats -->
+    <section class="stats" aria-label="Resumo de programas">
+      <div class="stat">
+        <span class="stat__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Pacientes acompanhados</div>
+          <div class="stat__val mono">38.864</div>
+          <div class="stat__sub">+551 cadastros · 30 dias</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon stat__icon--ok" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Cobertura média</div>
+          <div class="stat__val mono">82%</div>
+          <div class="stat__sub">meta municipal 85%</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon stat__icon--purple" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Visitas / acolhimentos · mês</div>
+          <div class="stat__val mono">14.218</div>
+          <div class="stat__sub">+7% vs abril</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon stat__icon--warn" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Pacientes em risco</div>
+          <div class="stat__val mono">412</div>
+          <div class="stat__sub">requer busca ativa</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar -->
+    <div class="toolbar" role="region" aria-label="Filtros de programas">
+      <label class="search">
+        <span class="sr-only">Buscar programa</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="search" placeholder="Buscar por nome ou eixo temático…" />
+      </label>
+      <button class="pill active">Todos <span style="background:rgba(19,81,180,0.15); color:var(--blue-700); padding:1px 6px; border-radius:999px; font-size:0.7rem; margin-left:4px;">8</span></button>
+      <button class="pill">Atenção Básica</button>
+      <button class="pill">Crônicos</button>
+      <button class="pill">Ciclos de vida</button>
+      <button class="pill">Saúde Mental</button>
+      <button class="pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+        Unidade
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+    </div>
+
+    <!-- ===== Programs grid ===== -->
+    <section class="pg-grid" role="list" aria-label="Lista de programas">
+
+      <!-- Saúde da Família -->
+      <article class="program" role="listitem" tabindex="0" aria-selected="false" data-prog="sf">
+        <header class="pg__head">
+          <span class="pg__icon pg__icon--blue" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+          </span>
+          <div>
+            <div class="pg__title">Saúde da Família</div>
+            <div class="pg__sub">Atenção Básica · ESF</div>
+          </div>
+          <button class="pg__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="pg__counts">
+          <div class="pg__count">
+            <div class="lbl">Famílias</div>
+            <div class="val mono">4.812</div>
+          </div>
+          <div class="pg__count">
+            <div class="lbl">Pacientes</div>
+            <div class="val mono">18.430</div>
+          </div>
+        </div>
+        <div class="pg__bar-wrap">
+          <div class="pg__bar-top"><span>Cobertura</span><strong>92%</strong></div>
+          <div class="pg__bar"><span style="width:92%"></span></div>
+        </div>
+        <div class="pg__foot">
+          <span class="delta up">+248 famílias · 30d</span>
+          <span class="resp"><span class="who__avatar" aria-hidden="true" style="width:18px;height:18px;font-size:0.55rem;background:linear-gradient(135deg,#1351b4,#2f8de4);">HR</span> Dra. Helena</span>
+        </div>
+      </article>
+
+      <!-- HiperDia -->
+      <article class="program" role="listitem" tabindex="0" aria-selected="true" data-prog="hd">
+        <header class="pg__head">
+          <span class="pg__icon pg__icon--ok" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"></path></svg>
+          </span>
+          <div>
+            <div class="pg__title">HiperDia</div>
+            <div class="pg__sub">Hipertensos &amp; diabéticos</div>
+          </div>
+          <button class="pg__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="pg__counts">
+          <div class="pg__count">
+            <div class="lbl">Hipertensos</div>
+            <div class="val mono">7.214</div>
+          </div>
+          <div class="pg__count">
+            <div class="lbl">Diabéticos</div>
+            <div class="val mono">2.598</div>
+          </div>
+        </div>
+        <div class="pg__bar-wrap">
+          <div class="pg__bar-top"><span>Controlados</span><strong>78%</strong></div>
+          <div class="pg__bar"><span style="width:78%"></span></div>
+        </div>
+        <div class="pg__foot">
+          <span class="delta up">+126 pacientes · 30d</span>
+          <span class="resp"><span class="who__avatar" aria-hidden="true" style="width:18px;height:18px;font-size:0.55rem;background:linear-gradient(135deg,#1351b4,#2f8de4);">HR</span> Dra. Helena</span>
+        </div>
+      </article>
+
+      <!-- Pré-Natal -->
+      <article class="program" role="listitem" tabindex="0" aria-selected="false" data-prog="pn">
+        <header class="pg__head">
+          <span class="pg__icon pg__icon--pink" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </span>
+          <div>
+            <div class="pg__title">Pré-Natal</div>
+            <div class="pg__sub">Gestantes acompanhadas</div>
+          </div>
+          <button class="pg__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="pg__counts">
+          <div class="pg__count">
+            <div class="lbl">Gestantes</div>
+            <div class="val mono">1.284</div>
+          </div>
+          <div class="pg__count">
+            <div class="lbl">7+ consultas</div>
+            <div class="val mono">84%</div>
+          </div>
+        </div>
+        <div class="pg__bar-wrap">
+          <div class="pg__bar-top"><span>Cobertura</span><strong>84%</strong></div>
+          <div class="pg__bar"><span style="width:84%"></span></div>
+        </div>
+        <div class="pg__foot">
+          <span class="delta up">+38 · 30d</span>
+          <span class="resp"><span class="who__avatar" aria-hidden="true" style="width:18px;height:18px;font-size:0.55rem;background:linear-gradient(135deg,#1351b4,#2f8de4);">MF</span> Dra. Mariana</span>
+        </div>
+      </article>
+
+      <!-- Saúde Mental -->
+      <article class="program" role="listitem" tabindex="0" aria-selected="false" data-prog="sm">
+        <header class="pg__head">
+          <span class="pg__icon pg__icon--purple" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+          </span>
+          <div>
+            <div class="pg__title">Saúde Mental</div>
+            <div class="pg__sub">CAPS · acolhimento</div>
+          </div>
+          <button class="pg__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="pg__counts">
+          <div class="pg__count">
+            <div class="lbl">Pacientes</div>
+            <div class="val mono">3.402</div>
+          </div>
+          <div class="pg__count">
+            <div class="lbl">Em risco</div>
+            <div class="val mono" style="color:var(--alert);">128</div>
+          </div>
+        </div>
+        <div class="pg__bar-wrap">
+          <div class="pg__bar-top"><span>Vínculo ativo</span><strong>65%</strong></div>
+          <div class="pg__bar"><span class="warn" style="width:65%"></span></div>
+        </div>
+        <div class="pg__foot">
+          <span class="delta up">+52 · 30d</span>
+          <span class="resp">CAPS Norte · Eq. multi</span>
+        </div>
+      </article>
+
+      <!-- Saúde da Mulher -->
+      <article class="program" role="listitem" tabindex="0" aria-selected="false" data-prog="sw">
+        <header class="pg__head">
+          <span class="pg__icon pg__icon--pink" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"></circle><path d="M12 14v8"></path><path d="M9 19h6"></path></svg>
+          </span>
+          <div>
+            <div class="pg__title">Saúde da Mulher</div>
+            <div class="pg__sub">Prevenção CA · climatério</div>
+          </div>
+          <button class="pg__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="pg__counts">
+          <div class="pg__count">
+            <div class="lbl">Pacientes</div>
+            <div class="val mono">5.918</div>
+          </div>
+          <div class="pg__count">
+            <div class="lbl">Exames em dia</div>
+            <div class="val mono">71%</div>
+          </div>
+        </div>
+        <div class="pg__bar-wrap">
+          <div class="pg__bar-top"><span>Cobertura</span><strong>71%</strong></div>
+          <div class="pg__bar"><span class="warn" style="width:71%"></span></div>
+        </div>
+        <div class="pg__foot">
+          <span class="delta up">+87 · 30d</span>
+          <span class="resp"><span class="who__avatar" aria-hidden="true" style="width:18px;height:18px;font-size:0.55rem;background:linear-gradient(135deg,#1351b4,#2f8de4);">MF</span> Dra. Mariana</span>
+        </div>
+      </article>
+
+      <!-- Saúde da Criança -->
+      <article class="program" role="listitem" tabindex="0" aria-selected="false" data-prog="sc">
+        <header class="pg__head">
+          <span class="pg__icon pg__icon--teal" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6" r="4"></circle><path d="M5 22a7 7 0 0 1 14 0"></path></svg>
+          </span>
+          <div>
+            <div class="pg__title">Saúde da Criança</div>
+            <div class="pg__sub">0–10 anos · puericultura</div>
+          </div>
+          <button class="pg__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="pg__counts">
+          <div class="pg__count">
+            <div class="lbl">Crianças</div>
+            <div class="val mono">4.122</div>
+          </div>
+          <div class="pg__count">
+            <div class="lbl">Vacinas em dia</div>
+            <div class="val mono">89%</div>
+          </div>
+        </div>
+        <div class="pg__bar-wrap">
+          <div class="pg__bar-top"><span>Acompanhamento</span><strong>89%</strong></div>
+          <div class="pg__bar"><span class="ok" style="width:89%"></span></div>
+        </div>
+        <div class="pg__foot">
+          <span class="delta up">+62 · 30d</span>
+          <span class="resp">Pediatria · 4 prof.</span>
+        </div>
+      </article>
+
+      <!-- Saúde do Idoso -->
+      <article class="program" role="listitem" tabindex="0" aria-selected="false" data-prog="si">
+        <header class="pg__head">
+          <span class="pg__icon pg__icon--amber" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path><path d="M16 7l2-2"></path></svg>
+          </span>
+          <div>
+            <div class="pg__title">Saúde do Idoso</div>
+            <div class="pg__sub">60+ · cuidado integral</div>
+          </div>
+          <button class="pg__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="pg__counts">
+          <div class="pg__count">
+            <div class="lbl">Idosos</div>
+            <div class="val mono">3.612</div>
+          </div>
+          <div class="pg__count">
+            <div class="lbl">Caderneta ativa</div>
+            <div class="val mono">81%</div>
+          </div>
+        </div>
+        <div class="pg__bar-wrap">
+          <div class="pg__bar-top"><span>Cobertura</span><strong>81%</strong></div>
+          <div class="pg__bar"><span style="width:81%"></span></div>
+        </div>
+        <div class="pg__foot">
+          <span class="delta up">+44 · 30d</span>
+          <span class="resp">Eq. SF · ACS</span>
+        </div>
+      </article>
+
+      <!-- Tabagismo -->
+      <article class="program" role="listitem" tabindex="0" aria-selected="false" data-prog="tb">
+        <header class="pg__head">
+          <span class="pg__icon pg__icon--purple" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+          </span>
+          <div>
+            <div class="pg__title">Tabagismo</div>
+            <div class="pg__sub">Cessação tabágica</div>
+          </div>
+          <button class="pg__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="pg__counts">
+          <div class="pg__count">
+            <div class="lbl">Em tratamento</div>
+            <div class="val mono">468</div>
+          </div>
+          <div class="pg__count">
+            <div class="lbl">Concluídos</div>
+            <div class="val mono">128</div>
+          </div>
+        </div>
+        <div class="pg__bar-wrap">
+          <div class="pg__bar-top"><span>Adesão 4 sem.</span><strong>62%</strong></div>
+          <div class="pg__bar"><span class="warn" style="width:62%"></span></div>
+        </div>
+        <div class="pg__foot">
+          <span class="delta down">−4 · 30d</span>
+          <span class="resp">Grupo terapêutico</span>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ===== Selected program detail (HiperDia) ===== -->
+    <section class="card detail" aria-labelledby="prog-detail-title">
+      <div class="detail__head">
+        <span class="detail__icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"></path></svg>
+        </span>
+        <div class="detail__id">
+          <h2 id="prog-detail-title">HiperDia · Hipertensos &amp; Diabéticos</h2>
+          <div style="color:var(--ink-500); font-size:0.875rem; margin-top: 4px;">
+            Acompanhamento contínuo de pacientes com hipertensão e diabetes na atenção básica · Coordenação assistencial: Dra. Helena Ribeiro
+          </div>
+          <div class="detail__chips">
+            <span class="tag tag--info">Crônicos</span>
+            <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Ativo · 128 unidades</span>
+            <span class="tag tag--info">Periodicidade mensal</span>
+          </div>
+        </div>
+        <div class="detail__actions">
+          <a href="Pacientes.html" class="btn">Ver pacientes</a>
+          <button class="btn">Relatório clínico</button>
+          <button class="btn btn--primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Inscrever paciente
+          </button>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="detail__kpis">
+        <div class="kpi">
+          <div class="kpi__row">
+            <span class="kpi__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+            </span>
+            <span class="kpi__delta kpi__delta--up">+126</span>
+          </div>
+          <div class="kpi__val">9.812</div>
+          <div class="kpi__lbl">Pacientes inscritos</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__row">
+            <span class="kpi__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </span>
+            <span class="kpi__delta kpi__delta--up">+2,1%</span>
+          </div>
+          <div class="kpi__val">78%</div>
+          <div class="kpi__lbl">Pressão arterial controlada</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__row">
+            <span class="kpi__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"></path></svg>
+            </span>
+            <span class="kpi__delta kpi__delta--neutral">±0</span>
+          </div>
+          <div class="kpi__val">64%</div>
+          <div class="kpi__lbl">HbA1c &lt; 7%</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__row">
+            <span class="kpi__icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+            </span>
+            <span class="kpi__delta kpi__delta--down">+18</span>
+          </div>
+          <div class="kpi__val" style="color:var(--alert);">214</div>
+          <div class="kpi__lbl">Faltosos · busca ativa</div>
+        </div>
+      </div>
+
+      <!-- Two-col: chart + tasks/team -->
+      <div class="two-col">
+        <div class="col-left">
+          <div class="section-h">Evolução · últimos 12 meses</div>
+          <svg class="trend-svg" viewBox="0 0 720 220" role="img" aria-label="Linha de tendência mostrando crescimento estável de pacientes inscritos e melhoria na taxa de controle">
+            <!-- gridlines -->
+            <g stroke="#eef1f5" stroke-width="1">
+              <line x1="40" y1="30" x2="710" y2="30"></line>
+              <line x1="40" y1="80" x2="710" y2="80"></line>
+              <line x1="40" y1="130" x2="710" y2="130"></line>
+              <line x1="40" y1="180" x2="710" y2="180"></line>
+            </g>
+            <g fill="#7a8392" font-size="9" font-family="IBM Plex Mono, monospace" text-anchor="end">
+              <text x="34" y="34">10k</text>
+              <text x="34" y="84">9k</text>
+              <text x="34" y="134">8k</text>
+              <text x="34" y="184">7k</text>
+            </g>
+            <line x1="40" y1="190" x2="710" y2="190" stroke="#dde1e8"></line>
+
+            <!-- area for inscritos -->
+            <path d="M55,160 L110,150 L165,145 L220,130 L275,118 L330,108 L385,95 L440,80 L495,72 L550,58 L605,45 L660,38 L660,190 L55,190 Z"
+                  fill="#1351b4" fill-opacity="0.08"></path>
+            <!-- line -->
+            <path d="M55,160 L110,150 L165,145 L220,130 L275,118 L330,108 L385,95 L440,80 L495,72 L550,58 L605,45 L660,38"
+                  stroke="#1351b4" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+            <!-- secondary line — taxa de controle (right axis simulated, scale 70-78%) -->
+            <path d="M55,140 L110,135 L165,128 L220,118 L275,115 L330,108 L385,102 L440,95 L495,90 L550,85 L605,78 L660,72"
+                  stroke="#1f8a5b" stroke-width="2" fill="none" stroke-dasharray="4 3"></path>
+
+            <!-- dots on main -->
+            <g fill="#1351b4">
+              <circle cx="55" cy="160" r="3"></circle>
+              <circle cx="110" cy="150" r="3"></circle>
+              <circle cx="165" cy="145" r="3"></circle>
+              <circle cx="220" cy="130" r="3"></circle>
+              <circle cx="275" cy="118" r="3"></circle>
+              <circle cx="330" cy="108" r="3"></circle>
+              <circle cx="385" cy="95" r="3"></circle>
+              <circle cx="440" cy="80" r="3"></circle>
+              <circle cx="495" cy="72" r="3"></circle>
+              <circle cx="550" cy="58" r="3"></circle>
+              <circle cx="605" cy="45" r="3"></circle>
+              <circle cx="660" cy="38" r="4" stroke="#fff" stroke-width="2"></circle>
+            </g>
+
+            <!-- labels at current point -->
+            <g transform="translate(670, 22)">
+              <rect x="0" y="0" width="48" height="22" rx="5" fill="#1351b4"></rect>
+              <text x="24" y="14" fill="#fff" font-size="10" font-weight="700" font-family="IBM Plex Mono, monospace" text-anchor="middle">9.812</text>
+            </g>
+
+            <!-- x labels months -->
+            <g fill="#7a8392" font-size="9" font-family="IBM Plex Mono, monospace" text-anchor="middle">
+              <text x="55"  y="208">Jun</text>
+              <text x="110" y="208">Jul</text>
+              <text x="165" y="208">Ago</text>
+              <text x="220" y="208">Set</text>
+              <text x="275" y="208">Out</text>
+              <text x="330" y="208">Nov</text>
+              <text x="385" y="208">Dez</text>
+              <text x="440" y="208">Jan</text>
+              <text x="495" y="208">Fev</text>
+              <text x="550" y="208">Mar</text>
+              <text x="605" y="208">Abr</text>
+              <text x="660" y="208">Mai</text>
+            </g>
+
+            <!-- legend -->
+            <g transform="translate(40, 5)" font-size="10" font-family="IBM Plex Sans">
+              <line x1="0" y1="0" x2="14" y2="0" stroke="#1351b4" stroke-width="2.5"></line>
+              <text x="20" y="3" fill="#2a3140">Pacientes inscritos</text>
+              <line x1="160" y1="0" x2="174" y2="0" stroke="#1f8a5b" stroke-width="2" stroke-dasharray="3 2"></line>
+              <text x="180" y="3" fill="#2a3140">Taxa de controle (%)</text>
+            </g>
+          </svg>
+
+          <div class="section-h" style="margin-top: var(--s-5);">Pacientes em destaque · busca ativa</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Paciente</th>
+                <th>Idade</th>
+                <th>Última aferição</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="who-cell">
+                    <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">JP</span>
+                    <div><span class="n">Joana Pereira da Silva</span><span class="r">UBS Vila Esperança</span></div>
+                  </div>
+                </td>
+                <td>68</td>
+                <td class="mono">23/05 · PA 158/96</td>
+                <td><span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> PA elevada</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="who-cell">
+                    <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">AC</span>
+                    <div><span class="n">Antônio Carlos Silva</span><span class="r">UBS Centro</span></div>
+                  </div>
+                </td>
+                <td>72</td>
+                <td class="mono">22/05 · PA 132/84</td>
+                <td><span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Controlado</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="who-cell">
+                    <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">RA</span>
+                    <div><span class="n">Roberto Almeida Pinto</span><span class="r">UBS Centro</span></div>
+                  </div>
+                </td>
+                <td>59</td>
+                <td class="mono">18/05 · PA 128/80</td>
+                <td><span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Controlado</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="who-cell">
+                    <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">ET</span>
+                    <div><span class="n">Eduardo Tavares Lopes</span><span class="r">UBS Boa Esperança</span></div>
+                  </div>
+                </td>
+                <td>51</td>
+                <td class="mono">15/05 · HbA1c 8,2%</td>
+                <td><span class="badge badge--warn"><span class="dot" aria-hidden="true"></span> Atenção</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="who-cell">
+                    <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">FB</span>
+                    <div><span class="n">Felipe Barbosa</span><span class="r">UBS Jardim das Flores</span></div>
+                  </div>
+                </td>
+                <td>54</td>
+                <td class="mono">07/04 · faltou</td>
+                <td><span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Faltoso 45d</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Right column: tasks + team -->
+        <div class="col-right">
+          <div class="section-h">Ações pendentes · semana</div>
+          <div class="tasks">
+            <div class="task">
+              <span class="task__icon task__icon--alert" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              </span>
+              <div>
+                <div class="task__title">Busca ativa · 214 faltosos</div>
+                <div class="task__meta">PA não aferida há 60+ dias · ACS Microárea 14, 18, 22</div>
+              </div>
+              <div class="task__when"><span class="due">vence 28/mai</span><br/>4 ACS</div>
+            </div>
+            <div class="task">
+              <span class="task__icon task__icon--warn" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              </span>
+              <div>
+                <div class="task__title">Reavaliação medicamentosa · 38 pacientes</div>
+                <div class="task__meta">PA não controlada por 3 aferições consecutivas</div>
+              </div>
+              <div class="task__when">esta sem.<br/>Dra. Helena</div>
+            </div>
+            <div class="task">
+              <span class="task__icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              </span>
+              <div>
+                <div class="task__title">Coleta laboratorial · 124 vagas</div>
+                <div class="task__meta">HbA1c trimestral · UBS Vila Esperança · ter 09h</div>
+              </div>
+              <div class="task__when">28/mai · 09h<br/>Enf. Paulo</div>
+            </div>
+            <div class="task">
+              <span class="task__icon task__icon--ok" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+              </span>
+              <div>
+                <div class="task__title">Grupo terapêutico · alimentação saudável</div>
+                <div class="task__meta">12 participantes · ter 16h30 · UBS Vila Esperança</div>
+              </div>
+              <div class="task__when">28/mai · 16h30<br/>Nutricionista</div>
+            </div>
+          </div>
+
+          <div class="section-h" style="margin-top: var(--s-5);">Equipe responsável</div>
+          <div style="display: grid; gap: 8px;">
+            <div style="display:flex; align-items:center; gap:10px; padding: 8px 0; border-bottom: 1px solid var(--ink-100);">
+              <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">HR</span>
+              <div style="flex:1;">
+                <div style="font-weight:600; font-size:0.875rem;">Dra. Helena Ribeiro</div>
+                <div style="font-size:0.72rem; color:var(--ink-500);">Coord. clínica · Clínica Geral</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding: 8px 0; border-bottom: 1px solid var(--ink-100);">
+              <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#0b8a8a,#38b2b2);">PS</span>
+              <div style="flex:1;">
+                <div style="font-weight:600; font-size:0.875rem;">Enf. Paulo Silva</div>
+                <div style="font-size:0.72rem; color:var(--ink-500);">Procedimentos · aferições</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding: 8px 0; border-bottom: 1px solid var(--ink-100);">
+              <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#6936c2,#9c6ce8);">CA</span>
+              <div style="flex:1;">
+                <div style="font-weight:600; font-size:0.875rem;">Carolina Alencar</div>
+                <div style="font-size:0.72rem; color:var(--ink-500);">Nutricionista · grupo terapêutico</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; padding: 8px 0;">
+              <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1f8a5b,#4cb083);">MM</span>
+              <div style="flex:1;">
+                <div style="font-weight:600; font-size:0.875rem;">ACS Márcia Mendes</div>
+                <div style="font-size:0.72rem; color:var(--ink-500);">+3 ACS · busca ativa</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p style="text-align: center; color: var(--ink-400); font-size: 0.75rem; margin-top: var(--s-8);">
+      Mais Saúde Pública · indicadores conforme PMAQ · dados auditados · LGPD
+    </p>
+  </main>
+</div>
+
+<script>
+  // Mobile sidebar
+  (function () {
+    const btn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn || !sidebar) return;
+    btn.addEventListener('click', () => {
+      const open = sidebar.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth > 980) return;
+      if (!sidebar.classList.contains('is-open')) return;
+      if (sidebar.contains(e.target) || btn.contains(e.target)) return;
+      sidebar.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  })();
+  // Program selection (visual only — keeps detail card content)
+  (function () {
+    document.querySelectorAll('.program').forEach(p => {
+      p.addEventListener('click', () => {
+        document.querySelectorAll('.program').forEach(x => x.setAttribute('aria-selected', 'false'));
+        p.setAttribute('aria-selected', 'true');
+      });
+    });
+  })();
+</script>
+</body>
+</html>

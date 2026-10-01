@@ -8,6 +8,16 @@ export function formatCpf(raw: string): string {
   return out;
 }
 
+export function formatCartaoSus(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 15);
+
+  let out = digits.slice(0, 3);
+  if (digits.length > 3) out += ' ' + digits.slice(3, 7);
+  if (digits.length > 7) out += ' ' + digits.slice(7, 11);
+  if (digits.length > 11) out += ' ' + digits.slice(11, 15);
+  return out;
+}
+
 export function formatTelefone(raw: string): string {
   // O próprio texto formatado por esta função começa com "+55", que contém dígitos "5" "5" —
   // como o handler de (input) reprocessa o valor já formatado a cada tecla, sem remover esse

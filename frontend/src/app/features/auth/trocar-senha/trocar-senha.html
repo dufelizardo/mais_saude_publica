@@ -1,0 +1,69 @@
+<a href="#main" class="skip-link">Pular para o formulário</a>
+
+<div class="login-shell login-shell--solo">
+  <section class="form-panel" aria-labelledby="form-title">
+    <main id="main" class="form-wrap" role="main">
+      <span class="bp-brand__mark senha-mark" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+      </span>
+      <h1 id="form-title">{{ obrigatoria() ? 'Crie a sua senha' : 'Trocar senha' }}</h1>
+      @if (obrigatoria()) {
+        <p class="lead">
+          @if (nome()) { Olá, {{ nome() }}. }
+          Você entrou com uma senha provisória, definida pela administração. Antes de continuar, crie uma senha que só você conheça.
+        </p>
+      } @else {
+        <p class="lead">Informe a senha atual e escolha a nova. A troca vale a partir do próximo acesso em qualquer dispositivo.</p>
+      }
+
+      <form novalidate [formGroup]="form" (ngSubmit)="enviar()">
+        <div class="field" [class.has-error]="!!erro('senhaAtual')">
+          <label for="f-senhaAtual">{{ obrigatoria() ? 'Senha provisória' : 'Senha atual' }}</label>
+          <div class="input-wrap" [class.has-error]="!!erro('senhaAtual')">
+            <input id="f-senhaAtual" formControlName="senhaAtual" [type]="mostrar() ? 'text' : 'password'" autocomplete="current-password" aria-describedby="e-senhaAtual" />
+          </div>
+          @if (erro('senhaAtual')) { <span class="error-msg" id="e-senhaAtual" role="alert" style="display: inline-flex;">{{ erro('senhaAtual') }}</span> }
+        </div>
+
+        <div class="field" [class.has-error]="!!erro('novaSenha')">
+          <label for="f-novaSenha">Nova senha</label>
+          <div class="input-wrap" [class.has-error]="!!erro('novaSenha')">
+            <input id="f-novaSenha" formControlName="novaSenha" [type]="mostrar() ? 'text' : 'password'" autocomplete="new-password" aria-describedby="requisitos e-novaSenha" />
+            <button type="button" class="input-wrap__action" (click)="mostrar.set(!mostrar())" [attr.aria-pressed]="mostrar()" [attr.aria-label]="mostrar() ? 'Ocultar senhas' : 'Mostrar senhas'">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+          @if (erro('novaSenha')) { <span class="error-msg" id="e-novaSenha" role="alert" style="display: inline-flex;">{{ erro('novaSenha') }}</span> }
+        </div>
+
+        <div class="field" [class.has-error]="!!erro('confirmacao')">
+          <label for="f-confirmacao">Confirmar nova senha</label>
+          <div class="input-wrap" [class.has-error]="!!erro('confirmacao')">
+            <input id="f-confirmacao" formControlName="confirmacao" [type]="mostrar() ? 'text' : 'password'" autocomplete="new-password" aria-describedby="e-confirmacao" />
+          </div>
+          @if (erro('confirmacao')) { <span class="error-msg" id="e-confirmacao" role="alert" style="display: inline-flex;">{{ erro('confirmacao') }}</span> }
+        </div>
+
+        <ul class="senha-req" id="requisitos" aria-label="Requisitos da nova senha">
+          @for (r of requisitos(); track r.texto) {
+            <li [class.ok]="r.ok">
+              <span aria-hidden="true">{{ r.ok ? '✓' : '•' }}</span> {{ r.texto }}
+              <span class="sr-only">{{ r.ok ? '(atendido)' : '(pendente)' }}</span>
+            </li>
+          }
+        </ul>
+
+        @if (erroServidor()) {
+          <span class="error-msg" role="alert" style="display: inline-flex;">{{ erroServidor() }}</span>
+        }
+
+        <button type="submit" class="btn btn--block" [disabled]="enviando()">{{ enviando() ? 'Salvando…' : 'Salvar nova senha' }}</button>
+        @if (obrigatoria()) {
+          <button type="button" class="btn btn--ghost btn--block" (click)="sair()">Sair</button>
+        } @else {
+          <button type="button" class="btn btn--ghost btn--block" (click)="voltar()">Voltar</button>
+        }
+      </form>
+    </main>
+  </section>
+</div>

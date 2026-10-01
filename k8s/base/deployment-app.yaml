@@ -29,6 +29,30 @@ spec:
                 secretKeyRef:
                   name: db-credentials
                   key: password
+            # Opcional (ver ADR-0055) — sem este secret provisionado, a app sobe normalmente e
+            # JwtService gera uma chave efemera em memoria (tokens nao sobrevivem a um restart).
+            - name: APP_SECURITY_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: jwt-secret
+                  optional: true
+            # Bootstrap do AdministradorPlataforma (ADR-0054 decisao 5) — tambem opcional: sem os
+            # dois valores, AdministradorPlataformaBootstrap so pula a criacao (nao crasha). Mas se
+            # o toggle de seguranca estiver ligado (ver overlay) e nenhum Usuario existir ainda,
+            # ninguem consegue logar sem isso provisionado.
+            - name: APP_SECURITY_BOOTSTRAP_CPF
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: bootstrap-cpf
+                  optional: true
+            - name: APP_SECURITY_BOOTSTRAP_SENHA
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: bootstrap-senha
+                  optional: true
           resources:
             requests:
               cpu: 250m
@@ -39,12 +63,16 @@ spec:
           # startupProbe segura o readiness/liveness até a app responder — sem isso, o liveness
           # (initialDelaySeconds curto) mata o container no meio da subida do Spring Boot/Hibernate
           # antes dele terminar de criar o schema, principalmente no CPU modesto do home-lab
-          # (ver ADR-0012). Até 36x5s = 180s pra primeira resposta antes de considerar falha real.
+          # (ver ADR-0012). Até 120x5s = 10 min pra primeira resposta antes de considerar falha real:
+          # depois de um reinício do servidor, as APIs de todos os ambientes (e outros projetos do
+          # home-lab) sobem juntas sobre o mesmo disco mecânico, e 180 s não bastavam — cada API morta
+          # recomeçava a corrida (até 13 reinícios observados em 2026-10-01). Só atrasa a desistência;
+          # com a API no ar, readiness e liveness seguem iguais.
           startupProbe:
             httpGet:
               path: /v3/api-docs
               port: 8080
-            failureThreshold: 36
+            failureThreshold: 120
             periodSeconds: 5
           readinessProbe:
             httpGet:

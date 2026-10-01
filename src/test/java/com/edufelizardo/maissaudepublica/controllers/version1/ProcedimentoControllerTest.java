@@ -10,6 +10,7 @@ import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProcedimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -80,7 +81,9 @@ class ProcedimentoControllerTest {
         // Ordem importa: Procedimento -> Consulta -> Atendimento (cada um referencia o anterior por
         // FK). Nenhum tem campo de teste próprio para filtrar sem navegar associações LAZY fora de
         // transação — este é o único teste que os cria, então apagar tudo é seguro.
+        procedimentoRepository.deleteAll(procedimentoRepository.findAll().stream().filter(r -> r.getRetificacaoDe() != null).toList());
         procedimentoRepository.deleteAll();
+        consultaRepository.deleteAll(consultaRepository.findAll().stream().filter(c -> c.getRetificacaoDe() != null).toList());
         consultaRepository.deleteAll();
         atendimentoRepository.deleteAll();
 
@@ -370,28 +373,159 @@ class ProcedimentoControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    void deveAtualizarStatus() throws Exception {
-        ConsultaSeed seed = criarConsultaEBuscarUuid("05");
-
+    private UUID criarOriginal(ConsultaSeed seed, String valor) throws Exception {
         mockMvc.perform(post(PROCEDIMENTO_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(corpoProcedimento(seed.consultaId(), seed.profissionalMatricula(), "AGENDADO")))
+                        .content(corpoProcedimento(seed.consultaId(), seed.profissionalMatricula(), valor)))
                 .andExpect(status().isCreated());
-
-        UUID uuid = procedimentoRepository.findAll().stream()
-                .filter(p -> p.getConsulta().getUuid().equals(seed.consultaId()))
+        return procedimentoRepository.findAll().stream()
+                .filter(r -> r.getRetificacaoDe() == null && r.getConsulta().getUuid().equals(seed.consultaId()))
                 .findFirst()
                 .orElseThrow()
                 .getUuid();
+    }
 
-        mockMvc.perform(patch(PROCEDIMENTO_URL + uuid)
+    /** O mesmo corpo da criação, mais o motivo da retificação (ADR-0062). */
+    private static String comMotivo(String corpo, String motivo) {
+        return corpo.replaceFirst("\\{", "{ \"motivoRetificacao\": " + (motivo == null ? "null" : "\"" + motivo + "\"") + ",");
+    }
+
+    @Test
+    void deveRetificarGravandoNovaVersaoSemAlterarAOriginal() throws Exception {
+        ConsultaSeed seed = criarConsultaEBuscarUuid("31");
+        UUID original = criarOriginal(seed, "AGENDADO");
+
+        mockMvc.perform(post(PROCEDIMENTO_URL + original + "/retificacao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(comMotivo(corpoProcedimento(seed.consultaId(), seed.profissionalMatricula(), "REALIZADO"), "Valor registrado errado")))
+                .andExpect(status().isCreated());
+
+        assertThat(procedimentoRepository.findById(original).orElseThrow().getStatus().name()).isEqualTo("AGENDADO");
+        UUID nova = procedimentoRepository.findAll().stream()
+                .filter(r -> !r.getUuid().equals(original) && r.getConsulta().getUuid().equals(seed.consultaId()))
+                .findFirst()
+                .orElseThrow()
+                .getUuid();
+        assertThat(procedimentoRepository.findById(nova).orElseThrow().getStatus().name()).isEqualTo("REALIZADO");
+
+        mockMvc.perform(get(PROCEDIMENTO_URL + original))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.retificado").value(true))
+                .andExpect(jsonPath("$.retificadoPorUuid").value(nova.toString()));
+        mockMvc.perform(get(PROCEDIMENTO_URL + nova))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.retificado").value(false))
+                .andExpect(jsonPath("$.retificacaoDeUuid").value(original.toString()))
+                .andExpect(jsonPath("$.motivoRetificacao").value("Valor registrado errado"))
+                .andExpect(jsonPath("$.registradoEm").isNotEmpty());
+    }
+
+    @Test
+    void deveRecusarRetificarVersaoQueJaFoiRetificada() throws Exception {
+        ConsultaSeed seed = criarConsultaEBuscarUuid("32");
+        UUID original = criarOriginal(seed, "AGENDADO");
+        String retificacao = comMotivo(corpoProcedimento(seed.consultaId(), seed.profissionalMatricula(), "REALIZADO"), "Correção");
+
+        mockMvc.perform(post(PROCEDIMENTO_URL + original + "/retificacao").contentType(MediaType.APPLICATION_JSON).content(retificacao))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post(PROCEDIMENTO_URL + original + "/retificacao").contentType(MediaType.APPLICATION_JSON).content(retificacao))
+                .andExpect(status().isUnprocessableEntity());
+
+        assertThat(procedimentoRepository.findAll().stream().filter(r -> r.getConsulta().getUuid().equals(seed.consultaId())).count())
+                .isEqualTo(2);
+    }
+
+    @Test
+    void deveExigirMotivoNaRetificacao() throws Exception {
+        ConsultaSeed seed = criarConsultaEBuscarUuid("33");
+        UUID original = criarOriginal(seed, "AGENDADO");
+
+        mockMvc.perform(post(PROCEDIMENTO_URL + original + "/retificacao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(comMotivo(corpoProcedimento(seed.consultaId(), seed.profissionalMatricula(), "REALIZADO"), null)))
+                .andExpect(status().isBadRequest());
+
+        assertThat(procedimentoRepository.findAll().stream().filter(r -> r.getConsulta().getUuid().equals(seed.consultaId())).count())
+                .isEqualTo(1);
+    }
+
+    @Test
+    void deveRecusarRetificacaoQueTrocaOConsulta() throws Exception {
+        ConsultaSeed seed = criarConsultaEBuscarUuid("34");
+        ConsultaSeed outro = criarConsultaEBuscarUuid("35");
+        UUID original = criarOriginal(seed, "AGENDADO");
+
+        mockMvc.perform(post(PROCEDIMENTO_URL + original + "/retificacao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(comMotivo(corpoProcedimento(outro.consultaId(), seed.profissionalMatricula(), "REALIZADO"), "Registro no lugar errado")))
+                .andExpect(status().isBadRequest());
+    }
+
+    private String corpoStatus(String status, String matricula, String dataRealizacao, String justificativa) {
+        return """
+                { "status": "%s", "profissionalMatricula": "%s", "dataRealizacao": %s, "justificativa": %s }
+                """.formatted(status, matricula,
+                dataRealizacao == null ? "null" : "\"" + dataRealizacao + "\"",
+                justificativa == null ? "null" : "\"" + justificativa + "\"");
+    }
+
+    @Test
+    void deveRegistrarRealizacaoUmaUnicaVezGuardandoADataPrevista() throws Exception {
+        ConsultaSeed seed = criarConsultaEBuscarUuid("36");
+        UUID id = criarOriginal(seed, "AGENDADO");
+
+        mockMvc.perform(post(PROCEDIMENTO_URL + id + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoStatus("REALIZADO", seed.profissionalMatricula(), "2026-01-02T10:30:00", null)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get(PROCEDIMENTO_URL + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REALIZADO"))
+                .andExpect(jsonPath("$.dataRealizacao").value(startsWith("2026-01-02T10:30")))
+                .andExpect(jsonPath("$.dataPrevista").value(startsWith("2026-01-01T09:00")))
+                .andExpect(jsonPath("$.profissionalStatusMatricula").value(seed.profissionalMatricula()))
+                .andExpect(jsonPath("$.statusAlteradoEm").isNotEmpty());
+
+        // O desfecho acontece uma vez; depois disso, correção é retificação.
+        mockMvc.perform(post(PROCEDIMENTO_URL + id + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoStatus("CANCELADO", seed.profissionalMatricula(), null, "Engano")))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void deveExigirJustificativaNoCancelamento() throws Exception {
+        ConsultaSeed seed = criarConsultaEBuscarUuid("37");
+        UUID id = criarOriginal(seed, "AGENDADO");
+
+        mockMvc.perform(post(PROCEDIMENTO_URL + id + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoStatus("CANCELADO", seed.profissionalMatricula(), null, null)))
+                .andExpect(status().isBadRequest());
+
+        assertThat(procedimentoRepository.findById(id).orElseThrow().getStatus().name()).isEqualTo("AGENDADO");
+    }
+
+    @Test
+    void deveRecusarProcedimentoEmConsultaRetificada() throws Exception {
+        ConsultaSeed seed = criarConsultaEBuscarUuid("38");
+        String consulta = mockMvc.perform(get(CONSULTA_URL + seed.consultaId()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String atendimentoId = JsonPath.read(consulta, "$.atendimentoUuid");
+
+        mockMvc.perform(post(CONSULTA_URL + seed.consultaId() + "/retificacao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "atendimentoId": "%s", "profissionalMatricula": "%s", "dataHora": "2026-01-01T08:30:00",
+                                  "tipoConsulta": "RETORNO", "motivoRetificacao": "Tipo de consulta errado" }
+                                """.formatted(atendimentoId, seed.profissionalMatricula())))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post(PROCEDIMENTO_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(corpoProcedimento(seed.consultaId(), seed.profissionalMatricula(), "REALIZADO")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.details").value("Status: REALIZADO"));
-
-        Procedimento atualizado = procedimentoRepository.findById(uuid).orElseThrow();
-        assertThat(atualizado.getStatus().name()).isEqualTo("REALIZADO");
+                .andExpect(status().isUnprocessableEntity());
     }
 }

@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Profissionais — Mais Saúde Pública</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --blue-900:#0a2540; --blue-800:#0c3170; --blue-700:#1351b4; --blue-600:#1e6fd9;
+    --blue-500:#2f8de4; --blue-400:#5aa9ee; --blue-200:#c7daf5; --blue-100:#e7f0fb; --blue-50:#f3f7fd;
+    --ink-900:#0e1116; --ink-700:#2a3140; --ink-500:#5c6470; --ink-400:#7a8392;
+    --ink-300:#b6bdc9; --ink-200:#dde1e8; --ink-100:#eef1f5; --ink-50:#f7f8fb;
+    --white:#fff;
+    --ok:#1f8a5b; --ok-bg:#e7f6ee; --warn:#b86b00; --warn-bg:#fdf4e3; --alert:#c0392b; --alert-bg:#fdecea;
+    --purple:#6936c2; --purple-bg:#f4ecff;
+    --teal:#0b8a8a; --teal-bg:#e3f4f4;
+    --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:18px;
+    --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:20px; --s-6:24px; --s-8:32px;
+    --side-w:260px; --top-h:64px;
+    --shadow-sm:0 1px 2px rgba(14,17,22,0.05);
+    --shadow-md:0 1px 2px rgba(14,17,22,0.04), 0 6px 18px rgba(14,17,22,0.06);
+    --shadow-lg:0 10px 30px rgba(14,17,22,0.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin:0; background: var(--ink-50); color: var(--ink-900); font-family:'IBM Plex Sans', system-ui, -apple-system, sans-serif; font-size:0.9375rem; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x: hidden; }
+  a { color: var(--blue-700); text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+  h1,h2,h3,h4 { margin:0; letter-spacing:-0.01em; line-height:1.2; font-weight:600; }
+  p { margin:0; }
+  ul { margin:0; padding:0; list-style:none; }
+  .mono { font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 3px solid var(--blue-500); outline-offset: 2px; border-radius: 6px; }
+  .skip-link { position: absolute; left: 8px; top: -100px; background: var(--blue-700); color:#fff; padding: 10px 14px; border-radius: 6px; font-weight: 600; z-index: 200; }
+  .skip-link:focus { top: 8px; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  /* === Shell === */
+  .app { display: grid; grid-template-columns: var(--side-w) 1fr; grid-template-rows: var(--top-h) 1fr; grid-template-areas: "sidebar topbar" "sidebar content"; min-height: 100vh; }
+  @media (max-width: 980px) { .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "topbar" "content"; } }
+  .sidebar { grid-area: sidebar; background: #fff; border-right: 1px solid var(--ink-200); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  @media (max-width: 980px) {
+    .sidebar { display: none; }
+    .sidebar.is-open { display: flex; position: fixed; inset: 0 auto 0 0; width: 280px; z-index: 150; box-shadow: var(--shadow-lg); }
+  }
+  .sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--ink-100); height: var(--top-h); flex-shrink: 0; }
+  .sb-mark { width: 36px; height: 36px; border-radius: 9px; background: var(--blue-700); color: #fff; display: grid; place-items: center; flex-shrink: 0; }
+  .sb-name { font-weight: 600; font-size: 0.9375rem; line-height: 1.05; white-space: nowrap; }
+  .sb-sub { font-size: 0.66rem; color: var(--ink-500); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+  .sidebar__nav { padding: var(--s-3) 10px; flex: 1; }
+  .nav-group { margin-bottom: var(--s-4); }
+  .nav-group__label { font-size: 0.66rem; font-weight: 600; color: var(--ink-400); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 10px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--ink-700); font-size: 0.875rem; font-weight: 500; text-decoration: none; min-height: 36px; }
+  .nav-item:hover { background: var(--blue-50); color: var(--blue-700); }
+  .nav-item[aria-current="page"] { background: var(--blue-700); color: #fff; box-shadow: var(--shadow-sm); }
+  .nav-item[aria-current="page"] .nav-badge { background: rgba(255,255,255,0.2); color: #fff; }
+  .nav-item__icon { width: 18px; height: 18px; color: currentColor; flex-shrink: 0; }
+  .nav-item__label { flex: 1; }
+  .nav-badge { background: var(--ink-100); color: var(--ink-500); font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
+  .sidebar__foot { border-top: 1px solid var(--ink-100); padding: var(--s-3); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .who { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; padding: 4px 6px; border-radius: 8px; }
+  .who:hover { background: var(--ink-50); }
+  .who__avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 0.8125rem; flex-shrink: 0; }
+  .who__name { font-weight: 600; font-size: 0.8125rem; color: var(--ink-900); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who__role { font-size: 0.7rem; color: var(--ink-500); }
+  .icon-btn { background: transparent; border: 1px solid transparent; color: var(--ink-500); width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+  .icon-btn:hover { background: var(--ink-100); color: var(--ink-900); }
+
+  /* === Topbar === */
+  .topbar { grid-area: topbar; background: #fff; border-bottom: 1px solid var(--ink-200); height: var(--top-h); display: flex; align-items: center; padding: 0 var(--s-6); gap: var(--s-4); position: sticky; top: 0; z-index: 80; }
+  @media (max-width: 600px) { .topbar { padding: 0 var(--s-4); } }
+  .menu-btn { display: none; width: 40px; height: 40px; border-radius: 8px; background: transparent; border: 1px solid var(--ink-200); color: var(--ink-700); align-items: center; justify-content: center; }
+  @media (max-width: 980px) { .menu-btn { display: inline-flex; } }
+  .crumbs { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--ink-500); }
+  .crumbs strong { color: var(--ink-900); font-weight: 600; }
+  @media (max-width: 1024px) { .crumbs { display: none; } }
+  .topbar__search { margin-left: auto; position: relative; flex: 0 1 320px; min-width: 0; }
+  .topbar__search input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--ink-200); border-radius: 8px; background: var(--ink-50); font: inherit; font-size: 0.875rem; min-height: 40px; }
+  .topbar__search input:focus { background: #fff; }
+  .topbar__search > svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+  @media (max-width: 700px) { .topbar__search { display: none; } }
+  .top-actions { display: flex; align-items: center; gap: 4px; }
+  .top-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--ok-bg); color: var(--ok); padding: 5px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 600; }
+  .top-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px rgba(31,138,91,0.18); }
+  @media (max-width: 700px) { .top-pill { display: none; } }
+  .top-btn { background: transparent; border: 1px solid transparent; color: var(--ink-700); width: 40px; height: 40px; border-radius: 8px; display: inline-grid; place-items: center; position: relative; }
+  .top-btn:hover { background: var(--ink-50); }
+  .top-btn .dot-alert { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--alert); border: 2px solid #fff; }
+
+  /* === Content === */
+  .content { grid-area: content; padding: var(--s-6); max-width: 1600px; }
+  @media (max-width: 600px) { .content { padding: var(--s-4); } }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s-4); flex-wrap: wrap; margin-bottom: var(--s-5); }
+  .page-head h1 { font-size: clamp(1.375rem, 1.1rem + 0.7vw, 1.75rem); }
+  .page-head p { color: var(--ink-500); font-size: 0.875rem; margin-top: 4px; }
+  .actions { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+  .btn { appearance:none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 14px; border-radius: 8px; border: 1.5px solid var(--ink-200); background: #fff; color: var(--ink-700); font-weight: 500; font-size: 0.875rem; min-height: 40px; text-decoration: none; }
+  .btn:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .btn--primary { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+  .btn--primary:hover { background: var(--blue-800); border-color: var(--blue-800); color: #fff; }
+
+  /* === Stats === */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-3); margin-bottom: var(--s-5); }
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .stats { grid-template-columns: 1fr; } }
+  .stat { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-4); display: flex; gap: 14px; align-items: center; }
+  .stat__icon { width: 42px; height: 42px; border-radius: 10px; background: var(--blue-50); color: var(--blue-700); display: grid; place-items: center; flex-shrink: 0; }
+  .stat__icon--warn { background: var(--warn-bg); color: var(--warn); }
+  .stat__icon--alert { background: var(--alert-bg); color: var(--alert); }
+  .stat__icon--ok { background: var(--ok-bg); color: var(--ok); }
+  .stat__icon--purple { background: var(--purple-bg); color: var(--purple); }
+  .stat__lbl { color: var(--ink-500); font-size: 0.78rem; }
+  .stat__val { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.05; margin-top: 2px; }
+  .stat__sub { font-size: 0.72rem; color: var(--ink-500); margin-top: 2px; }
+
+  /* === Category tabs === */
+  .cats { display: flex; gap: 4px; overflow-x: auto; margin-bottom: var(--s-4); padding-bottom: 4px; }
+  .cat {
+    appearance: none;
+    background: #fff; border: 1px solid var(--ink-200);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 0.8125rem; font-weight: 500;
+    color: var(--ink-700);
+    white-space: nowrap;
+    min-height: 38px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .cat:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .cat[aria-pressed="true"] { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+  .cat[aria-pressed="true"] .cat__count { background: rgba(255,255,255,0.2); color: #fff; }
+  .cat__count {
+    background: var(--ink-100); color: var(--ink-500);
+    font-size: 0.7rem; font-weight: 600;
+    padding: 1px 7px; border-radius: 999px;
+  }
+
+  /* === Filter bar === */
+  .filterbar { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-3) var(--s-4); display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; margin-bottom: var(--s-4); }
+  .filterbar .search { position: relative; flex: 1 1 280px; min-width: 200px; }
+  .filterbar .search input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--ink-200); border-radius: 8px; background: var(--ink-50); font: inherit; font-size: 0.875rem; min-height: 40px; }
+  .filterbar .search input:focus { background: #fff; }
+  .filterbar .search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--ink-200); padding: 8px 12px; border-radius: 8px; font-size: 0.8125rem; color: var(--ink-700); font-weight: 500; min-height: 40px; cursor: pointer; }
+  .pill:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .pill svg { color: var(--ink-400); }
+  .pill.active { background: var(--blue-50); border-color: var(--blue-200); color: var(--blue-700); }
+  .pill.active svg { color: var(--blue-700); }
+  .pill .x { display: inline-flex; width: 16px; height: 16px; border-radius: 50%; background: var(--blue-700); color: #fff; align-items: center; justify-content: center; margin-left: 2px; font-size: 11px; }
+
+  .toolbar-row { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); margin-bottom: var(--s-3); flex-wrap: wrap; }
+  .results { font-size: 0.8125rem; color: var(--ink-500); }
+  .results strong { color: var(--ink-900); font-weight: 600; }
+  .seg { display: inline-flex; background: var(--ink-100); border-radius: 8px; padding: 3px; border: 1px solid var(--ink-200); }
+  .seg button { background: transparent; border: 0; padding: 6px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 500; color: var(--ink-500); min-height: 30px; display: inline-flex; align-items: center; gap: 6px; }
+  .seg button[aria-pressed="true"] { background: #fff; color: var(--blue-700); box-shadow: var(--shadow-sm); }
+
+  /* === Cards grid === */
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); }
+  @media (max-width: 1280px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+
+  .prof {
+    background: #fff; border: 1px solid var(--ink-200);
+    border-radius: var(--r-lg); padding: var(--s-4);
+    display: grid; gap: var(--s-3);
+  }
+  .prof:hover { border-color: var(--blue-700); box-shadow: var(--shadow-md); }
+  .prof__head { display: flex; gap: 12px; align-items: flex-start; }
+  .prof__avatar {
+    width: 52px; height: 52px; border-radius: 14px;
+    background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+    color: #fff; display: grid; place-items: center;
+    font-weight: 600; font-size: 1rem;
+    flex-shrink: 0; position: relative;
+  }
+  .prof__avatar.cat-md { background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); }
+  .prof__avatar.cat-enf { background: linear-gradient(135deg, var(--teal), #38b2b2); }
+  .prof__avatar.cat-tec { background: linear-gradient(135deg, var(--purple), #9c6ce8); }
+  .prof__avatar.cat-adm { background: linear-gradient(135deg, var(--ink-700), var(--ink-500)); }
+  .prof__avatar.cat-acs { background: linear-gradient(135deg, var(--ok), #4cb083); }
+  .prof__status {
+    position: absolute; bottom: -2px; right: -2px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--ok);
+    border: 2px solid #fff;
+  }
+  .prof__status--away { background: var(--warn); }
+  .prof__status--off { background: var(--ink-300); }
+  .prof__status--leave { background: var(--alert); }
+
+  .prof__id { flex: 1; min-width: 0; }
+  .prof__name { font-weight: 600; font-size: 1rem; line-height: 1.2; }
+  .prof__role { font-size: 0.78rem; color: var(--ink-500); margin-top: 2px; }
+  .prof__menu { background: transparent; border: 0; color: var(--ink-400); width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; flex-shrink: 0; }
+  .prof__menu:hover { background: var(--ink-100); color: var(--ink-900); }
+
+  .prof__tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 0.7rem; font-weight: 600; padding: 3px 8px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px; }
+  .tag--md { background: var(--blue-50); color: var(--blue-800); }
+  .tag--enf { background: var(--teal-bg); color: var(--teal); }
+  .tag--tec { background: var(--purple-bg); color: var(--purple); }
+  .tag--adm { background: var(--ink-100); color: var(--ink-700); }
+  .tag--acs { background: var(--ok-bg); color: var(--ok); }
+  .tag--ok { background: var(--ok-bg); color: var(--ok); }
+  .tag--warn { background: var(--warn-bg); color: var(--warn); }
+  .tag--alert { background: var(--alert-bg); color: var(--alert); }
+
+  .prof__meta { display: grid; gap: 8px; font-size: 0.8125rem; }
+  .meta-row { display: flex; align-items: center; gap: 8px; color: var(--ink-700); }
+  .meta-row svg { color: var(--ink-400); flex-shrink: 0; }
+  .meta-row strong { font-weight: 600; }
+  .meta-row .v { font-family: 'IBM Plex Mono', monospace; color: var(--ink-900); }
+
+  .prof__load { background: var(--ink-50); border: 1px solid var(--ink-200); border-radius: 10px; padding: 10px 12px; }
+  .prof__load-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .prof__load-lbl { font-size: 0.7rem; color: var(--ink-500); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .prof__load-val { font-weight: 600; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+  .prof__load-val small { color: var(--ink-500); font-weight: 500; font-size: 0.78rem; }
+  .prof__load-bar { height: 6px; background: #fff; border: 1px solid var(--ink-200); border-radius: 999px; margin-top: 8px; overflow: hidden; }
+  .prof__load-bar span { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; }
+  .prof__load-bar span.hi { background: var(--warn); }
+  .prof__load-bar span.crit { background: var(--alert); }
+
+  /* week mini bar (5 weekday cells) */
+  .week-mini { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-top: 8px; }
+  .week-mini__d { background: #fff; border: 1px solid var(--ink-200); border-radius: 6px; padding: 4px 0; text-align: center; font-size: 0.7rem; }
+  .week-mini__d .l { display: block; color: var(--ink-400); font-size: 0.6rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .week-mini__d .v { display: block; color: var(--ink-900); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .week-mini__d.off { background: var(--ink-100); color: var(--ink-400); }
+  .week-mini__d.off .v { color: var(--ink-400); text-decoration: line-through; }
+
+  .prof__actions { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 4px; }
+  .prof__actions .btn { padding: 7px 12px; min-height: 36px; font-size: 0.8125rem; }
+  .prof__actions .btn--ghost-icon {
+    background: transparent; border: 1px solid var(--ink-200);
+    color: var(--ink-700);
+    width: 36px; height: 36px; padding: 0;
+    display: grid; place-items: center;
+  }
+  .prof__actions .btn--ghost-icon:hover { border-color: var(--blue-700); color: var(--blue-700); }
+
+  /* Pagination */
+  .pagination { display: flex; justify-content: space-between; align-items: center; padding: var(--s-4) 0 0; font-size: 0.8125rem; color: var(--ink-500); flex-wrap: wrap; gap: 12px; }
+  .page-nav { display: inline-flex; gap: 4px; align-items: center; }
+  .page-nav button { background: #fff; border: 1px solid var(--ink-200); border-radius: 6px; color: var(--ink-700); padding: 4px 8px; min-width: 32px; min-height: 32px; font-size: 0.8125rem; font-weight: 500; }
+  .page-nav button[aria-current="page"] { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+  .page-nav button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div role="note" style="position:relative;z-index:200;background:#fff4d6;color:#5c4200;border-bottom:1px solid #f0d58c;padding:8px 16px;font:500 13px/1.45 'IBM Plex Sans',system-ui,sans-serif;text-align:center">Protótipo navegável do <strong>Mais Saúde Pública</strong>: telas de referência com dados fictícios, não é o sistema em produção. <a href="https://github.com/dufelizardo/mais_saude_publica" style="color:inherit;text-decoration:underline">Ver o código no GitHub</a></div>
+
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+    <div class="sidebar__brand">
+      <span class="sb-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <div>
+        <div class="sb-name">Mais Saúde</div>
+        <div class="sb-sub">Sistema Integrado</div>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="nav-group">
+        <a href="Painel.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          <span class="nav-item__label">Sala de Situação</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Assistencial</div>
+        <a href="Pacientes.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+          <span class="nav-item__label">Pacientes</span>
+        </a>
+        <a href="Equipamentos.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+          <span class="nav-item__label">Programas de Saúde</span>
+        </a>
+        <a href="Agenda.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span class="nav-item__label">Agenda</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Recursos Humanos</div>
+        <a href="Profissionais.html" class="nav-item" aria-current="page">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path></svg>
+          <span class="nav-item__label">Profissionais</span>
+          <span class="nav-badge">3.420</span>
+        </a>
+        <a href="Escalas.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+          <span class="nav-item__label">Equipes</span>
+        </a>
+        <a href="Relatorios.html" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span class="nav-item__label">Escalas</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span class="nav-item__label">Funções</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group__label">Gestão</div>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path></svg>
+          <span class="nav-item__label">Equipamentos</span>
+        </a>
+        <a href="#" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span class="nav-item__label">Relatórios</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar__foot">
+      <div class="who" tabindex="0">
+        <span class="who__avatar" aria-hidden="true">MS</span>
+        <div style="min-width:0;">
+          <div class="who__name">Mariana Souza</div>
+          <div class="who__role">Coordenação · Regional Centro</div>
+        </div>
+      </div>
+      <a href="Login.html" class="icon-btn" aria-label="Sair" title="Sair">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Topbar -->
+  <header class="topbar" role="banner">
+    <button class="menu-btn" id="menu-btn" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <nav class="crumbs" aria-label="Trilha">
+      <a href="Painel.html" style="color:var(--ink-500);">Início</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <span style="color:var(--ink-500);">Recursos Humanos</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <strong>Profissionais</strong>
+    </nav>
+
+    <label class="topbar__search" role="search">
+      <span class="sr-only">Buscar</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="search" placeholder="Buscar paciente, profissional, unidade…" />
+    </label>
+
+    <div class="top-actions">
+      <span class="top-pill"><span class="dot" aria-hidden="true"></span> Dados ao vivo</span>
+      <button class="top-btn" aria-label="Notificações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="dot-alert" aria-hidden="true"></span>
+      </button>
+      <button class="top-btn" aria-label="Configurações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="content" id="main">
+
+    <header class="page-head">
+      <div>
+        <h1>Profissionais da Saúde</h1>
+        <p>3.420 profissionais ativos · 128 unidades · capacidade de 138.640h semanais</p>
+      </div>
+      <div class="actions">
+        <button class="btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Exportar
+        </button>
+        <button class="btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+          Importar CSV
+        </button>
+        <button class="btn btn--primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Novo profissional
+        </button>
+      </div>
+    </header>
+
+    <!-- Stats -->
+    <section class="stats" aria-label="Resumo do quadro de profissionais">
+      <div class="stat">
+        <span class="stat__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Profissionais ativos</div>
+          <div class="stat__val mono">3.420</div>
+          <div class="stat__sub">+18 admissões no mês</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Médicos</div>
+          <div class="stat__val mono">842</div>
+          <div class="stat__sub">24,6% do quadro</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon stat__icon--ok" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Enfermagem &amp; Téc.</div>
+          <div class="stat__val mono">1.486</div>
+          <div class="stat__sub">43,5% do quadro</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon stat__icon--warn" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Em férias / licença</div>
+          <div class="stat__val mono">94</div>
+          <div class="stat__sub">2,7% · cobertura ativa</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category tabs -->
+    <div class="cats" role="tablist" aria-label="Categorias">
+      <button class="cat" role="tab" aria-pressed="true">Todos <span class="cat__count">3.420</span></button>
+      <button class="cat" role="tab" aria-pressed="false">Médicos <span class="cat__count">842</span></button>
+      <button class="cat" role="tab" aria-pressed="false">Enfermagem <span class="cat__count">784</span></button>
+      <button class="cat" role="tab" aria-pressed="false">Técnicos de saúde <span class="cat__count">702</span></button>
+      <button class="cat" role="tab" aria-pressed="false">ACS comunitários <span class="cat__count">612</span></button>
+      <button class="cat" role="tab" aria-pressed="false">Administrativo <span class="cat__count">480</span></button>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filterbar" role="region" aria-label="Filtros de profissionais">
+      <label class="search">
+        <span class="sr-only">Buscar profissional</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="search" placeholder="Buscar por nome, CPF, CRM, COREN ou matrícula…" />
+      </label>
+      <button class="pill active">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+        Unidade: UBS Vila Esperança <span class="x" aria-hidden="true">×</span>
+      </button>
+      <button class="pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+        Especialidade
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <button class="pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+        Status
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <button class="pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        Função
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+    </div>
+
+    <!-- Toolbar above grid -->
+    <div class="toolbar-row">
+      <div class="results">Mostrando <strong>1–9</strong> de <strong>3.420</strong> profissionais · ordenado por nome</div>
+      <div class="seg" role="group" aria-label="Visualização">
+        <button aria-pressed="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Cartões
+        </button>
+        <button aria-pressed="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          Lista
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== Cards grid ===== -->
+    <section class="cards" aria-label="Lista de profissionais">
+
+      <!-- Card 1 — Médica -->
+      <article class="prof">
+        <header class="prof__head">
+          <div class="prof__avatar cat-md" aria-hidden="true">
+            HR
+            <span class="prof__status" title="Online"></span>
+          </div>
+          <div class="prof__id">
+            <div class="prof__name">Dra. Helena Ribeiro</div>
+            <div class="prof__role">Clínica Geral · Pediatria</div>
+          </div>
+          <button class="prof__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="prof__tags">
+          <span class="tag tag--md">Médica</span>
+          <span class="tag tag--ok"><span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;"></span> Em escala</span>
+        </div>
+        <div class="prof__meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect></svg>
+            <span>Conselho <span class="v">CRM-SP 142.317</span></span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span>UBS Vila Esperança · Equipe SF-12</span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            <span>(11) 9 8472-1190</span>
+          </div>
+        </div>
+        <div class="prof__load">
+          <div class="prof__load-top">
+            <span class="prof__load-lbl">Carga semanal</span>
+            <span class="prof__load-val mono">38<small>/40h</small></span>
+          </div>
+          <div class="prof__load-bar" role="img" aria-label="95% da carga horária semanal"><span style="width:95%"></span></div>
+          <div class="week-mini" aria-label="Distribuição semanal">
+            <div class="week-mini__d"><span class="l">Seg</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Ter</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Qua</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Qui</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Sex</span><span class="v">6h</span></div>
+          </div>
+        </div>
+        <div class="prof__actions">
+          <a href="Agenda.html" class="btn">Ver escala</a>
+          <button class="btn">Atribuir equipe</button>
+          <button class="btn btn--ghost-icon" aria-label="Mensagem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Card 2 — Enfermeiro -->
+      <article class="prof">
+        <header class="prof__head">
+          <div class="prof__avatar cat-enf" aria-hidden="true">
+            PS
+            <span class="prof__status" title="Online"></span>
+          </div>
+          <div class="prof__id">
+            <div class="prof__name">Paulo Silva</div>
+            <div class="prof__role">Enfermeiro · Sala de procedimentos</div>
+          </div>
+          <button class="prof__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="prof__tags">
+          <span class="tag tag--enf">Enfermagem</span>
+          <span class="tag tag--ok"><span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;"></span> Plantão tarde</span>
+        </div>
+        <div class="prof__meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect></svg>
+            <span>Conselho <span class="v">COREN-SP 87.214</span></span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span>UPA São Pedro · Pronto-atendimento</span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            <span>(11) 9 7711-0298</span>
+          </div>
+        </div>
+        <div class="prof__load">
+          <div class="prof__load-top">
+            <span class="prof__load-lbl">Carga semanal</span>
+            <span class="prof__load-val mono">36<small>/40h</small></span>
+          </div>
+          <div class="prof__load-bar"><span style="width:90%"></span></div>
+          <div class="week-mini">
+            <div class="week-mini__d"><span class="l">Seg</span><span class="v">12h</span></div>
+            <div class="week-mini__d off"><span class="l">Ter</span><span class="v">—</span></div>
+            <div class="week-mini__d"><span class="l">Qua</span><span class="v">12h</span></div>
+            <div class="week-mini__d off"><span class="l">Qui</span><span class="v">—</span></div>
+            <div class="week-mini__d"><span class="l">Sex</span><span class="v">12h</span></div>
+          </div>
+        </div>
+        <div class="prof__actions">
+          <a href="Agenda.html" class="btn">Ver escala</a>
+          <button class="btn">Atribuir equipe</button>
+          <button class="btn btn--ghost-icon" aria-label="Mensagem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Card 3 — Médica férias -->
+      <article class="prof">
+        <header class="prof__head">
+          <div class="prof__avatar cat-md" aria-hidden="true">
+            CR
+            <span class="prof__status prof__status--away" title="Em férias"></span>
+          </div>
+          <div class="prof__id">
+            <div class="prof__name">Dra. Carla Ramos</div>
+            <div class="prof__role">Pediatra</div>
+          </div>
+          <button class="prof__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="prof__tags">
+          <span class="tag tag--md">Médica</span>
+          <span class="tag tag--warn">Em férias até 02/jun</span>
+        </div>
+        <div class="prof__meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect></svg>
+            <span>Conselho <span class="v">CRM-SP 12.382</span></span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+            <span>UBS Centro · Equipe SF-04</span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>Cobertura: Dr. L. Andrade</span>
+          </div>
+        </div>
+        <div class="prof__load">
+          <div class="prof__load-top">
+            <span class="prof__load-lbl">Carga semanal</span>
+            <span class="prof__load-val mono" style="color:var(--warn);">0<small>/40h · férias</small></span>
+          </div>
+          <div class="prof__load-bar"><span class="hi" style="width:0%"></span></div>
+        </div>
+        <div class="prof__actions">
+          <button class="btn">Reatribuir agenda</button>
+          <button class="btn">Ver férias</button>
+          <button class="btn btn--ghost-icon" aria-label="Mensagem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Card 4 — Técnico -->
+      <article class="prof">
+        <header class="prof__head">
+          <div class="prof__avatar cat-tec" aria-hidden="true">
+            AT
+            <span class="prof__status" title="Online"></span>
+          </div>
+          <div class="prof__id">
+            <div class="prof__name">Ana Torres</div>
+            <div class="prof__role">Téc. Enfermagem · Sala de vacinas</div>
+          </div>
+          <button class="prof__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="prof__tags">
+          <span class="tag tag--tec">Técnica</span>
+          <span class="tag tag--ok"><span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;"></span> Plantão extra</span>
+        </div>
+        <div class="prof__meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect></svg>
+            <span>Conselho <span class="v">COREN-SP TE 41.082</span></span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+            <span>UBS Vila Esperança · Imunização</span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path></svg>
+            <span>Especialidade: vacinação</span>
+          </div>
+        </div>
+        <div class="prof__load">
+          <div class="prof__load-top">
+            <span class="prof__load-lbl">Carga semanal</span>
+            <span class="prof__load-val mono" style="color:var(--warn);">44<small>/40h</small></span>
+          </div>
+          <div class="prof__load-bar"><span class="hi" style="width:100%"></span></div>
+          <div class="week-mini">
+            <div class="week-mini__d"><span class="l">Seg</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Ter</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Qua</span><span class="v">12h</span></div>
+            <div class="week-mini__d"><span class="l">Qui</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Sex</span><span class="v">8h</span></div>
+          </div>
+        </div>
+        <div class="prof__actions">
+          <a href="Agenda.html" class="btn">Ver escala</a>
+          <button class="btn">Atribuir equipe</button>
+          <button class="btn btn--ghost-icon" aria-label="Mensagem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Card 5 — Cardiologista -->
+      <article class="prof">
+        <header class="prof__head">
+          <div class="prof__avatar cat-md" aria-hidden="true">
+            LM
+            <span class="prof__status prof__status--off" title="Indisponível"></span>
+          </div>
+          <div class="prof__id">
+            <div class="prof__name">Dr. Leonardo Matos</div>
+            <div class="prof__role">Cardiologista</div>
+          </div>
+          <button class="prof__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="prof__tags">
+          <span class="tag tag--md">Médico</span>
+          <span class="tag tag--warn">Congresso até 26/mai</span>
+        </div>
+        <div class="prof__meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect></svg>
+            <span>Conselho <span class="v">CRM-SP 28.911 · RQE 1190</span></span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+            <span>UBS Jardim das Flores · Especialidades</span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"></path></svg>
+            <span>96 consultas/sem · ocupação 88%</span>
+          </div>
+        </div>
+        <div class="prof__load">
+          <div class="prof__load-top">
+            <span class="prof__load-lbl">Carga semanal</span>
+            <span class="prof__load-val mono">24<small>/24h ambulatorial</small></span>
+          </div>
+          <div class="prof__load-bar"><span style="width:100%"></span></div>
+        </div>
+        <div class="prof__actions">
+          <button class="btn">Redirecionar agenda</button>
+          <button class="btn">Ver histórico</button>
+          <button class="btn btn--ghost-icon" aria-label="Mensagem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Card 6 — Saúde Mental -->
+      <article class="prof">
+        <header class="prof__head">
+          <div class="prof__avatar cat-md" aria-hidden="true">
+            RC
+            <span class="prof__status prof__status--leave" title="Licença maternidade"></span>
+          </div>
+          <div class="prof__id">
+            <div class="prof__name">Dra. Renata Castro</div>
+            <div class="prof__role">Psiquiatra · CAPS Norte</div>
+          </div>
+          <button class="prof__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="prof__tags">
+          <span class="tag tag--md">Médica</span>
+          <span class="tag tag--alert">Licença maternidade · 120 dias</span>
+        </div>
+        <div class="prof__meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect></svg>
+            <span>Conselho <span class="v">CRM-SP 34.110 · RQE 0712</span></span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+            <span>CAPS Norte · Saúde Mental</span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            <span>Cobertura: Dr. F. Andrade (CRM 41.227)</span>
+          </div>
+        </div>
+        <div class="prof__load">
+          <div class="prof__load-top">
+            <span class="prof__load-lbl">Status atual</span>
+            <span class="prof__load-val mono" style="color:var(--alert);">Afastada</span>
+          </div>
+          <div class="prof__load-bar"><span class="crit" style="width:0%"></span></div>
+        </div>
+        <div class="prof__actions">
+          <button class="btn">Detalhes do afastamento</button>
+          <button class="btn">Ver cobertura</button>
+        </div>
+      </article>
+
+      <!-- Card 7 — Ginecologista -->
+      <article class="prof">
+        <header class="prof__head">
+          <div class="prof__avatar cat-md" aria-hidden="true">
+            MF
+            <span class="prof__status" title="Online"></span>
+          </div>
+          <div class="prof__id">
+            <div class="prof__name">Dra. Mariana Faria</div>
+            <div class="prof__role">Ginecologia &amp; Obstetrícia</div>
+          </div>
+          <button class="prof__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="prof__tags">
+          <span class="tag tag--md">Médica</span>
+          <span class="tag tag--ok"><span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;"></span> Em escala</span>
+        </div>
+        <div class="prof__meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect></svg>
+            <span>Conselho <span class="v">CRM-SP 38.722 · RQE 0921</span></span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+            <span>UBS Vila Esperança · S. da Mulher</span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>Pré-natal · 42 gestantes acomp.</span>
+          </div>
+        </div>
+        <div class="prof__load">
+          <div class="prof__load-top">
+            <span class="prof__load-lbl">Carga semanal</span>
+            <span class="prof__load-val mono">32<small>/32h</small></span>
+          </div>
+          <div class="prof__load-bar"><span style="width:100%"></span></div>
+          <div class="week-mini">
+            <div class="week-mini__d"><span class="l">Seg</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Ter</span><span class="v">8h</span></div>
+            <div class="week-mini__d off"><span class="l">Qua</span><span class="v">—</span></div>
+            <div class="week-mini__d"><span class="l">Qui</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Sex</span><span class="v">8h</span></div>
+          </div>
+        </div>
+        <div class="prof__actions">
+          <a href="Agenda.html" class="btn">Ver escala</a>
+          <button class="btn">Atribuir equipe</button>
+          <button class="btn btn--ghost-icon" aria-label="Mensagem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Card 8 — ACS -->
+      <article class="prof">
+        <header class="prof__head">
+          <div class="prof__avatar cat-acs" aria-hidden="true">
+            MM
+            <span class="prof__status" title="Online · em campo"></span>
+          </div>
+          <div class="prof__id">
+            <div class="prof__name">Márcia Mendes</div>
+            <div class="prof__role">Agente Comunitária · ACS</div>
+          </div>
+          <button class="prof__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="prof__tags">
+          <span class="tag tag--acs">ACS</span>
+          <span class="tag tag--ok"><span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;"></span> Em campo</span>
+        </div>
+        <div class="prof__meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect></svg>
+            <span>Matrícula <span class="v">M-08412</span></span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+            <span>UBS Vila Esperança · Microárea 14</span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+            <span>168 famílias acompanhadas</span>
+          </div>
+        </div>
+        <div class="prof__load">
+          <div class="prof__load-top">
+            <span class="prof__load-lbl">Carga semanal</span>
+            <span class="prof__load-val mono">40<small>/40h</small></span>
+          </div>
+          <div class="prof__load-bar"><span style="width:100%"></span></div>
+          <div class="week-mini">
+            <div class="week-mini__d"><span class="l">Seg</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Ter</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Qua</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Qui</span><span class="v">8h</span></div>
+            <div class="week-mini__d"><span class="l">Sex</span><span class="v">8h</span></div>
+          </div>
+        </div>
+        <div class="prof__actions">
+          <button class="btn">Ver microárea</button>
+          <button class="btn">Visitas</button>
+          <button class="btn btn--ghost-icon" aria-label="Mensagem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+      </article>
+
+      <!-- Card 9 — Odontologista -->
+      <article class="prof">
+        <header class="prof__head">
+          <div class="prof__avatar cat-md" aria-hidden="true">
+            BC
+            <span class="prof__status" title="Online"></span>
+          </div>
+          <div class="prof__id">
+            <div class="prof__name">Dr. Bruno Camargo</div>
+            <div class="prof__role">Cirurgião-dentista</div>
+          </div>
+          <button class="prof__menu" aria-label="Mais opções">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        </header>
+        <div class="prof__tags">
+          <span class="tag tag--md">Odontologia</span>
+          <span class="tag tag--ok"><span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;"></span> Em escala</span>
+        </div>
+        <div class="prof__meta">
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect></svg>
+            <span>Conselho <span class="v">CRO-SP 78.221</span></span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path></svg>
+            <span>UBS Centro · CEO Regional</span>
+          </div>
+          <div class="meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14H5a2 2 0 0 0-2 2v3"></path><circle cx="9" cy="7" r="4"></circle></svg>
+            <span>312 vagas/sem · ocupação 54%</span>
+          </div>
+        </div>
+        <div class="prof__load">
+          <div class="prof__load-top">
+            <span class="prof__load-lbl">Carga semanal</span>
+            <span class="prof__load-val mono">30<small>/40h</small></span>
+          </div>
+          <div class="prof__load-bar"><span style="width:75%"></span></div>
+          <div class="week-mini">
+            <div class="week-mini__d"><span class="l">Seg</span><span class="v">6h</span></div>
+            <div class="week-mini__d"><span class="l">Ter</span><span class="v">6h</span></div>
+            <div class="week-mini__d"><span class="l">Qua</span><span class="v">6h</span></div>
+            <div class="week-mini__d"><span class="l">Qui</span><span class="v">6h</span></div>
+            <div class="week-mini__d"><span class="l">Sex</span><span class="v">6h</span></div>
+          </div>
+        </div>
+        <div class="prof__actions">
+          <a href="Agenda.html" class="btn">Ver escala</a>
+          <button class="btn">Atribuir equipe</button>
+          <button class="btn btn--ghost-icon" aria-label="Mensagem">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+      </article>
+
+    </section>
+
+    <div class="pagination">
+      <span>Mostrando <strong style="color:var(--ink-900);">1–9</strong> de 3.420 profissionais</span>
+      <div class="page-nav">
+        <button disabled aria-label="Anterior">‹</button>
+        <button aria-current="page">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>4</button>
+        <button>5</button>
+        <span style="padding: 0 4px; color: var(--ink-400);">…</span>
+        <button>380</button>
+        <button aria-label="Próximo">›</button>
+      </div>
+    </div>
+
+    <p style="text-align: center; color: var(--ink-400); font-size: 0.75rem; margin-top: var(--s-8);">
+      Mais Saúde Pública · LGPD · acesso auditado · vínculos integrados ao CNES
+    </p>
+  </main>
+</div>
+
+<script>
+  // Mobile sidebar
+  (function () {
+    const btn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn || !sidebar) return;
+    btn.addEventListener('click', () => {
+      const open = sidebar.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth > 980) return;
+      if (!sidebar.classList.contains('is-open')) return;
+      if (sidebar.contains(e.target) || btn.contains(e.target)) return;
+      sidebar.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  })();
+
+  // Category tabs
+  (function () {
+    const cats = document.querySelectorAll('.cat');
+    cats.forEach(c => c.addEventListener('click', () => {
+      cats.forEach(x => x.setAttribute('aria-pressed', 'false'));
+      c.setAttribute('aria-pressed', 'true');
+    }));
+  })();
+
+  // Segmented
+  (function () {
+    document.querySelectorAll('.seg').forEach(group => {
+      group.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => {
+          group.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false'));
+          b.setAttribute('aria-pressed', 'true');
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

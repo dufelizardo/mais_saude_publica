@@ -1,0 +1,227 @@
+<header class="page-head">
+  <div>
+    <h1>Auditoria</h1>
+    <p>Trilha imutável de quem acessou e alterou o quê — nada aqui pode ser editado ou apagado</p>
+  </div>
+  <div class="page-actions">
+    <button type="button" class="btn btn--ghost" disabled title="Em breve">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      Exportar
+    </button>
+  </div>
+</header>
+
+<section class="stats" aria-label="Resumo do filtro">
+  <div class="stat">
+    <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Eventos {{ temFiltro() ? 'no filtro' : 'registrados' }}</div>
+      <div class="stat__val mono">{{ pagina()?.total ?? '—' }}</div>
+      <div class="stat__sub">do mais recente ao mais antigo</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg></span>
+    <div>
+      <div class="stat__lbl">Leituras de dado de saúde</div>
+      <div class="stat__val mono">{{ pagina()?.resumo?.leituras ?? '—' }}</div>
+      <div class="stat__sub">detalhes abertos: prontuário, atendimento, paciente…</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Alterações</div>
+      <div class="stat__val mono">{{ pagina()?.resumo?.alteracoes ?? '—' }}</div>
+      <div class="stat__sub">criações, alterações, retificações, revogações</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Acessos negados</div>
+      <div class="stat__val mono">{{ pagina()?.resumo?.negados ?? '—' }}</div>
+      <div class="stat__sub">{{ pagina()?.resumo?.loginsRecusados ?? 0 }} login(s) recusado(s)</div>
+    </div>
+  </div>
+</section>
+
+<div class="toolbar" role="region" aria-label="Filtros da auditoria">
+  <label class="search search--icon aud-cpf">
+    <span class="sr-only">CPF de quem fez</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+    <input type="search" inputmode="numeric" placeholder="CPF de quem fez" [value]="usuarioCpf()" (input)="mudarCpf($any($event.target).value)" />
+  </label>
+
+  @if (pacienteFiltrado(); as p) {
+    <button type="button" class="pill active" (click)="limparPaciente()" [attr.aria-label]="'Remover filtro do paciente ' + p.nome">
+      Paciente: {{ p.nome }} <span aria-hidden="true" style="margin-left: 4px;">×</span>
+    </button>
+  } @else if (pacienteId()) {
+    <button type="button" class="pill active" (click)="limparPaciente()" aria-label="Remover filtro de paciente">
+      Paciente selecionado <span aria-hidden="true" style="margin-left: 4px;">×</span>
+    </button>
+  } @else {
+    <div class="aud-busca">
+      <label class="search search--icon">
+        <span class="sr-only">Buscar paciente</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="search" placeholder="Paciente (nome, CPF, cartão SUS)" [value]="buscaPaciente()" (input)="buscaPaciente.set($any($event.target).value)" aria-controls="aud-sugestoes" [attr.aria-expanded]="sugestoes().length > 0" />
+      </label>
+      @if (sugestoes().length) {
+        <ul class="aud-sugestoes" id="aud-sugestoes" role="listbox" aria-label="Pacientes">
+          @for (p of sugestoes(); track p.uuid) {
+            <li role="option" aria-selected="false"><button type="button" (click)="escolherPaciente(p)">{{ p.nome }}@if (p.cpf) { <span class="cell-sub mono">{{ formatCpf(p.cpf) }}</span> }</button></li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <label class="pill pill--select">
+    <span class="sr-only">Ação</span>
+    <select [value]="acao()" (change)="acao.set($any($event.target).value); filtrar()">
+      <option value="">Ação</option>
+      @for (a of listaAcoes; track a[0]) { <option [value]="a[0]">{{ a[1].rotulo }}</option> }
+    </select>
+  </label>
+  <label class="pill pill--select">
+    <span class="sr-only">Resultado</span>
+    <select [value]="resultado()" (change)="resultado.set($any($event.target).value); filtrar()">
+      <option value="">Resultado</option>
+      <option value="PERMITIDO">Permitido</option>
+      <option value="NEGADO">Negado</option>
+    </select>
+  </label>
+  <label class="pill pill--select aud-data">
+    <span>De</span>
+    <input type="date" [value]="desde()" (change)="desde.set($any($event.target).value); filtrar()" aria-label="Desde" />
+  </label>
+  <label class="pill pill--select aud-data">
+    <span>Até</span>
+    <input type="date" [value]="ate()" (change)="ate.set($any($event.target).value); filtrar()" aria-label="Até" />
+  </label>
+  @if (temFiltro()) {
+    <button type="button" class="btn btn--ghost btn--sm" (click)="limparTudo()">Limpar filtros</button>
+  }
+</div>
+
+<section class="card">
+  <div class="card__head">
+    <div>
+      <h2>Eventos</h2>
+      <div class="sub">Leituras do detalhe de dado de saúde ou pessoal, alterações, acessos negados e logins (ADR-0070)</div>
+    </div>
+  </div>
+
+  @if (erro()) {
+    <div class="box box--err" role="alert" style="margin: var(--s-4);"><strong>{{ erro() }}</strong></div>
+  } @else if (carregando() && !pagina()) {
+    <p class="cell-sub" style="padding: var(--s-5);">Carregando…</p>
+  } @else if (!pagina()?.itens?.length) {
+    <div class="empty">
+      <span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
+      <strong>Nenhum evento</strong>
+      <span>{{ temFiltro() ? 'Ajuste os filtros.' : 'A trilha ainda está vazia no seu escopo.' }}</span>
+    </div>
+  } @else {
+    <div class="tbl-wrap" [class.aud-carregando]="carregando()">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Quando</th>
+            <th scope="col">Quem</th>
+            <th scope="col">Ação</th>
+            <th scope="col">O quê</th>
+            <th scope="col">Paciente</th>
+            <th scope="col">Unidade</th>
+            <th scope="col">Resultado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of pagina()!.itens; track e.uuid) {
+            <tr class="row-link" tabindex="0" (click)="selecionado.set(e)" (keydown)="teclaNaLinha($event, e)" [attr.aria-label]="'Detalhar evento de ' + quando(e.ocorridoEm)">
+              <td class="mono aud-quando">{{ quando(e.ocorridoEm) }}</td>
+              <td>
+                <span class="cell-main">{{ quem(e) }}</span>
+                @if (e.usuarioCpf) { <span class="cell-sub mono">{{ formatCpf(e.usuarioCpf) }}</span> }
+              </td>
+              <td><span class="badge" [class]="'badge badge--' + acoes[e.acao].classe">{{ acoes[e.acao].rotulo }}</span></td>
+              <td>
+                <span class="cell-main">{{ rotuloRecurso(e.recurso) }}</span>
+                <span class="cell-sub mono">{{ e.metodo }} {{ e.rota }}</span>
+              </td>
+              <td>{{ e.pacienteNome || '—' }}</td>
+              <td>{{ e.unidadeNome || '—' }}</td>
+              <td>
+                @if (e.resultado === 'NEGADO') {
+                  <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Negado</span>
+                } @else {
+                  <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Permitido</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <span>Mostrando <strong style="color: var(--ink-900);">{{ faixa().de }}–{{ faixa().ate }}</strong> de {{ faixa().total }} eventos</span>
+      <nav class="page-nav" aria-label="Paginação">
+        <button type="button" aria-label="Anterior" [disabled]="numeroPagina() <= 0" (click)="irParaPagina(numeroPagina() - 1)">‹</button>
+        @for (p of paginas(); track $index) {
+          @if (p === null) {
+            <span style="padding: 0 4px; color: var(--ink-400);">…</span>
+          } @else {
+            <button type="button" [attr.aria-current]="p === numeroPagina() + 1 ? 'page' : null" (click)="irParaPagina(p - 1)">{{ p }}</button>
+          }
+        }
+        <button type="button" aria-label="Próximo" [disabled]="numeroPagina() + 1 >= totalPaginas()" (click)="irParaPagina(numeroPagina() + 1)">›</button>
+      </nav>
+    </div>
+  }
+</section>
+
+@if (selecionado(); as e) {
+  <app-drawer titulo="Evento de auditoria" (fechar)="selecionado.set(null)">
+    <div class="dw-form">
+      <div class="dw-body">
+        <div class="dw-meta">
+          <span class="badge" [class]="'badge badge--' + acoes[e.acao].classe">{{ acoes[e.acao].rotulo }}</span>
+          @if (e.resultado === 'NEGADO') {
+            <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Negado</span>
+          } @else {
+            <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Permitido</span>
+          }
+          <span class="cell-sub mono" style="display: inline;">{{ quando(e.ocorridoEm) }}</span>
+        </div>
+        @if (e.detalhe) {
+          <div class="box box--warn"><span><strong>Motivo:</strong> {{ e.detalhe }}</span></div>
+        }
+        <dl class="ro">
+          <div><dt>Quem</dt><dd>{{ quem(e) }}@if (e.usuarioCpf) { <span class="cell-sub mono">{{ formatCpf(e.usuarioCpf) }}</span> }</dd></div>
+          <div><dt>Origem (IP)</dt><dd class="mono">{{ e.origemIp || '—' }}</dd></div>
+          <div><dt>O quê</dt><dd>{{ rotuloRecurso(e.recurso) }}</dd></div>
+          <div><dt>Resposta</dt><dd class="mono">HTTP {{ e.statusHttp }}</dd></div>
+          <div style="grid-column: 1 / -1;"><dt>Rota</dt><dd class="mono">{{ e.metodo }} {{ e.rota }}</dd></div>
+          <div style="grid-column: 1 / -1;"><dt>Registro</dt><dd class="mono">{{ e.registroId || '—' }}</dd></div>
+          <div><dt>Paciente</dt><dd>{{ e.pacienteNome || '—' }}</dd></div>
+          <div><dt>Unidade</dt><dd>{{ e.unidadeNome || '—' }}</dd></div>
+        </dl>
+        <div class="dw-actions">
+          @if (e.usuarioCpf) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="filtrarPorPessoa(e.usuarioCpf)">Tudo desta pessoa</button>
+          }
+          @if (e.pacienteId) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="filtrarPorPaciente(e.pacienteId)">Tudo deste paciente</button>
+          }
+        </div>
+        <div class="box box--info"><span>O evento não guarda o conteúdo — nem dados enviados, nem texto clínico. O registro apontado continua no sistema, com o seu histórico.</span></div>
+      </div>
+      <footer class="dw-foot">
+        <button type="button" class="btn btn--ghost" (click)="selecionado.set(null)">Fechar</button>
+      </footer>
+    </div>
+  </app-drawer>
+}

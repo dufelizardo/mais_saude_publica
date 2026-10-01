@@ -25,4 +25,6 @@ public class ProntuarioResponseDto implements Serializable {
     private UUID pacienteUuid;
     private String pacienteNome;
     private List<ProntuarioAtendimentoDto> atendimentos;
+    /** Em que se baseou a abertura (ADR-0076): vínculo, acesso justificado, permissão ampla ou regra desligada. */
+    private AcessoProntuarioDto acesso;
 }
