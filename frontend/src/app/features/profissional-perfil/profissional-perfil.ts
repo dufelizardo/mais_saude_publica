@@ -43,6 +43,7 @@ import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf, formatTelefone } from '../../shared/format-mask';
 import { Modal } from '../../shared/modal/modal';
+import { Drawer } from '../../shared/drawer/drawer';
 import { hojeIso } from '../../shared/formato';
 import { categoriaDoProfissional, iniciaisDoNome, situacaoDoProfissional } from '../../shared/profissional-categoria';
 import { AcessoDaInterface } from '../../core/models/auth';
@@ -57,9 +58,11 @@ interface EventoHistorico {
   descricao: string;
 }
 
+type GavetaPerfil = 'contato' | 'transferencia' | 'ajuste';
+
 @Component({
   selector: 'app-profissional-perfil',
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Modal, RouterLink],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Modal, Drawer, RouterLink],
   templateUrl: './profissional-perfil.html',
   styleUrl: './profissional-perfil.css',
 })
@@ -92,7 +95,10 @@ export class ProfissionalPerfil {
 
   protected readonly abaAtiva = signal<Aba>('dados');
 
-  protected readonly contatoModalAberto = signal(false);
+  /** Gaveta aberta nas abas já no padrão novo (ADR-0084). */
+  protected readonly gaveta = signal<GavetaPerfil | null>(null);
+  protected readonly toast = signal<{ titulo: string; detalhe: string } | null>(null);
+  private toastTimer: ReturnType<typeof setTimeout> | undefined;
   protected readonly submittingContato = signal(false);
   protected readonly contatoErrorMessage = signal<string | null>(null);
   protected readonly buscandoCepContato = signal(false);
@@ -490,11 +496,35 @@ export class ProfissionalPerfil {
     });
     this.contatoErrorMessage.set(null);
     this.cepContatoNaoEncontrado.set(false);
-    this.contatoModalAberto.set(true);
+    this.gaveta.set('contato');
   }
 
-  protected fecharContatoModal(): void {
-    this.contatoModalAberto.set(false);
+  protected fecharGaveta(): void {
+    this.gaveta.set(null);
+  }
+
+  private avisar(titulo: string, detalhe: string): void {
+    this.toast.set({ titulo, detalhe });
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+  }
+
+  protected abrirTransferencia(): void {
+    this.transferenciaForm.reset({ unidadeId: '', cargoId: '', jornadaSemanalHoras: '', dataInicio: hojeIso(), motivo: 'Transferência' });
+    this.transferenciaErrorMessage.set(null);
+    this.gaveta.set('transferencia');
+  }
+
+  protected abrirAjuste(): void {
+    this.ajusteForm.reset({ valor: '', motivo: '', dataInicio: hojeIso(), dataFim: '', referencia: '' });
+    this.ajusteErrorMessage.set(null);
+    this.gaveta.set('ajuste');
+  }
+
+  /** Vigente hoje: já começou e não terminou. */
+  protected ajusteVigente(item: { dataInicio: string; dataFim?: string | null }): boolean {
+    const hoje = hojeIso();
+    return item.dataInicio <= hoje && (!item.dataFim || item.dataFim >= hoje);
   }
 
   protected submitContato(): void {
@@ -525,7 +555,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingContato.set(false);
-          this.contatoModalAberto.set(false);
+          this.gaveta.set(null);
+          this.avisar('Contato atualizado', profissional.nome);
           this.profissionalService.buscarPorCpf(profissional.cpf).subscribe({
             next: (atualizado) => this.profissional.set(atualizado),
           });
@@ -639,13 +670,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingTransferencia.set(false);
-          this.transferenciaForm.reset({
-            unidadeId: '',
-            cargoId: '',
-            jornadaSemanalHoras: '',
-            dataInicio: '',
-            motivo: 'Transferência',
-          });
+          this.gaveta.set(null);
+          this.avisar('Transferência registrada', profissional.nome);
           this.carregarLotacao(profissional.matricula);
           this.carregarComposicao(profissional.matricula);
         },
@@ -703,7 +729,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingAjuste.set(false);
-          this.ajusteForm.reset({ valor: '', motivo: '', dataInicio: '', dataFim: '', referencia: '' });
+          this.gaveta.set(null);
+          this.avisar('Ajuste registrado', profissional.nome);
           this.carregarAjustes(profissional.matricula);
           this.carregarComposicao(profissional.matricula);
         },
