@@ -6,7 +6,7 @@ Aceita e implementada. Corrige uma perda silenciosa de eventos de auditoria nos 
 
 ## Contexto
 
-O esquema é mantido pelo Hibernate com `ddl-auto=update` (ADR-0005). Ao criar uma tabela, o Hibernate
+O esquema é mantido pelo Hibernate com `ddl-auto=update`. Ao criar uma tabela, o Hibernate
 gera, para cada coluna de enum gravada como texto, uma restrição `CHECK (coluna IN (...))` com os valores do
 enum **naquele momento**. O `update` acrescenta colunas e tabelas, mas **nunca refaz essas restrições**.
 
@@ -34,7 +34,7 @@ banco anterior.
 (Flyway)**
 - ✅ Mantém a proteção do banco contra valor inválido, inclusive para SQL manual.
 - ✅ Não exige adotar uma ferramenta de migração agora. A troca do `ddl-auto` por migrações versionadas
-  continua sendo a recomendação antes de produção real (ADR-0005), e esta rotina sai junto.
+  continua prevista ([ADR-0007](./0007-deploy-docker.md), [ADR-0060](./0060-uma-remessa-um-lote-por-unidade.md)), e esta rotina sai junto.
 - ❌ É heurística (casa a restrição com o enum pelos valores). Os casos ambíguos ficam no log em vez de
   serem adivinhados.
 
