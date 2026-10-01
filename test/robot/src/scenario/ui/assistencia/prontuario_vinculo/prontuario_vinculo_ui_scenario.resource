@@ -1,62 +1,40 @@
 *** Settings ***
-Resource    ../../../common/mais_saude_publica_ui_common.resource
+Resource    ../../../../flow/ui/assistencia/prontuario_vinculo/prontuario_vinculo_ui_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
-    Tela Pacientes: busca, detalhe do paciente e prontuário (ADR-0052, ADR-0076).
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
-UI Pacientes - Abrir Tela
-    [Documentation]    Abre a tela Pacientes.
+UI - PRONTUARIO POR VINCULO - PREPARAR
+    [Documentation]    Suite Setup: cenário pela API e navegador logado como a enfermeira da UBS A.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Ir Para Rota Do Frontend    /assistencia/pacientes
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI Pacientes - Buscar
-    [Documentation]    Digita na busca por nome ou CPF.
-    [Arguments]    ${termo}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Fill Text    role=searchbox[name="Buscar paciente por nome ou CPF"]    ${termo}
+    Preparar Cenario Do Prontuario Por Vinculo
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI Pacientes - Abrir Paciente
-    [Documentation]    Abre o detalhe do paciente pelo nome, na linha da lista (visão padrão).
-    [Arguments]    ${nome}
+UI - PRONTUARIO POR VINCULO - COM VINCULO
+    [Documentation]    Paciente da unidade: prontuário sem aviso.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Click    role=row[name=/${nome}/] >> nth=0
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI Pacientes - Ler Nome No Detalhe
-    [Documentation]    Devolve o nome mostrado no detalhe do paciente.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${nome}=    Get Text    role=complementary[name="Detalhes do paciente"] >> role=heading[level=2]
-    RETURN    ${nome}
+    UI Vinculo - Com Vinculo Abre Sem Aviso
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI Pacientes - Preencher Justificativa Do Acesso
-    [Documentation]    Preenche o texto da justificativa no formulário de acesso justificado (ADR-0076).
-    [Arguments]    ${texto}
+UI - PRONTUARIO POR VINCULO - SEM VINCULO
+    [Documentation]    Paciente de outra unidade: aviso e bloqueio.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Fill Text    role=textbox[name=/Justificativa/]    ${texto}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI Pacientes - Ler Erro Da Justificativa
-    [Documentation]    Devolve a mensagem de validação do texto da justificativa.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${erro}=    Get Text    css=[id^="e-acesso-"]
-    RETURN    ${erro}
+    UI Vinculo - Sem Vinculo Mostra Aviso E Bloqueia
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI Pacientes - Ler Faixa Do Acesso Justificado
-    [Documentation]    Devolve o texto da faixa "Acesso justificado até…" (espera ela aparecer).
+UI - PRONTUARIO POR VINCULO - JUSTIFICATIVA CURTA
+    [Documentation]    Justificativa abaixo do mínimo é recusada na tela.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Wait For Elements State    text=/Acesso justificado até/ >> nth=0    visible
-    ${texto}=    Get Text    text=/Acesso justificado até/ >> nth=0
-    RETURN    ${texto}
+    UI Vinculo - Justificativa Curta E Recusada
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI - PRONTUARIO POR VINCULO - JUSTIFICATIVA LIBERA
+    [Documentation]    Justificativa válida libera o prontuário com a faixa.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI Vinculo - Justificativa Libera O Prontuario
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

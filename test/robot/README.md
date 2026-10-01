@@ -47,8 +47,19 @@ O frontend também é testado aqui, com Robot Framework e o mesmo LKDF
   - o estado vazio aparece;
   - com autorização ligada, o que muda por permissão.
 - **Tag `UI` em todo teste de interface.** Ela separa as duas suítes:
-  - o job `robot-ui` da pipeline roda só `--include UI`, em todo PR;
+  - o job `robot-ui` da pipeline roda os testes de interface em todo PR;
   - a suíte de API (`run_tests.sh --exclude UI`) roda nos PRs de promoção e no health-check.
+- **Tag `SEGURANCA` nos testes que precisam de login, autorização e vínculo ligados** (hoje, o prontuário
+  por vínculo). Eles rodam numa segunda fase do `robot-ui`, contra uma API com esses toggles e o
+  administrador inicial. O cenário é montado pela própria API, autenticada:
+  - usuários com perfis;
+  - troca da senha provisória;
+  - unidades, pacientes e atendimentos.
+
+  Sem `MSP_ADMIN_CPF`/`MSP_ADMIN_SENHA`, a suíte é pulada (Skip).
+- **API autenticada nos FLOWs:** `Definir Token Da Sessao De API` faz toda chamada da suíte levar o
+  Bearer, e os Seeds de sempre (`Seed A Paciente` etc.) funcionam com a segurança ligada.
+- **CPF válido para criar usuário:** `src/resource/libraries/cpf_library.py` (`Gerar Cpf Valido`).
 - **Sessão:** `src/pom/common/mais_saude_publica_ui_common.resource`, que também traz as ações comuns.
   - As ações comuns são abrir rota, clicar aba e botão, preencher e enviar a gaveta, e ler erro, título e
     aviso.
@@ -59,7 +70,10 @@ O frontend também é testado aqui, com Robot Framework e o mesmo LKDF
 - **Cobertura atual:**
   - Setores;
   - Modelo administrativo (abas, rotas antigas, validação e cadastro pela gaveta);
-  - abertura do prontuário em Pacientes com a regra de vínculo desligada.
+  - abertura do prontuário em Pacientes com a regra de vínculo desligada;
+  - prontuário com o vínculo ligado (`SEGURANCA`): paciente da unidade sem aviso; paciente de outra
+    unidade com aviso e bloqueio; justificativa curta recusada; justificativa válida libera e mostra a
+    faixa.
 
   O que falta está na ADR-0077.
 
@@ -82,6 +96,19 @@ MSP_HOST_URL=http://localhost:8082 MSP_FRONT_URL=http://localhost:4200 robot --i
 ```
 
 Use `MSP_UI_HEADLESS=false` para ver o navegador. Se um teste falhar, o screenshot fica no relatório.
+
+**Testes com `SEGURANCA`:** suba uma segunda API, num banco próprio, com os toggles e o administrador
+inicial. Depois rode o front com proxy para ela e os testes com as credenciais do administrador.
+
+```bash
+java -jar ../../target/mais_saude_publica-*.jar --spring.profiles.active=test --server.port=8083 \
+  --spring.datasource.url=jdbc:postgresql://localhost:55432/saudepublica_seguranca \
+  --app.security.enabled=true --app.security.authorization.enabled=true \
+  --app.security.prontuario-por-vinculo.enabled=true \
+  --app.security.bootstrap.cpf=52998224725 --app.security.bootstrap.senha='Robot#Admin123'
+MSP_HOST_URL=http://localhost:8083 MSP_FRONT_URL=http://localhost:4201 \
+  MSP_ADMIN_CPF=52998224725 MSP_ADMIN_SENHA='Robot#Admin123' robot --include SEGURANCA test
+```
 
 ## Camadas (POM → FLOW → SCENARIO → TEST)
 
