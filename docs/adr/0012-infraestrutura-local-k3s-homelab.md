@@ -196,6 +196,12 @@ Dois problemas reais apareceram só com o cluster de verdade, não eram previsí
 
 Depois dessas duas correções, `qaa`, `homologacao` e `prod` subiram de primeira, sem crash loop.
 
+3. **Reinício do servidor em 2026-10-01: 180 s não bastaram.** As APIs dos 4 ambientes, mais o projeto
+   `lonewolf` que passou a dividir o servidor, subiram juntas sobre o disco mecânico. Cada API morta pelo
+   `startupProbe` recomeçava a corrida: `prod` e `qaa` só subiram depois de 11 e 12 reinícios, e `dev` e
+   `homologacao` ficaram fora por mais de uma hora. O `startupProbe` passou para `failureThreshold: 120`
+   (até 10 min). Isso só atrasa a desistência; com a API no ar, readiness e liveness seguem iguais.
+
 ## Passo a passo de provisionamento
 
 Concluído em 2026-09-10:
