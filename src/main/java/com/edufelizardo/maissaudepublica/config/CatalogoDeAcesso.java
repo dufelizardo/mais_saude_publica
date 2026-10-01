@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.edufelizardo.maissaudepublica.models.enuns.DimensaoPermissao.ACESSO_AO_DADO_DE_SAUDE;
@@ -71,6 +72,10 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("MEDICACAO.ADMINISTRAR", new Def("Checagem de medicação prescrita", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("REGISTRO_CLINICO.RETIFICAR_DE_OUTROS",
                 new Def("Retificar registro clínico feito por outro profissional (supervisão)", ACESSO_AO_DADO_DE_SAUDE));
+        // Regulação do acesso (ADR-0087): consultar o andamento não mostra o dado clínico; solicitar e regular, sim.
+        PERMISSOES.put("REGULACAO.CONSULTAR", new Def("Acompanhar o andamento das solicitações de regulação", OPERACAO));
+        PERMISSOES.put("REGULACAO.SOLICITAR", new Def("Solicitar regulação (encaminhar a especialidade, exame ou procedimento)", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("REGULACAO.REGULAR", new Def("Regular a fila: autorizar com vaga, devolver, negar e manter o catálogo", ACESSO_AO_DADO_DE_SAUDE));
         // Fora de todos os papéis padrão (ADR-0071): quem administra o sistema não audita a si mesmo.
         PERMISSOES.put("AUDITORIA.CONSULTAR", new Def("Consultar a trilha de auditoria", ADMINISTRACAO_DO_SISTEMA));
     }
@@ -90,11 +95,15 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "ADMINISTRATIVO.GERENCIAR", "PACIENTE.CONSULTAR", "FARMACIA.CONSULTAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
-                List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR")));
+                List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
+                        "REGULACAO.CONSULTAR")));
         PAPEIS.put("MEDICO", new PapelPadrao("Médico",
                 "Consulta, prescrição e procedimentos.",
                 List.of("PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
-                        "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR")));
+                        "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR")));
+        PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
+                "Regula a fila da Central de Regulação do Acesso no seu escopo (ADR-0087).",
+                List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR")));
         PAPEIS.put("ENFERMEIRO", new PapelPadrao("Enfermeiro",
                 "Classificação de risco, evolução, procedimentos e medicação.",
                 List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
@@ -127,23 +136,36 @@ public class CatalogoDeAcesso implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        int novasPermissoes = 0;
+        Set<String> novasPermissoes = new HashSet<>();
         for (Map.Entry<String, Def> e : PERMISSOES.entrySet()) {
             if (permissaoRepository.findByCodigo(e.getKey()).isEmpty()) {
                 permissaoRepository.save(new Permissao(e.getKey(), e.getValue().descricao(), e.getValue().dimensao()));
-                novasPermissoes++;
+                novasPermissoes.add(e.getKey());
             }
         }
         int novosPapeis = 0;
+        int acrescimos = 0;
         for (Map.Entry<String, PapelPadrao> e : PAPEIS.entrySet()) {
-            if (papelRepository.findByCodigo(e.getKey()).isEmpty()) {
+            Optional<Papel> existente = papelRepository.findByCodigo(e.getKey());
+            if (existente.isEmpty()) {
                 Set<Permissao> permissoes = new HashSet<>(permissaoRepository.findByCodigoIn(e.getValue().permissoes()));
                 papelRepository.save(new Papel(e.getKey(), e.getValue().nome(), e.getValue().descricao(), permissoes));
                 novosPapeis++;
+                continue;
+            }
+            // Permissão que acabou de nascer entra nos papéis padrão que já existiam e a preveem (ADR-0087).
+            // Só na criação dela: depois, o que a administração tirou do papel continua tirado.
+            List<String> acrescentar = e.getValue().permissoes().stream().filter(novasPermissoes::contains).toList();
+            if (!acrescentar.isEmpty()) {
+                Papel papel = existente.get();
+                papel.getPermissoes().addAll(permissaoRepository.findByCodigoIn(acrescentar));
+                papelRepository.save(papel);
+                acrescimos += acrescentar.size();
             }
         }
-        if (novasPermissoes + novosPapeis > 0) {
-            log.info("Catálogo de acesso: {} permissão(ões) e {} papel(éis) padrão criados (ADR-0066).", novasPermissoes, novosPapeis);
+        if (novasPermissoes.size() + novosPapeis + acrescimos > 0) {
+            log.info("Catálogo de acesso: {} permissão(ões) e {} papel(éis) padrão criados, {} permissão(ões) acrescentada(s) "
+                    + "a papéis existentes (ADR-0066, ADR-0087).", novasPermissoes.size(), novosPapeis, acrescimos);
         }
     }
 }

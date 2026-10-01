@@ -41,6 +41,7 @@ const CLASSE_POR_PAPEL: Record<string, ClassePapel> = {
   GESTOR: 'coord',
   COORDENADOR_DE_ENFERMAGEM: 'coord',
   MEDICO: 'med',
+  MEDICO_REGULADOR: 'med',
   ENFERMEIRO: 'enf',
   TECNICO_DE_ENFERMAGEM: 'enf',
   RECEPCAO: 'acs',
@@ -82,6 +83,7 @@ const MODULOS: Modulo[] = [
     gerenciar: ['REGISTRO_CLINICO.RETIFICAR_DE_OUTROS'],
   },
   { nome: 'Medicação', sub: 'checagem da prescrição', ver: [], registrar: ['MEDICACAO.ADMINISTRAR'], gerenciar: [] },
+  { nome: 'Regulação', sub: 'encaminhamento, fila e vaga (ADR-0087)', ver: ['REGULACAO.CONSULTAR'], registrar: ['REGULACAO.SOLICITAR'], gerenciar: ['REGULACAO.REGULAR'] },
   {
     nome: 'Farmácia',
     sub: 'estoque, dispensação, transferências',
