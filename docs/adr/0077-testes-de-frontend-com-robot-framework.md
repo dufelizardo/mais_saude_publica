@@ -83,12 +83,12 @@ O job `robot-ui` da pipeline roda em todo PR, inclusive para `developer`, sem Do
 **Primeiras telas cobertas:**
 - Setores;
 - Modelo administrativo;
-- abertura do prontuário em Pacientes, com a regra de vínculo desligada.
+- abertura do prontuário em Pacientes, com a regra de vínculo desligada;
+- prontuário com o vínculo ligado (tag `SEGURANCA`, segunda fase do job): sem aviso para paciente da
+  unidade, aviso e bloqueio para paciente de outra unidade, justificativa curta recusada, e justificativa
+  válida liberando com a faixa.
 
 **Pendências:**
-- **O fluxo do prontuário com o vínculo ligado** (aviso, justificativa e faixa) precisa de uma API com
-  login, autorização e vínculo ligados, e de usuários com perfis. Isso pede uma segunda configuração da
-  API no job, com o bootstrap do administrador e a troca de senha feita pela API.
 - **Cobrir as demais telas já existentes, começando pelas mais recentes:**
   - prontuário por vínculo (ADR-0076);
   - Administrativo agrupado (ADR-0074);

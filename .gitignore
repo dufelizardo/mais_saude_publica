@@ -38,3 +38,5 @@ build/
 # Testes de interface (ADR-0077): log do Playwright e resultados do job robot-ui
 playwright-log.txt
 test/robot/results-ui/
+test/robot/results-ui-seguranca/
+frontend/proxy-seguranca.json
