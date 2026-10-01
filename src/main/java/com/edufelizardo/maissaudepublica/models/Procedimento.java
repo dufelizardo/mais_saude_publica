@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.models;
 
+import java.time.Instant;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusProcedimento;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -54,6 +55,41 @@ public class Procedimento implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private StatusProcedimento status;
+
+    /**
+     * Registro que esta versão corrige (ADR-0062). Nulo no registro original. Registros clínicos não
+     * são editados: uma correção é uma nova versão ligada à anterior, que continua no prontuário.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "retificacao_de_id", referencedColumnName = "uuid", updatable = false)
+    private Procedimento retificacaoDe;
+
+    @Column(length = 1000, updatable = false)
+    private String motivoRetificacao;
+
+    /** Hora do servidor em que o registro foi gravado (ADR-0062); nula em registros anteriores. */
+    @Column(updatable = false)
+    private Instant registradoEm;
+
+    /** CPF do usuário autenticado quando o toggle de segurança está ligado (ADR-0055). */
+    @Column(updatable = false)
+    private String registradoPorCpf;
+
+    // ── Mudança de status (ADR-0062): AGENDADO → REALIZADO | CANCELADO, uma única vez ────────────
+
+    /** Data que estava prevista enquanto AGENDADO; guardada quando o procedimento é realizado ou cancelado. */
+    private LocalDateTime dataPrevista;
+
+    private Instant statusAlteradoEm;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profissional_status_id", referencedColumnName = "uuid")
+    private Profissional profissionalStatus;
+
+    @Column(length = 1000)
+    private String justificativaStatus;
+
+    private String statusAlteradoPorCpf;
 
     public Procedimento(Consulta consulta, Profissional profissional, String tipo, String descricao,
                          LocalDateTime dataRealizacao, StatusProcedimento status) {

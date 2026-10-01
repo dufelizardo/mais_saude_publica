@@ -1,0 +1,1018 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Coordenações, Supervisões &amp; Gerência — Mais Saúde Pública</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --blue-900:#0a2540; --blue-800:#0c3170; --blue-700:#1351b4; --blue-600:#1e6fd9;
+    --blue-500:#2f8de4; --blue-400:#5aa9ee; --blue-200:#c7daf5; --blue-100:#e7f0fb; --blue-50:#f3f7fd;
+    --ink-900:#0e1116; --ink-700:#2a3140; --ink-500:#5c6470; --ink-400:#7a8392;
+    --ink-300:#b6bdc9; --ink-200:#dde1e8; --ink-100:#eef1f5; --ink-50:#f7f8fb;
+    --white:#fff;
+    --ok:#1f8a5b; --ok-bg:#e7f6ee; --warn:#b86b00; --warn-bg:#fdf4e3; --alert:#c0392b; --alert-bg:#fdecea;
+    --purple:#6936c2; --purple-bg:#f4ecff;
+    --teal:#0b8a8a; --teal-bg:#e3f4f4;
+    --amber:#a37200; --amber-bg:#fbf2d6;
+    --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:18px;
+    --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:20px; --s-6:24px; --s-8:32px;
+    --side-w:260px; --top-h:64px;
+    --shadow-sm:0 1px 2px rgba(14,17,22,0.05);
+    --shadow-md:0 1px 2px rgba(14,17,22,0.04), 0 6px 18px rgba(14,17,22,0.06);
+    --shadow-lg:0 10px 30px rgba(14,17,22,0.10);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin:0; background: var(--ink-50); color: var(--ink-900); font-family:'IBM Plex Sans', system-ui, -apple-system, sans-serif; font-size:0.9375rem; line-height:1.5; -webkit-font-smoothing:antialiased; overflow-x: hidden; }
+  a { color: var(--blue-700); text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+  h1,h2,h3,h4 { margin:0; letter-spacing:-0.01em; line-height:1.2; font-weight:600; }
+  p { margin:0; }
+  ul { margin:0; padding:0; list-style:none; }
+  .mono { font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 3px solid var(--blue-500); outline-offset: 2px; border-radius: 6px; }
+  .skip-link { position: absolute; left: 8px; top: -100px; background: var(--blue-700); color:#fff; padding: 10px 14px; border-radius: 6px; font-weight: 600; z-index: 200; }
+  .skip-link:focus { top: 8px; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  .app { display: grid; grid-template-columns: var(--side-w) 1fr; grid-template-rows: var(--top-h) 1fr; grid-template-areas: "sidebar topbar" "sidebar content"; min-height: 100vh; }
+  @media (max-width: 980px) { .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "topbar" "content"; } }
+  .sidebar { grid-area: sidebar; background: #fff; border-right: 1px solid var(--ink-200); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  @media (max-width: 980px) {
+    .sidebar { display: none; }
+    .sidebar.is-open { display: flex; position: fixed; inset: 0 auto 0 0; width: 280px; z-index: 150; box-shadow: var(--shadow-lg); }
+  }
+  .sidebar__brand { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--ink-100); height: var(--top-h); flex-shrink: 0; }
+  .sb-mark { width: 36px; height: 36px; border-radius: 9px; background: var(--blue-700); color: #fff; display: grid; place-items: center; flex-shrink: 0; }
+  .sb-name { font-weight: 600; font-size: 0.9375rem; line-height: 1.05; white-space: nowrap; }
+  .sb-sub { font-size: 0.66rem; color: var(--ink-500); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+  .sidebar__nav { padding: var(--s-3) 10px; flex: 1; }
+  .nav-group { margin-bottom: var(--s-4); }
+  .nav-group__label { font-size: 0.66rem; font-weight: 600; color: var(--ink-400); letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 10px 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--ink-700); font-size: 0.875rem; font-weight: 500; text-decoration: none; min-height: 36px; }
+  .nav-item:hover { background: var(--blue-50); color: var(--blue-700); }
+  .nav-item[aria-current="page"] { background: var(--blue-700); color: #fff; box-shadow: var(--shadow-sm); }
+  .nav-item[aria-current="page"] .nav-badge { background: rgba(255,255,255,0.2); color: #fff; }
+  .nav-item__icon { width: 18px; height: 18px; color: currentColor; flex-shrink: 0; }
+  .nav-item__label { flex: 1; }
+  .nav-badge { background: var(--ink-100); color: var(--ink-500); font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
+  .sidebar__foot { border-top: 1px solid var(--ink-100); padding: var(--s-3); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .who { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; padding: 4px 6px; border-radius: 8px; }
+  .who:hover { background: var(--ink-50); }
+  .who__avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--blue-700), var(--blue-500)); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 0.8125rem; flex-shrink: 0; }
+  .who__name { font-weight: 600; font-size: 0.8125rem; color: var(--ink-900); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who__role { font-size: 0.7rem; color: var(--ink-500); }
+  .icon-btn { background: transparent; border: 1px solid transparent; color: var(--ink-500); width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
+  .icon-btn:hover { background: var(--ink-100); color: var(--ink-900); }
+
+  .topbar { grid-area: topbar; background: #fff; border-bottom: 1px solid var(--ink-200); height: var(--top-h); display: flex; align-items: center; padding: 0 var(--s-6); gap: var(--s-4); position: sticky; top: 0; z-index: 80; }
+  @media (max-width: 600px) { .topbar { padding: 0 var(--s-4); } }
+  .menu-btn { display: none; width: 40px; height: 40px; border-radius: 8px; background: transparent; border: 1px solid var(--ink-200); color: var(--ink-700); align-items: center; justify-content: center; }
+  @media (max-width: 980px) { .menu-btn { display: inline-flex; } }
+  .crumbs { display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; color: var(--ink-500); }
+  .crumbs strong { color: var(--ink-900); font-weight: 600; }
+  @media (max-width: 1024px) { .crumbs { display: none; } }
+  .topbar__search { margin-left: auto; position: relative; flex: 0 1 320px; min-width: 0; }
+  .topbar__search input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--ink-200); border-radius: 8px; background: var(--ink-50); font: inherit; font-size: 0.875rem; min-height: 40px; }
+  .topbar__search input:focus { background: #fff; }
+  .topbar__search > svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+  @media (max-width: 700px) { .topbar__search { display: none; } }
+  .top-actions { display: flex; align-items: center; gap: 4px; }
+  .top-btn { background: transparent; border: 1px solid transparent; color: var(--ink-700); width: 40px; height: 40px; border-radius: 8px; display: inline-grid; place-items: center; position: relative; }
+  .top-btn:hover { background: var(--ink-50); }
+  .top-btn .dot-alert { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--alert); border: 2px solid #fff; }
+
+  .content { grid-area: content; padding: var(--s-6); max-width: 1600px; }
+  @media (max-width: 600px) { .content { padding: var(--s-4); } }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s-4); flex-wrap: wrap; margin-bottom: var(--s-5); }
+  .page-head h1 { font-size: clamp(1.375rem, 1.1rem + 0.7vw, 1.75rem); }
+  .page-head p { color: var(--ink-500); font-size: 0.875rem; margin-top: 4px; }
+  .actions { display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; }
+  .btn { appearance:none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 14px; border-radius: 8px; border: 1.5px solid var(--ink-200); background: #fff; color: var(--ink-700); font-weight: 500; font-size: 0.875rem; min-height: 40px; text-decoration: none; }
+  .btn:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .btn--primary { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+  .btn--primary:hover { background: var(--blue-800); border-color: var(--blue-800); color: #fff; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); margin-bottom: var(--s-5); }
+  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .stats { grid-template-columns: minmax(0, 1fr); } }
+  .stat { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-4); display: flex; gap: 14px; align-items: center; }
+  .stat__icon { width: 42px; height: 42px; border-radius: 10px; background: var(--blue-50); color: var(--blue-700); display: grid; place-items: center; flex-shrink: 0; }
+  .stat__icon--purple { background: var(--purple-bg); color: var(--purple); }
+  .stat__icon--teal { background: var(--teal-bg); color: var(--teal); }
+  .stat__icon--amber { background: var(--amber-bg); color: var(--amber); }
+  .stat__lbl { color: var(--ink-500); font-size: 0.78rem; }
+  .stat__val { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.05; margin-top: 2px; }
+  .stat__sub { font-size: 0.72rem; color: var(--ink-500); margin-top: 2px; }
+
+  /* Main tabs */
+  .main-tabs { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: 4px; display: inline-flex; gap: 2px; margin-bottom: var(--s-4); overflow-x: auto; max-width: 100%; }
+  .main-tabs button { background: transparent; border: 0; padding: 9px 16px; border-radius: 10px; font-size: 0.875rem; font-weight: 500; color: var(--ink-500); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; min-height: 38px; }
+  .main-tabs button[aria-selected="true"] { background: var(--blue-700); color: #fff; }
+  .main-tabs button:not([aria-selected="true"]):hover { color: var(--blue-700); background: var(--blue-50); }
+
+  .card { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); }
+
+  /* Org chart */
+  .org-card { padding: var(--s-5); margin-bottom: var(--s-5); overflow: hidden; }
+  .org-card__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s-5); flex-wrap: wrap; gap: 12px; }
+  .org-card__head h2 { font-size: 1rem; }
+  .org-card__head .sub { font-size: 0.78rem; color: var(--ink-500); margin-top: 2px; }
+  .legend-inline { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.72rem; color: var(--ink-500); }
+  .legend-inline span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-inline i { width: 12px; height: 12px; border-radius: 3px; }
+
+  .org-wrap { overflow-x: auto; }
+  .org { min-width: 760px; position: relative; padding: 6px 0 10px; }
+
+  .org-tier { display: flex; justify-content: center; gap: 16px; position: relative; }
+  .org-tier + .org-tier { margin-top: 36px; }
+
+  /* Connector lines between tiers */
+  .org-tier::before {
+    content: ""; position: absolute; left: 50%; top: -28px;
+    width: 2px; height: 18px;
+    background: var(--ink-200);
+    transform: translateX(-50%);
+  }
+  .org-tier.t0::before { display: none; }
+
+  .org-node {
+    background: #fff;
+    border: 1.5px solid var(--ink-200);
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 200px; max-width: 240px;
+    display: grid; gap: 8px;
+    cursor: pointer;
+  }
+  .org-node:hover { border-color: var(--blue-700); box-shadow: var(--shadow-md); }
+  .org-node[aria-selected="true"] { border-color: var(--blue-700); background: var(--blue-50); box-shadow: 0 0 0 3px rgba(19,81,180,0.10); }
+
+  .org-node.t-sec { border-color: var(--blue-700); background: var(--blue-700); color: #fff; }
+  .org-node.t-sec .org-node__sub { color: rgba(255,255,255,0.75); }
+  .org-node.t-sec:hover { box-shadow: var(--shadow-md); }
+
+  .org-node.t-ger { border-color: var(--purple); background: var(--purple-bg); }
+  .org-node.t-coord { border-color: var(--blue-200); background: var(--blue-50); }
+  .org-node.t-sup { border-color: var(--teal); background: var(--teal-bg); }
+
+  .org-node__head { display: flex; gap: 10px; align-items: center; }
+  .org-node__avatar { width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.18); color: inherit; display: grid; place-items: center; font-weight: 600; font-size: 0.78rem; flex-shrink: 0; }
+  .org-node.t-ger .org-node__avatar { background: rgba(105,54,194,0.15); color: var(--purple); }
+  .org-node.t-coord .org-node__avatar { background: var(--white); color: var(--blue-700); }
+  .org-node.t-sup .org-node__avatar { background: rgba(11,138,138,0.18); color: var(--teal); }
+
+  .org-node__title { font-weight: 600; font-size: 0.8125rem; line-height: 1.2; }
+  .org-node__sub { font-size: 0.7rem; color: var(--ink-500); margin-top: 2px; }
+  .org-node__name { font-size: 0.78rem; font-weight: 500; color: var(--ink-700); }
+  .org-node.t-sec .org-node__name { color: #fff; }
+  .org-node__foot { display: flex; gap: 12px; font-size: 0.66rem; color: var(--ink-500); padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.06); }
+  .org-node.t-sec .org-node__foot { color: rgba(255,255,255,0.7); border-top-color: rgba(255,255,255,0.15); }
+  .org-node__foot strong { color: var(--ink-900); font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+  .org-node.t-sec .org-node__foot strong { color: #fff; }
+
+  /* Toolbar */
+  .toolbar { background: #fff; border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-3) var(--s-4); display: flex; gap: var(--s-2); flex-wrap: wrap; align-items: center; margin-bottom: var(--s-4); }
+  .toolbar .search { position: relative; flex: 1 1 280px; min-width: 200px; }
+  .toolbar .search input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--ink-200); border-radius: 8px; background: var(--ink-50); font: inherit; font-size: 0.875rem; min-height: 40px; }
+  .toolbar .search input:focus { background: #fff; }
+  .toolbar .search > svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--ink-400); pointer-events: none; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--ink-200); padding: 7px 12px; border-radius: 8px; font-size: 0.8125rem; color: var(--ink-700); font-weight: 500; min-height: 36px; cursor: pointer; }
+  .pill:hover { border-color: var(--blue-700); color: var(--blue-700); }
+  .pill svg { color: var(--ink-400); }
+  .pill.active { background: var(--blue-50); border-color: var(--blue-200); color: var(--blue-700); }
+
+  /* Cards grid */
+  .cards-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-3); margin-bottom: var(--s-5); }
+  @media (max-width: 1280px) { .cards-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 760px) { .cards-grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .area-card {
+    background: #fff; border: 1px solid var(--ink-200);
+    border-radius: var(--r-lg);
+    padding: var(--s-4); display: grid; gap: var(--s-3);
+  }
+  .area-card__head { display: flex; align-items: center; gap: 12px; }
+  .area-card__mark {
+    width: 44px; height: 44px; border-radius: 11px;
+    background: var(--blue-50); color: var(--blue-700);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .area-card__mark.coord { background: var(--blue-50); color: var(--blue-700); }
+  .area-card__mark.sup { background: var(--teal-bg); color: var(--teal); }
+  .area-card__mark.ger { background: var(--purple-bg); color: var(--purple); }
+  .area-card__title { font-weight: 600; font-size: 1rem; line-height: 1.2; }
+  .area-card__sub { font-size: 0.72rem; color: var(--ink-500); margin-top: 2px; }
+  .area-card__menu { background: transparent; border: 0; color: var(--ink-400); width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; margin-left: auto; flex-shrink: 0; }
+  .area-card__menu:hover { background: var(--ink-100); color: var(--ink-900); }
+
+  .area-card__resp { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--ink-50); border-radius: 10px; }
+  .area-card__resp .who__avatar { width: 32px; height: 32px; font-size: 0.78rem; }
+  .area-card__resp .n { font-weight: 600; font-size: 0.8125rem; }
+  .area-card__resp .r { font-size: 0.7rem; color: var(--ink-500); margin-top: 2px; }
+
+  .area-card__counts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .area-card__count { background: var(--ink-50); border-radius: 8px; padding: 8px 10px; text-align: center; }
+  .area-card__count .lbl { font-size: 0.62rem; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .area-card__count .val { font-weight: 600; font-size: 1rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+  .area-card__cov { display: grid; gap: 4px; }
+  .area-card__cov-top { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--ink-500); }
+  .area-card__cov-top strong { color: var(--ink-900); font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+  .area-card__bar { height: 5px; background: var(--ink-100); border-radius: 999px; overflow: hidden; }
+  .area-card__bar span { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; }
+  .area-card__bar span.warn { background: var(--warn); }
+  .area-card__bar span.ok { background: var(--ok); }
+
+  .tag { font-size: 0.66rem; font-weight: 600; padding: 3px 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; }
+  .tag--coord { background: var(--blue-50); color: var(--blue-700); }
+  .tag--sup { background: var(--teal-bg); color: var(--teal); }
+  .tag--ger { background: var(--purple-bg); color: var(--purple); }
+
+  /* Detail card */
+  .detail { overflow: hidden; }
+  .detail__head { padding: var(--s-5); border-bottom: 1px solid var(--ink-100); display: flex; gap: var(--s-4); align-items: flex-start; flex-wrap: wrap; background: radial-gradient(60% 80% at 100% 0%, rgba(19,81,180,0.06), transparent 70%), #fff; }
+  .detail__icon { width: 56px; height: 56px; border-radius: 14px; background: var(--blue-50); color: var(--blue-700); display: grid; place-items: center; flex-shrink: 0; }
+  .detail__id { flex: 1; min-width: 240px; }
+  .detail__id h2 { font-size: 1.25rem; }
+  .detail__id .sub { color: var(--ink-500); font-size: 0.8125rem; margin-top: 4px; line-height: 1.5; }
+  .detail__chips { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag--info { background: var(--blue-50); color: var(--blue-800); }
+  .tag--ok { background: var(--ok-bg); color: var(--ok); }
+  .tag .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  /* Two-col detail */
+  .two-col { display: grid; grid-template-columns: 1.4fr minmax(0, 1fr); gap: 0; }
+  @media (max-width: 1100px) { .two-col { grid-template-columns: minmax(0, 1fr); } }
+  .col-left { padding: var(--s-5); border-right: 1px solid var(--ink-100); }
+  @media (max-width: 1100px) { .col-left { border-right: 0; border-bottom: 1px solid var(--ink-100); } }
+  .col-right { padding: var(--s-5); }
+  .section-h { font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+
+  /* Unit list under coordination */
+  .unit-list { display: grid; gap: 6px; margin-bottom: var(--s-5); }
+  .unit-row { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--ink-200); border-radius: 10px; }
+  .unit-row .ic { width: 32px; height: 32px; border-radius: 8px; background: var(--blue-50); color: var(--blue-700); display: grid; place-items: center; }
+  .unit-row .n { font-weight: 600; font-size: 0.875rem; }
+  .unit-row .r { color: var(--ink-500); font-size: 0.72rem; margin-top: 2px; }
+  .unit-row .v { font-weight: 600; font-family: 'IBM Plex Mono', monospace; color: var(--ink-900); font-size: 0.875rem; text-align: right; }
+  .unit-row .v small { display: block; color: var(--ink-500); font-size: 0.66rem; font-weight: 500; }
+
+  /* Indicators panel */
+  .ind { display: grid; gap: 10px; }
+  .ind-row { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--ink-200); border-radius: 10px; }
+  .ind-row .ic { width: 32px; height: 32px; border-radius: 8px; background: var(--blue-50); color: var(--blue-700); display: grid; place-items: center; }
+  .ind-row .ic.ok { background: var(--ok-bg); color: var(--ok); }
+  .ind-row .ic.warn { background: var(--warn-bg); color: var(--warn); }
+  .ind-row .lbl { font-weight: 600; font-size: 0.8125rem; }
+  .ind-row .sub { color: var(--ink-500); font-size: 0.7rem; margin-top: 2px; }
+  .ind-row .v { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 1rem; text-align: right; }
+  .ind-row .delta { display: block; font-size: 0.7rem; font-weight: 500; margin-top: 2px; }
+  .ind-row .delta.up { color: var(--ok); }
+  .ind-row .delta.down { color: var(--alert); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div role="note" style="position:relative;z-index:200;background:#fff4d6;color:#5c4200;border-bottom:1px solid #f0d58c;padding:8px 16px;font:500 13px/1.45 'IBM Plex Sans',system-ui,sans-serif;text-align:center">Protótipo navegável do <strong>Mais Saúde Pública</strong>: telas de referência com dados fictícios, não é o sistema em produção. <a href="https://github.com/dufelizardo/mais_saude_publica" style="color:inherit;text-decoration:underline">Ver o código no GitHub</a></div>
+
+<a href="#main" class="skip-link">Pular para o conteúdo</a>
+
+<div class="app">
+
+  <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+    <div class="sidebar__brand">
+      <span class="sb-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+      </span>
+      <div>
+        <div class="sb-name">Mais Saúde</div>
+        <div class="sb-sub">Sistema Integrado</div>
+      </div>
+    </div>
+
+    <nav class="sidebar__nav">
+      <div class="nav-group">
+        <a href="Painel.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg><span class="nav-item__label">Sala de Situação</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group__label">Assistencial</div>
+        <a href="Pacientes.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg><span class="nav-item__label">Pacientes</span></a>
+        <a href="Programas.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg><span class="nav-item__label">Programas de Saúde</span></a>
+        <a href="Agenda.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span class="nav-item__label">Agenda</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group__label">Recursos Humanos</div>
+        <a href="Profissionais.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path></svg><span class="nav-item__label">Profissionais</span></a>
+        <a href="Equipes.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg><span class="nav-item__label">Equipes</span></a>
+        <a href="Escalas.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><span class="nav-item__label">Escalas</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group__label">Gestão</div>
+        <a href="Equipamentos.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path></svg><span class="nav-item__label">Equipamentos</span></a>
+        <a href="Coordenacoes.html" class="nav-item" aria-current="page">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          <span class="nav-item__label">Coordenações &amp; Gerência</span>
+        </a>
+        <a href="Relatorios.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg><span class="nav-item__label">Relatórios</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group__label">Administração</div>
+        <a href="Usuarios.html" class="nav-item"><svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="nav-item__label">Usuários &amp; Perfis</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar__foot">
+      <div class="who" tabindex="0">
+        <span class="who__avatar" aria-hidden="true">MS</span>
+        <div style="min-width:0;">
+          <div class="who__name">Mariana Souza</div>
+          <div class="who__role">Coordenação · Regional Centro</div>
+        </div>
+      </div>
+      <a href="Login.html" class="icon-btn" aria-label="Sair" title="Sair">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+      </a>
+    </div>
+  </aside>
+
+  <header class="topbar" role="banner">
+    <button class="menu-btn" id="menu-btn" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <nav class="crumbs" aria-label="Trilha">
+      <a href="Painel.html" style="color:var(--ink-500);">Início</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <span style="color:var(--ink-500);">Gestão</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <strong>Coordenações, Supervisões &amp; Gerência</strong>
+    </nav>
+
+    <label class="topbar__search" role="search">
+      <span class="sr-only">Buscar</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="search" placeholder="Buscar coordenação, supervisão, gerência…" />
+    </label>
+
+    <div class="top-actions">
+      <button class="top-btn" aria-label="Notificações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="dot-alert" aria-hidden="true"></span>
+      </button>
+      <button class="top-btn" aria-label="Configurações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="content" id="main">
+
+    <header class="page-head">
+      <div>
+        <h1>Coordenações, Supervisões &amp; Gerência</h1>
+        <p>Estrutura organizacional da Secretaria Municipal de Saúde · 4 gerências · 7 coordenações regionais · 14 supervisões técnicas</p>
+      </div>
+      <div class="actions">
+        <button class="btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline></svg>
+          Exportar organograma
+        </button>
+        <button class="btn btn--primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Nova área
+        </button>
+      </div>
+    </header>
+
+    <section class="stats" aria-label="Resumo da estrutura">
+      <div class="stat">
+        <span class="stat__icon stat__icon--purple" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 6v6c0 5 8 10 8 10s8-5 8-10V6z"></path></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Gerências</div>
+          <div class="stat__val mono">4</div>
+          <div class="stat__sub">Atenção Básica · Especialidades · Urgência · Gestão</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Coordenações</div>
+          <div class="stat__val mono">7</div>
+          <div class="stat__sub">regionais · 128 unidades</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon stat__icon--teal" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Supervisões técnicas</div>
+          <div class="stat__val mono">14</div>
+          <div class="stat__sub">programas, qualidade, vigilância</div>
+        </div>
+      </div>
+      <div class="stat">
+        <span class="stat__icon stat__icon--amber" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+        </span>
+        <div>
+          <div class="stat__lbl">Cargos gestores</div>
+          <div class="stat__val mono">25</div>
+          <div class="stat__sub">com escopo e suplência</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabs -->
+    <div class="main-tabs" role="tablist" aria-label="Visão">
+      <button role="tab" aria-selected="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Organograma
+      </button>
+      <button role="tab" aria-selected="false">Coordenações <span style="background:rgba(255,255,255,0.2); color:var(--ink-500); padding:1px 7px; border-radius:999px; font-size:0.7rem; font-weight:600;">7</span></button>
+      <button role="tab" aria-selected="false">Supervisões <span style="background:rgba(255,255,255,0.2); color:var(--ink-500); padding:1px 7px; border-radius:999px; font-size:0.7rem; font-weight:600;">14</span></button>
+      <button role="tab" aria-selected="false">Gerências <span style="background:rgba(255,255,255,0.2); color:var(--ink-500); padding:1px 7px; border-radius:999px; font-size:0.7rem; font-weight:600;">4</span></button>
+    </div>
+
+    <!-- ===== Organograma ===== -->
+    <section class="card org-card" aria-labelledby="org-title">
+      <div class="org-card__head">
+        <div>
+          <h2 id="org-title">Organograma · Secretaria Municipal de Saúde</h2>
+          <div class="sub">hierarquia administrativa · vínculos vigentes em maio/2026</div>
+        </div>
+        <div class="legend-inline" aria-hidden="true">
+          <span><i style="background:var(--blue-700);"></i> Secretaria</span>
+          <span><i style="background:var(--purple-bg); border:1px solid var(--purple);"></i> Gerência</span>
+          <span><i style="background:var(--blue-50); border:1px solid var(--blue-200);"></i> Coordenação</span>
+          <span><i style="background:var(--teal-bg); border:1px solid var(--teal);"></i> Supervisão</span>
+        </div>
+      </div>
+
+      <div class="org-wrap">
+        <div class="org">
+          <!-- Tier 0: Secretaria -->
+          <div class="org-tier t0">
+            <div class="org-node t-sec" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">SMS</span>
+                <div>
+                  <div class="org-node__title">Secretaria Mun. Saúde</div>
+                  <div class="org-node__sub">gabinete</div>
+                </div>
+              </div>
+              <div class="org-node__name">Dr. Ricardo Coelho · Secretário</div>
+              <div class="org-node__foot"><span><strong>3.612</strong> servidores</span><span><strong>128</strong> unidades</span></div>
+            </div>
+          </div>
+
+          <!-- Tier 1: Gerências (4) -->
+          <div class="org-tier">
+            <div class="org-node t-ger" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">GAB</span>
+                <div>
+                  <div class="org-node__title">Atenção Básica</div>
+                  <div class="org-node__sub">Gerência</div>
+                </div>
+              </div>
+              <div class="org-node__name">Dra. Larissa Mendes</div>
+              <div class="org-node__foot"><span><strong>94</strong> UBS/CSF</span><span><strong>28</strong> eSF</span></div>
+            </div>
+            <div class="org-node t-ger" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">ESP</span>
+                <div>
+                  <div class="org-node__title">Especialidades &amp; Apoio</div>
+                  <div class="org-node__sub">Gerência</div>
+                </div>
+              </div>
+              <div class="org-node__name">Dr. Jorge Tavares</div>
+              <div class="org-node__foot"><span><strong>9</strong> esp.</span><span><strong>418</strong> prof.</span></div>
+            </div>
+            <div class="org-node t-ger" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">URG</span>
+                <div>
+                  <div class="org-node__title">Urgência &amp; Emergência</div>
+                  <div class="org-node__sub">Gerência</div>
+                </div>
+              </div>
+              <div class="org-node__name">Dra. Patrícia Vilela</div>
+              <div class="org-node__foot"><span><strong>5</strong> UPA</span><span><strong>SAMU</strong></span></div>
+            </div>
+            <div class="org-node t-ger" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">ADM</span>
+                <div>
+                  <div class="org-node__title">Gestão &amp; Planejamento</div>
+                  <div class="org-node__sub">Gerência</div>
+                </div>
+              </div>
+              <div class="org-node__name">Eng. Bruno Carvalho</div>
+              <div class="org-node__foot"><span><strong>RH</strong></span><span><strong>TI</strong></span><span><strong>Finan.</strong></span></div>
+            </div>
+          </div>
+
+          <!-- Tier 2: Coordenações regionais (5 visíveis) -->
+          <div class="org-tier">
+            <div class="org-node t-coord" tabindex="0" aria-selected="true">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">MS</span>
+                <div>
+                  <div class="org-node__title">Regional Centro</div>
+                  <div class="org-node__sub">Coordenação</div>
+                </div>
+              </div>
+              <div class="org-node__name">Mariana Souza</div>
+              <div class="org-node__foot"><span><strong>14</strong> unid.</span><span><strong>418</strong> prof.</span></div>
+            </div>
+            <div class="org-node t-coord" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">CL</span>
+                <div>
+                  <div class="org-node__title">Regional Norte</div>
+                  <div class="org-node__sub">Coordenação</div>
+                </div>
+              </div>
+              <div class="org-node__name">Carlos Lima</div>
+              <div class="org-node__foot"><span><strong>18</strong> unid.</span><span><strong>512</strong> prof.</span></div>
+            </div>
+            <div class="org-node t-coord" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">JA</span>
+                <div>
+                  <div class="org-node__title">Regional Sul</div>
+                  <div class="org-node__sub">Coordenação</div>
+                </div>
+              </div>
+              <div class="org-node__name">Júlia Almeida</div>
+              <div class="org-node__foot"><span><strong>22</strong> unid.</span><span><strong>631</strong> prof.</span></div>
+            </div>
+            <div class="org-node t-coord" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">PR</span>
+                <div>
+                  <div class="org-node__title">Regional Leste</div>
+                  <div class="org-node__sub">Coordenação</div>
+                </div>
+              </div>
+              <div class="org-node__name">Paula Ribeiro</div>
+              <div class="org-node__foot"><span><strong>20</strong> unid.</span><span><strong>584</strong> prof.</span></div>
+            </div>
+            <div class="org-node t-coord" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">RV</span>
+                <div>
+                  <div class="org-node__title">Regional Oeste</div>
+                  <div class="org-node__sub">Coordenação</div>
+                </div>
+              </div>
+              <div class="org-node__name">Rafael Vieira</div>
+              <div class="org-node__foot"><span><strong>16</strong> unid.</span><span><strong>442</strong> prof.</span></div>
+            </div>
+          </div>
+
+          <!-- Tier 3: Supervisões (vinculadas à Regional Centro) -->
+          <div class="org-tier">
+            <div class="org-node t-sup" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">HR</span>
+                <div>
+                  <div class="org-node__title">Sup. Atenção Básica</div>
+                  <div class="org-node__sub">Centro</div>
+                </div>
+              </div>
+              <div class="org-node__name">Dra. Helena Ribeiro</div>
+              <div class="org-node__foot"><span><strong>9</strong> eSF</span></div>
+            </div>
+            <div class="org-node t-sup" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">JT</span>
+                <div>
+                  <div class="org-node__title">Sup. Vigilância em Saúde</div>
+                  <div class="org-node__sub">Centro</div>
+                </div>
+              </div>
+              <div class="org-node__name">Joana Teles</div>
+              <div class="org-node__foot"><span><strong>vacinas</strong></span><span><strong>epi.</strong></span></div>
+            </div>
+            <div class="org-node t-sup" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">FA</span>
+                <div>
+                  <div class="org-node__title">Sup. Saúde Mental</div>
+                  <div class="org-node__sub">CAPS Centro</div>
+                </div>
+              </div>
+              <div class="org-node__name">Dr. Felipe Andrade</div>
+              <div class="org-node__foot"><span><strong>3</strong> CAPS</span></div>
+            </div>
+            <div class="org-node t-sup" tabindex="0">
+              <div class="org-node__head">
+                <span class="org-node__avatar" aria-hidden="true">CA</span>
+                <div>
+                  <div class="org-node__title">Sup. PMAQ &amp; Qualidade</div>
+                  <div class="org-node__sub">Centro</div>
+                </div>
+              </div>
+              <div class="org-node__name">Carolina Alencar</div>
+              <div class="org-node__foot"><span><strong>17</strong> ind.</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Toolbar -->
+    <div class="toolbar" role="region" aria-label="Filtros">
+      <label class="search">
+        <span class="sr-only">Buscar</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="search" placeholder="Buscar por área, regional, gestor…" />
+      </label>
+      <button class="pill active">Regional: Centro <span style="margin-left:4px;">×</span></button>
+      <button class="pill">Tipo de área <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+      <button class="pill">Status <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+    </div>
+
+    <!-- ===== Cards grid (Coordenações & Supervisões da Regional Centro) ===== -->
+    <section class="cards-grid" aria-label="Áreas da Regional Centro">
+
+      <article class="area-card">
+        <header class="area-card__head">
+          <span class="area-card__mark coord" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          </span>
+          <div>
+            <div class="area-card__title">Coordenação Regional Centro</div>
+            <div class="area-card__sub">14 unidades · territorial</div>
+          </div>
+          <button class="area-card__menu" aria-label="Mais opções"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+        </header>
+        <div><span class="tag tag--coord">Coordenação</span></div>
+        <div class="area-card__resp">
+          <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">MS</span>
+          <div>
+            <div class="n">Mariana Souza</div>
+            <div class="r">desde mar/2024 · 40h</div>
+          </div>
+        </div>
+        <div class="area-card__counts">
+          <div class="area-card__count"><div class="lbl">Unidades</div><div class="val mono">14</div></div>
+          <div class="area-card__count"><div class="lbl">Equipes</div><div class="val mono">12</div></div>
+          <div class="area-card__count"><div class="lbl">Prof.</div><div class="val mono">418</div></div>
+        </div>
+        <div class="area-card__cov">
+          <div class="area-card__cov-top"><span>Cobertura territorial</span><strong>87%</strong></div>
+          <div class="area-card__bar"><span style="width:87%"></span></div>
+        </div>
+      </article>
+
+      <article class="area-card">
+        <header class="area-card__head">
+          <span class="area-card__mark sup" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+          </span>
+          <div>
+            <div class="area-card__title">Sup. Atenção Básica</div>
+            <div class="area-card__sub">técnica · eSF</div>
+          </div>
+          <button class="area-card__menu" aria-label="Mais opções"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+        </header>
+        <div><span class="tag tag--sup">Supervisão técnica</span></div>
+        <div class="area-card__resp">
+          <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">HR</span>
+          <div>
+            <div class="n">Dra. Helena Ribeiro</div>
+            <div class="r">CRM 142.317 · 40h</div>
+          </div>
+        </div>
+        <div class="area-card__counts">
+          <div class="area-card__count"><div class="lbl">eSF</div><div class="val mono">9</div></div>
+          <div class="area-card__count"><div class="lbl">eSB</div><div class="val mono">3</div></div>
+          <div class="area-card__count"><div class="lbl">Famílias</div><div class="val mono">14k</div></div>
+        </div>
+        <div class="area-card__cov">
+          <div class="area-card__cov-top"><span>PMAQ · indicadores</span><strong>14/17</strong></div>
+          <div class="area-card__bar"><span class="ok" style="width:82%"></span></div>
+        </div>
+      </article>
+
+      <article class="area-card">
+        <header class="area-card__head">
+          <span class="area-card__mark sup" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12c4 2 14 2 18 0"></path><path d="M12 3c2.5 3 2.5 15 0 18"></path></svg>
+          </span>
+          <div>
+            <div class="area-card__title">Sup. Vigilância em Saúde</div>
+            <div class="area-card__sub">vacinas, dengue, epidemiologia</div>
+          </div>
+          <button class="area-card__menu" aria-label="Mais opções"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+        </header>
+        <div><span class="tag tag--sup">Supervisão técnica</span></div>
+        <div class="area-card__resp">
+          <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#0b8a8a,#38b2b2);">JT</span>
+          <div>
+            <div class="n">Joana Teles</div>
+            <div class="r">Enf. especialista · 30h</div>
+          </div>
+        </div>
+        <div class="area-card__counts">
+          <div class="area-card__count"><div class="lbl">Salas vac.</div><div class="val mono">14</div></div>
+          <div class="area-card__count"><div class="lbl">Notif.</div><div class="val mono">208</div></div>
+          <div class="area-card__count"><div class="lbl">Casos</div><div class="val mono">28</div></div>
+        </div>
+        <div class="area-card__cov">
+          <div class="area-card__cov-top"><span>Cobertura vacinal · cob. geral</span><strong>87,4%</strong></div>
+          <div class="area-card__bar"><span style="width:87%"></span></div>
+        </div>
+      </article>
+
+      <article class="area-card">
+        <header class="area-card__head">
+          <span class="area-card__mark sup" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+          </span>
+          <div>
+            <div class="area-card__title">Sup. Saúde Mental</div>
+            <div class="area-card__sub">CAPS · RAPS</div>
+          </div>
+          <button class="area-card__menu" aria-label="Mais opções"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+        </header>
+        <div><span class="tag tag--sup">Supervisão técnica</span></div>
+        <div class="area-card__resp">
+          <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4);">FA</span>
+          <div>
+            <div class="n">Dr. Felipe Andrade</div>
+            <div class="r">CRM 41.227 · 30h</div>
+          </div>
+        </div>
+        <div class="area-card__counts">
+          <div class="area-card__count"><div class="lbl">CAPS</div><div class="val mono">3</div></div>
+          <div class="area-card__count"><div class="lbl">Pac.</div><div class="val mono">3.4k</div></div>
+          <div class="area-card__count"><div class="lbl">Vínculo</div><div class="val mono">65%</div></div>
+        </div>
+        <div class="area-card__cov">
+          <div class="area-card__cov-top"><span>Acolhimentos / mês</span><strong>312</strong></div>
+          <div class="area-card__bar"><span class="warn" style="width:65%"></span></div>
+        </div>
+      </article>
+
+      <article class="area-card">
+        <header class="area-card__head">
+          <span class="area-card__mark sup" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          </span>
+          <div>
+            <div class="area-card__title">Sup. PMAQ &amp; Qualidade</div>
+            <div class="area-card__sub">17 indicadores</div>
+          </div>
+          <button class="area-card__menu" aria-label="Mais opções"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+        </header>
+        <div><span class="tag tag--sup">Supervisão técnica</span></div>
+        <div class="area-card__resp">
+          <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#6936c2,#9c6ce8);">CA</span>
+          <div>
+            <div class="n">Carolina Alencar</div>
+            <div class="r">Nutricionista · 30h</div>
+          </div>
+        </div>
+        <div class="area-card__counts">
+          <div class="area-card__count"><div class="lbl">eSF aval.</div><div class="val mono">28</div></div>
+          <div class="area-card__count"><div class="lbl">Em meta</div><div class="val mono">14/17</div></div>
+          <div class="area-card__count"><div class="lbl">Ciclo</div><div class="val mono">2026</div></div>
+        </div>
+        <div class="area-card__cov">
+          <div class="area-card__cov-top"><span>Aderência aos indicadores</span><strong>82%</strong></div>
+          <div class="area-card__bar"><span style="width:82%"></span></div>
+        </div>
+      </article>
+
+      <article class="area-card">
+        <header class="area-card__head">
+          <span class="area-card__mark ger" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 6v6c0 5 8 10 8 10s8-5 8-10V6z"></path></svg>
+          </span>
+          <div>
+            <div class="area-card__title">Gerência de Atenção Básica</div>
+            <div class="area-card__sub">municipal</div>
+          </div>
+          <button class="area-card__menu" aria-label="Mais opções"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+        </header>
+        <div><span class="tag tag--ger">Gerência</span></div>
+        <div class="area-card__resp">
+          <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#6936c2,#9c6ce8);">LM</span>
+          <div>
+            <div class="n">Dra. Larissa Mendes</div>
+            <div class="r">desde jan/2025 · 40h</div>
+          </div>
+        </div>
+        <div class="area-card__counts">
+          <div class="area-card__count"><div class="lbl">UBS/CSF</div><div class="val mono">94</div></div>
+          <div class="area-card__count"><div class="lbl">eSF</div><div class="val mono">28</div></div>
+          <div class="area-card__count"><div class="lbl">Equipes</div><div class="val mono">42</div></div>
+        </div>
+        <div class="area-card__cov">
+          <div class="area-card__cov-top"><span>Cobertura ESF municipal</span><strong>92%</strong></div>
+          <div class="area-card__bar"><span class="ok" style="width:92%"></span></div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ===== Detail card (Regional Centro selecionada) ===== -->
+    <section class="card detail" aria-labelledby="detail-title">
+      <div class="detail__head">
+        <span class="detail__icon" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        </span>
+        <div class="detail__id">
+          <h2 id="detail-title">Coordenação Regional Centro</h2>
+          <p class="sub">Responsável por 14 unidades de saúde da regional Centro · subordinada à Gerência de Atenção Básica · centro nervoso operacional do território com 87% de cobertura adscrita.</p>
+          <div class="detail__chips">
+            <span class="tag tag--info">Coordenação</span>
+            <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Ativa</span>
+            <span class="tag tag--info">14 unidades · 418 prof.</span>
+            <span class="tag tag--info">Subordinada à GAB</span>
+          </div>
+        </div>
+        <div class="actions">
+          <a href="Equipamentos.html" class="btn">Ver unidades</a>
+          <a href="Equipes.html" class="btn">Equipes</a>
+          <button class="btn btn--primary">Editar</button>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="col-left">
+          <div class="section-h">Unidades vinculadas · 14 equipamentos</div>
+          <div class="unit-list">
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path></svg></span>
+              <div><div class="n">UBS Vila Esperança</div><div class="r">UBS · 18 prof. · CNES 2 145 089</div></div>
+              <div class="v">87%<small>ocupação</small></div>
+            </div>
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v4"></path><path d="M14 8h-4"></path><path d="M4 22h16"></path><path d="M4 22V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v18"></path></svg></span>
+              <div><div class="n">UBS Centro</div><div class="r">UBS · 28 prof. · CNES 2 145 014</div></div>
+              <div class="v">78%<small>ocupação</small></div>
+            </div>
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true" style="background:var(--purple-bg); color:var(--purple);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg></span>
+              <div><div class="n">UPA São Pedro 24h</div><div class="r">UPA · 41 prof. · pronto-atendimento</div></div>
+              <div class="v" style="color:var(--warn);">94%<small>ocupação</small></div>
+            </div>
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true" style="background:var(--ok-bg); color:var(--ok);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path></svg></span>
+              <div><div class="n">CAPS Norte</div><div class="r">CAPS · 16 prof. · saúde mental</div></div>
+              <div class="v">65%<small>ocupação</small></div>
+            </div>
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true" style="background:var(--teal-bg); color:var(--teal);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14H5a2 2 0 0 0-2 2v3"></path><circle cx="9" cy="7" r="4"></circle></svg></span>
+              <div><div class="n">CEO Regional Centro</div><div class="r">Odontologia · 12 prof.</div></div>
+              <div class="v">54%<small>ocupação</small></div>
+            </div>
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true" style="background:var(--warn-bg); color:var(--warn);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83"></path></svg></span>
+              <div><div class="n">UBS Parque Industrial</div><div class="r">UBS · em manutenção · retorno 12/jun</div></div>
+              <div class="v" style="color:var(--warn);">Manut.</div>
+            </div>
+          </div>
+
+          <div class="section-h">Supervisões técnicas vinculadas · 4 áreas</div>
+          <div class="unit-list">
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true" style="background:var(--teal-bg); color:var(--teal);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg></span>
+              <div><div class="n">Sup. Atenção Básica</div><div class="r">Dra. Helena Ribeiro · 9 eSF</div></div>
+              <div class="v">82%<small>PMAQ</small></div>
+            </div>
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true" style="background:var(--teal-bg); color:var(--teal);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle></svg></span>
+              <div><div class="n">Sup. Vigilância em Saúde</div><div class="r">Joana Teles · vacinas + epidemiologia</div></div>
+              <div class="v">87%<small>vac. geral</small></div>
+            </div>
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true" style="background:var(--teal-bg); color:var(--teal);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path></svg></span>
+              <div><div class="n">Sup. Saúde Mental</div><div class="r">Dr. Felipe Andrade · 3 CAPS</div></div>
+              <div class="v">65%<small>vínculo</small></div>
+            </div>
+            <div class="unit-row">
+              <span class="ic" aria-hidden="true" style="background:var(--teal-bg); color:var(--teal);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline></svg></span>
+              <div><div class="n">Sup. PMAQ &amp; Qualidade</div><div class="r">Carolina Alencar · 17 indicadores</div></div>
+              <div class="v">14/17<small>em meta</small></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div class="section-h">Indicadores consolidados · regional</div>
+          <div class="ind">
+            <div class="ind-row">
+              <span class="ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span>
+              <div><div class="lbl">População adscrita</div><div class="sub">128.412 pessoas · 14 microáreas</div></div>
+              <div class="v">87%<span class="delta up">+1,2%</span></div>
+            </div>
+            <div class="ind-row">
+              <span class="ic ok" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path></svg></span>
+              <div><div class="lbl">Cobertura vacinal</div><div class="sub">geral · meta 95%</div></div>
+              <div class="v">87,4%<span class="delta up">+4,2 pp</span></div>
+            </div>
+            <div class="ind-row">
+              <span class="ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"></path></svg></span>
+              <div><div class="lbl">Atendimentos / mês</div><div class="sub">consolidado regional</div></div>
+              <div class="v">42.118<span class="delta up">+7,2%</span></div>
+            </div>
+            <div class="ind-row">
+              <span class="ic warn" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg></span>
+              <div><div class="lbl">Taxa de faltas</div><div class="sub">meta &lt; 8%</div></div>
+              <div class="v">9,8%<span class="delta up">−1,4 pp</span></div>
+            </div>
+            <div class="ind-row">
+              <span class="ic ok" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+              <div><div class="lbl">PMAQ · indicadores em meta</div><div class="sub">14 de 17 · ciclo 2026</div></div>
+              <div class="v">82%<span class="delta up">+1</span></div>
+            </div>
+          </div>
+
+          <div class="section-h" style="margin-top: var(--s-5);">Hierarquia &amp; reporte</div>
+          <div style="background:var(--ink-50); border:1px solid var(--ink-200); border-radius:10px; padding: 12px; display:grid; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#0a2540,#1e6fd9); width:30px; height:30px; font-size:0.7rem;">RC</span>
+              <div style="flex:1;">
+                <div style="font-weight:600; font-size:0.8125rem;">Dr. Ricardo Coelho</div>
+                <div style="font-size:0.7rem; color:var(--ink-500);">Secretário Mun. Saúde</div>
+              </div>
+            </div>
+            <div style="margin-left:14px; border-left:2px solid var(--ink-200); padding-left:12px; display:grid; gap:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#6936c2,#9c6ce8); width:30px; height:30px; font-size:0.7rem;">LM</span>
+                <div style="flex:1;">
+                  <div style="font-weight:600; font-size:0.8125rem;">Dra. Larissa Mendes</div>
+                  <div style="font-size:0.7rem; color:var(--ink-500);">Gerência de Atenção Básica</div>
+                </div>
+              </div>
+              <div style="margin-left:14px; border-left:2px solid var(--ink-200); padding-left:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span class="who__avatar" aria-hidden="true" style="background:linear-gradient(135deg,#1351b4,#2f8de4); width:30px; height:30px; font-size:0.7rem;">MS</span>
+                  <div style="flex:1;">
+                    <div style="font-weight:600; font-size:0.8125rem;">Mariana Souza <span style="font-weight:500; color:var(--blue-700); font-size:0.7rem;">· você</span></div>
+                    <div style="font-size:0.7rem; color:var(--ink-500);">Coordenação Regional Centro</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p style="text-align: center; color: var(--ink-400); font-size: 0.75rem; margin-top: var(--s-8);">
+      Mais Saúde Pública · estrutura organizacional · vínculos auditados · LGPD
+    </p>
+  </main>
+</div>
+
+<script>
+  (function () {
+    const btn = document.getElementById('menu-btn');
+    const sidebar = document.getElementById('sidebar');
+    if (!btn || !sidebar) return;
+    btn.addEventListener('click', () => {
+      const open = sidebar.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth > 980) return;
+      if (!sidebar.classList.contains('is-open')) return;
+      if (sidebar.contains(e.target) || btn.contains(e.target)) return;
+      sidebar.classList.remove('is-open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  })();
+  (function () {
+    document.querySelectorAll('[role="tablist"]').forEach(group => {
+      group.querySelectorAll('[role="tab"]').forEach(t => {
+        t.addEventListener('click', () => {
+          group.querySelectorAll('[role="tab"]').forEach(x => x.setAttribute('aria-selected', 'false'));
+          t.setAttribute('aria-selected', 'true');
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

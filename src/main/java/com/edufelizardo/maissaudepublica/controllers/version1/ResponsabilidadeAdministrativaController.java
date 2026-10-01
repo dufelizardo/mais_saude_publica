@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -34,6 +35,7 @@ public class ResponsabilidadeAdministrativaController {
     @Autowired
     private ResponsabilidadeAdministrativaService service;
 
+    @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de responsabilidades administrativas de um profissional", tags = "ResponsabilidadeAdministrativa")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -48,6 +50,7 @@ public class ResponsabilidadeAdministrativaController {
         return ResponseEntity.ok(service.listarHistorico(matricula));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma responsabilidade administrativa",
             description = "Um profissional pode ter várias responsabilidades vigentes ao mesmo tempo — diferente de Lotacao, não há limite de uma vigente por vez.",
@@ -69,6 +72,7 @@ public class ResponsabilidadeAdministrativaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.GERENCIAR"})
     @PatchMapping(value = "{uuid}/encerrar", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Encerra uma responsabilidade administrativa",
             description = "Operação de negócio explícita: a responsabilidade não é apagada nem alterada destrutivamente, ela ganha uma data de fim. Recusa encerrar uma responsabilidade que já foi encerrada (409).",

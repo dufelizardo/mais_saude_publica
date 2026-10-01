@@ -1,5 +1,7 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.LiberadoParaAutenticados;
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -37,6 +39,7 @@ public class UnidadeDeSaudeUnidadeController {
     @Autowired
     private UnidadeSaudeService service;
 
+    @LiberadoParaAutenticados
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca as Unidades de Saúde",
             description = "Verifica a existencia de Unidades de Saúde (UBS/Hospital).",
@@ -58,6 +61,7 @@ public class UnidadeDeSaudeUnidadeController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @LiberadoParaAutenticados
     @GetMapping(value = "{nome}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma Unidade de Saúde pelo seu Nome.",
             description = "Verifica a existencia de Unidades de Saúde (UBS/Hospital).",
@@ -76,6 +80,7 @@ public class UnidadeDeSaudeUnidadeController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma Unidade de Saúde.",
             description = "Cria uma Unidade de Saúde (UBS/Hospital).",
@@ -112,6 +117,7 @@ public class UnidadeDeSaudeUnidadeController {
         }
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza o nome de uma Unidade de Saúde.",
             description = "Atualiza o nome de uma Unidade de Saúde.",
@@ -136,6 +142,7 @@ public class UnidadeDeSaudeUnidadeController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "contato/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza os contatos de uma Unidade de Saúde.",
             description = "Atualiza os contatos de uma Unidade de Saúde.",
@@ -160,6 +167,7 @@ public class UnidadeDeSaudeUnidadeController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "horario-de-funcionamento/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza o Horario de funcionamento de uma Unidade de Saúde.",
             description = "Atualiza o Horario de funcionamento de uma Unidade de Saúde.",
@@ -184,6 +192,7 @@ public class UnidadeDeSaudeUnidadeController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "horario-de-atendimento/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza o Horario de atendimento de uma Unidade de Saúde.",
             description = "Atualiza o Horario de atendimento de uma Unidade de Saúde.",
@@ -208,6 +217,7 @@ public class UnidadeDeSaudeUnidadeController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "supervisao-regional/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza a supervisão regional de uma Unidade de Saúde.",
             description = "Vincula uma Unidade de Saúde a uma unidade REGIONAL de supervisão técnica (vínculo lateral, não-hierárquico).",
@@ -232,6 +242,7 @@ public class UnidadeDeSaudeUnidadeController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "responsavel/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza o responsável de uma Unidade de Saúde.",
             description = "Informa o CPF do responsável pela Unidade de Saúde; o vínculo com o Profissional é resolvido na hora se ele já existir, ou depois por reconciliação (ver ADR-0014).",
@@ -256,6 +267,7 @@ public class UnidadeDeSaudeUnidadeController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @DeleteMapping(value = "des-habilitar/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Desabilita ou Habilita uma Unidade de Saúde.",
             description = "Desabilita ou Habilita uma Unidade de Saúde.",

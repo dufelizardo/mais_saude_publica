@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
@@ -30,6 +31,7 @@ public class PacienteResponseDto implements Serializable {
     private Set<String> telefones;
     private String email;
     private boolean ativo;
+    private Instant dataCadastro;
 
     public static PacienteResponseDto fromPaciente(Paciente paciente) {
         return new PacienteResponseDto(
@@ -42,7 +44,8 @@ public class PacienteResponseDto implements Serializable {
                 EnderecoResponseDto.fromEndereco(paciente.getEndereco()),
                 paciente.getTelefones(),
                 paciente.getEmail(),
-                paciente.isAtivo()
+                paciente.isAtivo(),
+                paciente.getDataCadastro()
         );
     }
 }

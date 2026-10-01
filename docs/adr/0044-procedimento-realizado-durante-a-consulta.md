@@ -5,6 +5,11 @@
 Aceita e implementada (quinta fatia da onda Operação Assistencial — último insumo antes da
 agregação do Prontuário — [PR #213](https://github.com/dufelizardo/mais_saude_publica/pull/213)).
 
+> **Revista pela [ADR-0062](./0062-registros-clinicos-imutaveis-com-retificacao.md):** este registro clínico
+> não é mais editado por `PATCH`; correções são retificações (nova versão ligada à anterior, com motivo).
+> O desfecho de um procedimento agendado (realizado ou cancelado) passou a ser um evento próprio,
+> `POST /api/v1/procedimento/{id}/status`.
+
 ## Contexto
 
 Com `Paciente` (ADR-0040), `Atendimento` (ADR-0041), `Agendamento` (ADR-0042) e `Consulta`
