@@ -50,6 +50,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
+		<!-- Recuperação de senha por e-mail (ADR-0081): SMTP configurável, desligado por padrão. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 		<!-- JWT stateless (mecanismo escolhido pela ADR-0006/ADR-0055) — emissão/validação direta,
 		     sem subir a complexidade de um Authorization Server completo. -->
 		<dependency>

@@ -82,7 +82,7 @@ validade)
 
 **Negativas / pendências:**
 - ~~Invalidar sessões ativas ao redefinir ou desativar.~~ Feito pela [ADR-0078](./0078-sessoes-encerradas-na-hora.md).
-- Recuperação de senha sem a administração (e-mail ou gov.br).
+- ~~Recuperação de senha sem a administração~~ por e-mail feita pela [ADR-0081](./0081-recuperacao-de-senha-por-email.md); gov.br segue pendente.
 - Política de senha configurável.
 
 ## Referências

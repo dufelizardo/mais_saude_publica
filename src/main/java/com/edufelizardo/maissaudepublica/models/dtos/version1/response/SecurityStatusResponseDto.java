@@ -27,4 +27,6 @@ public class SecurityStatusResponseDto implements Serializable {
     private boolean securityEnabled;
     /** Exigência de permissão por papel e escopo ligada (ADR-0067); o frontend só esconde o que não pode com ela ligada. */
     private boolean authorizationEnabled;
+    /** "Esqueci minha senha" por e-mail disponível neste ambiente (ADR-0081): login ligado e SMTP configurado. */
+    private boolean recuperacaoDeSenha;
 }

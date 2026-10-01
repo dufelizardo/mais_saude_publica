@@ -87,6 +87,21 @@ export class AuthService {
     return this.status().pipe(map((s) => s.securityEnabled));
   }
 
+  /** O ambiente oferece "Esqueci minha senha" por e-mail (ADR-0081)? */
+  recuperacaoDeSenhaDisponivel(): Observable<boolean> {
+    return this.status().pipe(map((s) => !!s.recuperacaoDeSenha));
+  }
+
+  /** Pede o link por e-mail. A resposta é a mesma com ou sem cadastro (ADR-0081). */
+  solicitarRecuperacaoDeSenha(cpf: string): Observable<{ message: string; details: string }> {
+    return this.http.post<{ message: string; details: string }>(`${this.baseUrl}/senha/recuperacao`, { cpf });
+  }
+
+  /** Define a senha nova pelo link do e-mail; depois a pessoa entra pela tela de login. */
+  redefinirSenhaPorLink(token: string, novaSenha: string): Observable<{ message: string; details: string }> {
+    return this.http.post<{ message: string; details: string }>(`${this.baseUrl}/senha/redefinicao`, { token, novaSenha });
+  }
+
   private status(): Observable<SecurityStatusResponseDto> {
     if (!this.status$) {
       this.status$ = this.http.get<SecurityStatusResponseDto>(`${this.baseUrl}/status`).pipe(
