@@ -11,9 +11,9 @@ resources:
 
 images:
   - name: ghcr.io/dufelizardo/mais_saude_publica
-    newTag: 66e0bf618bcd501f3ccf0038bb9199ef5eeecebe
+    newTag: 30ee416cc12f0b680bd880f27436fc798deac8d2
   - name: ghcr.io/dufelizardo/mais_saude_publica-frontend
-    newTag: 66e0bf618bcd501f3ccf0038bb9199ef5eeecebe
+    newTag: 30ee416cc12f0b680bd880f27436fc798deac8d2
 
 configMapGenerator:
   - name: app-config
