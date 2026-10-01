@@ -60,14 +60,12 @@ export class AppShell {
   protected readonly sidebarAberta = signal(false);
 
   /**
-   * Grupos do menu que estão expandidos — todos começam abertos (mesmo visual de antes do
-   * acordeão). O estado vive aqui, não em cada rota, porque o AppShell nunca é destruído entre
-   * navegações — não precisa de persistência em localStorage pra sobreviver a troca de página
-   * dentro da mesma sessão.
+   * Grupos do menu que estão expandidos. Começam recolhidos; o grupo da página atual (campo `area` da
+   * rota, com o mesmo nome do grupo) abre sozinho a cada navegação, para o item ativo nunca ficar
+   * escondido. Os que a pessoa abriu continuam abertos. O estado vive aqui, não em cada rota, porque o
+   * AppShell nunca é destruído entre navegações.
    */
-  protected readonly gruposExpandidos = signal<ReadonlySet<string>>(
-    new Set(['Recursos Humanos', 'Administrativo', 'Assistência', 'Administração']),
-  );
+  protected readonly gruposExpandidos = signal<ReadonlySet<string>>(new Set());
 
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.usuario.set(u));
@@ -85,7 +83,11 @@ export class AppShell {
       rota = rota.firstChild;
     }
     this.breadcrumb.set((rota.data['breadcrumb'] as string) ?? '');
-    this.area.set((rota.data['area'] as string) ?? '');
+    const area = (rota.data['area'] as string) ?? '';
+    this.area.set(area);
+    if (area && !this.gruposExpandidos().has(area)) {
+      this.gruposExpandidos.update((atual) => new Set(atual).add(area));
+    }
   }
 
   /** Item do menu visível: a entrada mais específica de MENU que casa com a rota decide. */
