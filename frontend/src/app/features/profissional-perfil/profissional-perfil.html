@@ -447,57 +447,317 @@
     }
 
     @if (abaAtiva() === 'afastamentos') {
-      <div style="padding: var(--s-5); overflow-x: auto;">
-        <h3 style="font-size: 1.0625rem;">Afastamentos</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Início</th>
-              <th>Fim</th>
-              <th>Status</th>
-              <th>Observação</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of afastamentos(); track item.uuid) {
-              <tr>
-                <td>{{ item.tipo }}</td>
-                <td>{{ item.dataInicio | date: 'dd/MM/yyyy' }}</td>
-                <td>{{ item.dataFim | date: 'dd/MM/yyyy' }}</td>
-                <td>{{ item.status }}</td>
-                <td>{{ item.observacao || '—' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        @if (!carregandoAfastamentos() && afastamentos().length === 0) {
-          <p class="table-empty">Nenhum afastamento registrado.</p>
-        }
-
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Afastamentos</h2>
+          <p class="sub">Férias, licenças e outras ausências com período definido</p>
+        </div>
         @if (pode('RH.GERENCIAR')) {
-          <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar afastamento</h4>
-          @if (afastamentoErrorMessage()) {
-            <div class="form-banner form-banner--error" role="alert">{{ afastamentoErrorMessage() }}</div>
+          <button type="button" class="btn btn--sm" (click)="abrirAfastamento()">+ Registrar afastamento</button>
+        }
+      </div>
+      <div class="perfil-corpo">
+        @if (carregandoAfastamentos()) {
+          <p class="cell-sub">Carregando…</p>
+        } @else if (!afastamentos().length) {
+          <div class="empty"><strong>Nenhum afastamento registrado</strong></div>
+        } @else {
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th scope="col">Tipo</th><th scope="col">Período</th><th scope="col">Situação</th><th scope="col">Observação</th></tr></thead>
+              <tbody>
+                @for (item of afastamentos(); track item.uuid) {
+                  <tr>
+                    <td class="cell-main">{{ rotulo('tipoAfastamento', item.tipo) }}</td>
+                    <td class="mono">{{ item.dataInicio | date: 'dd/MM/yyyy' }} a {{ item.dataFim | date: 'dd/MM/yyyy' }}</td>
+                    <td><span [class]="'badge badge--' + classeStatusAfastamento(item.status)"><span class="dot" aria-hidden="true"></span> {{ rotulo('statusAfastamento', item.status) }}</span></td>
+                    <td>{{ item.observacao || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+      <div class="card__head perfil-sec perfil-sec--sub">
+        <div>
+          <h2>Licenças</h2>
+          <p class="sub">Enquadramento legal e quem paga, ligado a um afastamento já registrado</p>
+        </div>
+        @if (pode('RH.GERENCIAR')) {
+          <button type="button" class="btn btn--sm" (click)="abrirLicenca()">+ Registrar licença</button>
+        }
+      </div>
+      <div class="perfil-corpo">
+        @if (carregandoLicencas()) {
+          <p class="cell-sub">Carregando…</p>
+        } @else if (!licencas().length) {
+          <div class="empty"><strong>Nenhuma licença registrada</strong></div>
+        } @else {
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th scope="col">Tipo legal</th><th scope="col">Afastamento</th><th scope="col">Pagamento</th><th scope="col">Documento</th></tr></thead>
+              <tbody>
+                @for (item of licencas(); track item.uuid) {
+                  <tr>
+                    <td class="cell-main">{{ rotulo('tipoLicenca', item.tipoLegal) }}</td>
+                    <td>
+                      @if (afastamentoDaLicenca(item); as a) { {{ rotulo('tipoAfastamento', a.tipo) }} <span class="cell-sub mono">{{ a.dataInicio | date: 'dd/MM/yyyy' }}</span> } @else { — }
+                    </td>
+                    <td>{{ rotulo('responsavelPagamento', item.responsavelPagamento) }}</td>
+                    <td>@if (item.documentoUrl) { <a [href]="item.documentoUrl" target="_blank" rel="noopener">Ver documento</a> } @else { — }</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    @if (abaAtiva() === 'ponto') {
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Ponto</h2>
+          <p class="sub">Marcações do período; a correção só vale depois de aprovada</p>
+        </div>
+        @if (pode('RH.GERENCIAR')) {
+          <button type="button" class="btn btn--sm" (click)="abrirPonto()">+ Registrar ponto</button>
+        }
+      </div>
+      <div class="perfil-corpo">
+        <form class="filters" [formGroup]="filtroPontoForm" (ngSubmit)="carregarPonto()" aria-label="Período do ponto" novalidate>
+          <label class="pill pill--select aud-data"><span>De</span><input type="date" formControlName="dataInicio" aria-label="Período desde" /></label>
+          <label class="pill pill--select aud-data"><span>Até</span><input type="date" formControlName="dataFim" aria-label="Período até" /></label>
+          <button type="submit" class="btn btn--ghost btn--sm">Filtrar</button>
+        </form>
+        @if (pontoErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ pontoErrorMessage() }}</strong></div> }
+        @if (carregandoPonto()) {
+          <p class="cell-sub">Carregando…</p>
+        } @else if (!registrosPonto().length) {
+          <div class="empty"><strong>Nenhum registro de ponto no período</strong></div>
+        } @else {
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th scope="col">Data/hora</th><th scope="col">Tipo</th><th scope="col">Origem</th><th scope="col">Situação</th>@if (pode('RH.GERENCIAR')) { <th scope="col" class="num">Ações</th> }</tr></thead>
+              <tbody>
+                @for (item of registrosPonto(); track item.uuid) {
+                  <tr>
+                    <td class="mono">{{ item.dataHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td class="cell-main">{{ rotulo('tipoPonto', item.tipo) }}</td>
+                    <td>{{ item.origem || '—' }}</td>
+                    <td>
+                      @if (item.dataHoraProposta) {
+                        <span class="badge badge--warn"><span class="dot" aria-hidden="true"></span> Correção pendente</span>
+                        <div class="cell-sub">Proposta: <span class="mono">{{ item.dataHoraProposta | date: 'dd/MM/yyyy HH:mm' }}</span> · {{ rotulo('tipoPonto', item.tipoProposto) }}</div>
+                      } @else {
+                        <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Regular</span>
+                      }
+                    </td>
+                    @if (pode('RH.GERENCIAR')) {
+                      <td class="num perfil-acoes">
+                        @if (item.dataHoraProposta) {
+                          <button type="button" class="btn btn--ghost btn--sm" [disabled]="resolvendoCorrecaoUuid() === item.uuid" [attr.aria-label]="'Aprovar correção de ' + (item.dataHora | date: 'dd/MM/yyyy HH:mm')" (click)="aprovarCorrecaoPonto(item)">Aprovar</button>
+                          <button type="button" class="btn btn--ghost btn--sm" [disabled]="resolvendoCorrecaoUuid() === item.uuid" [attr.aria-label]="'Rejeitar correção de ' + (item.dataHora | date: 'dd/MM/yyyy HH:mm')" (click)="rejeitarCorrecaoPonto(item)">Rejeitar</button>
+                        } @else {
+                          <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Solicitar correção de ' + (item.dataHora | date: 'dd/MM/yyyy HH:mm')" (click)="abrirSolicitarCorrecaoPonto(item)">Solicitar correção</button>
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    @if (abaAtiva() === 'folha') {
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Folha de pagamento</h2>
+          <p class="sub">Valores informados por competência; não são calculados pelo sistema</p>
+        </div>
+        @if (pode('RH.GERENCIAR')) {
+          <button type="button" class="btn btn--sm" (click)="abrirFolha()">+ Registrar folha</button>
+        }
+      </div>
+      <div class="perfil-corpo">
+        @if (carregandoFolhas()) {
+          <p class="cell-sub">Carregando…</p>
+        } @else if (!folhas().length) {
+          <div class="empty"><strong>Nenhuma folha de pagamento registrada</strong></div>
+        } @else {
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th scope="col">Competência</th><th scope="col" class="num">Proventos</th><th scope="col" class="num">Descontos</th><th scope="col" class="num">Encargos</th><th scope="col" class="num">Total</th></tr></thead>
+              <tbody>
+                @for (item of folhas(); track item.uuid) {
+                  <tr>
+                    <td class="cell-main mono">{{ item.competencia }}</td>
+                    <td class="num mono">{{ item.proventos | number: '1.2-2' }}</td>
+                    <td class="num mono">{{ item.descontos | number: '1.2-2' }}</td>
+                    <td class="num mono">{{ item.encargos | number: '1.2-2' }}</td>
+                    <td class="num mono"><strong>{{ item.total | number: '1.2-2' }}</strong></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    @if (abaAtiva() === 'sst') {
+      <div class="tabs perfil-subtabs" role="tablist" aria-label="Seções de SST">
+        <button type="button" role="tab" [attr.aria-selected]="sstAbaAtiva() === 'exames'" (click)="selecionarAbaSst('exames')">Exames ocupacionais</button>
+        <button type="button" role="tab" [attr.aria-selected]="sstAbaAtiva() === 'acidentes'" (click)="selecionarAbaSst('acidentes')">Acidentes de trabalho</button>
+        <button type="button" role="tab" [attr.aria-selected]="sstAbaAtiva() === 'epis'" (click)="selecionarAbaSst('epis')">EPIs</button>
+      </div>
+
+      @if (sstAbaAtiva() === 'exames') {
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Exames ocupacionais</h2>
+          <p class="sub">ASO admissional, periódico, de retorno, de mudança de função e demissional</p>
+        </div>
+        @if (pode('RH.GERENCIAR')) {
+          <button type="button" class="btn btn--sm" (click)="abrirExame()">+ Registrar exame</button>
+        }
+      </div>
+        <div class="perfil-corpo">
+          @if (carregandoExames()) {
+            <p class="cell-sub">Carregando…</p>
+          } @else if (!exames().length) {
+            <div class="empty"><strong>Nenhum exame ocupacional registrado</strong></div>
+          } @else {
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th scope="col">Tipo</th><th scope="col">Realização</th><th scope="col">Resultado</th><th scope="col">Validade</th><th scope="col">ASO</th></tr></thead>
+                <tbody>
+                  @for (item of exames(); track item.uuid) {
+                    <tr>
+                      <td class="cell-main">{{ rotulo('tipoExame', item.tipo) }}</td>
+                      <td class="mono">{{ item.dataRealizacao | date: 'dd/MM/yyyy' }}</td>
+                      <td><span [class]="'badge badge--' + classeResultadoExame(item.resultado)"><span class="dot" aria-hidden="true"></span> {{ rotulo('resultadoExame', item.resultado) }}</span></td>
+                      <td>
+                        @if (item.dataValidade) {
+                          <span class="mono">{{ item.dataValidade | date: 'dd/MM/yyyy' }}</span>
+                          @if (exameVencido(item)) { <span class="badge badge--alert">Vencido</span> }
+                        } @else { — }
+                      </td>
+                      <td>@if (item.asoUrl) { <a [href]="item.asoUrl" target="_blank" rel="noopener">Ver ASO</a> } @else { — }</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           }
-          <form [formGroup]="afastamentoForm" (ngSubmit)="registrarAfastamento()" class="form" novalidate>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="tipoAfastamento">Tipo *</label>
-                <select id="tipoAfastamento" formControlName="tipo">
+        </div>
+      }
+
+      @if (sstAbaAtiva() === 'acidentes') {
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Acidentes de trabalho</h2>
+          <p class="sub">Ocorrências com a CAT, quando emitida, e os dias de afastamento</p>
+        </div>
+        @if (pode('RH.GERENCIAR')) {
+          <button type="button" class="btn btn--sm" (click)="abrirAcidente()">+ Registrar acidente</button>
+        }
+      </div>
+        <div class="perfil-corpo">
+          @if (carregandoAcidentes()) {
+            <p class="cell-sub">Carregando…</p>
+          } @else if (!acidentes().length) {
+            <div class="empty"><strong>Nenhum acidente de trabalho registrado</strong></div>
+          } @else {
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th scope="col">Data/hora</th><th scope="col">Descrição</th><th scope="col">CAT</th><th scope="col" class="num">Dias de afastamento</th></tr></thead>
+                <tbody>
+                  @for (item of acidentes(); track item.uuid) {
+                    <tr>
+                      <td class="mono">{{ item.dataHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+                      <td class="cell-main">{{ item.descricao }}</td>
+                      <td>
+                        @if (item.catEmitida) {
+                          <span class="badge badge--info">Emitida</span>
+                          @if (item.catUrl) { <a [href]="item.catUrl" target="_blank" rel="noopener">Ver CAT</a> }
+                        } @else { <span class="badge badge--muted">Não emitida</span> }
+                      </td>
+                      <td class="num mono">{{ item.diasAfastamento ?? '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+
+      @if (sstAbaAtiva() === 'epis') {
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>EPIs</h2>
+          <p class="sub">Equipamentos de proteção entregues, com o certificado de aprovação (CA)</p>
+        </div>
+        @if (pode('RH.GERENCIAR')) {
+          <button type="button" class="btn btn--sm" (click)="abrirEpi()">+ Registrar EPI</button>
+        }
+      </div>
+        <div class="perfil-corpo">
+          @if (carregandoEpis()) {
+            <p class="cell-sub">Carregando…</p>
+          } @else if (!epis().length) {
+            <div class="empty"><strong>Nenhum EPI registrado</strong></div>
+          } @else {
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th scope="col">EPI</th><th scope="col">CA</th><th scope="col">Entrega</th><th scope="col">Devolução</th><th scope="col">Situação</th></tr></thead>
+                <tbody>
+                  @for (item of epis(); track item.uuid) {
+                    <tr>
+                      <td class="cell-main">{{ item.tipo }}</td>
+                      <td class="mono">{{ item.numeroCA || '—' }}</td>
+                      <td class="mono">{{ item.dataEntrega | date: 'dd/MM/yyyy' }}</td>
+                      <td class="mono">{{ item.dataDevolucao ? (item.dataDevolucao | date: 'dd/MM/yyyy') : '—' }}</td>
+                      <td>
+                        @if (situacaoDoEpi(item) === 'Em uso') { <span class="badge badge--info"><span class="dot" aria-hidden="true"></span> Em uso</span> }
+                        @else { <span class="badge badge--muted">Devolvido</span> }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- ── Gavetas das abas Afastamentos, Ponto, Folha e SST (ADR-0085) ───────────────────────── -->
+    @if (gaveta() === 'afastamento') {
+      <app-drawer titulo="Registrar afastamento" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="afastamentoForm" (ngSubmit)="registrarAfastamento()" novalidate>
+          <div class="dw-body">
+            @if (afastamentoErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ afastamentoErrorMessage() }}</strong></div> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipoAfastamento">Tipo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoAfastamento" formControlName="tipo" aria-describedby="e-tipoAfastamento">
                   <option value="" disabled>Selecione…</option>
                   <option value="FERIAS">Férias</option>
                   <option value="LICENCA_MEDICA">Licença médica</option>
                   <option value="LICENCA_PESSOAL">Licença pessoal</option>
                   <option value="OUTROS">Outros</option>
                 </select>
-                @if (afastamentoForm.controls.tipo.invalid && afastamentoForm.controls.tipo.touched) {
-                  <span class="form-error">Tipo é obrigatório.</span>
-                }
+                @if (afastamentoForm.controls.tipo.invalid && afastamentoForm.controls.tipo.touched) { <p class="dw-err" id="e-tipoAfastamento">Tipo é obrigatório.</p> }
               </div>
-              <div class="form-group">
-                <label for="statusAfastamento">Status *</label>
-                <select id="statusAfastamento" formControlName="status">
+              <div class="dw-field">
+                <label for="f-statusAfastamento">Situação <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-statusAfastamento" formControlName="status" aria-describedby="e-statusAfastamento">
                   <option value="" disabled>Selecione…</option>
                   <option value="SOLICITADO">Solicitado</option>
                   <option value="APROVADO">Aprovado</option>
@@ -505,93 +765,55 @@
                   <option value="CONCLUIDO">Concluído</option>
                   <option value="CANCELADO">Cancelado</option>
                 </select>
-                @if (afastamentoForm.controls.status.invalid && afastamentoForm.controls.status.touched) {
-                  <span class="form-error">Status é obrigatório.</span>
-                }
+                @if (afastamentoForm.controls.status.invalid && afastamentoForm.controls.status.touched) { <p class="dw-err" id="e-statusAfastamento">Situação é obrigatória.</p> }
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="afastamentoDataInicio">Data de início *</label>
-                <input id="afastamentoDataInicio" type="date" formControlName="dataInicio" />
-                @if (afastamentoForm.controls.dataInicio.invalid && afastamentoForm.controls.dataInicio.touched) {
-                  <span class="form-error">Data de início é obrigatória.</span>
-                }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-dataInicioAfastamento">Início <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataInicioAfastamento" type="date" formControlName="dataInicio" aria-describedby="e-dataInicioAfastamento" />
+                @if (afastamentoForm.controls.dataInicio.invalid && afastamentoForm.controls.dataInicio.touched) { <p class="dw-err" id="e-dataInicioAfastamento">Data de início é obrigatória.</p> }
               </div>
-              <div class="form-group">
-                <label for="afastamentoDataFim">Data de fim *</label>
-                <input id="afastamentoDataFim" type="date" formControlName="dataFim" />
-                @if (afastamentoForm.controls.dataFim.invalid && afastamentoForm.controls.dataFim.touched) {
-                  <span class="form-error">Data de fim é obrigatória.</span>
-                }
+              <div class="dw-field">
+                <label for="f-dataFimAfastamento">Fim <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataFimAfastamento" type="date" formControlName="dataFim" aria-describedby="e-dataFimAfastamento" />
+                @if (afastamentoForm.controls.dataFim.invalid && afastamentoForm.controls.dataFim.touched) { <p class="dw-err" id="e-dataFimAfastamento">Data de fim é obrigatória.</p> }
               </div>
             </div>
-            <div class="form-group">
-              <label for="observacao">Observação</label>
-              <input id="observacao" type="text" formControlName="observacao" />
+            <div class="dw-field">
+              <label for="f-observacaoAfastamento">Observação<span class="opt">opcional</span></label>
+              <input id="f-observacaoAfastamento" type="text" formControlName="observacao" />
             </div>
-            <div class="form-actions">
-              <button type="submit" class="btn" [disabled]="submittingAfastamento()">
-                {{ submittingAfastamento() ? 'Registrando…' : 'Registrar afastamento' }}
-              </button>
-            </div>
-          </form>
-        }
-
-        <h3 style="font-size: 1.0625rem; margin-top: var(--s-8);">Licenças</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Tipo legal</th>
-              <th>Responsável pelo pagamento</th>
-              <th>Documento</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of licencas(); track item.uuid) {
-              <tr>
-                <td>{{ item.tipoLegal }}</td>
-                <td>{{ item.responsavelPagamento }}</td>
-                <td>
-                  @if (item.documentoUrl) {
-                    <a [href]="item.documentoUrl" target="_blank" rel="noopener">Ver</a>
-                  } @else {
-                    —
-                  }
-                </td>
-              </tr>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingAfastamento()">{{ submittingAfastamento() ? 'Registrando…' : 'Registrar afastamento' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
+    }
+    @if (gaveta() === 'licenca') {
+      <app-drawer titulo="Registrar licença" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="licencaForm" (ngSubmit)="registrarLicenca()" novalidate>
+          <div class="dw-body">
+            @if (licencaErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ licencaErrorMessage() }}</strong></div> }
+            @if (!afastamentosSemLicenca().length) {
+              <div class="box box--info"><span>Todos os afastamentos já têm licença. Registre o afastamento antes.</span></div>
+            } @else {
+              <p class="dw-hint">Só aparecem afastamentos que ainda não têm licença.</p>
             }
-          </tbody>
-        </table>
-        @if (!carregandoLicencas() && licencas().length === 0) {
-          <p class="table-empty">Nenhuma licença registrada.</p>
-        }
-
-        @if (pode('RH.GERENCIAR')) {
-          <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar licença</h4>
-          <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-top: 4px;">
-            Só afastamentos sem licença registrada ainda aparecem no seletor.
-          </p>
-          @if (licencaErrorMessage()) {
-            <div class="form-banner form-banner--error" role="alert">{{ licencaErrorMessage() }}</div>
-          }
-          <form [formGroup]="licencaForm" (ngSubmit)="registrarLicenca()" class="form" novalidate>
-            <div class="form-group">
-              <label for="afastamentoId">Afastamento *</label>
-              <select id="afastamentoId" formControlName="afastamentoId">
+            <div class="dw-field">
+              <label for="f-afastamentoId">Afastamento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-afastamentoId" formControlName="afastamentoId" aria-describedby="e-afastamentoId">
                 <option value="" disabled>Selecione…</option>
-                @for (afastamento of afastamentosSemLicenca(); track afastamento.uuid) {
-                  <option [value]="afastamento.uuid">{{ afastamento.tipo }} · {{ afastamento.dataInicio | date: 'dd/MM/yyyy' }}</option>
-                }
+                @for (a of afastamentosSemLicenca(); track a.uuid) { <option [value]="a.uuid">{{ rotulo('tipoAfastamento', a.tipo) }} · {{ a.dataInicio | date: 'dd/MM/yyyy' }} a {{ a.dataFim | date: 'dd/MM/yyyy' }}</option> }
               </select>
-              @if (licencaForm.controls.afastamentoId.invalid && licencaForm.controls.afastamentoId.touched) {
-                <span class="form-error">Afastamento é obrigatório.</span>
-              }
+              @if (licencaForm.controls.afastamentoId.invalid && licencaForm.controls.afastamentoId.touched) { <p class="dw-err" id="e-afastamentoId">Afastamento é obrigatório.</p> }
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="tipoLegal">Tipo legal *</label>
-                <select id="tipoLegal" formControlName="tipoLegal">
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipoLegal">Tipo legal <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoLegal" formControlName="tipoLegal" aria-describedby="e-tipoLegal">
                   <option value="" disabled>Selecione…</option>
                   <option value="MATERNIDADE">Maternidade</option>
                   <option value="PATERNIDADE">Paternidade</option>
@@ -601,512 +823,270 @@
                   <option value="CASAMENTO">Casamento</option>
                   <option value="OUTROS">Outros</option>
                 </select>
-                @if (licencaForm.controls.tipoLegal.invalid && licencaForm.controls.tipoLegal.touched) {
-                  <span class="form-error">Tipo legal é obrigatório.</span>
-                }
+                @if (licencaForm.controls.tipoLegal.invalid && licencaForm.controls.tipoLegal.touched) { <p class="dw-err" id="e-tipoLegal">Tipo legal é obrigatório.</p> }
               </div>
-              <div class="form-group">
-                <label for="responsavelPagamento">Responsável pelo pagamento *</label>
-                <select id="responsavelPagamento" formControlName="responsavelPagamento">
+              <div class="dw-field">
+                <label for="f-responsavelPagamento">Quem paga <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-responsavelPagamento" formControlName="responsavelPagamento" aria-describedby="e-responsavelPagamento">
                   <option value="" disabled>Selecione…</option>
                   <option value="EMPRESA">Empresa</option>
                   <option value="INSS">INSS</option>
                   <option value="MISTO">Misto</option>
                 </select>
-                @if (licencaForm.controls.responsavelPagamento.invalid && licencaForm.controls.responsavelPagamento.touched) {
-                  <span class="form-error">Responsável é obrigatório.</span>
-                }
+                @if (licencaForm.controls.responsavelPagamento.invalid && licencaForm.controls.responsavelPagamento.touched) { <p class="dw-err" id="e-responsavelPagamento">Responsável é obrigatório.</p> }
               </div>
             </div>
-            <div class="form-group">
-              <label for="documentoUrl">Link do documento</label>
-              <input id="documentoUrl" type="text" formControlName="documentoUrl" placeholder="https://…" />
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn" [disabled]="submittingLicenca() || afastamentosSemLicenca().length === 0">
-                {{ submittingLicenca() ? 'Registrando…' : 'Registrar licença' }}
-              </button>
-            </div>
-          </form>
-        }
-      </div>
-    }
-
-    @if (abaAtiva() === 'ponto') {
-      <div style="padding: var(--s-5); overflow-x: auto;">
-        <form [formGroup]="filtroPontoForm" (ngSubmit)="carregarPonto()" class="form" style="margin-top: 0;" novalidate>
-          <div class="form-row" style="align-items: end;">
-            <div class="form-group">
-              <label for="pontoDataInicio">De</label>
-              <input id="pontoDataInicio" type="date" formControlName="dataInicio" />
-            </div>
-            <div class="form-group">
-              <label for="pontoDataFim">Até</label>
-              <input id="pontoDataFim" type="date" formControlName="dataFim" />
-            </div>
-            <div class="form-group">
-              <button type="submit" class="btn btn--ghost">Filtrar</button>
+            <div class="dw-field">
+              <label for="f-documentoUrl">Link do documento<span class="opt">opcional</span></label>
+              <input id="f-documentoUrl" type="text" formControlName="documentoUrl" placeholder="https://…" />
             </div>
           </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingLicenca() || !afastamentosSemLicenca().length">{{ submittingLicenca() ? 'Registrando…' : 'Registrar licença' }}</button>
+          </footer>
         </form>
-
-        @if (pontoErrorMessage()) {
-          <div class="form-banner form-banner--error" role="alert">{{ pontoErrorMessage() }}</div>
-        }
-
-        <table>
-          <thead>
-            <tr>
-              <th>Data/hora</th>
-              <th>Tipo</th>
-              <th>Origem</th>
-              <th>Situação</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of registrosPonto(); track item.uuid) {
-              <tr>
-                <td>{{ item.dataHora | date: 'dd/MM/yyyy HH:mm' }}</td>
-                <td>{{ item.tipo }}</td>
-                <td>{{ item.origem || '—' }}</td>
-                <td>
-                  @if (item.dataHoraProposta) {
-                    <span class="tag tag--alert"><span class="dot" aria-hidden="true"></span> Correção pendente</span>
-                    <div style="font-size: var(--fs-xs); color: var(--ink-500); margin-top: 4px;">
-                      → {{ item.dataHoraProposta | date: 'dd/MM/yyyy HH:mm' }} ({{ item.tipoProposto }})
-                    </div>
-                  } @else {
-                    <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Regular</span>
-                  }
-                </td>
-                <td style="text-align: right; white-space: nowrap;">
-                  @if (item.dataHoraProposta) {
-                    @if (pode('RH.GERENCIAR')) { <button type="button" class="btn btn--ghost" [disabled]="resolvendoCorrecaoUuid() === item.uuid" (click)="aprovarCorrecaoPonto(item)">Aprovar</button> }
-                    @if (pode('RH.GERENCIAR')) { <button type="button" class="btn btn--ghost" [disabled]="resolvendoCorrecaoUuid() === item.uuid" (click)="rejeitarCorrecaoPonto(item)">Rejeitar</button> }
-                  } @else {
-                    @if (pode('RH.GERENCIAR')) { <button type="button" class="btn btn--ghost" (click)="abrirSolicitarCorrecaoPonto(item)">Solicitar correção</button> }
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        @if (!carregandoPonto() && registrosPonto().length === 0) {
-          <p class="table-empty">Nenhum registro de ponto no período.</p>
-        }
-
-        @if (pode('RH.GERENCIAR')) {
-          <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Registrar ponto</h3>
-          <form [formGroup]="pontoForm" (ngSubmit)="registrarPonto()" class="form" novalidate>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="tipoPonto">Tipo *</label>
-                <select id="tipoPonto" formControlName="tipo">
+      </app-drawer>
+    }
+    @if (gaveta() === 'ponto') {
+      <app-drawer titulo="Registrar ponto" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="pontoForm" (ngSubmit)="registrarPonto()" novalidate>
+          <div class="dw-body">
+            @if (pontoErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ pontoErrorMessage() }}</strong></div> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipoPonto">Tipo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoPonto" formControlName="tipo" aria-describedby="e-tipoPonto">
                   <option value="" disabled>Selecione…</option>
                   <option value="ENTRADA">Entrada</option>
                   <option value="INICIO_INTERVALO">Início do intervalo</option>
                   <option value="FIM_INTERVALO">Fim do intervalo</option>
                   <option value="SAIDA">Saída</option>
                 </select>
-                @if (pontoForm.controls.tipo.invalid && pontoForm.controls.tipo.touched) {
-                  <span class="form-error">Tipo é obrigatório.</span>
-                }
+                @if (pontoForm.controls.tipo.invalid && pontoForm.controls.tipo.touched) { <p class="dw-err" id="e-tipoPonto">Tipo é obrigatório.</p> }
               </div>
-              <div class="form-group">
-                <label for="dataHoraPonto">Data/hora *</label>
-                <input id="dataHoraPonto" type="datetime-local" formControlName="dataHora" />
-                @if (pontoForm.controls.dataHora.invalid && pontoForm.controls.dataHora.touched) {
-                  <span class="form-error">Data/hora é obrigatória.</span>
-                }
+              <div class="dw-field">
+                <label for="f-dataHoraPonto">Data/hora <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataHoraPonto" type="datetime-local" formControlName="dataHora" aria-describedby="e-dataHoraPonto" />
+                @if (pontoForm.controls.dataHora.invalid && pontoForm.controls.dataHora.touched) { <p class="dw-err" id="e-dataHoraPonto">Data/hora é obrigatória.</p> }
               </div>
             </div>
-            <div class="form-actions">
-              <button type="submit" class="btn" [disabled]="submittingPonto()">
-                {{ submittingPonto() ? 'Registrando…' : 'Registrar ponto' }}
-              </button>
-            </div>
-          </form>
-        }
-      </div>
-    }
-
-    @if (correcaoPontoAlvo(); as alvo) {
-      <app-modal titulo="Solicitar correção de ponto" (fechar)="fecharCorrecaoPontoModal()">
-        @if (correcaoPontoErrorMessage()) {
-          <div class="form-banner form-banner--error" role="alert">{{ correcaoPontoErrorMessage() }}</div>
-        }
-        <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-bottom: var(--s-3);">
-          Registro atual: {{ alvo.dataHora | date: 'dd/MM/yyyy HH:mm' }} ({{ alvo.tipo }}). A correção só é aplicada
-          depois de aprovada.
-        </p>
-        <form [formGroup]="correcaoPontoForm" (ngSubmit)="confirmarSolicitarCorrecaoPonto()" class="form" novalidate>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="tipoProposto">Tipo correto *</label>
-              <select id="tipoProposto" formControlName="tipoProposto">
-                <option value="" disabled>Selecione…</option>
-                <option value="ENTRADA">Entrada</option>
-                <option value="INICIO_INTERVALO">Início do intervalo</option>
-                <option value="FIM_INTERVALO">Fim do intervalo</option>
-                <option value="SAIDA">Saída</option>
-              </select>
-              @if (correcaoPontoForm.controls.tipoProposto.invalid && correcaoPontoForm.controls.tipoProposto.touched) {
-                <span class="form-error">Tipo é obrigatório.</span>
-              }
-            </div>
-            <div class="form-group">
-              <label for="dataHoraProposta">Data/hora correta *</label>
-              <input id="dataHoraProposta" type="datetime-local" formControlName="dataHoraProposta" />
-              @if (correcaoPontoForm.controls.dataHoraProposta.invalid && correcaoPontoForm.controls.dataHoraProposta.touched) {
-                <span class="form-error">Data/hora é obrigatória.</span>
-              }
-            </div>
           </div>
-          <div class="form-group">
-            <label for="justificativa">Justificativa *</label>
-            <input id="justificativa" type="text" formControlName="justificativa" placeholder="Ex.: relógio de ponto marcou errado" />
-            @if (correcaoPontoForm.controls.justificativa.invalid && correcaoPontoForm.controls.justificativa.touched) {
-              <span class="form-error">Justificativa é obrigatória.</span>
-            }
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn--ghost" (click)="fecharCorrecaoPontoModal()">Cancelar</button>
-            <button type="submit" class="btn" [disabled]="submittingCorrecaoPonto()">
-              {{ submittingCorrecaoPonto() ? 'Enviando…' : 'Solicitar correção' }}
-            </button>
-          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingPonto()">{{ submittingPonto() ? 'Registrando…' : 'Registrar ponto' }}</button>
+          </footer>
         </form>
-      </app-modal>
+      </app-drawer>
     }
-
-    @if (abaAtiva() === 'folha') {
-      <div style="padding: var(--s-5); overflow-x: auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Competência</th>
-              <th>Proventos</th>
-              <th>Descontos</th>
-              <th>Encargos</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of folhas(); track item.uuid) {
-              <tr>
-                <td>{{ item.competencia }}</td>
-                <td>{{ item.proventos | number: '1.2-2' }}</td>
-                <td>{{ item.descontos | number: '1.2-2' }}</td>
-                <td>{{ item.encargos | number: '1.2-2' }}</td>
-                <td>{{ item.total | number: '1.2-2' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        @if (!carregandoFolhas() && folhas().length === 0) {
-          <p class="table-empty">Nenhuma folha de pagamento registrada.</p>
-        }
-
-        @if (pode('RH.GERENCIAR')) {
-          <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Registrar folha de pagamento</h3>
-          <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-top: 4px;">
-            Valores informados — não calculados pelo sistema.
-          </p>
-          @if (folhaErrorMessage()) {
-            <div class="form-banner form-banner--error" role="alert">{{ folhaErrorMessage() }}</div>
-          }
-          <form [formGroup]="folhaForm" (ngSubmit)="registrarFolha()" class="form" novalidate>
-            <div class="form-group">
-              <label for="competencia">Competência (MM/AAAA) *</label>
-              <input id="competencia" type="text" formControlName="competencia" placeholder="09/2026" style="max-width: 160px;" />
-              @if (folhaForm.controls.competencia.invalid && folhaForm.controls.competencia.touched) {
-                <span class="form-error">Competência é obrigatória, no formato MM/AAAA.</span>
-              }
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="proventos">Proventos *</label>
-                <input id="proventos" type="number" step="0.01" min="0" formControlName="proventos" />
+    @if (gaveta() === 'correcao' && correcaoPontoAlvo(); as alvo) {
+      <app-drawer titulo="Solicitar correção de ponto" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="correcaoPontoForm" (ngSubmit)="confirmarSolicitarCorrecaoPonto()" novalidate>
+          <div class="dw-body">
+            @if (correcaoPontoErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ correcaoPontoErrorMessage() }}</strong></div> }
+            <div class="box box--info"><span>Registro atual: <strong class="mono">{{ alvo.dataHora | date: 'dd/MM/yyyy HH:mm' }}</strong> ({{ rotulo('tipoPonto', alvo.tipo) }}). A correção só vale depois de aprovada.</span></div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipoProposto">Tipo correto <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoProposto" formControlName="tipoProposto" aria-describedby="e-tipoProposto">
+                  <option value="" disabled>Selecione…</option>
+                  <option value="ENTRADA">Entrada</option>
+                  <option value="INICIO_INTERVALO">Início do intervalo</option>
+                  <option value="FIM_INTERVALO">Fim do intervalo</option>
+                  <option value="SAIDA">Saída</option>
+                </select>
+                @if (correcaoPontoForm.controls.tipoProposto.invalid && correcaoPontoForm.controls.tipoProposto.touched) { <p class="dw-err" id="e-tipoProposto">Tipo é obrigatório.</p> }
               </div>
-              <div class="form-group">
-                <label for="descontos">Descontos *</label>
-                <input id="descontos" type="number" step="0.01" min="0" formControlName="descontos" />
+              <div class="dw-field">
+                <label for="f-dataHoraProposta">Data/hora correta <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataHoraProposta" type="datetime-local" formControlName="dataHoraProposta" aria-describedby="e-dataHoraProposta" />
+                @if (correcaoPontoForm.controls.dataHoraProposta.invalid && correcaoPontoForm.controls.dataHoraProposta.touched) { <p class="dw-err" id="e-dataHoraProposta">Data/hora é obrigatória.</p> }
               </div>
             </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="encargos">Encargos *</label>
-                <input id="encargos" type="number" step="0.01" min="0" formControlName="encargos" />
-              </div>
-              <div class="form-group">
-                <label for="total">Total *</label>
-                <input id="total" type="number" step="0.01" min="0" formControlName="total" />
-              </div>
+            <div class="dw-field">
+              <label for="f-justificativa">Justificativa <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-justificativa" type="text" formControlName="justificativa" aria-describedby="e-justificativa" placeholder="Ex.: relógio de ponto marcou errado" />
+              @if (correcaoPontoForm.controls.justificativa.invalid && correcaoPontoForm.controls.justificativa.touched) { <p class="dw-err" id="e-justificativa">Justificativa é obrigatória.</p> }
             </div>
-            <div class="form-actions">
-              <button type="submit" class="btn" [disabled]="submittingFolha()">
-                {{ submittingFolha() ? 'Registrando…' : 'Registrar folha' }}
-              </button>
-            </div>
-          </form>
-        }
-      </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingCorrecaoPonto()">{{ submittingCorrecaoPonto() ? 'Enviando…' : 'Solicitar correção' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
     }
-
-    @if (abaAtiva() === 'sst') {
-      <div class="tabs" role="tablist" aria-label="Seções de SST" style="padding: 0 var(--s-5); border-top: 1px solid var(--ink-100);">
-        <button type="button" role="tab" [attr.aria-selected]="sstAbaAtiva() === 'exames'" (click)="selecionarAbaSst('exames')">Exames ocupacionais</button>
-        <button type="button" role="tab" [attr.aria-selected]="sstAbaAtiva() === 'acidentes'" (click)="selecionarAbaSst('acidentes')">Acidentes de trabalho</button>
-        <button type="button" role="tab" [attr.aria-selected]="sstAbaAtiva() === 'epis'" (click)="selecionarAbaSst('epis')">EPIs</button>
-      </div>
-
-      @if (sstAbaAtiva() === 'exames') {
-        <div style="padding: var(--s-5); overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Tipo</th>
-                <th>Realização</th>
-                <th>Validade</th>
-                <th>Resultado</th>
-                <th>ASO</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of exames(); track item.uuid) {
-                <tr>
-                  <td>{{ item.tipo }}</td>
-                  <td>{{ item.dataRealizacao | date: 'dd/MM/yyyy' }}</td>
-                  <td>{{ item.dataValidade ? (item.dataValidade | date: 'dd/MM/yyyy') : '—' }}</td>
-                  <td>{{ item.resultado }}</td>
-                  <td>
-                    @if (item.asoUrl) {
-                      <a [href]="item.asoUrl" target="_blank" rel="noopener">Ver ASO</a>
-                    } @else {
-                      —
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          @if (!carregandoExames() && exames().length === 0) {
-            <p class="table-empty">Nenhum exame ocupacional registrado.</p>
-          }
-
-          @if (pode('RH.GERENCIAR')) {
-            <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar exame</h4>
-            @if (exameErrorMessage()) {
-              <div class="form-banner form-banner--error" role="alert">{{ exameErrorMessage() }}</div>
+    @if (gaveta() === 'folha') {
+      <app-drawer titulo="Registrar folha de pagamento" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="folhaForm" (ngSubmit)="registrarFolha()" novalidate>
+          <div class="dw-body">
+            @if (folhaErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ folhaErrorMessage() }}</strong></div> }
+            <p class="dw-hint">Valores informados, não calculados pelo sistema.</p>
+            <div class="dw-field">
+              <label for="f-competencia">Competência (MM/AAAA) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-competencia" type="text" formControlName="competencia" aria-describedby="e-competencia" class="mono" inputmode="numeric" maxlength="7" placeholder="09/2026" />
+              @if (folhaForm.controls.competencia.invalid && folhaForm.controls.competencia.touched) { <p class="dw-err" id="e-competencia">Informe a competência no formato MM/AAAA.</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-proventos">Proventos (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-proventos" type="number" formControlName="proventos" aria-describedby="e-proventos" step="0.01" min="0" class="mono" />
+                @if (folhaForm.controls.proventos.invalid && folhaForm.controls.proventos.touched) { <p class="dw-err" id="e-proventos">Proventos são obrigatórios.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-descontos">Descontos (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-descontos" type="number" formControlName="descontos" aria-describedby="e-descontos" step="0.01" min="0" class="mono" />
+                @if (folhaForm.controls.descontos.invalid && folhaForm.controls.descontos.touched) { <p class="dw-err" id="e-descontos">Descontos são obrigatórios.</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-encargos">Encargos (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-encargos" type="number" formControlName="encargos" aria-describedby="e-encargos" step="0.01" min="0" class="mono" />
+                @if (folhaForm.controls.encargos.invalid && folhaForm.controls.encargos.touched) { <p class="dw-err" id="e-encargos">Encargos são obrigatórios.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-total">Total (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-total" type="number" formControlName="total" aria-describedby="e-total" step="0.01" min="0" class="mono" />
+                @if (folhaForm.controls.total.invalid && folhaForm.controls.total.touched) { <p class="dw-err" id="e-total">Total é obrigatório.</p> }
+              </div>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingFolha()">{{ submittingFolha() ? 'Registrando…' : 'Registrar folha' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
+    }
+    @if (gaveta() === 'exame') {
+      <app-drawer titulo="Registrar exame ocupacional" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="exameForm" (ngSubmit)="registrarExame()" novalidate>
+          <div class="dw-body">
+            @if (exameErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ exameErrorMessage() }}</strong></div> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipoExame">Tipo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoExame" formControlName="tipo" aria-describedby="e-tipoExame">
+                  <option value="" disabled>Selecione…</option>
+                  <option value="ADMISSIONAL">Admissional</option>
+                  <option value="PERIODICO">Periódico</option>
+                  <option value="DEMISSIONAL">Demissional</option>
+                  <option value="RETORNO">Retorno ao trabalho</option>
+                  <option value="MUDANCA_FUNCAO">Mudança de função</option>
+                </select>
+                @if (exameForm.controls.tipo.invalid && exameForm.controls.tipo.touched) { <p class="dw-err" id="e-tipoExame">Tipo é obrigatório.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-resultadoExame">Resultado <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-resultadoExame" formControlName="resultado" aria-describedby="e-resultadoExame">
+                  <option value="" disabled>Selecione…</option>
+                  <option value="APTO">Apto</option>
+                  <option value="INAPTO">Inapto</option>
+                  <option value="APTO_COM_RESTRICAO">Apto com restrição</option>
+                </select>
+                @if (exameForm.controls.resultado.invalid && exameForm.controls.resultado.touched) { <p class="dw-err" id="e-resultadoExame">Resultado é obrigatório.</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-dataRealizacao">Realização <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataRealizacao" type="date" formControlName="dataRealizacao" aria-describedby="e-dataRealizacao" />
+                @if (exameForm.controls.dataRealizacao.invalid && exameForm.controls.dataRealizacao.touched) { <p class="dw-err" id="e-dataRealizacao">Data de realização é obrigatória.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-dataValidade">Validade<span class="opt">opcional</span></label>
+                <input id="f-dataValidade" type="date" formControlName="dataValidade" />
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-asoUrl">Link do ASO<span class="opt">opcional</span></label>
+              <input id="f-asoUrl" type="text" formControlName="asoUrl" placeholder="https://…" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingExame()">{{ submittingExame() ? 'Registrando…' : 'Registrar exame' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
+    }
+    @if (gaveta() === 'acidente') {
+      <app-drawer titulo="Registrar acidente de trabalho" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="acidenteForm" (ngSubmit)="registrarAcidente()" novalidate>
+          <div class="dw-body">
+            @if (acidenteErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ acidenteErrorMessage() }}</strong></div> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-dataHoraAcidente">Data/hora <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataHoraAcidente" type="datetime-local" formControlName="dataHora" aria-describedby="e-dataHoraAcidente" />
+                @if (acidenteForm.controls.dataHora.invalid && acidenteForm.controls.dataHora.touched) { <p class="dw-err" id="e-dataHoraAcidente">Data/hora é obrigatória.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-diasAfastamento">Dias de afastamento<span class="opt">opcional</span></label>
+                <input id="f-diasAfastamento" type="number" formControlName="diasAfastamento" step="1" min="0" class="mono" />
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-descricaoAcidente">Descrição <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-descricaoAcidente" type="text" formControlName="descricao" aria-describedby="e-descricaoAcidente" />
+              @if (acidenteForm.controls.descricao.invalid && acidenteForm.controls.descricao.touched) { <p class="dw-err" id="e-descricaoAcidente">Descrição é obrigatória.</p> }
+            </div>
+            <div class="dw-field">
+              <label class="switch" for="f-catEmitida">
+                <span><b style="font-weight: 500;">CAT emitida</b><span class="cell-sub">Comunicação de Acidente de Trabalho</span></span>
+                <input type="checkbox" role="switch" id="f-catEmitida" formControlName="catEmitida" />
+              </label>
+            </div>
+            @if (acidenteForm.controls.catEmitida.value) {
+              <div class="dw-field">
+                <label for="f-catUrl">Link da CAT <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-catUrl" type="text" formControlName="catUrl" aria-describedby="e-catUrl" placeholder="https://…" />
+                @if (acidenteForm.controls.catUrl.invalid && acidenteForm.controls.catUrl.touched) { <p class="dw-err" id="e-catUrl">Link da CAT é obrigatório quando a CAT foi emitida.</p> }
+              </div>
             }
-            <form [formGroup]="exameForm" (ngSubmit)="registrarExame()" class="form" novalidate>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="tipoExame">Tipo *</label>
-                  <select id="tipoExame" formControlName="tipo">
-                    <option value="" disabled>Selecione…</option>
-                    <option value="ADMISSIONAL">Admissional</option>
-                    <option value="PERIODICO">Periódico</option>
-                    <option value="DEMISSIONAL">Demissional</option>
-                    <option value="RETORNO">Retorno</option>
-                    <option value="MUDANCA_FUNCAO">Mudança de função</option>
-                  </select>
-                  @if (exameForm.controls.tipo.invalid && exameForm.controls.tipo.touched) {
-                    <span class="form-error">Tipo é obrigatório.</span>
-                  }
-                </div>
-                <div class="form-group">
-                  <label for="resultado">Resultado *</label>
-                  <select id="resultado" formControlName="resultado">
-                    <option value="" disabled>Selecione…</option>
-                    <option value="APTO">Apto</option>
-                    <option value="INAPTO">Inapto</option>
-                    <option value="APTO_COM_RESTRICAO">Apto com restrição</option>
-                  </select>
-                  @if (exameForm.controls.resultado.invalid && exameForm.controls.resultado.touched) {
-                    <span class="form-error">Resultado é obrigatório.</span>
-                  }
-                </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingAcidente()">{{ submittingAcidente() ? 'Registrando…' : 'Registrar acidente' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
+    }
+    @if (gaveta() === 'epi') {
+      <app-drawer titulo="Registrar EPI" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="epiForm" (ngSubmit)="registrarEpi()" novalidate>
+          <div class="dw-body">
+            @if (epiErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ epiErrorMessage() }}</strong></div> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipoEpi">EPI <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-tipoEpi" type="text" formControlName="tipo" aria-describedby="e-tipoEpi" placeholder="Ex.: Luva nitrílica" />
+                @if (epiForm.controls.tipo.invalid && epiForm.controls.tipo.touched) { <p class="dw-err" id="e-tipoEpi">Informe o EPI.</p> }
               </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="dataRealizacao">Data de realização *</label>
-                  <input id="dataRealizacao" type="date" formControlName="dataRealizacao" />
-                  @if (exameForm.controls.dataRealizacao.invalid && exameForm.controls.dataRealizacao.touched) {
-                    <span class="form-error">Data de realização é obrigatória.</span>
-                  }
-                </div>
-                <div class="form-group">
-                  <label for="dataValidade">Data de validade</label>
-                  <input id="dataValidade" type="date" formControlName="dataValidade" />
-                </div>
+              <div class="dw-field">
+                <label for="f-numeroCA">Número do CA<span class="opt">opcional</span></label>
+                <input id="f-numeroCA" type="text" formControlName="numeroCA" class="mono" />
               </div>
-              <div class="form-group">
-                <label for="asoUrl">Link do ASO</label>
-                <input id="asoUrl" type="text" formControlName="asoUrl" placeholder="https://…" />
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-dataEntrega">Entrega <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataEntrega" type="date" formControlName="dataEntrega" aria-describedby="e-dataEntrega" />
+                @if (epiForm.controls.dataEntrega.invalid && epiForm.controls.dataEntrega.touched) { <p class="dw-err" id="e-dataEntrega">Data de entrega é obrigatória.</p> }
               </div>
-              <div class="form-actions">
-                <button type="submit" class="btn" [disabled]="submittingExame()">
-                  {{ submittingExame() ? 'Registrando…' : 'Registrar exame' }}
-                </button>
+              <div class="dw-field">
+                <label for="f-dataDevolucao">Devolução<span class="opt">opcional</span></label>
+                <input id="f-dataDevolucao" type="date" formControlName="dataDevolucao" />
               </div>
-            </form>
-          }
-        </div>
-      }
-
-      @if (sstAbaAtiva() === 'acidentes') {
-        <div style="padding: var(--s-5); overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Data/hora</th>
-                <th>Descrição</th>
-                <th>CAT emitida</th>
-                <th>Dias de afastamento</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of acidentes(); track item.uuid) {
-                <tr>
-                  <td>{{ item.dataHora | date: 'dd/MM/yyyy HH:mm' }}</td>
-                  <td>{{ item.descricao }}</td>
-                  <td>
-                    {{ item.catEmitida ? 'Sim' : 'Não' }}
-                    @if (item.catEmitida && item.catUrl) {
-                      · <a [href]="item.catUrl" target="_blank" rel="noopener">Ver CAT</a>
-                    }
-                  </td>
-                  <td>{{ item.diasAfastamento ?? '—' }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          @if (!carregandoAcidentes() && acidentes().length === 0) {
-            <p class="table-empty">Nenhum acidente de trabalho registrado.</p>
-          }
-
-          @if (pode('RH.GERENCIAR')) {
-            <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar acidente</h4>
-            @if (acidenteErrorMessage()) {
-              <div class="form-banner form-banner--error" role="alert">{{ acidenteErrorMessage() }}</div>
-            }
-            <form [formGroup]="acidenteForm" (ngSubmit)="registrarAcidente()" class="form" novalidate>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="dataHora">Data/hora *</label>
-                  <input id="dataHora" type="datetime-local" formControlName="dataHora" />
-                  @if (acidenteForm.controls.dataHora.invalid && acidenteForm.controls.dataHora.touched) {
-                    <span class="form-error">Data/hora é obrigatória.</span>
-                  }
-                </div>
-                <div class="form-group">
-                  <label for="diasAfastamento">Dias de afastamento</label>
-                  <input id="diasAfastamento" type="number" step="1" min="0" formControlName="diasAfastamento" />
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="descricao">Descrição *</label>
-                <input id="descricao" type="text" formControlName="descricao" />
-                @if (acidenteForm.controls.descricao.invalid && acidenteForm.controls.descricao.touched) {
-                  <span class="form-error">Descrição é obrigatória.</span>
-                }
-              </div>
-              <div class="form-group">
-                <label style="display: flex; align-items: center; gap: 8px; font-weight: 500;">
-                  <input type="checkbox" formControlName="catEmitida" style="width: auto;" />
-                  CAT emitida
-                </label>
-              </div>
-              @if (acidenteForm.controls.catEmitida.value) {
-                <div class="form-group">
-                  <label for="catUrl">Link da CAT *</label>
-                  <input id="catUrl" type="text" formControlName="catUrl" placeholder="https://…" />
-                  @if (acidenteForm.controls.catUrl.invalid && acidenteForm.controls.catUrl.touched) {
-                    <span class="form-error">Link da CAT é obrigatório quando a CAT foi emitida.</span>
-                  }
-                </div>
-              }
-              <div class="form-actions">
-                <button type="submit" class="btn" [disabled]="submittingAcidente()">
-                  {{ submittingAcidente() ? 'Registrando…' : 'Registrar acidente' }}
-                </button>
-              </div>
-            </form>
-          }
-        </div>
-      }
-
-      @if (sstAbaAtiva() === 'epis') {
-        <div style="padding: var(--s-5); overflow-x: auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>EPI</th>
-                <th>CA</th>
-                <th>Entrega</th>
-                <th>Devolução</th>
-                <th>Situação</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of epis(); track item.uuid) {
-                <tr>
-                  <td>{{ item.tipo }}</td>
-                  <td>{{ item.numeroCA || '—' }}</td>
-                  <td>{{ item.dataEntrega | date: 'dd/MM/yyyy' }}</td>
-                  <td>{{ item.dataDevolucao ? (item.dataDevolucao | date: 'dd/MM/yyyy') : '—' }}</td>
-                  <td>{{ situacaoDoEpi(item) }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          @if (!carregandoEpis() && epis().length === 0) {
-            <p class="table-empty">Nenhum EPI registrado.</p>
-          }
-
-          @if (pode('RH.GERENCIAR')) {
-            <h4 style="font-size: 0.9375rem; margin-top: var(--s-5);">Registrar EPI</h4>
-            @if (epiErrorMessage()) {
-              <div class="form-banner form-banner--error" role="alert">{{ epiErrorMessage() }}</div>
-            }
-            <form [formGroup]="epiForm" (ngSubmit)="registrarEpi()" class="form" novalidate>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="tipoEpi">Tipo *</label>
-                  <input id="tipoEpi" type="text" formControlName="tipo" placeholder="Ex.: Luva nitrílica" />
-                  @if (epiForm.controls.tipo.invalid && epiForm.controls.tipo.touched) {
-                    <span class="form-error">Tipo é obrigatório.</span>
-                  }
-                </div>
-                <div class="form-group">
-                  <label for="numeroCA">Número CA</label>
-                  <input id="numeroCA" type="text" formControlName="numeroCA" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="dataEntrega">Data de entrega *</label>
-                  <input id="dataEntrega" type="date" formControlName="dataEntrega" />
-                  @if (epiForm.controls.dataEntrega.invalid && epiForm.controls.dataEntrega.touched) {
-                    <span class="form-error">Data de entrega é obrigatória.</span>
-                  }
-                </div>
-                <div class="form-group">
-                  <label for="dataDevolucao">Data de devolução</label>
-                  <input id="dataDevolucao" type="date" formControlName="dataDevolucao" />
-                </div>
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="btn" [disabled]="submittingEpi()">
-                  {{ submittingEpi() ? 'Registrando…' : 'Registrar EPI' }}
-                </button>
-              </div>
-            </form>
-          }
-        </div>
-      }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingEpi()">{{ submittingEpi() ? 'Registrando…' : 'Registrar EPI' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
     }
 
     @if (abaAtiva() === 'treinamentos') {

@@ -1360,6 +1360,11 @@ tfoot .linha-total th { text-align: left; }
 .perfil-destaque__lbl { font-size: 0.75rem; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
 .perfil-destaque strong { font-size: 1.0625rem; }
 .perfil-destaque__valor { font-size: 1.5rem !important; }
+.perfil-sec--sub { border-top: 1px solid var(--ink-100); margin-top: var(--s-2); }
+.perfil-subtabs { background: var(--ink-50); }
+.perfil-acoes { white-space: nowrap; }
+.perfil-acoes .btn + .btn { margin-left: 4px; }
+.perfil-corpo td .mono + .badge { margin-left: 6px; }
 
 /* Prontuário por vínculo assistencial (ADR-0076): aviso, formulário do acesso justificado e faixa. */
 .acesso-pront { display: grid; gap: var(--s-3); }

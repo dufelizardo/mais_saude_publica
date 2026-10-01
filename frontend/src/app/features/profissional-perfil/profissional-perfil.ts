@@ -58,7 +58,35 @@ interface EventoHistorico {
   descricao: string;
 }
 
-type GavetaPerfil = 'contato' | 'transferencia' | 'ajuste';
+type GavetaPerfil =
+  | 'contato' | 'transferencia' | 'ajuste'
+  | 'afastamento' | 'licenca' | 'ponto' | 'correcao' | 'folha' | 'exame' | 'acidente' | 'epi';
+
+/** Rótulos dos enums mostrados nas tabelas e nas gavetas (ADR-0085). */
+const ROTULOS = {
+  tipoAfastamento: { FERIAS: 'Férias', LICENCA_MEDICA: 'Licença médica', LICENCA_PESSOAL: 'Licença pessoal', OUTROS: 'Outros' },
+  statusAfastamento: { SOLICITADO: 'Solicitado', APROVADO: 'Aprovado', EM_ANDAMENTO: 'Em andamento', CONCLUIDO: 'Concluído', CANCELADO: 'Cancelado' },
+  tipoLicenca: {
+    MATERNIDADE: 'Maternidade', PATERNIDADE: 'Paternidade', DOENCA: 'Doença', ACIDENTE_DE_TRABALHO: 'Acidente de trabalho',
+    FALECIMENTO: 'Falecimento', CASAMENTO: 'Casamento', OUTROS: 'Outros',
+  },
+  responsavelPagamento: { EMPRESA: 'Empresa', INSS: 'INSS', MISTO: 'Misto' },
+  tipoPonto: { ENTRADA: 'Entrada', INICIO_INTERVALO: 'Início do intervalo', FIM_INTERVALO: 'Fim do intervalo', SAIDA: 'Saída' },
+  tipoExame: { ADMISSIONAL: 'Admissional', PERIODICO: 'Periódico', DEMISSIONAL: 'Demissional', RETORNO: 'Retorno ao trabalho', MUDANCA_FUNCAO: 'Mudança de função' },
+  resultadoExame: { APTO: 'Apto', INAPTO: 'Inapto', APTO_COM_RESTRICAO: 'Apto com restrição' },
+} satisfies Record<string, Record<string, string>>;
+
+/** "aaaa-mm-ddThh:mm" local, o formato do input datetime-local. */
+function agoraLocal(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function competenciaAtual(): string {
+  const d = new Date();
+  return `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+}
 
 @Component({
   selector: 'app-profissional-perfil',
@@ -347,7 +375,7 @@ export class ProfissionalPerfil {
       eventos.push({
         data: a.dataInicio,
         tipo: 'Afastamento',
-        descricao: `${a.tipo} (${a.status})` + (licenca ? ` — licença: ${licenca.tipoLegal}` : ''),
+        descricao: `${this.rotulo('tipoAfastamento', a.tipo)} (${this.rotulo('statusAfastamento', a.status)})` + (licenca ? ` — licença: ${this.rotulo('tipoLicenca', licenca.tipoLegal)}` : ''),
       });
     }
 
@@ -501,6 +529,71 @@ export class ProfissionalPerfil {
 
   protected fecharGaveta(): void {
     this.gaveta.set(null);
+    this.correcaoPontoAlvo.set(null);
+  }
+
+  protected rotulo(grupo: keyof typeof ROTULOS, valor: string | null | undefined): string {
+    if (!valor) return '—';
+    return (ROTULOS[grupo] as Record<string, string>)[valor] ?? valor;
+  }
+
+  protected classeStatusAfastamento(status: StatusAfastamento): string {
+    return { SOLICITADO: 'info', APROVADO: 'ok', EM_ANDAMENTO: 'warn', CONCLUIDO: 'muted', CANCELADO: 'muted' }[status] ?? 'muted';
+  }
+
+  protected classeResultadoExame(resultado: ResultadoExameOcupacional): string {
+    return { APTO: 'ok', INAPTO: 'alert', APTO_COM_RESTRICAO: 'warn' }[resultado] ?? 'muted';
+  }
+
+  protected exameVencido(exame: ExameOcupacionalResponseDto): boolean {
+    return !!exame.dataValidade && exame.dataValidade < hojeIso();
+  }
+
+  protected afastamentoDaLicenca(licenca: LicencaResponseDto): AfastamentoResponseDto | null {
+    return this.afastamentos().find((a) => a.uuid === licenca.afastamentoId) ?? null;
+  }
+
+  protected abrirAfastamento(): void {
+    this.afastamentoForm.reset({ tipo: '', dataInicio: hojeIso(), dataFim: '', status: 'APROVADO', observacao: '' });
+    this.afastamentoErrorMessage.set(null);
+    this.gaveta.set('afastamento');
+  }
+
+  protected abrirLicenca(): void {
+    const unico = this.afastamentosSemLicenca().length === 1 ? this.afastamentosSemLicenca()[0].uuid : '';
+    this.licencaForm.reset({ afastamentoId: unico, tipoLegal: '', responsavelPagamento: '', documentoUrl: '' });
+    this.licencaErrorMessage.set(null);
+    this.gaveta.set('licenca');
+  }
+
+  protected abrirPonto(): void {
+    this.pontoForm.reset({ tipo: '', dataHora: agoraLocal() });
+    this.pontoErrorMessage.set(null);
+    this.gaveta.set('ponto');
+  }
+
+  protected abrirFolha(): void {
+    this.folhaForm.reset({ competencia: competenciaAtual(), proventos: '', descontos: '', encargos: '', total: '' });
+    this.folhaErrorMessage.set(null);
+    this.gaveta.set('folha');
+  }
+
+  protected abrirExame(): void {
+    this.exameForm.reset({ tipo: '', dataRealizacao: hojeIso(), dataValidade: '', resultado: '', asoUrl: '' });
+    this.exameErrorMessage.set(null);
+    this.gaveta.set('exame');
+  }
+
+  protected abrirAcidente(): void {
+    this.acidenteForm.reset({ dataHora: agoraLocal(), descricao: '', catEmitida: false, catUrl: '', diasAfastamento: '' });
+    this.acidenteErrorMessage.set(null);
+    this.gaveta.set('acidente');
+  }
+
+  protected abrirEpi(): void {
+    this.epiForm.reset({ tipo: '', numeroCA: '', dataEntrega: hojeIso(), dataDevolucao: '' });
+    this.epiErrorMessage.set(null);
+    this.gaveta.set('epi');
   }
 
   private avisar(titulo: string, detalhe: string): void {
@@ -1018,7 +1111,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingAfastamento.set(false);
-          this.afastamentoForm.reset({ tipo: '', dataInicio: '', dataFim: '', status: '', observacao: '' });
+          this.gaveta.set(null);
+          this.avisar('Afastamento registrado', profissional.nome);
           this.carregarAfastamentos(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1064,7 +1158,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingLicenca.set(false);
-          this.licencaForm.reset({ afastamentoId: '', tipoLegal: '', responsavelPagamento: '', documentoUrl: '' });
+          this.gaveta.set(null);
+          this.avisar('Licença registrada', profissional.nome);
           this.carregarLicencas(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1110,7 +1205,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingPonto.set(false);
-          this.pontoForm.reset({ tipo: '', dataHora: '' });
+          this.gaveta.set(null);
+          this.avisar('Ponto registrado', profissional.nome);
           this.carregarPonto();
         },
         error: (error: HttpErrorResponse) => {
@@ -1129,10 +1225,7 @@ export class ProfissionalPerfil {
     });
     this.correcaoPontoErrorMessage.set(null);
     this.correcaoPontoAlvo.set(registro);
-  }
-
-  protected fecharCorrecaoPontoModal(): void {
-    this.correcaoPontoAlvo.set(null);
+    this.gaveta.set('correcao');
   }
 
   protected confirmarSolicitarCorrecaoPonto(): void {
@@ -1155,7 +1248,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingCorrecaoPonto.set(false);
-          this.correcaoPontoAlvo.set(null);
+          this.fecharGaveta();
+          this.avisar('Correção solicitada', 'Aguarda aprovação');
           this.carregarPonto();
         },
         error: (error: HttpErrorResponse) => {
@@ -1172,6 +1266,7 @@ export class ProfissionalPerfil {
     this.registroPontoService.aprovarCorrecao(registro.uuid).subscribe({
       next: () => {
         this.resolvendoCorrecaoUuid.set(null);
+        this.avisar('Correção aprovada', 'O registro foi atualizado');
         this.carregarPonto();
       },
       error: (error: HttpErrorResponse) => {
@@ -1188,6 +1283,7 @@ export class ProfissionalPerfil {
     this.registroPontoService.rejeitarCorrecao(registro.uuid).subscribe({
       next: () => {
         this.resolvendoCorrecaoUuid.set(null);
+        this.avisar('Correção rejeitada', 'O registro continua como estava');
         this.carregarPonto();
       },
       error: (error: HttpErrorResponse) => {
@@ -1235,7 +1331,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingFolha.set(false);
-          this.folhaForm.reset({ competencia: '', proventos: '', descontos: '', encargos: '', total: '' });
+          this.gaveta.set(null);
+          this.avisar('Folha registrada', profissional.nome);
           this.carregarFolhas(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1287,7 +1384,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingExame.set(false);
-          this.exameForm.reset({ tipo: '', dataRealizacao: '', dataValidade: '', resultado: '', asoUrl: '' });
+          this.gaveta.set(null);
+          this.avisar('Exame registrado', profissional.nome);
           this.carregarExames(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1335,7 +1433,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingAcidente.set(false);
-          this.acidenteForm.reset({ dataHora: '', descricao: '', catEmitida: false, catUrl: '', diasAfastamento: '' });
+          this.gaveta.set(null);
+          this.avisar('Acidente registrado', profissional.nome);
           this.carregarAcidentes(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1387,7 +1486,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingEpi.set(false);
-          this.epiForm.reset({ tipo: '', numeroCA: '', dataEntrega: '', dataDevolucao: '' });
+          this.gaveta.set(null);
+          this.avisar('EPI registrado', profissional.nome);
           this.carregarEpis(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
