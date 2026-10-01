@@ -1,10 +1,7 @@
 *** Settings ***
 Library    Collections
-Library    ../../../../resource/libraries/cpf_library.py
 Resource    ../../../../pom/ui/assistencia/pacientes/pacientes_ui_pom.resource
-Resource    ../../../../pom/auth/login/login_pom.resource
-Resource    ../../../../pom/auth/senha/senha_pom.resource
-Resource    ../../../acesso/acesso/acesso_flow.resource
+Resource    ../../../common/ui_seguranca_flow.resource
 Resource    ../../../setor/create_setor/create_setor_flow.resource
 Resource    ../../../profissional/get_profissional_by_matricula/get_profissional_by_matricula_flow.resource
 Resource    ../../../paciente/create_paciente/create_paciente_flow.resource
@@ -23,68 +20,9 @@ Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.reso
       (sem vínculo).
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Variables ***
-${VINCULO_ADMIN_CPF}            %{MSP_ADMIN_CPF=}
-${VINCULO_ADMIN_SENHA}          %{MSP_ADMIN_SENHA=}
-${VINCULO_SENHA_PROVISORIA}     Robot#Provisoria1
-${VINCULO_SENHA}                Robot#Definitiva1
 ${VINCULO_TEXTO_VALIDO}         Paciente chegou desacordado, preciso do histórico de alergias e medicações
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
-Entrar Na API Como
-    [Documentation]    Faz login na API e passa a usar o token nas chamadas seguintes. Devolve o corpo do login.
-    [Arguments]    ${cpf}    ${senha}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Definir Token Da Sessao De API    ${EMPTY}
-    ${payload}=    Create Dictionary    tipo=CPF    identificador=${cpf}    senha=${senha}    manterConectado=${False}
-    ${resposta}=    POST Login    ${payload}
-    Should Be Equal As Integers    ${resposta.status_code}    200
-    Definir Token Da Sessao De API    ${resposta.json()['token']}
-    RETURN    ${resposta.json()}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-Criar Usuario Pela Administracao
-    [Documentation]    Cria um usuário com senha provisória (o token do administrador precisa estar ativo) e devolve
-    ...    cpf e uuid.
-    [Arguments]    ${nome}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${cpf}=    Gerar Cpf Valido
-    ${payload}=    Create Dictionary    cpf=${cpf}    nome=${nome}    senha=${VINCULO_SENHA_PROVISORIA}
-    ${criado}=    POST Create Usuario    ${payload}
-    Should Be Equal As Integers    ${criado.status_code}    201
-    ${lista}=    GET List Usuarios
-    ${uuid}=    Evaluate    [u['uuid'] for u in $lista.json() if u['cpf'] == $cpf][0]
-    RETURN    ${cpf}    ${uuid}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-Conceder Papel
-    [Documentation]    Concede um papel padrão a um usuário; sem unidade, na rede inteira.
-    [Arguments]    ${usuarioId}    ${codigoPapel}    ${unidadeId}=${NONE}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${papelId}=    Buscar Papel Uuid Por Codigo    ${codigoPapel}
-    ${payload}=    Create Dictionary    usuarioId=${usuarioId}    papelId=${papelId}
-    IF    $unidadeId is not None
-        Set To Dictionary    ${payload}    unidadeId=${unidadeId}
-    END
-    ${resposta}=    POST Create Atribuicao Acesso    ${payload}
-    Should Be Equal As Integers    ${resposta.status_code}    201
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-Trocar Senha Provisoria
-    [Documentation]    Entra com a senha provisória e define a senha definitiva (ADR-0069). Deixa o token do usuário ativo.
-    [Arguments]    ${cpf}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Entrar Na API Como    ${cpf}    ${VINCULO_SENHA_PROVISORIA}
-    ${payload}=    Create Dictionary    senhaAtual=${VINCULO_SENHA_PROVISORIA}    novaSenha=${VINCULO_SENHA}
-    ...    manterConectado=${False}
-    ${resposta}=    POST Auth Senha    ${payload}
-    Should Be Equal As Integers    ${resposta.status_code}    200
-    Definir Token Da Sessao De API    ${resposta.json()['token']}
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
 Cadastrar Paciente Com Atendimento Na Unidade
     [Documentation]    Cadastra um paciente com um atendimento em aberto na unidade (token de quem cadastra ativo).
     ...    Devolve o nome do paciente.
@@ -102,10 +40,9 @@ Preparar Cenario Do Prontuario Por Vinculo
     [Documentation]    Monta o cenário pela API e abre o navegador já logado como a enfermeira da UBS A. Sem as
     ...    credenciais do administrador, pula a suíte.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Skip If    '${VINCULO_ADMIN_CPF}' == '${EMPTY}'
-    ...    MSP_ADMIN_CPF/MSP_ADMIN_SENHA não definidas: a suíte precisa de uma API com login, autorização e vínculo ligados.
+    Pular Sem Administrador Configurado
 
-    Entrar Na API Como    ${VINCULO_ADMIN_CPF}    ${VINCULO_ADMIN_SENHA}
+    Entrar Na API Como    ${SEG_ADMIN_CPF}    ${SEG_ADMIN_SENHA}
     ${ubsA}=    Seed A Unidade De Saude Uuid
     ${ubsB}=    Seed A Unidade De Saude Uuid
     ${cpfApoio}    ${idApoio}=    Criar Usuario Pela Administracao    Robot Apoio Vinculo
@@ -124,7 +61,7 @@ Preparar Cenario Do Prontuario Por Vinculo
     Set Suite Variable    ${VINCULO_PACIENTE_COM_VINCULO}    ${comVinculo}
     Set Suite Variable    ${VINCULO_PACIENTE_SEM_VINCULO}    ${semVinculo}
     Abrir Navegador Do Mais Saude Publica
-    Entrar No Sistema Pela Tela De Login    ${cpfEnfermeira}    ${VINCULO_SENHA}
+    Entrar No Sistema Pela Tela De Login    ${cpfEnfermeira}    ${SEG_SENHA}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

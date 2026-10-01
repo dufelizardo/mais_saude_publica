@@ -100,6 +100,14 @@ ACESSO - DESBLOQUEIO - POST
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+ACESSO - ENCERRAMENTO DE SESSOES - POST
+    [Documentation]    Test scenario for POST /api/v1/usuario/{uuid}/encerramento-de-sessoes on the Mais Saúde Pública API (ADR-0078).
+    [Arguments]    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Acesso - Encerramento De Sessoes - POST - By HTTP Status Code    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 ACESSO - ESCOPOS - GET
     [Documentation]    Test scenario for GET /api/v1/atribuicao-acesso/escopos on the Mais Saúde Pública API (ADR-0068).
     [Arguments]    ${meuHTTP}

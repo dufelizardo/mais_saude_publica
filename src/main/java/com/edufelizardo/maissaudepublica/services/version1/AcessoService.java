@@ -227,6 +227,10 @@ public class AcessoService {
         if (!dto.getAtivo() && usuario.getCpf().equals(UsuarioAutenticado.cpf())) {
             throw new ResourceUnprocessableEntityException("Você não pode desativar o seu próprio usuário.");
         }
+        if (usuario.isAtivo() && !dto.getAtivo()) {
+            // Desativado sai na hora, sem esperar o token expirar (ADR-0078).
+            usuario.encerrarSessoes();
+        }
         usuario.setNome(dto.getNome().trim());
         usuario.setAtivo(dto.getAtivo());
         return UsuarioResponseDto.fromUsuario(usuarioRepository.save(usuario));
@@ -247,6 +251,23 @@ public class AcessoService {
         usuario.setSenhaAlteradaEm(Instant.now());
         usuario.setBloqueadoAte(null);
         usuario.setTentativasFalhas(0);
+        // Quem estava logado com a senha antiga sai (ADR-0078).
+        usuario.encerrarSessoes();
+        return UsuarioResponseDto.fromUsuario(usuarioRepository.save(usuario));
+    }
+
+    /**
+     * Encerra todas as sessões abertas do usuário (ADR-0078) — computador esquecido logado, suspeita de uso
+     * indevido. A senha não muda: a pessoa entra de novo com ela. As próprias sessões se encerram trocando a
+     * senha.
+     */
+    @Transactional
+    public UsuarioResponseDto encerrarSessoes(UUID uuid) {
+        Usuario usuario = usuario(uuid);
+        if (usuario.getCpf().equals(UsuarioAutenticado.cpf())) {
+            throw new ResourceUnprocessableEntityException("Para encerrar as suas próprias sessões, troque a sua senha.");
+        }
+        usuario.encerrarSessoes();
         return UsuarioResponseDto.fromUsuario(usuarioRepository.save(usuario));
     }
 

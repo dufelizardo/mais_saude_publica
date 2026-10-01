@@ -86,10 +86,23 @@ public class Usuario implements Serializable {
 
     private Instant senhaAlteradaEm;
 
+    /**
+     * Versão das sessões (ADR-0078): vai no token e é conferida a cada requisição. Subir a versão encerra
+     * todas as sessões abertas — ao redefinir a senha, ao trocar a própria senha, ao desativar e quando a
+     * administração encerra as sessões. Default no banco para as linhas que já existiam.
+     */
+    @Column(columnDefinition = "integer not null default 0")
+    private int versaoSessao;
+
     public Usuario(String cpf, String nome, String senhaHash) {
         this.cpf = cpf;
         this.nome = nome;
         this.senhaHash = senhaHash;
         this.ativo = true;
+    }
+
+    /** Invalida todos os tokens já emitidos para este usuário (ADR-0078). */
+    public void encerrarSessoes() {
+        this.versaoSessao++;
     }
 }

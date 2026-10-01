@@ -59,7 +59,7 @@ O frontend também é testado aqui, com Robot Framework e o mesmo LKDF
   Sem `MSP_ADMIN_CPF`/`MSP_ADMIN_SENHA`, a suíte é pulada (Skip).
 - **API autenticada nos FLOWs:** `Definir Token Da Sessao De API` faz toda chamada da suíte levar o
   Bearer, e os Seeds de sempre (`Seed A Paciente` etc.) funcionam com a segurança ligada.
-- **CPF válido para criar usuário:** `src/resource/libraries/cpf_library.py` (`Gerar Cpf Valido`).
+- **CPF válido para criar usuário:** `CPF Valido Aleatorio`, do FLOW de acesso.
 - **Sessão:** `src/pom/common/mais_saude_publica_ui_common.resource`, que também traz as ações comuns.
   - As ações comuns são abrir rota, clicar aba e botão, preencher e enviar a gaveta, e ler erro, título e
     aviso.

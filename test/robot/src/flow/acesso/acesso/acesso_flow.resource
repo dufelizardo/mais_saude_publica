@@ -518,6 +518,38 @@ Acesso - Desbloqueio - POST - By HTTP Status Code
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+POST Encerrar Sessoes Usuario - Status Code 200
+    [Documentation]    Ends the sessions of a freshly seeded Usuario, expecting HTTP 200 with a SuccessResponseDto.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${cpf}=    Seed Um Usuario
+    ${response}=    POST Encerrar Sessoes Usuario    ${uuid}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Validate Object Schema    ${response.json()}    ${SUCCESS_RESPONSE_SCHEMA}
+    Should Be Equal As Strings    ${response.json()['message']}    Sessões encerradas com sucesso!
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Encerrar Sessoes Usuario - Status Code 404
+    [Documentation]    Ends the sessions of a random, non-existent Usuario, expecting HTTP 404.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuidInexistente}=    Evaluate    str(uuid.uuid4())    modules=uuid
+    ${response}=    POST Encerrar Sessoes Usuario    ${uuidInexistente}
+    Should Be Equal As Integers    ${response.status_code}    404
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Acesso - Encerramento De Sessoes - POST - By HTTP Status Code
+    [Documentation]    Executes the appropriate Encerrar Sessoes Usuario test scenario based on the provided HTTP status code.
+    [Arguments]    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Run Keyword If    '${meuHTTP}' == '200'    POST Encerrar Sessoes Usuario - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '404'    POST Encerrar Sessoes Usuario - Status Code 404
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Encerrar Sessoes Usuario test scenario.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 GET List Escopos Acesso - Status Code 200
     [Documentation]    Lists the grantable units, expecting HTTP 200 (or 404 when the environment has no unit).
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════

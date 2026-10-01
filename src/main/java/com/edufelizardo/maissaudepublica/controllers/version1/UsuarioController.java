@@ -116,7 +116,8 @@ public class UsuarioController {
     @PostMapping(value = "{uuid}/redefinicao-senha", produces = MediaType.APPLICATION_JSON_VALUE,
             consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Define uma senha provisória para o usuário",
-            description = "A pessoa troca no próximo acesso; também desbloqueia. Para a própria senha, use /auth/senha (422).",
+            description = "A pessoa troca no próximo acesso; também desbloqueia e encerra as sessões abertas (ADR-0078). "
+                    + "Para a própria senha, use /auth/senha (422).",
             tags = "Acesso")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", schema = @Schema(implementation = SuccessResponseDto.class),
@@ -128,6 +129,24 @@ public class UsuarioController {
         UsuarioResponseDto r = service.redefinirSenha(uuid, dto);
 
         return ResponseEntity.ok(new SuccessResponseDto("Senha provisória definida com sucesso!",
-                "Usuário: " + r.getNome() + ", troca no próximo acesso"));
+                "Usuário: " + r.getNome() + ", troca no próximo acesso; sessões abertas encerradas"));
+    }
+
+    @RequerPermissao({"USUARIO.GERENCIAR"})
+    @PostMapping(value = "{uuid}/encerramento-de-sessoes", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Encerra todas as sessões abertas do usuário",
+            description = "Todo token já emitido para a pessoa deixa de valer na hora (ADR-0078); a senha não muda e ela "
+                    + "entra de novo normalmente. Para as próprias sessões, troque a senha (422). Usuário inexistente, 404.",
+            tags = "Acesso")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> encerrarSessoes(@PathVariable UUID uuid) {
+        UsuarioResponseDto r = service.encerrarSessoes(uuid);
+
+        return ResponseEntity.ok(new SuccessResponseDto("Sessões encerradas com sucesso!", "Usuário: " + r.getNome()));
     }
 }

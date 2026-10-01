@@ -27,6 +27,8 @@ import java.util.Date;
 public class JwtService {
 
     public static final String CLAIM_TROCAR_SENHA = "trocarSenha";
+    /** Versão das sessões do usuário quando o token foi emitido (ADR-0078). Ausente = 0. */
+    public static final String CLAIM_VERSAO_SESSAO = "sv";
 
     @Value("${app.security.jwt-secret:}")
     private String configuredSecret;
@@ -61,6 +63,11 @@ public class JwtService {
      * token novo, sem o claim, é emitido quando a troca acontece.
      */
     public String gerarToken(String cpf, String nome, boolean manterConectado, boolean trocarSenha) {
+        return gerarToken(cpf, nome, manterConectado, trocarSenha, 0);
+    }
+
+    /** Com a versão das sessões do usuário (ADR-0078): o token deixa de valer quando ela sobe. */
+    public String gerarToken(String cpf, String nome, boolean manterConectado, boolean trocarSenha, int versaoSessao) {
         Instant agora = Instant.now();
         Instant expiraEm = agora.plus(Duration.ofHours(
                 manterConectado ? expirationHoursRememberMe : expirationHours));
@@ -69,6 +76,7 @@ public class JwtService {
                 .subject(cpf)
                 .claim("nome", nome)
                 .claim(CLAIM_TROCAR_SENHA, trocarSenha)
+                .claim(CLAIM_VERSAO_SESSAO, versaoSessao)
                 .issuedAt(Date.from(agora))
                 .expiration(Date.from(expiraEm))
                 .signWith(key)

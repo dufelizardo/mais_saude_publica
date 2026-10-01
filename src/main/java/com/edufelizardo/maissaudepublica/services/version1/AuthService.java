@@ -91,14 +91,16 @@ public class AuthService {
     }
 
     private LoginResponseDto emitir(Usuario usuario, boolean manterConectado) {
-        String token = jwtService.gerarToken(usuario.getCpf(), usuario.getNome(), manterConectado, usuario.isTrocarSenha());
+        String token = jwtService.gerarToken(usuario.getCpf(), usuario.getNome(), manterConectado, usuario.isTrocarSenha(),
+                usuario.getVersaoSessao());
         return new LoginResponseDto(token, jwtService.extrairExpiracao(token), usuario.getNome(), usuario.getCpf(),
                 usuario.isTrocarSenha());
     }
 
     /**
      * Troca da própria senha (ADR-0069): confere a atual, exige uma nova diferente dela e do CPF, e devolve um
-     * token novo — sem a restrição de senha provisória.
+     * token novo — sem a restrição de senha provisória. As outras sessões abertas são encerradas (ADR-0078):
+     * só o token devolvido aqui continua valendo.
      */
     @Transactional
     public LoginResponseDto trocarSenha(TrocaSenhaRequestDto dto) {
@@ -119,6 +121,7 @@ public class AuthService {
         usuario.setSenhaHash(passwordEncoder.encode(dto.getNovaSenha()));
         usuario.setTrocarSenha(false);
         usuario.setSenhaAlteradaEm(Instant.now());
+        usuario.encerrarSessoes();
         usuarioRepository.save(usuario);
         return emitir(usuario, dto.isManterConectado());
     }

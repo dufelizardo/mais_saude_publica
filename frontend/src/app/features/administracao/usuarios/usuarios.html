@@ -362,6 +362,10 @@
                   @if (l.usuario.bloqueado) {
                     <button type="button" class="btn btn--ghost btn--sm" [disabled]="submitting()" (click)="desbloquear(l.usuario)">Desbloquear</button>
                   }
+                  @if (l.usuario.cpf !== meuCpf()) {
+                    <button type="button" class="btn btn--ghost btn--sm" [disabled]="submitting()" (click)="encerrarSessoes(l.usuario)"
+                      title="A pessoa sai de todos os computadores e celulares e precisa entrar de novo; a senha não muda.">Encerrar sessões</button>
+                  }
                 </div>
               }
               @if (pode('AUDITORIA.CONSULTAR')) {
@@ -526,7 +530,7 @@
                 @if (erro('confirmacao')) { <p class="dw-err" id="e-confirmacao">{{ erro('confirmacao') }}</p> }
               </div>
             </div>
-            <div class="box box--info"><span>Para quem esqueceu a senha ou está bloqueado. A senha atual deixa de valer, o bloqueio é liberado e, no próximo acesso, a pessoa cria a própria senha antes de usar o sistema.</span></div>
+            <div class="box box--info"><span>Para quem esqueceu a senha ou está bloqueado. A senha atual deixa de valer, as sessões abertas são encerradas, o bloqueio é liberado e, no próximo acesso, a pessoa cria a própria senha antes de usar o sistema.</span></div>
           </div>
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="voltarAoUsuario(g.usuario)">Voltar</button>

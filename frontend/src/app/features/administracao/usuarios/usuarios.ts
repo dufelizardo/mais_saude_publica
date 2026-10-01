@@ -137,6 +137,8 @@ export class Usuarios {
   protected readonly profissionais = signal<ProfissionalResponseDto[]>([]);
   protected readonly carregando = signal(true);
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
+  /** CPF de quem está logado: as próprias sessões se encerram trocando a senha, não por aqui. */
+  protected readonly meuCpf = signal<string | null>(null);
 
   protected readonly aba = signal<Aba>('usuarios');
   protected readonly busca = signal('');
@@ -191,6 +193,7 @@ export class Usuarios {
 
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
+    this.authService.usuarioAtual().subscribe((u) => this.meuCpf.set(u?.cpf ?? null));
     this.carregarTudo();
     this.profissionalService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.profissionais.set(p));
   }
@@ -636,6 +639,12 @@ export class Usuarios {
   protected verNaAuditoria(u: UsuarioResponseDto): void {
     this.gaveta.set(null);
     this.router.navigate(['/administracao/auditoria'], { queryParams: { usuarioCpf: u.cpf } });
+  }
+
+  /** Derruba as sessões abertas da pessoa (ADR-0078) — computador esquecido logado, suspeita de uso indevido. */
+  protected encerrarSessoes(u: UsuarioResponseDto): void {
+    this.enviar(this.acessoService.encerrarSessoes(u.uuid), 'Sessões encerradas', `${u.nome} precisa entrar de novo`,
+      () => ({ tipo: 'usuario', usuarioId: u.uuid }));
   }
 
   protected desbloquear(u: UsuarioResponseDto): void {
