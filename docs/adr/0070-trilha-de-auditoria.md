@@ -96,7 +96,7 @@ por entidade)**
 **Negativas / pendências:**
 - **Fatia 2:** consulta, com tela, filtros e a aba "Quem acessou", e a permissão `AUDITORIA.CONSULTAR`,
   que nem o administrador da plataforma recebe por padrão.
-- Política de retenção e arquivamento da trilha (volume).
+- ~~Política de retenção e arquivamento da trilha (volume).~~ Retenção de 20 anos, configurável, pela [ADR-0082](./0082-exportacao-e-retencao-da-auditoria.md) — a única exceção à trilha que só cresce.
 - Antes e depois dos cadastros, só se surgir requisito.
 
 ## Referências

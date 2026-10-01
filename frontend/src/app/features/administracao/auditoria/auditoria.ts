@@ -44,6 +44,9 @@ export class Auditoria {
   protected readonly pagina = signal<PaginaAuditoriaResponseDto | null>(null);
   protected readonly carregando = signal(true);
   protected readonly erro = signal<string | null>(null);
+  protected readonly exportando = signal(false);
+  /** Prazo de guarda da trilha, em anos (0 = indefinido); null enquanto carrega (ADR-0082). */
+  protected readonly retencaoAnos = signal<number | null>(null);
   protected readonly pacientes = signal<PacienteResponseDto[]>([]);
   protected readonly selecionado = signal<EventoAuditoriaResponseDto | null>(null);
 
@@ -92,6 +95,7 @@ export class Auditoria {
     this.usuarioCpf.set(formatCpf(params.get('usuarioCpf') ?? ''));
     this.pacienteId.set(params.get('pacienteId') ?? '');
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
+    this.auditoriaService.politica().pipe(catchError(() => of(null))).subscribe((p) => this.retencaoAnos.set(p?.retencaoAnos ?? null));
     this.carregar();
   }
 
@@ -118,6 +122,47 @@ export class Auditoria {
           this.carregando.set(false);
           this.pagina.set(null);
           this.erro.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível consultar a auditoria.');
+        },
+      });
+  }
+
+  /**
+   * Baixa o filtro atual em CSV (ADR-0082). Com o filtro por paciente, é o relatório de acessos para atender o titular
+   * dos dados. A exportação também entra na trilha.
+   */
+  protected exportar(): void {
+    this.exportando.set(true);
+    this.erro.set(null);
+    this.auditoriaService
+      .exportar({
+        usuarioCpf: this.usuarioCpf().replace(/\D/g, ''),
+        pacienteId: this.pacienteId(),
+        acao: this.acao(),
+        resultado: this.resultado(),
+        desde: this.desde(),
+        ate: this.ate(),
+      })
+      .subscribe({
+        next: (r) => {
+          this.exportando.set(false);
+          const nome = /filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') ?? '')?.[1] ?? 'auditoria.csv';
+          const url = URL.createObjectURL(r.body ?? new Blob());
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = nome;
+          link.click();
+          URL.revokeObjectURL(url);
+        },
+        error: async (e: HttpErrorResponse) => {
+          this.exportando.set(false);
+          // O corpo do erro vem como Blob (a requisição pediu arquivo).
+          let mensagem = 'Não foi possível exportar a auditoria.';
+          try {
+            mensagem = (JSON.parse(await (e.error as Blob).text()) as ErrorResponseDto).message ?? mensagem;
+          } catch {
+            /* mantém a mensagem padrão */
+          }
+          this.erro.set(mensagem);
         },
       });
   }
