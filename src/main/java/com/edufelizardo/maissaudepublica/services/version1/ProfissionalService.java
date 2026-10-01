@@ -1,5 +1,15 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.models.Afastamento;
+import com.edufelizardo.maissaudepublica.models.Lotacao;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.QuadroProfissionalResponseDto;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusAfastamento;
+import com.edufelizardo.maissaudepublica.repositories.AfastamentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.LotacaoRepository;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.Endereco;
 import com.edufelizardo.maissaudepublica.models.Profissional;
@@ -34,6 +44,35 @@ public class ProfissionalService {
 
     @Autowired
     private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
+
+    @Autowired
+    private AfastamentoRepository afastamentoRepository;
+
+    @Autowired
+    private LotacaoRepository lotacaoRepository;
+
+    /**
+     * O quadro para a tela Profissionais (ADR-0072): cada profissional com a lotação vigente e o afastamento em
+     * curso hoje (aprovado ou em andamento). Três consultas no total, sem uma por profissional.
+     */
+    @Transactional(readOnly = true)
+    public List<QuadroProfissionalResponseDto> quadro() {
+        Map<UUID, Lotacao> lotacoes = new HashMap<>();
+        for (Lotacao l : lotacaoRepository.findVigentesComUnidadeECargo()) {
+            lotacoes.merge(l.getProfissional().getUuid(), l, (a, b) -> a.getDataInicio().isAfter(b.getDataInicio()) ? a : b);
+        }
+        Map<UUID, Afastamento> afastamentos = new HashMap<>();
+        for (Afastamento a : afastamentoRepository.findVigentesEm(LocalDate.now(),
+                List.of(StatusAfastamento.APROVADO, StatusAfastamento.EM_ANDAMENTO))) {
+            afastamentos.merge(a.getProfissional().getUuid(), a, (x, y) -> x.getDataFim().isAfter(y.getDataFim()) ? x : y);
+        }
+        return profissionalRepository.findAll().stream()
+                .sorted(Comparator.comparing(Profissional::getNome, String.CASE_INSENSITIVE_ORDER))
+                .map(p -> new QuadroProfissionalResponseDto(ProfissionalResponseDto.fromProfissional(p),
+                        lotacoes.containsKey(p.getUuid()) ? QuadroProfissionalResponseDto.LotacaoVigente.fromLotacao(lotacoes.get(p.getUuid())) : null,
+                        afastamentos.containsKey(p.getUuid()) ? QuadroProfissionalResponseDto.AfastamentoVigente.fromAfastamento(afastamentos.get(p.getUuid())) : null))
+                .toList();
+    }
 
     public List<ProfissionalResponseDto> getAll() {
         return profissionalRepository.findAll()

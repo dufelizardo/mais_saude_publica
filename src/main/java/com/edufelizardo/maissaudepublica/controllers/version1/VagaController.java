@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +35,7 @@ public class VagaController {
     @Autowired
     private VagaService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as vagas cadastradas", tags = "Vaga")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +54,7 @@ public class VagaController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma vaga pelo id", tags = "Vaga")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -63,6 +66,7 @@ public class VagaController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma vaga", tags = "Vaga")
     @ApiResponse(responseCode = "201", description = "Success:", content = {
@@ -82,6 +86,7 @@ public class VagaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza uma vaga",
             description = "Cobre tanto encerrar a vaga (mudar status) quanto corrigir título/descrição/quantidade — substitui os campos editáveis por inteiro.",

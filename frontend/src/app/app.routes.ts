@@ -1,69 +1,115 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Routes, Params, Router } from '@angular/router';
 import { LandingPage } from './features/landing/landing-page';
 import { ProfissionaisLista } from './features/profissionais-lista/profissionais-lista';
-import { ProfissionalCadastro } from './features/profissional-cadastro/profissional-cadastro';
-import { ProfissionalDesligar } from './features/profissional-desligar/profissional-desligar';
 import { ProfissionalPerfil } from './features/profissional-perfil/profissional-perfil';
-import { CategoriasSalariais } from './features/rh/categorias-salariais/categorias-salariais';
-import { Cargos } from './features/rh/cargos/cargos';
-import { CargoTabelaSalarial } from './features/rh/cargo-tabela-salarial/cargo-tabela-salarial';
-import { RegrasAnuenio } from './features/rh/regras-anuenio/regras-anuenio';
 import { FolhaPagamento } from './features/rh/folha-pagamento/folha-pagamento';
-import { Treinamentos } from './features/rh/treinamentos/treinamentos';
-import { CiclosAvaliacao } from './features/rh/ciclos-avaliacao/ciclos-avaliacao';
-import { Vagas } from './features/rh/vagas/vagas';
-import { VagaCandidatos } from './features/rh/vaga-candidatos/vaga-candidatos';
-import { TiposBeneficio } from './features/rh/tipos-beneficio/tipos-beneficio';
-import { TipoBeneficioValores } from './features/rh/tipo-beneficio-valores/tipo-beneficio-valores';
 import { Setores } from './features/administrativo/setores/setores';
-import { CapacidadesAdministrativas } from './features/administrativo/capacidades-administrativas/capacidades-administrativas';
-import { PerfisAdministrativos } from './features/administrativo/perfis-administrativos/perfis-administrativos';
-import { PerfisPorTipoUnidade } from './features/administrativo/perfis-por-tipo-unidade/perfis-por-tipo-unidade';
-import { ProcessosAdministrativos } from './features/administrativo/processos-administrativos/processos-administrativos';
-import { ResponsabilidadesAdministrativas } from './features/administrativo/responsabilidades-administrativas/responsabilidades-administrativas';
-import { NecessidadesDePessoal } from './features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal';
 import { Pacientes } from './features/assistencia/pacientes/pacientes';
 import { Atendimentos } from './features/assistencia/atendimentos/atendimentos';
-import { Agendamentos } from './features/assistencia/agendamentos/agendamentos';
-import { Consultas } from './features/assistencia/consultas/consultas';
-import { Procedimentos } from './features/assistencia/procedimentos/procedimentos';
-import { Prontuario } from './features/assistencia/prontuario/prontuario';
+import { Farmacia } from './features/assistencia/farmacia/farmacia';
 import { AppShell } from './shared/app-shell/app-shell';
+import { Login } from './features/auth/login/login';
+import { authGuard, trocaDeSenhaGuard } from './core/guards/auth-guard';
+import { TrocarSenha } from './features/auth/trocar-senha/trocar-senha';
 
 export const routes: Routes = [
   { path: '', component: LandingPage },
+  { path: 'login', component: Login },
+  { path: 'trocar-senha', component: TrocarSenha, canActivate: [trocaDeSenhaGuard] },
+  // Recuperação de senha por e-mail (ADR-0081): públicas, fora do AppShell.
+  { path: 'recuperar-senha', loadComponent: () => import('./features/auth/recuperar-senha/recuperar-senha').then((m) => m.RecuperarSenha) },
+  { path: 'redefinir-senha', loadComponent: () => import('./features/auth/redefinir-senha/redefinir-senha').then((m) => m.RedefinirSenha) },
   {
     path: '',
     component: AppShell,
+    canActivate: [authGuard],
     children: [
-      { path: 'profissionais', component: ProfissionaisLista, data: { breadcrumb: 'Profissionais', area: 'Recursos Humanos' } },
-      { path: 'profissionais/novo', component: ProfissionalCadastro, data: { breadcrumb: 'Cadastrar profissional', area: 'Recursos Humanos' } },
-      { path: 'profissionais/desligar', component: ProfissionalDesligar, data: { breadcrumb: 'Desligar profissional', area: 'Recursos Humanos' } },
+      { path: 'profissionais', component: ProfissionaisLista, data: { breadcrumb: 'Profissionais da Saúde', area: 'Recursos Humanos' } },
+      // Cadastro e desligamento viraram gavetas da tela Profissionais (ADR-0072).
+      { path: 'profissionais/novo', redirectTo: () => inject(Router).createUrlTree(['/profissionais'], { queryParams: { acao: 'novo' } }) },
+      {
+        path: 'profissionais/desligar',
+        redirectTo: ({ queryParams }) => inject(Router).createUrlTree(['/profissionais'], { queryParams: { acao: 'desligar', ...queryParams } }),
+      },
       { path: 'profissionais/perfil', component: ProfissionalPerfil, data: { breadcrumb: 'Perfil do profissional', area: 'Recursos Humanos' } },
-      { path: 'rh/categorias-salariais', component: CategoriasSalariais, data: { breadcrumb: 'Categorias salariais', area: 'Recursos Humanos' } },
-      { path: 'rh/cargos', component: Cargos, data: { breadcrumb: 'Cargos', area: 'Recursos Humanos' } },
-      { path: 'rh/cargos/:cargoId/tabela-salarial', component: CargoTabelaSalarial, data: { breadcrumb: 'Tabela salarial', area: 'Recursos Humanos' } },
-      { path: 'rh/regras-anuenio', component: RegrasAnuenio, data: { breadcrumb: 'Regras de anuênio', area: 'Recursos Humanos' } },
+      // Catálogos de RH agrupados em telas com abas (ADR-0073), carregadas sob demanda.
+      {
+        path: 'rh/cargos-e-salarios',
+        loadComponent: () => import('./features/rh/cargos-e-salarios/cargos-e-salarios').then((m) => m.CargosESalarios),
+        data: { breadcrumb: 'Cargos & salários', area: 'Recursos Humanos' },
+      },
+      {
+        path: 'rh/beneficios',
+        loadComponent: () => import('./features/rh/beneficios/beneficios').then((m) => m.Beneficios),
+        data: { breadcrumb: 'Benefícios', area: 'Recursos Humanos' },
+      },
+      {
+        path: 'rh/desenvolvimento',
+        loadComponent: () => import('./features/rh/desenvolvimento/desenvolvimento').then((m) => m.Desenvolvimento),
+        data: { breadcrumb: 'Desenvolvimento', area: 'Recursos Humanos' },
+      },
+      {
+        path: 'rh/recrutamento',
+        loadComponent: () => import('./features/rh/recrutamento/recrutamento').then((m) => m.Recrutamento),
+        data: { breadcrumb: 'Recrutamento', area: 'Recursos Humanos' },
+      },
       { path: 'rh/folha-pagamento', component: FolhaPagamento, data: { breadcrumb: 'Folha de pagamento', area: 'Recursos Humanos' } },
-      { path: 'rh/treinamentos', component: Treinamentos, data: { breadcrumb: 'Catálogo de treinamentos', area: 'Recursos Humanos' } },
-      { path: 'rh/ciclos-avaliacao', component: CiclosAvaliacao, data: { breadcrumb: 'Ciclos de avaliação', area: 'Recursos Humanos' } },
-      { path: 'rh/vagas', component: Vagas, data: { breadcrumb: 'Vagas', area: 'Recursos Humanos' } },
-      { path: 'rh/vagas/:vagaId/candidatos', component: VagaCandidatos, data: { breadcrumb: 'Candidatos', area: 'Recursos Humanos' } },
-      { path: 'rh/tipos-beneficio', component: TiposBeneficio, data: { breadcrumb: 'Tipos de benefício', area: 'Recursos Humanos' } },
-      { path: 'rh/tipos-beneficio/:tipoId/valores', component: TipoBeneficioValores, data: { breadcrumb: 'Valores do benefício', area: 'Recursos Humanos' } },
+      // Rotas antigas dos catálogos → a aba (ou a gaveta) certa na tela nova.
+      { path: 'rh/categorias-salariais', redirectTo: () => para('/rh/cargos-e-salarios', { aba: 'categorias' }) },
+      { path: 'rh/cargos', redirectTo: () => para('/rh/cargos-e-salarios', {}) },
+      { path: 'rh/cargos/:cargoId/tabela-salarial', redirectTo: ({ params }) => para('/rh/cargos-e-salarios', { cargo: params['cargoId'] }) },
+      { path: 'rh/regras-anuenio', redirectTo: () => para('/rh/cargos-e-salarios', { aba: 'anuenio' }) },
+      { path: 'rh/tipos-beneficio', redirectTo: () => para('/rh/beneficios', {}) },
+      { path: 'rh/tipos-beneficio/:tipoId/valores', redirectTo: ({ params }) => para('/rh/beneficios', { tipo: params['tipoId'] }) },
+      { path: 'rh/treinamentos', redirectTo: () => para('/rh/desenvolvimento', {}) },
+      { path: 'rh/ciclos-avaliacao', redirectTo: () => para('/rh/desenvolvimento', { aba: 'ciclos' }) },
+      { path: 'rh/vagas', redirectTo: () => para('/rh/recrutamento', {}) },
+      { path: 'rh/vagas/:vagaId/candidatos', redirectTo: ({ params }) => para('/rh/recrutamento', { vaga: params['vagaId'] }) },
       { path: 'administrativo/setores', component: Setores, data: { breadcrumb: 'Setores', area: 'Administrativo' } },
-      { path: 'administrativo/capacidades', component: CapacidadesAdministrativas, data: { breadcrumb: 'Capacidades administrativas', area: 'Administrativo' } },
-      { path: 'administrativo/perfis', component: PerfisAdministrativos, data: { breadcrumb: 'Perfis administrativos', area: 'Administrativo' } },
-      { path: 'administrativo/perfis-por-tipo-unidade', component: PerfisPorTipoUnidade, data: { breadcrumb: 'Perfil por tipo de unidade', area: 'Administrativo' } },
-      { path: 'administrativo/processos', component: ProcessosAdministrativos, data: { breadcrumb: 'Processos administrativos', area: 'Administrativo' } },
-      { path: 'administrativo/responsabilidades', component: ResponsabilidadesAdministrativas, data: { breadcrumb: 'Responsabilidades administrativas', area: 'Administrativo' } },
-      { path: 'administrativo/necessidades-de-pessoal', component: NecessidadesDePessoal, data: { breadcrumb: 'Necessidades de pessoal', area: 'Administrativo' } },
+      {
+        path: 'administrativo/modelo',
+        loadComponent: () => import('./features/administrativo/modelo-administrativo/modelo-administrativo').then((m) => m.ModeloAdministrativo),
+        data: { breadcrumb: 'Modelo administrativo', area: 'Administrativo' },
+      },
+      {
+        path: 'administrativo/necessidades-de-pessoal',
+        loadComponent: () => import('./features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal').then((m) => m.NecessidadesDePessoal),
+        data: { breadcrumb: 'Necessidades de pessoal', area: 'Administrativo' },
+      },
+      // Telas antigas do Administrativo → a aba certa nas telas agrupadas (ADR-0074).
+      { path: 'administrativo/responsabilidades', redirectTo: ({ queryParams }) => para('/administrativo/setores', { ...queryParams, aba: 'responsabilidades' }) },
+      { path: 'administrativo/capacidades', redirectTo: () => para('/administrativo/modelo', { aba: 'capacidades' }) },
+      { path: 'administrativo/processos', redirectTo: () => para('/administrativo/modelo', { aba: 'processos' }) },
+      { path: 'administrativo/perfis', redirectTo: () => para('/administrativo/modelo', { aba: 'perfis' }) },
+      { path: 'administrativo/perfis-por-tipo-unidade', redirectTo: () => para('/administrativo/modelo', { aba: 'tipos' }) },
       { path: 'assistencia/pacientes', component: Pacientes, data: { breadcrumb: 'Pacientes', area: 'Assistência' } },
       { path: 'assistencia/atendimentos', component: Atendimentos, data: { breadcrumb: 'Atendimentos', area: 'Assistência' } },
-      { path: 'assistencia/agendamentos', component: Agendamentos, data: { breadcrumb: 'Agendamentos', area: 'Assistência' } },
-      { path: 'assistencia/consultas', component: Consultas, data: { breadcrumb: 'Consultas', area: 'Assistência' } },
-      { path: 'assistencia/procedimentos', component: Procedimentos, data: { breadcrumb: 'Procedimentos', area: 'Assistência' } },
-      { path: 'assistencia/prontuario', component: Prontuario, data: { breadcrumb: 'Prontuário', area: 'Assistência' } },
+      // Agendamentos, Consultas, Procedimentos e Prontuário viraram abas/seções da tela Atendimentos (ADR-0063).
+      { path: 'assistencia/agendamentos', redirectTo: ({ queryParams }) => paraAtendimentos('ag', queryParams) },
+      { path: 'assistencia/consultas', redirectTo: ({ queryParams }) => paraAtendimentos('atend', queryParams) },
+      { path: 'assistencia/procedimentos', redirectTo: ({ queryParams }) => paraAtendimentos('atend', queryParams) },
+      { path: 'assistencia/prontuario', redirectTo: ({ queryParams }) => paraAtendimentos('pront', queryParams) },
+      { path: 'assistencia/farmacia', component: Farmacia, data: { breadcrumb: 'Farmácia', area: 'Assistência' } },
+      {
+        path: 'administracao/usuarios',
+        // Sob demanda: tela de administração, fora do bundle inicial (orçamento de 1 MB).
+        loadComponent: () => import('./features/administracao/usuarios/usuarios').then((m) => m.Usuarios),
+        data: { breadcrumb: 'Usuários & Perfis', area: 'Administração' },
+      },
+      {
+        path: 'administracao/auditoria',
+        loadComponent: () => import('./features/administracao/auditoria/auditoria').then((m) => m.Auditoria),
+        data: { breadcrumb: 'Auditoria', area: 'Administração' },
+      },
     ],
   },
 ];
+
+function para(caminho: string, queryParams: Params) {
+  return inject(Router).createUrlTree([caminho], { queryParams });
+}
+
+function paraAtendimentos(aba: string, queryParams: Params) {
+  return inject(Router).createUrlTree(['/assistencia/atendimentos'], { queryParams: { ...queryParams, aba } });
+}

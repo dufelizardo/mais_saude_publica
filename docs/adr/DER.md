@@ -188,11 +188,19 @@
 
 ### 1. **USUARIO** (Tabela Base de Autenticação) — ⚠️ SUPERSEDIDA
 
-> Nenhuma entidade `Usuario` foi criada. A ADR-0006 (JWT/autenticação) segue "Proposta", adiada
-> conscientemente mesmo para o domínio clínico (ver ADR-0039) — RH e Administrativo inteiros foram
-> construídos sem nenhuma autenticação, e a próxima onda (Paciente/Atendimento) segue o mesmo
-> padrão por decisão explícita. Esta tabela fica como registro da proposta original, não como algo
-> a implementar na próxima onda.
+> Nenhuma entidade `Usuario` foi criada. A ADR-0006 (JWT/autenticação) segue adiada conscientemente
+> mesmo para o domínio clínico (ver ADR-0039) — RH e Administrativo inteiros foram construídos sem
+> nenhuma autenticação, e a próxima onda (Paciente/Atendimento) seguiu o mesmo padrão por decisão
+> explícita. Esta tabela (com a coluna `roles` de 4 valores fixos) fica como registro da proposta
+> **original**, substituída pelo modelo de `Papel`/`Permissao`/`Escopo` da
+> [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md) — ver o esboço expandido em
+> "Identidade e Acesso" no apêndice.
+>
+> **Atualização:** `Usuario` foi implementado pela ADR-0055 (`TB_USUARIO`: cpf único, nome, senhaHash, ativo,
+> tentativasFalhas, bloqueadoAte, ultimoAcessoEm — sem coluna de roles), e o acesso pela ADR-0066:
+> `TB_PERMISSAO` (codigo, descricao, dimensao), `TB_PAPEL` (codigo, nome, descricao, ativo) com `TB_PAPEL_PERMISSAO`,
+> e `TB_ATRIBUICAO_ACESSO` (usuario_id, papel_id, unidade_id nulo = rede inteira, inicio, fim, concedidoEm/PorCpf,
+> revogadoEm/PorCpf, motivoRevogacao).
 
 Armazena as credenciais e perfis de acesso ao sistema.
 
@@ -530,6 +538,16 @@ Notificações para usuários do sistema.
 ---
 
 ### 15. **AUDITORIA**
+
+> Esboço original, ainda compatível com o modelo adotado pela
+> [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md) — ver a versão enriquecida
+> (unidade/contexto) em "Auditoria" no apêndice.
+>
+> **Atualização:** implementada pela [ADR-0070](./0070-trilha-de-auditoria.md) como `TB_EVENTO_AUDITORIA`
+> (ocorridoEm, usuarioCpf, acao, resultado, recurso, metodo, rota, statusHttp, registroId, pacienteId, unidadeId,
+> origemIp, detalhe). Sem FK para usuário (guarda o CPF, inclusive o tentado num login recusado) e **sem**
+> valores antes/depois: os registros clínicos já são imutáveis (ADR-0062).
+
 Log de auditoria de ações no sistema.
 
 | **Campo** | **Tipo** | **Descrição** | **Restrições** |
@@ -681,10 +699,29 @@ clínico** (anexos — depende de o domínio transversal "Documentos", ver apên
 > completo quando a onda de cada domínio de fato chegar e merecer sua própria conversa (mesma
 > disciplina de "incrementos pequenos e discutidos" de RH/Administrativo). Nenhum destes vira ADR
 > agora — só quando houver uma decisão real com trade-off para registrar (ver ADR-0039).
+>
+> **2026-09-26**: o levantamento de equipamentos de saúde do usuário
+> ([`docs/pm/sistema_de_saude_brasileiro.md`](../pm/sistema_de_saude_brasileiro.md), reconciliado em
+> [`MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`](../MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md) e
+> [ADR-0053](./0053-criterio-de-governanca-para-equipamentos-de-saude.md)) identificou estruturas
+> que se relacionam com alguns dos domínios abaixo (anotadas na própria seção do domínio) e outras
+> sem nenhum domínio correspondente ainda, reunidas na nova subseção
+> "Equipamentos ainda sem domínio próprio" ao final deste apêndice.
 
 ### Enfermagem (#8)
 
 Processos de enfermagem, com peso maior em UPA/Hospital que em UBS.
+
+> **`Triagem` e `EvolucaoDeEnfermagem` já foram reconciliadas e implementadas** — ver
+> [ADR-0047](./0047-triagem-primeira-entidade-da-enfermagem.md) e
+> [ADR-0048](./0048-evolucao-de-enfermagem-segunda-entidade-da-enfermagem.md). O fluxo abaixo
+> (Triagem antes do Atendimento) é o esboço original, **não** o que foi implementado: na versão
+> real, `Triagem` e `EvolucaoEnfermagem` (implementada sem o "De" no nome da classe) são filhas de
+> `Atendimento` (mesmo papel estrutural de `Consulta`), `classificacaoRisco` é um campo enum na
+> própria `Triagem` (não uma entidade `ClassificacaoDeRisco` separada), e `EvolucaoEnfermagem` tem
+> só um campo `descricao` de texto livre (sem estruturação SOAP). `AdministracaoDeMedicamento`
+> (depende de Farmácia, #9, ainda não iniciado), `Cuidado` e `Escala` continuam como esboço, não
+> implementados.
 
 - `Triagem` — pressão, temperatura, saturação, frequência cardíaca, peso.
 - `ClassificacaoDeRisco` — resultado da triagem.
@@ -694,10 +731,45 @@ Processos de enfermagem, com peso maior em UPA/Hospital que em UBS.
 Paciente → Triagem (sinais vitais) → Classificação de risco → Atendimento médico/enfermagem
 ```
 
+> **Registros clínicos imutáveis** ([ADR-0062](./0062-registros-clinicos-imutaveis-com-retificacao.md)): `Triagem`, `EvolucaoEnfermagem`, `Consulta` e `Procedimento` ganham `retificacaoDe` (auto-referência à versão que corrigem), `motivoRetificacao`, `registradoEm` e `registradoPorCpf`; `Procedimento` guarda também o desfecho (`dataPrevista`, `statusAlteradoEm`, `profissionalStatus`, `justificativaStatus`).
+
+> **`AdministracaoMedicamento` implementada** ([ADR-0064](./0064-administracao-de-medicamento-enfermagem-e-farmacia.md)): FKs a `Atendimento`, `Consulta` (a prescrição), `Medicamento`, `Lote` (opcional) e `Profissional`; `situacao`, dose, via, quantidade, motivo de não administração e os campos de retificação da ADR-0062. `MovimentacaoFarmacia.administracao` liga a baixa (`ADMINISTRACAO`) e o estorno (`ADMINISTRACAO_ESTORNO`) à checagem.
+
 ### Farmácia (#9)
 
 Medicamentos e dispensação — regras próprias, deliberadamente **separado de Estoque** (#13):
 medicamento tem lote/validade/controle de dispensação que material de almoxarifado não tem.
+
+> **`Medicamento`, `Lote` e `Dispensacao` já foram implementados** — ver
+> [ADR-0049](./0049-medicamento-primeira-entidade-da-farmacia.md),
+> [ADR-0050](./0050-lote-segunda-entidade-da-farmacia.md) e
+> [ADR-0051](./0051-dispensacao-terceira-entidade-da-farmacia.md). `Lote` referencia `Medicamento` e
+> `UnidadeDeSaude` (estoque rastreado por unidade, não um estoque único da rede). `Dispensacao`
+> referencia `Lote`/`Paciente`/`Profissional` (e opcionalmente `Consulta`), é **create-only** (sem
+> PATCH — histórico imutável) e debita `Lote.quantidade` como efeito colateral do create.
+>
+> **`MovimentacaoFarmacia` também foi implementada** — ver
+> [ADR-0057](./0057-livro-de-movimentacao-do-estoque-da-farmacia.md). É o livro imutável de cada
+> `Lote` (FK obrigatória), com FKs opcionais a `Profissional` e `Dispensacao`; tipos `SALDO_INICIAL`,
+> `ENTRADA`, `DISPENSACAO`, `PERDA` (com `MotivoPerda`) e `AJUSTE_INVENTARIO`, variação com sinal e
+> `saldoApos`. `Perda` e `InventarioFarmacia` deixaram de ser entidades candidatas — viraram tipos de
+> lançamento. `Lote.quantidade` continua existindo como saldo atual, mas só muda pelo livro (revisão
+> da simplificação "contador simples" da ADR-0050).
+>
+> **`TransferenciaFarmacia` também foi implementada** (o esboço `TransferenciaEntreUnidades`) — ver
+> [ADR-0059](./0059-transferencia-de-estoque-entre-unidades.md). FKs obrigatórias a `Lote` (origem e
+> destino) e `Profissional`; gera dois lançamentos no livro (`TRANSFERENCIA_SAIDA` e
+> `TRANSFERENCIA_ENTRADA`), ligados a ela por `MovimentacaoFarmacia.transferencia`. O lote de destino é
+> o da mesma remessa (medicamento, número, validade) na unidade de destino. Desde a
+> [ADR-0061](./0061-transferencia-em-duas-etapas-envio-e-recebimento.md), em duas etapas: `status`
+> (`EM_TRANSITO`, `RECEBIDA`, `RECEBIDA_COM_DIVERGENCIA`, `CANCELADA`), `unidadeDestino` desde o envio,
+> `loteDestino` só no recebimento, e dados de recebimento (quantidade, divergência, profissional) e de
+> cancelamento (motivo, profissional) — com `TRANSFERENCIA_ESTORNO` no livro ao cancelar.
+>
+> **Uma remessa, um lote ativo por unidade** ([ADR-0060](./0060-uma-remessa-um-lote-por-unidade.md)):
+> `Lote.loteIncorporador` (auto-referência, opcional) e `incorporadoEm` marcam um lote duplicado
+> incorporado a outro; índice único parcial em (medicamento, unidade, número, validade) para lotes
+> não incorporados.
 
 - `Medicamento`, `Lote` (validade, quantidade), `Dispensacao`, `MovimentacaoFarmacia`,
   `TransferenciaEntreUnidades`, `Perda`, `InventarioFarmacia`.
@@ -716,6 +788,14 @@ Atendimento → Solicitação de exame → Agendamento/Coleta → Amostra
   → Laboratório → Resultado → Laudo → Prontuário (agregação)
 ```
 
+> **Nota (2026-09-26, do levantamento de equipamentos)**: este esboço cobre o laboratório
+> **assistencial** (o que hoje mapeia para `TipoUnidadeDeSaude.LABORATORIO`, ADR-0031). O
+> **LACEN**/Laboratório de Saúde Pública é uma função distinta — vigilância laboratorial,
+> investigação de surto, apoio epidemiológico — não um "laboratório municipal que faz mais exames".
+> Ver `MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md` §3.2. Sem entidade candidata própria ainda; quando este
+> domínio for desenhado de verdade, decidir se LACEN é uma especialização de Laboratório ou um
+> domínio de Vigilância à parte.
+
 ### Regulação (#11)
 
 Conecta a rede inteira, não uma unidade só — coordena acesso a serviço que não está disponível na
@@ -729,6 +809,12 @@ UBS → Solicitação (ex.: cardiologia) → Regulação → Fila
 
 UPA → Solicitação de internação → Regulação → Hospital
 ```
+
+> **Nota (2026-09-26, do levantamento de equipamentos)**: o levantamento distingue **Central de
+> Regulação Médica das Urgências** (despacha SAMU) de **Central de Regulação do Acesso** (fila para
+> especialista/internação eletiva) como estruturas separadas no CNES — hoje este esboço não
+> distingue as duas. `SAMU 192` depende desta Central para despacho — ver `MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`
+> §3.2 e §3.4.
 
 ### Gestão de Leitos e Internação (#12)
 
@@ -766,6 +852,10 @@ Almoxarifado Central
  └── Hospital A
 ```
 
+> **Nota (2026-09-26, do levantamento de equipamentos)**: a **Central de Abastecimento** do
+> levantamento do usuário corresponde ao "Almoxarifado Central" já esboçado acima — mesmo conceito,
+> nomes diferentes. Ver `MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md` §3.2.
+
 ### Compras, Contratos e Fornecedores (#14)
 
 - `Fornecedor`, `SolicitacaoCompra`, `Cotacao`, `Contrato`, `ItemContratado`, `Entrega`,
@@ -797,6 +887,12 @@ UPA → Solicitação de transferência → Regulação → Ambulância → Hosp
 Integrações: RH → motorista; Patrimônio → veículo; Paciente → passageiro; Atendimento → motivo;
 Regulação → necessidade.
 
+> **Nota (2026-09-26, do levantamento de equipamentos)**: **SAMU 192** é o serviço/rede de
+> atendimento pré-hospitalar móvel que opera as ambulâncias deste domínio — regulado pela Central de
+> Regulação Médica das Urgências (#11). O levantamento é explícito: `SAMU` é serviço/rede,
+> `Ambulância` é recurso móvel — nenhum dos dois deve virar `UnidadeDeSaude`. Ver
+> `MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md` §3.4.
+
 ### Financeiro (#17)
 
 - `Orcamento`, `Empenho`, `Despesa`, `Receita`, `Pagamento`, `CentroDeCusto`,
@@ -823,10 +919,12 @@ Não conformidade → Análise → Plano de ação → Execução → Verificaç
 
 Já esboçada como entidade `AUDITORIA` na proposta original (seção 15 acima) — mantida como
 referência, com o entendimento de que roda **transversalmente** a todos os domínios, não só ao
-clínico: `EventoDeAuditoria` (ação, entidade, entidade_id, dados_anteriores, dados_novos, ip,
-usuário, data/hora). Perguntas que deve responder: quem alterou a lotação, quem dispensou o
-medicamento, quem alterou o resultado do exame, quem aprovou a compra, quem autorizou a
-transferência.
+clínico. Enriquecida pela [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md)
+(2026-09-26, origem [`docs/pm/sistema_de_acesso.md`](../pm/sistema_de_acesso.md)) com unidade/contexto
+organizacional: `EventoAuditoria` (usuário, ação, recurso/entidade, entidade_id, unidade/contexto,
+dados_anteriores, dados_novos — quando a ação for uma alteração —, ip, data/hora). Perguntas que
+deve responder: quem alterou a lotação, quem dispensou o medicamento, quem alterou o resultado do
+exame, quem aprovou a compra, quem autorizou a transferência, a partir de qual unidade.
 
 ### Indicadores, BI e Gestão (#19)
 
@@ -839,17 +937,48 @@ médica.
 
 ### Identidade e Acesso (#20, parte)
 
-- `Usuario`, `Perfil`, `Papel`, `Permissao`, com escopo por `Unidade`/`Setor` — controle de acesso
-  **por contexto organizacional**, não só por papel global:
+> **Modelo decidido pela [ADR-0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md)**
+> (2026-09-26), substituindo o esboço curto anterior — implementação continua adiada por decisão
+> explícita (ADR-0039/ADR-0006), revisitar antes de produção com dado real de paciente. Origem:
+> [`docs/pm/sistema_de_acesso.md`](../pm/sistema_de_acesso.md).
+
+- `Usuario` — identidade digital (login, credencial, status), separada de `Profissional` (RH) e
+  `Paciente` (Assistência); vínculo fraco opcional por CPF/uuid, mesmo mecanismo da ADR-0014.
+- `Credencial` — dados de autenticação do `Usuario` (hash de senha, ou futura integração externa).
+- `Papel` — agrupamento nomeado de `Permissao` (catálogo como dado, mesmo padrão da
+  `CapacidadeAdministrativa`/ADR-0032, não enum Java).
+- `Permissao` — granular, formato `RECURSO.ACAO` (ex.: `PRONTUARIO.CONSULTAR`,
+  `FARMACIA.DISPENSAR`).
+- `EscopoAcesso` — reaproveita a hierarquia organizacional já implementada (`UnidadeDeSaude` de 5
+  níveis, `Setor`), sem hierarquia de escopo nova.
+- `AtribuicaoAcesso` — liga `Usuario + Papel + EscopoAcesso`, com período de validade opcional
+  (`inicio`/`fim` nullable, para acesso temporário — ex.: plantonista).
+- `AdministradorPlataforma` — identidade de bootstrap, fora do fluxo normal de concessão de papel;
+  a partir dela nascem administradores municipais/regionais/de unidade, descentralizando a
+  administração.
 
 ```text
-Usuário
- ├── Unidade A → Administração
- └── Unidade B → Enfermagem
+Usuario
+   │
+   ├── AtribuicaoAcesso
+   │       │
+   │       ├── Papel
+   │       │       └── Permissoes
+   │       │
+   │       └── EscopoAcesso (Unidade/Setor, com herança pela hierarquia)
+   │
+   └── EventoAuditoria
+
+Bootstrap:
+Sistema instalado → AdministradorPlataforma → configura organização
+  → cria unidades → cria administradores municipais/regionais/de unidade
+  → administração passa a ser descentralizada
 ```
 
-Adiado por decisão explícita (ADR-0039/ADR-0006) — revisitar antes de produção com dado real de
-paciente.
+Regra de governança (não mecanismo técnico, ver ADR-0054): ninguém concede papel/escopo acima do
+próprio nível de autoridade. `Cargo` (RH) permanece explicitamente distinto de `Papel` (Segurança) —
+mesma disciplina de bounded context da ADR-0034. Pendência aberta, não decidida: se o acesso a dado
+clínico será só por papel/escopo, ou também por regra contextual (ex.: vínculo assistencial ativo).
 
 ### Integrações Externas (#20, parte)
 
@@ -879,3 +1008,30 @@ Auditoria → Documento
 Compra → Documento
 Unidade → Documento
 ```
+
+### Equipamentos ainda sem domínio próprio (do levantamento de equipamentos de saúde)
+
+> Mesma disciplina do restante do apêndice: **não implementado, não decidido**. Estes equipamentos,
+> do levantamento em [`docs/pm/sistema_de_saude_brasileiro.md`](../pm/sistema_de_saude_brasileiro.md)
+> e reconciliados em [`MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`](../MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md), não
+> correspondem a nenhum dos 20 domínios já listados na seção 3 de `MAPA-DE-DOMINIOS.md` — cada um só
+> ganha número de domínio, entidades desenhadas de verdade e (se houver trade-off real) sua própria
+> ADR quando uma onda futura de fato o priorizar (ADR-0039 decisão 8). Formato compacto (sem
+> diagrama de fluxo por item) dado o volume — ver o mapa de equipamentos para função/público/papel
+> na rede de cada um.
+
+| Equipamento | Entidades candidatas (esboço) | Observação |
+|---|---|---|
+| Hemoterapia / Hemocentro | `Doador`, `ColetaSangue`, `Hemocomponente`, `TesteCompatibilidade`, `Transfusao` | Suporte à rede hospitalar; poderia compartilhar `Lote`/rastreabilidade com Farmácia (#9), a decidir quando desenhado |
+| Saúde Indígena (DSEI / Polo Base / UBSI / CASAI) | `DistritoSanitarioIndigena`, `PoloBase`, `Uni­dadeSaudeIndigena`, `CasaDeApoio` | Estrutura territorial própria do SasiSUS — o levantamento explicitamente recomenda não forçar encaixe em UBS/UPA/Hospital existentes |
+| Telessaúde | `Teleconsulta`, `SegundaOpiniao`, `SessaoEducacaoPermanente` | Serviço de apoio remoto a profissionais, não atendimento direto ao paciente |
+| Central de Transplantes | `PotencialDoador`, `ListaDeEspera`, `Compatibilidade`, `CaptacaoOrgao` | Coordenação entre hospitais; depende de Regulação (#11) para fila/prioridade |
+| Serviço de Verificação de Óbito (SVO) | `VerificacaoObito` | Alimenta indicadores de mortalidade/vigilância (#19) |
+| CEREST | `CasoSaudeTrabalhador`, `InvestigacaoAgravoTrabalho` | Assistência + vigilância + referência técnica — não é só clínica |
+| Unidade de Vigilância de Zoonoses (UVZ) | `NotificacaoZoonose`, `ControleDeVetor` | Vigilância, não clínica veterinária |
+| Oficina Ortopédica | `OrteseProtese`, `Confeccao`, `Manutencao` | Ligada à Reabilitação (`TipoUnidadeDeSaude.CENTRO_REABILITACAO`, já implementado) |
+| Unidades móveis (terrestre/fluvial/pré-hospitalar) | *(nenhuma nova — modalidade de uma unidade existente)* | O levantamento recomenda modelar como `modalidade = MOVEL` em uma unidade já existente, não uma entidade própria |
+| Maternidade / Centro de Parto Normal | `Parto`, `AssistenciaObstetrica`, `CuidadoNeonatal` | Especialização de Hospital (perfil obstétrico/neonatal) ou estrutura própria — não decidido |
+| Serviço de Atenção Domiciliar (SAD) | `PlanoDeCuidadoDomiciliar`, `VisitaDomiciliar`, `EquipeEMAD`, `EquipeEMAP` | Desospitalização — depende de Hospital/Atendimento como origem |
+| Academia da Saúde / Consultório na Rua | *(nenhuma nova — serviço/equipe da APS)* | O levantamento os trata como serviços/equipes vinculados à APS, não novos tipos de unidade |
+| Centro de Imunização | `CampanhaVacinacao`, `RegistroImunobiologico` | Pode existir dentro de uma UBS ou como estrutura própria — o próprio levantamento nota que "serviço não precisa necessariamente ser uma UnidadeDeSaude independente" |

@@ -38,6 +38,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Versao exibida no frontend (rodape do Login, landing page), gravada na imagem como
+      # /version.json. Fonte: <version> do pom.xml (ver VERSIONING.md). Em main e a propria release;
+      # nas demais branches ganha metadado de build (SemVer "+"), que nao implica ordem - deixa
+      # claro que aquele codigo ainda nao e uma release publicada.
+      - name: Determinar a versao exibida
+        id: versao
+        run: |
+          POM=$(sed -n '/<artifactId>mais_saude_publica<\/artifactId>/{n;s/.*<version>\(.*\)<\/version>.*/\1/p}' pom.xml)
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "app=${POM}" >> "$GITHUB_OUTPUT"
+          else
+            echo "app=${POM}+${{ github.ref_name }}.${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -53,6 +67,8 @@ jobs:
         with:
           context: ${{ matrix.context }}
           push: true
+          build-args: |
+            APP_VERSION=${{ steps.versao.outputs.app }}
           tags: |
             ghcr.io/dufelizardo/${{ matrix.image }}:${{ github.ref_name }}
             ghcr.io/dufelizardo/${{ matrix.image }}:${{ github.sha }}
@@ -109,4 +125,30 @@ jobs:
             # workflow.
             git commit -m "chore: pin ${{ github.ref_name }} a ${{ github.sha }}"
             git push origin HEAD:${{ github.ref_name }}
+          fi
+
+  # Release automatica (ver VERSIONING.md): quando um pom.xml com versao nova chega em main, cria a
+  # tag vX.Y.Z e a release no GitHub, com notas geradas a partir dos PRs (.github/release.yml). Se
+  # a versao do pom.xml ja tem release, nao cria nada - so avisa, porque provavelmente alguem
+  # promoveu codigo novo para main sem incrementar a versao.
+  release:
+    needs: publish
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Criar a release da versao do pom.xml, se ainda nao existir
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSAO=$(sed -n '/<artifactId>mais_saude_publica<\/artifactId>/{n;s/.*<version>\(.*\)<\/version>.*/\1/p}' pom.xml)
+          if gh release view "v${VERSAO}" > /dev/null 2>&1; then
+            echo "::warning::A versao ${VERSAO} do pom.xml ja tem release - nenhuma release nova criada. Se este push traz codigo novo, incremente <version> no pom.xml (ver VERSIONING.md)."
+          else
+            gh release create "v${VERSAO}" --target "${{ github.sha }}" --title "v${VERSAO}" --generate-notes
           fi

@@ -21,6 +21,10 @@ export class PacienteService {
     return this.http.get<PacienteResponseDto[]>(`${this.baseUrl}/cpf/${cpf}`);
   }
 
+  buscarPorCartaoSus(cartaoSus: string): Observable<PacienteResponseDto[]> {
+    return this.http.get<PacienteResponseDto[]>(`${this.baseUrl}/cartao-sus/${cartaoSus}`);
+  }
+
   criar(dto: PacienteRequestDto): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/`, dto);
   }

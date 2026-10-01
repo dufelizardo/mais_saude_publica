@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -31,6 +32,7 @@ public class FolhaPagamentoController {
     @Autowired
     private FolhaPagamentoService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "competencia", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as folhas de pagamento de todos os profissionais numa competência",
             description = "Competência via query param (não path, o formato MM/AAAA tem barra) — ex.: ?valor=09/2026. Lista vazia (200) se ninguém foi processado ainda nessa competência, não é erro.",
@@ -46,6 +48,7 @@ public class FolhaPagamentoController {
         return ResponseEntity.ok(service.listarPorCompetencia(valor));
     }
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de folhas de pagamento de um profissional", tags = "FolhaPagamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -60,6 +63,7 @@ public class FolhaPagamentoController {
         return ResponseEntity.ok(service.listarHistorico(matricula));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra uma folha de pagamento",
             description = "Os valores são informados — não calculados pelo sistema. No máximo uma folha por profissional por competência (409 na segunda tentativa).",

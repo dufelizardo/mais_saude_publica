@@ -1,5 +1,8 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.AuditarLeitura;
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetificacaoConsultaRequestDto;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +37,7 @@ public class ConsultaController {
     @Autowired
     private ConsultaService service;
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as consultas cadastradas", tags = "Consulta")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +56,8 @@ public class ConsultaController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
+    @AuditarLeitura
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma consulta pelo id", tags = "Consulta")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -63,6 +69,7 @@ public class ConsultaController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"CONSULTA.REGISTRAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma consulta",
             description = "Registra uma consulta realizada durante um atendimento, com um profissional (por matrícula, ver ADR-0034).",
@@ -84,24 +91,27 @@ public class ConsultaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
-    @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atualiza uma consulta",
-            description = "Substitui os campos editáveis por inteiro — cobre corrigir diagnóstico, receituário, exames solicitados e retorno.",
+    @RequerPermissao({"CONSULTA.REGISTRAR"})
+    @PostMapping(value = "{uuid}/retificacao", produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Retifica uma consulta",
+            description = "Registro clínico não é editado (ADR-0062): a retificação grava uma nova versão com os campos "
+                    + "corrigidos e o motivo, ligada à anterior, que continua no prontuário. Só a versão vigente pode ser "
+                    + "retificada (422); o atendimento precisa ser o mesmo do registro original (400).",
             tags = "Consulta")
-    @ApiResponse(responseCode = "200", description = "Success:", content = {
+    @ApiResponse(responseCode = "201", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
                     schema = @Schema(implementation = SuccessResponseDto.class)
             ), examples = @ExampleObject(name = "Success",
                     summary = "SuccessResponse",
-                    value = ExampleConstants.SUCCESS_RESPONSE_UPDATE_EXAMPLE))
+                    value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
     })
     @ApiErrorResponsesMutacao
-    public ResponseEntity<SuccessResponseDto> update(@PathVariable UUID uuid, @Valid @RequestBody ConsultaRequestDto dto) {
-        ConsultaResponseDto responseDto = service.atualizar(uuid, dto);
+    public ResponseEntity<SuccessResponseDto> retificar(@PathVariable UUID uuid,
+                                                        @Valid @RequestBody RetificacaoConsultaRequestDto dto) {
+        ConsultaResponseDto responseDto = service.retificar(uuid, dto);
 
-        String successMessage = "Consulta atualizada com sucesso!";
-        String details = "Tipo: " + responseDto.getTipoConsulta();
-
-        return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
+        String details = "Nova versão: " + responseDto.getUuid() + ", Corrige: " + responseDto.getRetificacaoDeUuid();
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto("Consulta retificada com sucesso!", details));
     }
 }

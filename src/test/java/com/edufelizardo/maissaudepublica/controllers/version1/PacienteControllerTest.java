@@ -87,6 +87,26 @@ class PacienteControllerTest {
     }
 
     @Test
+    void deveRegistrarDataDeCadastroQueNaoMudaNaEdicao() throws Exception {
+        String cpf = PREFIXO_CPF_TESTE + "20";
+        java.util.UUID uuid = criarPaciente(cpf, "Paciente Data Cadastro", "700000000000020");
+
+        java.time.Instant dataCadastro = pacienteRepository.findById(uuid).orElseThrow().getDataCadastro();
+        assertThat(dataCadastro).isNotNull();
+
+        mockMvc.perform(get(BASE_URL + uuid))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dataCadastro").isNotEmpty());
+
+        mockMvc.perform(patch(BASE_URL + uuid)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoPaciente(cpf, "Paciente Data Cadastro Editado", "700000000000020", true)))
+                .andExpect(status().isOk());
+
+        assertThat(pacienteRepository.findById(uuid).orElseThrow().getDataCadastro()).isEqualTo(dataCadastro);
+    }
+
+    @Test
     void deveCriarComSucesso() throws Exception {
         String cpf = PREFIXO_CPF_TESTE + "01";
         String nome = "Paciente Criação";

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.Endereco;
 import com.edufelizardo.maissaudepublica.models.Paciente;
@@ -28,11 +29,13 @@ public class PacienteService {
     public PacienteResponseDto criar(PacienteRequestDto dto) {
         Paciente paciente = new Paciente(dto);
         paciente = pacienteRepository.save(paciente);
+        ContextoAuditoria.paciente(paciente.getUuid());
         return PacienteResponseDto.fromPaciente(paciente);
     }
 
     public PacienteResponseDto atualizar(UUID uuid, PacienteRequestDto dto) {
         Paciente paciente = buscarEntidadePorId(uuid);
+        ContextoAuditoria.paciente(paciente.getUuid());
         paciente.setNome(dto.getNome());
         paciente.setCpf(dto.getCpf());
         paciente.setCartaoSus(dto.getCartaoSus());
@@ -54,7 +57,9 @@ public class PacienteService {
     }
 
     public PacienteResponseDto buscarPorId(UUID uuid) {
-        return PacienteResponseDto.fromPaciente(buscarEntidadePorId(uuid));
+        Paciente paciente = buscarEntidadePorId(uuid);
+        ContextoAuditoria.paciente(paciente.getUuid());
+        return PacienteResponseDto.fromPaciente(paciente);
     }
 
     public List<PacienteResponseDto> buscarPorCpf(String cpf) {
@@ -65,6 +70,9 @@ public class PacienteService {
         if (encontrados.isEmpty()) {
             throw new ResourceNotFoundException(
                     "Não foi possível encontrar um paciente com o CPF " + cpf + " em nossos registros.");
+        }
+        if (encontrados.size() == 1) {
+            ContextoAuditoria.paciente(encontrados.get(0).getUuid());
         }
         return encontrados;
     }
@@ -77,6 +85,9 @@ public class PacienteService {
         if (encontrados.isEmpty()) {
             throw new ResourceNotFoundException(
                     "Não foi possível encontrar um paciente com o cartão SUS " + cartaoSus + " em nossos registros.");
+        }
+        if (encontrados.size() == 1) {
+            ContextoAuditoria.paciente(encontrados.get(0).getUuid());
         }
         return encontrados;
     }

@@ -120,7 +120,8 @@ jobs:
       - name: Rodar suíte Robot Framework
         env:
           MSP_HOST_URL: http://localhost:8080
-        run: test/robot/run_tests.sh
+        # Só a API; os testes de interface (tag UI) rodam no job robot-ui da pipeline.
+        run: test/robot/run_tests.sh --exclude UI
 
       - name: Publicar resultados do Robot Framework
         if: always()

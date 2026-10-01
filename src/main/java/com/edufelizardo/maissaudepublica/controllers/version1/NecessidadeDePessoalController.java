@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +35,7 @@ public class NecessidadeDePessoalController {
     @Autowired
     private NecessidadeDePessoalService service;
 
+    @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as necessidades de pessoal cadastradas", tags = "NecessidadeDePessoal")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +54,7 @@ public class NecessidadeDePessoalController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma necessidade de pessoal pelo id", tags = "NecessidadeDePessoal")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -63,6 +66,7 @@ public class NecessidadeDePessoalController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.GERENCIAR", "RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma necessidade de pessoal", tags = "NecessidadeDePessoal")
     @ApiResponse(responseCode = "201", description = "Success:", content = {
@@ -82,6 +86,7 @@ public class NecessidadeDePessoalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.GERENCIAR", "RH.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza uma necessidade de pessoal",
             description = "Substitui os campos editáveis por inteiro (unidade, setor, cargo, quantidade, jornada, competências, justificativa). Não altera dataRegistro nem vagaAssociada.",
@@ -103,6 +108,7 @@ public class NecessidadeDePessoalController {
         return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.GERENCIAR", "RH.GERENCIAR"})
     @PatchMapping(value = "{uuid}/vincular-vaga", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Vincula a vaga aberta pelo RH a partir desta necessidade",
             description = "Link informativo, nunca um gatilho automático (ver ADR-0036). Recusa vincular uma necessidade que já tem vaga associada (409).",
