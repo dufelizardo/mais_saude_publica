@@ -273,6 +273,24 @@ POST Desbloquear Usuario
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+POST Encerrar Sessoes Usuario
+    [Documentation]    Sends a POST request ending every open session of a Usuario (ADR-0078) and returns the response.
+    [Arguments]    ${uuid}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+
+    ${response}=    Post On Session
+    ...    msp_session
+    ...    ${BASE_URL}${USUARIO_ENDPOINT}/${uuid}/encerramento-de-sessoes
+    ...    expected_status=ANY
+
+    Log    ${response.status_code}
+    Log    ${response.text}
+
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 GET List Escopos Acesso
     [Documentation]    Sends a GET request listing the units where an access can be granted and returns the response.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════

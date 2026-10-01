@@ -182,12 +182,13 @@ quando a exigência for religada.
 | Pessoa esqueceu a senha | não há recuperação por e-mail ainda | abrir a pessoa → **Definir senha provisória**; ela troca no próximo acesso (ADR-0069) |
 | "Troque a senha provisória antes de continuar" | a pessoa entrou com senha provisória | ela conclui a troca na tela que o sistema abre sozinho |
 | "Sem vínculo assistencial com este paciente" | o vínculo está ligado e a pessoa não tem atendimento nem agendamento com o paciente | registrar o atendimento ou o agendamento, ou usar **Acessar com justificativa** |
+| Computador esquecido logado, ou suspeita de uso indevido da conta | a sessão continua aberta | abrir a pessoa → **Encerrar sessões**; ela entra de novo com a mesma senha (ADR-0078) |
 | Menu mostra tudo mesmo com a exigência ligada | a tela foi aberta antes do deploy | sair e entrar de novo, ou recarregar a página |
 
 ## Pendências conhecidas
 
-- Recuperação de senha sem a administração (e-mail ou gov.br) e invalidação das sessões ativas ao
-  redefinir a senha ou desativar o usuário (ADR-0069).
+- Recuperação de senha sem a administração (e-mail ou gov.br) (ADR-0069). As sessões ativas já caem
+  na hora ao desativar, redefinir ou trocar a senha, e pelo botão **Encerrar sessões** (ADR-0078).
 - Dentro das telas, alguns botões de registro continuam visíveis para quem não tem a permissão. A API
   bloqueia com 403 e mensagem clara.
 - MFA, sessões ativas e política de senha aparecem como "Em breve" na tela.

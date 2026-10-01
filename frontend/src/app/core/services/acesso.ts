@@ -73,4 +73,9 @@ export class AcessoService {
   desbloquearUsuario(uuid: string): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.api}/usuario/${uuid}/desbloqueio`, null);
   }
+
+  /** Derruba todas as sessões abertas da pessoa (ADR-0078); a senha não muda. */
+  encerrarSessoes(uuid: string): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.api}/usuario/${uuid}/encerramento-de-sessoes`, null);
+  }
 }

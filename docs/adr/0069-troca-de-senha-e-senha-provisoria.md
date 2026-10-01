@@ -60,7 +60,8 @@ Até aqui, nenhuma senha podia ser trocada depois de criada:
 - ❌ Um token antigo, emitido antes de uma redefinição, continua sem o claim até expirar (8 h, ou 7 dias
   com "manter conectado"). Aceitável: a redefinição atende quem *esqueceu* a senha, não quem teve a
   sessão roubada. Invalidar sessões ativas fica para a aba "Sessões ativas" (ADR-0068), ainda "Em
-  breve".
+  breve". *Resolvido pela [ADR-0078](./0078-sessoes-encerradas-na-hora.md): redefinir, trocar a senha e
+  desativar encerram as sessões na hora.*
 
 **Redefinição pela administração (escolhida)** × **recuperação por e-mail**
 - ✅ Funciona hoje, sem serviço de e-mail, e a senha que a administração conhece é provisória.
@@ -80,7 +81,7 @@ validade)
   [`GUIA-LIGAR-AUTORIZACAO.md`](../acesso/GUIA-LIGAR-AUTORIZACAO.md) foi simplificado com isso.
 
 **Negativas / pendências:**
-- Invalidar sessões ativas ao redefinir ou desativar.
+- ~~Invalidar sessões ativas ao redefinir ou desativar.~~ Feito pela [ADR-0078](./0078-sessoes-encerradas-na-hora.md).
 - Recuperação de senha sem a administração (e-mail ou gov.br).
 - Política de senha configurável.
 
