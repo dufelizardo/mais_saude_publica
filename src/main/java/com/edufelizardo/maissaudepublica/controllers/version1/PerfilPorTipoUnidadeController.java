@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -35,6 +36,7 @@ public class PerfilPorTipoUnidadeController {
     @Autowired
     private PerfilPorTipoUnidadeService service;
 
+    @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as associações perfil/tipo de unidade cadastradas", tags = "PerfilPorTipoUnidade")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -53,6 +55,7 @@ public class PerfilPorTipoUnidadeController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma associação perfil/tipo de unidade pelo id", tags = "PerfilPorTipoUnidade")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -64,6 +67,7 @@ public class PerfilPorTipoUnidadeController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR"})
     @GetMapping(value = "tipo/{tipo}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Resolve o perfil administrativo configurado para um tipo de unidade", tags = "PerfilPorTipoUnidade")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -75,6 +79,7 @@ public class PerfilPorTipoUnidadeController {
         return ResponseEntity.ok(service.buscarPorTipo(tipo));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Associa um perfil administrativo a um tipo de unidade", tags = "PerfilPorTipoUnidade")
     @ApiResponse(responseCode = "201", description = "Success:", content = {
@@ -94,6 +99,7 @@ public class PerfilPorTipoUnidadeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza uma associação perfil/tipo de unidade",
             description = "Substitui o perfil associado a um tipo (ex.: trocar qual perfil vale para UBS).",

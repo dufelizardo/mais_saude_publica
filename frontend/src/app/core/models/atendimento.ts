@@ -1,3 +1,5 @@
+import { ClassificacaoRisco } from './triagem';
+
 export type TipoAtendimento = 'CONSULTA' | 'URGENCIA' | 'INTERNACAO';
 export type StatusAtendimento = 'AGENDADO' | 'EM_ANDAMENTO' | 'CONCLUIDO';
 
@@ -26,4 +28,13 @@ export interface AtendimentoResponseDto {
   tipo: TipoAtendimento;
   status: StatusAtendimento;
   dataHora: string;
+  /** Resumo para a listagem (ADR-0062). */
+  pacienteCpf?: string;
+  pacienteDataNascimento?: string;
+  classificacaoRiscoAtual?: ClassificacaoRisco | null;
+  totalTriagens?: number;
+  totalConsultas?: number;
+  totalProcedimentos?: number;
+  totalEvolucoes?: number;
+  totalAdministracoes?: number;
 }

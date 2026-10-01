@@ -25,4 +25,6 @@ export interface PacienteResponseDto {
   telefones: string[];
   email?: string;
   ativo: boolean;
+  /** ISO-8601; ausente em pacientes cadastrados antes do campo existir. */
+  dataCadastro?: string;
 }

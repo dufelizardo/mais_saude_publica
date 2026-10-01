@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +35,7 @@ public class CapacidadeAdministrativaController {
     @Autowired
     private CapacidadeAdministrativaService service;
 
+    @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as capacidades administrativas cadastradas", tags = "CapacidadeAdministrativa")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +54,7 @@ public class CapacidadeAdministrativaController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma capacidade administrativa pelo id", tags = "CapacidadeAdministrativa")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -63,6 +66,7 @@ public class CapacidadeAdministrativaController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma capacidade administrativa no catálogo", tags = "CapacidadeAdministrativa")
     @ApiResponse(responseCode = "201", description = "Success:", content = {
@@ -82,6 +86,7 @@ public class CapacidadeAdministrativaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"ADMINISTRATIVO.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza uma capacidade administrativa",
             description = "Cobre tanto desativar a capacidade (ativo=false) quanto corrigir código/nome/descrição — substitui os campos editáveis por inteiro.",

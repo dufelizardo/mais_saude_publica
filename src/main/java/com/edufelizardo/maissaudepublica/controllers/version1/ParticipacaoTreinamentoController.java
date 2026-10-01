@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -31,6 +32,7 @@ public class ParticipacaoTreinamentoController {
     @Autowired
     private ParticipacaoTreinamentoService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de participações em treinamento de um profissional", tags = "ParticipacaoTreinamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -45,6 +47,7 @@ public class ParticipacaoTreinamentoController {
         return ResponseEntity.ok(service.listarHistorico(matricula));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra a participação de um profissional num treinamento",
             description = "A data de validade é calculada automaticamente a partir da validadeMeses do treinamento — null se o treinamento não tiver validade.",

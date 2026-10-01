@@ -80,6 +80,10 @@ mockup pixel a pixel neste ponto específico.
    e conferir o **valor exato** (font-size, padding, cor) antes de escrever a regra — não
    implementar de memória de uma leitura anterior.
 
+6. A tela tem **teste Robot de interface** no mesmo PR (`test/robot/.../ui/<tela>/`, ADR-0077)? Os campos
+   têm `id` `f-<campo>` e as abas e botões de ícone têm nome acessível, para o teste não depender de
+   classe CSS.
+
 ## 6. Tabelas largas — nunca `overflow: hidden`, sempre `overflow-x: auto`
 
 Achado num levantamento de usabilidade: 12 telas (mais 14 pontos dentro do perfil do profissional)
@@ -103,8 +107,73 @@ sidebar e cabeçalho continuam fixos, só a tabela rola.
 `overflow-x: auto` (nunca `overflow: hidden`) — geralmente o próprio `.card` que a envolve, ou o
 `<div style="padding: var(--s-5);">` de uma aba do perfil quando não há `.card` por perto.
 
-## 7. Referências
+## 7. Modal ou gaveta lateral
+
+- **`<app-drawer>` é o padrão para tela nova ou refeita**, inclusive cadastro simples de catálogo
+  (ADR-0073, ADR-0074): uma forma só no sistema, a lista continua visível e cabe histórico junto do formulário.
+- **`<app-modal>`** (`shared/modal`) — só nas telas da primeira geração que ainda não foram refeitas
+  (ex.: abas do perfil do profissional). Não usar em tela nova.
+- **`<app-drawer>`** (`shared/drawer`) — painel à direita, para formulários com mais campos ou
+  avisos contextuais, quando vale manter a tabela visível ao lado (primeiro uso: Farmácia,
+  ADR-0058). O conteúdo projetado segue esta estrutura, para o `<form>` envolver corpo e rodapé:
+
+```html
+<app-drawer titulo="Registrar dispensação" (fechar)="fechar()">
+  <form class="dw-form" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+    <div class="dw-body">
+      <div class="dw-field">
+        <label for="f-campo">Campo <span class="req" aria-hidden="true">*</span></label>
+        <input id="f-campo" formControlName="campo" />
+        <p class="dw-hint">Dica</p>
+        <p class="dw-err">Erro</p>
+      </div>
+    </div>
+    <footer class="dw-foot">
+      <button type="button" class="btn btn--ghost" (click)="fechar()">Cancelar</button>
+      <button type="submit" class="btn">Salvar</button>
+    </footer>
+  </form>
+</app-drawer>
+```
+
+Para painéis de leitura com várias seções (ex.: o atendimento, ADR-0063), use `<app-drawer [larga]="true">` (760px). Gavetas de registro abertas de dentro dele voltam para ele ao salvar ou cancelar.
+
+Nomes que parecem iguais mas não são: `.page-tabs` (abas em pílula no nível da página) ≠ `.tabs`
+(abas sublinhadas dentro de um card de detalhe); `.dw-field` (campo de gaveta) ≠ `.field` (tela de
+Login) ≠ `.form-group` (formulário dentro do `<app-modal>`).
+
+## 8. Menu conforme as permissões (ADR-0068)
+
+Toda tela nova no menu do `AppShell` precisa de uma entrada na tabela `MENU` de
+`shared/app-shell/app-shell.ts`, com as permissões que a liberam (basta uma), e o `<a>` do item vai dentro de
+`@if (podeVer('/rota'))`. Sem entrada, o item fica aberto a qualquer usuário logado. Isso é certo só para
+estrutura e para o quadro de profissionais, que a API também libera (`@LiberadoParaAutenticados`, ADR-0067).
+Com a autorização desligada, `podeVer` é sempre verdadeiro.
+
+Dentro da tela, ações que exigem permissão usam o mesmo `AuthService.acessoDaInterface()` (ver
+`pode(...)` em `features/administracao/usuarios`), com **a mesma permissão que a rota da API exige**
+(ADR-0079). Toda tela com ação de escrita faz isso. Esconder nunca substitui a checagem da API.
+
+Telas de administração, pouco usadas, entram por `loadComponent` (sob demanda), para não pesar no
+bundle inicial, que tem orçamento de 1 MB.
+
+**Grupos do menu começam recolhidos.** Só o grupo da página atual abre sozinho, porque o `data.area` da
+rota tem o mesmo nome do grupo. Assim o item ativo nunca fica escondido. Os grupos que a pessoa abre
+continuam abertos enquanto ela navega, e o da página atual também pode ser recolhido. Uma rota nova
+precisa de `data.area` com o nome exato do grupo onde o item aparece.
+
+## 9. Listagem de pessoas em cartões (ADR-0072)
+
+Para quadros de pessoas (profissionais), a visão padrão é a **grade de cartões** do protótipo
+`Profissionais.html` (`.cards` > `.prof`), com alternância para lista (`.seg`) guardada no navegador. Cada cartão
+tem avatar com a cor da categoria (`.prof__avatar.cat-*`) e ponto de situação (`.prof__status--*`), etiquetas,
+linhas de metadado (`.meta-row`), um bloco de destaque (`.prof__load`) e ações; o menu "⋯" (`.prof__popover`)
+leva as ações secundárias. Abas de categoria com contagem usam `.cats` > `.cat`. Categoria e situação vêm de
+`shared/profissional-categoria.ts` — não recalcular em cada tela.
+
+## 10. Referências
 
 - [ADR-0018](../adr/0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) — decisão original do
   `AppShell` e histórico das correções que motivaram este documento.
-- `modelo_front/Usuarios.html` — mockup de referência mais completo pro padrão de listagem.
+- `modelo_front/Usuarios.html` — mockup de referência mais completo pro padrão de listagem, portado
+  como a tela Usuários & Perfis ([ADR-0068](../adr/0068-tela-usuarios-e-perfis.md)).

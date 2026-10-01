@@ -66,7 +66,7 @@ decisões que não têm precedente direto no código existente.
    e máscara de CPF/telefone, sem criar nenhum utilitário novo.
 9. **Sem testes automatizados de frontend** (`.spec.ts`) — nenhuma tela de RH/Administrativo tem;
    o único `.spec.ts` do projeto é o scaffold padrão do Angular CLI. Verificação é manual
-   (`ng serve` + navegador).
+   (`ng serve` + navegador). *Revisto pela [ADR-0077](./0077-testes-de-frontend-com-robot-framework.md): o frontend passa a ser testado com Robot Framework, no mesmo padrão LKDF da API.*
 
 ## Trade-offs considerados
 

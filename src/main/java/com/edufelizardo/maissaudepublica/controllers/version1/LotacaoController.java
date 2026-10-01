@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -31,6 +32,7 @@ public class LotacaoController {
     @Autowired
     private LotacaoService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de lotações de um profissional", tags = "Lotacao")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -45,6 +47,7 @@ public class LotacaoController {
         return ResponseEntity.ok(service.listarHistorico(matricula));
     }
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}/atual", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca a lotação vigente de um profissional", tags = "Lotacao")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -56,6 +59,7 @@ public class LotacaoController {
         return ResponseEntity.ok(service.buscarVigente(matricula));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma lotação (admissão, transferência ou mudança de cargo)",
             description = "Se já existir uma lotação vigente para o profissional, ela é encerrada automaticamente (dataFim = dia anterior ao dataInicio da nova) antes da nova ser criada.",

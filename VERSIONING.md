@@ -20,11 +20,26 @@ A versão `1.0.0` marca o primeiro contrato de API estável e versionado (4 esfe
 CRUD completo) — antes disso o projeto ficou em `0.0.1-SNAPSHOT` indefinidamente, sem nenhuma
 versão real publicada.
 
-## Tags
+## Tags e releases (automáticas)
 
-Cada versão publicada em `main` recebe uma tag git `vMAJOR.MINOR.PATCH` (ex.: `v1.0.0`), criada
-depois que o `pom.xml` é atualizado e a mudança chega em `main` pelo fluxo normal de promoção. A
-tag é o que aciona a geração de release notes (ver seção abaixo).
+O `<version>` do `pom.xml` é a **única fonte** da versão (ver
+[ADR-0056](docs/adr/0056-versao-da-release-vem-do-pom-e-release-automatica.md)). O único passo
+manual é incrementá-lo em `developer` enquanto se prepara a próxima release — o resto é do CI
+(`publish-image.yml`):
+
+- **Tag e release:** quando um `pom.xml` com versão nova chega em `main`, o job `release` cria a tag
+  `vMAJOR.MINOR.PATCH` e a release no GitHub, com notas geradas a partir dos PRs (ver seção abaixo).
+  Se a versão já tem release, não cria nada e deixa um aviso no run — sinal de que código novo foi
+  promovido sem incrementar a versão. O título gerado é só `vX.Y.Z`; um subtítulo descritivo (como
+  nas releases anteriores) pode ser editado depois na página da release.
+- **Versão exibida na tela** (rodapé do Login, landing page): gravada na imagem do frontend como
+  `/version.json`. Em `main` é a própria versão (`1.4.0`); nas outras branches ganha metadado de
+  build SemVer, ex.: `1.4.0+developer.2f3fb87` — "código a caminho da 1.4.0, commit 2f3fb87", ainda
+  não uma release publicada. Em build local o arquivo não existe e a tela não mostra versão.
+
+> Até a v1.3.0 as tags foram criadas à mão e o passo de atualizar o `pom.xml` foi pulado a partir
+> da v1.1.0 (o `pom.xml` ficou em `1.0.0`). Corrigido junto com a automação: o `pom.xml` passou
+> direto para `1.4.0`, a próxima release.
 
 ## Changelog / Release Notes
 
