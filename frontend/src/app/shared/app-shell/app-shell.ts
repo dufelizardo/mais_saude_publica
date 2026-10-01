@@ -28,13 +28,14 @@ const MENU: Record<string, string[]> = {
   '/assistencia/pacientes': ['PACIENTE.CONSULTAR'],
   '/assistencia/atendimentos': ['ATENDIMENTO.GERENCIAR', 'PRONTUARIO.CONSULTAR', 'AGENDAMENTO.GERENCIAR'],
   '/assistencia/farmacia': ['FARMACIA.CONSULTAR', 'FARMACIA.DISPENSAR', 'FARMACIA.TRANSFERIR', 'FARMACIA.GERENCIAR_ESTOQUE'],
+  '/assistencia/regulacao': ['REGULACAO.CONSULTAR', 'REGULACAO.SOLICITAR', 'REGULACAO.REGULAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],
   '/administracao/auditoria': ['AUDITORIA.CONSULTAR'],
 };
 
 /** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
 const GRUPOS: Record<string, string[]> = {
-  Assistência: ['/assistencia/pacientes', '/assistencia/atendimentos', '/assistencia/farmacia'],
+  Assistência: ['/assistencia/pacientes', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao'],
   Administração: ['/administracao/usuarios', '/administracao/auditoria'],
 };
 

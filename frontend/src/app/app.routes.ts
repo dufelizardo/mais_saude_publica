@@ -94,6 +94,12 @@ export const routes: Routes = [
       { path: 'assistencia/procedimentos', redirectTo: ({ queryParams }) => paraAtendimentos('atend', queryParams) },
       { path: 'assistencia/prontuario', redirectTo: ({ queryParams }) => paraAtendimentos('pront', queryParams) },
       { path: 'assistencia/farmacia', component: Farmacia, data: { breadcrumb: 'Farmácia', area: 'Assistência' } },
+      // Regulação do acesso (ADR-0088), carregada sob demanda.
+      {
+        path: 'assistencia/regulacao',
+        loadComponent: () => import('./features/assistencia/regulacao/regulacao').then((m) => m.Regulacao),
+        data: { breadcrumb: 'Regulação', area: 'Assistência' },
+      },
       {
         path: 'administracao/usuarios',
         // Sob demanda: tela de administração, fora do bundle inicial (orçamento de 1 MB).

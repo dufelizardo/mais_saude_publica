@@ -979,6 +979,8 @@ tbody tr:hover { background: var(--ink-50); }
 .tbl-wrap thead th { font-size: 0.66rem; white-space: nowrap; }
 .tbl-wrap th.num, .tbl-wrap td.num { text-align: right; }
 .cell-main { font-weight: 600; color: var(--ink-900); display: block; }
+/* Usada direto na célula, continua célula de tabela (ADR-0088). */
+td.cell-main { display: table-cell; }
 .cell-sub { display: block; color: var(--ink-500); font-size: 0.72rem; margin-top: 1px; }
 .saldo { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 0.9375rem; }
 .saldo.zero { color: var(--ink-400); }
@@ -1371,6 +1373,8 @@ tfoot .linha-total th { text-align: left; }
 .perfil-linha .badge { justify-self: start; }
 .perfil-linha__data { color: var(--ink-500); font-size: 0.8125rem; }
 .perfil-linha__desc { font-size: 0.875rem; color: var(--ink-900); }
+/* Regulação (ADR-0088): justificativa clínica com as quebras de linha de quem escreveu. */
+.reg-texto { white-space: pre-line; font-size: 0.875rem; color: var(--ink-900); margin: 0; }
 @media (max-width: 640px) { .perfil-linha li { grid-template-columns: 1fr; gap: 4px; } }
 
 /* Prontuário por vínculo assistencial (ADR-0076): aviso, formulário do acesso justificado e faixa. */
