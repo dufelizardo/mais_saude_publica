@@ -2,6 +2,9 @@
 Library     String
 Resource    ../../../../pom/ui/rh/perfil/perfil_ui_pom.resource
 Resource    ../../../profissional/create_profissional/create_profissional_flow.resource
+Resource    ../../../treinamento/update_treinamento/update_treinamento_flow.resource
+Resource    ../../../tipo_beneficio/update_tipo_beneficio/update_tipo_beneficio_flow.resource
+Resource    ../../../ciclo_avaliacao/update_ciclo_avaliacao/update_ciclo_avaliacao_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     O profissional é criado pela API; o registro é feito pelas gavetas das abas (ADR-0084).
@@ -139,5 +142,71 @@ UI Perfil - Gaveta Da Folha Recusa Competencia Invalida
     Enviar Gaveta
     ${erro}=    Ler Erro Do Campo Da Gaveta    competencia
     Should Contain    ${erro}    MM/AAAA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Perfil - Registrar Participacao Em Treinamento Pela Gaveta
+    [Documentation]    Registra a participação num treinamento do catálogo e vê o aviso e a linha nova.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${nome}=    Seed A Treinamento
+    ${cpf}=    UI Perfil - Semear Profissional Com Cpf Formatado
+    UI Perfil - Abrir Perfil Pelo Cpf    ${cpf}
+    Clicar Aba    Treinamentos
+    Clicar Botao    + Registrar participação
+    Escolher Opcao Da Gaveta    treinamentoId    ${uuid}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Participação registrada
+    Esperar Texto Aparecer    ${nome}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Perfil - Aderir E Encerrar Beneficio Pelas Gavetas
+    [Documentation]    Registra a adesão e depois a encerra pela gaveta da linha.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${nome}=    Seed A Tipo Beneficio
+    ${cpf}=    UI Perfil - Semear Profissional Com Cpf Formatado
+    UI Perfil - Abrir Perfil Pelo Cpf    ${cpf}
+    Clicar Aba    Benefícios
+    Clicar Botao    + Nova adesão
+    Escolher Opcao Da Gaveta    tipoBeneficioId    ${uuid}
+    Enviar Gaveta
+    Esperar Texto Aparecer    Adesão registrada
+    Clicar Botao    Encerrar adesão de ${nome}
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Encerrar adesão
+    Enviar Gaveta
+    Esperar Texto Aparecer    Adesão encerrada
+    Esperar Texto Aparecer    Encerrado
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Perfil - Registrar Avaliacao Pela Gaveta
+    [Documentation]    Registra uma avaliação num ciclo e vê o aviso e o ciclo na tabela.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${nome}=    Seed A Ciclo Avaliacao
+    ${cpf}=    UI Perfil - Semear Profissional Com Cpf Formatado
+    UI Perfil - Abrir Perfil Pelo Cpf    ${cpf}
+    Clicar Aba    Avaliações
+    Clicar Botao    + Registrar avaliação
+    Escolher Opcao Da Gaveta    cicloId    ${uuid}
+    Preencher Campo Da Gaveta    avaliador    Chefia Robot
+    Preencher Campo Da Gaveta    nota    8.5
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Avaliação registrada
+    Esperar Texto Aparecer    ${nome}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Perfil - Profissional Ativo Nao Oferece Calculo De Rescisao
+    [Documentation]    Com o profissional ativo, a aba Desligamento não oferece o cálculo de rescisão.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${cpf}=    UI Perfil - Semear Profissional Com Cpf Formatado
+    UI Perfil - Abrir Perfil Pelo Cpf    ${cpf}
+    Clicar Aba    Desligamento/Rescisão
+    Esperar Texto Aparecer    Nenhum cálculo de rescisão registrado
+    ${n}=    Contar Botoes Com Nome    + Registrar cálculo de rescisão
+    Should Be Equal As Integers    ${n}    0
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
