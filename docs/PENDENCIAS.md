@@ -81,7 +81,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - A regulação ainda não gera vínculo: entra na ADR-0089, com o agendamento na unidade executante (ADR-0076).
 
 ### Regulação
-- Tela (ADR-0088) e fechamento do ciclo: agendamento na executante, vínculo e contrarreferência (ADR-0089).
+- ~~Tela~~ — feita pela ADR-0088. Falta o fechamento do ciclo: agendamento na executante, vínculo e
+  contrarreferência (ADR-0089).
 - Fora do escopo da ADR-0087: regulação de urgência e SAMU, internação (depende de Leitos, #12),
   integração com SISREG e SIGTAP, e cotas por unidade (PPI).
 - Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
