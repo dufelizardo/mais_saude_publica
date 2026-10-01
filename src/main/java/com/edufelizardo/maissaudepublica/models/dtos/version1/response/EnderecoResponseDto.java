@@ -25,7 +25,11 @@ public class EnderecoResponseDto implements Serializable {
     private String estado;
     private String ddd;
 
+    /** Sem endereço (cadastro antigo ou criado fora do formulário), a resposta leva {@code null} em vez de falhar. */
     public static EnderecoResponseDto fromEndereco(Endereco endereco) {
+        if (endereco == null) {
+            return null;
+        }
         return new EnderecoResponseDto(
                 endereco.getCep(),
                 endereco.getLogradouro(),

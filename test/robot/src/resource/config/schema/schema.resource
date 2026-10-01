@@ -37,3 +37,23 @@ Resource    ../../schema/agendamento/agendamento_schema.resource
 Resource    ../../schema/consulta/consulta_schema.resource
 # PROCEDIMENTO
 Resource    ../../schema/procedimento/procedimento_schema.resource
+# TRIAGEM
+Resource    ../../schema/triagem/triagem_schema.resource
+# EVOLUCAO ENFERMAGEM
+Resource    ../../schema/evolucao_enfermagem/evolucao_enfermagem_schema.resource
+# MEDICAMENTO
+Resource    ../../schema/medicamento/medicamento_schema.resource
+# LOTE
+Resource    ../../schema/lote/lote_schema.resource
+# DISPENSACAO
+Resource    ../../schema/dispensacao/dispensacao_schema.resource
+# AUTH
+Resource    ../../schema/auth/auth_schema.resource
+# MOVIMENTACAO FARMACIA
+Resource    ../../schema/movimentacao_farmacia/movimentacao_farmacia_schema.resource
+Resource    ../../schema/transferencia_farmacia/transferencia_farmacia_schema.resource
+Resource    ../../schema/administracao_medicamento/administracao_medicamento_schema.resource
+# ACESSO (ADR-0066)
+Resource    ../../schema/acesso/acesso_schema.resource
+# AUDITORIA (ADR-0070/0071)
+Resource    ../../schema/auditoria/auditoria_schema.resource

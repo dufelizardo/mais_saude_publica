@@ -36,23 +36,15 @@ ng build
 
 This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
-## Running unit tests
+## Testes
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+Os testes do frontend são **Robot Framework**, no mesmo padrão LKDF (POM → FLOW → SCENARIO → TEST) e na
+mesma suíte dos testes de API, em [`../test/robot/`](../test/robot/README.md). O navegador é controlado pela
+Browser library, que roda o Playwright por baixo. Detalhes na
+[ADR-0077](../docs/adr/0077-testes-de-frontend-com-robot-framework.md).
 
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+`ng test` e `ng e2e` não são usados como teste de aceitação das telas. Toda tela nova ou refeita traz o
+teste Robot de interface no mesmo PR.
 
 ## Additional Resources
 

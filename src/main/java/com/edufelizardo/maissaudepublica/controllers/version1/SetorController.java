@@ -1,5 +1,7 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.LiberadoParaAutenticados;
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +36,7 @@ public class SetorController {
     @Autowired
     private SetorService service;
 
+    @LiberadoParaAutenticados
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os setores cadastrados", tags = "Setor")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +55,7 @@ public class SetorController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @LiberadoParaAutenticados
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um setor pelo id", tags = "Setor")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -63,6 +67,7 @@ public class SetorController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um setor vinculado a uma unidade de saúde", tags = "Setor")
     @ApiResponse(responseCode = "201", description = "Success:", content = {
@@ -82,6 +87,7 @@ public class SetorController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza um setor",
             description = "Cobre tanto desativar o setor (ativo=false) quanto corrigir nome/código/tipo — substitui os campos editáveis por inteiro.",

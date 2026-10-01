@@ -10,6 +10,7 @@ import com.edufelizardo.maissaudepublica.models.enuns.StatusAgendamento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoAgendamento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoSetor;
 import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.TriagemRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
@@ -45,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AtendimentoControllerTest {
 
     private static final String ATENDIMENTO_URL = "/api/v1/atendimento/";
+    private static final String TRIAGEM_URL = "/api/v1/triagem/";
     private static final String UNIDADE_SAUDE_URL = "/api/v1/unidade-saude/";
     private static final String PROFISSIONAL_URL = "/api/v1/profissional/";
     private static final String FEDERAL_URL = "/api/v1/federal/";
@@ -64,6 +66,9 @@ class AtendimentoControllerTest {
     private AgendamentoRepository agendamentoRepository;
 
     @Autowired
+    private TriagemRepository triagemRepository;
+
+    @Autowired
     private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
 
     @Autowired
@@ -81,6 +86,8 @@ class AtendimentoControllerTest {
         // @ManyToOne LAZY — navegar até paciente.getCpf() fora de uma transação lançaria
         // LazyInitializationException). Este é o único teste que cria Atendimento, então apagar
         // tudo é seguro. Agendamento primeiro seria bloqueado pela FK de tb_atendimento.
+        triagemRepository.deleteAll(triagemRepository.findAll().stream().filter(t -> t.getRetificacaoDe() != null).toList());
+        triagemRepository.deleteAll();
         atendimentoRepository.deleteAll();
         agendamentoRepository.deleteAll();
 
@@ -383,6 +390,15 @@ class AtendimentoControllerTest {
         mockMvc.perform(get(ATENDIMENTO_URL + criado.getUuid()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.agendamentoUuid").value(agendamento.getUuid().toString()));
+
+        // O agendamento de origem vira REALIZADO na mesma transação e não abre um segundo atendimento (ADR-0062).
+        assertThat(agendamentoRepository.findById(agendamento.getUuid()).orElseThrow().getStatus())
+                .isEqualTo(StatusAgendamento.REALIZADO);
+        mockMvc.perform(post(ATENDIMENTO_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoAtendimento(pacienteId, matricula, unidadeId, null, agendamento.getUuid(),
+                                "CONSULTA", "EM_ANDAMENTO")))
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
@@ -426,5 +442,91 @@ class AtendimentoControllerTest {
 
         Atendimento atualizado = atendimentoRepository.findById(uuid).orElseThrow();
         assertThat(atualizado.getStatus().name()).isEqualTo("CONCLUIDO");
+    }
+
+    private record AtendimentoComMatricula(UUID atendimentoId, UUID pacienteId, UUID unidadeId, String matricula) {
+    }
+
+    private AtendimentoComMatricula criarAtendimento(String sufixo) throws Exception {
+        UUID unidadeId = criarUnidadeSaudeUbs(sufixo);
+        String matricula = criarProfissionalEBuscarMatricula(PREFIXO_CPF_TESTE + sufixo, "Profissional " + sufixo);
+        UUID pacienteId = criarPacienteEBuscarUuid(PREFIXO_CPF_TESTE + sufixo, "Paciente " + sufixo);
+        mockMvc.perform(post(ATENDIMENTO_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoAtendimento(pacienteId, matricula, unidadeId, null, "CONSULTA", "EM_ANDAMENTO")))
+                .andExpect(status().isCreated());
+        UUID atendimentoId = atendimentoRepository.findAll().stream()
+                .filter(a -> a.getPaciente().getUuid().equals(pacienteId))
+                .findFirst()
+                .orElseThrow()
+                .getUuid();
+        return new AtendimentoComMatricula(atendimentoId, pacienteId, unidadeId, matricula);
+    }
+
+    private void registrarTriagem(AtendimentoComMatricula a, String dataHora, String risco) throws Exception {
+        mockMvc.perform(post(TRIAGEM_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "atendimentoId": "%s", "profissionalMatricula": "%s", "dataHora": "%s",
+                                  "classificacaoRisco": "%s", "pressaoArterial": "120/80" }
+                                """.formatted(a.atendimentoId(), a.matricula(), dataHora, risco)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void deveTrazerResumoClinicoNaBusca() throws Exception {
+        AtendimentoComMatricula a = criarAtendimento("08");
+        registrarTriagem(a, "2026-01-01T08:10:00", "VERDE");
+        registrarTriagem(a, "2026-01-01T08:40:00", "LARANJA");
+
+        mockMvc.perform(get(ATENDIMENTO_URL + a.atendimentoId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pacienteCpf").value(PREFIXO_CPF_TESTE + "08"))
+                .andExpect(jsonPath("$.classificacaoRiscoAtual").value("LARANJA"))
+                .andExpect(jsonPath("$.totalTriagens").value(2))
+                .andExpect(jsonPath("$.totalConsultas").value(0))
+                .andExpect(jsonPath("$.totalProcedimentos").value(0))
+                .andExpect(jsonPath("$.totalEvolucoes").value(0));
+        mockMvc.perform(get(ATENDIMENTO_URL))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.uuid == '%s')].totalTriagens".formatted(a.atendimentoId())).value(2));
+    }
+
+    @Test
+    void deveContarSoAVersaoVigenteDeUmaTriagemRetificada() throws Exception {
+        AtendimentoComMatricula a = criarAtendimento("09");
+        registrarTriagem(a, "2026-01-01T08:10:00", "VERMELHO");
+        UUID triagem = triagemRepository.findAll().stream()
+                .filter(t -> t.getAtendimento().getUuid().equals(a.atendimentoId()))
+                .findFirst()
+                .orElseThrow()
+                .getUuid();
+
+        mockMvc.perform(post(TRIAGEM_URL + triagem + "/retificacao")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "atendimentoId": "%s", "profissionalMatricula": "%s", "dataHora": "2026-01-01T08:10:00",
+                                  "classificacaoRisco": "AMARELO", "motivoRetificacao": "Cor selecionada errada" }
+                                """.formatted(a.atendimentoId(), a.matricula())))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get(ATENDIMENTO_URL + a.atendimentoId()))
+                .andExpect(jsonPath("$.classificacaoRiscoAtual").value("AMARELO"))
+                .andExpect(jsonPath("$.totalTriagens").value(1));
+    }
+
+    @Test
+    void deveRecusarTrocarOPacienteDeAtendimentoComRegistroClinico() throws Exception {
+        AtendimentoComMatricula a = criarAtendimento("10");
+        registrarTriagem(a, "2026-01-01T08:10:00", "VERDE");
+        UUID outroPaciente = criarPacienteEBuscarUuid(PREFIXO_CPF_TESTE + "11", "Paciente Onze");
+
+        mockMvc.perform(patch(ATENDIMENTO_URL + a.atendimentoId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(corpoAtendimento(outroPaciente, a.matricula(), a.unidadeId(), null, "CONSULTA", "EM_ANDAMENTO")))
+                .andExpect(status().isUnprocessableEntity());
+
+        assertThat(atendimentoRepository.findById(a.atendimentoId()).orElseThrow().getPaciente().getUuid())
+                .isEqualTo(a.pacienteId());
     }
 }

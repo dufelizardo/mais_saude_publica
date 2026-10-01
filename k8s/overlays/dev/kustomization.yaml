@@ -11,9 +11,9 @@ resources:
 
 images:
   - name: ghcr.io/dufelizardo/mais_saude_publica
-    newTag: 65f1617e9952c01c3849ba9d9548c04bbbf5fae2
+    newTag: 8b7740fc3bf99f29b29ca3c22fe8c968a1ddee5d
   - name: ghcr.io/dufelizardo/mais_saude_publica-frontend
-    newTag: 65f1617e9952c01c3849ba9d9548c04bbbf5fae2
+    newTag: 8b7740fc3bf99f29b29ca3c22fe8c968a1ddee5d
 
 configMapGenerator:
   - name: app-config
@@ -22,6 +22,13 @@ configMapGenerator:
       - JAVA_TOOL_OPTIONS=-Xmx384m
       - DATABASE_URL=jdbc:postgresql://postgres:5432/saudepublica_dev
       - DATABASE_USERNAME=postgres
+      # Ligado pela primeira vez neste ambiente (ver ADR-0055) — requer o secret app-secrets
+      # (jwt-secret, bootstrap-cpf, bootstrap-senha) provisionado no namespace mais-saude-dev,
+      # senao ninguem consegue logar (sem crash, so sem ninguem cadastrado).
+      - APP_SECURITY_ENABLED=true
+      # Exigir permissao por perfil e unidade (ADR-0067) fica DESLIGADO ate os acessos serem
+      # concedidos — ver docs/acesso/GUIA-LIGAR-AUTORIZACAO.md antes de acrescentar
+      # APP_SECURITY_AUTHORIZATION_ENABLED=true aqui.
   - name: db-config
     literals:
       - POSTGRES_DB=saudepublica_dev

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ComposicaoRemuneratoriaResponseDto;
@@ -26,6 +27,7 @@ public class ComposicaoRemuneratoriaController {
     @Autowired
     private ComposicaoRemuneratoriaService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Calcula a composição remuneratória vigente de um profissional", tags = "ComposicaoRemuneratoria")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

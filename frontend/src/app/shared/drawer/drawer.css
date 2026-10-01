@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.drawer-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 37, 64, 0.4);
+  z-index: 300;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(500px, 100%);
+  background: var(--white);
+  z-index: 301;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer--larga {
+  width: min(760px, 100%);
+}
+
+.dw-head {
+  padding: var(--s-5);
+  border-bottom: 1px solid var(--ink-100);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.dw-head h2 {
+  font-size: 1.125rem;
+}
+
+.dw-head .icon-btn {
+  width: 40px;
+  height: 40px;
+  border-color: transparent;
+}

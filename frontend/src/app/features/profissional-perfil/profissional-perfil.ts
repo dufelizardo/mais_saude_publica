@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ProfissionalResponseDto, ErrorResponseDto } from '../../core/models/profissional';
@@ -43,6 +43,10 @@ import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf, formatTelefone } from '../../shared/format-mask';
 import { Modal } from '../../shared/modal/modal';
+import { hojeIso } from '../../shared/formato';
+import { categoriaDoProfissional, iniciaisDoNome, situacaoDoProfissional } from '../../shared/profissional-categoria';
+import { AcessoDaInterface } from '../../core/models/auth';
+import { AuthService } from '../../core/services/auth';
 
 type Aba = 'dados' | 'lotacao' | 'composicao' | 'ajustes' | 'afastamentos' | 'ponto' | 'folha' | 'sst' | 'treinamentos' | 'avaliacoes' | 'beneficios' | 'desligamento' | 'historico';
 type AbaSst = 'exames' | 'acidentes' | 'epis';
@@ -55,7 +59,7 @@ interface EventoHistorico {
 
 @Component({
   selector: 'app-profissional-perfil',
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Modal],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Modal, RouterLink],
   templateUrl: './profissional-perfil.html',
   styleUrl: './profissional-perfil.css',
 })
@@ -180,6 +184,29 @@ export class ProfissionalPerfil {
   protected readonly carregandoRescisao = signal(false);
   protected readonly submittingRescisao = signal(false);
   protected readonly rescisaoErrorMessage = signal<string | null>(null);
+
+  // ── Cabeçalho no estilo do cartão de Profissionais (ADR-0075) ────────────────────────────────────
+  /** Mesma regra do quadro (ADR-0072): aprovado ou em andamento, cobrindo hoje; o que termina por último. */
+  protected readonly afastamentoVigente = computed(() => {
+    const hoje = hojeIso();
+    return this.afastamentos()
+      .filter((a) => (a.status === 'APROVADO' || a.status === 'EM_ANDAMENTO') && a.dataInicio <= hoje && a.dataFim >= hoje)
+      .sort((a, b) => b.dataFim.localeCompare(a.dataFim))[0] ?? null;
+  });
+
+  protected readonly cabecalho = computed(() => {
+    const p = this.profissional();
+    if (!p) return null;
+    const conselho = `${p.conselhoClasse ?? ''} ${p.numeroConselho ?? ''}`.trim();
+    return {
+      iniciais: iniciaisDoNome(p.nome),
+      categoria: categoriaDoProfissional(p),
+      // Até a lotação chegar, não afirma "Sem lotação vigente".
+      situacao: this.carregandoLotacao() ? null : situacaoDoProfissional({ profissional: p, lotacao: this.lotacaoVigente(), afastamento: this.afastamentoVigente() }),
+      conselho: conselho || null,
+      telefone: p.telefones?.[0] ?? null,
+    };
+  });
 
   protected readonly cpfForm = this.fb.nonNullable.group({
     cpf: ['', [Validators.required]],
@@ -354,7 +381,12 @@ export class ProfissionalPerfil {
     documentoTrctUrl: [''],
   });
 
+  private readonly authService = inject(AuthService);
+  /** O que a tela oferece (ADR-0079): sem a permissão, o botão nem aparece. A API continua decidindo. */
+  private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
+
   constructor() {
+    this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.acidenteForm.controls.catEmitida.valueChanges.subscribe((catEmitida) => {
       const catUrlControl = this.acidenteForm.controls.catUrl;
       catUrlControl.setValidators(catEmitida ? [Validators.required] : []);
@@ -392,6 +424,12 @@ export class ProfissionalPerfil {
       this.buscar();
     }
   }
+
+  protected pode(...permissoes: string[]): boolean {
+    const a = this.acesso();
+    return !a.restrito || permissoes.some((p) => a.permissoes.has(p));
+  }
+
 
   protected onCpfInput(event: Event): void {
     const valor = formatCpf((event.target as HTMLInputElement).value);
@@ -541,6 +579,7 @@ export class ProfissionalPerfil {
 
   private carregarLotacao(matricula: string): void {
     this.carregandoLotacao.set(true);
+    this.lotacaoVigente.set(null);
     this.lotacaoService.buscarVigente(matricula).subscribe({
       next: (vigente) => this.lotacaoVigente.set(vigente),
       error: () => this.lotacaoVigente.set(null),

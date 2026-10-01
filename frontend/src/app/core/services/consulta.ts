@@ -21,7 +21,8 @@ export class ConsultaService {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/`, dto);
   }
 
-  atualizar(uuid: string, dto: ConsultaRequestDto): Observable<SuccessResponseDto> {
-    return this.http.patch<SuccessResponseDto>(`${this.baseUrl}/${uuid}`, dto);
+  /** Registro clínico não é editado: a retificação grava uma nova versão ligada à anterior (ADR-0062). */
+  retificar(uuid: string, dto: ConsultaRequestDto & { motivoRetificacao: string }): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.baseUrl}/${uuid}/retificacao`, dto);
   }
 }

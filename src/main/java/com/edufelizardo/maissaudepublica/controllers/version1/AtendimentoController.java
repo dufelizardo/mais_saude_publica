@@ -1,5 +1,7 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.AuditarLeitura;
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +36,7 @@ public class AtendimentoController {
     @Autowired
     private AtendimentoService service;
 
+    @RequerPermissao({"ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os atendimentos cadastrados", tags = "Atendimento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +55,8 @@ public class AtendimentoController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR"})
+    @AuditarLeitura
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um atendimento pelo id", tags = "Atendimento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -63,6 +68,7 @@ public class AtendimentoController {
         return ResponseEntity.ok(service.buscarPorId(uuid));
     }
 
+    @RequerPermissao({"ATENDIMENTO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um atendimento",
             description = "Registra a entrada de um paciente na rede, vinculando-o a um profissional (por matrícula, ver ADR-0034) e a uma unidade de saúde.",
@@ -84,6 +90,7 @@ public class AtendimentoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"ATENDIMENTO.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza um atendimento",
             description = "Substitui os campos editáveis por inteiro — cobre tanto corrigir dados quanto avançar o status (AGENDADO/EM_ANDAMENTO/CONCLUIDO).",

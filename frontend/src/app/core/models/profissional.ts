@@ -60,3 +60,19 @@ export interface ErrorResponseDto {
   message: string;
   details: string;
 }
+
+export type TipoAfastamento = 'FERIAS' | 'LICENCA_MEDICA' | 'LICENCA_PESSOAL' | 'OUTROS';
+
+/** Um profissional com a lotação vigente e o afastamento em curso — a tela Profissionais (ADR-0072). */
+export interface QuadroProfissionalResponseDto {
+  profissional: ProfissionalResponseDto;
+  lotacao?: {
+    unidadeUuid: string;
+    unidadeNome: string;
+    cargoUuid: string;
+    cargoNome: string;
+    jornadaSemanalHoras?: number | null;
+    dataInicio: string;
+  } | null;
+  afastamento?: { tipo: TipoAfastamento; dataInicio: string; dataFim: string } | null;
+}

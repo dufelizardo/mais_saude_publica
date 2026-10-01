@@ -1,0 +1,10 @@
+<div class="drawer-bg" (click)="fechar.emit()"></div>
+<div class="drawer" [class.drawer--larga]="larga" role="dialog" aria-modal="true" aria-labelledby="drawer-titulo">
+  <header class="dw-head">
+    <h2 id="drawer-titulo">{{ titulo }}</h2>
+    <button type="button" class="icon-btn" aria-label="Fechar" (click)="fechar.emit()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </header>
+  <ng-content></ng-content>
+</div>

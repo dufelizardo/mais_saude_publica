@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -34,6 +35,7 @@ public class AdesaoBeneficioController {
     @Autowired
     private AdesaoBeneficioService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de adesões de benefício de um profissional", tags = "AdesaoBeneficio")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -48,6 +50,7 @@ public class AdesaoBeneficioController {
         return ResponseEntity.ok(service.listarHistorico(matricula));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma adesão de benefício",
             description = "Um profissional pode ter várias adesões vigentes ao mesmo tempo (ex.: VT + VR + plano de saúde) — diferente de Lotacao, não há limite de uma vigente por vez.",
@@ -69,6 +72,7 @@ public class AdesaoBeneficioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PatchMapping(value = "{uuid}/encerrar", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Encerra uma adesão de benefício",
             description = "Operação de negócio explícita: a adesão não é apagada nem alterada destrutivamente, ela ganha uma data de fim. Recusa encerrar uma adesão que já foi encerrada (409).",
