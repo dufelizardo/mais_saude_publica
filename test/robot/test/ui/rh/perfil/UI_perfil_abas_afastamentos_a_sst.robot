@@ -1,54 +1,51 @@
 *** Settings ***
-Resource    ../../../../flow/ui/rh/perfil/perfil_ui_flow.resource
+Resource    ../../../../src/scenario/ui/rh/perfil/perfil_ui_scenario.resource
+Resource    ../../../../src/scenario/common/ui_sessao_scenario.resource
+Suite Setup       UI - ABRIR SISTEMA
+Suite Teardown    UI - FECHAR SISTEMA
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Metadata    Test Suite - UI RH - Perfil do profissional (Afastamentos a SST)
+Metadata    Test Suite Description        Valida as gavetas das abas Afastamentos, Ponto, Folha e SST do perfil (ADR-0085).
+Metadata    Test Suite Owner              Eduardo Felizardo
+Metadata    Test Suite Version            1.0
+Metadata    Test Suite Tags               UI    UiRhPerfil    MaisSaudePublicaFrontend
+Metadata    Test Suite Created On         2026-10-01
+Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Project                       Layered Keyword Driven Framework (LKDF)
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-*** Keywords ***
-UI - PERFIL - REGISTRAR AJUSTE
-    [Documentation]    Registro de ajuste individual pela gaveta.
+*** Variables ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Test Cases ***
+CT-001 - Registrar afastamento pela gaveta
+    [Documentation]    Aviso e linha nova na tabela.
+    [Tags]    UI    UiRhPerfil
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Perfil - Registrar Ajuste Pela Gaveta
+    UI - PERFIL - REGISTRAR AFASTAMENTO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - PERFIL - EDITAR CONTATO
-    [Documentation]    Edição do contato pela gaveta.
+CT-002 - Solicitar correção de ponto pela gaveta
+    [Documentation]    Ponto registrado e correção pendente.
+    [Tags]    UI    UiRhPerfil
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Perfil - Editar Contato Pela Gaveta
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - PERFIL - AJUSTE SEM VALOR
-    [Documentation]    Validação do campo obrigatório na gaveta.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Perfil - Gaveta Recusa Ajuste Sem Valor
+    UI - PERFIL - SOLICITAR CORRECAO DE PONTO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - PERFIL - REGISTRAR AFASTAMENTO
-    [Documentation]    Registro de afastamento pela gaveta.
+CT-003 - Registrar exame ocupacional pela gaveta
+    [Documentation]    Aviso e resultado na tabela.
+    [Tags]    UI    UiRhPerfil
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Perfil - Registrar Afastamento Pela Gaveta
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - PERFIL - SOLICITAR CORRECAO DE PONTO
-    [Documentation]    Correção de ponto pela gaveta.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Perfil - Solicitar Correcao De Ponto Pela Gaveta
+    UI - PERFIL - REGISTRAR EXAME
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - PERFIL - REGISTRAR EXAME
-    [Documentation]    Registro de exame ocupacional pela gaveta.
+CT-004 - Gaveta da folha recusa competência inválida
+    [Documentation]    Mensagem do campo competência.
+    [Tags]    UI    UiRhPerfil
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Perfil - Registrar Exame Ocupacional Pela Gaveta
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - PERFIL - FOLHA COM COMPETENCIA INVALIDA
-    [Documentation]    Validação da competência na gaveta da folha.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Perfil - Gaveta Da Folha Recusa Competencia Invalida
+    UI - PERFIL - FOLHA COM COMPETENCIA INVALIDA
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
