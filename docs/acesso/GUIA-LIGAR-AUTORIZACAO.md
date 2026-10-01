@@ -163,6 +163,25 @@ liberação explícita do responsável.
 Passo 4 e siga o mesmo fluxo de PR. Para desligar, remova a linha. Os acessos justificados continuam
 guardados.
 
+## Recuperação de senha por e-mail (ADR-0081)
+
+Sem ela, quem esquece a senha depende da administração (senha provisória). Para oferecer o
+**Esqueci minha senha** no login, o ambiente precisa de um provedor SMTP.
+
+**Variáveis no overlay do ambiente:**
+- `SPRING_MAIL_HOST` e `SPRING_MAIL_PORT`;
+- `SPRING_MAIL_USERNAME` e `SPRING_MAIL_PASSWORD`, num Secret;
+- `SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true`, se o provedor exigir;
+- `APP_SECURITY_RECUPERACAO_SENHA_URL_FRONTEND`, o endereço do front, usado no link (ex.:
+  `http://frontend-dev.mais-saude.local`);
+- `APP_EMAIL_REMETENTE`, o endereço "de".
+
+**Para conferir:** `GET /api/v1/auth/status` deve trazer `"recuperacaoDeSenha": true`.
+
+**Quem consegue recuperar:** só quem tem profissional cadastrado com e-mail, ligado pelo mesmo CPF. Os
+outros continuam pela senha provisória. Os pedidos aparecem na tela Auditoria com a ação
+**Recuperação de senha**.
+
 ## Como desligar (voltar atrás)
 
 Remova a linha `APP_SECURITY_AUTHORIZATION_ENABLED=true` do overlay, ou troque o valor para `false`, e
@@ -179,7 +198,7 @@ quando a exigência for religada.
 | Gestor não consegue conceder Administrador da plataforma | por desenho: perfil com administração do sistema só é concedido por quem tem acesso na rede inteira | um administrador da plataforma concede |
 | "Você não pode desativar o seu próprio usuário" | proteção contra trancar a administração | desativar a partir de outra conta de administrador |
 | "Conta temporariamente bloqueada" no login | 5 senhas erradas seguidas (ADR-0055) | abrir a pessoa → **Desbloquear**, ou esperar o prazo |
-| Pessoa esqueceu a senha | não há recuperação por e-mail ainda | abrir a pessoa → **Definir senha provisória**; ela troca no próximo acesso (ADR-0069) |
+| Pessoa esqueceu a senha | — | com SMTP configurado, ela mesma usa **Esqueci minha senha** no login (ADR-0081); sem SMTP, ou sem e-mail no cadastro de profissional, abrir a pessoa → **Definir senha provisória** (ADR-0069) |
 | "Troque a senha provisória antes de continuar" | a pessoa entrou com senha provisória | ela conclui a troca na tela que o sistema abre sozinho |
 | "Sem vínculo assistencial com este paciente" | o vínculo está ligado e a pessoa não tem atendimento nem agendamento com o paciente | registrar o atendimento ou o agendamento, ou usar **Acessar com justificativa** |
 | Computador esquecido logado, ou suspeita de uso indevido da conta | a sessão continua aberta | abrir a pessoa → **Encerrar sessões**; ela entra de novo com a mesma senha (ADR-0078) |
@@ -187,6 +206,6 @@ quando a exigência for religada.
 
 ## Pendências conhecidas
 
-- Recuperação de senha sem a administração (e-mail ou gov.br) (ADR-0069). As sessões ativas já caem
-  na hora ao desativar, redefinir ou trocar a senha, e pelo botão **Encerrar sessões** (ADR-0078).
+- Recuperação de senha pelo gov.br (a por e-mail existe, ver seção acima, ADR-0081). As sessões ativas
+  já caem na hora ao desativar, redefinir ou trocar a senha, e pelo botão **Encerrar sessões** (ADR-0078).
 - MFA, sessões ativas e política de senha aparecem como "Em breve" na tela.

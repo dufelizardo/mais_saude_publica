@@ -29,6 +29,8 @@ public class AuditoriaInterceptor implements HandlerInterceptor {
 
     private static final String LOGIN = "/api/v1/auth/login";
     private static final String SENHA = "/api/v1/auth/senha";
+    private static final String RECUPERACAO = "/api/v1/auth/senha/recuperacao";
+    private static final String REDEFINICAO = "/api/v1/auth/senha/redefinicao";
 
     @Autowired
     private AuditoriaService auditoriaService;
@@ -48,7 +50,8 @@ public class AuditoriaInterceptor implements HandlerInterceptor {
             }
             acao = AcaoAuditoria.LEITURA;
         }
-        boolean negado = status == 403 || (acao == AcaoAuditoria.LOGIN && status == 401);
+        boolean negado = status == 403 || (acao == AcaoAuditoria.LOGIN && status == 401)
+                || (acao == AcaoAuditoria.RECUPERACAO_DE_SENHA && status == 422);
         boolean sucesso = status >= 200 && status < 300;
         if (!negado && !sucesso) {
             return;
@@ -79,6 +82,7 @@ public class AuditoriaInterceptor implements HandlerInterceptor {
     private static AcaoAuditoria acao(String metodoHttp, String rota, HandlerMethod metodo) {
         if (LOGIN.equals(rota)) return AcaoAuditoria.LOGIN;
         if (SENHA.equals(rota)) return AcaoAuditoria.TROCA_DE_SENHA;
+        if (RECUPERACAO.equals(rota) || REDEFINICAO.equals(rota)) return AcaoAuditoria.RECUPERACAO_DE_SENHA;
         switch (metodoHttp) {
             case "GET":
                 return metodo.hasMethodAnnotation(AuditarLeitura.class) ? AcaoAuditoria.LEITURA : null;

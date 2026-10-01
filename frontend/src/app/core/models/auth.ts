@@ -48,6 +48,8 @@ export interface SecurityStatusResponseDto {
   securityEnabled: boolean;
   /** Exigência de permissão por papel e escopo ligada (ADR-0067). */
   authorizationEnabled?: boolean;
+  /** "Esqueci minha senha" por e-mail disponível neste ambiente (ADR-0081). */
+  recuperacaoDeSenha?: boolean;
 }
 
 /** O que a interface pode mostrar: sem restrição, ou só o que as permissões do usuário liberam (ADR-0068). */

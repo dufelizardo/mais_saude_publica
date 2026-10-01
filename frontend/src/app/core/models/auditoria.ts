@@ -3,6 +3,7 @@
 export type AcaoAuditoria =
   | 'LOGIN'
   | 'TROCA_DE_SENHA'
+  | 'RECUPERACAO_DE_SENHA'
   | 'LEITURA'
   | 'CRIACAO'
   | 'ALTERACAO'
@@ -58,6 +59,7 @@ export interface FiltroAuditoria {
 export const ACOES_AUDITORIA: Record<AcaoAuditoria, { rotulo: string; classe: string }> = {
   LOGIN: { rotulo: 'Login', classe: 'info' },
   TROCA_DE_SENHA: { rotulo: 'Troca de senha', classe: 'purple' },
+  RECUPERACAO_DE_SENHA: { rotulo: 'Recuperação de senha', classe: 'purple' },
   LEITURA: { rotulo: 'Leitura', classe: 'info' },
   CRIACAO: { rotulo: 'Criação', classe: 'ok' },
   ALTERACAO: { rotulo: 'Alteração', classe: 'warn' },

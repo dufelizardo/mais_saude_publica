@@ -17,6 +17,9 @@ export const routes: Routes = [
   { path: '', component: LandingPage },
   { path: 'login', component: Login },
   { path: 'trocar-senha', component: TrocarSenha, canActivate: [trocaDeSenhaGuard] },
+  // Recuperação de senha por e-mail (ADR-0081): públicas, fora do AppShell.
+  { path: 'recuperar-senha', loadComponent: () => import('./features/auth/recuperar-senha/recuperar-senha').then((m) => m.RecuperarSenha) },
+  { path: 'redefinir-senha', loadComponent: () => import('./features/auth/redefinir-senha/redefinir-senha').then((m) => m.RedefinirSenha) },
   {
     path: '',
     component: AppShell,

@@ -31,6 +31,8 @@ export class Login {
   protected readonly aba = signal<TipoIdentificadorLogin>('CPF');
   protected readonly mostrarSenha = signal(false);
   protected readonly enviando = signal(false);
+  /** "Esqueci minha senha" por e-mail neste ambiente (ADR-0081); sem SMTP, só a administração redefine. */
+  protected readonly recuperacaoDeSenha = signal(false);
   protected readonly erroServidor = signal<string | null>(null);
   protected readonly identificadorInvalido = signal(false);
   protected readonly senhaInvalida = signal(false);
@@ -43,6 +45,7 @@ export class Login {
 
   constructor() {
     this.restaurarPreferencias();
+    this.authService.recuperacaoDeSenhaDisponivel().subscribe((d) => this.recuperacaoDeSenha.set(d));
   }
 
   protected selecionarAba(aba: TipoIdentificadorLogin): void {

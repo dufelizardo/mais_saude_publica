@@ -127,6 +127,12 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      # Caixa de e-mail de teste da recuperação de senha (ADR-0081): SMTP na 1025, API HTTP na 8025.
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 1025:1025
+          - 8025:8025
 
     steps:
       - name: Checkout code
@@ -153,6 +159,8 @@ jobs:
             --app.security.enabled=true --app.security.authorization.enabled=true \
             --app.security.prontuario-por-vinculo.enabled=true \
             --app.security.bootstrap.cpf=52998224725 --app.security.bootstrap.senha='Robot#Admin123' \
+            --spring.mail.host=localhost --spring.mail.port=1025 \
+            --app.security.recuperacao-senha.url-frontend=http://localhost:4200 \
             > api-seguranca.log 2>&1 &
 
       - name: Set up Node
@@ -223,6 +231,7 @@ jobs:
           MSP_FRONT_URL: http://localhost:4200
           MSP_ADMIN_CPF: '52998224725'
           MSP_ADMIN_SENHA: 'Robot#Admin123'
+          MSP_MAILPIT_URL: http://localhost:8025
         run: robot --outputdir test/robot/results-ui-seguranca --include SEGURANCA test/robot/test
 
       - name: Publicar resultados da interface

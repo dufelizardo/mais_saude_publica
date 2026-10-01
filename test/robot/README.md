@@ -70,6 +70,7 @@ O frontend também é testado aqui, com Robot Framework e o mesmo LKDF
 - **Cobertura atual:**
   - menu lateral (recolhido por padrão, grupo da página aberto);
   - botões por permissão (`SEGURANCA`): técnico de enfermagem × recepção em Pacientes e Atendimentos;
+  - recuperação de senha: indisponível sem SMTP; com `SEGURANCA` e Mailpit (`MSP_MAILPIT_URL`), o fluxo completo pelo e-mail;
   - Setores;
   - Modelo administrativo (abas, rotas antigas, validação e cadastro pela gaveta);
   - abertura do prontuário em Pacientes com a regra de vínculo desligada;

@@ -134,7 +134,11 @@
         <div class="field" id="field-pwd" [class.has-error]="senhaInvalida()">
           <div class="field__row">
             <label for="password">Senha</label>
-            <button type="button" class="hint" disabled title="Em breve — recuperação de senha ainda não implementada">Esqueci minha senha</button>
+            @if (recuperacaoDeSenha()) {
+              <a class="hint" routerLink="/recuperar-senha">Esqueci minha senha</a>
+            } @else {
+              <button type="button" class="hint" disabled title="Neste ambiente, quem redefine a senha é a administração do sistema">Esqueci minha senha</button>
+            }
           </div>
           <div class="input-wrap" [class.has-error]="senhaInvalida()">
             <span class="input-wrap__icon" aria-hidden="true">
