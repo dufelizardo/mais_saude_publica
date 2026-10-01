@@ -19,7 +19,25 @@ public class CicloAvaliacaoService {
     private CicloAvaliacaoRepository cicloAvaliacaoRepository;
 
     public CicloAvaliacaoResponseDto criar(CicloAvaliacaoRequestDto dto) {
+        if (dto.getDataFim() != null && dto.getDataInicio() != null && dto.getDataFim().isBefore(dto.getDataInicio())) {
+            throw new com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException(
+                    "O fim do ciclo não pode ser antes do início.");
+        }
         CicloAvaliacao ciclo = new CicloAvaliacao(dto);
+        ciclo = cicloAvaliacaoRepository.save(ciclo);
+        return CicloAvaliacaoResponseDto.fromCicloAvaliacao(ciclo);
+    }
+
+    /** Edição do catálogo (ADR-0083): mesmos campos e regras da criação; nome repetido → 409. */
+    public CicloAvaliacaoResponseDto atualizar(UUID uuid, CicloAvaliacaoRequestDto dto) {
+        if (dto.getDataFim() != null && dto.getDataInicio() != null && dto.getDataFim().isBefore(dto.getDataInicio())) {
+            throw new com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException(
+                    "O fim do ciclo não pode ser antes do início.");
+        }
+        CicloAvaliacao ciclo = buscarEntidadePorId(uuid);
+        ciclo.setNome(dto.getNome());
+        ciclo.setDataInicio(dto.getDataInicio());
+        ciclo.setDataFim(dto.getDataFim());
         ciclo = cicloAvaliacaoRepository.save(ciclo);
         return CicloAvaliacaoResponseDto.fromCicloAvaliacao(ciclo);
     }

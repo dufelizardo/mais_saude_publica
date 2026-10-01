@@ -72,8 +72,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   (ADR-0079).
 
 ### Auditoria
-- **Exportação** (CSV ou PDF) para atender pedidos formais do titular dos dados (ADR-0071).
-- **Retenção e arquivamento** da trilha (ADRs 0070 e 0071).
+- ~~Exportação e retenção~~ — feitas pela ADR-0082 (CSV e 20 anos). PDF formatado só se houver pedido
+  formal que o exija.
 - **Alertas** (muitas recusas seguidas, leituras fora do horário, acesso justificado para a supervisão)
   (ADRs 0071 e 0076).
 
@@ -82,9 +82,7 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 
 ### Telas
 - **Perfil do profissional:** as 13 abas seguem com modais da primeira geração (ADR-0075).
-- **Responsáveis por setor:** falta um endpoint para listar os responsáveis de um setor (ADR-0074).
-- **Treinamento, ciclo de avaliação e tipo de benefício** sem edição, porque a API não tem o endpoint
-  (ADR-0073).
+- ~~Responsáveis por setor~~ e ~~edição de treinamento, ciclo e tipo de benefício~~ — feitos pela ADR-0083.
 - Exportar e importar profissionais; **Equipes** e **Escalas**, que são domínios novos (ADR-0072).
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
 

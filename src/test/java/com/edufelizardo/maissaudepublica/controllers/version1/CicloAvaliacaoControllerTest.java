@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -111,6 +112,39 @@ class CicloAvaliacaoControllerTest {
     @Test
     void deveRetornarNotFoundAoBuscarIdInexistente() throws Exception {
         mockMvc.perform(get(BASE_URL + UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+
+    // ── Edição (ADR-0083) ──────────────────────────────────────────────────────────────────────
+
+    @Test
+    void deveAtualizarOCiclo() throws Exception {
+        UUID uuid = criarCiclo(PREFIXO_NOME_TESTE + "2027/1");
+        String nome = PREFIXO_NOME_TESTE + "2027 semestre 1";
+        mockMvc.perform(patch(BASE_URL + uuid).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "%s", "dataInicio": "2027-02-01", "dataFim": "2027-07-31"}
+                        """.formatted(nome)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Ciclo de avaliação atualizado com sucesso!"));
+        mockMvc.perform(get(BASE_URL + uuid))
+                .andExpect(jsonPath("$.nome").value(nome))
+                .andExpect(jsonPath("$.dataInicio").value("2027-02-01"))
+                .andExpect(jsonPath("$.dataFim").value("2027-07-31"));
+    }
+
+    @Test
+    void cicloComFimAntesDoInicioDa400AoCriarEAtualizar() throws Exception {
+        String invertido = """
+                {"nome": "%s", "dataInicio": "2027-06-30", "dataFim": "2027-01-01"}
+                """.formatted(PREFIXO_NOME_TESTE + "Invertido");
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(invertido))
+                .andExpect(status().isBadRequest());
+        UUID uuid = criarCiclo(PREFIXO_NOME_TESTE + "Valido");
+        mockMvc.perform(patch(BASE_URL + uuid).contentType(MediaType.APPLICATION_JSON).content(invertido))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(patch(BASE_URL + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "%s", "dataInicio": "2027-01-01", "dataFim": "2027-06-30"}
+                        """.formatted(PREFIXO_NOME_TESTE + "Fantasma")))
                 .andExpect(status().isNotFound());
     }
 }

@@ -124,9 +124,7 @@
                 </td>
                 <td class="num">
                   <div class="row-actions">
-                    @if (s.responsavelMatricula) {
-                      <button type="button" class="btn btn--ghost btn--sm" (click)="$event.stopPropagation(); verResponsabilidades(s)">Responsabilidades</button>
-                    }
+                    <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Responsáveis de ' + s.nome" (click)="$event.stopPropagation(); verResponsabilidades(s)">Responsáveis</button>
                     @if (pode('ORGANIZACAO.GERENCIAR')) {
                       <button type="button" class="btn btn--ghost btn--sm" (click)="$event.stopPropagation(); abrirSetor(s)">Editar</button>
                     }
@@ -228,7 +226,7 @@
 
 <!-- ── Gavetas ──────────────────────────────────────────────────────────────────────────────── -->
 @if (gaveta(); as g) {
-  <app-drawer [titulo]="g.tipo === 'setor' ? (g.setor ? 'Editar setor' : 'Novo setor') : g.tipo === 'responsabilidade' ? 'Atribuir responsabilidade' : 'Encerrar responsabilidade'" (fechar)="fecharGaveta()">
+  <app-drawer [titulo]="g.tipo === 'setor' ? (g.setor ? 'Editar setor' : 'Novo setor') : g.tipo === 'responsabilidade' ? 'Atribuir responsabilidade' : g.tipo === 'responsaveis' ? 'Responsáveis · ' + g.setor.nome : 'Encerrar responsabilidade'" (fechar)="fecharGaveta()">
     @switch (g.tipo) {
       @case ('setor') {
         <form class="dw-form" [formGroup]="setorForm" (ngSubmit)="salvar()" novalidate>
@@ -336,6 +334,39 @@
             <button type="submit" class="btn btn--danger" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Encerrar' }}</button>
           </footer>
         </form>
+      }
+
+      @case ('responsaveis') {
+        <div class="dw-body">
+          @if (responsaveisDoSetor() === null) {
+            <p class="cell-sub">Carregando…</p>
+          } @else if (!responsaveisDoSetor()!.length) {
+            <div class="empty"><strong>Nenhuma responsabilidade registrada neste setor</strong><span>Atribua pela aba Responsabilidades, escolhendo o profissional.</span></div>
+          } @else {
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr><th scope="col">Responsabilidade</th><th scope="col">Profissional</th><th scope="col">Período</th><th scope="col">Situação</th><th scope="col" class="num">Ações</th></tr></thead>
+                <tbody>
+                  @for (r of responsaveisDoSetor(); track r.uuid) {
+                    <tr>
+                      <td class="cell-main">{{ r.tipo }}@if (r.descricao) { <span class="cell-sub">{{ r.descricao }}</span> }</td>
+                      <td>{{ r.profissionalNome }} <span class="cell-sub mono" style="display: inline;">{{ r.profissionalMatricula }}</span></td>
+                      <td class="mono">{{ dataBr(r.dataInicio) }}@if (r.dataFim) { a {{ dataBr(r.dataFim) }} } @else { em diante }</td>
+                      <td>
+                        @if (r.dataFim) { <span class="badge badge--muted">Encerrada</span> }
+                        @else { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Vigente</span> }
+                      </td>
+                      <td class="num"><button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Histórico de ' + r.profissionalNome" (click)="verHistoricoDe(r.profissionalMatricula)">Histórico</button></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </div>
+        <footer class="dw-foot">
+          <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button>
+        </footer>
       }
     }
   </app-drawer>

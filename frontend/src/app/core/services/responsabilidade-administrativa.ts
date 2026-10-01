@@ -16,6 +16,11 @@ export class ResponsabilidadeAdministrativaService {
     return this.http.get<ResponsabilidadeAdministrativaResponseDto[]>(`${this.baseUrl}/profissional/${matricula}`);
   }
 
+  /** Responsáveis de um setor, vigentes primeiro (ADR-0083). Sem nenhuma, a API responde 404. */
+  listarPorSetor(setorId: string): Observable<ResponsabilidadeAdministrativaResponseDto[]> {
+    return this.http.get<ResponsabilidadeAdministrativaResponseDto[]>(`/api/v1/responsabilidade-administrativa/setor/${setorId}`);
+  }
+
   criar(dto: ResponsabilidadeAdministrativaRequestDto): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/`, dto);
   }

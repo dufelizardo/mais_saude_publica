@@ -87,7 +87,7 @@ mas ficavam numa tela separada.
 - O menu tem 3 itens.
 
 **Negativas / pendências:**
-- Não há lista de responsáveis por setor (ver trade-off acima).
+- ~~Não há lista de responsáveis por setor~~ — feita pela [ADR-0083](./0083-edicao-de-catalogos-de-rh-e-responsaveis-por-setor.md) (gaveta "Responsáveis" na tela Setores).
 - A tela não foi conferida visualmente no navegador por quem implementou. A conferência fica com o revisor.
 
 ## Referências

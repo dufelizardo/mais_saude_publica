@@ -1,4 +1,6 @@
 *** Settings ***
+Resource    ../../../responsabilidade_administrativa/create_responsabilidade_administrativa/create_responsabilidade_administrativa_flow.resource
+Resource    ../../../../pom/setor/get_setor_by_id/get_setor_by_id_pom.resource
 Library    String
 Resource    ../../../../pom/ui/administrativo/setores/setores_ui_pom.resource
 Resource    ../../../setor/create_setor/create_setor_flow.resource
@@ -64,5 +66,20 @@ UI Setores - Aba Responsabilidades Pela Rota Antiga
     Should Contain    ${url}    aba=responsabilidades
     ${aba}=    Ler Aba Selecionada
     Should Start With    ${aba}    Responsabilidades
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Setores - Responsaveis Do Setor
+    [Documentation]    A gaveta "Responsáveis" mostra a responsabilidade vigente do setor (ADR-0083).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${matricula}    ${setorId}=    Seed A Responsabilidade Administrativa
+    ${setor}=    GET Get Setor By Id    ${setorId}
+    ${nome}=    Set Variable    ${setor.json()}[nome]
+    UI Setores - Abrir Tela
+    UI Setores - Abrir Responsaveis    ${nome}
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Responsáveis · ${nome}
+    Esperar Texto Aparecer    ${matricula}
+    Esperar Texto Aparecer    Vigente
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -93,7 +93,7 @@ assunto espalhadas pelo menu.
 
 **Negativas / pendências:**
 - **Perfil do profissional** (13 abas, modais antigos): a próxima entrega, só o cabeçalho.
-- Treinamento, ciclo e tipo de benefício continuam sem edição, porque a API não tem esse endpoint.
+- ~~Treinamento, ciclo e tipo de benefício continuam sem edição~~ — edição feita pela [ADR-0083](./0083-edicao-de-catalogos-de-rh-e-responsaveis-por-setor.md).
 
 ## Referências
 
