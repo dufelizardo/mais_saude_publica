@@ -2,7 +2,6 @@ import { inject } from '@angular/core';
 import { Routes, Params, Router } from '@angular/router';
 import { LandingPage } from './features/landing/landing-page';
 import { ProfissionaisLista } from './features/profissionais-lista/profissionais-lista';
-import { ProfissionalPerfil } from './features/profissional-perfil/profissional-perfil';
 import { FolhaPagamento } from './features/rh/folha-pagamento/folha-pagamento';
 import { Setores } from './features/administrativo/setores/setores';
 import { Pacientes } from './features/assistencia/pacientes/pacientes';
@@ -32,7 +31,11 @@ export const routes: Routes = [
         path: 'profissionais/desligar',
         redirectTo: ({ queryParams }) => inject(Router).createUrlTree(['/profissionais'], { queryParams: { acao: 'desligar', ...queryParams } }),
       },
-      { path: 'profissionais/perfil', component: ProfissionalPerfil, data: { breadcrumb: 'Perfil do profissional', area: 'Recursos Humanos' } },
+      {
+        path: 'profissionais/perfil',
+        loadComponent: () => import('./features/profissional-perfil/profissional-perfil').then((m) => m.ProfissionalPerfil),
+        data: { breadcrumb: 'Perfil do profissional', area: 'Recursos Humanos' },
+      },
       // Catálogos de RH agrupados em telas com abas (ADR-0073), carregadas sob demanda.
       {
         path: 'rh/cargos-e-salarios',

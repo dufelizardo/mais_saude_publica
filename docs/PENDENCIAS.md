@@ -81,15 +81,14 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - Encaminhamento e regulação ainda não geram vínculo, porque esses domínios não existem (ADR-0076).
 
 ### Telas
-- **Perfil do profissional:** de Dados até SST já está no padrão novo (ADRs 0084 e 0085). Faltam
-  Treinamentos, Avaliações, Benefícios, Desligamento e Histórico (parte C).
+- ~~**Perfil do profissional:** as 13 abas no padrão novo~~ — feito pelas ADRs 0084 a 0086.
 - ~~Responsáveis por setor~~ e ~~edição de treinamento, ciclo e tipo de benefício~~ — feitos pela ADR-0083.
 - Exportar e importar profissionais; **Equipes** e **Escalas**, que são domínios novos (ADR-0072).
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
 
 ### Testes
 - **Cobertura Robot de interface das demais telas**, deixada para o final (ADR-0077): Necessidades de
-  pessoal, RH (Cargos & salários, Benefícios, Desenvolvimento, Recrutamento, Folha, perfil),
+  pessoal, RH (Cargos & salários, Benefícios, Desenvolvimento, Recrutamento, Folha; o perfil já tem cobertura pelas ADRs 0084 a 0086),
   Profissionais, Usuários & Perfis (além do encerramento de sessões) e Auditoria.
 
 ## 6. Roadmap de domínios

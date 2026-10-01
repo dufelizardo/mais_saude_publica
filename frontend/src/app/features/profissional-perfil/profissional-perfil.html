@@ -1090,394 +1090,387 @@
     }
 
     @if (abaAtiva() === 'treinamentos') {
-      <div style="padding: var(--s-5); overflow-x: auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Treinamento</th>
-              <th>Conclusão</th>
-              <th>Validade</th>
-              <th>Certificado</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of participacoes(); track item.uuid) {
-              <tr>
-                <td>{{ item.treinamentoNome }}</td>
-                <td>{{ item.dataConclusao | date: 'dd/MM/yyyy' }}</td>
-                <td>{{ item.dataValidade ? (item.dataValidade | date: 'dd/MM/yyyy') : '—' }}</td>
-                <td>
-                  @if (item.certificadoUrl) {
-                    <a [href]="item.certificadoUrl" target="_blank" rel="noopener">Ver</a>
-                  } @else {
-                    —
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        @if (!carregandoTreinamentos() && participacoes().length === 0) {
-          <p class="table-empty">Nenhuma participação em treinamento registrada.</p>
-        }
-
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Treinamentos</h2>
+          <p class="sub">Participações concluídas; a validade vem do catálogo do treinamento</p>
+        </div>
         @if (pode('RH.GERENCIAR')) {
-          <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Registrar participação</h3>
-          @if (participacaoErrorMessage()) {
-            <div class="form-banner form-banner--error" role="alert">{{ participacaoErrorMessage() }}</div>
-          }
-          <form [formGroup]="participacaoForm" (ngSubmit)="registrarParticipacao()" class="form" novalidate>
-            <div class="form-group">
-              <label for="treinamentoId">Treinamento *</label>
-              <select id="treinamentoId" formControlName="treinamentoId">
-                <option value="" disabled>Selecione…</option>
-                @for (treinamento of treinamentosCatalogo(); track treinamento.uuid) {
-                  <option [value]="treinamento.uuid">{{ treinamento.nome }}</option>
+          <button type="button" class="btn btn--sm" (click)="abrirParticipacao()">+ Registrar participação</button>
+        }
+      </div>
+      <div class="perfil-corpo">
+        @if (carregandoTreinamentos()) {
+          <p class="cell-sub">Carregando…</p>
+        } @else if (!participacoes().length) {
+          <div class="empty"><strong>Nenhuma participação em treinamento registrada</strong></div>
+        } @else {
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th scope="col">Treinamento</th><th scope="col">Conclusão</th><th scope="col">Validade</th><th scope="col">Certificado</th></tr></thead>
+              <tbody>
+                @for (item of participacoes(); track item.uuid) {
+                  <tr>
+                    <td class="cell-main">{{ item.treinamentoNome }}</td>
+                    <td class="mono">{{ item.dataConclusao | date: 'dd/MM/yyyy' }}</td>
+                    <td>
+                      @if (item.dataValidade) {
+                        <span class="mono">{{ item.dataValidade | date: 'dd/MM/yyyy' }}</span>
+                        @if (vencida(item.dataValidade)) { <span class="badge badge--alert">Vencido</span> }
+                      } @else { <span class="cell-sub">Sem validade</span> }
+                    </td>
+                    <td>@if (item.certificadoUrl) { <a [href]="item.certificadoUrl" target="_blank" rel="noopener">Ver certificado</a> } @else { — }</td>
+                  </tr>
                 }
-              </select>
-              @if (participacaoForm.controls.treinamentoId.invalid && participacaoForm.controls.treinamentoId.touched) {
-                <span class="form-error">Treinamento é obrigatório.</span>
-              }
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="dataConclusao">Data de conclusão *</label>
-                <input id="dataConclusao" type="date" formControlName="dataConclusao" />
-                @if (participacaoForm.controls.dataConclusao.invalid && participacaoForm.controls.dataConclusao.touched) {
-                  <span class="form-error">Data de conclusão é obrigatória.</span>
-                }
-              </div>
-              <div class="form-group">
-                <label for="certificadoUrl">Link do certificado</label>
-                <input id="certificadoUrl" type="text" formControlName="certificadoUrl" placeholder="https://…" />
-              </div>
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn" [disabled]="submittingParticipacao()">
-                {{ submittingParticipacao() ? 'Registrando…' : 'Registrar participação' }}
-              </button>
-            </div>
-          </form>
+              </tbody>
+            </table>
+          </div>
         }
       </div>
     }
 
     @if (abaAtiva() === 'avaliacoes') {
-      <div style="padding: var(--s-5); overflow-x: auto;">
-        <table>
-          <thead>
-            <tr>
-              <th>Ciclo</th>
-              <th>Avaliador</th>
-              <th>Nota</th>
-              <th>Observação</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of avaliacoes(); track item.uuid) {
-              <tr>
-                <td>{{ item.cicloNome }}</td>
-                <td>{{ item.avaliador }}</td>
-                <td>{{ item.nota }}</td>
-                <td>{{ item.observacao || '—' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        @if (!carregandoAvaliacoes() && avaliacoes().length === 0) {
-          <p class="table-empty">Nenhuma avaliação registrada.</p>
-        }
-
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Avaliações</h2>
+          <p class="sub">Avaliações de desempenho por ciclo</p>
+        </div>
         @if (pode('RH.GERENCIAR')) {
-          <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Registrar avaliação</h3>
-          @if (avaliacaoErrorMessage()) {
-            <div class="form-banner form-banner--error" role="alert">{{ avaliacaoErrorMessage() }}</div>
-          }
-          <form [formGroup]="avaliacaoForm" (ngSubmit)="registrarAvaliacao()" class="form" novalidate>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="cicloId">Ciclo de avaliação *</label>
-                <select id="cicloId" formControlName="cicloId">
-                  <option value="" disabled>Selecione…</option>
-                  @for (ciclo of ciclosAvaliacao(); track ciclo.uuid) {
-                    <option [value]="ciclo.uuid">{{ ciclo.nome }}</option>
-                  }
-                </select>
-                @if (avaliacaoForm.controls.cicloId.invalid && avaliacaoForm.controls.cicloId.touched) {
-                  <span class="form-error">Ciclo é obrigatório.</span>
+          <button type="button" class="btn btn--sm" (click)="abrirAvaliacao()">+ Registrar avaliação</button>
+        }
+      </div>
+      <div class="perfil-corpo">
+        @if (carregandoAvaliacoes()) {
+          <p class="cell-sub">Carregando…</p>
+        } @else if (!avaliacoes().length) {
+          <div class="empty"><strong>Nenhuma avaliação registrada</strong></div>
+        } @else {
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th scope="col">Ciclo</th><th scope="col">Avaliador</th><th scope="col" class="num">Nota</th><th scope="col">Observação</th></tr></thead>
+              <tbody>
+                @for (item of avaliacoes(); track item.uuid) {
+                  <tr>
+                    <td class="cell-main">{{ item.cicloNome }}</td>
+                    <td>{{ item.avaliador }}</td>
+                    <td class="num mono"><strong>{{ item.nota | number: '1.1-1' }}</strong></td>
+                    <td>{{ item.observacao || '—' }}</td>
+                  </tr>
                 }
-              </div>
-              <div class="form-group">
-                <label for="avaliador">Avaliador *</label>
-                <input id="avaliador" type="text" formControlName="avaliador" />
-                @if (avaliacaoForm.controls.avaliador.invalid && avaliacaoForm.controls.avaliador.touched) {
-                  <span class="form-error">Avaliador é obrigatório.</span>
-                }
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="nota">Nota *</label>
-              <input id="nota" type="number" step="0.1" min="0" formControlName="nota" style="max-width: 160px;" />
-              @if (avaliacaoForm.controls.nota.invalid && avaliacaoForm.controls.nota.touched) {
-                <span class="form-error">Nota é obrigatória.</span>
-              }
-            </div>
-            <div class="form-group">
-              <label for="observacao">Observação</label>
-              <input id="observacao" type="text" formControlName="observacao" />
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn" [disabled]="submittingAvaliacao()">
-                {{ submittingAvaliacao() ? 'Registrando…' : 'Registrar avaliação' }}
-              </button>
-            </div>
-          </form>
+              </tbody>
+            </table>
+          </div>
         }
       </div>
     }
 
     @if (abaAtiva() === 'beneficios') {
-      <div style="padding: var(--s-5); overflow-x: auto;">
-        @if (encerrarBeneficioErrorMessage()) {
-          <div class="form-banner form-banner--error" role="alert">{{ encerrarBeneficioErrorMessage() }}</div>
-        }
-        <table>
-          <thead>
-            <tr>
-              <th>Benefício</th>
-              <th>Início</th>
-              <th>Dependentes</th>
-              <th>Situação</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of beneficios(); track item.uuid) {
-              <tr>
-                <td>{{ item.tipoBeneficioNome }}</td>
-                <td>{{ item.dataInicio | date: 'dd/MM/yyyy' }}</td>
-                <td>{{ item.quantidadeDependentes ?? '—' }}</td>
-                <td>
-                  @if (situacaoBeneficio(item) === 'Vigente') {
-                    <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span> Vigente</span>
-                  } @else {
-                    <span class="tag"><span class="dot" aria-hidden="true"></span> Encerrado {{ item.dataFim ? ('em ' + (item.dataFim | date: 'dd/MM/yyyy')) : '' }}</span>
-                  }
-                </td>
-                <td style="text-align: right; white-space: nowrap;">
-                  @if (situacaoBeneficio(item) === 'Vigente') {
-                    @if (pode('RH.GERENCIAR')) { <button type="button" class="btn btn--ghost" (click)="abrirEncerrarBeneficio(item)">Encerrar adesão</button> }
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-        @if (!carregandoBeneficios() && beneficios().length === 0) {
-          <p class="table-empty">Nenhuma adesão a benefício registrada.</p>
-        }
-
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Benefícios</h2>
+          <p class="sub">Adesões do profissional; encerrar registra o fim sem apagar o histórico</p>
+        </div>
         @if (pode('RH.GERENCIAR')) {
-          <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Nova adesão</h3>
-          @if (beneficioErrorMessage()) {
-            <div class="form-banner form-banner--error" role="alert">{{ beneficioErrorMessage() }}</div>
-          }
-          <form [formGroup]="beneficioForm" (ngSubmit)="registrarBeneficio()" class="form" novalidate>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="tipoBeneficioId">Benefício *</label>
-                <select id="tipoBeneficioId" formControlName="tipoBeneficioId">
-                  <option value="" disabled>Selecione…</option>
-                  @for (tipo of tiposBeneficioCatalogo(); track tipo.uuid) {
-                    <option [value]="tipo.uuid">{{ tipo.nome }}</option>
-                  }
-                </select>
-                @if (beneficioForm.controls.tipoBeneficioId.invalid && beneficioForm.controls.tipoBeneficioId.touched) {
-                  <span class="form-error">Benefício é obrigatório.</span>
+          <button type="button" class="btn btn--sm" (click)="abrirBeneficio()">+ Nova adesão</button>
+        }
+      </div>
+      <div class="perfil-corpo">
+        @if (carregandoBeneficios()) {
+          <p class="cell-sub">Carregando…</p>
+        } @else if (!beneficios().length) {
+          <div class="empty"><strong>Nenhuma adesão a benefício registrada</strong></div>
+        } @else {
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th scope="col">Benefício</th><th scope="col">Período</th><th scope="col" class="num">Dependentes</th><th scope="col">Situação</th>@if (pode('RH.GERENCIAR')) { <th scope="col" class="num">Ações</th> }</tr></thead>
+              <tbody>
+                @for (item of beneficios(); track item.uuid) {
+                  <tr>
+                    <td class="cell-main">{{ item.tipoBeneficioNome }}</td>
+                    <td class="mono">{{ item.dataInicio | date: 'dd/MM/yyyy' }}@if (item.dataFim) { a {{ item.dataFim | date: 'dd/MM/yyyy' }} } @else { em diante }</td>
+                    <td class="num mono">{{ item.quantidadeDependentes ?? '—' }}</td>
+                    <td>
+                      @if (situacaoBeneficio(item) === 'Vigente') { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Vigente</span> }
+                      @else { <span class="badge badge--muted">Encerrado</span> }
+                    </td>
+                    @if (pode('RH.GERENCIAR')) {
+                      <td class="num perfil-acoes">
+                        @if (situacaoBeneficio(item) === 'Vigente') {
+                          <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Encerrar adesão de ' + item.tipoBeneficioNome" (click)="abrirEncerrarBeneficio(item)">Encerrar</button>
+                        }
+                      </td>
+                    }
+                  </tr>
                 }
-              </div>
-              <div class="form-group">
-                <label for="dataInicioBeneficio">Data de início *</label>
-                <input id="dataInicioBeneficio" type="date" formControlName="dataInicio" />
-                @if (beneficioForm.controls.dataInicio.invalid && beneficioForm.controls.dataInicio.touched) {
-                  <span class="form-error">Data de início é obrigatória.</span>
-                }
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="quantidadeDependentes">Quantidade de dependentes</label>
-              <input id="quantidadeDependentes" type="number" step="1" min="0" formControlName="quantidadeDependentes" />
-            </div>
-            <div class="form-actions">
-              <button type="submit" class="btn" [disabled]="submittingBeneficio()">
-                {{ submittingBeneficio() ? 'Registrando…' : 'Registrar adesão' }}
-              </button>
-            </div>
-          </form>
+              </tbody>
+            </table>
+          </div>
         }
       </div>
     }
 
-    @if (encerrarBeneficioAlvo(); as alvo) {
-      <app-modal [titulo]="'Encerrar adesão — ' + alvo.tipoBeneficioNome" (fechar)="fecharEncerrarBeneficio()">
-        @if (encerrarBeneficioErrorMessage()) {
-          <div class="form-banner form-banner--error" role="alert">{{ encerrarBeneficioErrorMessage() }}</div>
-        }
-        <form [formGroup]="encerrarBeneficioForm" (ngSubmit)="confirmarEncerrarBeneficio()" class="form" novalidate>
-          <div class="form-group">
-            <label for="dataFimBeneficio">Data de fim *</label>
-            <input id="dataFimBeneficio" type="date" formControlName="dataFim" />
-            @if (encerrarBeneficioForm.controls.dataFim.invalid && encerrarBeneficioForm.controls.dataFim.touched) {
-              <span class="form-error">Data de fim é obrigatória.</span>
-            }
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn--ghost" (click)="fecharEncerrarBeneficio()">Cancelar</button>
-            <button type="submit" class="btn" [disabled]="submittingEncerrarBeneficio()">
-              {{ submittingEncerrarBeneficio() ? 'Encerrando…' : 'Encerrar adesão' }}
-            </button>
-          </div>
-        </form>
-      </app-modal>
-    }
-
     @if (abaAtiva() === 'desligamento') {
-      <div style="padding: var(--s-5); overflow-x: auto;">
-        <div class="card" style="padding: var(--s-5); margin-bottom: var(--s-4); background: var(--ink-50);">
-          <div style="font-size: var(--fs-xs); color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;">Situação</div>
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Desligamento e rescisão</h2>
+          <p class="sub">O cálculo de rescisão é informado uma vez, depois do desligamento; os valores não são calculados pelo sistema</p>
+        </div>
+      </div>
+      <div class="perfil-corpo">
+        <div class="perfil-destaque">
+          <span class="perfil-destaque__lbl">Situação</span>
           @if (p.ativo) {
-            <div style="font-size: 1.0625rem; font-weight: 600; margin-top: 4px; color: var(--ok);">Ativo</div>
+            <strong><span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Ativo</span></strong>
+            <span class="cell-sub">O cálculo de rescisão fica disponível depois do desligamento, pela tela Profissionais.</span>
           } @else {
-            <div style="font-size: 1.0625rem; font-weight: 600; margin-top: 4px; color: var(--alert);">
-              Desligado @if (p.dataDesligamento) { em {{ p.dataDesligamento | date: 'dd/MM/yyyy' }} }
-            </div>
+            <strong><span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Desligado</span></strong>
+            @if (p.dataDesligamento) { <span class="cell-sub">Desde {{ p.dataDesligamento | date: 'dd/MM/yyyy' }}</span> }
           }
         </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Tipo</th>
-              <th>Aviso prévio</th>
-              <th>Férias vencidas</th>
-              <th>Férias prop.</th>
-              <th>13º prop.</th>
-              <th>Multa FGTS</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of calculosRescisao(); track item.uuid) {
-              <tr>
-                <td>{{ item.tipoDesligamento }}</td>
-                <td>{{ item.avisoPrevio | number: '1.2-2' }}</td>
-                <td>{{ item.feriasVencidas | number: '1.2-2' }}</td>
-                <td>{{ item.feriasProporcionais | number: '1.2-2' }}</td>
-                <td>{{ item.decimoTerceiroProporcional | number: '1.2-2' }}</td>
-                <td>{{ item.multaFgts | number: '1.2-2' }}</td>
-                <td>{{ item.total | number: '1.2-2' }}</td>
-              </tr>
+        @if (carregandoRescisao()) {
+          <p class="cell-sub">Carregando…</p>
+        } @else if (!calculosRescisao().length) {
+          <div class="empty">
+            <strong>Nenhum cálculo de rescisão registrado</strong>
+            @if (podeRegistrarRescisao() && pode('RH.GERENCIAR')) {
+              <button type="button" class="btn btn--sm" (click)="abrirRescisao()">+ Registrar cálculo de rescisão</button>
             }
-          </tbody>
-        </table>
-        @if (!carregandoRescisao() && calculosRescisao().length === 0) {
-          <p class="table-empty">Nenhum cálculo de rescisão registrado.</p>
-        }
-
-        @if (!p.ativo && !carregandoRescisao() && calculosRescisao().length === 0) {
-          @if (pode('RH.GERENCIAR')) {
-            <h3 style="font-size: 1.0625rem; margin-top: var(--s-6);">Registrar cálculo de rescisão</h3>
-            @if (rescisaoErrorMessage()) {
-              <div class="form-banner form-banner--error" role="alert">{{ rescisaoErrorMessage() }}</div>
-            }
-            <form [formGroup]="rescisaoForm" (ngSubmit)="registrarRescisao()" class="form" novalidate>
-              <div class="form-group">
-                <label for="tipoDesligamento">Tipo de desligamento *</label>
-                <select id="tipoDesligamento" formControlName="tipoDesligamento">
-                  <option value="" disabled>Selecione…</option>
-                  <option value="SEM_JUSTA_CAUSA">Sem justa causa</option>
-                  <option value="COM_JUSTA_CAUSA">Com justa causa</option>
-                  <option value="PEDIDO_DEMISSAO">Pedido de demissão</option>
-                  <option value="TERMINO_CONTRATO">Término de contrato</option>
-                  <option value="APOSENTADORIA">Aposentadoria</option>
-                  <option value="FALECIMENTO">Falecimento</option>
-                </select>
-                @if (rescisaoForm.controls.tipoDesligamento.invalid && rescisaoForm.controls.tipoDesligamento.touched) {
-                  <span class="form-error">Tipo é obrigatório.</span>
+          </div>
+        } @else {
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th scope="col">Tipo</th><th scope="col" class="num">Aviso prévio</th><th scope="col" class="num">Férias vencidas</th><th scope="col" class="num">Férias prop.</th><th scope="col" class="num">13º prop.</th><th scope="col" class="num">Multa FGTS</th><th scope="col" class="num">Total</th><th scope="col">TRCT</th></tr></thead>
+              <tbody>
+                @for (item of calculosRescisao(); track item.uuid) {
+                  <tr>
+                    <td class="cell-main">{{ rotulo('tipoDesligamento', item.tipoDesligamento) }}</td>
+                    <td class="num mono">{{ item.avisoPrevio | number: '1.2-2' }}</td>
+                    <td class="num mono">{{ item.feriasVencidas | number: '1.2-2' }}</td>
+                    <td class="num mono">{{ item.feriasProporcionais | number: '1.2-2' }}</td>
+                    <td class="num mono">{{ item.decimoTerceiroProporcional | number: '1.2-2' }}</td>
+                    <td class="num mono">{{ item.multaFgts | number: '1.2-2' }}</td>
+                    <td class="num mono"><strong>{{ item.total | number: '1.2-2' }}</strong></td>
+                    <td>@if (item.documentoTrctUrl) { <a [href]="item.documentoTrctUrl" target="_blank" rel="noopener">Ver TRCT</a> } @else { — }</td>
+                  </tr>
                 }
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="avisoPrevio">Aviso prévio *</label>
-                  <input id="avisoPrevio" type="number" step="0.01" min="0" formControlName="avisoPrevio" />
-                </div>
-                <div class="form-group">
-                  <label for="feriasVencidas">Férias vencidas *</label>
-                  <input id="feriasVencidas" type="number" step="0.01" min="0" formControlName="feriasVencidas" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="feriasProporcionais">Férias proporcionais *</label>
-                  <input id="feriasProporcionais" type="number" step="0.01" min="0" formControlName="feriasProporcionais" />
-                </div>
-                <div class="form-group">
-                  <label for="decimoTerceiroProporcional">13º proporcional *</label>
-                  <input id="decimoTerceiroProporcional" type="number" step="0.01" min="0" formControlName="decimoTerceiroProporcional" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="multaFgts">Multa FGTS *</label>
-                  <input id="multaFgts" type="number" step="0.01" min="0" formControlName="multaFgts" />
-                </div>
-                <div class="form-group">
-                  <label for="total">Total *</label>
-                  <input id="total" type="number" step="0.01" min="0" formControlName="total" />
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="documentoTrctUrl">Link do documento (TRCT)</label>
-                <input id="documentoTrctUrl" type="text" formControlName="documentoTrctUrl" placeholder="https://…" />
-              </div>
-              <div class="form-actions">
-                <button type="submit" class="btn" [disabled]="submittingRescisao()">
-                  {{ submittingRescisao() ? 'Registrando…' : 'Registrar cálculo' }}
-                </button>
-              </div>
-            </form>
-          }
+              </tbody>
+            </table>
+          </div>
         }
       </div>
     }
 
     @if (abaAtiva() === 'historico') {
-      <div style="padding: var(--s-5); overflow-x: auto;">
-        <p style="color: var(--ink-500); font-size: var(--fs-sm); margin-bottom: var(--s-4);">
-          Linha do tempo consolidada — lotação, afastamentos, ajustes individuais e desligamento, mais recente primeiro.
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Tipo</th>
-              <th>Descrição</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div class="card__head perfil-sec">
+        <div>
+          <h2>Histórico funcional</h2>
+          <p class="sub">Lotações, afastamentos, ajustes individuais e desligamento, do mais recente para o mais antigo</p>
+        </div>
+      </div>
+      <div class="perfil-corpo">
+        @if (!historicoFuncional().length) {
+          <div class="empty"><strong>Nenhum evento no histórico funcional</strong></div>
+        } @else {
+          <ol class="perfil-linha">
             @for (evento of historicoFuncional(); track evento.data + evento.tipo + evento.descricao) {
-              <tr>
-                <td>{{ evento.data | date: 'dd/MM/yyyy' }}</td>
-                <td>{{ evento.tipo }}</td>
-                <td>{{ evento.descricao }}</td>
-              </tr>
+              <li>
+                <span class="perfil-linha__data mono">{{ evento.data | date: 'dd/MM/yyyy' }}</span>
+                <span [class]="'badge badge--' + classeEventoHistorico(evento.tipo)">{{ evento.tipo }}</span>
+                <span class="perfil-linha__desc">{{ evento.descricao }}</span>
+              </li>
             }
-          </tbody>
-        </table>
-        @if (historicoFuncional().length === 0) {
-          <p class="table-empty">Nenhum evento no histórico funcional.</p>
+          </ol>
         }
       </div>
+    }
+
+    <!-- ── Gavetas das abas Treinamentos, Avaliações, Benefícios e Desligamento (ADR-0086) ──────── -->
+    @if (gaveta() === 'participacao') {
+      <app-drawer titulo="Registrar participação em treinamento" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="participacaoForm" (ngSubmit)="registrarParticipacao()" novalidate>
+          <div class="dw-body">
+            @if (participacaoErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ participacaoErrorMessage() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-treinamentoId">Treinamento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-treinamentoId" formControlName="treinamentoId" aria-describedby="e-treinamentoId">
+                <option value="" disabled>Selecione…</option>
+                @for (t of treinamentosCatalogo(); track t.uuid) { <option [value]="t.uuid">{{ t.nome }}</option> }
+              </select>
+              @if (participacaoForm.controls.treinamentoId.invalid && participacaoForm.controls.treinamentoId.touched) { <p class="dw-err" id="e-treinamentoId">Treinamento é obrigatório.</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-dataConclusao">Conclusão <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataConclusao" type="date" formControlName="dataConclusao" aria-describedby="e-dataConclusao" />
+                @if (participacaoForm.controls.dataConclusao.invalid && participacaoForm.controls.dataConclusao.touched) { <p class="dw-err" id="e-dataConclusao">Data de conclusão é obrigatória.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-certificadoUrl">Link do certificado<span class="opt">opcional</span></label>
+                <input id="f-certificadoUrl" type="text" formControlName="certificadoUrl" placeholder="https://…" />
+              </div>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingParticipacao()">{{ submittingParticipacao() ? 'Registrando…' : 'Registrar participação' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
+    }
+    @if (gaveta() === 'avaliacao') {
+      <app-drawer titulo="Registrar avaliação" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="avaliacaoForm" (ngSubmit)="registrarAvaliacao()" novalidate>
+          <div class="dw-body">
+            @if (avaliacaoErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ avaliacaoErrorMessage() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-cicloId">Ciclo de avaliação <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-cicloId" formControlName="cicloId" aria-describedby="e-cicloId">
+                <option value="" disabled>Selecione…</option>
+                @for (c of ciclosAvaliacao(); track c.uuid) { <option [value]="c.uuid">{{ c.nome }}</option> }
+              </select>
+              @if (avaliacaoForm.controls.cicloId.invalid && avaliacaoForm.controls.cicloId.touched) { <p class="dw-err" id="e-cicloId">Ciclo é obrigatório.</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-avaliador">Avaliador <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-avaliador" type="text" formControlName="avaliador" aria-describedby="e-avaliador" />
+                @if (avaliacaoForm.controls.avaliador.invalid && avaliacaoForm.controls.avaliador.touched) { <p class="dw-err" id="e-avaliador">Avaliador é obrigatório.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-nota">Nota <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-nota" type="number" formControlName="nota" aria-describedby="e-nota" step="0.1" min="0" class="mono" />
+                @if (avaliacaoForm.controls.nota.invalid && avaliacaoForm.controls.nota.touched) { <p class="dw-err" id="e-nota">Nota é obrigatória.</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-observacaoAvaliacao">Observação<span class="opt">opcional</span></label>
+              <input id="f-observacaoAvaliacao" type="text" formControlName="observacao" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingAvaliacao()">{{ submittingAvaliacao() ? 'Registrando…' : 'Registrar avaliação' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
+    }
+    @if (gaveta() === 'beneficio') {
+      <app-drawer titulo="Nova adesão a benefício" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="beneficioForm" (ngSubmit)="registrarBeneficio()" novalidate>
+          <div class="dw-body">
+            @if (beneficioErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ beneficioErrorMessage() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-tipoBeneficioId">Benefício <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-tipoBeneficioId" formControlName="tipoBeneficioId" aria-describedby="e-tipoBeneficioId">
+                <option value="" disabled>Selecione…</option>
+                @for (t of tiposBeneficioCatalogo(); track t.uuid) { <option [value]="t.uuid">{{ t.nome }}</option> }
+              </select>
+              @if (beneficioForm.controls.tipoBeneficioId.invalid && beneficioForm.controls.tipoBeneficioId.touched) { <p class="dw-err" id="e-tipoBeneficioId">Benefício é obrigatório.</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-dataInicioBeneficio">Início <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataInicioBeneficio" type="date" formControlName="dataInicio" aria-describedby="e-dataInicioBeneficio" />
+                @if (beneficioForm.controls.dataInicio.invalid && beneficioForm.controls.dataInicio.touched) { <p class="dw-err" id="e-dataInicioBeneficio">Data de início é obrigatória.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-quantidadeDependentes">Dependentes<span class="opt">opcional</span></label>
+                <input id="f-quantidadeDependentes" type="number" formControlName="quantidadeDependentes" step="1" min="0" class="mono" />
+              </div>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingBeneficio()">{{ submittingBeneficio() ? 'Registrando…' : 'Registrar adesão' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
+    }
+    @if (gaveta() === 'encerrarBeneficio' && encerrarBeneficioAlvo(); as alvo) {
+      <app-drawer titulo="Encerrar adesão" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="encerrarBeneficioForm" (ngSubmit)="confirmarEncerrarBeneficio()" novalidate>
+          <div class="dw-body">
+            @if (encerrarBeneficioErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ encerrarBeneficioErrorMessage() }}</strong></div> }
+            <div class="box box--info"><span><strong>{{ alvo.tipoBeneficioNome }}</strong>, vigente desde {{ alvo.dataInicio | date: 'dd/MM/yyyy' }}. O encerramento acontece uma vez só e fica no histórico.</span></div>
+            <div class="dw-field">
+              <label for="f-dataFimBeneficio">Fim da adesão <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-dataFimBeneficio" type="date" formControlName="dataFim" aria-describedby="e-dataFimBeneficio" />
+              @if (encerrarBeneficioForm.controls.dataFim.invalid && encerrarBeneficioForm.controls.dataFim.touched) { <p class="dw-err" id="e-dataFimBeneficio">Data de fim é obrigatória.</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingEncerrarBeneficio()">{{ submittingEncerrarBeneficio() ? 'Encerrando…' : 'Encerrar adesão' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
+    }
+    @if (gaveta() === 'rescisao') {
+      <app-drawer titulo="Registrar cálculo de rescisão" (fechar)="fecharGaveta()">
+        <form class="dw-form" [formGroup]="rescisaoForm" (ngSubmit)="registrarRescisao()" novalidate>
+          <div class="dw-body">
+            @if (rescisaoErrorMessage()) { <div class="box box--err" role="alert"><strong>{{ rescisaoErrorMessage() }}</strong></div> }
+            <p class="dw-hint">Valores informados, não calculados pelo sistema. O cálculo é registrado uma vez.</p>
+            <div class="dw-field">
+              <label for="f-tipoDesligamento">Tipo de desligamento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-tipoDesligamento" formControlName="tipoDesligamento" aria-describedby="e-tipoDesligamento">
+                <option value="" disabled>Selecione…</option>
+                <option value="SEM_JUSTA_CAUSA">Sem justa causa</option>
+                <option value="COM_JUSTA_CAUSA">Com justa causa</option>
+                <option value="PEDIDO_DEMISSAO">Pedido de demissão</option>
+                <option value="TERMINO_CONTRATO">Término de contrato</option>
+                <option value="APOSENTADORIA">Aposentadoria</option>
+                <option value="FALECIMENTO">Falecimento</option>
+              </select>
+              @if (rescisaoForm.controls.tipoDesligamento.invalid && rescisaoForm.controls.tipoDesligamento.touched) { <p class="dw-err" id="e-tipoDesligamento">Tipo é obrigatório.</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-avisoPrevio">Aviso prévio (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-avisoPrevio" type="number" formControlName="avisoPrevio" aria-describedby="e-avisoPrevio" step="0.01" min="0" class="mono" />
+                @if (rescisaoForm.controls.avisoPrevio.invalid && rescisaoForm.controls.avisoPrevio.touched) { <p class="dw-err" id="e-avisoPrevio">Obrigatório.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-feriasVencidas">Férias vencidas (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-feriasVencidas" type="number" formControlName="feriasVencidas" aria-describedby="e-feriasVencidas" step="0.01" min="0" class="mono" />
+                @if (rescisaoForm.controls.feriasVencidas.invalid && rescisaoForm.controls.feriasVencidas.touched) { <p class="dw-err" id="e-feriasVencidas">Obrigatório.</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-feriasProporcionais">Férias proporcionais (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-feriasProporcionais" type="number" formControlName="feriasProporcionais" aria-describedby="e-feriasProporcionais" step="0.01" min="0" class="mono" />
+                @if (rescisaoForm.controls.feriasProporcionais.invalid && rescisaoForm.controls.feriasProporcionais.touched) { <p class="dw-err" id="e-feriasProporcionais">Obrigatório.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-decimoTerceiroProporcional">13º proporcional (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-decimoTerceiroProporcional" type="number" formControlName="decimoTerceiroProporcional" aria-describedby="e-decimoTerceiroProporcional" step="0.01" min="0" class="mono" />
+                @if (rescisaoForm.controls.decimoTerceiroProporcional.invalid && rescisaoForm.controls.decimoTerceiroProporcional.touched) { <p class="dw-err" id="e-decimoTerceiroProporcional">Obrigatório.</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-multaFgts">Multa FGTS (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-multaFgts" type="number" formControlName="multaFgts" aria-describedby="e-multaFgts" step="0.01" min="0" class="mono" />
+                @if (rescisaoForm.controls.multaFgts.invalid && rescisaoForm.controls.multaFgts.touched) { <p class="dw-err" id="e-multaFgts">Obrigatório.</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-totalRescisao">Total (R$) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-totalRescisao" type="number" formControlName="total" aria-describedby="e-totalRescisao" step="0.01" min="0" class="mono" />
+                @if (rescisaoForm.controls.total.invalid && rescisaoForm.controls.total.touched) { <p class="dw-err" id="e-totalRescisao">Obrigatório.</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-documentoTrctUrl">Link do TRCT<span class="opt">opcional</span></label>
+              <input id="f-documentoTrctUrl" type="text" formControlName="documentoTrctUrl" placeholder="https://…" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submittingRescisao()">{{ submittingRescisao() ? 'Registrando…' : 'Registrar cálculo' }}</button>
+          </footer>
+        </form>
+      </app-drawer>
     }
   </section>
 }

@@ -42,9 +42,8 @@ import { TreinamentoService } from '../../core/services/treinamento';
 import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf, formatTelefone } from '../../shared/format-mask';
-import { Modal } from '../../shared/modal/modal';
 import { Drawer } from '../../shared/drawer/drawer';
-import { hojeIso } from '../../shared/formato';
+import { hojeIso, moeda } from '../../shared/formato';
 import { categoriaDoProfissional, iniciaisDoNome, situacaoDoProfissional } from '../../shared/profissional-categoria';
 import { AcessoDaInterface } from '../../core/models/auth';
 import { AuthService } from '../../core/services/auth';
@@ -60,7 +59,8 @@ interface EventoHistorico {
 
 type GavetaPerfil =
   | 'contato' | 'transferencia' | 'ajuste'
-  | 'afastamento' | 'licenca' | 'ponto' | 'correcao' | 'folha' | 'exame' | 'acidente' | 'epi';
+  | 'afastamento' | 'licenca' | 'ponto' | 'correcao' | 'folha' | 'exame' | 'acidente' | 'epi'
+  | 'participacao' | 'avaliacao' | 'beneficio' | 'encerrarBeneficio' | 'rescisao';
 
 /** Rótulos dos enums mostrados nas tabelas e nas gavetas (ADR-0085). */
 const ROTULOS = {
@@ -74,6 +74,10 @@ const ROTULOS = {
   tipoPonto: { ENTRADA: 'Entrada', INICIO_INTERVALO: 'Início do intervalo', FIM_INTERVALO: 'Fim do intervalo', SAIDA: 'Saída' },
   tipoExame: { ADMISSIONAL: 'Admissional', PERIODICO: 'Periódico', DEMISSIONAL: 'Demissional', RETORNO: 'Retorno ao trabalho', MUDANCA_FUNCAO: 'Mudança de função' },
   resultadoExame: { APTO: 'Apto', INAPTO: 'Inapto', APTO_COM_RESTRICAO: 'Apto com restrição' },
+  tipoDesligamento: {
+    SEM_JUSTA_CAUSA: 'Sem justa causa', COM_JUSTA_CAUSA: 'Com justa causa', PEDIDO_DEMISSAO: 'Pedido de demissão',
+    TERMINO_CONTRATO: 'Término de contrato', APOSENTADORIA: 'Aposentadoria', FALECIMENTO: 'Falecimento',
+  },
 } satisfies Record<string, Record<string, string>>;
 
 /** "aaaa-mm-ddThh:mm" local, o formato do input datetime-local. */
@@ -90,7 +94,7 @@ function competenciaAtual(): string {
 
 @Component({
   selector: 'app-profissional-perfil',
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Modal, Drawer, RouterLink],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Drawer, RouterLink],
   templateUrl: './profissional-perfil.html',
   styleUrl: './profissional-perfil.css',
 })
@@ -383,7 +387,7 @@ export class ProfissionalPerfil {
       eventos.push({
         data: aj.dataInicio,
         tipo: 'Ajuste individual',
-        descricao: `${this.rotuloMotivoAjuste(aj.motivo)}: ${aj.valor}`,
+        descricao: `${this.rotuloMotivoAjuste(aj.motivo)}: ${moeda(aj.valor)}`,
       });
     }
 
@@ -530,6 +534,7 @@ export class ProfissionalPerfil {
   protected fecharGaveta(): void {
     this.gaveta.set(null);
     this.correcaoPontoAlvo.set(null);
+    this.encerrarBeneficioAlvo.set(null);
   }
 
   protected rotulo(grupo: keyof typeof ROTULOS, valor: string | null | undefined): string {
@@ -546,7 +551,48 @@ export class ProfissionalPerfil {
   }
 
   protected exameVencido(exame: ExameOcupacionalResponseDto): boolean {
-    return !!exame.dataValidade && exame.dataValidade < hojeIso();
+    return this.vencida(exame.dataValidade);
+  }
+
+  protected vencida(dataValidade: string | null | undefined): boolean {
+    return !!dataValidade && dataValidade < hojeIso();
+  }
+
+  protected classeEventoHistorico(tipo: string): string {
+    return ({ Lotação: 'info', Afastamento: 'warn', 'Ajuste individual': 'purple', Desligamento: 'alert' } as Record<string, string>)[tipo] ?? 'muted';
+  }
+
+  /** Mesma regra de antes: só depois do desligamento e uma vez só. */
+  protected podeRegistrarRescisao(): boolean {
+    const p = this.profissional();
+    return !!p && !p.ativo && !this.carregandoRescisao() && this.calculosRescisao().length === 0;
+  }
+
+  protected abrirParticipacao(): void {
+    this.participacaoForm.reset({ treinamentoId: '', dataConclusao: hojeIso(), certificadoUrl: '' });
+    this.participacaoErrorMessage.set(null);
+    this.gaveta.set('participacao');
+  }
+
+  protected abrirAvaliacao(): void {
+    this.avaliacaoForm.reset({ cicloId: '', avaliador: '', nota: '', observacao: '' });
+    this.avaliacaoErrorMessage.set(null);
+    this.gaveta.set('avaliacao');
+  }
+
+  protected abrirBeneficio(): void {
+    this.beneficioForm.reset({ tipoBeneficioId: '', dataInicio: hojeIso(), quantidadeDependentes: '' });
+    this.beneficioErrorMessage.set(null);
+    this.gaveta.set('beneficio');
+  }
+
+  protected abrirRescisao(): void {
+    this.rescisaoForm.reset({
+      tipoDesligamento: '', avisoPrevio: '', feriasVencidas: '', feriasProporcionais: '',
+      decimoTerceiroProporcional: '', multaFgts: '', total: '', documentoTrctUrl: '',
+    });
+    this.rescisaoErrorMessage.set(null);
+    this.gaveta.set('rescisao');
   }
 
   protected afastamentoDaLicenca(licenca: LicencaResponseDto): AfastamentoResponseDto | null {
@@ -874,7 +920,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingBeneficio.set(false);
-          this.beneficioForm.reset({ tipoBeneficioId: '', dataInicio: '', quantidadeDependentes: '' });
+          this.gaveta.set(null);
+          this.avisar('Adesão registrada', profissional.nome);
           this.carregarBeneficios(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -886,13 +933,10 @@ export class ProfissionalPerfil {
   }
 
   protected abrirEncerrarBeneficio(adesao: AdesaoBeneficioResponseDto): void {
-    this.encerrarBeneficioForm.reset({ dataFim: '' });
+    this.encerrarBeneficioForm.reset({ dataFim: hojeIso() });
     this.encerrarBeneficioErrorMessage.set(null);
     this.encerrarBeneficioAlvo.set(adesao);
-  }
-
-  protected fecharEncerrarBeneficio(): void {
-    this.encerrarBeneficioAlvo.set(null);
+    this.gaveta.set('encerrarBeneficio');
   }
 
   protected confirmarEncerrarBeneficio(): void {
@@ -910,7 +954,8 @@ export class ProfissionalPerfil {
     this.adesaoBeneficioService.encerrar(adesao.uuid, dataFim).subscribe({
       next: () => {
         this.submittingEncerrarBeneficio.set(false);
-        this.encerrarBeneficioAlvo.set(null);
+        this.fecharGaveta();
+        this.avisar('Adesão encerrada', adesao.tipoBeneficioNome);
         this.carregarBeneficios(profissional.matricula);
       },
       error: (error: HttpErrorResponse) => {
@@ -956,7 +1001,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingParticipacao.set(false);
-          this.participacaoForm.reset({ treinamentoId: '', dataConclusao: '', certificadoUrl: '' });
+          this.gaveta.set(null);
+          this.avisar('Participação registrada', profissional.nome);
           this.carregarTreinamentos(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1003,7 +1049,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingAvaliacao.set(false);
-          this.avaliacaoForm.reset({ cicloId: '', avaliador: '', nota: '', observacao: '' });
+          this.gaveta.set(null);
+          this.avisar('Avaliação registrada', profissional.nome);
           this.carregarAvaliacoes(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1054,16 +1101,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingRescisao.set(false);
-          this.rescisaoForm.reset({
-            tipoDesligamento: '',
-            avisoPrevio: '',
-            feriasVencidas: '',
-            feriasProporcionais: '',
-            decimoTerceiroProporcional: '',
-            multaFgts: '',
-            total: '',
-            documentoTrctUrl: '',
-          });
+          this.gaveta.set(null);
+          this.avisar('Cálculo de rescisão registrado', profissional.nome);
           this.carregarRescisao(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
