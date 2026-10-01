@@ -71,7 +71,14 @@
             <tr class="row-link" tabindex="0" (click)="abrirValores(t)" (keydown)="teclaNaLinha($event, t)" [attr.aria-label]="'Valores de ' + t.nome">
               <td class="cell-main">{{ t.nome }}</td>
               <td><span class="badge" [class]="'badge badge--' + custeio(t.custeio).classe">{{ custeio(t.custeio).rotulo }}</span></td>
-              <td class="num"><button type="button" class="btn btn--ghost btn--sm" (click)="$event.stopPropagation(); abrirValores(t)">Valores</button></td>
+              <td class="num">
+                <div class="row-actions">
+                  @if (pode('RH.GERENCIAR')) {
+                    <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Editar ' + t.nome" (click)="$event.stopPropagation(); abrirEdicao(t)">Editar</button>
+                  }
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="$event.stopPropagation(); abrirValores(t)">Valores</button>
+                </div>
+              </td>
             </tr>
           }
         </tbody>
@@ -81,8 +88,8 @@
 </section>
 
 @if (gaveta(); as g) {
-  <app-drawer [titulo]="g.tipo === 'novo' ? 'Novo benefício' : 'Valores · ' + g.beneficio.nome" [larga]="g.tipo === 'valores'" (fechar)="fecharGaveta()">
-    @if (g.tipo === 'novo') {
+  <app-drawer [titulo]="g.tipo === 'tipo' ? (g.item ? 'Editar benefício' : 'Novo benefício') : 'Valores · ' + g.beneficio.nome" [larga]="g.tipo === 'valores'" (fechar)="fecharGaveta()">
+    @if (g.tipo === 'tipo') {
       <form class="dw-form" [formGroup]="tipoForm" (ngSubmit)="salvar()" novalidate>
         <div class="dw-body">
           @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
@@ -107,7 +114,7 @@
         </div>
         <footer class="dw-foot">
           <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
-          <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Cadastrar benefício' }}</button>
+          <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.item ? 'Salvar alterações' : 'Cadastrar benefício') }}</button>
         </footer>
       </form>
     } @else if (g.tipo === 'valores') {

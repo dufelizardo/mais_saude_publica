@@ -62,6 +62,24 @@ public class ResponsabilidadeAdministrativaService {
         return ResponsabilidadeAdministrativaResponseDto.fromResponsabilidadeAdministrativa(responsabilidade);
     }
 
+    /**
+     * Responsáveis de um setor (ADR-0083): as vigentes primeiro, depois as encerradas, cada grupo da mais recente para a
+     * mais antiga. Setor inexistente → 404; sem nenhuma → 404, como a consulta por profissional.
+     */
+    public List<ResponsabilidadeAdministrativaResponseDto> listarPorSetor(java.util.UUID setorId) {
+        setorService.buscarEntidadePorId(setorId);
+        List<ResponsabilidadeAdministrativaResponseDto> lista = responsabilidadeAdministrativaRepository
+                .findBySetor_UuidOrderByDataInicioDesc(setorId)
+                .stream()
+                .map(ResponsabilidadeAdministrativaResponseDto::fromResponsabilidadeAdministrativa)
+                .sorted(java.util.Comparator.comparing((ResponsabilidadeAdministrativaResponseDto r) -> r.getDataFim() != null))
+                .collect(Collectors.toList());
+        if (lista.isEmpty()) {
+            throw new ResourceNotFoundException("Nenhuma responsabilidade administrativa registrada para o setor " + setorId + ".");
+        }
+        return lista;
+    }
+
     public List<ResponsabilidadeAdministrativaResponseDto> listarHistorico(String matricula) {
         List<ResponsabilidadeAdministrativaResponseDto> historico = responsabilidadeAdministrativaRepository
                 .findByProfissional_MatriculaOrderByDataInicioDesc(matricula)

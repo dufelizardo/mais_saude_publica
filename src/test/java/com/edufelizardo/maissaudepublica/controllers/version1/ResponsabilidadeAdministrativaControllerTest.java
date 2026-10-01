@@ -236,4 +236,30 @@ class ResponsabilidadeAdministrativaControllerTest {
                         .param("dataFim", "2026-06-30"))
                 .andExpect(status().isNotFound());
     }
+
+    // ── Responsáveis por setor (ADR-0083) ──────────────────────────────────────────────────────
+
+    @Test
+    void deveListarOsResponsaveisDoSetorComAsVigentesPrimeiro() throws Exception {
+        UUID encerrada = criarResponsabilidadeFixture("S1", LocalDate.of(2026, 3, 31));
+        Setor setor = responsabilidadeAdministrativaRepository.findById(encerrada).orElseThrow().getSetor();
+        String matricula = criarProfissionalFixture("S2");
+        ResponsabilidadeAdministrativa vigente = new ResponsabilidadeAdministrativa(
+                profissionalRepository.findByMatricula(matricula).orElseThrow(), setor, "Responsável técnico", null,
+                LocalDate.of(2025, 6, 1));
+        UUID vigenteId = responsabilidadeAdministrativaRepository.save(vigente).getUuid();
+
+        mockMvc.perform(get(BASE_URL + "setor/" + setor.getUuid()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].uuid").value(vigenteId.toString()))
+                .andExpect(jsonPath("$[1].uuid").value(encerrada.toString()));
+    }
+
+    @Test
+    void setorInexistenteOuSemResponsaveisDa404() throws Exception {
+        mockMvc.perform(get(BASE_URL + "setor/" + UUID.randomUUID())).andExpect(status().isNotFound());
+        UUID setorVazio = criarSetorFixture("S3");
+        mockMvc.perform(get(BASE_URL + "setor/" + setorVazio)).andExpect(status().isNotFound());
+    }
 }

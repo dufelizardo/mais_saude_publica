@@ -85,4 +85,15 @@ public class TipoBeneficioController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
+
+    @RequerPermissao({"RH.GERENCIAR"})
+    @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Atualiza tipo de benefício",
+            description = "Mesmos campos e regras da criação (ADR-0083). Inexistente → 404; nome já usado por outro → 409.",
+            tags = "TipoBeneficio")
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> atualizar(@PathVariable UUID uuid, @Valid @RequestBody TipoBeneficioRequestDto dto) {
+        TipoBeneficioResponseDto r = service.atualizar(uuid, dto);
+        return ResponseEntity.ok(new SuccessResponseDto("Tipo de benefício atualizado com sucesso!", "Nome: " + r.getNome()));
+    }
 }
