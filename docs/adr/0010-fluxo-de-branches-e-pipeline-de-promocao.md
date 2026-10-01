@@ -42,7 +42,8 @@ Adotar um fluxo de promoção linear entre 4 branches — `developer` → `qa` �
   `robot-acceptance` (acceptance.yml) passando, e força fluxo de PR (sem push direto) — sem exigir
   aprovação humana de revisor, e valendo até para o dono do repositório (`enforce_admins`).
 - **Deploy real** (`deploy-prod.yml`, Render) só dispara em `push` (merge) na `main` — nunca em
-  `pull_request`, corrigindo o bug de deploy prematuro.
+  `pull_request`, corrigindo o bug de deploy prematuro. *(Removido em 2026-10-01: produção passou a ser o
+  `prod` do home-lab, via ArgoCD — ver ADR-0012.)*
 - **Troca completa de MySQL para PostgreSQL** em todos os ambientes (dev local, JUnit, CI) — não
   só no gate de aceitação. Motivo: `application-prod.properties` já usava Postgres; manter MySQL
   em dev/test só pra produção usar outro motor era a causa raiz do bug de dialect conflitante já
