@@ -12,6 +12,9 @@ name: Pipeline de Promoção
 # um Postgres num container efêmero (só dura o job) e roda a suíte de aceitação contra a aplicação
 # de pé. Nada fica "no ar" depois do job.
 #
+# "robot-ui" (ADR-0077) roda os testes de interface em todo PR, depois do "test": API pelo jar e
+# frontend pelo ng serve, sem Docker, e so os testes com a tag UI.
+#
 # Há também um CodeQL.yml à parte, com uma varredura semanal (schedule) do repo inteiro - esse não
 # é gate de promoção, é uma checagem periódica independente de PR.
 on:
@@ -97,6 +100,99 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
+  robot-ui:
+    # Testes de interface em Robot Framework (ADR-0077): sobem a API (jar, perfil test, Postgres do
+    # proprio Actions) e o frontend (ng serve, que ja faz proxy de /api para a 8080), e rodam so os
+    # testes com a tag UI num Chromium headless. Roda em todo PR - inclusive para developer -, para o
+    # seletor errado aparecer no PR da tela, e nao so na promocao.
+    needs: test
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: saudepublica_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Empacotar a API
+        run: ./mvnw -B -DskipTests package
+
+      - name: Subir a API
+        run: nohup java -jar target/mais_saude_publica-*.jar --spring.profiles.active=test --server.port=8080 > api.log 2>&1 &
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Subir o frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          nohup npx ng serve --port 4200 > ../front.log 2>&1 &
+
+      - name: Esperar API e frontend responderem
+        run: |
+          for i in $(seq 1 90); do
+            api=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/v3/api-docs || echo 000)
+            front=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4200/ || echo 000)
+            echo "Tentativa $i: API $api, front $front"
+            if [ "$api" = "200" ] && [ "$front" = "200" ]; then exit 0; fi
+            sleep 3
+          done
+          echo "--- api.log ---"; tail -n 80 api.log || true
+          echo "--- front.log ---"; tail -n 80 front.log || true
+          exit 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Robot Framework e o Chromium
+        run: |
+          pip install -r test/robot/requirements.txt
+          rfbrowser init --with-deps chromium
+
+      - name: Rodar testes de interface
+        env:
+          MSP_HOST_URL: http://localhost:8080
+          MSP_FRONT_URL: http://localhost:4200
+        run: robot --outputdir test/robot/results-ui --include UI test/robot/test
+
+      - name: Publicar resultados da interface
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-ui-results
+          path: |
+            test/robot/results-ui/
+            api.log
+            front.log
+
   robot-acceptance:
     needs: analyze
     if: github.event_name == 'pull_request' && contains(fromJson('["qaa","homologacao","main"]'), github.base_ref)
@@ -179,7 +275,8 @@ jobs:
       - name: Rodar suíte de aceitação
         env:
           MSP_HOST_URL: http://localhost:8080
-        run: test/robot/run_tests.sh
+        # Os testes de interface (tag UI) rodam no job robot-ui.
+        run: test/robot/run_tests.sh --exclude UI
 
       - name: Publicar resultados do Robot Framework
         if: always()

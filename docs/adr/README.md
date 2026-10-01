@@ -92,7 +92,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0074](./0074-telas-do-administrativo-agrupadas.md) | Telas do Administrativo agrupadas com o layout recente | Aceita e implementada |
 | [0075](./0075-cabecalho-do-perfil-do-profissional.md) | Cabeçalho do perfil do profissional no estilo do cartão | Aceita e implementada (padronização do RH, 3 de 3) |
 | [0076](./0076-prontuario-por-vinculo-assistencial.md) | Prontuário por vínculo assistencial e acesso justificado | Aceita e implementada (atrás de toggle, desligado) |
-| [0077](./0077-testes-de-frontend-com-robot-framework.md) | Testes de frontend com Robot Framework | Aceita (base da suíte de interface pendente) |
+| [0077](./0077-testes-de-frontend-com-robot-framework.md) | Testes de frontend com Robot Framework | Aceita e implementada (base e primeiras telas) |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

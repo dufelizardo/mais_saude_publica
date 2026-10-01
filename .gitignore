@@ -34,3 +34,7 @@ build/
 .vscode/*
 !.vscode/settings.json
 !.vscode/launch.json
+
+# Testes de interface (ADR-0077): log do Playwright e resultados do job robot-ui
+playwright-log.txt
+test/robot/results-ui/
