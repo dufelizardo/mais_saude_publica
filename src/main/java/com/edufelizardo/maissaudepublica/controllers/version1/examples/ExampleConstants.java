@@ -491,6 +491,79 @@ public class ExampleConstants {
                   }
                 ]
             """;
+    public static final String DISPENSACAO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "loteUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "loteNumeroLote": "string",
+                    "medicamentoNome": "string",
+                    "pacienteUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "pacienteNome": "string",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "consultaUuid": null,
+                    "quantidade": 10,
+                    "dataHora": "2026-01-01T14:00:00"
+                  }
+                ]
+            """;
+    public static final String LOTE_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "medicamentoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "medicamentoNome": "string",
+                    "unidadeUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "unidadeNome": "string",
+                    "numeroLote": "string",
+                    "validade": "2027-01-01",
+                    "quantidade": 100
+                  }
+                ]
+            """;
+    public static final String MEDICAMENTO_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "nome": "string",
+                    "principioAtivo": "string",
+                    "apresentacao": "string",
+                    "codigo": "string",
+                    "ativo": true
+                  }
+                ]
+            """;
+    public static final String EVOLUCAO_ENFERMAGEM_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "atendimentoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "dataHora": "2026-01-01T10:00:00",
+                    "descricao": "string"
+                  }
+                ]
+            """;
+    public static final String TRIAGEM_RESPONSE_EXAMPLE = """
+                [
+                  {
+                    "uuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "atendimentoUuid": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                    "profissionalMatricula": "11111111111111-11",
+                    "profissionalNome": "string",
+                    "dataHora": "2026-01-01T08:15:00",
+                    "pressaoArterial": "120/80",
+                    "temperatura": 36.5,
+                    "saturacaoOxigenio": 98.0,
+                    "frequenciaCardiaca": 80,
+                    "peso": 70.5,
+                    "classificacaoRisco": "VERDE",
+                    "observacoes": "string"
+                  }
+                ]
+            """;
     public static final String AGENDAMENTO_RESPONSE_EXAMPLE = """
                 [
                   {

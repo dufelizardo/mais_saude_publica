@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -32,6 +33,7 @@ public class LicencaController {
     @Autowired
     private LicencaService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as licenças de um profissional", tags = "Licenca")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -46,6 +48,7 @@ public class LicencaController {
         return ResponseEntity.ok(service.listarPorProfissional(matricula));
     }
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "afastamento/{afastamentoId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca a licença de um afastamento", tags = "Licenca")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -60,6 +63,7 @@ public class LicencaController {
         return ResponseEntity.ok(service.buscarPorAfastamento(afastamentoId));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria a licença de um afastamento",
             description = "Só uma licença por afastamento — tentar criar uma segunda pro mesmo afastamento retorna 409.",

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
@@ -34,6 +35,7 @@ public class TabelaSalarialController {
     @Autowired
     private TabelaSalarialService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "cargo/{cargoId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de valores de um cargo", tags = "TabelaSalarial")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -48,6 +50,7 @@ public class TabelaSalarialController {
         return ResponseEntity.ok(service.listarPorCargo(cargoId));
     }
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "cargo/{cargoId}/vigente", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca o valor vigente de um cargo numa data (padrão: hoje)", tags = "TabelaSalarial")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -61,6 +64,7 @@ public class TabelaSalarialController {
         return ResponseEntity.ok(service.buscarVigente(cargoId, data));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria um novo valor de tabela salarial para um cargo (dissídio ou revisão do plano)", tags = "TabelaSalarial")
     @ApiResponse(responseCode = "201", description = "Success:", content = {

@@ -12,6 +12,9 @@ name: Pipeline de Promoção
 # um Postgres num container efêmero (só dura o job) e roda a suíte de aceitação contra a aplicação
 # de pé. Nada fica "no ar" depois do job.
 #
+# "robot-ui" (ADR-0077) roda os testes de interface em todo PR, depois do "test": API pelo jar e
+# frontend pelo ng serve, sem Docker, e so os testes com a tag UI.
+#
 # Há também um CodeQL.yml à parte, com uma varredura semanal (schedule) do repo inteiro - esse não
 # é gate de promoção, é uma checagem periódica independente de PR.
 on:
@@ -97,6 +100,153 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
+  robot-ui:
+    # Testes de interface em Robot Framework (ADR-0077), num Chromium headless, em duas fases:
+    #   1. tag UI sem SEGURANCA: API do jar (perfil test, login desligado) na 8080 e front no ng serve
+    #      (4200, proxy de /api para a 8080);
+    #   2. tag SEGURANCA: uma segunda API na 8083, com login, autorizacao e prontuario por vinculo
+    #      ligados e o administrador inicial (bootstrap), num banco proprio; o front volta a subir com
+    #      proxy para a 8083.
+    # Roda em todo PR - inclusive para developer -, para o seletor errado aparecer no PR da tela, e
+    # nao so na promocao.
+    needs: test
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: saudepublica_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      # Caixa de e-mail de teste da recuperação de senha (ADR-0081): SMTP na 1025, API HTTP na 8025.
+      mailpit:
+        image: axllent/mailpit
+        ports:
+          - 1025:1025
+          - 8025:8025
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Empacotar a API
+        run: ./mvnw -B -DskipTests package
+
+      - name: Subir as duas APIs
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -c "create database saudepublica_seguranca"
+          nohup java -jar target/mais_saude_publica-*.jar --spring.profiles.active=test --server.port=8080 > api.log 2>&1 &
+          nohup java -jar target/mais_saude_publica-*.jar --spring.profiles.active=test --server.port=8083 \
+            --spring.datasource.url=jdbc:postgresql://localhost:5432/saudepublica_seguranca \
+            --app.security.enabled=true --app.security.authorization.enabled=true \
+            --app.security.prontuario-por-vinculo.enabled=true \
+            --app.security.bootstrap.cpf=52998224725 --app.security.bootstrap.senha='Robot#Admin123' \
+            --spring.mail.host=localhost --spring.mail.port=1025 \
+            --app.security.recuperacao-senha.url-frontend=http://localhost:4200 \
+            > api-seguranca.log 2>&1 &
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Subir o frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          nohup npx ng serve --port 4200 > ../front.log 2>&1 &
+
+      - name: Esperar API e frontend responderem
+        run: |
+          for i in $(seq 1 90); do
+            api=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/v3/api-docs || echo 000)
+            seg=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8083/v3/api-docs || echo 000)
+            front=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4200/ || echo 000)
+            echo "Tentativa $i: API $api, API com seguranca $seg, front $front"
+            if [ "$api" = "200" ] && [ "$seg" = "200" ] && [ "$front" = "200" ]; then exit 0; fi
+            sleep 3
+          done
+          echo "--- api.log ---"; tail -n 80 api.log || true
+          echo "--- api-seguranca.log ---"; tail -n 80 api-seguranca.log || true
+          echo "--- front.log ---"; tail -n 80 front.log || true
+          exit 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Robot Framework e o Chromium
+        run: |
+          pip install -r test/robot/requirements.txt
+          rfbrowser init --with-deps chromium
+
+      - name: Rodar testes de interface (login desligado)
+        env:
+          MSP_HOST_URL: http://localhost:8080
+          MSP_FRONT_URL: http://localhost:4200
+        run: robot --outputdir test/robot/results-ui --include UI --exclude SEGURANCA test/robot/test
+
+      - name: Apontar o frontend para a API com seguranca
+        if: always()
+        working-directory: frontend
+        run: |
+          pkill -f "ng serve" || true
+          printf '{"/api": {"target": "http://localhost:8083", "secure": false, "changeOrigin": true}}' > proxy-seguranca.json
+          nohup npx ng serve --port 4200 --proxy-config proxy-seguranca.json > ../front-seguranca.log 2>&1 &
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4200/ || echo 000)
+            status=$(curl -s http://localhost:4200/api/v1/auth/status || true)
+            echo "Tentativa $i: front $code, $status"
+            if [ "$code" = "200" ] && echo "$status" | grep -q '"securityEnabled":true'; then exit 0; fi
+            sleep 3
+          done
+          tail -n 80 ../front-seguranca.log || true
+          exit 1
+
+      - name: Rodar testes de interface (login, autorizacao e vinculo ligados)
+        if: always()
+        env:
+          MSP_HOST_URL: http://localhost:8083
+          MSP_FRONT_URL: http://localhost:4200
+          MSP_ADMIN_CPF: '52998224725'
+          MSP_ADMIN_SENHA: 'Robot#Admin123'
+          MSP_MAILPIT_URL: http://localhost:8025
+        run: robot --outputdir test/robot/results-ui-seguranca --include SEGURANCA test/robot/test
+
+      - name: Publicar resultados da interface
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-ui-results
+          path: |
+            test/robot/results-ui/
+            test/robot/results-ui-seguranca/
+            api.log
+            api-seguranca.log
+            front.log
+            front-seguranca.log
+
   robot-acceptance:
     needs: analyze
     if: github.event_name == 'pull_request' && contains(fromJson('["qaa","homologacao","main"]'), github.base_ref)
@@ -179,7 +329,8 @@ jobs:
       - name: Rodar suíte de aceitação
         env:
           MSP_HOST_URL: http://localhost:8080
-        run: test/robot/run_tests.sh
+        # Os testes de interface (tag UI) rodam no job robot-ui.
+        run: test/robot/run_tests.sh --exclude UI
 
       - name: Publicar resultados do Robot Framework
         if: always()

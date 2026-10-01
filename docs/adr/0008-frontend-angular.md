@@ -6,6 +6,8 @@ Aceita (parcialmente implementada). A landing page (`frontend/`, Angular 22) já
 em `dev` (ver ADR-0016) — sem autenticação ainda, já que ADR 0006 (JWT) continua não implementada.
 As telas de CRUD que dependem de login ficam para depois de 0006 avançar.
 
+**Testes: substituído pela [ADR-0077](./0077-testes-de-frontend-com-robot-framework.md).** O frontend é testado com Robot Framework, no mesmo padrão LKDF da API, e a Browser library roda o Playwright por baixo. Playwright isolado não é usado.
+
 ## Contexto
 
 Uma interface seria necessária para que gestores, profissionais e administradores interajam com os dados de saúde pública: CRUD de unidades/profissionais/pacientes/atendimentos, dashboards e relatórios, consumindo a API REST com autenticação JWT (ADR 0006).
@@ -28,7 +30,7 @@ Adotar **Angular 17+** com **TypeScript**, **Angular Material** para componentes
 | Vue | Curva de aprendizado suave | Ecossistema menor para projetos corporativos | ❌ Rejeitada |
 | Svelte | Performance, bundle pequeno | Ecossistema imaturo para o porte deste projeto | ❌ Rejeitada |
 | Angular Material (UI) | Integração nativa com Angular, componentes acessíveis | Visual mais "padrão Google" | ✅ Escolhida sobre PrimeNG/Bootstrap/Tailwind |
-| Playwright (E2E) | Rápido, multi-browser, boa DX | Ferramenta mais nova que Selenium | ✅ Escolhida sobre Cypress/Selenium |
+| Playwright (E2E) | Rápido, multi-browser, boa DX | Ferramenta mais nova que Selenium | ✅ Escolhida sobre Cypress/Selenium — hoje como motor da Browser library do Robot Framework (ADR-0077) |
 
 ## Consequências
 

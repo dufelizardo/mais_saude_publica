@@ -1,2 +1,4 @@
 robotframework>=7.0
 robotframework-requests>=0.9
+# Testes de interface (ADR-0077): navegador via Playwright. Depois de instalar, rode "rfbrowser init chromium".
+robotframework-browser>=19.0

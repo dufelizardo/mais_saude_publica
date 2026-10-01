@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -34,6 +35,7 @@ public class RegraAnuenioController {
     @Autowired
     private RegraAnuenioService service;
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista as regras de anuênio cadastradas", tags = "RegraAnuenio")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -52,6 +54,7 @@ public class RegraAnuenioController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @RequerPermissao({"RH.CONSULTAR", "RH.GERENCIAR"})
     @GetMapping(value = "categoria/{categoriaId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca a regra de anuênio de uma categoria salarial", tags = "RegraAnuenio")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -66,6 +69,7 @@ public class RegraAnuenioController {
         return ResponseEntity.ok(service.buscarPorCategoria(categoriaId));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria a regra de anuênio de uma categoria salarial",
             description = "Só uma regra por categoria — tentar criar uma segunda para a mesma categoria retorna 409.",
@@ -87,6 +91,7 @@ public class RegraAnuenioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
 
+    @RequerPermissao({"RH.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza o percentual/teto de uma regra de anuênio",
             description = "A categoria não muda numa edição — é a chave que garante uma regra por categoria.",

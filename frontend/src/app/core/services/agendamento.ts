@@ -13,6 +13,11 @@ export class AgendamentoService {
     return this.http.get<AgendamentoResponseDto[]>(`${this.baseUrl}/`);
   }
 
+  /** Responde 404 quando o paciente não tem agendamentos (convenção dos endpoints de listagem). */
+  listarPorPaciente(pacienteId: string): Observable<AgendamentoResponseDto[]> {
+    return this.http.get<AgendamentoResponseDto[]>(`${this.baseUrl}/paciente/${pacienteId}`);
+  }
+
   buscarPorId(uuid: string): Observable<AgendamentoResponseDto> {
     return this.http.get<AgendamentoResponseDto>(`${this.baseUrl}/${uuid}`);
   }

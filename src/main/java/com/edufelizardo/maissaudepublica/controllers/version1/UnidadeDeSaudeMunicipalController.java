@@ -1,5 +1,7 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
+import com.edufelizardo.maissaudepublica.config.LiberadoParaAutenticados;
+import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
@@ -37,6 +39,7 @@ public class UnidadeDeSaudeMunicipalController {
     @Autowired
     private MunicipalService service;
 
+    @LiberadoParaAutenticados
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma Instituição da Esfera Municipal de Saúde",
             description = "Verifica a existencia de Instituções da Esfera Municipal.",
@@ -58,6 +61,7 @@ public class UnidadeDeSaudeMunicipalController {
         return ResponseEntity.ok(responseDtos);
     }
 
+    @LiberadoParaAutenticados
     @GetMapping(value = "{nome}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca uma Instituição da Esfera Municipal de Saúde pelo seu Nome.",
             description = "Verifica a existencia de Instituções da Esfera Municipal.",
@@ -76,6 +80,7 @@ public class UnidadeDeSaudeMunicipalController {
         return ResponseEntity.ok(responseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cria uma Instituição da Esfera Municipal de Saúde.",
             description = "Cria uma Instituição da Esfera Municipal.",
@@ -112,6 +117,7 @@ public class UnidadeDeSaudeMunicipalController {
         }
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza o nome de uma Instituição da Esfera Municipal de Saúde.",
             description = "Atualiza o nome de uma Instituição da Esfera Municipal.",
@@ -136,6 +142,7 @@ public class UnidadeDeSaudeMunicipalController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "contato/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza os contatos de uma Instituição da Esfera Municipal de Saúde.",
             description = "Atualiza os contatos de uma Instituição da Esfera Municipal.",
@@ -160,6 +167,7 @@ public class UnidadeDeSaudeMunicipalController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "horario-de-funcionamento/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza o Horariode de funcionamento de uma Instituição da Esfera Municipal de Saúde.",
             description = "Atualiza o Horariode de funcionamento de uma Instituição da Esfera Municipal.",
@@ -184,6 +192,7 @@ public class UnidadeDeSaudeMunicipalController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @PatchMapping(value = "horario-de-atendimento/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza o Horario de atendimento de uma Instituição da Esfera Municipal de Saúde.",
             description = "Atualiza o Horario de atendimento de uma Instituição da Esfera Municipal.",
@@ -208,6 +217,7 @@ public class UnidadeDeSaudeMunicipalController {
         return ResponseEntity.ok().body(successResponseDto);
     }
 
+    @RequerPermissao({"ORGANIZACAO.GERENCIAR"})
     @DeleteMapping(value = "des-habilitar/{nome}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Desabilita ou Habilita uma Instituição da Esfera Municipal de Saúde.",
             description = "Desabilita ou Habilita uma Instituição da Esfera Municipal.",

@@ -1,4 +1,4 @@
-# Testes de aceitação (Robot Framework) — Mais Saúde Pública API
+# Testes de aceitação (Robot Framework) — Mais Saúde Pública (API e frontend)
 
 Suíte de testes de aceitação/API em [Robot Framework](https://robotframework.org/), seguindo o
 **Layered Keyword-Driven Framework (LKDF)**: [dufelizardo/Layered-Keyword-Driven-Framework-LKDF](https://github.com/dufelizardo/Layered-Keyword-Driven-Framework-LKDF).
@@ -20,6 +20,98 @@ RH (Cargo, Categoria Salarial, Lotação, Vaga, Tabela Salarial, Benefícios, Re
 ficaram sem nenhum teste Robot, só JUnit.** Não foi uma decisão de arquitetura deliberada, foi a
 suíte parando de crescer junto com o backend. "Suíte completa" descreve o escopo histórico
 coberto, não uma licença para pular Robot em domínios novos.
+
+## ⚠️ Regra: toda tela nova ou refeita precisa de teste Robot de interface
+
+O frontend também é testado aqui, com Robot Framework e o mesmo LKDF
+([ADR-0077](../../docs/adr/0077-testes-de-frontend-com-robot-framework.md)). O navegador é controlado pela
+[Browser library](https://robotframework-browser.org/), que roda o Playwright por baixo. Playwright isolado,
+`ng e2e` e `.spec.ts` não servem como teste de aceitação de tela.
+
+- **Onde:**
+  - `src/pom/ui/<tela>/`: seletores e ações cruas, sem asserção;
+  - `src/flow/ui/<tela>/`: jornada e asserções;
+  - `src/scenario/ui/<tela>/`;
+  - `test/ui/<tela>/`.
+- **Seletores**, nesta ordem:
+  - o `id` dos campos (`f-<campo>`);
+  - papel e nome acessível (`role=tab[name="…"]`, `aria-label`);
+  - texto visível.
+
+  Classes CSS nunca, porque mudam com o visual.
+- **Dados:** semeados pelas keywords dos FLOWs de API (ex.: `Seed A Paciente`), não cadastrados clicando.
+- **Mínimo por tela:**
+  - abre;
+  - o fluxo principal funciona (gaveta de cadastro ou edição);
+  - a validação aparece;
+  - o estado vazio aparece;
+  - com autorização ligada, o que muda por permissão.
+- **Tag `UI` em todo teste de interface.** Ela separa as duas suítes:
+  - o job `robot-ui` da pipeline roda os testes de interface em todo PR;
+  - a suíte de API (`run_tests.sh --exclude UI`) roda nos PRs de promoção e no health-check.
+- **Tag `SEGURANCA` nos testes que precisam de login, autorização e vínculo ligados** (hoje, o prontuário
+  por vínculo). Eles rodam numa segunda fase do `robot-ui`, contra uma API com esses toggles e o
+  administrador inicial. O cenário é montado pela própria API, autenticada:
+  - usuários com perfis;
+  - troca da senha provisória;
+  - unidades, pacientes e atendimentos.
+
+  Sem `MSP_ADMIN_CPF`/`MSP_ADMIN_SENHA`, a suíte é pulada (Skip).
+- **API autenticada nos FLOWs:** `Definir Token Da Sessao De API` faz toda chamada da suíte levar o
+  Bearer, e os Seeds de sempre (`Seed A Paciente` etc.) funcionam com a segurança ligada.
+- **CPF válido para criar usuário:** `CPF Valido Aleatorio`, do FLOW de acesso.
+- **Sessão:** `src/pom/common/mais_saude_publica_ui_common.resource`, que também traz as ações comuns.
+  - As ações comuns são abrir rota, clicar aba e botão, preencher e enviar a gaveta, e ler erro, título e
+    aviso.
+  - Sem `MSP_UI_CPF`/`MSP_UI_SENHA`, abre direto, porque o login fica desligado no CI e no local. Com
+    elas, entra pela tela de login.
+  - O Suite Setup e o Teardown de cada suíte chamam `UI - ABRIR SISTEMA` e `UI - FECHAR SISTEMA`
+    (`src/scenario/common/ui_sessao_scenario.resource`).
+- **Cobertura atual:**
+  - menu lateral (recolhido por padrão, grupo da página aberto);
+  - botões por permissão (`SEGURANCA`): técnico de enfermagem × recepção em Pacientes e Atendimentos;
+  - recuperação de senha: indisponível sem SMTP; com `SEGURANCA` e Mailpit (`MSP_MAILPIT_URL`), o fluxo completo pelo e-mail;
+  - Setores;
+  - Modelo administrativo (abas, rotas antigas, validação e cadastro pela gaveta);
+  - abertura do prontuário em Pacientes com a regra de vínculo desligada;
+  - prontuário com o vínculo ligado (`SEGURANCA`): paciente da unidade sem aviso; paciente de outra
+    unidade com aviso e bloqueio; justificativa curta recusada; justificativa válida libera e mostra a
+    faixa.
+
+  O que falta está na ADR-0077.
+
+### Rodando os testes de interface localmente
+
+São três passos: subir a API, subir o frontend com proxy para ela e rodar só a tag `UI`.
+
+```bash
+pip install -r requirements.txt && rfbrowser init chromium     # uma vez
+# 1. API (perfil test) numa porta livre — aqui 8082, com um Postgres descartável na 55432:
+docker run -d --name msp-ui-postgres -e POSTGRES_DB=saudepublica_test -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres -p 55432:5432 postgres:16
+java -jar ../../target/mais_saude_publica-*.jar --spring.profiles.active=test --server.port=8082 \
+  --spring.datasource.url=jdbc:postgresql://localhost:55432/saudepublica_test
+# 2. Frontend com proxy para a 8082 (arquivo de proxy próprio, sem mexer no proxy.conf.json):
+#    {"/api": {"target": "http://localhost:8082", "secure": false, "changeOrigin": true}}
+npx ng serve --port 4200 --proxy-config <seu-proxy>.json      # dentro de frontend/
+# 3. Testes:
+MSP_HOST_URL=http://localhost:8082 MSP_FRONT_URL=http://localhost:4200 robot --include UI test
+```
+
+Use `MSP_UI_HEADLESS=false` para ver o navegador. Se um teste falhar, o screenshot fica no relatório.
+
+**Testes com `SEGURANCA`:** suba uma segunda API, num banco próprio, com os toggles e o administrador
+inicial. Depois rode o front com proxy para ela e os testes com as credenciais do administrador.
+
+```bash
+java -jar ../../target/mais_saude_publica-*.jar --spring.profiles.active=test --server.port=8083 \
+  --spring.datasource.url=jdbc:postgresql://localhost:55432/saudepublica_seguranca \
+  --app.security.enabled=true --app.security.authorization.enabled=true \
+  --app.security.prontuario-por-vinculo.enabled=true \
+  --app.security.bootstrap.cpf=52998224725 --app.security.bootstrap.senha='Robot#Admin123'
+MSP_HOST_URL=http://localhost:8083 MSP_FRONT_URL=http://localhost:4201 \
+  MSP_ADMIN_CPF=52998224725 MSP_ADMIN_SENHA='Robot#Admin123' robot --include SEGURANCA test
+```
 
 ## Camadas (POM → FLOW → SCENARIO → TEST)
 
