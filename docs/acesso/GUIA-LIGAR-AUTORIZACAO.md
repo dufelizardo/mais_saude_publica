@@ -70,8 +70,9 @@ Perfis que já vêm prontos:
 |---|---|---|
 | Administrador da plataforma | quem administra usuários, acessos e unidades | sem dado de saúde |
 | Gestor | gestão de RH, setor administrativo, estoque e acessos da unidade | concede acesso só na sua unidade |
-| Recepção | cadastro de paciente, agenda, acolhimento | não lê triagem nem prontuário |
-| Médico | consulta, prescrição, procedimento | |
+| Recepção | cadastro de paciente, agenda, acolhimento, andamento da regulação | não lê triagem, prontuário nem a justificativa da regulação |
+| Médico | consulta, prescrição, procedimento, solicitação de regulação | |
+| Médico regulador | fila da Central de Regulação do Acesso: autoriza com vaga, devolve, nega | escopo no município ou na regional (ADR-0087) |
 | Enfermeiro | classificação de risco, evolução, procedimento, medicação | |
 | Coordenador de enfermagem | tudo do enfermeiro + retificar registro de outro profissional | |
 | Técnico de enfermagem | procedimento e medicação | sem classificação de risco nem evolução (COFEN 661/2021) |

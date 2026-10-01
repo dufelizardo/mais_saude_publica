@@ -78,7 +78,14 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   (ADRs 0071 e 0076).
 
 ### Prontuário por vínculo
-- Encaminhamento e regulação ainda não geram vínculo, porque esses domínios não existem (ADR-0076).
+- A regulação ainda não gera vínculo: entra na ADR-0089, com o agendamento na unidade executante (ADR-0076).
+
+### Regulação
+- Tela (ADR-0088) e fechamento do ciclo: agendamento na executante, vínculo e contrarreferência (ADR-0089).
+- Fora do escopo da ADR-0087: regulação de urgência e SAMU, internação (depende de Leitos, #12),
+  integração com SISREG e SIGTAP, e cotas por unidade (PPI).
+- Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
+  autorização for ligada.
 
 ### Telas
 - ~~**Perfil do profissional:** as 13 abas no padrão novo~~ — feito pelas ADRs 0084 a 0086.

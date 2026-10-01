@@ -86,6 +86,8 @@ const RECURSOS: Record<string, string> = {
   MEDICAMENTO: 'Medicamento',
   MOVIMENTACAO_FARMACIA: 'Livro de estoque',
   TRANSFERENCIA_FARMACIA: 'Transferência',
+  SOLICITACAO_REGULACAO: 'Regulação',
+  PROCEDIMENTO_REGULADO: 'Procedimento regulado',
   AUTH: 'Acesso ao sistema',
   USUARIO: 'Usuário',
   PAPEL: 'Perfil',

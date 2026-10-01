@@ -102,6 +102,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0084](./0084-abas-do-perfil-no-padrao-novo-dados-a-ajustes.md) | Abas do perfil do profissional no padrão novo (Dados a Ajustes) | Aceita e implementada |
 | [0085](./0085-abas-do-perfil-no-padrao-novo-afastamentos-a-sst.md) | Abas do perfil do profissional no padrão novo (Afastamentos a SST) | Aceita e implementada |
 | [0086](./0086-abas-do-perfil-no-padrao-novo-treinamentos-a-historico.md) | Abas do perfil do profissional no padrão novo (Treinamentos a Histórico) | Aceita e implementada |
+| [0087](./0087-regulacao-do-acesso-backend.md) | Regulação do acesso: backend | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

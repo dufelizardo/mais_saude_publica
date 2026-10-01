@@ -57,3 +57,5 @@ Resource    ../../schema/administracao_medicamento/administracao_medicamento_sch
 Resource    ../../schema/acesso/acesso_schema.resource
 # AUDITORIA (ADR-0070/0071)
 Resource    ../../schema/auditoria/auditoria_schema.resource
+# REGULACAO
+Resource    ../../schema/regulacao/regulacao_schema.resource
