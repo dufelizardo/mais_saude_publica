@@ -1,82 +1,67 @@
 *** Settings ***
-Resource    ../../../../flow/ui/assistencia/regulacao/regulacao_ui_flow.resource
+Resource    ../../../../src/scenario/ui/assistencia/agenda/agenda_ui_scenario.resource
+Resource    ../../../../src/scenario/common/ui_sessao_scenario.resource
+Suite Setup       UI - ABRIR SISTEMA
+Suite Teardown    UI - FECHAR SISTEMA
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Metadata    Test Suite - UI Assistência - Agenda
+Metadata    Test Suite Description        Valida a tela Agenda: marcar na vaga, encaixe, falta, bloco, bloqueio e estado inicial (ADR-0092).
+Metadata    Test Suite Owner              Eduardo Felizardo
+Metadata    Test Suite Version            1.0
+Metadata    Test Suite Tags               UI    UiAgenda    MaisSaudePublicaFrontend
+Metadata    Test Suite Created On         2026-10-02
+Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Project                       Layered Keyword Driven Framework (LKDF)
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-*** Keywords ***
-UI - REGULACAO - NOVA SOLICITACAO
-    [Documentation]    Nova solicitação pela gaveta.
+*** Variables ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Test Cases ***
+CT-001 - Marcar paciente clicando na vaga livre
+    [Documentation]    Aviso e nome no calendário.
+    [Tags]    UI    UiAgenda
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Nova Solicitacao Pela Gaveta
+    UI - AGENDA - MARCAR NA VAGA
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - REGULACAO - AUTORIZAR PELA FILA
-    [Documentation]    Autorização com vaga pela fila.
+CT-002 - Marcar encaixe fora das vagas
+    [Documentation]    Aviso de encaixe.
+    [Tags]    UI    UiAgenda
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Autorizar Pela Fila
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - REGULACAO - DEVOLVER E COMPLEMENTAR
-    [Documentation]    Devolução e complemento.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Devolver E Complementar
+    UI - AGENDA - MARCAR ENCAIXE
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - REGULACAO - CID INVALIDO
-    [Documentation]    Validação do CID-10.
+CT-003 - Registrar falta na marcação
+    [Documentation]    Agendamento como falta.
+    [Tags]    UI    UiAgenda
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Gaveta Recusa Cid Invalido
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - REGULACAO - CADASTRAR PROCEDIMENTO
-    [Documentation]    Catálogo de procedimentos.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Cadastrar Procedimento Pela Gaveta
+    UI - AGENDA - REGISTRAR FALTA
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - REGULACAO - ENCAMINHAR PREENCHIDO
-    [Documentation]    Link do Encaminhar.
+CT-004 - Criar bloco e ver as vagas
+    [Documentation]    Vagas aparecem.
+    [Tags]    UI    UiAgenda
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Encaminhar Abre A Gaveta Preenchida
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - REGULACAO - AUTORIZAR JA AGENDANDO
-    [Documentation]    Autorização com quem vai atender.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Autorizar Ja Agendando
+    UI - AGENDA - CRIAR BLOCO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - REGULACAO - AGENDAR PELA LINHA
-    [Documentation]    Agendamento na executante.
+CT-005 - Bloquear uma hora da agenda
+    [Documentation]    Bloqueio no calendário e vagas a menos.
+    [Tags]    UI    UiAgenda
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Agendar Pela Linha
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - REGULACAO - ATENDIMENTO COM CONTRARREFERENCIA
-    [Documentation]    Atendimento e contrarreferência.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Registrar Atendimento Com Contrarreferencia
+    UI - AGENDA - BLOQUEAR
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - REGULACAO - REGISTRAR FALTA
-    [Documentation]    Falta ao agendamento.
+CT-006 - Sem filtro pede profissional e unidade
+    [Documentation]    Mensagem de escolha.
+    [Tags]    UI    UiAgenda
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Registrar Falta
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - REGULACAO - AUTORIZAR NA VAGA DA AGENDA
-    [Documentation]    Autorização escolhendo a vaga.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Regulacao - Autorizar Escolhendo A Vaga Da Agenda
+    UI - AGENDA - SEM FILTRO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

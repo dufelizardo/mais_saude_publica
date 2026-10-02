@@ -94,6 +94,12 @@ export const routes: Routes = [
       { path: 'assistencia/procedimentos', redirectTo: ({ queryParams }) => paraAtendimentos('atend', queryParams) },
       { path: 'assistencia/prontuario', redirectTo: ({ queryParams }) => paraAtendimentos('pront', queryParams) },
       { path: 'assistencia/farmacia', component: Farmacia, data: { breadcrumb: 'Farmácia', area: 'Assistência' } },
+      // Agenda do profissional (ADR-0092), carregada sob demanda.
+      {
+        path: 'assistencia/agenda',
+        loadComponent: () => import('./features/assistencia/agenda/agenda').then((m) => m.Agenda),
+        data: { breadcrumb: 'Agenda', area: 'Assistência' },
+      },
       // Regulação do acesso (ADR-0088), carregada sob demanda.
       {
         path: 'assistencia/regulacao',

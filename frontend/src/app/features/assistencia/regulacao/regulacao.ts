@@ -21,6 +21,8 @@ import { AuthService } from '../../../core/services/auth';
 import { PacienteService } from '../../../core/services/paciente';
 import { RegulacaoService } from '../../../core/services/regulacao';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
+import { AgendaService } from '../../../core/services/agenda';
+import { ItemAgendaDto } from '../../../core/models/agenda';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
 
@@ -96,6 +98,13 @@ export class Regulacao {
   private readonly regulacaoService = inject(RegulacaoService);
   private readonly pacienteService = inject(PacienteService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
+  private readonly agendaService = inject(AgendaService);
+
+  /** Vagas livres de quem vai atender, na unidade executante (ADR-0092): um clique preenche a data. */
+  protected readonly vagasSugeridas = signal<ItemAgendaDto[]>([]);
+  protected readonly vagasAlvo = signal<'decisao' | 'agendar' | null>(null);
+  protected readonly carregandoVagas = signal(false);
+  protected readonly erroVagas = signal<string | null>(null);
 
   protected readonly formatCpf = formatCpf;
   protected readonly prioridades = PRIORIDADES;
@@ -352,6 +361,8 @@ export class Regulacao {
   private abrir(g: Gaveta): void {
     this.erros.set({});
     this.erroApi.set(null);
+    this.vagasAlvo.set(null);
+    this.vagasSugeridas.set([]);
     this.gaveta.set(g);
   }
 
@@ -431,6 +442,34 @@ export class Regulacao {
 
   protected podeRegistrarFalta(s: SolicitacaoRegulacaoResumoDto): boolean {
     return s.status === 'AGENDADA' && this.pode('AGENDAMENTO.GERENCIAR', 'ATENDIMENTO.GERENCIAR');
+  }
+
+  protected buscarVagas(unidadeId: string | null | undefined, matricula: string, alvo: 'decisao' | 'agendar'): void {
+    if (!unidadeId || !matricula.trim()) return;
+    const hoje = new Date();
+    const de = `${hoje.getFullYear()}-${pad(hoje.getMonth() + 1)}-${pad(hoje.getDate())}`;
+    const fim = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 30);
+    const ate = `${fim.getFullYear()}-${pad(fim.getMonth() + 1)}-${pad(fim.getDate())}`;
+    this.vagasAlvo.set(alvo);
+    this.carregandoVagas.set(true);
+    this.erroVagas.set(null);
+    this.agendaService.vagas(matricula.trim(), unidadeId, de, ate).subscribe({
+      next: (v) => {
+        this.vagasSugeridas.set(v.slice(0, 12));
+        this.carregandoVagas.set(false);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.vagasSugeridas.set([]);
+        this.carregandoVagas.set(false);
+        this.erroVagas.set(e.status === 404 ? 'Matrícula não encontrada.' : 'Não foi possível buscar as vagas.');
+      },
+    });
+  }
+
+  protected escolherVaga(inicio: string, alvo: 'decisao' | 'agendar'): void {
+    const valor = inicio.slice(0, 16);
+    if (alvo === 'decisao') this.decisaoForm.controls.dataHoraPrevista.setValue(valor);
+    else this.agendarForm.controls.dataHora.setValue(valor);
   }
 
   protected abrirProcedimento(p: ProcedimentoReguladoResponseDto | null = null): void {

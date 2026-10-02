@@ -227,6 +227,11 @@ class AgendaControllerTest {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].inicio").value(segunda + "T08:30:00"));
         marcar("08:00", true).andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(get(AGENDA + "bloqueio" + doDia()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].motivo").value("REUNIAO"))
+                .andExpect(jsonPath("$[0].profissionalMatricula").doesNotExist());
         mockMvc.perform(get(AGENDA + doDia()))
                 .andExpect(jsonPath("$.vagasOfertadas").value(1))
                 .andExpect(jsonPath("$.dias[0].itens[0].tipo").value("BLOQUEIO"));

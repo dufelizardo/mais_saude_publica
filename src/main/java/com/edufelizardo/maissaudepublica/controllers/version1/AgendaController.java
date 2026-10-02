@@ -142,6 +142,20 @@ public class AgendaController {
                 "Id: " + b.getUuid() + ", " + b.getMotivo() + ", De: " + b.getInicio() + ", Até: " + b.getFim()));
     }
 
+    @RequerPermissao({"AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "REGULACAO.REGULAR"})
+    @GetMapping(value = "bloqueio", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Bloqueios que tocam um período, para um profissional numa unidade",
+            description = "Os do profissional (na unidade ou em todas) e os da unidade inteira. Até 62 dias por vez.", tags = "Agenda")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = BloqueioAgendaResponseDto.class)))
+    })
+    @ApiErrorResponsesListagem
+    public ResponseEntity<List<BloqueioAgendaResponseDto>> listarBloqueios(@RequestParam String profissionalMatricula, @RequestParam UUID unidadeId,
+                                                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
+                                                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate) {
+        return ResponseEntity.ok(service.listarBloqueios(profissionalMatricula, unidadeId, de, ate));
+    }
+
     @RequerPermissao({"AGENDAMENTO.GERENCIAR"})
     @DeleteMapping(value = "bloqueio/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Remove um bloqueio da agenda", description = "As vagas do período voltam a ser oferecidas.", tags = "Agenda")
