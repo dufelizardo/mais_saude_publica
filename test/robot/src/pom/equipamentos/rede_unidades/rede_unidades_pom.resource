@@ -1,54 +1,68 @@
 *** Settings ***
-Resource    ../../../../flow/ui/assistencia/agenda/agenda_ui_flow.resource
+Resource    ../../common/mais_saude_publica_common.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
+    Equipamentos de Saúde (ADR-0101): rede, ficha, cadastro e edição por id, horário estruturado e situação.
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Variables ***
+${REDE_ENDPOINT}    /unidade-saude
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
-UI - AGENDA - MARCAR NA VAGA
-    [Documentation]    Marcação clicando na vaga.
+GET Rede Unidades
+    [Documentation]    Fetches the network of units.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Marcar Na Vaga
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - AGENDA - MARCAR ENCAIXE
-    [Documentation]    Encaixe fora das vagas.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Marcar Encaixe
+    Get Mais Saude Publica Session
+    ${response}=    GET On Session    msp_session    ${BASE_URL}${REDE_ENDPOINT}/rede    expected_status=ANY
+    RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - AGENDA - REGISTRAR FALTA
-    [Documentation]    Falta pela gaveta da marcação.
+GET Ficha Unidade
+    [Documentation]    Fetches a unit file by id.
+    [Arguments]    ${uuid}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Registrar Falta
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - AGENDA - CRIAR BLOCO
-    [Documentation]    Bloco pelo painel.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Criar Bloco Pela Gaveta
+    Get Mais Saude Publica Session
+    ${response}=    GET On Session    msp_session    ${BASE_URL}${REDE_ENDPOINT}/id/${uuid}    expected_status=ANY
+    RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - AGENDA - BLOQUEAR
-    [Documentation]    Bloqueio pelo painel.
+POST Create Unidade Por Id
+    [Documentation]    Creates a unit through the id routes.
+    [Arguments]    ${payload}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Bloquear Pela Gaveta
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - AGENDA - SEM FILTRO
-    [Documentation]    Estado inicial.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Sem Filtro Pede Profissional E Unidade
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}${REDE_ENDPOINT}/id    json=${payload}    expected_status=ANY
+    RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - AGENDA - UNIDADE EM OBRA
-    [Documentation]    Unidade em obra.
+PATCH Update Unidade Por Id
+    [Documentation]    Edits a unit through the id routes.
+    [Arguments]    ${uuid}    ${payload}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Unidade Em Obra Avisa E Fecha
+    Get Mais Saude Publica Session
+    ${response}=    PATCH On Session    msp_session    ${BASE_URL}${REDE_ENDPOINT}/id/${uuid}    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+PUT Horarios Unidade
+    [Documentation]    Replaces the structured opening hours.
+    [Arguments]    ${uuid}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    PUT On Session    msp_session    ${BASE_URL}${REDE_ENDPOINT}/id/${uuid}/horarios    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Situacao Unidade
+    [Documentation]    Changes the operational status.
+    [Arguments]    ${uuid}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}${REDE_ENDPOINT}/id/${uuid}/situacao    json=${payload}    expected_status=ANY
+    RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

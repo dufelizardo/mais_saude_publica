@@ -1,75 +1,125 @@
 *** Settings ***
-Resource    ../../../../src/scenario/ui/assistencia/agenda/agenda_ui_scenario.resource
-Resource    ../../../../src/scenario/common/ui_sessao_scenario.resource
-Suite Setup       UI - ABRIR SISTEMA
-Suite Teardown    UI - FECHAR SISTEMA
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-Metadata    Test Suite - UI Assistência - Agenda
-Metadata    Test Suite Description        Valida a tela Agenda: marcar na vaga, encaixe, falta, bloco, bloqueio e estado inicial (ADR-0092).
-Metadata    Test Suite Owner              Eduardo Felizardo
-Metadata    Test Suite Version            1.0
-Metadata    Test Suite Tags               UI    UiAgenda    MaisSaudePublicaFrontend
-Metadata    Test Suite Created On         2026-10-02
-Metadata    Test Suite Last Modified      XXXX-XX-XX
-Metadata    Project                       Layered Keyword Driven Framework (LKDF)
+Library     String
+Resource    ../../../pom/equipamentos/rede_unidades/rede_unidades_pom.resource
+Resource    ../../common/schema_validation_flow.resource
+Resource    ../../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-*** Variables ***
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-*** Test Cases ***
-CT-001 - Marcar paciente clicando na vaga livre
-    [Documentation]    Aviso e nome no calendário.
-    [Tags]    UI    UiAgenda
+*** Keywords ***
+Seed Uma Unidade Por Id
+    [Documentation]    Creates a UBS with a random name (and optional CNES) and returns its uuid and name.
+    [Arguments]    ${cnes}=${EMPTY}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI - AGENDA - MARCAR NA VAGA
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-CT-002 - Marcar encaixe fora das vagas
-    [Documentation]    Aviso de encaixe.
-    [Tags]    UI    UiAgenda
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI - AGENDA - MARCAR ENCAIXE
+    ${sufixo}=    Generate Random String    8    [LETTERS][NUMBERS]
+    ${nome}=    Set Variable    Robot UBS Rede ${sufixo}
+    ${payload}=    Create Dictionary    nome=${nome}    tipo=UBS
+    IF    "${cnes}" != "${EMPTY}"    Set To Dictionary    ${payload}    cnes=${cnes}
+    ${response}=    POST Create Unidade Por Id    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    201
+    RETURN    ${response.json()}[resumo][uuid]    ${nome}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-CT-003 - Registrar falta na marcação
-    [Documentation]    Agendamento como falta.
-    [Tags]    UI    UiAgenda
+Rede - Listar - Status Code 200
+    [Documentation]    Lists the network with valid schemas.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI - AGENDA - REGISTRAR FALTA
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-CT-004 - Criar bloco e ver as vagas
-    [Documentation]    Vagas aparecem.
-    [Tags]    UI    UiAgenda
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI - AGENDA - CRIAR BLOCO
+    ${uuid}    ${nome}=    Seed Uma Unidade Por Id
+    ${response}=    GET Rede Unidades
+    Should Be Equal As Integers    ${response.status_code}    200
+    Validate Object Schema    ${response.json()}    ${REDE_UNIDADES_SCHEMA}
+    Validate Array Schema    ${response.json()}[rede]    ${REDE_UNIDADE_RESUMO_SCHEMA}
+    ${nomes}=    Evaluate    [u["nome"] for u in $response.json()["rede"]]
+    Should Contain    ${nomes}    ${nome}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-CT-005 - Bloquear uma hora da agenda
-    [Documentation]    Bloqueio no calendário e vagas a menos.
-    [Tags]    UI    UiAgenda
+Rede - Criar - Status Code 409 - Nome Repetido
+    [Documentation]    Creates a unit with an existing name.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI - AGENDA - BLOQUEAR
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-CT-006 - Sem filtro pede profissional e unidade
-    [Documentation]    Mensagem de escolha.
-    [Tags]    UI    UiAgenda
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI - AGENDA - SEM FILTRO
+    ${uuid}    ${nome}=    Seed Uma Unidade Por Id
+    ${payload}=    Create Dictionary    nome=${nome}    tipo=UBS
+    ${response}=    POST Create Unidade Por Id    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    409
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-CT-007 - Unidade em obra avisa e fecha a agenda
-    [Documentation]    Aviso e nenhuma vaga.
-    [Tags]    UI    UiAgenda
+Rede - Criar - Status Code 400 - Cnes Invalido
+    [Documentation]    Creates a unit with a 5-digit CNES.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI - AGENDA - UNIDADE EM OBRA
+    ${sufixo}=    Generate Random String    8    [LETTERS][NUMBERS]
+    ${payload}=    Create Dictionary    nome=Robot UBS Cnes ${sufixo}    tipo=UBS    cnes=12345
+    ${response}=    POST Create Unidade Por Id    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    400
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Rede - Editar - Status Code 200
+    [Documentation]    Edits the name and the CNES; the file comes back updated.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${nome}=    Seed Uma Unidade Por Id
+    ${cnes}=    Generate Random String    7    [NUMBERS]
+    ${payload}=    Create Dictionary    nome=${nome} Editada    tipo=UBS    cnes=${cnes}
+    ${response}=    PATCH Update Unidade Por Id    ${uuid}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Validate Object Schema    ${response.json()}    ${FICHA_UNIDADE_SCHEMA}
+    Should Be Equal    ${response.json()}[resumo][cnes]    ${cnes}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Rede - Horarios - Status Code 200 E 400
+    [Documentation]    Sets Monday 08-12; overlapping turns are refused.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${nome}=    Seed Uma Unidade Por Id
+    ${t1}=    Create Dictionary    diaSemana=MONDAY    abre=08:00    fecha=12:00
+    ${t2}=    Create Dictionary    diaSemana=MONDAY    abre=11:00    fecha=17:00
+    ${sobrepostos}=    Create List    ${t1}    ${t2}
+    ${payload}=    Create Dictionary    funciona24h=${False}    turnos=${sobrepostos}
+    ${recusado}=    PUT Horarios Unidade    ${uuid}    ${payload}
+    Should Be Equal As Integers    ${recusado.status_code}    400
+    ${turnos}=    Create List    ${t1}
+    ${payload}=    Create Dictionary    funciona24h=${False}    turnos=${turnos}
+    ${response}=    PUT Horarios Unidade    ${uuid}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Length Should Be    ${response.json()}[turnos]    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Rede - Situacao - Status Code 200 E 400
+    [Documentation]    Puts the unit under construction with a reason; without reason, 400.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${nome}=    Seed Uma Unidade Por Id
+    ${sem}=    Create Dictionary    situacao=EM_OBRA
+    ${recusado}=    POST Situacao Unidade    ${uuid}    ${sem}
+    Should Be Equal As Integers    ${recusado.status_code}    400
+    ${payload}=    Create Dictionary    situacao=EM_OBRA    motivo=Reforma do telhado
+    ${response}=    POST Situacao Unidade    ${uuid}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Should Be Equal    ${response.json()}[resumo][situacaoOperacional]    EM_OBRA
+    Length Should Be    ${response.json()}[historico]    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Rede - Ficha - Status Code 404
+    [Documentation]    Fetches a unit that does not exist.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}=    Evaluate    str(uuid.uuid4())    modules=uuid
+    ${response}=    GET Ficha Unidade    ${uuid}
+    Should Be Equal As Integers    ${response.status_code}    404
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Rede Unidades - By HTTP Status Code
+    [Documentation]    Executes the network scenario for the given HTTP status code.
+    [Arguments]    ${meuHTTP}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Run Keyword If    '${meuHTTP}' == '200-rede'    Rede - Listar - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '409'    Rede - Criar - Status Code 409 - Nome Repetido
+    ...    ELSE IF    '${meuHTTP}' == '400-cnes'    Rede - Criar - Status Code 400 - Cnes Invalido
+    ...    ELSE IF    '${meuHTTP}' == '200-editar'    Rede - Editar - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '200-horarios'    Rede - Horarios - Status Code 200 E 400
+    ...    ELSE IF    '${meuHTTP}' == '200-situacao'    Rede - Situacao - Status Code 200 E 400
+    ...    ELSE IF    '${meuHTTP}' == '404'    Rede - Ficha - Status Code 404
+    ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Rede Unidades test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -21,6 +21,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.DiaAgenda
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ItemAgendaDto;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAfastamento;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAgendamento;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoOperacional;
 import com.edufelizardo.maissaudepublica.repositories.AfastamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.BlocoAgendaRepository;
@@ -81,6 +82,9 @@ public class AgendaService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private FuncionamentoUnidade funcionamentoUnidade;
+
     // ── Blocos ─────────────────────────────────────────────────────────────────────────────────────
 
     @Transactional
@@ -98,6 +102,12 @@ public class AgendaService {
         LocalDate desde = dto.getVigenteDesde() != null ? dto.getVigenteDesde() : LocalDate.now();
         if (dto.getVigenteAte() != null && dto.getVigenteAte().isBefore(desde)) {
             throw new ResourceBadRequestException("O fim da vigência precisa ser igual ou depois do início.");
+        }
+        FuncionamentoUnidade.Funcionamento funcionamento = funcionamentoUnidade.de(unidade);
+        if (!funcionamento.semRestricao() && !funcionamento.aberta(proximo(dto.getDiaSemana()).atTime(dto.getHoraInicio()),
+                proximo(dto.getDiaSemana()).atTime(dto.getHoraFim()))) {
+            throw new ResourceUnprocessableEntityException("O bloco fica fora do horário de funcionamento da " + unidade.getNome()
+                    + " em " + dto.getDiaSemana() + ".");
         }
         BlocoAgenda novo = new BlocoAgenda(profissional, unidade, dto.getDiaSemana(), dto.getHoraInicio(), dto.getHoraFim(),
                 dto.getDuracaoMinutos(), dto.getTipo(), desde, dto.getVigenteAte());
@@ -243,7 +253,7 @@ public class AgendaService {
                 (int) todos.stream().filter(a -> a.getStatus() != StatusAgendamento.CANCELADO).count(),
                 (int) todos.stream().filter(a -> a.isEncaixe() && a.getStatus() != StatusAgendamento.CANCELADO).count(),
                 (int) todos.stream().filter(a -> a.getStatus() == StatusAgendamento.FALTOU).count(),
-                dias);
+                dias, avisoDaUnidade(unidade));
     }
 
     /** Vagas livres a partir de agora: para a nova marcação e para a autorização da regulação. */
@@ -280,6 +290,14 @@ public class AgendaService {
                                        UUID ignorarAgendamento) {
         LocalDate dia = dataHora.toLocalDate();
         Montagem m = montar(profissional, unidade, dia, dia);
+        // Unidade fechada (em obra ou inoperante) não recebe marcação, nem encaixe (ADR-0101).
+        if (m.funcionamento.fechada()) {
+            throw new ResourceUnprocessableEntityException("A " + unidade.getNome() + " está " + m.funcionamento.situacao()
+                    + (unidade.getMotivoSituacao() != null ? " (" + unidade.getMotivoSituacao() + ")" : "") + " e não recebe marcação.");
+        }
+        if (!m.funcionamento.aberta(dataHora, dataHora.plusMinutes(1))) {
+            throw new ResourceUnprocessableEntityException("A " + unidade.getNome() + " não funciona nesse horário.");
+        }
         m.afastamentoEm(dia).ifPresent(a -> {
             throw new ResourceUnprocessableEntityException("O profissional está afastado (" + a.getTipo() + ") de "
                     + a.getDataInicio() + " a " + a.getDataFim() + ".");
@@ -302,6 +320,26 @@ public class AgendaService {
         }
     }
 
+    /** O aviso da situação da unidade na agenda (ADR-0101): fechada, ou funcionando com restrição. Em operação, nulo. */
+    private static String avisoDaUnidade(UnidadeDeSaude u) {
+        if (u.getSituacaoOperacional() == null || u.getSituacaoOperacional() == SituacaoOperacional.EM_OPERACAO) {
+            return null;
+        }
+        String texto = switch (u.getSituacaoOperacional()) {
+            case EM_MANUTENCAO -> "Unidade em manutenção";
+            case EM_OBRA -> "Unidade em obra: sem vagas nem marcação";
+            case INOPERANTE -> "Unidade inoperante: sem vagas nem marcação";
+            default -> "";
+        };
+        return texto + (u.getMotivoSituacao() != null ? " · " + u.getMotivoSituacao() : "")
+                + (u.getPrevisaoRetorno() != null ? " · retorno previsto em " + u.getPrevisaoRetorno() : "") + ".";
+    }
+
+    /** O próximo dia com aquele dia da semana, para testar o horário de um bloco recorrente. */
+    private static LocalDate proximo(java.time.DayOfWeek dia) {
+        return LocalDate.now().with(java.time.temporal.TemporalAdjusters.nextOrSame(dia));
+    }
+
     // ── Montagem ───────────────────────────────────────────────────────────────────────────────────
 
     private Montagem montar(Profissional profissional, UnidadeDeSaude unidade, LocalDate de, LocalDate ate) {
@@ -318,14 +356,16 @@ public class AgendaService {
                 .filter(a -> a.getStatus() != StatusAgendamento.CANCELADO)
                 .filter(a -> a.getUnidade() == null || a.getUnidade().getUuid().equals(unidade.getUuid()))
                 .toList();
-        return new Montagem(profissional.getUuid(), unidade.getUuid(), blocos, bloqueios, afastamentos, agendamentos);
+        return new Montagem(profissional.getUuid(), unidade.getUuid(), blocos, bloqueios, afastamentos, agendamentos,
+                funcionamentoUnidade.de(unidade));
     }
 
     private record Vaga(BlocoAgenda bloco, LocalDateTime inicio, LocalDateTime fim, boolean bloqueada) {
     }
 
     private record Montagem(UUID profissionalId, UUID unidadeId, List<BlocoAgenda> blocos, List<BloqueioAgenda> bloqueios,
-                            List<Afastamento> afastamentos, List<Agendamento> agendamentos) {
+                            List<Afastamento> afastamentos, List<Agendamento> agendamentos,
+                            FuncionamentoUnidade.Funcionamento funcionamento) {
 
         Optional<Afastamento> afastamentoEm(LocalDate dia) {
             return afastamentos.stream().filter(a -> !dia.isBefore(a.getDataInicio()) && !dia.isAfter(a.getDataFim())).findFirst();
@@ -342,6 +382,10 @@ public class AgendaService {
                         && t.plusMinutes(b.getDuracaoMinutos()).isAfter(t); t = t.plusMinutes(b.getDuracaoMinutos())) {
                     LocalDateTime ini = dia.atTime(t);
                     LocalDateTime fim = ini.plusMinutes(b.getDuracaoMinutos());
+                    // Fora do horário da unidade, ou com a unidade fechada, a vaga não existe (ADR-0101).
+                    if (!funcionamento.aberta(ini, fim)) {
+                        continue;
+                    }
                     boolean bloqueada = afastado || bloqueios.stream().anyMatch(x -> x.cobre(profissionalId, unidadeId, ini, fim));
                     vagas.add(new Vaga(b, ini, fim, bloqueada));
                 }

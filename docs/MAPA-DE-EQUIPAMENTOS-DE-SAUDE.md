@@ -1,7 +1,9 @@
 # Mapa de Equipamentos de Saúde
 
 **Data:** 2026-09-26
-**Status:** Vivo — levantamento conceitual, sem implementação associada. Ver
+**Status:** Vivo — levantamento conceitual. A unidade ganhou CNES, situação operacional e horário estruturado
+([ADR-0101](./adr/0101-equipamentos-de-saude-backend.md)); os tipos novos de equipamento continuam sem
+implementação. Ver
 [ADR-0053](./adr/0053-criterio-de-governanca-para-equipamentos-de-saude.md) para a decisão de
 governança que este mapa fundamenta.
 

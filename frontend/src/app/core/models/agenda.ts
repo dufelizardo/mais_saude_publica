@@ -88,4 +88,6 @@ export interface AgendaResponseDto {
   encaixes: number;
   faltas: number;
   dias: DiaAgendaDto[];
+  /** Situação da unidade quando não está em operação (ADR-0101). */
+  avisoUnidade?: string | null;
 }

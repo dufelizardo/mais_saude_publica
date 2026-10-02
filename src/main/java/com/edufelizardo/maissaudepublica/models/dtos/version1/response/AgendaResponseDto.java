@@ -35,4 +35,6 @@ public class AgendaResponseDto implements Serializable {
     private int encaixes;
     private int faltas;
     private List<DiaAgendaDto> dias;
+    /** Situação da unidade quando não está em operação (ADR-0101), para a tela avisar. Nulo em operação. */
+    private String avisoUnidade;
 }

@@ -1,54 +1,72 @@
 *** Settings ***
-Resource    ../../../../flow/ui/assistencia/agenda/agenda_ui_flow.resource
+Resource    ../../../src/scenario/equipamentos/rede_unidades/rede_unidades_scenario.resource
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Metadata    Test Suite - RedeUnidades
+Metadata    Test Suite Description        This test suite validates the id routes of /api/v1/unidade-saude/ (ADR-0101) of the Mais Saúde Pública API.
+Metadata    Test Suite Owner              Eduardo Felizardo
+Metadata    Test Suite Version            1.0
+Metadata    Test Suite Tags               RedeUnidades    MaisSaudePublicaAPI
+Metadata    Test Suite Created On         2026-10-02
+Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Project                       Layered Keyword Driven Framework (LKDF)
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-*** Keywords ***
-UI - AGENDA - MARCAR NA VAGA
-    [Documentation]    Marcação clicando na vaga.
+*** Variables ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Test Cases ***
+CT-001 - Validate RedeUnidades - HTTP 200 (Rede)
+    [Documentation]    Rede com resumo e indicadores.
+    [Tags]    RedeUnidades    HTTP200
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Marcar Na Vaga
+    REDE UNIDADES    200-rede
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - AGENDA - MARCAR ENCAIXE
-    [Documentation]    Encaixe fora das vagas.
+CT-002 - Validate RedeUnidades - HTTP 409 (Nome Repetido)
+    [Documentation]    Nome de unidade repetido.
+    [Tags]    RedeUnidades    HTTP409
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Marcar Encaixe
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - AGENDA - REGISTRAR FALTA
-    [Documentation]    Falta pela gaveta da marcação.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Registrar Falta
+    REDE UNIDADES    409
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - AGENDA - CRIAR BLOCO
-    [Documentation]    Bloco pelo painel.
+CT-003 - Validate RedeUnidades - HTTP 400 (CNES Invalido)
+    [Documentation]    CNES com menos de 7 dígitos.
+    [Tags]    RedeUnidades    HTTP400
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Criar Bloco Pela Gaveta
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-
-UI - AGENDA - BLOQUEAR
-    [Documentation]    Bloqueio pelo painel.
-    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Bloquear Pela Gaveta
+    REDE UNIDADES    400-cnes
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - AGENDA - SEM FILTRO
-    [Documentation]    Estado inicial.
+CT-004 - Validate RedeUnidades - HTTP 200 (Edicao)
+    [Documentation]    Edição de nome e CNES.
+    [Tags]    RedeUnidades    HTTP200
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Sem Filtro Pede Profissional E Unidade
+    REDE UNIDADES    200-editar
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-UI - AGENDA - UNIDADE EM OBRA
-    [Documentation]    Unidade em obra.
+CT-005 - Validate RedeUnidades - HTTP 200 (Horarios)
+    [Documentation]    Horário estruturado e turnos sobrepostos recusados.
+    [Tags]    RedeUnidades    HTTP200
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    UI Agenda - Unidade Em Obra Avisa E Fecha
+    REDE UNIDADES    200-horarios
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-006 - Validate RedeUnidades - HTTP 200 (Situacao)
+    [Documentation]    Em obra com motivo; sem motivo, 400.
+    [Tags]    RedeUnidades    HTTP200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    REDE UNIDADES    200-situacao
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-007 - Validate RedeUnidades - HTTP 404 (Inexistente)
+    [Documentation]    Unidade que não existe.
+    [Tags]    RedeUnidades    HTTP404
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    REDE UNIDADES    404
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

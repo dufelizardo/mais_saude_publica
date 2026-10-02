@@ -90,6 +90,12 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
   autorização for ligada.
 
+### Equipamentos de Saúde
+- Tela pelo protótipo `Equipamentos.html` (ADR-0102).
+- Fora do escopo da ADR-0101: sincronização com o CNES; coordenadas e mapa; microáreas e famílias; equipes de
+  Saúde da Família; inspeção sanitária; capacidade de consultórios; exportação; horário de atendimento
+  estruturado.
+
 ### Leitos e internação
 - ~~Internações no prontuário e vínculo de quem cuida do internado~~ — feitos pela ADR-0100. A tela (ADR-0099)
   não tem protótipo próprio.
@@ -110,7 +116,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - Atividades coletivas (grupo, vacinação aberta, coleta com N pacientes, reunião, capacitação, visita do
   ACS), programas nas marcações (HiperDia, pré-natal) e sala: dependem de domínios que não existem.
 - Vaga liberada por falta oferecida à fila da Regulação ou a encaixe.
-- Horário de funcionamento da unidade fechando a agenda (hoje é preciso lançar bloqueio).
+- ~~Horário de funcionamento da unidade fechando a agenda~~ — feito pela ADR-0101 (horário estruturado em
+  turnos e unidade em obra ou inoperante sem vagas).
 - Meta de ocupação configurável por unidade (está fixa em 85%); indicadores de encaixe e falta "de hoje".
 - Mini-mês com marcações do mês inteiro; almoço desenhado como bloco; contador no menu; atualização ao
   vivo.

@@ -3,6 +3,7 @@ Library     String
 Resource    ../../../../pom/ui/assistencia/agenda/agenda_ui_pom.resource
 Resource    ../../../agendamento/falta_agendamento/falta_agendamento_flow.resource
 Resource    ../../../../pom/agenda/bloqueio_agenda/bloqueio_agenda_pom.resource
+Resource    ../../../equipamentos/rede_unidades/rede_unidades_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Profissional, unidade, bloco e paciente são criados pela API; a ação sob teste é feita pela tela (ADR-0092).
@@ -103,5 +104,18 @@ UI Agenda - Sem Filtro Pede Profissional E Unidade
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI Agenda - Abrir Sem Filtro
     Esperar Texto Aparecer    Escolha o profissional e a unidade
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Agenda - Unidade Em Obra Avisa E Fecha
+    [Documentation]    Com a unidade em obra, a agenda avisa e não mostra vagas (ADR-0101).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${matricula}    ${unidadeId}    ${segunda}=    Seed A Bloco Agenda
+    ${payload}=    Create Dictionary    situacao=EM_OBRA    motivo=Reforma do telhado
+    ${response}=    POST Situacao Unidade    ${unidadeId}    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    200
+    UI Agenda - Abrir    ${matricula}    ${unidadeId}    ${segunda}    semana
+    Esperar Texto Aparecer    Unidade em obra: sem vagas nem marcação
+    Esperar Texto Aparecer    Reforma do telhado
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
