@@ -5,6 +5,7 @@ Resource    ../../setor/create_setor/create_setor_flow.resource
 Resource    ../../paciente/create_paciente/create_paciente_flow.resource
 Resource    ../../profissional/get_profissional_by_matricula/get_profissional_by_matricula_flow.resource
 Resource    ../../common/schema_validation_flow.resource
+Resource    ../../../pom/prontuario/get_prontuario_by_paciente_id/get_prontuario_by_paciente_id_pom.resource
 Resource    ../../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -178,6 +179,19 @@ Internacao - Detalhe - Status Code 404
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+Internacao - Prontuario - Status Code 200
+    [Documentation]    Reads the admission in the patient record, with the reason and the movements (ADR-0100).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${internacaoId}    ${leitoId}    ${unidadeId}    ${setorId}    ${pacienteId}    ${matricula}=    Seed Uma Internacao
+    ${response}=    GET Get Prontuario By Paciente Id    ${pacienteId}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Validate Array Schema    ${response.json()}[internacoes]    ${INTERNACAO_SCHEMA}
+    Should Be Equal    ${response.json()}[internacoes][0][uuid]    ${internacaoId}
+    Should Be Equal    ${response.json()}[internacoes][0][motivo]    Pneumonia com hipoxemia.
+    Should Be Equal    ${response.json()}[internacoes][0][eventos][0][tipo]    ADMISSAO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Leito Internacao - By HTTP Status Code
     [Documentation]    Executes the bed and admission scenario for the given HTTP status code.
     [Arguments]    ${meuHTTP}
@@ -192,6 +206,7 @@ Leito Internacao - By HTTP Status Code
     ...    ELSE IF    '${meuHTTP}' == '200-bloqueio'    Leito - Bloqueio E Desbloqueio - Status Code 200
     ...    ELSE IF    '${meuHTTP}' == '200-indicadores'    Leito - Indicadores - Status Code 200
     ...    ELSE IF    '${meuHTTP}' == '404'    Internacao - Detalhe - Status Code 404
+    ...    ELSE IF    '${meuHTTP}' == '200-prontuario'    Internacao - Prontuario - Status Code 200
     ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Leito Internacao test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

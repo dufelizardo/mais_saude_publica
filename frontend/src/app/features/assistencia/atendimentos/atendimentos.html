@@ -361,6 +361,12 @@
       @if (prontuario()?.acesso?.base === 'JUSTIFICADO') {
         <app-acesso-prontuario [pacienteId]="p.uuid" [acesso]="prontuario()?.acesso" />
       }
+      @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.internacoes?.length) {
+        <section class="pront-exames" aria-labelledby="pront-internacoes-h">
+          <h4 id="pront-internacoes-h">Internações</h4>
+          <app-internacoes-paciente [internacoes]="prontuario()?.internacoes ?? []" />
+        </section>
+      }
       @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.exames?.length) {
         <section class="pront-exames" aria-labelledby="pront-exames-h">
           <h4 id="pront-exames-h">Exames laboratoriais</h4>
@@ -656,6 +662,12 @@
                   </div>
                   <app-exames-paciente [exames]="examesDoAtendimento()" vazio="Nenhum exame pedido neste atendimento." />
                 </section>
+                @if (internacoesDoAtendimento().length) {
+                  <section class="dsec">
+                    <div class="dsec__h"><h3>Internação</h3></div>
+                    <app-internacoes-paciente [internacoes]="internacoesDoAtendimento()" />
+                  </section>
+                }
               }
               @if (podeAuditar()) {
                 <section class="dsec">

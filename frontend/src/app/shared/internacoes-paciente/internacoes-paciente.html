@@ -1,0 +1,33 @@
+@for (i of internacoes; track i.uuid) {
+  <article class="rec int-rec">
+    <div class="rec__head">
+      <div>
+        <span class="cell-main">{{ i.leitoIdentificacao }} · {{ i.setorNome }}</span>
+        <span class="cell-sub">{{ i.unidadeNome }} · {{ i.medicoResponsavelNome }} · CID <span class="mono">{{ i.cid }}</span></span>
+      </div>
+      @if (i.status === 'INTERNADO') {
+        <span class="badge badge--info"><span class="dot" aria-hidden="true"></span> Internado · D+{{ i.diasPermanencia }}</span>
+      } @else {
+        <span class="badge badge--muted">Alta · {{ i.tipoAlta ? tiposAlta[i.tipoAlta] : '' }} · {{ i.diasPermanencia }} dia(s)</span>
+      }
+    </div>
+    <p class="cell-sub mono">Admissão {{ instante(i.admitidaEm) }}@if (i.altaEm) { · alta {{ instante(i.altaEm) }}@if (i.altaPorNome) { por {{ i.altaPorNome }} } }</p>
+    @if (i.motivo) { <p class="rec__txt"><b>Motivo:</b> {{ i.motivo }}</p> }
+    @if (i.sumarioAlta) { <p class="rec__txt reg-texto"><b>Sumário de alta:</b> {{ i.sumarioAlta }}</p> }
+    @if (i.eventos?.length) {
+      <details class="int-mov">
+        <summary>Movimentos ({{ i.eventos?.length }})</summary>
+        <ul>
+          @for (e of i.eventos ?? []; track $index) {
+            <li><span class="mono">{{ instante(e.ocorridoEm) }}</span> · {{ eventos[e.tipo] }} · {{ e.leitoIdentificacao }}@if (e.texto) { · {{ e.texto }} }</li>
+          }
+        </ul>
+      </details>
+    }
+    @if (i.status === 'INTERNADO') {
+      <div><a class="btn btn--ghost btn--sm" routerLink="/assistencia/leitos" [queryParams]="{ aba: 'internacoes' }">Ver no mapa de leitos</a></div>
+    }
+  </article>
+} @empty {
+  <p class="cell-sub">{{ vazio }}</p>
+}

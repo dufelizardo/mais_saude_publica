@@ -1405,6 +1405,10 @@ tfoot .linha-total th { text-align: left; }
 .leito-leg--BLOQUEADO { background: var(--ink-400); }
 /* Recoleta na coleta e exames do paciente no prontuário (ADR-0095). */
 .lab-recoleta { margin-top: 4px; }
+/* Internações no prontuário (ADR-0100): movimentos recolhidos. */
+.int-rec { margin-bottom: 8px; }
+.int-mov summary { cursor: pointer; font-size: 0.8rem; color: var(--ink-500); }
+.int-mov ul { margin: 6px 0 0; padding-left: 18px; font-size: 0.8rem; color: var(--ink-700); display: grid; gap: 2px; }
 .pront-exames { display: grid; gap: 8px; margin: var(--s-4) 0; }
 .pront-exames h4 { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-500); font-weight: 600; }
 @media (max-width: 640px) { .perfil-linha li { grid-template-columns: 1fr; gap: 4px; } }
