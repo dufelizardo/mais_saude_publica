@@ -74,8 +74,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Auditoria
 - ~~Exportação e retenção~~ — feitas pela ADR-0082 (CSV e 20 anos). PDF formatado só se houver pedido
   formal que o exija.
-- **Alertas** (muitas recusas seguidas, leituras fora do horário, acesso justificado para a supervisão)
-  (ADRs 0071 e 0076).
+- ~~**Alertas**~~ — detecção e análise feitas pela ADR-0096; a tela vem na ADR-0097. Fora do escopo:
+  detecção em tempo real, regras configuráveis pela tela, integração com SIEM e aviso ao titular dos dados.
+  Os limites das regras precisam ser calibrados com o volume real de cada rede.
 
 ### Prontuário por vínculo
 - ~~A regulação ainda não gera vínculo~~ — feito pela ADR-0089 (quarta condição).
