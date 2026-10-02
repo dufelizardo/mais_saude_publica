@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../../pom/ui/assistencia/laboratorio/laboratorio_ui_pom.resource
 Resource    ../../../laboratorio/pedido_exame/pedido_exame_flow.resource
+Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (paciente, unidade, profissional, exame, pedido, coleta) são criados pela API; a ação sob
@@ -175,5 +176,80 @@ UI Laboratorio - Campo Deve Valer
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${valor}=    UI Laboratorio - Ler Valor Do Campo    ${campo}
     Should Be Equal    ${valor}    ${esperado}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Liberar Pela API
+    [Documentation]    Registra o resultado (17, acima de 12-16) e libera o primeiro exame do pedido pela API.
+    [Arguments]    ${itemId}    ${matricula}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${payload}=    Create Dictionary    profissionalMatricula=${matricula}    valorNumerico=${17}
+    ${registrado}=    POST Acao Item Exame    ${itemId}    resultado    ${payload}
+    Should Be Equal As Integers    ${registrado.status_code}    200
+    ${lib}=    Create Dictionary    profissionalMatricula=${matricula}
+    ${liberado}=    POST Acao Item Exame    ${itemId}    liberacao    ${lib}
+    Should Be Equal As Integers    ${liberado.status_code}    200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Seed Exame Liberado No Atendimento
+    [Documentation]    Cria um atendimento, pede um exame nele, coleta e libera pela API.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${atendimentoId}    ${pacienteId}    ${matricula}    ${unidadeId}=    Seed Um Atendimento
+    ${exameId}    ${exameNome}=    Seed A Exame Laboratorial
+    ${exames}=    Create List    ${exameId}
+    ${payload}=    Create Dictionary    pacienteId=${pacienteId}    atendimentoId=${atendimentoId}    unidadeSolicitanteId=${unidadeId}    profissionalMatricula=${matricula}    exameIds=${exames}    indicacaoClinica=Astenia e palidez.    prioridade=ROTINA
+    ${criado}=    POST Create Pedido Exame    ${payload}
+    Should Be Equal As Integers    ${criado.status_code}    201
+    ${lista}=    GET List Pedido Exame Do Paciente    ${pacienteId}
+    ${pedidoId}=    Set Variable    ${lista.json()}[0][uuid]
+    ${itemId}=    Set Variable    ${lista.json()}[0][itens][0][uuid]
+    ${coleta}=    Create Dictionary    profissionalMatricula=${matricula}    unidadeColetaId=${unidadeId}
+    ${coletado}=    POST Coletar Pedido Exame    ${pedidoId}    ${coleta}
+    Should Be Equal As Integers    ${coletado.status_code}    200
+    UI Laboratorio - Liberar Pela API    ${itemId}    ${matricula}
+    RETURN    ${pacienteId}    ${exameNome}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Recoleta Na Coleta
+    [Documentation]    Rejeita a amostra pela API e vê o exame como recoleta na aba Para coletar (ADR-0095).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${amostraId}=    Seed A Pedido Exame Coletado
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    ${payload}=    Create Dictionary    profissionalMatricula=${matricula}    motivo=HEMOLISADA
+    ${rejeitada}=    POST Rejeitar Amostra Exame    ${amostraId}    ${payload}
+    Should Be Equal As Integers    ${rejeitada.status_code}    200
+    UI Laboratorio - Abrir Aba    coletar
+    Clicar Botao    Coletar exames de ${nomePaciente}
+    Esperar Texto Aparecer    a amostra anterior foi rejeitada
+    Wait For Elements State    css=app-drawer label >> text=Recoleta · Hemolisada    visible    10s
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Laudo Imprimivel
+    [Documentation]    Abre o laudo de um pedido liberado e vê o resultado, a interpretação e quem liberou (ADR-0095).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${amostraId}=    Seed A Pedido Exame Coletado
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Liberar Pela API    ${itemId}    ${matricula}
+    Ir Para Rota Do Frontend    /laudo/exame/${pedidoId}
+    Esperar Texto Aparecer    Laudo de exames laboratoriais
+    Esperar Texto Aparecer    ${exameNome}
+    Esperar Texto Aparecer    Acima da referência
+    Esperar Texto Aparecer    Liberado por
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Exames No Prontuario E No Atendimento
+    [Documentation]    Vê o exame liberado no prontuário e no atendimento em que foi pedido (ADR-0095).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pacienteId}    ${exameNome}=    UI Laboratorio - Seed Exame Liberado No Atendimento
+    Ir Para Rota Do Frontend    /assistencia/atendimentos?aba=pront&pacienteId=${pacienteId}
+    Esperar Texto Aparecer    Exames laboratoriais
+    Wait For Elements State    css=.pront-exames >> text=${exameNome}    visible    10s
+    Wait For Elements State    css=.pront-exames >> text=Acima da referência    visible    10s
+    Clicar Botao    Abrir
+    Wait For Elements State    css=app-drawer app-exames-paciente >> text=${exameNome}    visible    10s
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

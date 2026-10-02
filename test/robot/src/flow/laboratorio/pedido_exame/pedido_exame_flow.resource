@@ -7,6 +7,7 @@ Resource    ../../paciente/create_paciente/create_paciente_flow.resource
 Resource    ../../setor/create_setor/create_setor_flow.resource
 Resource    ../../profissional/get_profissional_by_matricula/get_profissional_by_matricula_flow.resource
 Resource    ../../common/schema_validation_flow.resource
+Resource    ../../../pom/prontuario/get_prontuario_by_paciente_id/get_prontuario_by_paciente_id_pom.resource
 Resource    ../../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -234,6 +235,46 @@ Pedido Exame - Trabalho - Status Code 400 - Etapa Invalida
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+Pedido Exame - Trabalho - Recoleta Com Motivo
+    [Documentation]    Rejects the sample and reads the exam back in PARA_COLETAR flagged as recollection, with the reason (ADR-0095).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${amostraId}=    Seed A Pedido Exame Coletado
+    ${payload}=    Create Dictionary    profissionalMatricula=${matricula}    motivo=COAGULADA
+    ${rejeitada}=    POST Rejeitar Amostra Exame    ${amostraId}    ${payload}
+    Should Be Equal As Integers    ${rejeitada.status_code}    200
+    ${lista}=    GET Trabalho Laboratorio    PARA_COLETAR
+    Should Be Equal As Integers    ${lista.status_code}    200
+    Validate Array Schema    ${lista.json()}    ${ITEM_TRABALHO_EXAME_SCHEMA}
+    ${motivos}=    Evaluate    [i.get("motivoRecoleta") for i in $lista.json() if i["itemId"] == $itemId]
+    Should Be Equal    ${motivos}[0]    COAGULADA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Pedido Exame - Prontuario - Resultado So Depois De Liberado
+    [Documentation]    Reads the exams in the patient record: no value while only registered, the value and interpretation after release (ADR-0095).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${unidadeId}    ${pacienteId}=    Seed A Pedido Exame
+    ${coleta}=    Create Dictionary    profissionalMatricula=${matricula}    unidadeColetaId=${unidadeId}
+    ${coletado}=    POST Coletar Pedido Exame    ${pedidoId}    ${coleta}
+    Should Be Equal As Integers    ${coletado.status_code}    200
+    ${payload}=    Create Dictionary    profissionalMatricula=${matricula}    valorNumerico=${17}
+    ${registrado}=    POST Acao Item Exame    ${itemId}    resultado    ${payload}
+    Should Be Equal As Integers    ${registrado.status_code}    200
+    ${antes}=    GET Get Prontuario By Paciente Id    ${pacienteId}
+    Should Be Equal As Integers    ${antes.status_code}    200
+    Validate Array Schema    ${antes.json()}[exames]    ${EXAME_PRONTUARIO_SCHEMA}
+    Should Be Equal    ${antes.json()}[exames][0][status]    RESULTADO_REGISTRADO
+    Should Be Equal    ${antes.json()}[exames][0][resultado]    ${None}
+    ${lib}=    Create Dictionary    profissionalMatricula=${matricula}
+    ${liberado}=    POST Acao Item Exame    ${itemId}    liberacao    ${lib}
+    Should Be Equal As Integers    ${liberado.status_code}    200
+    ${depois}=    GET Get Prontuario By Paciente Id    ${pacienteId}
+    Should Be Equal    ${depois.json()}[exames][0][status]    LIBERADO
+    Should Be Equal    ${depois.json()}[exames][0][resultado][interpretacao]    ACIMA
+    Should Be Equal    ${depois.json()}[exames][0][pedidoId]    ${pedidoId}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Pedido Exame - By HTTP Status Code
     [Documentation]    Executes the Pedido Exame scenario for the given HTTP status code.
     [Arguments]    ${meuHTTP}
@@ -253,6 +294,8 @@ Pedido Exame - By HTTP Status Code
     ...    ELSE IF    '${meuHTTP}' == '200-cancelamento'    Pedido Exame - Cancelamento - Status Code 200
     ...    ELSE IF    '${meuHTTP}' == '422-cancelamento'    Pedido Exame - Cancelamento - Status Code 422 - Liberado
     ...    ELSE IF    '${meuHTTP}' == '400-trabalho'    Pedido Exame - Trabalho - Status Code 400 - Etapa Invalida
+    ...    ELSE IF    '${meuHTTP}' == '200-recoleta'    Pedido Exame - Trabalho - Recoleta Com Motivo
+    ...    ELSE IF    '${meuHTTP}' == '200-prontuario'    Pedido Exame - Prontuario - Resultado So Depois De Liberado
     ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Pedido Exame test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

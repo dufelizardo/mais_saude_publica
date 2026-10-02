@@ -2,6 +2,7 @@ package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.ItemPedidoExame;
 import com.edufelizardo.maissaudepublica.models.enuns.MaterialExame;
+import com.edufelizardo.maissaudepublica.models.enuns.MotivoRejeicaoAmostra;
 import com.edufelizardo.maissaudepublica.models.enuns.PrioridadeExame;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusItemExame;
 import java.time.Instant;
@@ -36,13 +37,15 @@ public class ItemTrabalhoExameDto implements Serializable {
     private String amostraCodigo;
     private UUID laboratorioId;
     private String laboratorioNome;
+    /** Na coleta: o motivo da rejeição da amostra anterior, quando o exame é recoleta (ADR-0095). Senão, nulo. */
+    private MotivoRejeicaoAmostra motivoRecoleta;
 
-    public static ItemTrabalhoExameDto fromItem(ItemPedidoExame i) {
+    public static ItemTrabalhoExameDto fromItem(ItemPedidoExame i, MotivoRejeicaoAmostra motivoRecoleta) {
         var p = i.getPedido();
         var a = i.getAmostra();
         return new ItemTrabalhoExameDto(i.getUuid(), p.getUuid(), p.getPaciente().getUuid(), p.getPaciente().getNome(), i.getExame().getNome(),
                 i.getExame().getMaterial(), i.getExame().getPreparo(), i.getStatus(), p.getPrioridade(), p.getSolicitadoEm(),
                 p.getUnidadeSolicitante().getNome(), a != null ? a.getCodigo() : null,
-                a != null ? a.getLaboratorio().getUuid() : null, a != null ? a.getLaboratorio().getNome() : null);
+                a != null ? a.getLaboratorio().getUuid() : null, a != null ? a.getLaboratorio().getNome() : null, motivoRecoleta);
     }
 }

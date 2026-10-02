@@ -1384,6 +1384,10 @@ tfoot .linha-total th { text-align: left; }
 .lab-exame { display: inline-block; margin: 0 6px 2px 0; padding: 1px 8px; border-radius: 999px; background: var(--ink-100); font-size: 0.75rem; }
 .radios.lab-checks { grid-template-columns: 1fr; max-height: 260px; overflow-y: auto; margin-top: 6px; }
 .lab-valor { font-weight: 600; color: var(--ink-900); margin-right: 6px; }
+/* Recoleta na coleta e exames do paciente no prontuário (ADR-0095). */
+.lab-recoleta { margin-top: 4px; }
+.pront-exames { display: grid; gap: 8px; margin: var(--s-4) 0; }
+.pront-exames h4 { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-500); font-weight: 600; }
 @media (max-width: 640px) { .perfil-linha li { grid-template-columns: 1fr; gap: 4px; } }
 
 /* Prontuário por vínculo assistencial (ADR-0076): aviso, formulário do acesso justificado e faixa. */

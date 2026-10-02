@@ -6,9 +6,15 @@ import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import {
+  INTERPRETACOES,
+  MATERIAIS,
+  MOTIVOS_REJEICAO,
+  STATUS_ITEM,
+  faixaReferencia,
+  numeroLaboratorio,
+  valorResultado,
   EtapaTrabalho,
   ExameLaboratorialResponseDto,
-  InterpretacaoResultado,
   ItemPedidoExameDto,
   ItemTrabalhoExameDto,
   MaterialExame,
@@ -55,35 +61,11 @@ interface GrupoColeta {
   preparos: string[];
 }
 
-export const MATERIAIS: Record<MaterialExame, string> = { SANGUE: 'Sangue', URINA: 'Urina', FEZES: 'Fezes', SECRECAO: 'Secreção', OUTRO: 'Outro' };
-
-export const STATUS_ITEM: Record<StatusItemExame, { classe: string; rotulo: string }> = {
-  SOLICITADO: { classe: 'info', rotulo: 'Aguardando coleta' },
-  COLETADO: { classe: 'warn', rotulo: 'Em análise' },
-  RESULTADO_REGISTRADO: { classe: 'purple', rotulo: 'Para liberar' },
-  LIBERADO: { classe: 'ok', rotulo: 'Liberado' },
-  CANCELADO: { classe: 'muted', rotulo: 'Cancelado' },
-};
-
-export const SITUACOES: Record<SituacaoPedidoExame, { classe: string; rotulo: string }> = {
+const SITUACOES: Record<SituacaoPedidoExame, { classe: string; rotulo: string }> = {
   AGUARDANDO_COLETA: { classe: 'info', rotulo: 'Aguardando coleta' },
   EM_ANDAMENTO: { classe: 'warn', rotulo: 'Em andamento' },
   CONCLUIDO: { classe: 'ok', rotulo: 'Concluído' },
   CANCELADO: { classe: 'muted', rotulo: 'Cancelado' },
-};
-
-export const INTERPRETACOES: Record<InterpretacaoResultado, { classe: string; rotulo: string }> = {
-  NORMAL: { classe: 'ok', rotulo: 'Dentro da referência' },
-  ACIMA: { classe: 'alert', rotulo: 'Acima da referência' },
-  ABAIXO: { classe: 'warn', rotulo: 'Abaixo da referência' },
-};
-
-const MOTIVOS_REJEICAO: Record<MotivoRejeicaoAmostra, string> = {
-  HEMOLISADA: 'Hemolisada',
-  INSUFICIENTE: 'Volume insuficiente',
-  COAGULADA: 'Coagulada',
-  IDENTIFICACAO_INCORRETA: 'Identificação incorreta',
-  OUTRO: 'Outro',
 };
 
 const EVENTOS: Record<TipoEventoExame, string> = {
@@ -312,24 +294,16 @@ export class Laboratorio {
     return `${d}/${m}/${y} · ${(hora ?? '').slice(0, 5)}`;
   }
 
-  protected numero(v: number | null | undefined): string {
-    return v === null || v === undefined ? '' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 4 });
-  }
-
-  protected faixa(e: { referenciaMinima?: number | null; referenciaMaxima?: number | null; referenciaTexto?: string | null; unidadeMedida?: string | null } | undefined | null): string {
-    if (!e) return '—';
-    if (e.referenciaTexto) return e.referenciaTexto;
-    const un = e.unidadeMedida ? ` ${e.unidadeMedida}` : '';
-    if (e.referenciaMinima != null && e.referenciaMaxima != null) return `${this.numero(e.referenciaMinima)} a ${this.numero(e.referenciaMaxima)}${un}`;
-    if (e.referenciaMinima != null) return `≥ ${this.numero(e.referenciaMinima)}${un}`;
-    if (e.referenciaMaxima != null) return `≤ ${this.numero(e.referenciaMaxima)}${un}`;
-    return '—';
-  }
+  protected readonly numero = numeroLaboratorio;
+  protected readonly faixa = faixaReferencia;
 
   protected valorDe(i: ItemPedidoExameDto): string {
-    const r = i.resultado;
-    if (!r) return '—';
-    return r.valorTexto ?? `${this.numero(r.valorNumerico)}${r.unidadeMedida ? ' ' + r.unidadeMedida : ''}`;
+    return valorResultado(i.resultado);
+  }
+
+  /** Itens de recoleta no grupo da coleta (ADR-0095). */
+  protected recoletas(g: GrupoColeta): ItemTrabalhoExameDto[] {
+    return g.itens.filter((i) => i.motivoRecoleta);
   }
 
   protected exameDoCatalogo(nome: string): ExameLaboratorialResponseDto | undefined {

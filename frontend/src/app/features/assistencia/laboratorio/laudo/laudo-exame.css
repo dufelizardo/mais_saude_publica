@@ -1,0 +1,31 @@
+/* Laudo (ADR-0095): papel branco nos dois temas, A4 na impressão. */
+:host { display: block; min-height: 100vh; background: #e9edf2; padding: 24px 16px; color: #0e1116; }
+.laudo-acoes { max-width: 794px; margin: 0 auto 12px; display: flex; gap: 8px; justify-content: flex-end; }
+.laudo { max-width: 794px; margin: 0 auto; background: #ffffff; padding: 40px 48px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); font-size: 0.875rem; }
+.laudo__cab { display: flex; justify-content: space-between; gap: 16px; border-bottom: 2px solid #0e1116; padding-bottom: 12px; margin-bottom: 16px; }
+.laudo__cab h1 { font-size: 1.25rem; margin: 0; }
+.laudo__org { margin: 0 0 2px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #4a5361; }
+.laudo__lab { text-align: right; font-size: 0.8rem; color: #2b323d; }
+.laudo__dados { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 16px; margin: 0 0 20px; }
+.laudo__dados dt { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #4a5361; }
+.laudo__dados dd { margin: 0; font-weight: 500; }
+.laudo__tbl { width: 100%; border-collapse: collapse; }
+.laudo__tbl th { text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #4a5361; border-bottom: 1px solid #0e1116; padding: 6px 8px; }
+.laudo__tbl td { padding: 10px 8px 4px; vertical-align: top; }
+.laudo__sub { display: block; font-size: 0.75rem; color: #4a5361; margin-top: 2px; }
+.laudo__valor { font-family: 'IBM Plex Mono', monospace; font-size: 0.95rem; }
+.laudo__fora { color: #0e1116; font-weight: 600; }
+.laudo__assina td { padding: 0 8px 10px; font-size: 0.72rem; color: #4a5361; border-bottom: 1px solid #d5dbe3; }
+.laudo__aviso { color: #4a5361; }
+.laudo__rod { margin-top: 24px; font-size: 0.72rem; color: #4a5361; }
+.laudo__rod p { margin: 2px 0; }
+@media (max-width: 640px) {
+  .laudo { padding: 24px 16px; }
+  .laudo__dados { grid-template-columns: 1fr 1fr; }
+}
+@media print {
+  :host { background: #ffffff; padding: 0; }
+  .laudo-acoes { display: none; }
+  .laudo { box-shadow: none; border-radius: 0; padding: 0; max-width: none; }
+  @page { size: A4; margin: 16mm; }
+}

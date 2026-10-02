@@ -5,12 +5,12 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Assistência - Laboratório
-Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094).
+Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094); recoleta, laudo e exames no prontuário e no atendimento (ADR-0095).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiLaboratorio    MaisSaudePublicaFrontend
 Metadata    Test Suite Created On         2026-10-02
-Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Test Suite Last Modified      2026-10-02
 Metadata    Project                       Layered Keyword Driven Framework (LKDF)
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -79,5 +79,29 @@ CT-008 - Pedir exames a partir do atendimento
     [Tags]    UI    UiLaboratorio
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - LABORATORIO - LINK DO ATENDIMENTO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-009 - Recoleta indicada na coleta
+    [Documentation]    Aviso e marca de recoleta com o motivo.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - RECOLETA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-010 - Laudo imprimível do pedido
+    [Documentation]    Resultado, interpretação e quem liberou.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - LAUDO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-011 - Exame liberado no prontuário e no atendimento
+    [Documentation]    Seção de exames nos dois lugares.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - PRONTUARIO E ATENDIMENTO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
