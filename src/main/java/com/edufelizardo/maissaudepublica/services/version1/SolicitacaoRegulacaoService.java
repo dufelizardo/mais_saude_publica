@@ -280,7 +280,7 @@ public class SolicitacaoRegulacaoService {
         }
         exigirStatus(solicitacao, "registrar a falta em", StatusSolicitacaoRegulacao.AGENDADA);
         Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
-        fecharAgendamento(solicitacao.getAgendamento(), StatusAgendamento.CANCELADO, "Paciente faltou: " + dto.getMotivo().trim());
+        fecharAgendamento(solicitacao.getAgendamento(), StatusAgendamento.FALTOU, "Paciente faltou: " + dto.getMotivo().trim());
         solicitacao.setConcluidoEm(Instant.now());
         solicitacao.setStatus(StatusSolicitacaoRegulacao.FALTOU);
         registrar(solicitacao, TipoEventoRegulacao.FALTA, dto.getMotivo().trim(), profissional);
@@ -294,6 +294,9 @@ public class SolicitacaoRegulacaoService {
         Agendamento agendamento = agendamentoRepository.save(new Agendamento(solicitacao.getPaciente(), executante, quando,
                 StatusAgendamento.AGENDADO, tipo, limitarObservacao("Regulação: " + solicitacao.getProcedimento().getNome()
                 + " (solicitação " + solicitacao.getUuid() + ")")));
+        // Na agenda da executante (ADR-0091): sem conferir vaga, porque a vaga foi decidida pela regulação.
+        agendamento.setUnidade(solicitacao.getUnidadeExecutante());
+        agendamentoRepository.save(agendamento);
         solicitacao.setAgendamento(agendamento);
         solicitacao.setDataHoraPrevista(quando);
         solicitacao.setStatus(StatusSolicitacaoRegulacao.AGENDADA);

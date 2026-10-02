@@ -357,6 +357,8 @@ class SolicitacaoRegulacaoControllerTest {
         assertThat(agendamento.getStatus()).isEqualTo(StatusAgendamento.AGENDADO);
         assertThat(agendamento.getTipo()).isEqualTo(TipoAgendamento.CONSULTA);
         assertThat(agendamento.getDataHora()).isEqualTo(vaga);
+        // Na agenda da unidade executante (ADR-0091).
+        assertThat(agendamento.getUnidade().getUuid()).isEqualTo(policlinica.getUuid());
 
         acao(uuid, "cancelamento", motivo("REGUL-MED", "Paciente internado")).andExpect(status().isOk());
         assertThat(agendamentoDe(uuid).getStatus()).isEqualTo(StatusAgendamento.CANCELADO);
@@ -393,7 +395,7 @@ class SolicitacaoRegulacaoControllerTest {
     }
 
     @Test
-    void faltaFechaOAgendamentoComAFaltaNaObservacao() throws Exception {
+    void faltaFechaOAgendamentoComoFaltaENaObservacao() throws Exception {
         UUID uuid = solicitada(paciente("Gina"), "AZUL");
         acao(uuid, "autorizacao", """
                 {"profissionalMatricula": "REGUL-REG", "unidadeExecutanteId": "%s", "dataHoraPrevista": "%s",
@@ -405,7 +407,7 @@ class SolicitacaoRegulacaoControllerTest {
                 .andExpect(jsonPath("$.status").value("FALTOU"))
                 .andExpect(jsonPath("$.eventos[3].tipo").value("FALTA"));
         Agendamento agendamento = agendamentoDe(uuid);
-        assertThat(agendamento.getStatus()).isEqualTo(StatusAgendamento.CANCELADO);
+        assertThat(agendamento.getStatus()).isEqualTo(StatusAgendamento.FALTOU);
         assertThat(agendamento.getObservacao()).contains("Paciente faltou");
         acao(uuid, "falta", motivo("REGUL-EXE", "De novo")).andExpect(status().isUnprocessableEntity());
     }
