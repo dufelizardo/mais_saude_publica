@@ -44,6 +44,7 @@ const CLASSE_POR_PAPEL: Record<string, ClassePapel> = {
   MEDICO_REGULADOR: 'med',
   TECNICO_DE_LABORATORIO: 'audit',
   RESPONSAVEL_TECNICO_LABORATORIO: 'coord',
+  GESTOR_DE_LEITOS: 'coord',
   ENFERMEIRO: 'enf',
   TECNICO_DE_ENFERMAGEM: 'enf',
   RECEPCAO: 'acs',
@@ -92,6 +93,13 @@ const MODULOS: Modulo[] = [
     ver: [],
     registrar: ['EXAME.SOLICITAR', 'LABORATORIO.COLETAR', 'LABORATORIO.ANALISAR'],
     gerenciar: ['LABORATORIO.LIBERAR', 'LABORATORIO.GERENCIAR'],
+  },
+  {
+    nome: 'Leitos e internação',
+    sub: 'mapa, internação, troca de leito e alta (ADR-0098)',
+    ver: ['INTERNACAO.CONSULTAR'],
+    registrar: ['INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA'],
+    gerenciar: ['LEITO.GERENCIAR'],
   },
   {
     nome: 'Farmácia',

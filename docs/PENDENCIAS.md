@@ -90,6 +90,12 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
   autorização for ligada.
 
+### Leitos e internação
+- Tela (ADR-0099) e internações no prontuário, com vínculo assistencial de quem cuida do internado (ADR-0100).
+- Fora do escopo da ADR-0098: AIH, SIH e faturamento; central de regulação de leitos entre unidades;
+  reserva de leito para cirurgia eletiva; censo diário formal; prescrição e dieta hospitalar; sincronização
+  com os leitos do CNES; restrição de leito por idade (pediátrico e neonatal).
+
 ### Laboratório
 - Depois da ADR-0095: laudo PDF assinado digitalmente (ICP-Brasil), envio do resultado ao paciente, gráfico
   da evolução de um exame no tempo e aviso ao solicitante quando o resultado é liberado.
