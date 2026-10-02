@@ -396,6 +396,22 @@
                           <input id="f-observacao" type="text" formControlName="observacao" placeholder="Ex.: levar os exames anteriores" />
                         </div>
                       </div>
+                      @if (decisaoForm.controls.unidadeExecutanteId.value && decisaoForm.controls.profissionalExecutanteMatricula.value.trim()) {
+                        <div class="reg-vagas">
+                          <button type="button" class="btn btn--ghost btn--sm" [disabled]="carregandoVagas()" (click)="buscarVagas(decisaoForm.controls.unidadeExecutanteId.value, decisaoForm.controls.profissionalExecutanteMatricula.value, 'decisao')">{{ carregandoVagas() ? 'Buscando vagas…' : 'Ver vagas livres de quem vai atender' }}</button>
+                          @if (vagasAlvo() === 'decisao') {
+                            @if (erroVagas()) { <p class="dw-err">{{ erroVagas() }}</p> }
+                            @else if (!vagasSugeridas().length) { <p class="dw-hint">Nenhuma vaga livre nos próximos 30 dias. Sem vaga, só como encaixe pela Agenda.</p> }
+                            @else {
+                              <div class="reg-vagas__lista" role="group" aria-label="Vagas livres">
+                                @for (v of vagasSugeridas(); track v.inicio) {
+                                  <button type="button" class="chip" [attr.aria-pressed]="decisaoForm.controls.dataHoraPrevista.value === v.inicio.slice(0, 16)" (click)="escolherVaga(v.inicio, 'decisao')">{{ formatarVaga(v.inicio) }}</button>
+                                }
+                              </div>
+                            }
+                          }
+                        </div>
+                      }
                     }
                     @case ('RECLASSIFICAR') {
                       <fieldset class="dw-field">
@@ -510,6 +526,22 @@
                 @if (erro('dataHora')) { <p class="dw-err" id="e-dataHora">{{ erro('dataHora') }}</p> }
               </div>
             </div>
+            @if (g.s.unidadeExecutanteId && agendarForm.controls.profissionalExecutanteMatricula.value.trim()) {
+              <div class="reg-vagas">
+                <button type="button" class="btn btn--ghost btn--sm" [disabled]="carregandoVagas()" (click)="buscarVagas(g.s.unidadeExecutanteId, agendarForm.controls.profissionalExecutanteMatricula.value, 'agendar')">{{ carregandoVagas() ? 'Buscando vagas…' : 'Ver vagas livres de quem vai atender' }}</button>
+                @if (vagasAlvo() === 'agendar') {
+                  @if (erroVagas()) { <p class="dw-err">{{ erroVagas() }}</p> }
+                  @else if (!vagasSugeridas().length) { <p class="dw-hint">Nenhuma vaga livre nos próximos 30 dias. Sem vaga, só como encaixe pela Agenda.</p> }
+                  @else {
+                    <div class="reg-vagas__lista" role="group" aria-label="Vagas livres">
+                      @for (v of vagasSugeridas(); track v.inicio) {
+                        <button type="button" class="chip" [attr.aria-pressed]="agendarForm.controls.dataHora.value === v.inicio.slice(0, 16)" (click)="escolherVaga(v.inicio, 'agendar')">{{ formatarVaga(v.inicio) }}</button>
+                      }
+                    </div>
+                  }
+                }
+              </div>
+            }
             <div class="dw-field">
               <label for="f-profissionalMatricula">Matrícula de quem agenda <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
               <input id="f-profissionalMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />

@@ -1,43 +1,37 @@
 *** Settings ***
-Resource    ../../common/mais_saude_publica_common.resource
+Resource    ../../../common/mais_saude_publica_ui_common.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
-    Agenda do profissional (ADR-0091).
-# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-*** Variables ***
-${AGENDA_ENDPOINT}    /agenda
+    Tela Agenda (ADR-0092): calendário com vagas clicáveis, marcações, painel com blocos e bloqueios, e gavetas.
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
-POST Create Bloqueio Agenda
-    [Documentation]    Blocks the agenda in a period.
-    [Arguments]    ${payload}
+UI Agenda - Abrir
+    [Documentation]    Abre a agenda do profissional na unidade, no dia e na visão pedidos.
+    [Arguments]    ${matricula}    ${unidadeId}    ${data}    ${visao}=dia
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Get Mais Saude Publica Session
-    ${headers}=    Create Dictionary    Content-Type=application/json
-    ${response}=    Post On Session    msp_session    ${BASE_URL}${AGENDA_ENDPOINT}/bloqueio    json=${payload}    headers=${headers}    expected_status=ANY
-    Log    ${response.status_code}
-    Log    ${response.text}
-    RETURN    ${response}
+    Ir Para Rota Do Frontend    /assistencia/agenda?profissional=${matricula}&unidade=${unidadeId}&data=${data}&visao=${visao}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-DELETE Bloqueio Agenda
-    [Documentation]    Removes an agenda block-out.
-    [Arguments]    ${uuid}
+UI Agenda - Abrir Sem Filtro
+    [Documentation]    Abre a agenda sem profissional nem unidade.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Get Mais Saude Publica Session
-    ${response}=    DELETE On Session    msp_session    ${BASE_URL}${AGENDA_ENDPOINT}/bloqueio/${uuid}    expected_status=ANY
-    RETURN    ${response}
+    Ir Para Rota Do Frontend    /assistencia/agenda
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
-GET Bloqueios Agenda
-    [Documentation]    Lists the block-outs of a professional at a unit in the period.
-    [Arguments]    ${matricula}    ${unidadeId}    ${segunda}
+UI Agenda - Clicar Vaga
+    [Documentation]    Clica na vaga livre que começa no horário (HH:MM), pela célula do calendário.
+    [Arguments]    ${hora}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    Get Mais Saude Publica Session
-    ${params}=    Create Dictionary    profissionalMatricula=${matricula}    unidadeId=${unidadeId}    de=${segunda}    ate=${segunda}
-    ${response}=    GET On Session    msp_session    ${BASE_URL}${AGENDA_ENDPOINT}/bloqueio    params=${params}    expected_status=ANY
-    RETURN    ${response}
+    Click    css=.appt.vaga >> text=${hora} >> nth=0
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Agenda - Clicar Marcacao Do Paciente
+    [Documentation]    Abre a marcação do paciente no calendário.
+    [Arguments]    ${nome}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Click    css=.appt:not(.vaga):not(.block) >> text=${nome} >> nth=0
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

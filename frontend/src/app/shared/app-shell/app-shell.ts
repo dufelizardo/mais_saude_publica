@@ -26,6 +26,7 @@ const MENU: Record<string, string[]> = {
   '/administrativo/modelo': ADMINISTRATIVO,
   '/administrativo/necessidades-de-pessoal': [...ADMINISTRATIVO, ...RH],
   '/assistencia/pacientes': ['PACIENTE.CONSULTAR'],
+  '/assistencia/agenda': ['AGENDAMENTO.GERENCIAR', 'ATENDIMENTO.GERENCIAR', 'REGULACAO.REGULAR'],
   '/assistencia/atendimentos': ['ATENDIMENTO.GERENCIAR', 'PRONTUARIO.CONSULTAR', 'AGENDAMENTO.GERENCIAR'],
   '/assistencia/farmacia': ['FARMACIA.CONSULTAR', 'FARMACIA.DISPENSAR', 'FARMACIA.TRANSFERIR', 'FARMACIA.GERENCIAR_ESTOQUE'],
   '/assistencia/regulacao': ['REGULACAO.CONSULTAR', 'REGULACAO.SOLICITAR', 'REGULACAO.REGULAR'],
@@ -35,7 +36,7 @@ const MENU: Record<string, string[]> = {
 
 /** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
 const GRUPOS: Record<string, string[]> = {
-  Assistência: ['/assistencia/pacientes', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao'],
+  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao'],
   Administração: ['/administracao/usuarios', '/administracao/auditoria'],
 };
 

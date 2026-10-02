@@ -3,6 +3,7 @@ Library     String
 Resource    ../../../../pom/ui/assistencia/regulacao/regulacao_ui_pom.resource
 Resource    ../../../solicitacao_regulacao/get_solicitacao_regulacao_by_id/get_solicitacao_regulacao_by_id_flow.resource
 Resource    ../../../solicitacao_regulacao/autorizacao_solicitacao_regulacao/autorizacao_solicitacao_regulacao_flow.resource
+Resource    ../../../agenda/create_bloco_agenda/create_bloco_agenda_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (paciente, unidade, profissional, procedimento, solicitação) são criados pela API; a ação
@@ -224,5 +225,28 @@ UI Regulacao - Registrar Falta
     Esperar Texto Aparecer    Falta registrada
     ${depois}=    GET Get Solicitacao Regulacao By Id    ${uuid}
     Should Be Equal    ${depois.json()}[status]    FALTOU
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Regulacao - Autorizar Escolhendo A Vaga Da Agenda
+    [Documentation]    Autoriza buscando as vagas livres de quem vai atender e escolhendo a primeira (ADR-0092).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${matricula}    ${procedimentoId}    ${pacienteId}    ${unidadeId}=    Seed A Solicitacao Regulacao
+    ${executante}    ${unidadeExecutante}    ${segunda}=    Seed A Bloco Agenda
+    ${regulador}=    Seed A Profissional Matricula
+    ${lida}=    GET Get Solicitacao Regulacao By Id    ${uuid}
+    ${nomePaciente}=    Set Variable    ${lida.json()}[pacienteNome]
+    UI Regulacao - Abrir Aba    fila
+    Clicar Botao    Analisar solicitação de ${nomePaciente}
+    Esperar Texto Aparecer    Decisão da regulação
+    Escolher Opcao Da Gaveta    unidadeExecutanteId    ${unidadeExecutante}
+    Preencher Campo Da Gaveta    profissionalExecutanteMatricula    ${executante}
+    Clicar Botao    Ver vagas livres de quem vai atender
+    Click    css=.reg-vagas__lista .chip >> nth=0
+    Preencher Campo Da Gaveta    matriculaRegulador    ${regulador}
+    Clicar Botao    Registrar decisão
+    Esperar Texto Aparecer    Solicitação autorizada e agendada
+    ${depois}=    GET Get Solicitacao Regulacao By Id    ${uuid}
+    Should Be Equal    ${depois.json()}[agendamentoDataHora]    ${segunda}T08:00:00
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

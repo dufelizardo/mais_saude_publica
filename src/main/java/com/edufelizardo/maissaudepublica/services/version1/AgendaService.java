@@ -167,6 +167,17 @@ public class AgendaService {
         return BloqueioAgendaResponseDto.fromBloqueio(salvo);
     }
 
+    /** Bloqueios que tocam o período e valem para o profissional na unidade (dele ou da unidade inteira). */
+    @Transactional(readOnly = true)
+    public List<BloqueioAgendaResponseDto> listarBloqueios(String profissionalMatricula, UUID unidadeId, LocalDate de, LocalDate ate) {
+        Profissional profissional = buscarProfissional(profissionalMatricula);
+        UnidadeDeSaude unidade = buscarUnidade(unidadeId);
+        controleDeAcesso.exigirVisivel(unidade, VER);
+        exigirPeriodo(de, ate);
+        return bloqueioRepository.findAplicaveis(profissional.getUuid(), unidade.getUuid(), de.atStartOfDay(), ate.plusDays(1).atStartOfDay())
+                .stream().map(BloqueioAgendaResponseDto::fromBloqueio).toList();
+    }
+
     @Transactional
     public void removerBloqueio(UUID uuid) {
         BloqueioAgenda bloqueio = bloqueioRepository.findById(uuid).orElseThrow(() -> new ResourceNotFoundException(

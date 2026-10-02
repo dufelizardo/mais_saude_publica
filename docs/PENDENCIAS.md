@@ -108,7 +108,8 @@ real":
   - #11 Regulação (também completa o vínculo do prontuário);
   - #12 Leitos e internação;
   - #16 Transporte sanitário;
-  - ~~agenda do profissional~~ — backend pela ADR-0091; a tela vem a seguir;
+  - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
+    coletivas, programas, especialidade e equipe;
   - na Enfermagem, `Cuidado`, `Escala` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
   - #13 Estoque;

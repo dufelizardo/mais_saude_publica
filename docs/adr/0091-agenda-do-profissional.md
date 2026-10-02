@@ -2,7 +2,8 @@
 
 ## Status
 
-Aceita e implementada no backend (parte 1 de 2). A tela, a partir do protótipo `Agenda.html`, vem na parte 2.
+Aceita e implementada (parte 1 de 2, o backend). A tela, a partir do protótipo `Agenda.html`, está na
+[ADR-0092](./0092-agenda-do-profissional-tela.md).
 Desenha o `HORARIO` previsto no DER (seção 12) e resolve a pendência de conflito de horário da
 [ADR-0042](./0042-agendamento-independente-do-atendimento.md).
 

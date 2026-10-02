@@ -19,6 +19,10 @@ Bloqueio Agenda - Status Code 201
     Should Be Equal As Integers    ${response.status_code}    201
     ${vagas}=    GET Vagas Agenda    ${matricula}    ${unidadeId}    ${segunda}
     Length Should Be    ${vagas.json()}    2
+    ${lista}=    GET Bloqueios Agenda    ${matricula}    ${unidadeId}    ${segunda}
+    Should Be Equal As Integers    ${lista.status_code}    200
+    Length Should Be    ${lista.json()}    1
+    Should Be Equal    ${lista.json()}[0][motivo]    REUNIAO
     ${uuid}=    Evaluate    $response.json()['details'].split(',')[0].replace('Id: ', '').strip()
     ${removido}=    DELETE Bloqueio Agenda    ${uuid}
     Should Be Equal As Integers    ${removido.status_code}    200
