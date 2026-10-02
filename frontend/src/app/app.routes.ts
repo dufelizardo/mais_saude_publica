@@ -118,6 +118,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/assistencia/laboratorio/laboratorio').then((m) => m.Laboratorio),
         data: { breadcrumb: 'Laboratório', area: 'Assistência' },
       },
+      // Leitos e internação (ADR-0099), carregados sob demanda.
+      {
+        path: 'assistencia/leitos',
+        loadComponent: () => import('./features/assistencia/leitos/leitos').then((m) => m.Leitos),
+        data: { breadcrumb: 'Leitos', area: 'Assistência' },
+      },
       {
         path: 'administracao/usuarios',
         // Sob demanda: tela de administração, fora do bundle inicial (orçamento de 1 MB).

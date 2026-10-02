@@ -91,7 +91,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   autorização for ligada.
 
 ### Leitos e internação
-- Tela (ADR-0099) e internações no prontuário, com vínculo assistencial de quem cuida do internado (ADR-0100).
+- Internações no prontuário, com vínculo assistencial de quem cuida do internado (ADR-0100). A tela é a ADR-0099
+  e não tem protótipo próprio.
 - Fora do escopo da ADR-0098: AIH, SIH e faturamento; central de regulação de leitos entre unidades;
   reserva de leito para cirurgia eletiva; censo diário formal; prescrição e dieta hospitalar; sincronização
   com os leitos do CNES; restrição de leito por idade (pediátrico e neonatal).
