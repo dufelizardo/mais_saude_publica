@@ -587,6 +587,9 @@
                 @if (pode('REGULACAO.SOLICITAR')) {
                   <a class="btn btn--ghost btn--sm" routerLink="/assistencia/regulacao" [queryParams]="{ acao: 'nova', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid }">Encaminhar</a>
                 }
+                @if (pode('EXAME.SOLICITAR')) {
+                  <a class="btn btn--ghost btn--sm" routerLink="/assistencia/laboratorio" [queryParams]="{ acao: 'pedido', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid, atendimentoId: a.uuid }">Pedir exames</a>
+                }
               </div>
 
               @if (registrosBloqueio()) {

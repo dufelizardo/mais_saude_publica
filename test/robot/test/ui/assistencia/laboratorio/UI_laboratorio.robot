@@ -1,0 +1,83 @@
+*** Settings ***
+Resource    ../../../../src/scenario/ui/assistencia/laboratorio/laboratorio_ui_scenario.resource
+Resource    ../../../../src/scenario/common/ui_sessao_scenario.resource
+Suite Setup       UI - ABRIR SISTEMA
+Suite Teardown    UI - FECHAR SISTEMA
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+Metadata    Test Suite - UI Assistência - Laboratório
+Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094).
+Metadata    Test Suite Owner              Eduardo Felizardo
+Metadata    Test Suite Version            1.0
+Metadata    Test Suite Tags               UI    UiLaboratorio    MaisSaudePublicaFrontend
+Metadata    Test Suite Created On         2026-10-02
+Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Project                       Layered Keyword Driven Framework (LKDF)
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Comments ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Variables ***
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Test Cases ***
+CT-001 - Pedir exames pela gaveta
+    [Documentation]    Aviso e linha na aba Pedidos.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - PEDIDO PELA GAVETA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-002 - Gaveta recusa pedido vazio
+    [Documentation]    Mensagens do paciente e dos exames.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - PEDIDO VAZIO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-003 - Registrar a coleta pela aba Para coletar
+    [Documentation]    Aviso e exame coletado.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - COLETAR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-004 - Registrar resultado e liberar
+    [Documentation]    Interpretação acima da referência e exame liberado.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - RESULTADO E LIBERACAO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-005 - Rejeitar amostra
+    [Documentation]    O exame volta a aguardar coleta.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - REJEITAR AMOSTRA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-006 - Ver o detalhe do pedido
+    [Documentation]    Indicação clínica e histórico.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - DETALHE DO PEDIDO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-007 - Cadastrar exame no catálogo
+    [Documentation]    Aviso e linha no catálogo.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - CADASTRAR EXAME
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-008 - Pedir exames a partir do atendimento
+    [Documentation]    Gaveta com paciente e unidade preenchidos.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - LINK DO ATENDIMENTO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
