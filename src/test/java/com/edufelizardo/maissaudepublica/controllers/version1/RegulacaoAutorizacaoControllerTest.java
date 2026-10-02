@@ -12,6 +12,7 @@ import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.Usuario;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoProcedimentoRegulado;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtribuicaoAcessoRepository;
 import com.edufelizardo.maissaudepublica.repositories.EventoRegulacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
@@ -53,12 +54,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Regulação com login e autorização ligados (ADR-0087): quem solicita responde pela unidade de origem, o
  * regulador enxerga as unidades abaixo do seu escopo, a recepção acompanha sem ver o dado clínico, e a
- * permissão nova entra nos papéis padrão que já existiam.
+ * permissão nova entra nos papéis padrão que já existiam. Com o prontuário por vínculo ligado, a unidade
+ * executante ganha vínculo com o paciente pela regulação (ADR-0089).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@TestPropertySource(properties = {"app.security.enabled=true", "app.security.authorization.enabled=true"})
+@TestPropertySource(properties = {"app.security.enabled=true", "app.security.authorization.enabled=true",
+        "app.security.prontuario-por-vinculo.enabled=true"})
 class RegulacaoAutorizacaoControllerTest {
 
     private static final String URL = "/api/v1/solicitacao-regulacao/";
@@ -68,7 +71,8 @@ class RegulacaoAutorizacaoControllerTest {
     private static final String RECEPCAO_A = "57374853070";
     private static final String REGULADOR_MUN = "86246853004";
     private static final String REGULADOR_OUTRO = "20548817002";
-    private static final List<String> CPFS = List.of(MEDICO_A, RECEPCAO_A, REGULADOR_MUN, REGULADOR_OUTRO);
+    private static final String MEDICO_POLICLINICA = "52601815906";
+    private static final List<String> CPFS = List.of(MEDICO_A, RECEPCAO_A, REGULADOR_MUN, REGULADOR_OUTRO, MEDICO_POLICLINICA);
 
     @Autowired
     private MockMvc mockMvc;
@@ -112,6 +116,9 @@ class RegulacaoAutorizacaoControllerTest {
     @Autowired
     private EventoRegulacaoRepository eventoRepository;
 
+    @Autowired
+    private AgendamentoRepository agendamentoRepository;
+
     private UnidadeDeSaude ubsA;
     private UnidadeDeSaude ubsB;
     private UnidadeDeSaude policlinica;
@@ -131,6 +138,7 @@ class RegulacaoAutorizacaoControllerTest {
         usuario(RECEPCAO_A, "RECEPCAO", ubsA);
         usuario(REGULADOR_MUN, "MEDICO_REGULADOR", municipio);
         usuario(REGULADOR_OUTRO, "MEDICO_REGULADOR", outroMunicipio);
+        usuario(MEDICO_POLICLINICA, "MEDICO", policlinica);
         profissional(MEDICO_A, "REGAUT-MED");
         profissional(REGULADOR_MUN, "REGAUT-REG");
         profissional(REGULADOR_OUTRO, "REGAUT-OUT");
@@ -153,6 +161,11 @@ class RegulacaoAutorizacaoControllerTest {
             eventoRepository.deleteAll(eventoRepository.findBySolicitacao_UuidOrderByOcorridoEmAsc(s.getUuid()));
         }
         solicitacaoRepository.deleteAll(solicitacoes);
+        // O agendamento criado pela regulação (ADR-0089) sai depois da solicitação que aponta para ele.
+        for (Paciente p : pacienteRepository.findAll().stream()
+                .filter(p -> p.getNome() != null && p.getNome().startsWith(PREFIXO)).toList()) {
+            agendamentoRepository.deleteAll(agendamentoRepository.findByPaciente_UuidOrderByDataHoraAsc(p.getUuid()));
+        }
         procedimentoRepository.deleteAll(procedimentoRepository.findAll().stream()
                 .filter(p -> p.getNome().startsWith(PREFIXO)).toList());
         pacienteRepository.deleteAll(pacienteRepository.findAll().stream()
@@ -264,6 +277,23 @@ class RegulacaoAutorizacaoControllerTest {
                 .andExpect(jsonPath("$[0].posicaoNaFila").value(1))
                 .andExpect(jsonPath("$[0].cid").doesNotExist());
         mockMvc.perform(como(RECEPCAO_A, get(URL + uuid))).andExpect(status().isForbidden());
+    }
+
+    // ── Vínculo assistencial pela regulação (ADR-0089) ─────────────────────────────────────────
+
+    @Test
+    void unidadeExecutanteGanhaVinculoComOPacienteQuandoAutorizada() throws Exception {
+        UUID uuid = solicitadaNaUbsA();
+        mockMvc.perform(como(MEDICO_POLICLINICA, get("/api/v1/prontuario/" + paciente.getUuid())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.details").value("VINCULO_ASSISTENCIAL_AUSENTE"));
+
+        mockMvc.perform(como(REGULADOR_MUN, autorizacao(uuid, "REGAUT-REG"))).andExpect(status().isOk());
+
+        mockMvc.perform(como(MEDICO_POLICLINICA, get("/api/v1/prontuario/" + paciente.getUuid())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.acesso.base").value("VINCULO"))
+                .andExpect(jsonPath("$.acesso.descricao").value(org.hamcrest.Matchers.startsWith("Regulação: unidade executante")));
     }
 
     // ── Catálogo de acesso ─────────────────────────────────────────────────────────────────────

@@ -9,15 +9,19 @@ import com.edufelizardo.maissaudepublica.models.AcessoJustificado;
 import com.edufelizardo.maissaudepublica.models.Agendamento;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.Paciente;
+import com.edufelizardo.maissaudepublica.models.SolicitacaoRegulacao;
+import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AcessoJustificadoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcessoJustificadoResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcessoProntuarioDto;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAgendamento;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusSolicitacaoRegulacao;
 import com.edufelizardo.maissaudepublica.repositories.AcessoJustificadoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
+import com.edufelizardo.maissaudepublica.repositories.SolicitacaoRegulacaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -37,6 +41,8 @@ import java.util.UUID;
  * <ol>
  *   <li>atendimento em aberto, ou recente, numa unidade do escopo de quem lê;</li>
  *   <li>ser o profissional de um atendimento recente ou de um agendamento próximo do paciente;</li>
+ *   <li>uma solicitação de regulação em curso, ou realizada há pouco, em que a unidade do escopo é a solicitante
+ *   ou a executante — referência e contrarreferência (ADR-0089);</li>
  *   <li>ou um acesso justificado ainda válido, declarado por quem lê.</li>
  * </ol>
  * {@value #SEM_VINCULO} dispensa o vínculo (auditoria clínica, regulação) e não entra em papel padrão.
@@ -79,6 +85,9 @@ public class VinculoAssistencialService {
 
     @Autowired
     private AcessoJustificadoRepository acessoJustificadoRepository;
+
+    @Autowired
+    private SolicitacaoRegulacaoRepository solicitacaoRegulacaoRepository;
 
     public boolean ativo() {
         return ligado && controleDeAcesso.ativo();
@@ -173,7 +182,29 @@ public class VinculoAssistencialService {
                 return Optional.of("Profissional do agendamento " + g.getUuid());
             }
         }
+
+        // 4. Regulação: a unidade solicitante e a executante, enquanto o encaminhamento está em curso ou
+        // foi realizado dentro da janela (ADR-0089).
+        Instant limiteRealizacao = Instant.now().minus(Duration.ofDays(janelaDias));
+        for (SolicitacaoRegulacao s : solicitacaoRegulacaoRepository.findByPaciente_Uuid(pacienteId)) {
+            boolean emCurso = StatusSolicitacaoRegulacao.EM_ABERTO.contains(s.getStatus());
+            boolean realizadaHaPouco = s.getStatus() == StatusSolicitacaoRegulacao.REALIZADA
+                    && s.getConcluidoEm() != null && s.getConcluidoEm().isAfter(limiteRealizacao);
+            if (!emCurso && !realizadaHaPouco) {
+                continue;
+            }
+            if (visivel(s.getUnidadeExecutante(), visiveis)) {
+                return Optional.of("Regulação: unidade executante " + s.getUnidadeExecutante().getNome());
+            }
+            if (visivel(s.getUnidadeSolicitante(), visiveis)) {
+                return Optional.of("Regulação: unidade solicitante " + s.getUnidadeSolicitante().getNome());
+            }
+        }
         return Optional.empty();
+    }
+
+    private static boolean visivel(UnidadeDeSaude unidade, Optional<Set<UUID>> visiveis) {
+        return unidade != null && visiveis.map(ids -> ids.contains(unidade.getUuid())).orElse(true);
     }
 
     private static AcessoProntuarioDto registrar(AcessoProntuarioDto acesso) {

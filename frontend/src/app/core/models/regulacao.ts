@@ -22,7 +22,10 @@ export type TipoEventoRegulacao =
   | 'AUTORIZACAO'
   | 'DEVOLUCAO'
   | 'NEGATIVA'
-  | 'CANCELAMENTO';
+  | 'CANCELAMENTO'
+  | 'AGENDAMENTO'
+  | 'REALIZACAO'
+  | 'FALTA';
 
 export interface ProcedimentoReguladoRequestDto {
   nome: string;
@@ -64,6 +67,21 @@ export interface AutorizacaoRegulacaoRequestDto {
   /** LocalDateTime, sem fuso. */
   dataHoraPrevista: string;
   observacao?: string;
+  /** Quem vai atender, se já se sabe: a autorização já agenda (ADR-0089). */
+  profissionalExecutanteMatricula?: string;
+}
+
+/** Agendamento da autorizada na executante (ADR-0089); sem data, vale a da vaga. */
+export interface AgendamentoRegulacaoRequestDto {
+  profissionalMatricula: string;
+  profissionalExecutanteMatricula: string;
+  dataHora?: string;
+}
+
+/** Atendido na executante, com a contrarreferência para a origem (ADR-0089). */
+export interface RealizacaoRegulacaoRequestDto {
+  profissionalMatricula: string;
+  contrarreferencia: string;
 }
 
 /** Devolução, negativa ou cancelamento. */
@@ -92,6 +110,11 @@ export interface SolicitacaoRegulacaoResumoDto {
   unidadeExecutanteId?: string | null;
   unidadeExecutanteNome?: string | null;
   dataHoraPrevista?: string | null;
+  agendamentoId?: string | null;
+  agendamentoDataHora?: string | null;
+  profissionalExecutanteMatricula?: string | null;
+  profissionalExecutanteNome?: string | null;
+  concluidoEm?: string | null;
 }
 
 export interface EventoRegulacaoResponseDto {
@@ -109,5 +132,6 @@ export interface EventoRegulacaoResponseDto {
 export interface SolicitacaoRegulacaoResponseDto extends SolicitacaoRegulacaoResumoDto {
   cid: string;
   justificativa: string;
+  contrarreferencia?: string | null;
   eventos: EventoRegulacaoResponseDto[];
 }

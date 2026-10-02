@@ -3,11 +3,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { SuccessResponseDto } from '../models/profissional';
 import {
+  AgendamentoRegulacaoRequestDto,
   AutorizacaoRegulacaoRequestDto,
   ComplementoRegulacaoRequestDto,
   MotivoRegulacaoRequestDto,
   ProcedimentoReguladoRequestDto,
   ProcedimentoReguladoResponseDto,
+  RealizacaoRegulacaoRequestDto,
   ReclassificacaoRegulacaoRequestDto,
   SolicitacaoRegulacaoRequestDto,
   SolicitacaoRegulacaoResponseDto,
@@ -80,5 +82,19 @@ export class RegulacaoService {
 
   cancelar(uuid: string, dto: MotivoRegulacaoRequestDto): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.solicitacaoUrl}/${uuid}/cancelamento`, dto);
+  }
+
+  // ── Unidade executante (ADR-0089) ──
+
+  agendar(uuid: string, dto: AgendamentoRegulacaoRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.solicitacaoUrl}/${uuid}/agendamento`, dto);
+  }
+
+  realizar(uuid: string, dto: RealizacaoRegulacaoRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.solicitacaoUrl}/${uuid}/realizacao`, dto);
+  }
+
+  registrarFalta(uuid: string, dto: MotivoRegulacaoRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.solicitacaoUrl}/${uuid}/falta`, dto);
   }
 }

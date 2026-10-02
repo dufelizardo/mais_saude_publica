@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Assistência - Regulação
-Metadata    Test Suite Description        Valida a tela Regulação: nova solicitação, análise pela fila, devolução e complemento, catálogo e o link do Encaminhar (ADR-0088).
+Metadata    Test Suite Description        Valida a tela Regulação: nova solicitação, análise pela fila, devolução e complemento, catálogo, o link do Encaminhar (ADR-0088), agendamento, atendimento com contrarreferência e falta (ADR-0089).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiRegulacao    MaisSaudePublicaFrontend
@@ -63,5 +63,37 @@ CT-006 - Encaminhar abre a gaveta com paciente e unidade
     [Tags]    UI    UiRegulacao
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - REGULACAO - ENCAMINHAR PREENCHIDO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-007 - Regulador autoriza informando quem vai atender
+    [Documentation]    A solicitação sai agendada.
+    [Tags]    UI    UiRegulacao
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - REGULACAO - AUTORIZAR JA AGENDANDO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-008 - Executante agenda a autorizada
+    [Documentation]    Agendada com o profissional informado.
+    [Tags]    UI    UiRegulacao
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - REGULACAO - AGENDAR PELA LINHA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-009 - Executante registra o atendimento com contrarreferência
+    [Documentation]    Contrarreferência no detalhe.
+    [Tags]    UI    UiRegulacao
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - REGULACAO - ATENDIMENTO COM CONTRARREFERENCIA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-010 - Executante registra a falta
+    [Documentation]    Solicitação termina como falta.
+    [Tags]    UI    UiRegulacao
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - REGULACAO - REGISTRAR FALTA
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

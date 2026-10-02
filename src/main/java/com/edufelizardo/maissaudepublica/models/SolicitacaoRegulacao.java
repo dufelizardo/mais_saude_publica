@@ -90,6 +90,20 @@ public class SolicitacaoRegulacao implements Serializable {
     /** Data e hora da vaga; preenchida na autorização. */
     private LocalDateTime dataHoraPrevista;
 
+    // ── Fechamento do ciclo (ADR-0089) ─────────────────────────────────────────────────────────────
+
+    /** O agendamento na unidade executante, com o profissional que vai atender. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agendamento_id", referencedColumnName = "uuid")
+    private Agendamento agendamento;
+
+    /** Retorno da executante para a unidade de origem. Dado de saúde. */
+    @Column(length = 4000)
+    private String contrarreferencia;
+
+    /** Quando o desfecho (realizado ou falta) foi registrado. */
+    private Instant concluidoEm;
+
     public SolicitacaoRegulacao(Paciente paciente, ProcedimentoRegulado procedimento, UnidadeDeSaude unidadeSolicitante,
                                 Profissional profissionalSolicitante, String cid, String justificativa,
                                 PrioridadeRegulacao prioridade, Instant solicitadoEm, String solicitadoPorCpf) {

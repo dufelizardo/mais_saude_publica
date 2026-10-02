@@ -7,6 +7,10 @@ import com.edufelizardo.maissaudepublica.models.SolicitacaoRegulacao;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoProcedimentoRegulado;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.Agendamento;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusAgendamento;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoAgendamento;
+import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.EventoAuditoriaRepository;
 import com.edufelizardo.maissaudepublica.repositories.EventoRegulacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
@@ -77,6 +81,9 @@ class SolicitacaoRegulacaoControllerTest {
     @Autowired
     private EventoAuditoriaRepository auditoriaRepository;
 
+    @Autowired
+    private AgendamentoRepository agendamentoRepository;
+
     private UnidadeDeSaude ubs;
     private UnidadeDeSaude policlinica;
     private Profissional medico;
@@ -90,6 +97,7 @@ class SolicitacaoRegulacaoControllerTest {
         policlinica = unidade("Policlínica", TipoUnidadeDeSaude.POLICLINICA);
         medico = profissional("REGUL-MED", "75830142500");
         regulador = profissional("REGUL-REG", "94215036812");
+        profissional("REGUL-EXE", "36184520989");
         cardiologia = procedimentoRepository.save(new ProcedimentoRegulado(PREFIXO + "Cardiologia",
                 TipoProcedimentoRegulado.CONSULTA_ESPECIALIZADA, true));
     }
@@ -104,6 +112,11 @@ class SolicitacaoRegulacaoControllerTest {
             eventoRepository.deleteAll(eventoRepository.findBySolicitacao_UuidOrderByOcorridoEmAsc(s.getUuid()));
         }
         solicitacaoRepository.deleteAll(solicitacoes);
+        // O agendamento criado pela regulação (ADR-0089) sai depois da solicitação que aponta para ele.
+        for (Paciente p : pacienteRepository.findAll().stream()
+                .filter(p -> p.getNome() != null && p.getNome().startsWith(PREFIXO)).toList()) {
+            agendamentoRepository.deleteAll(agendamentoRepository.findByPaciente_UuidOrderByDataHoraAsc(p.getUuid()));
+        }
         procedimentoRepository.deleteAll(procedimentoRepository.findAll().stream()
                 .filter(p -> p.getNome().startsWith(PREFIXO)).toList());
         pacienteRepository.deleteAll(pacienteRepository.findAll().stream()
@@ -317,6 +330,84 @@ class SolicitacaoRegulacaoControllerTest {
         acao(uuid, "cancelamento", motivo("REGUL-MED", "De novo")).andExpect(status().isUnprocessableEntity());
         mockMvc.perform(get(SOLICITACAO_URL + "?status=CANCELADA&procedimentoId=" + cardiologia.getUuid()))
                 .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    // ── Fechamento do ciclo (ADR-0089) ─────────────────────────────────────────────────────────
+
+    private Agendamento agendamentoDe(UUID solicitacao) {
+        return agendamentoRepository.findById(solicitacaoRepository.findById(solicitacao).orElseThrow()
+                .getAgendamento().getUuid()).orElseThrow();
+    }
+
+    @Test
+    void autorizarComOExecutanteJaAgendaECancelarCancelaOAgendamento() throws Exception {
+        UUID uuid = solicitada(paciente("Elisa"), "AMARELO");
+        LocalDateTime vaga = LocalDateTime.now().plusDays(5).withHour(14).withMinute(0).withSecond(0).withNano(0);
+        acao(uuid, "autorizacao", """
+                {"profissionalMatricula": "REGUL-REG", "unidadeExecutanteId": "%s", "dataHoraPrevista": "%s",
+                 "profissionalExecutanteMatricula": "REGUL-EXE"}
+                """.formatted(policlinica.getUuid(), ISO.format(vaga))).andExpect(status().isOk());
+
+        mockMvc.perform(get(SOLICITACAO_URL + uuid))
+                .andExpect(jsonPath("$.status").value("AGENDADA"))
+                .andExpect(jsonPath("$.profissionalExecutanteMatricula").value("REGUL-EXE"))
+                .andExpect(jsonPath("$.agendamentoId").isNotEmpty())
+                .andExpect(jsonPath("$.eventos[2].tipo").value("AGENDAMENTO"));
+        Agendamento agendamento = agendamentoDe(uuid);
+        assertThat(agendamento.getStatus()).isEqualTo(StatusAgendamento.AGENDADO);
+        assertThat(agendamento.getTipo()).isEqualTo(TipoAgendamento.CONSULTA);
+        assertThat(agendamento.getDataHora()).isEqualTo(vaga);
+
+        acao(uuid, "cancelamento", motivo("REGUL-MED", "Paciente internado")).andExpect(status().isOk());
+        assertThat(agendamentoDe(uuid).getStatus()).isEqualTo(StatusAgendamento.CANCELADO);
+    }
+
+    @Test
+    void executanteAgendaDepoisERegistraARealizacaoComContrarreferencia() throws Exception {
+        UUID uuid = solicitada(paciente("Fabio"), "VERDE");
+        String agendar = """
+                {"profissionalMatricula": "REGUL-REG", "profissionalExecutanteMatricula": "REGUL-EXE"}
+                """;
+        String realizar = """
+                {"profissionalMatricula": "REGUL-EXE", "contrarreferencia": "Ecocardiograma normal. Manter seguimento na UBS."}
+                """;
+        acao(uuid, "agendamento", agendar).andExpect(status().isUnprocessableEntity());
+
+        acao(uuid, "autorizacao", autorizacao("REGUL-REG", LocalDateTime.now().plusDays(3))).andExpect(status().isOk());
+        acao(uuid, "realizacao", realizar).andExpect(status().isUnprocessableEntity());
+        acao(uuid, "agendamento", agendar).andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Solicitação agendada na unidade executante!"));
+        acao(uuid, "realizacao", """
+                {"profissionalMatricula": "REGUL-EXE", "contrarreferencia": "curto"}
+                """).andExpect(status().isBadRequest());
+        acao(uuid, "realizacao", realizar).andExpect(status().isOk());
+
+        mockMvc.perform(get(SOLICITACAO_URL + uuid))
+                .andExpect(jsonPath("$.status").value("REALIZADA"))
+                .andExpect(jsonPath("$.contrarreferencia").value("Ecocardiograma normal. Manter seguimento na UBS."))
+                .andExpect(jsonPath("$.concluidoEm").isNotEmpty())
+                .andExpect(jsonPath("$.eventos[3].tipo").value("REALIZACAO"));
+        assertThat(agendamentoDe(uuid).getStatus()).isEqualTo(StatusAgendamento.REALIZADO);
+        // Realizada não se cancela.
+        acao(uuid, "cancelamento", motivo("REGUL-MED", "Tarde")).andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void faltaFechaOAgendamentoComAFaltaNaObservacao() throws Exception {
+        UUID uuid = solicitada(paciente("Gina"), "AZUL");
+        acao(uuid, "autorizacao", """
+                {"profissionalMatricula": "REGUL-REG", "unidadeExecutanteId": "%s", "dataHoraPrevista": "%s",
+                 "profissionalExecutanteMatricula": "REGUL-EXE"}
+                """.formatted(policlinica.getUuid(), ISO.format(LocalDateTime.now().plusDays(2)))).andExpect(status().isOk());
+        acao(uuid, "falta", motivo("REGUL-EXE", "Não compareceu e não avisou")).andExpect(status().isOk());
+
+        mockMvc.perform(get(SOLICITACAO_URL + uuid))
+                .andExpect(jsonPath("$.status").value("FALTOU"))
+                .andExpect(jsonPath("$.eventos[3].tipo").value("FALTA"));
+        Agendamento agendamento = agendamentoDe(uuid);
+        assertThat(agendamento.getStatus()).isEqualTo(StatusAgendamento.CANCELADO);
+        assertThat(agendamento.getObservacao()).contains("Paciente faltou");
+        acao(uuid, "falta", motivo("REGUL-EXE", "De novo")).andExpect(status().isUnprocessableEntity());
     }
 
     @Test
