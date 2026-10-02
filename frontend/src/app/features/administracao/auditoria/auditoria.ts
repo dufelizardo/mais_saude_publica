@@ -13,6 +13,8 @@ import {
 import { PacienteResponseDto } from '../../../core/models/paciente';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { AuditoriaService } from '../../../core/services/auditoria';
+import { AlertaAuditoriaService } from '../../../core/services/alerta-auditoria';
+import { AlertasAuditoria, FiltroEventosDoAlerta } from './alertas/alertas-auditoria';
 import { PacienteService } from '../../../core/services/paciente';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
@@ -26,7 +28,7 @@ const TAMANHO = 20;
  */
 @Component({
   selector: 'app-auditoria',
-  imports: [Drawer],
+  imports: [Drawer, AlertasAuditoria],
   templateUrl: './auditoria.html',
   styleUrl: './auditoria.css',
 })
@@ -35,6 +37,11 @@ export class Auditoria {
   private readonly pacienteService = inject(PacienteService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly alertaService = inject(AlertaAuditoriaService);
+
+  /** Abas da tela (ADR-0097): a trilha e os alertas. */
+  protected readonly aba = signal<'eventos' | 'alertas'>('eventos');
+  protected readonly alertasAbertos = this.alertaService.abertos;
 
   protected readonly formatCpf = formatCpf;
   protected readonly acoes = ACOES_AUDITORIA;
@@ -94,6 +101,10 @@ export class Auditoria {
     const params = this.route.snapshot.queryParamMap;
     this.usuarioCpf.set(formatCpf(params.get('usuarioCpf') ?? ''));
     this.pacienteId.set(params.get('pacienteId') ?? '');
+    this.desde.set(params.get('desde') ?? '');
+    this.ate.set(params.get('ate') ?? '');
+    if (params.get('aba') === 'alertas') this.aba.set('alertas');
+    this.alertaService.atualizarContador();
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
     this.auditoriaService.politica().pipe(catchError(() => of(null))).subscribe((p) => this.retencaoAnos.set(p?.retencaoAnos ?? null));
     this.carregar();
@@ -209,6 +220,30 @@ export class Auditoria {
 
   protected temFiltro(): boolean {
     return !!(this.usuarioCpf() || this.pacienteId() || this.acao() || this.resultado() || this.desde() || this.ate());
+  }
+
+  protected selecionarAba(aba: 'eventos' | 'alertas', focar = false): void {
+    this.aba.set(aba);
+    this.router.navigate([], { queryParams: { aba: aba === 'alertas' ? 'alertas' : null }, queryParamsHandling: 'merge', replaceUrl: true });
+    if (focar) setTimeout(() => document.getElementById('tab-' + aba)?.focus());
+  }
+
+  protected navegarAbas(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+    event.preventDefault();
+    this.selecionarAba(this.aba() === 'eventos' ? 'alertas' : 'eventos', true);
+  }
+
+  /** "Ver eventos" do alerta: a trilha de quem foi alertado, nos dias do alerta. */
+  protected verEventosDoAlerta(f: FiltroEventosDoAlerta): void {
+    this.usuarioCpf.set(formatCpf(f.usuarioCpf));
+    this.pacienteId.set('');
+    this.acao.set('');
+    this.resultado.set('');
+    this.desde.set(f.desde);
+    this.ate.set(f.ate);
+    this.selecionarAba('eventos');
+    this.filtrar();
   }
 
   /** Da gaveta: vê tudo desta pessoa ou deste paciente. */

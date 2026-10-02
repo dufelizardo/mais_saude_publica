@@ -9,6 +9,7 @@ import {
 } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
+import { AlertaAuditoriaService } from '../../core/services/alerta-auditoria';
 import { AcessoDaInterface, UsuarioAtualResponseDto } from '../../core/models/auth';
 
 const RH = ['RH.CONSULTAR', 'RH.GERENCIAR'];
@@ -51,6 +52,10 @@ export class AppShell {
   protected readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+  private readonly alertaService = inject(AlertaAuditoriaService);
+
+  /** Alertas da auditoria abertos (ADR-0097), no item Auditoria do menu; só para quem audita. */
+  protected readonly alertasAbertos = this.alertaService.abertos;
 
   /** Quem está logado (ADR-0065); nulo com o login desligado. */
   protected readonly usuario = signal<UsuarioAtualResponseDto | null>(null);
@@ -72,7 +77,10 @@ export class AppShell {
 
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.usuario.set(u));
-    this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
+    this.authService.acessoDaInterface().subscribe((a) => {
+      this.acesso.set(a);
+      if (this.podeVer('/administracao/auditoria')) this.alertaService.atualizarContador();
+    });
     this.atualizarBreadcrumb();
     this.router.events.pipe(filter((evento) => evento instanceof NavigationEnd)).subscribe(() => {
       this.atualizarBreadcrumb();
