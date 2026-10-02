@@ -34,6 +34,9 @@ import com.edufelizardo.maissaudepublica.repositories.PedidoExameRepository;
 import com.edufelizardo.maissaudepublica.models.PedidoExame;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ExameProntuarioDto;
 import java.util.Comparator;
+import com.edufelizardo.maissaudepublica.repositories.InternacaoRepository;
+import com.edufelizardo.maissaudepublica.repositories.EventoLeitoRepository;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.InternacaoResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -78,6 +81,12 @@ public class ProntuarioService {
     @Autowired
     private ItemPedidoExameRepository itemPedidoExameRepository;
 
+    @Autowired
+    private InternacaoRepository internacaoRepository;
+
+    @Autowired
+    private EventoLeitoRepository eventoLeitoRepository;
+
     public ProntuarioResponseDto buscarPorPacienteId(UUID pacienteId) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -96,6 +105,9 @@ public class ProntuarioService {
         response.setAtendimentos(atendimentos);
         response.setAcesso(acesso);
         response.setExames(exames(pacienteId));
+        response.setInternacoes(internacaoRepository.findByPaciente_UuidOrderByAdmitidaEmDesc(pacienteId).stream()
+                .map(i -> InternacaoResponseDto.fromInternacao(i, eventoLeitoRepository.findByInternacao_UuidOrderByOcorridoEmAsc(i.getUuid()), true))
+                .collect(Collectors.toList()));
         return response;
     }
 

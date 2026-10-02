@@ -8,6 +8,7 @@ import com.edufelizardo.maissaudepublica.exceptions.VinculoAssistencialAusenteEx
 import com.edufelizardo.maissaudepublica.models.AcessoJustificado;
 import com.edufelizardo.maissaudepublica.models.Agendamento;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
+import com.edufelizardo.maissaudepublica.models.Internacao;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.SolicitacaoRegulacao;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
@@ -16,10 +17,12 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcessoJus
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcessoProntuarioDto;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAgendamento;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusInternacao;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusSolicitacaoRegulacao;
 import com.edufelizardo.maissaudepublica.repositories.AcessoJustificadoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.InternacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.SolicitacaoRegulacaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +46,8 @@ import java.util.UUID;
  *   <li>ser o profissional de um atendimento recente ou de um agendamento próximo do paciente;</li>
  *   <li>uma solicitação de regulação em curso, ou realizada há pouco, em que a unidade do escopo é a solicitante
  *   ou a executante — referência e contrarreferência (ADR-0089);</li>
+ *   <li>uma internação em curso, ou com alta há pouco: a equipe da unidade onde o paciente está internado e o médico
+ *   responsável (ADR-0100);</li>
  *   <li>ou um acesso justificado ainda válido, declarado por quem lê.</li>
  * </ol>
  * {@value #SEM_VINCULO} dispensa o vínculo (auditoria clínica, regulação) e não entra em papel padrão.
@@ -88,6 +93,9 @@ public class VinculoAssistencialService {
 
     @Autowired
     private SolicitacaoRegulacaoRepository solicitacaoRegulacaoRepository;
+
+    @Autowired
+    private InternacaoRepository internacaoRepository;
 
     public boolean ativo() {
         return ligado && controleDeAcesso.ativo();
@@ -198,6 +206,21 @@ public class VinculoAssistencialService {
             }
             if (visivel(s.getUnidadeSolicitante(), visiveis)) {
                 return Optional.of("Regulação: unidade solicitante " + s.getUnidadeSolicitante().getNome());
+            }
+        }
+
+        // 5. Internação em curso, ou com alta dentro da janela: a equipe da unidade e o médico responsável (ADR-0100).
+        for (Internacao i : internacaoRepository.findByPaciente_UuidOrderByAdmitidaEmDesc(pacienteId)) {
+            boolean vigente = i.getStatus() == StatusInternacao.INTERNADO
+                    || (i.getAltaEm() != null && i.getAltaEm().isAfter(limiteRealizacao));
+            if (!vigente) {
+                continue;
+            }
+            if (visivel(i.getUnidade(), visiveis)) {
+                return Optional.of("Internação na unidade " + i.getUnidade().getNome());
+            }
+            if (i.getMedicoResponsavel() != null && cpf.equals(i.getMedicoResponsavel().getCpf())) {
+                return Optional.of("Médico responsável pela internação " + i.getUuid());
             }
         }
         return Optional.empty();

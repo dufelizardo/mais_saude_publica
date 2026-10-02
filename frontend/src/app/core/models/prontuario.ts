@@ -3,6 +3,7 @@ import { AtendimentoResponseDto } from './atendimento';
 import { ConsultaResponseDto } from './consulta';
 import { EvolucaoEnfermagemResponseDto } from './evolucao-enfermagem';
 import { ExameProntuarioDto } from './laboratorio';
+import { InternacaoResponseDto } from './internacao';
 import { ProcedimentoResponseDto } from './procedimento';
 import { TriagemResponseDto } from './triagem';
 
@@ -35,6 +36,8 @@ export interface ProntuarioResponseDto {
   acesso?: AcessoProntuarioDto;
   /** Exames laboratoriais do paciente (ADR-0095); ausente em respostas anteriores. */
   exames?: ExameProntuarioDto[];
+  /** Internações do paciente (ADR-0100); ausente em respostas anteriores. */
+  internacoes?: InternacaoResponseDto[];
 }
 
 export type MotivoAcessoJustificado = 'EMERGENCIA' | 'CONTINUIDADE_DO_CUIDADO' | 'REGULACAO_OU_ENCAMINHAMENTO' | 'OUTRO';

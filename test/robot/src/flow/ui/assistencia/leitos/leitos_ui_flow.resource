@@ -168,3 +168,15 @@ UI Leitos - Campo Deve Valer
     Should Be Equal    ${valor}    ${esperado}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Leitos - Internacao No Prontuario
+    [Documentation]    A internação aparece no prontuário do paciente, com o leito e o motivo (ADR-0100).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${internacaoId}    ${leitoId}    ${unidadeId}    ${setorId}    ${pacienteId}    ${matricula}=    Seed Uma Internacao
+    ${lida}=    GET Internacao By Id    ${internacaoId}
+    Ir Para Rota Do Frontend    /assistencia/atendimentos?aba=pront&pacienteId=${pacienteId}
+    Esperar Texto Aparecer    Internações
+    Wait For Elements State    css=app-internacoes-paciente >> text=${lida.json()}[leitoIdentificacao]    visible    10s
+    Wait For Elements State    css=app-internacoes-paciente >> text=Pneumonia com hipoxemia.    visible    10s
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
