@@ -31,4 +31,7 @@ public class AutorizacaoRegulacaoRequestDto implements Serializable {
 
     @Size(max = 1000)
     private String observacao;
+
+    /** Quem vai atender, se já se sabe: a autorização já cria o agendamento (ADR-0089). */
+    private String profissionalExecutanteMatricula;
 }

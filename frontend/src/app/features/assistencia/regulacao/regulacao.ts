@@ -30,6 +30,9 @@ type Gaveta =
   | { tipo: 'nova' }
   | { tipo: 'detalhe'; uuid: string }
   | { tipo: 'cancelar'; s: SolicitacaoRegulacaoResumoDto }
+  | { tipo: 'agendar'; s: SolicitacaoRegulacaoResumoDto }
+  | { tipo: 'realizar'; s: SolicitacaoRegulacaoResumoDto }
+  | { tipo: 'falta'; s: SolicitacaoRegulacaoResumoDto }
   | { tipo: 'procedimento'; p: ProcedimentoReguladoResponseDto | null };
 
 type Decisao = 'AUTORIZAR' | 'DEVOLVER' | 'NEGAR' | 'RECLASSIFICAR';
@@ -67,15 +70,19 @@ const EVENTOS: Record<TipoEventoRegulacao, string> = {
   DEVOLUCAO: 'Devolvida ao solicitante',
   NEGATIVA: 'Negada',
   CANCELAMENTO: 'Cancelada',
+  AGENDAMENTO: 'Agendada na unidade executante',
+  REALIZACAO: 'Atendida na unidade executante',
+  FALTA: 'Paciente faltou',
 };
 
-const CANCELAVEIS: StatusSolicitacaoRegulacao[] = ['SOLICITADA', 'DEVOLVIDA', 'AUTORIZADA'];
+const CANCELAVEIS: StatusSolicitacaoRegulacao[] = ['SOLICITADA', 'DEVOLVIDA', 'AUTORIZADA', 'AGENDADA'];
 const CID = /^\s*[A-Za-z][0-9]{2}(\.?[0-9A-Za-z]{1,2})?\s*$/;
 
 /**
  * Regulação do acesso (ADR-0088): a fila do regulador, as solicitações da rede e o catálogo de
  * procedimentos regulados, com as gavetas de nova solicitação, análise (autorizar com vaga, devolver,
- * negar, reclassificar), complemento, cancelamento e catálogo. O backend é a ADR-0087.
+ * negar, reclassificar), complemento, cancelamento e catálogo. O backend é a ADR-0087. A unidade
+ * executante agenda, registra o atendimento com a contrarreferência ou a falta (ADR-0089).
  */
 @Component({
   selector: 'app-regulacao',
@@ -144,6 +151,23 @@ export class Regulacao {
     motivo: [''],
     prioridade: ['' as PrioridadeRegulacao | ''],
     profissionalMatricula: [''],
+    profissionalExecutanteMatricula: [''],
+  });
+
+  protected readonly agendarForm = this.fb.nonNullable.group({
+    profissionalExecutanteMatricula: [''],
+    dataHora: [''],
+    profissionalMatricula: [''],
+  });
+
+  protected readonly realizarForm = this.fb.nonNullable.group({
+    contrarreferencia: [''],
+    profissionalMatricula: [''],
+  });
+
+  protected readonly faltaForm = this.fb.nonNullable.group({
+    motivo: [''],
+    profissionalMatricula: [''],
   });
 
   protected readonly complementoForm = this.fb.nonNullable.group({
@@ -193,7 +217,7 @@ export class Regulacao {
       naFila: naFila.length,
       urgentes: naFila.filter((s) => s.prioridade === 'VERMELHO' || s.prioridade === 'AMARELO').length,
       devolvidas: todas.filter((s) => s.status === 'DEVOLVIDA').length,
-      autorizadas: todas.filter((s) => s.status === 'AUTORIZADA').length,
+      autorizadas: todas.filter((s) => s.status === 'AUTORIZADA' || s.status === 'AGENDADA').length,
       esperaMedia: naFila.length ? Math.round(naFila.reduce((acc, s) => acc + diasDesde(s.solicitadoEm), 0) / naFila.length) : 0,
     };
   });
@@ -314,6 +338,12 @@ export class Regulacao {
         return 'Solicitação de regulação';
       case 'cancelar':
         return 'Cancelar solicitação';
+      case 'agendar':
+        return 'Agendar na unidade executante';
+      case 'realizar':
+        return 'Registrar atendimento';
+      case 'falta':
+        return 'Registrar falta';
       case 'procedimento':
         return g.p ? 'Editar procedimento regulado' : 'Novo procedimento regulado';
     }
@@ -355,6 +385,7 @@ export class Regulacao {
       motivo: '',
       prioridade: '',
       profissionalMatricula: this.matriculaPadrao(),
+      profissionalExecutanteMatricula: '',
     });
     this.complementoForm.reset({ complemento: '', profissionalMatricula: this.matriculaPadrao() });
     this.abrir({ tipo: 'detalhe', uuid: s.uuid });
@@ -368,6 +399,38 @@ export class Regulacao {
   protected abrirCancelamento(s: SolicitacaoRegulacaoResumoDto): void {
     this.cancelarForm.reset({ motivo: '', profissionalMatricula: this.matriculaPadrao() });
     this.abrir({ tipo: 'cancelar', s });
+  }
+
+  /** A executante agenda a autorizada com quem vai atender; a data já vem com a da vaga. */
+  protected abrirAgendamento(s: SolicitacaoRegulacaoResumoDto): void {
+    this.agendarForm.reset({
+      profissionalExecutanteMatricula: '',
+      dataHora: (s.dataHoraPrevista ?? '').slice(0, 16),
+      profissionalMatricula: this.matriculaPadrao(),
+    });
+    this.abrir({ tipo: 'agendar', s });
+  }
+
+  protected abrirRealizacao(s: SolicitacaoRegulacaoResumoDto): void {
+    this.realizarForm.reset({ contrarreferencia: '', profissionalMatricula: this.matriculaPadrao() });
+    this.abrir({ tipo: 'realizar', s });
+  }
+
+  protected abrirFalta(s: SolicitacaoRegulacaoResumoDto): void {
+    this.faltaForm.reset({ motivo: 'Não compareceu', profissionalMatricula: this.matriculaPadrao() });
+    this.abrir({ tipo: 'falta', s });
+  }
+
+  protected podeAgendar(s: SolicitacaoRegulacaoResumoDto): boolean {
+    return s.status === 'AUTORIZADA' && this.pode('AGENDAMENTO.GERENCIAR', 'REGULACAO.REGULAR');
+  }
+
+  protected podeRegistrarAtendimento(s: SolicitacaoRegulacaoResumoDto): boolean {
+    return s.status === 'AGENDADA' && this.pode('CONSULTA.REGISTRAR', 'PROCEDIMENTO.REGISTRAR');
+  }
+
+  protected podeRegistrarFalta(s: SolicitacaoRegulacaoResumoDto): boolean {
+    return s.status === 'AGENDADA' && this.pode('AGENDAMENTO.GERENCIAR', 'ATENDIMENTO.GERENCIAR');
   }
 
   protected abrirProcedimento(p: ProcedimentoReguladoResponseDto | null = null): void {
@@ -403,6 +466,12 @@ export class Regulacao {
       }
       case 'cancelar':
         return this.salvarCancelamento(g.s);
+      case 'agendar':
+        return this.salvarAgendamento(g.s);
+      case 'realizar':
+        return this.salvarRealizacao(g.s);
+      case 'falta':
+        return this.salvarFalta(g.s);
       case 'procedimento':
         return this.salvarProcedimento(g.p);
     }
@@ -470,8 +539,9 @@ export class Regulacao {
             unidadeExecutanteId: v.unidadeExecutanteId,
             dataHoraPrevista: v.dataHoraPrevista.length === 16 ? v.dataHoraPrevista + ':00' : v.dataHoraPrevista,
             observacao: v.observacao.trim() || undefined,
+            profissionalExecutanteMatricula: v.profissionalExecutanteMatricula.trim() || undefined,
           }),
-          'Solicitação autorizada',
+          v.profissionalExecutanteMatricula.trim() ? 'Solicitação autorizada e agendada' : 'Solicitação autorizada',
           `${d.pacienteNome} · ${this.formatarVaga(v.dataHoraPrevista)}`,
         );
       case 'DEVOLVER':
@@ -510,6 +580,51 @@ export class Regulacao {
       this.regulacaoService.cancelar(s.uuid, { profissionalMatricula: v.profissionalMatricula.trim(), motivo: v.motivo.trim() }),
       'Solicitação cancelada',
       `${s.pacienteNome} · ${s.procedimentoNome}`,
+    );
+  }
+
+  private salvarAgendamento(s: SolicitacaoRegulacaoResumoDto): void {
+    const v = this.agendarForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.profissionalExecutanteMatricula.trim()) erros['profissionalExecutanteMatricula'] = 'Informe a matrícula de quem vai atender.';
+    if (!v.dataHora) erros['dataHora'] = 'Informe a data e a hora.';
+    else if (v.dataHora < agoraLocal()) erros['dataHora'] = 'O agendamento não pode estar no passado.';
+    if (!v.profissionalMatricula.trim()) erros['profissionalMatricula'] = 'Informe a matrícula de quem agenda.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.regulacaoService.agendar(s.uuid, {
+        profissionalMatricula: v.profissionalMatricula.trim(),
+        profissionalExecutanteMatricula: v.profissionalExecutanteMatricula.trim(),
+        dataHora: v.dataHora.length === 16 ? v.dataHora + ':00' : v.dataHora,
+      }),
+      'Solicitação agendada',
+      `${s.pacienteNome} · ${this.formatarVaga(v.dataHora)}`,
+    );
+  }
+
+  private salvarRealizacao(s: SolicitacaoRegulacaoResumoDto): void {
+    const v = this.realizarForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (v.contrarreferencia.trim().length < 10) erros['contrarreferencia'] = 'Escreva a contrarreferência (pelo menos 10 caracteres).';
+    if (!v.profissionalMatricula.trim()) erros['profissionalMatricula'] = 'Informe a matrícula de quem atendeu.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.regulacaoService.realizar(s.uuid, { profissionalMatricula: v.profissionalMatricula.trim(), contrarreferencia: v.contrarreferencia.trim() }),
+      'Atendimento registrado',
+      `Contrarreferência enviada para ${s.unidadeSolicitanteNome}`,
+    );
+  }
+
+  private salvarFalta(s: SolicitacaoRegulacaoResumoDto): void {
+    const v = this.faltaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.motivo.trim()) erros['motivo'] = 'Descreva a falta.';
+    if (!v.profissionalMatricula.trim()) erros['profissionalMatricula'] = 'Informe a matrícula de quem registra.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.regulacaoService.registrarFalta(s.uuid, { profissionalMatricula: v.profissionalMatricula.trim(), motivo: v.motivo.trim() }),
+      'Falta registrada',
+      s.pacienteNome,
     );
   }
 

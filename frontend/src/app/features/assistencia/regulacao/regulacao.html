@@ -128,6 +128,9 @@
           <option value="SOLICITADA">Na fila</option>
           <option value="DEVOLVIDA">Devolvidas</option>
           <option value="AUTORIZADA">Autorizadas</option>
+          <option value="AGENDADA">Agendadas</option>
+          <option value="REALIZADA">Realizadas</option>
+          <option value="FALTOU">Faltou</option>
           <option value="NEGADA">Negadas</option>
           <option value="CANCELADA">Canceladas</option>
         </select>
@@ -155,7 +158,10 @@
               <td><span [class]="'badge badge--' + status[s.status].classe"><span class="dot" aria-hidden="true"></span> {{ status[s.status].rotulo }}</span></td>
               <td>
                 @if (s.status === 'SOLICITADA' && s.posicaoNaFila) { <span class="mono">{{ s.posicaoNaFila }}º</span> na fila }
-                @else if (s.unidadeExecutanteNome) { {{ s.unidadeExecutanteNome }}<span class="cell-sub mono">{{ formatarVaga(s.dataHoraPrevista) }}</span> }
+                @else if (s.unidadeExecutanteNome) {
+                  {{ s.unidadeExecutanteNome }}<span class="cell-sub mono">{{ formatarVaga(s.agendamentoDataHora || s.dataHoraPrevista) }}</span>
+                  @if (s.profissionalExecutanteNome) { <span class="cell-sub">com {{ s.profissionalExecutanteNome }}</span> }
+                }
                 @else { — }
               </td>
               <td class="mono">{{ formatarInstante(s.solicitadoEm) }}</td>
@@ -163,6 +169,15 @@
                 <div class="row-actions">
                   @if (podeVerDetalhe()) {
                     <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="(s.status === 'DEVOLVIDA' && pode('REGULACAO.SOLICITAR') ? 'Complementar solicitação de ' : 'Ver solicitação de ') + s.pacienteNome" (click)="abrirDetalhe(s)">{{ s.status === 'DEVOLVIDA' && pode('REGULACAO.SOLICITAR') ? 'Complementar' : 'Ver' }}</button>
+                  }
+                  @if (podeAgendar(s)) {
+                    <button type="button" class="btn btn--sm" [attr.aria-label]="'Agendar solicitação de ' + s.pacienteNome" (click)="abrirAgendamento(s)">Agendar</button>
+                  }
+                  @if (podeRegistrarAtendimento(s)) {
+                    <button type="button" class="btn btn--sm" [attr.aria-label]="'Registrar atendimento de ' + s.pacienteNome" (click)="abrirRealizacao(s)">Atendido</button>
+                  }
+                  @if (podeRegistrarFalta(s)) {
+                    <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Registrar falta de ' + s.pacienteNome" (click)="abrirFalta(s)">Faltou</button>
                   }
                   @if (podeCancelar(s)) {
                     <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Cancelar solicitação de ' + s.pacienteNome" (click)="abrirCancelamento(s)">Cancelar</button>
@@ -310,13 +325,23 @@
                 <div><dt>Solicitado em</dt><dd class="mono">{{ formatarInstante(d.solicitadoEm) }}</dd></div>
                 @if (d.unidadeExecutanteNome) {
                   <div><dt>Unidade executante</dt><dd>{{ d.unidadeExecutanteNome }}</dd></div>
-                  <div><dt>Vaga</dt><dd class="mono">{{ formatarVaga(d.dataHoraPrevista) }}</dd></div>
+                  <div><dt>{{ d.agendamentoId ? 'Agendado para' : 'Vaga' }}</dt><dd class="mono">{{ formatarVaga(d.agendamentoDataHora || d.dataHoraPrevista) }}</dd></div>
+                  @if (d.profissionalExecutanteNome) {
+                    <div><dt>Atendimento com</dt><dd>{{ d.profissionalExecutanteNome }} <span class="cell-sub mono">{{ d.profissionalExecutanteMatricula }}</span></dd></div>
+                  }
                 }
               </dl>
               <section class="dsec">
                 <div class="dsec__h"><h3>Justificativa clínica</h3></div>
                 <p class="reg-texto">{{ d.justificativa }}</p>
               </section>
+              @if (d.contrarreferencia) {
+                <section class="dsec">
+                  <div class="dsec__h"><h3>Contrarreferência</h3></div>
+                  <p class="reg-texto">{{ d.contrarreferencia }}</p>
+                  @if (d.concluidoEm) { <p class="cell-sub">Registrada em {{ formatarInstante(d.concluidoEm) }}</p> }
+                </section>
+              }
               <section class="dsec">
                 <div class="dsec__h"><h3>Histórico <span class="cnt">{{ d.eventos.length }}</span></h3></div>
                 <div class="tl">
@@ -360,9 +385,16 @@
                           @if (erro('dataHoraPrevista')) { <p class="dw-err" id="e-dataHoraPrevista">{{ erro('dataHoraPrevista') }}</p> }
                         </div>
                       </div>
-                      <div class="dw-field">
-                        <label for="f-observacao">Orientação ao paciente<span class="opt">opcional</span></label>
-                        <input id="f-observacao" type="text" formControlName="observacao" placeholder="Ex.: levar os exames anteriores" />
+                      <div class="dw-row">
+                        <div class="dw-field">
+                          <label for="f-profissionalExecutanteMatricula">Quem vai atender<span class="opt">opcional</span></label>
+                          <input id="f-profissionalExecutanteMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalExecutanteMatricula" aria-describedby="h-profissionalExecutanteMatricula" />
+                          <p class="dw-hint" id="h-profissionalExecutanteMatricula">Com a matrícula, a autorização já agenda. Sem ela, a unidade executante agenda depois.</p>
+                        </div>
+                        <div class="dw-field">
+                          <label for="f-observacao">Orientação ao paciente<span class="opt">opcional</span></label>
+                          <input id="f-observacao" type="text" formControlName="observacao" placeholder="Ex.: levar os exames anteriores" />
+                        </div>
                       </div>
                     }
                     @case ('RECLASSIFICAR') {
@@ -450,6 +482,101 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Cancelando…' : 'Cancelar solicitação' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('agendar') {
+        <form class="dw-form" [formGroup]="agendarForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Paciente</dt><dd>{{ g.s.pacienteNome }}</dd></div>
+              <div><dt>Procedimento</dt><dd>{{ g.s.procedimentoNome }}</dd></div>
+              <div><dt>Unidade executante</dt><dd>{{ g.s.unidadeExecutanteNome || '—' }}</dd></div>
+              <div><dt>Vaga</dt><dd class="mono">{{ formatarVaga(g.s.dataHoraPrevista) }}</dd></div>
+            </dl>
+            <div class="box box--info"><div>O agendamento entra na agenda de quem vai atender, na unidade executante.</div></div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-profissionalExecutanteMatricula">Matrícula de quem vai atender <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-profissionalExecutanteMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalExecutanteMatricula" [attr.aria-invalid]="!!erro('profissionalExecutanteMatricula')" aria-describedby="e-profissionalExecutanteMatricula" />
+                @if (erro('profissionalExecutanteMatricula')) { <p class="dw-err" id="e-profissionalExecutanteMatricula">{{ erro('profissionalExecutanteMatricula') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-dataHora">Data e hora <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataHora" type="datetime-local" formControlName="dataHora" [attr.aria-invalid]="!!erro('dataHora')" aria-describedby="h-dataHora e-dataHora" />
+                <p class="dw-hint" id="h-dataHora">Já vem com a vaga autorizada.</p>
+                @if (erro('dataHora')) { <p class="dw-err" id="e-dataHora">{{ erro('dataHora') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-profissionalMatricula">Matrícula de quem agenda <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-profissionalMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />
+              @if (erro('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erro('profissionalMatricula') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Agendando…' : 'Agendar' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('realizar') {
+        <form class="dw-form" [formGroup]="realizarForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Paciente</dt><dd>{{ g.s.pacienteNome }}</dd></div>
+              <div><dt>Procedimento</dt><dd>{{ g.s.procedimentoNome }}</dd></div>
+              <div><dt>Encaminhado por</dt><dd>{{ g.s.unidadeSolicitanteNome }}</dd></div>
+              <div><dt>Agendado com</dt><dd>{{ g.s.profissionalExecutanteNome || '—' }}</dd></div>
+            </dl>
+            <div class="dw-field">
+              <label for="f-contrarreferencia">Contrarreferência <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-contrarreferencia" formControlName="contrarreferencia" rows="6" placeholder="O que foi feito, o achado e a conduta para quem continua o cuidado" [attr.aria-invalid]="!!erro('contrarreferencia')" aria-describedby="h-contrarreferencia e-contrarreferencia"></textarea>
+              <p class="dw-hint" id="h-contrarreferencia">Volta para {{ g.s.unidadeSolicitanteNome }} no detalhe da solicitação.</p>
+              @if (erro('contrarreferencia')) { <p class="dw-err" id="e-contrarreferencia">{{ erro('contrarreferencia') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-profissionalMatricula">Matrícula de quem atendeu <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-profissionalMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />
+              @if (erro('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erro('profissionalMatricula') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Registrando…' : 'Registrar atendimento' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('falta') {
+        <form class="dw-form" [formGroup]="faltaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Paciente</dt><dd>{{ g.s.pacienteNome }}</dd></div>
+              <div><dt>Procedimento</dt><dd>{{ g.s.procedimentoNome }}</dd></div>
+              <div><dt>Agendado com</dt><dd>{{ g.s.profissionalExecutanteNome || '—' }}</dd></div>
+              <div><dt>Data</dt><dd class="mono">{{ formatarVaga(g.s.agendamentoDataHora || g.s.dataHoraPrevista) }}</dd></div>
+            </dl>
+            <div class="box box--warn"><div>O agendamento é fechado e a solicitação termina como falta. Para atender o paciente, será preciso uma nova solicitação.</div></div>
+            <div class="dw-field">
+              <label for="f-motivo">O que aconteceu <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-motivo" formControlName="motivo" rows="3" [attr.aria-invalid]="!!erro('motivo')" aria-describedby="e-motivo"></textarea>
+              @if (erro('motivo')) { <p class="dw-err" id="e-motivo">{{ erro('motivo') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-profissionalMatricula">Matrícula de quem registra <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-profissionalMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />
+              @if (erro('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erro('profissionalMatricula') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Registrando…' : 'Registrar falta' }}</button>
           </footer>
         </form>
       }

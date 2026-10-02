@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../../pom/ui/assistencia/regulacao/regulacao_ui_pom.resource
 Resource    ../../../solicitacao_regulacao/get_solicitacao_regulacao_by_id/get_solicitacao_regulacao_by_id_flow.resource
+Resource    ../../../solicitacao_regulacao/autorizacao_solicitacao_regulacao/autorizacao_solicitacao_regulacao_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (paciente, unidade, profissional, procedimento, solicitação) são criados pela API; a ação
@@ -130,5 +131,98 @@ Campo Da Gaveta Deve Valer
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${valor}=    UI Regulacao - Ler Valor Do Campo    ${campo}
     Should Be Equal    ${valor}    ${esperado}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Regulacao - Autorizar Ja Agendando
+    [Documentation]    Autoriza pela fila informando quem vai atender: a solicitação sai agendada (ADR-0089).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${matricula}    ${procedimentoId}    ${pacienteId}    ${unidadeId}=    Seed A Solicitacao Regulacao
+    ${regulador}=    Seed A Profissional Matricula
+    ${executante}=    Seed A Profissional Matricula
+    ${lida}=    GET Get Solicitacao Regulacao By Id    ${uuid}
+    ${nomePaciente}=    Set Variable    ${lida.json()}[pacienteNome]
+    UI Regulacao - Abrir Aba    fila
+    Clicar Botao    Analisar solicitação de ${nomePaciente}
+    Esperar Texto Aparecer    Decisão da regulação
+    Escolher Opcao Da Gaveta    unidadeExecutanteId    ${unidadeId}
+    ${vaga}=    Evaluate    (datetime.datetime.now() + datetime.timedelta(days=10)).strftime('%Y-%m-%dT09:30')    modules=datetime
+    Preencher Campo Da Gaveta    dataHoraPrevista    ${vaga}
+    Preencher Campo Da Gaveta    profissionalExecutanteMatricula    ${executante}
+    Preencher Campo Da Gaveta    matriculaRegulador    ${regulador}
+    Clicar Botao    Registrar decisão
+    Esperar Texto Aparecer    Solicitação autorizada e agendada
+    ${depois}=    GET Get Solicitacao Regulacao By Id    ${uuid}
+    Should Be Equal    ${depois.json()}[status]    AGENDADA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Regulacao - Agendar Pela Linha
+    [Documentation]    A executante agenda a autorizada pela linha da aba Solicitações.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${matricula}    ${procedimentoId}    ${pacienteId}    ${unidadeId}=    Seed A Solicitacao Regulacao
+    ${regulador}=    Seed A Profissional Matricula
+    ${executante}=    Seed A Profissional Matricula
+    ${lida}=    GET Get Solicitacao Regulacao By Id    ${uuid}
+    ${nomePaciente}=    Set Variable    ${lida.json()}[pacienteNome]
+    ${vaga}=    Evaluate    (datetime.datetime.now() + datetime.timedelta(days=10)).replace(hour=9, minute=30, second=0, microsecond=0)    modules=datetime
+    ${autorizacao}=    Create Dictionary    profissionalMatricula=${regulador}    unidadeExecutanteId=${unidadeId}    dataHoraPrevista=${vaga.isoformat()}
+    ${autorizada}=    POST Autorizar Solicitacao Regulacao    ${uuid}    ${autorizacao}
+    Should Be Equal As Integers    ${autorizada.status_code}    200
+    UI Regulacao - Abrir Aba    solicitacoes
+    Clicar Botao    Agendar solicitação de ${nomePaciente}
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Agendar na unidade executante
+    Preencher Campo Da Gaveta    profissionalExecutanteMatricula    ${executante}
+    Preencher Campo Da Gaveta    profissionalMatricula    ${regulador}
+    Enviar Gaveta
+    Esperar Texto Aparecer    Solicitação agendada
+    ${depois}=    GET Get Solicitacao Regulacao By Id    ${uuid}
+    Should Be Equal    ${depois.json()}[profissionalExecutanteMatricula]    ${executante}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Regulacao - Registrar Atendimento Com Contrarreferencia
+    [Documentation]    Registra o atendimento na executante e vê a contrarreferência no detalhe.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${matricula}    ${procedimentoId}    ${pacienteId}    ${unidadeId}=    Seed A Solicitacao Regulacao
+    ${regulador}=    Seed A Profissional Matricula
+    ${executante}=    Seed A Profissional Matricula
+    ${lida}=    GET Get Solicitacao Regulacao By Id    ${uuid}
+    ${nomePaciente}=    Set Variable    ${lida.json()}[pacienteNome]
+    ${vaga}=    Evaluate    (datetime.datetime.now() + datetime.timedelta(days=10)).replace(hour=9, minute=30, second=0, microsecond=0)    modules=datetime
+    ${autorizacao}=    Create Dictionary    profissionalMatricula=${regulador}    unidadeExecutanteId=${unidadeId}    dataHoraPrevista=${vaga.isoformat()}    profissionalExecutanteMatricula=${executante}
+    ${autorizada}=    POST Autorizar Solicitacao Regulacao    ${uuid}    ${autorizacao}
+    Should Be Equal As Integers    ${autorizada.status_code}    200
+    UI Regulacao - Abrir Aba    solicitacoes
+    Clicar Botao    Registrar atendimento de ${nomePaciente}
+    Preencher Campo Da Gaveta    contrarreferencia    Ecocardiograma normal. Manter seguimento na UBS.
+    Preencher Campo Da Gaveta    profissionalMatricula    ${executante}
+    Enviar Gaveta
+    Esperar Texto Aparecer    Atendimento registrado
+    Clicar Botao    Ver solicitação de ${nomePaciente}
+    Esperar Texto Aparecer    Ecocardiograma normal. Manter seguimento na UBS.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Regulacao - Registrar Falta
+    [Documentation]    Registra que o paciente faltou ao agendamento.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${matricula}    ${procedimentoId}    ${pacienteId}    ${unidadeId}=    Seed A Solicitacao Regulacao
+    ${regulador}=    Seed A Profissional Matricula
+    ${executante}=    Seed A Profissional Matricula
+    ${lida}=    GET Get Solicitacao Regulacao By Id    ${uuid}
+    ${nomePaciente}=    Set Variable    ${lida.json()}[pacienteNome]
+    ${vaga}=    Evaluate    (datetime.datetime.now() + datetime.timedelta(days=10)).replace(hour=9, minute=30, second=0, microsecond=0)    modules=datetime
+    ${autorizacao}=    Create Dictionary    profissionalMatricula=${regulador}    unidadeExecutanteId=${unidadeId}    dataHoraPrevista=${vaga.isoformat()}    profissionalExecutanteMatricula=${executante}
+    ${autorizada}=    POST Autorizar Solicitacao Regulacao    ${uuid}    ${autorizacao}
+    Should Be Equal As Integers    ${autorizada.status_code}    200
+    UI Regulacao - Abrir Aba    solicitacoes
+    Clicar Botao    Registrar falta de ${nomePaciente}
+    Preencher Campo Da Gaveta    profissionalMatricula    ${executante}
+    Enviar Gaveta
+    Esperar Texto Aparecer    Falta registrada
+    ${depois}=    GET Get Solicitacao Regulacao By Id    ${uuid}
+    Should Be Equal    ${depois.json()}[status]    FALTOU
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

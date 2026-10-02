@@ -150,7 +150,9 @@ liberação explícita do responsável.
 - Para abrir o prontuário completo de um paciente, é preciso ter vínculo com ele. Há vínculo quando:
   - o paciente tem atendimento em aberto, ou nos últimos 30 dias, numa unidade do acesso da pessoa; ou
   - a pessoa é a profissional de um atendimento recente dele; ou
-  - a pessoa é a profissional de um agendamento próximo dele (até 30 dias antes ou depois).
+  - a pessoa é a profissional de um agendamento próximo dele (até 30 dias antes ou depois); ou
+  - o paciente tem uma solicitação de regulação em curso, ou realizada nos últimos 30 dias, em que a
+    unidade solicitante ou a executante está no acesso da pessoa (ADR-0089).
 - Sem vínculo, a tela mostra **"Sem vínculo assistencial com este paciente"** e o botão
   **Acessar com justificativa**. A pessoa informa o motivo e um texto, e o acesso vale por 4 horas, só
   para ela.

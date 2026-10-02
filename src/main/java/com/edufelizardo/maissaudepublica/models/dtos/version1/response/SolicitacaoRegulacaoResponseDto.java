@@ -19,6 +19,8 @@ public class SolicitacaoRegulacaoResponseDto extends SolicitacaoRegulacaoResumoD
 
     private String cid;
     private String justificativa;
+    /** Retorno da executante (ADR-0089). Dado de saúde. */
+    private String contrarreferencia;
     private List<EventoRegulacaoResponseDto> eventos;
 
     public static SolicitacaoRegulacaoResponseDto fromSolicitacao(SolicitacaoRegulacao s, Integer posicaoNaFila,
@@ -27,6 +29,7 @@ public class SolicitacaoRegulacaoResponseDto extends SolicitacaoRegulacaoResumoD
         preencher(dto, s, posicaoNaFila);
         dto.setCid(s.getCid());
         dto.setJustificativa(s.getJustificativa());
+        dto.setContrarreferencia(s.getContrarreferencia());
         dto.setEventos(eventos.stream().map(EventoRegulacaoResponseDto::fromEvento).toList());
         return dto;
     }

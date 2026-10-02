@@ -7,9 +7,11 @@ import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorR
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ExampleConstants;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SuccessResponseDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AgendamentoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AutorizacaoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ComplementoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MotivoRegulacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RealizacaoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ReclassificacaoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SolicitacaoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SolicitacaoRegulacaoResponseDto;
@@ -159,6 +161,56 @@ public class SolicitacaoRegulacaoController {
     @ApiErrorResponsesMutacao
     public ResponseEntity<SuccessResponseDto> cancelar(@PathVariable UUID uuid, @Valid @RequestBody MotivoRegulacaoRequestDto dto) {
         return ResponseEntity.ok(sucesso("Solicitação cancelada!", service.cancelar(uuid, dto)));
+    }
+
+    @RequerPermissao({"AGENDAMENTO.GERENCIAR", "REGULACAO.REGULAR"})
+    @PostMapping(value = "{uuid}/agendamento", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Agenda a solicitação autorizada na unidade executante",
+            description = "Cria o agendamento com o profissional que vai atender; sem data, vale a da vaga. A recepção da "
+                    + "executante (AGENDAMENTO.GERENCIAR lá) ou a regulação. Só AUTORIZADA (422). Data no passado: 422.",
+            tags = "Regulação")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> agendar(@PathVariable UUID uuid, @Valid @RequestBody AgendamentoRegulacaoRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Solicitação agendada na unidade executante!", service.agendar(uuid, dto)));
+    }
+
+    @RequerPermissao({"CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR"})
+    @PostMapping(value = "{uuid}/realizacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra o atendimento realizado, com a contrarreferência",
+            description = "Na unidade executante. A contrarreferência volta para a unidade solicitante no detalhe da "
+                    + "solicitação. Fecha o agendamento como REALIZADO. Só AGENDADA (422).",
+            tags = "Regulação")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> realizar(@PathVariable UUID uuid, @Valid @RequestBody RealizacaoRegulacaoRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Atendimento realizado e contrarreferência registrada!", service.registrarRealizacao(uuid, dto)));
+    }
+
+    @RequerPermissao({"AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR"})
+    @PostMapping(value = "{uuid}/falta", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra que o paciente faltou ao agendamento",
+            description = "Na unidade executante. Fecha o agendamento como CANCELADO, com a falta na observação. Só AGENDADA (422).",
+            tags = "Regulação")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> faltar(@PathVariable UUID uuid, @Valid @RequestBody MotivoRegulacaoRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Falta registrada!", service.registrarFalta(uuid, dto)));
     }
 
     @RequerPermissao({"REGULACAO.REGULAR"})

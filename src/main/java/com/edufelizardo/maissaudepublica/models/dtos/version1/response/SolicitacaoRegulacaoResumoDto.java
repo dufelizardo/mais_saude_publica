@@ -43,6 +43,12 @@ public class SolicitacaoRegulacaoResumoDto implements Serializable {
     private UUID unidadeExecutanteId;
     private String unidadeExecutanteNome;
     private LocalDateTime dataHoraPrevista;
+    /** Agendamento na executante (ADR-0089). */
+    private UUID agendamentoId;
+    private LocalDateTime agendamentoDataHora;
+    private String profissionalExecutanteMatricula;
+    private String profissionalExecutanteNome;
+    private Instant concluidoEm;
 
     public static SolicitacaoRegulacaoResumoDto fromSolicitacao(SolicitacaoRegulacao s, Integer posicaoNaFila) {
         SolicitacaoRegulacaoResumoDto dto = new SolicitacaoRegulacaoResumoDto();
@@ -70,5 +76,12 @@ public class SolicitacaoRegulacaoResumoDto implements Serializable {
             dto.setUnidadeExecutanteNome(s.getUnidadeExecutante().getNome());
         }
         dto.setDataHoraPrevista(s.getDataHoraPrevista());
+        if (s.getAgendamento() != null) {
+            dto.setAgendamentoId(s.getAgendamento().getUuid());
+            dto.setAgendamentoDataHora(s.getAgendamento().getDataHora());
+            dto.setProfissionalExecutanteMatricula(s.getAgendamento().getProfissional().getMatricula());
+            dto.setProfissionalExecutanteNome(s.getAgendamento().getProfissional().getNome());
+        }
+        dto.setConcluidoEm(s.getConcluidoEm());
     }
 }

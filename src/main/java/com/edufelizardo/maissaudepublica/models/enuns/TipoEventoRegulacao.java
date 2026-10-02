@@ -8,5 +8,10 @@ public enum TipoEventoRegulacao {
     AUTORIZACAO,
     DEVOLUCAO,
     NEGATIVA,
-    CANCELAMENTO
+    CANCELAMENTO,
+    /** Agendamento na unidade executante (ADR-0089). */
+    AGENDAMENTO,
+    /** Atendido na executante, com a contrarreferência (ADR-0089). */
+    REALIZACAO,
+    FALTA
 }

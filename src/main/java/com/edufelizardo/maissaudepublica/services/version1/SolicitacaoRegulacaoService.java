@@ -6,22 +6,29 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceConflictException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceForbiddenException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
+import com.edufelizardo.maissaudepublica.models.Agendamento;
 import com.edufelizardo.maissaudepublica.models.EventoRegulacao;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.ProcedimentoRegulado;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.SolicitacaoRegulacao;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AgendamentoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AutorizacaoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ComplementoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MotivoRegulacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RealizacaoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ReclassificacaoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SolicitacaoRegulacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SolicitacaoRegulacaoResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SolicitacaoRegulacaoResumoDto;
 import com.edufelizardo.maissaudepublica.models.enuns.PrioridadeRegulacao;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusAgendamento;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusSolicitacaoRegulacao;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoAgendamento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoEventoRegulacao;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoProcedimentoRegulado;
+import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.EventoRegulacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
@@ -47,6 +54,10 @@ import java.util.stream.Stream;
  * Regulação do acesso (ADR-0087): a unidade de origem solicita, a Central regula — autoriza com a vaga,
  * devolve para complementar ou nega — e qualquer um dos dois lados cancela. Cada passo grava um
  * {@link EventoRegulacao}.
+ *
+ * <p>O ciclo fecha na unidade executante (ADR-0089): a solicitação autorizada vira um {@link Agendamento} com
+ * o profissional que vai atender, e o desfecho é registrado lá — realizado, com a contrarreferência para a
+ * origem, ou falta.
  *
  * <p>Escopo: quem solicita responde pela unidade solicitante ({@value #SOLICITAR}); quem regula precisa de
  * {@value #REGULAR} num escopo que cubra a unidade solicitante — o regulador lotado no município enxerga as
@@ -83,6 +94,9 @@ public class SolicitacaoRegulacaoService {
 
     @Autowired
     private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
+
+    @Autowired
+    private AgendamentoRepository agendamentoRepository;
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
@@ -142,6 +156,9 @@ public class SolicitacaoRegulacaoService {
         }
         exigirStatus(solicitacao, "cancelar", StatusSolicitacaoRegulacao.CANCELAVEIS.toArray(StatusSolicitacaoRegulacao[]::new));
         Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
+        if (solicitacao.getAgendamento() != null) {
+            fecharAgendamento(solicitacao.getAgendamento(), StatusAgendamento.CANCELADO, "Regulação cancelada: " + dto.getMotivo().trim());
+        }
         solicitacao.setStatus(StatusSolicitacaoRegulacao.CANCELADA);
         registrar(solicitacao, TipoEventoRegulacao.CANCELAMENTO, dto.getMotivo().trim(), profissional);
         return detalhe(solicitacao);
@@ -179,7 +196,12 @@ public class SolicitacaoRegulacaoService {
         solicitacao.setStatus(StatusSolicitacaoRegulacao.AUTORIZADA);
         String vaga = executante.getNome() + ", " + DATA_HORA.format(dto.getDataHoraPrevista());
         String observacao = textoOuNulo(dto.getObservacao());
+        Profissional profissionalExecutante = textoOuNulo(dto.getProfissionalExecutanteMatricula()) == null ? null
+                : buscarProfissional(dto.getProfissionalExecutanteMatricula().trim());
         registrar(solicitacao, TipoEventoRegulacao.AUTORIZACAO, observacao == null ? vaga : vaga + ". " + observacao, regulador);
+        if (profissionalExecutante != null) {
+            agendarNaExecutante(solicitacao, profissionalExecutante, dto.getDataHoraPrevista(), regulador);
+        }
         return detalhe(solicitacao);
     }
 
@@ -199,6 +221,99 @@ public class SolicitacaoRegulacaoService {
         solicitacao.setStatus(StatusSolicitacaoRegulacao.NEGADA);
         registrar(solicitacao, TipoEventoRegulacao.NEGATIVA, dto.getMotivo().trim(), regulador);
         return detalhe(solicitacao);
+    }
+
+    // ── Unidade executante (ADR-0089) ──────────────────────────────────────────────────────────────
+
+    /**
+     * Agenda a solicitação autorizada com o profissional que vai atender. Quem agenda é a recepção da
+     * executante ({@code AGENDAMENTO.GERENCIAR} lá) ou a própria regulação.
+     */
+    @Transactional
+    public SolicitacaoRegulacaoResponseDto agendar(UUID uuid, AgendamentoRegulacaoRequestDto dto) {
+        SolicitacaoRegulacao solicitacao = travar(uuid);
+        try {
+            controleDeAcesso.exigir("AGENDAMENTO.GERENCIAR", solicitacao.getUnidadeExecutante());
+        } catch (ResourceForbiddenException semAgenda) {
+            controleDeAcesso.exigir(REGULAR, solicitacao.getUnidadeSolicitante());
+        }
+        exigirStatus(solicitacao, "agendar", StatusSolicitacaoRegulacao.AUTORIZADA);
+        Profissional quem = buscarProfissional(dto.getProfissionalMatricula());
+        Profissional executante = buscarProfissional(dto.getProfissionalExecutanteMatricula());
+        LocalDateTime quando = dto.getDataHora() != null ? dto.getDataHora() : solicitacao.getDataHoraPrevista();
+        if (quando.isBefore(LocalDateTime.now().withSecond(0).withNano(0))) {
+            throw new ResourceUnprocessableEntityException("A data e a hora do agendamento não podem estar no passado.");
+        }
+        agendarNaExecutante(solicitacao, executante, quando, quem);
+        return detalhe(solicitacao);
+    }
+
+    /** Atendido na executante: a contrarreferência volta para quem solicitou. Só quem registra o atendimento clínico. */
+    @Transactional
+    public SolicitacaoRegulacaoResponseDto registrarRealizacao(UUID uuid, RealizacaoRegulacaoRequestDto dto) {
+        SolicitacaoRegulacao solicitacao = travar(uuid);
+        try {
+            controleDeAcesso.exigir("CONSULTA.REGISTRAR", solicitacao.getUnidadeExecutante());
+        } catch (ResourceForbiddenException semConsulta) {
+            controleDeAcesso.exigir("PROCEDIMENTO.REGISTRAR", solicitacao.getUnidadeExecutante());
+        }
+        exigirStatus(solicitacao, "registrar a realização de", StatusSolicitacaoRegulacao.AGENDADA);
+        Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
+        String contrarreferencia = dto.getContrarreferencia().trim();
+        fecharAgendamento(solicitacao.getAgendamento(), StatusAgendamento.REALIZADO, null);
+        solicitacao.setContrarreferencia(contrarreferencia);
+        solicitacao.setConcluidoEm(Instant.now());
+        solicitacao.setStatus(StatusSolicitacaoRegulacao.REALIZADA);
+        // O texto clínico fica na solicitação (leitura auditada); o evento diz só que houve retorno.
+        registrar(solicitacao, TipoEventoRegulacao.REALIZACAO, "Contrarreferência registrada para " + solicitacao.getUnidadeSolicitante().getNome(), profissional);
+        return detalhe(solicitacao);
+    }
+
+    /** O paciente não compareceu ao agendamento na executante. */
+    @Transactional
+    public SolicitacaoRegulacaoResponseDto registrarFalta(UUID uuid, MotivoRegulacaoRequestDto dto) {
+        SolicitacaoRegulacao solicitacao = travar(uuid);
+        try {
+            controleDeAcesso.exigir("AGENDAMENTO.GERENCIAR", solicitacao.getUnidadeExecutante());
+        } catch (ResourceForbiddenException semAgenda) {
+            controleDeAcesso.exigir("ATENDIMENTO.GERENCIAR", solicitacao.getUnidadeExecutante());
+        }
+        exigirStatus(solicitacao, "registrar a falta em", StatusSolicitacaoRegulacao.AGENDADA);
+        Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
+        fecharAgendamento(solicitacao.getAgendamento(), StatusAgendamento.CANCELADO, "Paciente faltou: " + dto.getMotivo().trim());
+        solicitacao.setConcluidoEm(Instant.now());
+        solicitacao.setStatus(StatusSolicitacaoRegulacao.FALTOU);
+        registrar(solicitacao, TipoEventoRegulacao.FALTA, dto.getMotivo().trim(), profissional);
+        return detalhe(solicitacao);
+    }
+
+    private void agendarNaExecutante(SolicitacaoRegulacao solicitacao, Profissional executante, LocalDateTime quando,
+                                     Profissional quemRegistra) {
+        TipoAgendamento tipo = solicitacao.getProcedimento().getTipo() == TipoProcedimentoRegulado.CONSULTA_ESPECIALIZADA
+                ? TipoAgendamento.CONSULTA : TipoAgendamento.PROCEDIMENTO;
+        Agendamento agendamento = agendamentoRepository.save(new Agendamento(solicitacao.getPaciente(), executante, quando,
+                StatusAgendamento.AGENDADO, tipo, limitarObservacao("Regulação: " + solicitacao.getProcedimento().getNome()
+                + " (solicitação " + solicitacao.getUuid() + ")")));
+        solicitacao.setAgendamento(agendamento);
+        solicitacao.setDataHoraPrevista(quando);
+        solicitacao.setStatus(StatusSolicitacaoRegulacao.AGENDADA);
+        registrar(solicitacao, TipoEventoRegulacao.AGENDAMENTO,
+                "Com " + executante.getNome() + " em " + DATA_HORA.format(quando), quemRegistra);
+    }
+
+    /** A observação do agendamento é uma coluna de 255 caracteres. */
+    private static String limitarObservacao(String texto) {
+        return texto.length() > 255 ? texto.substring(0, 255) : texto;
+    }
+
+    private void fecharAgendamento(Agendamento agendamento, StatusAgendamento status, String observacao) {
+        agendamento.setStatus(status);
+        if (observacao != null) {
+            String atual = agendamento.getObservacao();
+            String texto = atual == null || atual.isBlank() ? observacao : atual + " | " + observacao;
+            agendamento.setObservacao(limitarObservacao(texto));
+        }
+        agendamentoRepository.save(agendamento);
     }
 
     // ── Leitura ────────────────────────────────────────────────────────────────────────────────────

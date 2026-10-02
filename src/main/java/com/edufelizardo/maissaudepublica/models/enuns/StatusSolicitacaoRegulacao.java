@@ -3,8 +3,8 @@ package com.edufelizardo.maissaudepublica.models.enuns;
 import java.util.Set;
 
 /**
- * Ciclo da solicitação de regulação (ADR-0087). AGENDADA, REALIZADA e FALTOU são do fechamento do
- * ciclo, com o agendamento na unidade executante e a contrarreferência (ADR-0089).
+ * Ciclo da solicitação de regulação (ADR-0087). AGENDADA, REALIZADA e FALTOU fecham o ciclo: o
+ * agendamento na unidade executante e o desfecho, com a contrarreferência (ADR-0089).
  */
 public enum StatusSolicitacaoRegulacao {
     /** Na fila, aguardando o regulador. */
@@ -22,5 +22,5 @@ public enum StatusSolicitacaoRegulacao {
     public static final Set<StatusSolicitacaoRegulacao> EM_ABERTO = Set.of(SOLICITADA, DEVOLVIDA, AUTORIZADA, AGENDADA);
 
     /** O que ainda pode ser cancelado. */
-    public static final Set<StatusSolicitacaoRegulacao> CANCELAVEIS = Set.of(SOLICITADA, DEVOLVIDA, AUTORIZADA);
+    public static final Set<StatusSolicitacaoRegulacao> CANCELAVEIS = Set.of(SOLICITADA, DEVOLVIDA, AUTORIZADA, AGENDADA);
 }
