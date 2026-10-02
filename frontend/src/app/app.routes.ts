@@ -106,6 +106,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/assistencia/regulacao/regulacao').then((m) => m.Regulacao),
         data: { breadcrumb: 'Regulação', area: 'Assistência' },
       },
+      // Laboratório assistencial (ADR-0094), carregado sob demanda.
+      {
+        path: 'assistencia/laboratorio',
+        loadComponent: () => import('./features/assistencia/laboratorio/laboratorio').then((m) => m.Laboratorio),
+        data: { breadcrumb: 'Laboratório', area: 'Assistência' },
+      },
       {
         path: 'administracao/usuarios',
         // Sob demanda: tela de administração, fora do bundle inicial (orçamento de 1 MB).
