@@ -59,3 +59,5 @@ Resource    ../../schema/acesso/acesso_schema.resource
 Resource    ../../schema/auditoria/auditoria_schema.resource
 # REGULACAO
 Resource    ../../schema/regulacao/regulacao_schema.resource
+# AGENDA (ADR-0091)
+Resource    ../../schema/agenda/agenda_schema.resource

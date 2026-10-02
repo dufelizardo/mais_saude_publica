@@ -108,7 +108,7 @@ real":
   - #11 Regulação (também completa o vínculo do prontuário);
   - #12 Leitos e internação;
   - #16 Transporte sanitário;
-  - agenda do profissional (`Horario`);
+  - ~~agenda do profissional~~ — backend pela ADR-0091; a tela vem a seguir;
   - na Enfermagem, `Cuidado`, `Escala` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
   - #13 Estoque;

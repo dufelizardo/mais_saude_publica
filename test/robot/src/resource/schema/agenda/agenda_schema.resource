@@ -1,0 +1,7 @@
+*** Comments ***
+    Mais Saúde Pública API - Agenda do profissional (ADR-0091): bloco recorrente, bloqueio, item da agenda e a agenda
+    do período com o resumo.
+*** Variables ***
+${BLOCO_AGENDA_SCHEMA}    ${{{'required': ['uuid', 'profissionalMatricula', 'unidadeId', 'diaSemana', 'horaInicio', 'horaFim', 'duracaoMinutos', 'tipo', 'vigenteDesde', 'vagasPorDia'], 'types': {'uuid': str, 'profissionalMatricula': str, 'profissionalNome': str, 'unidadeId': str, 'unidadeNome': str, 'diaSemana': str, 'horaInicio': str, 'horaFim': str, 'duracaoMinutos': int, 'tipo': str, 'vigenteDesde': str, 'vigenteAte': str, 'vagasPorDia': int}, 'enums': {'diaSemana': ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'], 'tipo': ['CONSULTA', 'PROCEDIMENTO', 'RETORNO']}}}}
+${ITEM_AGENDA_SCHEMA}    ${{{'required': ['tipo', 'inicio', 'fim'], 'types': {'tipo': str, 'inicio': str, 'fim': str, 'tipoAtendimento': str, 'agendamentoId': str, 'pacienteId': str, 'pacienteNome': str, 'status': str, 'descricao': str}, 'enums': {'tipo': ['VAGA', 'MARCACAO', 'ENCAIXE', 'BLOQUEIO', 'AFASTAMENTO']}}}}
+${AGENDA_SCHEMA}    ${{{'required': ['profissionalMatricula', 'unidadeId', 'de', 'ate', 'vagasOfertadas', 'vagasOcupadas', 'ocupacaoPercentual', 'marcacoes', 'encaixes', 'faltas', 'dias'], 'types': {'profissionalMatricula': str, 'profissionalNome': str, 'unidadeId': str, 'unidadeNome': str, 'de': str, 'ate': str, 'vagasOfertadas': int, 'vagasOcupadas': int, 'ocupacaoPercentual': int, 'marcacoes': int, 'encaixes': int, 'faltas': int, 'dias': list}}}}

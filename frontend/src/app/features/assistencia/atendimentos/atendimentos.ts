@@ -82,6 +82,7 @@ const AG_STATUS: Record<StatusAgendamento, { classe: string; rotulo: string }> =
   CONFIRMADO: { classe: 'ok', rotulo: 'Confirmado' },
   REALIZADO: { classe: 'muted', rotulo: 'Realizado' },
   CANCELADO: { classe: 'alert', rotulo: 'Cancelado' },
+  FALTOU: { classe: 'warn', rotulo: 'Faltou' },
 };
 
 const PROC_STATUS: Record<StatusProcedimento, { classe: string; rotulo: string }> = {

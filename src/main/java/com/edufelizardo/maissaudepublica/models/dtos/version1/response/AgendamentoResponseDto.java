@@ -29,6 +29,9 @@ public class AgendamentoResponseDto implements Serializable {
     private StatusAgendamento status;
     private TipoAgendamento tipo;
     private String observacao;
+    private UUID unidadeUuid;
+    private String unidadeNome;
+    private boolean encaixe;
 
     public static AgendamentoResponseDto fromAgendamento(Agendamento agendamento) {
         return new AgendamentoResponseDto(
@@ -40,7 +43,10 @@ public class AgendamentoResponseDto implements Serializable {
                 agendamento.getDataHora(),
                 agendamento.getStatus(),
                 agendamento.getTipo(),
-                agendamento.getObservacao()
+                agendamento.getObservacao(),
+                agendamento.getUnidade() != null ? agendamento.getUnidade().getUuid() : null,
+                agendamento.getUnidade() != null ? agendamento.getUnidade().getNome() : null,
+                agendamento.isEncaixe()
         );
     }
 }

@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -36,10 +38,15 @@ class MigracoesDoEsquemaTest {
     private JdbcTemplate jdbcTemplate;
 
     @Test
-    void asMigracoesForamAplicadasAteAUltimaVersao() {
-        List<String> versoes = jdbcTemplate.queryForList(
-                "select version from flyway_schema_history where success order by installed_rank", String.class);
-        assertThat(versoes).contains("1", "2");
+    void asMigracoesForamAplicadasAteAUltimaVersao() throws Exception {
+        int ultimaNoCodigo = 0;
+        for (Resource r : new PathMatchingResourcePatternResolver().getResources("classpath:db/migration/V*__*.sql")) {
+            String nome = r.getFilename();
+            ultimaNoCodigo = Math.max(ultimaNoCodigo, Integer.parseInt(nome.substring(1, nome.indexOf("__"))));
+        }
+        Integer ultimaNoBanco = jdbcTemplate.queryForObject(
+                "select max(cast(version as integer)) from flyway_schema_history where success", Integer.class);
+        assertThat(ultimaNoBanco).isEqualTo(ultimaNoCodigo);
     }
 
     @Test
@@ -73,6 +80,8 @@ class MigracoesDoEsquemaTest {
         ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AssignableTypeFilter(Enum.class));
         List<Set<String>> enums = new ArrayList<>();
+        // Enums do JDK gravados como texto nas entidades (o dia da semana da agenda, ADR-0091).
+        enums.add(Arrays.stream(java.time.DayOfWeek.values()).map(Enum::name).collect(Collectors.toCollection(LinkedHashSet::new)));
         for (var definicao : scanner.findCandidateComponents("com.edufelizardo.maissaudepublica")) {
             try {
                 Class<?> classe = Class.forName(definicao.getBeanClassName());
