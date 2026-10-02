@@ -61,3 +61,5 @@ Resource    ../../schema/auditoria/auditoria_schema.resource
 Resource    ../../schema/regulacao/regulacao_schema.resource
 # AGENDA (ADR-0091)
 Resource    ../../schema/agenda/agenda_schema.resource
+# LABORATORIO (ADR-0093)
+Resource    ../../schema/laboratorio/laboratorio_schema.resource
