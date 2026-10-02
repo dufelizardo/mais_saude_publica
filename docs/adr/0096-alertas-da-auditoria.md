@@ -2,7 +2,7 @@
 
 ## Status
 
-Aceita e implementada (parte 1 de 2). A tela vem na ADR-0097. Resolve a pendência de alertas das ADRs 0071,
+Aceita e implementada (parte 1 de 2). A tela está na [ADR-0097](./0097-alertas-da-auditoria-tela.md). Resolve a pendência de alertas das ADRs 0071,
 0076 e 0082.
 
 ## Contexto

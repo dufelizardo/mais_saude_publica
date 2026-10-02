@@ -96,6 +96,7 @@ const RECURSOS: Record<string, string> = {
   PAPEL: 'Perfil',
   ATRIBUICAO_ACESSO: 'Acesso concedido',
   AUDITORIA: 'Auditoria',
+  ALERTA_AUDITORIA: 'Alerta da auditoria',
 };
 
 /** TRANSFERENCIA_FARMACIA → "Transferência"; recurso sem rótulo → "Cargo salarial" a partir do código. */

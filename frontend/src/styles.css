@@ -641,6 +641,9 @@ footer a:hover { color: #fff; text-decoration: underline; }
 .nav-item[aria-current="page"] { background: var(--blue-700); color: #fff; box-shadow: var(--shadow-sm); }
 .nav-item__icon { width: 18px; height: 18px; color: currentColor; flex-shrink: 0; }
 .nav-item__label { flex: 1; }
+/* Contador do menu (ADR-0097): alertas da auditoria abertos. */
+.nav-item__badge { min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--alert); color: #fff; font-size: 0.7rem; font-weight: 600; text-align: center; line-height: 1.5; }
+.nav-item[aria-current="page"] .nav-item__badge { background: #fff; color: var(--blue-700); }
 
 .topbar { grid-area: topbar; background: var(--white); border-bottom: 1px solid var(--ink-200); height: var(--top-h); display: flex; align-items: center; padding: 0 var(--s-6); gap: var(--s-4); position: sticky; top: 0; z-index: 80; }
 @media (max-width: 600px) { .topbar { padding: 0 var(--s-4); } }
