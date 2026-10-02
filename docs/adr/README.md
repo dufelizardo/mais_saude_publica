@@ -95,7 +95,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0077](./0077-testes-de-frontend-com-robot-framework.md) | Testes de frontend com Robot Framework | Aceita e implementada (base e primeiras telas) |
 | [0078](./0078-sessoes-encerradas-na-hora.md) | Sessões encerradas na hora: versão de sessão no token | Aceita e implementada |
 | [0079](./0079-acoes-escondidas-sem-permissao.md) | Telas só oferecem as ações que o perfil permite | Aceita e implementada |
-| [0080](./0080-restricoes-de-enum-atualizadas-na-subida.md) | Restrições de enum atualizadas na subida | Aceita e implementada |
+| [0080](./0080-restricoes-de-enum-atualizadas-na-subida.md) | Restrições de enum atualizadas na subida | Substituída pela ADR-0090 |
 | [0081](./0081-recuperacao-de-senha-por-email.md) | Recuperação de senha por e-mail | Aceita e implementada (desligada até haver SMTP) |
 | [0082](./0082-exportacao-e-retencao-da-auditoria.md) | Exportação e retenção da trilha de auditoria | Aceita e implementada |
 | [0083](./0083-edicao-de-catalogos-de-rh-e-responsaveis-por-setor.md) | Edição de catálogos de RH e responsáveis por setor | Aceita e implementada |
@@ -105,6 +105,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0087](./0087-regulacao-do-acesso-backend.md) | Regulação do acesso: backend | Aceita e implementada |
 | [0088](./0088-regulacao-do-acesso-tela.md) | Regulação do acesso: tela | Aceita e implementada |
 | [0089](./0089-regulacao-agendamento-desfecho-e-vinculo.md) | Regulação do acesso: agendamento, desfecho e vínculo | Aceita e implementada |
+| [0090](./0090-migracoes-versionadas-com-flyway.md) | Migrações versionadas com Flyway | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

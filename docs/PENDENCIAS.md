@@ -59,8 +59,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   da ADR-0012.
 - **Disco mecânico de 5400 RPM:** depois do reinício de 2026-10-01, as APIs levaram até 13 tentativas
   para subir. O `startupProbe` passou a 10 minutos. A troca por SSD continua recomendada.
-- **Migrações versionadas (Flyway)** no lugar do `ddl-auto=update`: previstas (ADRs 0007 e 0060). A
-  rotina de restrições de enum (ADR-0080) é provisória até lá.
+- ~~**Migrações versionadas (Flyway)**~~ — feitas pela ADR-0090. Na próxima subida de cada ambiente, o
+  Flyway marca o banco na V1 (esquema da v1.4.0) e aplica a V2. Mudança de esquema agora é migração.
 
 ## 5. Pendências por frente
 
