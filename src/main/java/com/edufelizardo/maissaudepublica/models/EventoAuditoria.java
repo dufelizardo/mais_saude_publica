@@ -21,7 +21,9 @@ import java.util.UUID;
 @Table(name = "TB_EVENTO_AUDITORIA", indexes = {
         @Index(name = "ix_auditoria_paciente", columnList = "pacienteId, ocorridoEm"),
         @Index(name = "ix_auditoria_usuario", columnList = "usuarioCpf, ocorridoEm"),
-        @Index(name = "ix_auditoria_registro", columnList = "registroId")
+        @Index(name = "ix_auditoria_registro", columnList = "registroId"),
+        // Detecção de alertas (ADR-0096): agrega por ação e período.
+        @Index(name = "ix_auditoria_acao_data", columnList = "acao, ocorridoEm")
 })
 @Getter
 @Setter
