@@ -77,6 +77,7 @@ Perfis que já vêm prontos:
 | Coordenador de enfermagem | tudo do enfermeiro + retificar registro de outro profissional | |
 | Técnico de enfermagem | procedimento e medicação | sem classificação de risco nem evolução (COFEN 661/2021) |
 | Farmacêutico | estoque, dispensação, transferências | |
+| Gestor de leitos (NIR) | mapa de leitos, internação, troca de leito, bloqueio e liberação | não dá alta (ADR-0098) |
 | Técnico de laboratório | coleta e análise de amostras, registro de resultados | não libera (ADR-0093) |
 | Responsável técnico do laboratório | análise, liberação e retificação de resultados, catálogo de exames | no escopo do laboratório |
 

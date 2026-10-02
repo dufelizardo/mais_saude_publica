@@ -63,3 +63,4 @@ Resource    ../../schema/regulacao/regulacao_schema.resource
 Resource    ../../schema/agenda/agenda_schema.resource
 # LABORATORIO (ADR-0093)
 Resource    ../../schema/laboratorio/laboratorio_schema.resource
+Resource    ../../schema/internacao/internacao_schema.resource
