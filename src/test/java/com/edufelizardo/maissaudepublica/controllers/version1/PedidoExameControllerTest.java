@@ -328,6 +328,9 @@ class PedidoExameControllerTest {
                 .andExpect(jsonPath("$.itens[?(@.uuid == '%s')].amostraCodigo".formatted(itemGlicemia)).value(org.hamcrest.Matchers.contains(org.hamcrest.Matchers.nullValue())))
                 .andExpect(jsonPath("$.amostras[?(@.uuid == '%s')].rejeitada".formatted(amostra)).value(true))
                 .andExpect(jsonPath("$.eventos[-1].tipo").value("REJEICAO_AMOSTRA"));
+        // Na lista de coleta, o exame que voltou aparece como recoleta, com o motivo (ADR-0095).
+        mockMvc.perform(get(PEDIDO + "trabalho?etapa=PARA_COLETAR"))
+                .andExpect(jsonPath("$[?(@.itemId == '%s')].motivoRecoleta".formatted(itemGlicemia)).value("HEMOLISADA"));
         // A recoleta gera amostra nova só para o que voltou.
         coletar(pedido).andExpect(status().isOk());
         assertThat(amostraRepository.findByPedido_UuidOrderByColetadaEmAsc(pedido)).hasSize(3);
@@ -339,6 +342,32 @@ class PedidoExameControllerTest {
         pedir("URGENTE", urina.getUuid()).andExpect(status().isCreated());
         mockMvc.perform(get(PEDIDO + "trabalho?etapa=PARA_COLETAR"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].prioridade").value("URGENTE"));
+                .andExpect(jsonPath("$[0].prioridade").value("URGENTE"))
+                .andExpect(jsonPath("$[?(@.pacienteId == '%s')].motivoRecoleta".formatted(paciente.getUuid()))
+                        .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.nullValue())));
+    }
+
+    // ── Prontuário (ADR-0095) ──────────────────────────────────────────────────────────────────
+
+    @Test
+    void prontuarioMostraOsExamesEOResultadoSoDepoisDeLiberado() throws Exception {
+        UUID pedido = pedido();
+        coletar(pedido).andExpect(status().isOk());
+        UUID itemGlicemia = item(pedido, glicemia);
+        acao(itemGlicemia, "resultado", "{\"profissionalMatricula\": \"LAB-TEC\", \"valorNumerico\": 130}").andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/prontuario/" + paciente.getUuid()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exames.length()").value(2))
+                .andExpect(jsonPath("$.exames[?(@.itemId == '%s')].status".formatted(itemGlicemia)).value("RESULTADO_REGISTRADO"))
+                .andExpect(jsonPath("$.exames[?(@.itemId == '%s')].resultado".formatted(itemGlicemia))
+                        .value(org.hamcrest.Matchers.contains(org.hamcrest.Matchers.nullValue())));
+
+        acao(itemGlicemia, "liberacao", "{\"profissionalMatricula\": \"LAB-RT\"}").andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/prontuario/" + paciente.getUuid()))
+                .andExpect(jsonPath("$.exames[?(@.itemId == '%s')].resultado.interpretacao".formatted(itemGlicemia)).value("ACIMA"))
+                .andExpect(jsonPath("$.exames[?(@.itemId == '%s')].resultado.liberadoPorMatricula".formatted(itemGlicemia)).value("LAB-RT"))
+                .andExpect(jsonPath("$.exames[?(@.itemId == '%s')].pedidoId".formatted(itemGlicemia)).value(pedido.toString()))
+                .andExpect(jsonPath("$.exames[?(@.itemId == '%s')].profissionalSolicitanteNome".formatted(itemGlicemia)).value(PREFIXO + "LAB-MED"));
     }
 }

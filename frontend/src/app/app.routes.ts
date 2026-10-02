@@ -19,6 +19,12 @@ export const routes: Routes = [
   // Recuperação de senha por e-mail (ADR-0081): públicas, fora do AppShell.
   { path: 'recuperar-senha', loadComponent: () => import('./features/auth/recuperar-senha/recuperar-senha').then((m) => m.RecuperarSenha) },
   { path: 'redefinir-senha', loadComponent: () => import('./features/auth/redefinir-senha/redefinir-senha').then((m) => m.RedefinirSenha) },
+  // Laudo de exames (ADR-0095): fora do AppShell, para imprimir limpo.
+  {
+    path: 'laudo/exame/:pedidoId',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/assistencia/laboratorio/laudo/laudo-exame').then((m) => m.LaudoExame),
+  },
   {
     path: '',
     component: AppShell,

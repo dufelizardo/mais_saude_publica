@@ -40,6 +40,8 @@ import { PacienteService } from '../../../core/services/paciente';
 import { ProcedimentoService } from '../../../core/services/procedimento';
 import { ProntuarioService, semVinculo } from '../../../core/services/prontuario';
 import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-prontuario';
+import { ExamesPaciente } from '../../../shared/exames-paciente/exames-paciente';
+import { ExameProntuarioDto } from '../../../core/models/laboratorio';
 import { SetorService } from '../../../core/services/setor';
 import { TriagemService } from '../../../core/services/triagem';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
@@ -118,7 +120,7 @@ const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
  */
 @Component({
   selector: 'app-atendimentos',
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario],
+  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente],
   templateUrl: './atendimentos.html',
   styleUrl: './atendimentos.css',
 })
@@ -210,6 +212,8 @@ export class Atendimentos {
   /** Recusas por falta de vínculo assistencial (ADR-0076): na aba Prontuário e na gaveta do atendimento. */
   protected readonly prontuarioBloqueio = signal<string | null>(null);
   protected readonly registrosBloqueio = signal<string | null>(null);
+  /** Exames pedidos no atendimento aberto, vindos do prontuário (ADR-0095). */
+  protected readonly examesDoAtendimento = signal<ExameProntuarioDto[]>([]);
   protected readonly buscaPor = signal<'cpf' | 'sus'>('cpf');
   protected readonly buscaDocumento = signal('');
   protected readonly buscaMensagem = signal<{ tipo: 'err' | 'warn'; texto: string } | null>(null);
@@ -761,10 +765,14 @@ export class Atendimentos {
     this.registros.set(null);
     this.registrosBloqueio.set(null);
     this.quemAcessou.set(null);
+    this.examesDoAtendimento.set([]);
     this.abrir({ tipo: 'at-view', atId });
     if (!at) return;
     this.prontuarioService.buscarPorPacienteId(at.pacienteUuid).subscribe({
-      next: (p) => this.registros.set(p.atendimentos.find((a) => a.atendimento.uuid === atId) ?? null),
+      next: (p) => {
+        this.registros.set(p.atendimentos.find((a) => a.atendimento.uuid === atId) ?? null);
+        this.examesDoAtendimento.set((p.exames ?? []).filter((e) => e.atendimentoId === atId));
+      },
       error: (e) => this.registrosBloqueio.set(semVinculo(e)),
     });
   }

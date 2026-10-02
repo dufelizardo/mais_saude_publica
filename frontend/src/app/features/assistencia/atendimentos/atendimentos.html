@@ -361,6 +361,12 @@
       @if (prontuario()?.acesso?.base === 'JUSTIFICADO') {
         <app-acesso-prontuario [pacienteId]="p.uuid" [acesso]="prontuario()?.acesso" />
       }
+      @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.exames?.length) {
+        <section class="pront-exames" aria-labelledby="pront-exames-h">
+          <h4 id="pront-exames-h">Exames laboratoriais</h4>
+          <app-exames-paciente [exames]="prontuario()?.exames ?? []" />
+        </section>
+      }
       @if (prontuarioCarregando()) {
         <div class="empty"><strong>Carregando prontuário…</strong></div>
       } @else if (prontuarioBloqueio()) {
@@ -637,6 +643,15 @@
                   @for (e of evolucoesVigentes(registros()); track e.uuid) {
                     <ng-container *ngTemplateOutlet="recEvolucao; context: { $implicit: e, atId: a.uuid }"></ng-container>
                   } @empty { <p class="cell-sub">Nenhum registro.</p> }
+                </section>
+                <section class="dsec">
+                  <div class="dsec__h">
+                    <h3>Exames <span class="cnt">{{ examesDoAtendimento().length }}</span></h3>
+                    @if (pode('EXAME.SOLICITAR')) {
+                      <a class="btn btn--ghost btn--sm" routerLink="/assistencia/laboratorio" [queryParams]="{ acao: 'pedido', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid, atendimentoId: a.uuid }">+ Exames</a>
+                    }
+                  </div>
+                  <app-exames-paciente [exames]="examesDoAtendimento()" vazio="Nenhum exame pedido neste atendimento." />
                 </section>
               }
               @if (podeAuditar()) {

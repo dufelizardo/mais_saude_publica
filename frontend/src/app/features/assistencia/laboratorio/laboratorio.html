@@ -84,6 +84,9 @@
               <td class="cell-main">{{ g.pacienteNome }}<span class="cell-sub">{{ g.unidadeSolicitanteNome }}</span></td>
               <td>
                 @for (i of g.itens; track i.itemId) { <span class="lab-exame">{{ i.exameNome }} <span class="cell-sub" style="display: inline;">· {{ materiais[i.material] }}</span></span> }
+                @if (recoletas(g).length) {
+                  <span class="badge badge--warn lab-recoleta"><span class="dot" aria-hidden="true"></span> Recoleta · {{ motivosRejeicao[recoletas(g)[0].motivoRecoleta!] }}</span>
+                }
               </td>
               <td>@if (g.prioridade === 'URGENTE') { <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Urgente</span> } @else { <span class="badge badge--muted">Rotina</span> }</td>
               <td>@if (g.preparos.length) { <span class="cell-sub" style="display: inline;">{{ g.preparos.join(' · ') }}</span> } @else { — }</td>
@@ -367,6 +370,9 @@
               <div><dt>Paciente</dt><dd>{{ g.grupo.pacienteNome }}</dd></div>
               <div><dt>Pedido por</dt><dd>{{ g.grupo.unidadeSolicitanteNome }}</dd></div>
             </dl>
+            @if (recoletas(g.grupo).length) {
+              <div class="box box--warn"><div><strong>Recoleta:</strong> a amostra anterior foi rejeitada. Confira o motivo antes de coletar de novo.</div></div>
+            }
             @if (g.grupo.preparos.length) {
               <div class="box box--warn"><div><strong>Preparo:</strong> {{ g.grupo.preparos.join(' · ') }}</div></div>
             }
@@ -374,7 +380,8 @@
               <legend>O que foi coletado <span class="req" aria-hidden="true">*</span></legend>
               <div class="radios lab-checks" role="group" aria-label="Exames coletados" aria-describedby="e-itens">
                 @for (i of g.grupo.itens; track i.itemId) {
-                  <label><input type="checkbox" [id]="$first ? 'f-itens' : null" [checked]="itensMarcados().has(i.itemId)" (change)="alternarItem(i.itemId)" />{{ i.exameNome }} <span class="cell-sub" style="display: inline;">· {{ materiais[i.material] }}</span></label>
+                  <label><input type="checkbox" [id]="$first ? 'f-itens' : null" [checked]="itensMarcados().has(i.itemId)" (change)="alternarItem(i.itemId)" />{{ i.exameNome }} <span class="cell-sub" style="display: inline;">· {{ materiais[i.material] }}</span>
+                    @if (i.motivoRecoleta) { <span class="badge badge--warn">Recoleta · {{ motivosRejeicao[i.motivoRecoleta] }}</span> }</label>
                 }
               </div>
               <p class="dw-hint">O que ficar desmarcado continua aguardando coleta.</p>
@@ -636,6 +643,9 @@
             </div>
             <footer class="dw-foot">
               <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button>
+              @if (d.liberados > 0) {
+                <a class="btn" [href]="'/laudo/exame/' + d.uuid" target="_blank" rel="noopener">Imprimir laudo</a>
+              }
             </footer>
           </div>
         } @else {

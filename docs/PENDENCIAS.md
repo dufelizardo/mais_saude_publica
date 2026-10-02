@@ -89,7 +89,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   autorização for ligada.
 
 ### Laboratório
-- Resultados no prontuário e no atendimento, laudo imprimível e recoleta indicada na tela (ADR-0095).
+- Depois da ADR-0095: laudo PDF assinado digitalmente (ICP-Brasil), envio do resultado ao paciente, gráfico
+  da evolução de um exame no tempo e aviso ao solicitante quando o resultado é liberado.
 - A tela (ADR-0094) não tem protótipo próprio: segue o padrão de Farmácia e Regulação.
 - Fora do escopo da ADR-0093: LACEN e vigilância, integração com equipamentos (LIS, HL7, ASTM), controle
   de qualidade, insumos de coleta (Estoque, #13), exames de imagem, laudo PDF assinado, SIGTAP e BPA,

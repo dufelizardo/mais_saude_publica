@@ -28,6 +28,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PedidoExa
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PedidoExameResumoDto;
 import com.edufelizardo.maissaudepublica.models.enuns.InterpretacaoResultado;
 import com.edufelizardo.maissaudepublica.models.enuns.MaterialExame;
+import com.edufelizardo.maissaudepublica.models.enuns.MotivoRejeicaoAmostra;
 import com.edufelizardo.maissaudepublica.models.enuns.PrioridadeExame;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusItemExame;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoEventoExame;
@@ -342,11 +343,35 @@ public class PedidoExameService {
             default -> throw new ResourceBadRequestException("Etapa inválida: use PARA_COLETAR, EM_ANALISE ou PARA_LIBERAR.");
         }
         List<ItemPedidoExame> itens = itemRepository.findByStatus(status);
+        Map<String, MotivoRejeicaoAmostra> recoleta = status == StatusItemExame.SOLICITADO ? recoletas(itens) : Map.of();
         return controleDeAcesso.filtrar(itens.stream(), i -> Stream.of(status == StatusItemExame.SOLICITADO
                         ? i.getPedido().getUnidadeSolicitante() : i.getAmostra().getLaboratorio()), permissao)
                 .sorted(ORDEM_DE_TRABALHO)
-                .map(ItemTrabalhoExameDto::fromItem)
+                .map(i -> ItemTrabalhoExameDto.fromItem(i, recoleta.get(chaveRecoleta(i.getPedido().getUuid(), i.getExame().getMaterial()))))
                 .toList();
+    }
+
+    /**
+     * Pedido e material → motivo da rejeição mais recente. A amostra é uma por material e a rejeição solta os exames dela,
+     * então o exame aguardando coleta com amostra rejeitada do mesmo material no pedido é recoleta (ADR-0095).
+     */
+    private Map<String, MotivoRejeicaoAmostra> recoletas(List<ItemPedidoExame> aguardando) {
+        if (aguardando.isEmpty()) {
+            return Map.of();
+        }
+        Map<String, AmostraExame> maisRecente = new java.util.HashMap<>();
+        for (AmostraExame a : amostraRepository.findByPedido_UuidInAndRejeitadaEmIsNotNull(
+                aguardando.stream().map(i -> i.getPedido().getUuid()).distinct().toList())) {
+            maisRecente.merge(chaveRecoleta(a.getPedido().getUuid(), a.getMaterial()), a,
+                    (x, y) -> x.getRejeitadaEm().isAfter(y.getRejeitadaEm()) ? x : y);
+        }
+        Map<String, MotivoRejeicaoAmostra> motivos = new java.util.HashMap<>();
+        maisRecente.forEach((k, a) -> motivos.put(k, a.getMotivoRejeicao()));
+        return motivos;
+    }
+
+    private static String chaveRecoleta(UUID pedidoId, MaterialExame material) {
+        return pedidoId + ":" + material;
     }
 
     /** O detalhe com indicação clínica, resultados, amostras e eventos: só no escopo de uma das unidades do pedido. */
