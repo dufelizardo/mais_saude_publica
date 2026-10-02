@@ -1387,6 +1387,22 @@ tfoot .linha-total th { text-align: left; }
 .lab-exame { display: inline-block; margin: 0 6px 2px 0; padding: 1px 8px; border-radius: 999px; background: var(--ink-100); font-size: 0.75rem; }
 .radios.lab-checks { grid-template-columns: 1fr; max-height: 260px; overflow-y: auto; margin-top: 6px; }
 .lab-valor { font-weight: 600; color: var(--ink-900); margin-right: 6px; }
+/* Mapa de leitos (ADR-0099): um cartão por leito, com a cor da situação na borda. */
+.leito-setor { margin-bottom: var(--s-4); }
+.leito-grid { list-style: none; margin: 0; padding: var(--s-4); display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.leito { border: 1px solid var(--ink-200); border-left: 4px solid var(--ink-300); border-radius: 10px; padding: 10px 12px; display: grid; gap: 4px; align-content: start; background: var(--white); }
+.leito--LIVRE { border-left-color: var(--ok); }
+.leito--OCUPADO { border-left-color: var(--blue-700); }
+.leito--HIGIENIZACAO { border-left-color: var(--warn); }
+.leito--BLOQUEADO { border-left-color: var(--ink-400); background: var(--ink-50); }
+.leito__head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.leito__pac { font-weight: 600; color: var(--ink-900); }
+.leito__acoes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.leito-leg { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-left: 6px; }
+.leito-leg--LIVRE { background: var(--ok); }
+.leito-leg--OCUPADO { background: var(--blue-700); }
+.leito-leg--HIGIENIZACAO { background: var(--warn); }
+.leito-leg--BLOQUEADO { background: var(--ink-400); }
 /* Recoleta na coleta e exames do paciente no prontuário (ADR-0095). */
 .lab-recoleta { margin-top: 4px; }
 .pront-exames { display: grid; gap: 8px; margin: var(--s-4) 0; }
