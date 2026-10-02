@@ -88,6 +88,22 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
   autorização for ligada.
 
+### Laboratório
+- Tela (ADR-0094) e resultados no prontuário, com laudo imprimível e recoleta pela tela (ADR-0095).
+- Fora do escopo da ADR-0093: LACEN e vigilância, integração com equipamentos (LIS, HL7, ASTM), controle
+  de qualidade, insumos de coleta (Estoque, #13), exames de imagem, laudo PDF assinado, SIGTAP e BPA,
+  e valores de referência por sexo e idade.
+
+### Agenda (diferenças com o protótipo `Agenda.html`, ADR-0092)
+- Visão Mês, exportação e filtro de especialidade ("Em breve").
+- Atividades coletivas (grupo, vacinação aberta, coleta com N pacientes, reunião, capacitação, visita do
+  ACS), programas nas marcações (HiperDia, pré-natal) e sala: dependem de domínios que não existem.
+- Vaga liberada por falta oferecida à fila da Regulação ou a encaixe.
+- Horário de funcionamento da unidade fechando a agenda (hoje é preciso lançar bloqueio).
+- Meta de ocupação configurável por unidade (está fixa em 85%); indicadores de encaixe e falta "de hoje".
+- Mini-mês com marcações do mês inteiro; almoço desenhado como bloco; contador no menu; atualização ao
+  vivo.
+
 ### Telas
 - ~~**Perfil do profissional:** as 13 abas no padrão novo~~ — feito pelas ADRs 0084 a 0086.
 - ~~Responsáveis por setor~~ e ~~edição de treinamento, ciclo e tipo de benefício~~ — feitos pela ADR-0083.

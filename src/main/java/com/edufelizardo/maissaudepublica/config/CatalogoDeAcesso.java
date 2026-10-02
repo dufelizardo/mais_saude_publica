@@ -76,6 +76,12 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("REGULACAO.CONSULTAR", new Def("Acompanhar o andamento das solicitações de regulação", OPERACAO));
         PERMISSOES.put("REGULACAO.SOLICITAR", new Def("Solicitar regulação (encaminhar a especialidade, exame ou procedimento)", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("REGULACAO.REGULAR", new Def("Regular a fila: autorizar com vaga, devolver, negar e manter o catálogo", ACESSO_AO_DADO_DE_SAUDE));
+        // Laboratório assistencial (ADR-0093).
+        PERMISSOES.put("EXAME.SOLICITAR", new Def("Pedir exames laboratoriais", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("LABORATORIO.COLETAR", new Def("Registrar a coleta de amostras", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("LABORATORIO.ANALISAR", new Def("Registrar resultados e rejeitar amostras", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("LABORATORIO.LIBERAR", new Def("Liberar e retificar resultados (responsável técnico)", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("LABORATORIO.GERENCIAR", new Def("Manter o catálogo de exames", OPERACAO));
         // Fora de todos os papéis padrão (ADR-0071): quem administra o sistema não audita a si mesmo.
         PERMISSOES.put("AUDITORIA.CONSULTAR", new Def("Consultar a trilha de auditoria", ADMINISTRACAO_DO_SISTEMA));
     }
@@ -100,14 +106,17 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("MEDICO", new PapelPadrao("Médico",
                 "Consulta, prescrição e procedimentos.",
                 List.of("PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
-                        "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR")));
+                        "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
+                        "EXAME.SOLICITAR")));
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
                 "Regula a fila da Central de Regulação do Acesso no seu escopo (ADR-0087).",
                 List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR")));
         PAPEIS.put("ENFERMEIRO", new PapelPadrao("Enfermeiro",
                 "Classificação de risco, evolução, procedimentos e medicação.",
                 List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
-                        "EVOLUCAO.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR")));
+                        "EVOLUCAO.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
+                        // Pedido de exames em protocolos da atenção básica e do pré-natal (ADR-0093).
+                        "EXAME.SOLICITAR", "LABORATORIO.COLETAR")));
         PAPEIS.put("COORDENADOR_DE_ENFERMAGEM", new PapelPadrao("Coordenador de enfermagem",
                 "O que o enfermeiro faz, mais retificar registro clínico de outro profissional.",
                 List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
@@ -115,7 +124,15 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "REGISTRO_CLINICO.RETIFICAR_DE_OUTROS")));
         PAPEIS.put("TECNICO_DE_ENFERMAGEM", new PapelPadrao("Técnico de enfermagem",
                 "Procedimentos e medicação. Sem classificação de risco nem evolução (COFEN 661/2021).",
-                List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR")));
+                List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
+                        "LABORATORIO.COLETAR")));
+        PAPEIS.put("TECNICO_DE_LABORATORIO", new PapelPadrao("Técnico de laboratório",
+                "Coleta, recebe e analisa amostras; registra resultados (ADR-0093).",
+                List.of("PACIENTE.CONSULTAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR")));
+        PAPEIS.put("RESPONSAVEL_TECNICO_LABORATORIO", new PapelPadrao("Responsável técnico do laboratório",
+                "Analisa, libera e retifica resultados e mantém o catálogo de exames (ADR-0093).",
+                List.of("PACIENTE.CONSULTAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR",
+                        "LABORATORIO.GERENCIAR")));
         PAPEIS.put("FARMACEUTICO", new PapelPadrao("Farmacêutico",
                 "Estoque, dispensação e transferências; lê a prescrição.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "FARMACIA.CONSULTAR", "FARMACIA.GERENCIAR_ESTOQUE",
