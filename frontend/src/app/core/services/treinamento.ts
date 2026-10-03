@@ -21,6 +21,11 @@ export class TreinamentoService {
     return this.http.post<SuccessResponseDto>('/api/v1/treinamento/', dto);
   }
 
+  /** Edição do catálogo (ADR-0083). */
+  atualizar(uuid: string, dto: TreinamentoRequestDto): Observable<SuccessResponseDto> {
+    return this.http.patch<SuccessResponseDto>(`/api/v1/treinamento/${uuid}`, dto);
+  }
+
   listarParticipacoesPorProfissional(matricula: string): Observable<ParticipacaoTreinamentoResponseDto[]> {
     return this.http.get<ParticipacaoTreinamentoResponseDto[]>(`/api/v1/participacao-treinamento/profissional/${matricula}`);
   }

@@ -59,7 +59,7 @@ atendimento pode agora referenciar o agendamento que o originou, sem forçar ess
 
 **Negativas / pendências**: sem filas de espera ou verificação de conflito de horário
 (`profissional` com dois agendamentos sobrepostos) — YAGNI, nenhum requisito concreto pede isso
-ainda. `Prontuário` (última fatia desta onda) ainda não existe.
+ainda. ~~Conflito de horário~~: resolvido pela agenda da [ADR-0091](./0091-agenda-do-profissional.md) (vaga ou encaixe). `Prontuário` (última fatia desta onda) ainda não existe.
 
 ## Referências
 

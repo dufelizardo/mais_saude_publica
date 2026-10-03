@@ -2,7 +2,6 @@ import { inject } from '@angular/core';
 import { Routes, Params, Router } from '@angular/router';
 import { LandingPage } from './features/landing/landing-page';
 import { ProfissionaisLista } from './features/profissionais-lista/profissionais-lista';
-import { ProfissionalPerfil } from './features/profissional-perfil/profissional-perfil';
 import { FolhaPagamento } from './features/rh/folha-pagamento/folha-pagamento';
 import { Setores } from './features/administrativo/setores/setores';
 import { Pacientes } from './features/assistencia/pacientes/pacientes';
@@ -20,6 +19,12 @@ export const routes: Routes = [
   // Recuperação de senha por e-mail (ADR-0081): públicas, fora do AppShell.
   { path: 'recuperar-senha', loadComponent: () => import('./features/auth/recuperar-senha/recuperar-senha').then((m) => m.RecuperarSenha) },
   { path: 'redefinir-senha', loadComponent: () => import('./features/auth/redefinir-senha/redefinir-senha').then((m) => m.RedefinirSenha) },
+  // Laudo de exames (ADR-0095): fora do AppShell, para imprimir limpo.
+  {
+    path: 'laudo/exame/:pedidoId',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/assistencia/laboratorio/laudo/laudo-exame').then((m) => m.LaudoExame),
+  },
   {
     path: '',
     component: AppShell,
@@ -32,7 +37,11 @@ export const routes: Routes = [
         path: 'profissionais/desligar',
         redirectTo: ({ queryParams }) => inject(Router).createUrlTree(['/profissionais'], { queryParams: { acao: 'desligar', ...queryParams } }),
       },
-      { path: 'profissionais/perfil', component: ProfissionalPerfil, data: { breadcrumb: 'Perfil do profissional', area: 'Recursos Humanos' } },
+      {
+        path: 'profissionais/perfil',
+        loadComponent: () => import('./features/profissional-perfil/profissional-perfil').then((m) => m.ProfissionalPerfil),
+        data: { breadcrumb: 'Perfil do profissional', area: 'Recursos Humanos' },
+      },
       // Catálogos de RH agrupados em telas com abas (ADR-0073), carregadas sob demanda.
       {
         path: 'rh/cargos-e-salarios',
@@ -67,6 +76,12 @@ export const routes: Routes = [
       { path: 'rh/vagas', redirectTo: () => para('/rh/recrutamento', {}) },
       { path: 'rh/vagas/:vagaId/candidatos', redirectTo: ({ params }) => para('/rh/recrutamento', { vaga: params['vagaId'] }) },
       { path: 'administrativo/setores', component: Setores, data: { breadcrumb: 'Setores', area: 'Administrativo' } },
+      // Equipamentos de Saúde (ADR-0102), carregados sob demanda.
+      {
+        path: 'administrativo/equipamentos',
+        loadComponent: () => import('./features/administrativo/equipamentos/equipamentos').then((m) => m.Equipamentos),
+        data: { breadcrumb: 'Equipamentos de Saúde', area: 'Administrativo' },
+      },
       {
         path: 'administrativo/modelo',
         loadComponent: () => import('./features/administrativo/modelo-administrativo/modelo-administrativo').then((m) => m.ModeloAdministrativo),
@@ -91,6 +106,30 @@ export const routes: Routes = [
       { path: 'assistencia/procedimentos', redirectTo: ({ queryParams }) => paraAtendimentos('atend', queryParams) },
       { path: 'assistencia/prontuario', redirectTo: ({ queryParams }) => paraAtendimentos('pront', queryParams) },
       { path: 'assistencia/farmacia', component: Farmacia, data: { breadcrumb: 'Farmácia', area: 'Assistência' } },
+      // Agenda do profissional (ADR-0092), carregada sob demanda.
+      {
+        path: 'assistencia/agenda',
+        loadComponent: () => import('./features/assistencia/agenda/agenda').then((m) => m.Agenda),
+        data: { breadcrumb: 'Agenda', area: 'Assistência' },
+      },
+      // Regulação do acesso (ADR-0088), carregada sob demanda.
+      {
+        path: 'assistencia/regulacao',
+        loadComponent: () => import('./features/assistencia/regulacao/regulacao').then((m) => m.Regulacao),
+        data: { breadcrumb: 'Regulação', area: 'Assistência' },
+      },
+      // Laboratório assistencial (ADR-0094), carregado sob demanda.
+      {
+        path: 'assistencia/laboratorio',
+        loadComponent: () => import('./features/assistencia/laboratorio/laboratorio').then((m) => m.Laboratorio),
+        data: { breadcrumb: 'Laboratório', area: 'Assistência' },
+      },
+      // Leitos e internação (ADR-0099), carregados sob demanda.
+      {
+        path: 'assistencia/leitos',
+        loadComponent: () => import('./features/assistencia/leitos/leitos').then((m) => m.Leitos),
+        data: { breadcrumb: 'Leitos', area: 'Assistência' },
+      },
       {
         path: 'administracao/usuarios',
         // Sob demanda: tela de administração, fora do bundle inicial (orçamento de 1 MB).

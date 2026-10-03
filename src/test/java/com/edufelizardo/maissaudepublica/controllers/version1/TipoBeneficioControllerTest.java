@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -109,6 +110,30 @@ class TipoBeneficioControllerTest {
     @Test
     void deveRetornarNotFoundAoBuscarIdInexistente() throws Exception {
         mockMvc.perform(get(BASE_URL + UUID.randomUUID()))
+                .andExpect(status().isNotFound());
+    }
+
+    // ── Edição (ADR-0083) ──────────────────────────────────────────────────────────────────────
+
+    @Test
+    void deveAtualizarOTipoDeBeneficio() throws Exception {
+        UUID uuid = criarTipoBeneficio(PREFIXO_NOME_TESTE + "Vale-alimentação");
+        String nome = PREFIXO_NOME_TESTE + "Vale-refeição";
+        mockMvc.perform(patch(BASE_URL + uuid).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "%s", "custeio": "COMPARTILHADO"}
+                        """.formatted(nome)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Tipo de benefício atualizado com sucesso!"));
+        mockMvc.perform(get(BASE_URL + uuid))
+                .andExpect(jsonPath("$.nome").value(nome))
+                .andExpect(jsonPath("$.custeio").value("COMPARTILHADO"));
+    }
+
+    @Test
+    void atualizarTipoInexistenteDa404() throws Exception {
+        mockMvc.perform(patch(BASE_URL + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "%s", "custeio": "EMPRESA"}
+                        """.formatted(PREFIXO_NOME_TESTE + "Fantasma")))
                 .andExpect(status().isNotFound());
     }
 }

@@ -4,5 +4,7 @@ public enum StatusAgendamento {
     AGENDADO,
     CONFIRMADO,
     REALIZADO,
-    CANCELADO
+    CANCELADO,
+    /** O paciente não compareceu (ADR-0091). */
+    FALTOU
 }

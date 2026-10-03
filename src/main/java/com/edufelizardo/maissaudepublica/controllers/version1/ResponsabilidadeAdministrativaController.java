@@ -36,6 +36,16 @@ public class ResponsabilidadeAdministrativaController {
     private ResponsabilidadeAdministrativaService service;
 
     @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR"})
+    @GetMapping(value = "setor/{setorId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Lista os responsáveis de um setor",
+            description = "Vigentes primeiro, depois as encerradas (ADR-0083). Setor inexistente ou sem responsabilidade → 404.",
+            tags = "ResponsabilidadeAdministrativa")
+    @ApiErrorResponsesBusca
+    public ResponseEntity<List<ResponsabilidadeAdministrativaResponseDto>> listarPorSetor(@PathVariable java.util.UUID setorId) {
+        return ResponseEntity.ok(service.listarPorSetor(setorId));
+    }
+
+    @RequerPermissao({"ADMINISTRATIVO.CONSULTAR", "ADMINISTRATIVO.GERENCIAR"})
     @GetMapping(value = "profissional/{matricula}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista o histórico de responsabilidades administrativas de um profissional", tags = "ResponsabilidadeAdministrativa")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

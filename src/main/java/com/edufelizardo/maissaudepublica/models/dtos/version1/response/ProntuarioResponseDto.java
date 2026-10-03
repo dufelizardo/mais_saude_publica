@@ -27,4 +27,8 @@ public class ProntuarioResponseDto implements Serializable {
     private List<ProntuarioAtendimentoDto> atendimentos;
     /** Em que se baseou a abertura (ADR-0076): vínculo, acesso justificado, permissão ampla ou regra desligada. */
     private AcessoProntuarioDto acesso;
+    /** Exames laboratoriais do paciente, do pedido mais recente ao mais antigo; resultado só depois de liberado (ADR-0095). */
+    private List<ExameProntuarioDto> exames;
+    /** Internações do paciente, da mais recente à mais antiga, com motivo, sumário de alta e movimentos (ADR-0100). */
+    private List<InternacaoResponseDto> internacoes;
 }

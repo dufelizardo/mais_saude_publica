@@ -84,8 +84,8 @@ A prática dos prontuários eletrônicos é exigir um **vínculo de cuidado**. S
 - A pendência aberta desde a ADR-0054 fica resolvida.
 
 **Negativas / pendências:**
-- **Encaminhamento e regulação ainda não geram vínculo**, porque esses domínios não existem. Quando
-  existirem, entram como uma quarta condição.
+- ~~**Encaminhamento e regulação ainda não geram vínculo**~~: a regulação entrou como quarta condição pela
+  [ADR-0089](./0089-regulacao-agendamento-desfecho-e-vinculo.md).
 - Não há alerta ativo de acesso justificado para a supervisão. A revisão é pelo filtro da Auditoria.
 - Para ligar num ambiente, siga o [guia](../acesso/GUIA-LIGAR-AUTORIZACAO.md), seção do vínculo.
 - A tela não foi conferida visualmente no navegador por quem implementou.

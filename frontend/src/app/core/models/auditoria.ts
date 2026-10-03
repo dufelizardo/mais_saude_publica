@@ -10,6 +10,7 @@ export type AcaoAuditoria =
   | 'RETIFICACAO'
   | 'REVOGACAO'
   | 'ACESSO_JUSTIFICADO'
+  | 'EXPORTACAO'
   | 'EXCLUSAO';
 
 export type ResultadoAuditoria = 'PERMITIDO' | 'NEGADO';
@@ -66,6 +67,7 @@ export const ACOES_AUDITORIA: Record<AcaoAuditoria, { rotulo: string; classe: st
   RETIFICACAO: { rotulo: 'Retificação', classe: 'warn' },
   REVOGACAO: { rotulo: 'Revogação', classe: 'alert' },
   ACESSO_JUSTIFICADO: { rotulo: 'Acesso justificado', classe: 'warn' },
+  EXPORTACAO: { rotulo: 'Exportação', classe: 'purple' },
   EXCLUSAO: { rotulo: 'Exclusão', classe: 'alert' },
 };
 
@@ -84,11 +86,19 @@ const RECURSOS: Record<string, string> = {
   MEDICAMENTO: 'Medicamento',
   MOVIMENTACAO_FARMACIA: 'Livro de estoque',
   TRANSFERENCIA_FARMACIA: 'Transferência',
+  SOLICITACAO_REGULACAO: 'Regulação',
+  PROCEDIMENTO_REGULADO: 'Procedimento regulado',
+  PEDIDO_EXAME: 'Exames',
+  EXAME_LABORATORIAL: 'Exame do catálogo',
+  LEITO: 'Leito',
+  INTERNACAO: 'Internação',
+  AGENDA: 'Agenda',
   AUTH: 'Acesso ao sistema',
   USUARIO: 'Usuário',
   PAPEL: 'Perfil',
   ATRIBUICAO_ACESSO: 'Acesso concedido',
   AUDITORIA: 'Auditoria',
+  ALERTA_AUDITORIA: 'Alerta da auditoria',
 };
 
 /** TRANSFERENCIA_FARMACIA → "Transferência"; recurso sem rótulo → "Cargo salarial" a partir do código. */

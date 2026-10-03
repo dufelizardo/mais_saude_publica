@@ -34,10 +34,10 @@ SSH — ainda não implementada. Esta ADR-0012 não substitui a ADR-0007 por com
 parte de containerização (`Dockerfile`, build via `pipeline.yml`), mas troca o destino do deploy
 via SSH por um cluster K3s local para os ambientes não-produtivos.
 
-O deploy de produção via Render (`deploy-prod.yml`, ver ADR-0010) provavelmente não existe mais —
-era como o usuário publicava em 2024 e ele mesmo indicou que a conta/serviço deve ter expirado.
-Isso não é resolvido aqui: fica registrado como pendência em aberto se `main`/produção também
-migra para este home-lab ou se um novo destino de deploy em nuvem é escolhido depois.
+O deploy de produção via Render (`deploy-prod.yml`, ver ADR-0010) era como o usuário publicava em 2024.
+**Removido em 2026-10-01:** produção é o ambiente `prod` deste home-lab (`mais-saude.local`), atualizado
+pelo ArgoCD a partir da `main`, como os outros. O workflow foi desligado e apagado, e o secret
+`RENDER_DEPLOY_URL` deixou de ser usado.
 
 ## Decisão
 
@@ -264,6 +264,5 @@ Concluído em 2026-09-10:
   revisar para um DNS local (Pi-hole ou similar).
 - Publicar imagens em `ghcr.io` exige que o repositório continue público, ou configurar
   autenticação de pull no cluster se ele se tornar privado no futuro.
-- Destino de deploy de produção (`main`) fica em aberto — hoje o ambiente `prod` deste home-lab
-  está no ar (`mais-saude.local`), mas o Render antigo nunca foi formalmente desativado/substituído
-  como destino de produção "real" (fora da rede de casa); decidir isso separadamente.
+- ~~Destino de deploy de produção (`main`) em aberto~~ — decidido em 2026-10-01: produção é o `prod` deste
+  home-lab, e o deploy no Render (`deploy-prod.yml`) foi removido.
