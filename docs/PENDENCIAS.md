@@ -5,7 +5,7 @@ para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou ab
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.4.0). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.5.0, promovida em 2026-10-03). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -140,9 +140,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 Detalhe em [`MAPA-DE-DOMINIOS.md`](./MAPA-DE-DOMINIOS.md), seção 4. Todos "só quando houver requisito
 real":
 - **Operação Assistencial:**
-  - #10 Laboratório e diagnóstico;
-  - #11 Regulação (também completa o vínculo do prontuário);
-  - #12 Leitos e internação;
+  - ~~#10 Laboratório e diagnóstico~~ — ADRs 0093 a 0095;
+  - ~~#11 Regulação~~ — ADRs 0087 a 0089 (falta a regulação de urgência e de internação);
+  - ~~#12 Leitos e internação~~ — ADRs 0098 a 0100;
   - #16 Transporte sanitário;
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
     coletivas, programas, especialidade e equipe;
@@ -159,4 +159,5 @@ real":
 ## 7. Fluxo de promoção
 
 Mergear na `developer` é rotina. **Promover para `qaa`, `homologacao` e `main` só quando o usuário pedir**
-(ADR-0010). A próxima promoção leva a remoção do deploy do Render (#281), que já está na `developer`.
+(ADR-0010). A remoção do deploy do Render (#281) foi na release 1.5.0. Antes de promover uma release, incremente o
+`<version>` do `pom.xml` em `developer` (VERSIONING.md): sem isso, a tag e a release não são criadas.

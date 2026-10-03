@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>br.com.eduafelizardo</groupId>
 	<artifactId>mais_saude_publica</artifactId>
-	<version>1.4.0</version>
+	<version>1.5.0</version>
 	<name>mais_saude_publica</name>
 	<description>Sistema exemplo de um sistema de saúde</description>
 	<url/>
