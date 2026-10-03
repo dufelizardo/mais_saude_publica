@@ -1,5 +1,6 @@
 *** Settings ***
 Library     String
+Library     Collections
 Resource    ../../../pom/equipamentos/rede_unidades/rede_unidades_pom.resource
 Resource    ../../common/schema_validation_flow.resource
 Resource    ../../../resource/config/schema/schema.resource

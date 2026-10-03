@@ -1387,6 +1387,64 @@ tfoot .linha-total th { text-align: left; }
 .lab-exame { display: inline-block; margin: 0 6px 2px 0; padding: 1px 8px; border-radius: 999px; background: var(--ink-100); font-size: 0.75rem; }
 .radios.lab-checks { grid-template-columns: 1fr; max-height: 260px; overflow-y: auto; margin-top: 6px; }
 .lab-valor { font-weight: 600; color: var(--ink-900); margin-right: 6px; }
+/* Equipamentos de Saúde (ADR-0102), portado do protótipo Equipamentos.html: lista de unidades, horário, capacidade e equipes. */
+.list-card { display: flex; flex-direction: column; padding: 0; }
+.list-head { padding: var(--s-4) var(--s-4) var(--s-3); border-bottom: 1px solid var(--ink-100); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.list-head h2 { font-size: 1rem; }
+.list-head .sub { color: var(--ink-500); font-size: 0.78rem; }
+.list-body { padding: var(--s-3) var(--s-4); display: grid; gap: var(--s-2); }
+.unit-row { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--ink-200); border-radius: 10px; background: var(--white); cursor: pointer; }
+.unit-row:hover { border-color: var(--blue-700); background: var(--blue-50); }
+.unit-row[aria-selected="true"] { border-color: var(--blue-700); background: var(--blue-50); box-shadow: inset 3px 0 0 var(--blue-700); }
+.unit-row:focus-visible { outline: 2px solid var(--blue-700); outline-offset: 2px; }
+.unit-pin { min-width: 26px; height: 26px; padding: 0 4px; border-radius: 999px; background: var(--blue-700); color: #fff; display: grid; place-items: center; font-size: 0.58rem; font-weight: 700; letter-spacing: 0.02em; }
+.unit-pin.t-upa { background: var(--purple); }
+.unit-pin.t-ceo { background: var(--teal); }
+.unit-pin.t-caps { background: var(--ok); }
+.unit-pin.t-gestao { background: var(--ink-500); }
+.unit-pin.t-manut { background: var(--warn); }
+.unit-pin.t-closed { background: var(--alert); }
+.unit-name { font-weight: 600; font-size: 0.875rem; }
+.unit-meta { font-size: 0.72rem; color: var(--ink-500); margin-top: 1px; }
+.unit-bar { margin-top: 6px; height: 4px; background: var(--ink-100); border-radius: 999px; overflow: hidden; max-width: 220px; }
+.unit-bar span { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; }
+.unit-bar span.hi, .cap-row .bar > span.hi { background: var(--warn); }
+.unit-bar span.crit, .cap-row .bar > span.crit { background: var(--alert); }
+.unit-bar span.lo, .cap-row .bar > span.lo { background: var(--ok); }
+.unit-right { text-align: right; font-size: 0.72rem; color: var(--ink-500); }
+.unit-right .v { font-weight: 600; color: var(--ink-900); font-family: 'IBM Plex Mono', monospace; font-size: 0.8125rem; display: block; }
+.detail-head__mark { font-size: 0.75rem; font-weight: 700; }
+.tag--info { background: var(--blue-50); color: var(--blue-700); }
+.tag--warn { background: var(--warn-bg); color: var(--warn); }
+.tag--purple { background: var(--purple-bg); color: var(--purple); }
+.info-grid--1 { grid-template-columns: minmax(0, 1fr); }
+.info-list dd.mono-data { font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+.hours-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.hours-table td { padding: 6px 0; }
+.hours-table td:first-child { color: var(--ink-500); }
+.hours-table td:last-child { text-align: right; font-family: 'IBM Plex Mono', monospace; color: var(--ink-900); }
+.hours-table tr.is-today td { font-weight: 600; color: var(--blue-700); }
+.hours-table tr.closed td:last-child { color: var(--ink-400); }
+.cap-grid { display: grid; gap: 10px; }
+.cap-row { display: flex; align-items: center; gap: 10px; font-size: 0.8125rem; }
+.cap-row .lbl { flex: 0 0 110px; color: var(--ink-700); }
+.cap-row .bar { flex: 1; height: 8px; background: var(--ink-100); border-radius: 999px; overflow: hidden; }
+.cap-row .bar > span { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; }
+.cap-row .val { flex: 0 0 56px; text-align: right; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+.teams { display: grid; gap: var(--s-3); padding: var(--s-5); }
+.team-card { background: var(--ink-50); border: 1px solid var(--ink-200); border-radius: 10px; padding: var(--s-4); }
+.team-card h4 { font-size: 0.875rem; }
+.team-card .meta { color: var(--ink-500); font-size: 0.72rem; margin-top: 2px; }
+.team-stack { display: flex; margin-top: 10px; }
+.team-stack .who__avatar { width: 26px; height: 26px; font-size: 0.65rem; border: 2px solid var(--ink-50); margin-left: -8px; }
+.team-stack .who__avatar:first-child { margin-left: 0; }
+.team-stack .more { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 2px solid var(--ink-50); color: var(--ink-500); display: grid; place-items: center; font-size: 0.65rem; font-weight: 600; margin-left: -8px; }
+.eq-prof, .eq-vinc { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; font-size: 0.8125rem; }
+.eq-prof li { display: grid; }
+.eq-horario { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.eq-horario th, .eq-horario td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--ink-100); }
+.eq-horario input[type="time"] { width: 96px; min-height: 32px; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--blue-700); font: inherit; cursor: pointer; text-decoration: underline; }
 /* Mapa de leitos (ADR-0099): um cartão por leito, com a cor da situação na borda. */
 .leito-setor { margin-bottom: var(--s-4); }
 .leito-grid { list-style: none; margin: 0; padding: var(--s-4); display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }

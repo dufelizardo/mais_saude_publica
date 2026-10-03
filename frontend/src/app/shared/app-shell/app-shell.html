@@ -72,6 +72,13 @@
               <span class="nav-item__label">Setores</span>
             </a>
 
+            @if (podeVer('/administrativo/equipamentos')) {
+              <a routerLink="/administrativo/equipamentos" routerLinkActive #rlaEquipamentos="routerLinkActive" [attr.aria-current]="rlaEquipamentos.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 21v-6h6v6"></path></svg>
+                <span class="nav-item__label">Equipamentos de Saúde</span>
+              </a>
+            }
+
             @if (podeVer('/administrativo/modelo')) {
               <a routerLink="/administrativo/modelo" routerLinkActive #rlaModelo="routerLinkActive" [attr.aria-current]="rlaModelo.isActive ? 'page' : null" class="nav-item">
                 <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>

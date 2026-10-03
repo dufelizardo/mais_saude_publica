@@ -25,6 +25,7 @@ const MENU: Record<string, string[]> = {
   '/administrativo': ADMINISTRATIVO,
   '/administrativo/setores': [],
   '/administrativo/modelo': ADMINISTRATIVO,
+  '/administrativo/equipamentos': ['ORGANIZACAO.GERENCIAR', 'ADMINISTRATIVO.CONSULTAR'],
   '/administrativo/necessidades-de-pessoal': [...ADMINISTRATIVO, ...RH],
   '/assistencia/pacientes': ['PACIENTE.CONSULTAR'],
   '/assistencia/agenda': ['AGENDAMENTO.GERENCIAR', 'ATENDIMENTO.GERENCIAR', 'REGULACAO.REGULAR'],
