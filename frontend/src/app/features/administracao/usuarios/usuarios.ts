@@ -95,6 +95,7 @@ const MODULOS: Modulo[] = [
     gerenciar: ['LABORATORIO.LIBERAR', 'LABORATORIO.GERENCIAR'],
   },
   { nome: 'Equipes', sub: 'equipes de saúde e membros (ADR-0103)', ver: [], registrar: [], gerenciar: ['EQUIPE.GERENCIAR'] },
+  { nome: 'Escalas', sub: 'turnos, vagas, troca e cópia de semana (ADR-0105)', ver: [], registrar: [], gerenciar: ['ESCALA.GERENCIAR'] },
   {
     nome: 'Leitos e internação',
     sub: 'mapa, internação, troca de leito e alta (ADR-0098)',
