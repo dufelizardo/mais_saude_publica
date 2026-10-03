@@ -57,3 +57,11 @@ Resource    ../../schema/administracao_medicamento/administracao_medicamento_sch
 Resource    ../../schema/acesso/acesso_schema.resource
 # AUDITORIA (ADR-0070/0071)
 Resource    ../../schema/auditoria/auditoria_schema.resource
+# REGULACAO
+Resource    ../../schema/regulacao/regulacao_schema.resource
+# AGENDA (ADR-0091)
+Resource    ../../schema/agenda/agenda_schema.resource
+# LABORATORIO (ADR-0093)
+Resource    ../../schema/laboratorio/laboratorio_schema.resource
+Resource    ../../schema/internacao/internacao_schema.resource
+Resource    ../../schema/equipamentos/equipamentos_schema.resource

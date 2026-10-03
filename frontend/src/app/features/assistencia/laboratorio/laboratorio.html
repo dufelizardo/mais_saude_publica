@@ -1,0 +1,808 @@
+<header class="page-head">
+  <div>
+    <h1>Laboratório</h1>
+    <p>Pedidos de exame, coleta, análise e liberação de resultados</p>
+  </div>
+  <div class="page-actions">
+    @if (pode('EXAME.SOLICITAR')) {
+      <button type="button" class="btn" (click)="abrirPedido()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Pedido de exames
+      </button>
+    }
+  </div>
+</header>
+
+<section class="stats" aria-label="Resumo do laboratório">
+  <div class="stat">
+    <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6L4 18a2 2 0 0 0 1.8 3h12.4a2 2 0 0 0 1.8-3L15 8V2"></path><line x1="8" y1="2" x2="16" y2="2"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Para coletar</div>
+      <div class="stat__val mono">{{ resumo().coletar }}</div>
+      <div class="stat__sub">exame(s) aguardando coleta</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+    <div>
+      <div class="stat__lbl">Em análise</div>
+      <div class="stat__val mono">{{ resumo().analise }}</div>
+      <div class="stat__sub">amostra no laboratório</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Para liberar</div>
+      <div class="stat__val mono">{{ resumo().liberar }}</div>
+      <div class="stat__sub">resultado aguardando revisão</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--alert" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Urgentes</div>
+      <div class="stat__val mono">{{ resumo().urgentes }}</div>
+      <div class="stat__sub">em qualquer etapa</div>
+    </div>
+  </div>
+</section>
+
+<div class="page-tabs" role="tablist" aria-label="Seções do laboratório">
+  @for (a of abas(); track a.id; let i = $index) {
+    <button type="button" role="tab" [id]="'tab-' + a.id" [attr.aria-controls]="'pn-' + a.id" [attr.aria-selected]="aba() === a.id"
+      [tabIndex]="aba() === a.id ? 0 : -1" (click)="selecionarAba(a.id)" (keydown)="navegarAbas($event, i)">
+      {{ a.rotulo }} <span class="cnt">{{ a.contagem }}</span>
+    </button>
+  }
+</div>
+
+<!-- ── Para coletar ───────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'coletar') {
+  <section class="card" id="pn-coletar" role="tabpanel" aria-labelledby="tab-coletar">
+    <div class="card__head">
+      <div>
+        <h2>Para coletar</h2>
+        <p class="sub">Um pedido por linha, urgente primeiro. A coleta gera uma amostra por material, com o código da etiqueta.</p>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Paciente</th>
+            <th scope="col">Exames</th>
+            <th scope="col">Prioridade</th>
+            <th scope="col">Preparo</th>
+            <th scope="col">Pedido em</th>
+            <th scope="col" class="num">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (g of gruposColeta(); track g.pedidoId) {
+            <tr>
+              <td class="cell-main">{{ g.pacienteNome }}<span class="cell-sub">{{ g.unidadeSolicitanteNome }}</span></td>
+              <td>
+                @for (i of g.itens; track i.itemId) { <span class="lab-exame">{{ i.exameNome }} <span class="cell-sub" style="display: inline;">· {{ materiais[i.material] }}</span></span> }
+                @if (recoletas(g).length) {
+                  <span class="badge badge--warn lab-recoleta"><span class="dot" aria-hidden="true"></span> Recoleta · {{ motivosRejeicao[recoletas(g)[0].motivoRecoleta!] }}</span>
+                }
+              </td>
+              <td>@if (g.prioridade === 'URGENTE') { <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Urgente</span> } @else { <span class="badge badge--muted">Rotina</span> }</td>
+              <td>@if (g.preparos.length) { <span class="cell-sub" style="display: inline;">{{ g.preparos.join(' · ') }}</span> } @else { — }</td>
+              <td class="mono">{{ formatarInstante(g.solicitadoEm) }}</td>
+              <td class="num"><button type="button" class="btn btn--sm" [attr.aria-label]="'Coletar exames de ' + g.pacienteNome" (click)="abrirColeta(g)">Coletar</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><div class="empty"><strong>{{ carregando() ? 'Carregando…' : 'Nada para coletar' }}</strong>@if (!carregando()) { <span>Nenhum exame aguardando coleta no seu escopo.</span> }</div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Em análise ─────────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'analise') {
+  <section class="card" id="pn-analise" role="tabpanel" aria-labelledby="tab-analise">
+    <div class="card__head">
+      <div>
+        <h2>Em análise</h2>
+        <p class="sub">Por exame, urgente primeiro. Amostra com problema é rejeitada e os exames dela voltam para a coleta.</p>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Amostra</th>
+            <th scope="col">Paciente</th>
+            <th scope="col">Exame</th>
+            <th scope="col">Prioridade</th>
+            <th scope="col">Laboratório</th>
+            <th scope="col" class="num">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (i of emAnalise(); track i.itemId) {
+            <tr>
+              <td class="mono">{{ i.amostraCodigo ?? '—' }}</td>
+              <td class="cell-main">{{ i.pacienteNome }}<span class="cell-sub">{{ i.unidadeSolicitanteNome }}</span></td>
+              <td>{{ i.exameNome }}<span class="cell-sub">{{ materiais[i.material] }}</span></td>
+              <td>@if (i.prioridade === 'URGENTE') { <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Urgente</span> } @else { <span class="badge badge--muted">Rotina</span> }</td>
+              <td>{{ i.laboratorioNome ?? '—' }}</td>
+              <td class="num">
+                <div class="row-actions">
+                  <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Rejeitar amostra de ' + i.exameNome + ' de ' + i.pacienteNome" (click)="abrirRejeicao(i)">Rejeitar amostra</button>
+                  <button type="button" class="btn btn--sm" [attr.aria-label]="'Registrar resultado de ' + i.exameNome + ' de ' + i.pacienteNome" (click)="abrirResultado(i)">Resultado</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><div class="empty"><strong>{{ carregando() ? 'Carregando…' : 'Nada em análise' }}</strong>@if (!carregando()) { <span>Nenhuma amostra aguardando resultado no seu laboratório.</span> }</div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Para liberar ───────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'liberar') {
+  <section class="card" id="pn-liberar" role="tabpanel" aria-labelledby="tab-liberar">
+    <div class="card__head">
+      <div>
+        <h2>Para liberar</h2>
+        <p class="sub">Resultados registrados aguardando o responsável técnico. Depois de liberado, o resultado só muda por retificação.</p>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Amostra</th>
+            <th scope="col">Paciente</th>
+            <th scope="col">Exame</th>
+            <th scope="col">Prioridade</th>
+            <th scope="col">Laboratório</th>
+            <th scope="col" class="num">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (i of paraLiberar(); track i.itemId) {
+            <tr>
+              <td class="mono">{{ i.amostraCodigo ?? '—' }}</td>
+              <td class="cell-main">{{ i.pacienteNome }}<span class="cell-sub">{{ i.unidadeSolicitanteNome }}</span></td>
+              <td>{{ i.exameNome }}<span class="cell-sub">{{ materiais[i.material] }}</span></td>
+              <td>@if (i.prioridade === 'URGENTE') { <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Urgente</span> } @else { <span class="badge badge--muted">Rotina</span> }</td>
+              <td>{{ i.laboratorioNome ?? '—' }}</td>
+              <td class="num"><button type="button" class="btn btn--sm" [attr.aria-label]="'Revisar resultado de ' + i.exameNome + ' de ' + i.pacienteNome" (click)="abrirLiberacao(i)">Revisar</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><div class="empty"><strong>{{ carregando() ? 'Carregando…' : 'Nada para liberar' }}</strong>@if (!carregando()) { <span>Nenhum resultado aguardando liberação no seu laboratório.</span> }</div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Pedidos ────────────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'pedidos') {
+  <section class="card" id="pn-pedidos" role="tabpanel" aria-labelledby="tab-pedidos">
+    <div class="card__head">
+      <div>
+        <h2>Pedidos</h2>
+        <p class="sub">Andamento de cada pedido, sem os valores. Os resultados abrem no detalhe, com a leitura registrada.</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar pedido</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Paciente, exame ou unidade…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+        <select class="sel" aria-label="Filtrar por situação" (change)="filtroSituacao.set($any($event.target).value)">
+          <option value="" [selected]="filtroSituacao() === ''">Todas as situações</option>
+          <option value="AGUARDANDO_COLETA" [selected]="filtroSituacao() === 'AGUARDANDO_COLETA'">Aguardando coleta</option>
+          <option value="EM_ANDAMENTO" [selected]="filtroSituacao() === 'EM_ANDAMENTO'">Em andamento</option>
+          <option value="CONCLUIDO" [selected]="filtroSituacao() === 'CONCLUIDO'">Concluídos</option>
+          <option value="CANCELADO" [selected]="filtroSituacao() === 'CANCELADO'">Cancelados</option>
+        </select>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Paciente</th>
+            <th scope="col">Exames</th>
+            <th scope="col">Prioridade</th>
+            <th scope="col">Situação</th>
+            <th scope="col">Pedido em</th>
+            <th scope="col" class="num">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of pedidosFiltrados(); track p.uuid) {
+            <tr>
+              <td class="cell-main">{{ p.pacienteNome }}<span class="cell-sub">{{ p.unidadeSolicitanteNome }} · {{ p.profissionalSolicitanteNome }}</span></td>
+              <td>
+                @for (i of p.itens; track i.uuid) { <span class="lab-exame">{{ i.exameNome }}</span> }
+                <span class="cell-sub">{{ p.liberados }} de {{ p.totalExames }} liberado(s)</span>
+              </td>
+              <td>@if (p.prioridade === 'URGENTE') { <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Urgente</span> } @else { <span class="badge badge--muted">Rotina</span> }</td>
+              <td><span [class]="'badge badge--' + situacoes[p.situacao].classe"><span class="dot" aria-hidden="true"></span> {{ situacoes[p.situacao].rotulo }}</span></td>
+              <td class="mono">{{ formatarInstante(p.solicitadoEm) }}</td>
+              <td class="num"><button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Ver pedido de ' + p.pacienteNome" (click)="abrirDetalhe(p.uuid)">Ver</button></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><div class="empty"><strong>{{ carregando() ? 'Carregando pedidos…' : 'Nenhum pedido encontrado' }}</strong></div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Catálogo ───────────────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'catalogo') {
+  <section class="card" id="pn-catalogo" role="tabpanel" aria-labelledby="tab-catalogo">
+    <div class="card__head">
+      <div>
+        <h2>Catálogo de exames</h2>
+        <p class="sub">O que o laboratório faz. A faixa de referência é copiada para cada resultado: mudar aqui não muda resultado já dado.</p>
+      </div>
+      @if (pode('LABORATORIO.GERENCIAR')) { <button type="button" class="btn btn--sm" (click)="abrirExame()">+ Exame</button> }
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Exame</th>
+            <th scope="col">Material</th>
+            <th scope="col">Referência</th>
+            <th scope="col">Prazo</th>
+            <th scope="col">Situação</th>
+            @if (pode('LABORATORIO.GERENCIAR')) { <th scope="col" class="num">Ações</th> }
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of exames(); track e.uuid) {
+            <tr>
+              <td class="cell-main">{{ e.nome }}@if (e.preparo) { <span class="cell-sub">{{ e.preparo }}</span> }</td>
+              <td>{{ materiais[e.material] }}</td>
+              <td>{{ faixa(e) }}</td>
+              <td>{{ e.prazoDias != null ? e.prazoDias + ' dia(s)' : '—' }}</td>
+              <td>@if (e.ativo) { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Em uso</span> } @else { <span class="badge badge--muted">Fora de uso</span> }</td>
+              @if (pode('LABORATORIO.GERENCIAR')) {
+                <td class="num"><button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Editar ' + e.nome" (click)="abrirExame(e)">Editar</button></td>
+              }
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><div class="empty"><strong>{{ carregando() ? 'Carregando…' : 'Nenhum exame no catálogo' }}</strong>@if (!carregando() && pode('LABORATORIO.GERENCIAR')) { <span>Cadastre os exames que o laboratório faz.</span> }</div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Gavetas ────────────────────────────────────────────────────────────────────────────────── -->
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="tituloGaveta(g)" [larga]="g.tipo === 'detalhe'" (fechar)="fecharGaveta()">
+    @switch (g.tipo) {
+      @case ('pedido') {
+        <form class="dw-form" [formGroup]="pedidoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-buscaPaciente">Paciente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-buscaPaciente" type="search" formControlName="buscaPaciente" autocomplete="off" placeholder="Buscar por nome ou CPF…" aria-describedby="h-pacienteId" />
+              <select id="f-pacienteId" formControlName="pacienteId" aria-label="Paciente" [attr.aria-invalid]="!!erro('pacienteId')" aria-describedby="e-pacienteId">
+                <option value="">Selecione…</option>
+                @for (p of pacientesFiltrados(); track p.uuid) { <option [value]="p.uuid">{{ p.nome }}@if (p.cpf) { · CPF {{ formatCpf(p.cpf) }} }</option> }
+              </select>
+              <p class="dw-hint" id="h-pacienteId">Digite parte do nome ou do CPF para filtrar a lista.</p>
+              @if (erro('pacienteId')) { <p class="dw-err" id="e-pacienteId">{{ erro('pacienteId') }}</p> }
+            </div>
+            @if (pedidoForm.controls.atendimentoId.value) {
+              <div class="box box--info"><div>O pedido fica ligado ao atendimento de onde veio.</div></div>
+            }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-unidadeSolicitanteId">Unidade que pede <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-unidadeSolicitanteId" formControlName="unidadeSolicitanteId" [attr.aria-invalid]="!!erro('unidadeSolicitanteId')" aria-describedby="e-unidadeSolicitanteId">
+                  <option value="">Selecione…</option>
+                  @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+                </select>
+                @if (erro('unidadeSolicitanteId')) { <p class="dw-err" id="e-unidadeSolicitanteId">{{ erro('unidadeSolicitanteId') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-profissionalMatricula">Matrícula de quem pede <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-profissionalMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />
+                @if (erro('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erro('profissionalMatricula') }}</p> }
+              </div>
+            </div>
+            <fieldset class="dw-field">
+              <legend>Exames <span class="req" aria-hidden="true">*</span> <span class="cnt">{{ examesMarcados().size }}</span></legend>
+              <input id="f-buscaExame" type="search" formControlName="buscaExame" autocomplete="off" placeholder="Filtrar exames…" aria-label="Filtrar exames" [attr.aria-invalid]="!!erro('buscaExame')" aria-describedby="e-buscaExame" />
+              <div class="radios lab-checks" role="group" aria-label="Exames do catálogo">
+                @for (e of examesParaMarcar(); track e.uuid) {
+                  <label><input type="checkbox" [checked]="examesMarcados().has(e.uuid)" (change)="alternarExame(e.uuid)" />{{ e.nome }} <span class="cell-sub" style="display: inline;">· {{ materiais[e.material] }}</span></label>
+                } @empty {
+                  <p class="dw-hint">Nenhum exame em uso no catálogo.</p>
+                }
+              </div>
+              @if (erro('buscaExame')) { <p class="dw-err" id="e-buscaExame">{{ erro('buscaExame') }}</p> }
+            </fieldset>
+            <div class="dw-field">
+              <label for="f-indicacaoClinica">Indicação clínica <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-indicacaoClinica" formControlName="indicacaoClinica" rows="3" placeholder="Por que os exames são pedidos" [attr.aria-invalid]="!!erro('indicacaoClinica')" aria-describedby="e-indicacaoClinica"></textarea>
+              @if (erro('indicacaoClinica')) { <p class="dw-err" id="e-indicacaoClinica">{{ erro('indicacaoClinica') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-cid">CID-10<span class="opt">opcional</span></label>
+                <input id="f-cid" type="text" class="mono" maxlength="6" autocomplete="off" formControlName="cid" placeholder="Ex.: E11.9" [attr.aria-invalid]="!!erro('cid')" aria-describedby="e-cid" />
+                @if (erro('cid')) { <p class="dw-err" id="e-cid">{{ erro('cid') }}</p> }
+              </div>
+              <fieldset class="dw-field">
+                <legend>Prioridade</legend>
+                <div class="radios" role="radiogroup">
+                  <label><input type="radio" formControlName="prioridade" value="ROTINA" id="f-prioridade" />Rotina</label>
+                  <label><input type="radio" formControlName="prioridade" value="URGENTE" />Urgente</label>
+                </div>
+              </fieldset>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Enviando…' : 'Registrar pedido' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('coleta') {
+        <form class="dw-form" [formGroup]="coletaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Paciente</dt><dd>{{ g.grupo.pacienteNome }}</dd></div>
+              <div><dt>Pedido por</dt><dd>{{ g.grupo.unidadeSolicitanteNome }}</dd></div>
+            </dl>
+            @if (recoletas(g.grupo).length) {
+              <div class="box box--warn"><div><strong>Recoleta:</strong> a amostra anterior foi rejeitada. Confira o motivo antes de coletar de novo.</div></div>
+            }
+            @if (g.grupo.preparos.length) {
+              <div class="box box--warn"><div><strong>Preparo:</strong> {{ g.grupo.preparos.join(' · ') }}</div></div>
+            }
+            <fieldset class="dw-field">
+              <legend>O que foi coletado <span class="req" aria-hidden="true">*</span></legend>
+              <div class="radios lab-checks" role="group" aria-label="Exames coletados" aria-describedby="e-itens">
+                @for (i of g.grupo.itens; track i.itemId) {
+                  <label><input type="checkbox" [id]="$first ? 'f-itens' : null" [checked]="itensMarcados().has(i.itemId)" (change)="alternarItem(i.itemId)" />{{ i.exameNome }} <span class="cell-sub" style="display: inline;">· {{ materiais[i.material] }}</span>
+                    @if (i.motivoRecoleta) { <span class="badge badge--warn">Recoleta · {{ motivosRejeicao[i.motivoRecoleta] }}</span> }</label>
+                }
+              </div>
+              <p class="dw-hint">O que ficar desmarcado continua aguardando coleta.</p>
+              @if (erro('itens')) { <p class="dw-err" id="e-itens">{{ erro('itens') }}</p> }
+            </fieldset>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-unidadeColetaId">Onde foi coletado <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-unidadeColetaId" formControlName="unidadeColetaId" [attr.aria-invalid]="!!erro('unidadeColetaId')" aria-describedby="e-unidadeColetaId">
+                  <option value="">Selecione…</option>
+                  @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+                </select>
+                @if (erro('unidadeColetaId')) { <p class="dw-err" id="e-unidadeColetaId">{{ erro('unidadeColetaId') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-laboratorioId">Laboratório que analisa<span class="opt">opcional</span></label>
+                <select id="f-laboratorioId" formControlName="laboratorioId" aria-describedby="h-laboratorioId">
+                  <option value="">A própria unidade da coleta</option>
+                  @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+                </select>
+                <p class="dw-hint" id="h-laboratorioId">É o laboratório que vai ver a amostra na lista de análise.</p>
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-profissionalMatricula">Matrícula de quem coletou <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-profissionalMatricula" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />
+              @if (erro('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erro('profissionalMatricula') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Registrando…' : 'Registrar coleta' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('resultado') {
+        @if (erroDetalhe()) {
+          <div class="dw-form"><div class="dw-body"><div class="box box--err" role="alert"><strong>{{ erroDetalhe() }}</strong></div></div>
+            <footer class="dw-foot"><button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button></footer></div>
+        } @else if (itemAtual(); as a) {
+          <form class="dw-form" [formGroup]="resultadoForm" (ngSubmit)="salvar()" novalidate>
+            <div class="dw-body">
+              @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+              <dl class="ro">
+                <div><dt>Paciente</dt><dd>{{ detalhe()?.pacienteNome }}</dd></div>
+                <div><dt>Exame</dt><dd>{{ a.item.exameNome }}</dd></div>
+                <div><dt>Amostra</dt><dd class="mono">{{ a.item.amostraCodigo ?? '—' }}</dd></div>
+                <div><dt>Referência</dt><dd>{{ faixa(a.exame) }}</dd></div>
+              </dl>
+              @if (a.item.resultado) {
+                <div class="box box--info"><div>Já há um resultado registrado ({{ valorDe(a.item) }}). O novo substitui e o anterior fica guardado.</div></div>
+              }
+              @if (a.item.tipoResultado === 'NUMERICO') {
+                <div class="dw-field">
+                  <label for="f-valorNumerico">Valor{{ a.exame?.unidadeMedida ? ' (' + a.exame?.unidadeMedida + ')' : '' }} <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <input id="f-valorNumerico" type="number" step="any" class="mono" formControlName="valorNumerico" [attr.aria-invalid]="!!erro('valorNumerico')" aria-describedby="e-valorNumerico" />
+                  @if (erro('valorNumerico')) { <p class="dw-err" id="e-valorNumerico">{{ erro('valorNumerico') }}</p> }
+                </div>
+              } @else {
+                <div class="dw-field">
+                  <label for="f-valorTexto">Resultado <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <textarea id="f-valorTexto" formControlName="valorTexto" rows="3" [attr.aria-invalid]="!!erro('valorTexto')" aria-describedby="e-valorTexto"></textarea>
+                  @if (erro('valorTexto')) { <p class="dw-err" id="e-valorTexto">{{ erro('valorTexto') }}</p> }
+                </div>
+              }
+              <div class="dw-field">
+                <label for="f-observacao">Observação<span class="opt">opcional</span></label>
+                <input id="f-observacao" type="text" formControlName="observacao" />
+              </div>
+              <div class="dw-field">
+                <label for="f-matriculaResultado">Matrícula de quem analisou <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-matriculaResultado" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('matriculaResultado')" aria-describedby="e-matriculaResultado" />
+                @if (erro('matriculaResultado')) { <p class="dw-err" id="e-matriculaResultado">{{ erro('matriculaResultado') }}</p> }
+              </div>
+            </div>
+            <footer class="dw-foot">
+              <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+              <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Registrando…' : 'Registrar resultado' }}</button>
+            </footer>
+          </form>
+        } @else {
+          <div class="dw-form"><div class="dw-body"><p class="cell-sub">Carregando o pedido…</p></div></div>
+        }
+      }
+
+      @case ('liberar') {
+        @if (erroDetalhe()) {
+          <div class="dw-form"><div class="dw-body"><div class="box box--err" role="alert"><strong>{{ erroDetalhe() }}</strong></div></div>
+            <footer class="dw-foot"><button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button></footer></div>
+        } @else if (itemAtual(); as a) {
+          <form class="dw-form" [formGroup]="liberarForm" (ngSubmit)="salvar()" novalidate>
+            <div class="dw-body">
+              @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+              <dl class="ro">
+                <div><dt>Paciente</dt><dd>{{ detalhe()?.pacienteNome }}</dd></div>
+                <div><dt>Exame</dt><dd>{{ a.item.exameNome }}</dd></div>
+                <div><dt>Resultado</dt><dd class="mono lab-valor">{{ valorDe(a.item) }}</dd></div>
+                <div><dt>Referência</dt><dd>{{ faixa(a.item.resultado) }}</dd></div>
+                <div><dt>Interpretação</dt><dd>
+                  @if (a.item.resultado?.interpretacao; as it) { <span [class]="'badge badge--' + interpretacoes[it].classe"><span class="dot" aria-hidden="true"></span> {{ interpretacoes[it].rotulo }}</span> } @else { — }
+                </dd></div>
+                <div><dt>Analisado por</dt><dd>{{ a.item.resultado?.analisadoPorNome }} <span class="cell-sub mono">{{ formatarInstante(a.item.resultado?.registradoEm) }}</span></dd></div>
+              </dl>
+              @if (a.item.resultado?.observacao) { <p class="reg-texto">{{ a.item.resultado?.observacao }}</p> }
+              <div class="box box--warn"><div>Depois de liberado, o resultado vai para o pedido e só muda por retificação. Para corrigir antes, o laboratório registra o resultado de novo.</div></div>
+              <div class="dw-field">
+                <label for="f-matriculaLiberacao">Matrícula de quem libera <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-matriculaLiberacao" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('matriculaLiberacao')" aria-describedby="e-matriculaLiberacao" />
+                @if (erro('matriculaLiberacao')) { <p class="dw-err" id="e-matriculaLiberacao">{{ erro('matriculaLiberacao') }}</p> }
+              </div>
+            </div>
+            <footer class="dw-foot">
+              <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+              @if (pode('LABORATORIO.ANALISAR')) {
+                <button type="button" class="btn btn--ghost" (click)="abrirResultado({ itemId: a.item.uuid, pedidoId: g.pedidoId })">Registrar de novo</button>
+              }
+              <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Liberando…' : 'Liberar resultado' }}</button>
+            </footer>
+          </form>
+        } @else {
+          <div class="dw-form"><div class="dw-body"><p class="cell-sub">Carregando o pedido…</p></div></div>
+        }
+      }
+
+      @case ('rejeitar') {
+        <form class="dw-form" [formGroup]="rejeitarForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi() || erroDetalhe()) { <div class="box box--err" role="alert"><strong>{{ erroApi() || erroDetalhe() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Amostra</dt><dd class="mono">{{ g.amostraCodigo }}</dd></div>
+              <div><dt>Paciente</dt><dd>{{ detalhe()?.pacienteNome ?? '…' }}</dd></div>
+            </dl>
+            <div class="box box--warn"><div>A amostra fica registrada como rejeitada. Os exames dela ainda não liberados voltam para <strong>Para coletar</strong>.</div></div>
+            <div class="dw-field">
+              <label for="f-motivoRejeicao">Motivo <span class="req" aria-hidden="true">*</span></label>
+              <select id="f-motivoRejeicao" formControlName="motivo">
+                @for (m of listaMotivos; track m) { <option [value]="m">{{ motivosRejeicao[m] }}</option> }
+              </select>
+            </div>
+            <div class="dw-field">
+              <label for="f-observacaoRejeicao">Observação<span class="opt">opcional</span></label>
+              <input id="f-observacaoRejeicao" type="text" formControlName="observacao" />
+            </div>
+            <div class="dw-field">
+              <label for="f-matriculaRejeicao">Matrícula de quem rejeita <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-matriculaRejeicao" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('matriculaRejeicao')" aria-describedby="e-matriculaRejeicao" />
+              @if (erro('matriculaRejeicao')) { <p class="dw-err" id="e-matriculaRejeicao">{{ erro('matriculaRejeicao') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting() || !detalhe()">{{ submitting() ? 'Rejeitando…' : 'Rejeitar amostra' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('detalhe') {
+        @if (erroDetalhe()) {
+          <div class="dw-form"><div class="dw-body"><div class="box box--err" role="alert"><strong>{{ erroDetalhe() }}</strong></div></div>
+            <footer class="dw-foot"><button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button></footer></div>
+        } @else if (detalhe(); as d) {
+          <div class="dw-form">
+            <div class="dw-body">
+              <div class="dw-meta">
+                <span [class]="'badge badge--' + situacoes[d.situacao].classe"><span class="dot" aria-hidden="true"></span> {{ situacoes[d.situacao].rotulo }}</span>
+                @if (d.prioridade === 'URGENTE') { <span class="badge badge--alert"><span class="dot" aria-hidden="true"></span> Urgente</span> } @else { <span class="badge badge--muted">Rotina</span> }
+              </div>
+              <dl class="ro ro3">
+                <div><dt>Paciente</dt><dd>{{ d.pacienteNome }}</dd></div>
+                <div><dt>Unidade que pediu</dt><dd>{{ d.unidadeSolicitanteNome }}</dd></div>
+                <div><dt>Pedido por</dt><dd>{{ d.profissionalSolicitanteNome }} <span class="cell-sub mono">{{ d.profissionalSolicitanteMatricula }}</span></dd></div>
+                <div><dt>Pedido em</dt><dd class="mono">{{ formatarInstante(d.solicitadoEm) }}</dd></div>
+                <div><dt>CID-10</dt><dd class="mono">{{ d.cid || '—' }}</dd></div>
+                <div><dt>Origem</dt><dd>{{ d.atendimentoId ? 'Atendimento' : 'Pedido avulso' }}</dd></div>
+              </dl>
+              <section class="dsec">
+                <div class="dsec__h"><h3>Indicação clínica</h3></div>
+                <p class="reg-texto">{{ d.indicacaoClinica }}</p>
+              </section>
+              <section class="dsec">
+                <div class="dsec__h"><h3>Exames <span class="cnt">{{ d.itens.length }}</span></h3></div>
+                <div class="tbl-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">Exame</th>
+                        <th scope="col">Situação</th>
+                        <th scope="col">Resultado</th>
+                        <th scope="col">Referência</th>
+                        <th scope="col" class="num">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (i of d.itens; track i.uuid) {
+                        <tr>
+                          <td class="cell-main">{{ i.exameNome }}<span class="cell-sub">{{ materiais[i.material] }}@if (i.amostraCodigo) { · <span class="mono">{{ i.amostraCodigo }}</span> }</span></td>
+                          <td>
+                            <span [class]="'badge badge--' + statusItem[i.status].classe"><span class="dot" aria-hidden="true"></span> {{ statusItem[i.status].rotulo }}</span>
+                            @if (i.motivoCancelamento) { <span class="cell-sub">{{ i.motivoCancelamento }}</span> }
+                          </td>
+                          <td>
+                            @if (i.status === 'LIBERADO' && i.resultado) {
+                              <span class="mono lab-valor">{{ valorDe(i) }}</span>
+                              @if (i.resultado.interpretacao; as it) { <span [class]="'badge badge--' + interpretacoes[it].classe">{{ interpretacoes[it].rotulo }}</span> }
+                              @if (i.resultado.retificacaoDeId) { <span class="cell-sub">Retificado: {{ i.resultado.motivoRetificacao }}</span> }
+                              <span class="cell-sub">Liberado por {{ i.resultado.liberadoPorNome }} · {{ formatarInstante(i.resultado.liberadoEm) }}</span>
+                            } @else if (i.resultado) {
+                              <span class="cell-sub" style="display: inline;">Aguardando liberação</span>
+                            } @else { — }
+                          </td>
+                          <td>{{ i.resultado ? faixa(i.resultado) : faixa(exameDoCatalogo(i.exameNome)) }}</td>
+                          <td class="num">
+                            <div class="row-actions">
+                              @if (podeAgirNoItem(i).retificar) {
+                                <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Retificar ' + i.exameNome" (click)="abrirRetificacao(i, d.uuid)">Retificar</button>
+                              }
+                              @if (podeAgirNoItem(i).cancelar) {
+                                <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Cancelar ' + i.exameNome" (click)="abrirCancelamento(i, d.uuid)">Cancelar</button>
+                              }
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              @if (d.amostras.length) {
+                <section class="dsec">
+                  <div class="dsec__h"><h3>Amostras <span class="cnt">{{ d.amostras.length }}</span></h3></div>
+                  <div class="tl">
+                    @for (a of d.amostras; track a.uuid) {
+                      <div class="tl-row">
+                        <div class="date mono">{{ a.codigo }}</div>
+                        <div class="title">{{ materiais[a.material] }} · {{ a.laboratorioNome }}
+                          @if (a.rejeitada) { <span class="badge badge--alert">Rejeitada</span> }
+                        </div>
+                        <div class="desc">Coletada em {{ a.unidadeColetaNome }} por {{ a.coletadaPorNome }} · {{ formatarInstante(a.coletadaEm) }}</div>
+                        @if (a.rejeitada && a.motivoRejeicao) { <div class="desc">{{ motivosRejeicao[a.motivoRejeicao] }}@if (a.observacaoRejeicao) { — {{ a.observacaoRejeicao }} }</div> }
+                      </div>
+                    }
+                  </div>
+                </section>
+              }
+              <section class="dsec">
+                <div class="dsec__h"><h3>Histórico <span class="cnt">{{ d.eventos.length }}</span></h3></div>
+                <div class="tl">
+                  @for (e of d.eventos; track $index) {
+                    <div class="tl-row">
+                      <div class="date mono">{{ formatarInstante(e.ocorridoEm) }}</div>
+                      <div class="title">{{ eventos[e.tipo] }}@if (e.exameNome) { · {{ e.exameNome }} }</div>
+                      @if (e.texto) { <div class="desc">{{ e.texto }}</div> }
+                      <div class="desc">{{ e.profissionalNome }} · {{ e.profissionalMatricula }}</div>
+                    </div>
+                  }
+                </div>
+              </section>
+            </div>
+            <footer class="dw-foot">
+              <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button>
+              @if (d.liberados > 0) {
+                <a class="btn" [href]="'/laudo/exame/' + d.uuid" target="_blank" rel="noopener">Imprimir laudo</a>
+              }
+            </footer>
+          </div>
+        } @else {
+          <div class="dw-form"><div class="dw-body"><p class="cell-sub">Carregando o pedido…</p></div></div>
+        }
+      }
+
+      @case ('retificar') {
+        @if (itemAtual(); as a) {
+          <form class="dw-form" [formGroup]="retificarForm" (ngSubmit)="salvar()" novalidate>
+            <div class="dw-body">
+              @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+              <dl class="ro">
+                <div><dt>Exame</dt><dd>{{ a.item.exameNome }}</dd></div>
+                <div><dt>Resultado liberado</dt><dd class="mono">{{ valorDe(a.item) }}</dd></div>
+              </dl>
+              <div class="box box--warn"><div>A retificação grava um resultado novo, já liberado por você. O anterior fica guardado e ligado a ele.</div></div>
+              @if (a.item.tipoResultado === 'NUMERICO') {
+                <div class="dw-field">
+                  <label for="f-valorNumericoRet">Valor correto <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <input id="f-valorNumericoRet" type="number" step="any" class="mono" formControlName="valorNumerico" [attr.aria-invalid]="!!erro('valorNumericoRet')" aria-describedby="e-valorNumericoRet" />
+                  @if (erro('valorNumericoRet')) { <p class="dw-err" id="e-valorNumericoRet">{{ erro('valorNumericoRet') }}</p> }
+                </div>
+              } @else {
+                <div class="dw-field">
+                  <label for="f-valorTextoRet">Resultado correto <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <textarea id="f-valorTextoRet" formControlName="valorTexto" rows="3" [attr.aria-invalid]="!!erro('valorTextoRet')" aria-describedby="e-valorTextoRet"></textarea>
+                  @if (erro('valorTextoRet')) { <p class="dw-err" id="e-valorTextoRet">{{ erro('valorTextoRet') }}</p> }
+                </div>
+              }
+              <div class="dw-field">
+                <label for="f-motivoRet">Motivo da retificação <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <textarea id="f-motivoRet" formControlName="motivo" rows="2" [attr.aria-invalid]="!!erro('motivoRet')" aria-describedby="e-motivoRet"></textarea>
+                @if (erro('motivoRet')) { <p class="dw-err" id="e-motivoRet">{{ erro('motivoRet') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-matriculaRet">Matrícula de quem retifica <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-matriculaRet" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('matriculaRet')" aria-describedby="e-matriculaRet" />
+                @if (erro('matriculaRet')) { <p class="dw-err" id="e-matriculaRet">{{ erro('matriculaRet') }}</p> }
+              </div>
+            </div>
+            <footer class="dw-foot">
+              <button type="button" class="btn btn--ghost" (click)="abrirDetalhe(g.pedidoId)">Voltar</button>
+              <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Retificando…' : 'Retificar resultado' }}</button>
+            </footer>
+          </form>
+        } @else {
+          <div class="dw-form"><div class="dw-body"><p class="cell-sub">Carregando o pedido…</p></div></div>
+        }
+      }
+
+      @case ('cancelar') {
+        <form class="dw-form" [formGroup]="cancelarForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Exame</dt><dd>{{ g.exameNome }}</dd></div></dl>
+            <div class="box box--warn"><div>O exame sai das listas de trabalho. Os outros exames do pedido continuam.</div></div>
+            <div class="dw-field">
+              <label for="f-motivoCancelamento">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-motivoCancelamento" formControlName="motivo" rows="3" [attr.aria-invalid]="!!erro('motivoCancelamento')" aria-describedby="e-motivoCancelamento"></textarea>
+              @if (erro('motivoCancelamento')) { <p class="dw-err" id="e-motivoCancelamento">{{ erro('motivoCancelamento') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-matriculaCancelamento">Matrícula do profissional <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-matriculaCancelamento" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('matriculaCancelamento')" aria-describedby="e-matriculaCancelamento" />
+              @if (erro('matriculaCancelamento')) { <p class="dw-err" id="e-matriculaCancelamento">{{ erro('matriculaCancelamento') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="abrirDetalhe(g.pedidoId)">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Cancelando…' : 'Cancelar exame' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('exame') {
+        <form class="dw-form" [formGroup]="exameForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nome" type="text" formControlName="nome" autocomplete="off" placeholder="Ex.: Glicemia de jejum" [attr.aria-invalid]="!!erro('nome')" aria-describedby="e-nome" />
+              @if (erro('nome')) { <p class="dw-err" id="e-nome">{{ erro('nome') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-material">Material</label>
+                <select id="f-material" formControlName="material">
+                  @for (m of listaMateriais; track m) { <option [value]="m">{{ materiais[m] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-tipoResultado">Tipo de resultado</label>
+                <select id="f-tipoResultado" formControlName="tipoResultado">
+                  <option value="NUMERICO">Numérico</option>
+                  <option value="TEXTO">Texto</option>
+                </select>
+              </div>
+            </div>
+            @if (exameForm.controls.tipoResultado.value === 'NUMERICO') {
+              <div class="dw-row">
+                <div class="dw-field">
+                  <label for="f-unidadeMedida">Unidade<span class="opt">opcional</span></label>
+                  <input id="f-unidadeMedida" type="text" formControlName="unidadeMedida" placeholder="Ex.: mg/dL" />
+                </div>
+                <div class="dw-field">
+                  <label for="f-prazoDias">Prazo em dias<span class="opt">opcional</span></label>
+                  <input id="f-prazoDias" type="number" min="0" formControlName="prazoDias" />
+                </div>
+              </div>
+              <div class="dw-row">
+                <div class="dw-field">
+                  <label for="f-referenciaMinima">Referência mínima<span class="opt">opcional</span></label>
+                  <input id="f-referenciaMinima" type="number" step="any" class="mono" formControlName="referenciaMinima" />
+                </div>
+                <div class="dw-field">
+                  <label for="f-referenciaMaxima">Referência máxima<span class="opt">opcional</span></label>
+                  <input id="f-referenciaMaxima" type="number" step="any" class="mono" formControlName="referenciaMaxima" [attr.aria-invalid]="!!erro('referenciaMaxima')" aria-describedby="e-referenciaMaxima" />
+                  @if (erro('referenciaMaxima')) { <p class="dw-err" id="e-referenciaMaxima">{{ erro('referenciaMaxima') }}</p> }
+                </div>
+              </div>
+            } @else {
+              <div class="dw-row">
+                <div class="dw-field">
+                  <label for="f-referenciaTexto">Referência<span class="opt">opcional</span></label>
+                  <input id="f-referenciaTexto" type="text" formControlName="referenciaTexto" placeholder="Ex.: Não reagente" />
+                </div>
+                <div class="dw-field">
+                  <label for="f-prazoDias">Prazo em dias<span class="opt">opcional</span></label>
+                  <input id="f-prazoDias" type="number" min="0" formControlName="prazoDias" />
+                </div>
+              </div>
+            }
+            <div class="dw-field">
+              <label for="f-preparo">Preparo do paciente<span class="opt">opcional</span></label>
+              <input id="f-preparo" type="text" formControlName="preparo" placeholder="Ex.: Jejum de 8 horas" />
+            </div>
+            <div class="dw-field">
+              <label class="switch" for="f-ativo">
+                <span><b style="font-weight: 500;">Em uso</b><span class="cell-sub" id="h-ativo">Fora de uso, não aparece no pedido. Os pedidos antigos continuam.</span></span>
+                <input type="checkbox" role="switch" id="f-ativo" formControlName="ativo" aria-describedby="h-ativo" />
+              </label>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.exame ? 'Salvar alterações' : 'Cadastrar exame') }}</button>
+          </footer>
+        </form>
+      }
+    }
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}

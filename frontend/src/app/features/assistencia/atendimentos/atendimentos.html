@@ -361,6 +361,18 @@
       @if (prontuario()?.acesso?.base === 'JUSTIFICADO') {
         <app-acesso-prontuario [pacienteId]="p.uuid" [acesso]="prontuario()?.acesso" />
       }
+      @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.internacoes?.length) {
+        <section class="pront-exames" aria-labelledby="pront-internacoes-h">
+          <h4 id="pront-internacoes-h">Internações</h4>
+          <app-internacoes-paciente [internacoes]="prontuario()?.internacoes ?? []" />
+        </section>
+      }
+      @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.exames?.length) {
+        <section class="pront-exames" aria-labelledby="pront-exames-h">
+          <h4 id="pront-exames-h">Exames laboratoriais</h4>
+          <app-exames-paciente [exames]="prontuario()?.exames ?? []" />
+        </section>
+      }
       @if (prontuarioCarregando()) {
         <div class="empty"><strong>Carregando prontuário…</strong></div>
       } @else if (prontuarioBloqueio()) {
@@ -584,6 +596,15 @@
                   @if (pode('ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" [disabled]="submitting()" (click)="concluirAtendimento(a)">Concluir atendimento</button> }
                 }
                 <button type="button" class="btn btn--ghost btn--sm" (click)="verProntuario(a.pacienteUuid)">Ver prontuário</button>
+                @if (pode('REGULACAO.SOLICITAR')) {
+                  <a class="btn btn--ghost btn--sm" routerLink="/assistencia/regulacao" [queryParams]="{ acao: 'nova', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid }">Encaminhar</a>
+                }
+                @if (pode('EXAME.SOLICITAR')) {
+                  <a class="btn btn--ghost btn--sm" routerLink="/assistencia/laboratorio" [queryParams]="{ acao: 'pedido', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid, atendimentoId: a.uuid }">Pedir exames</a>
+                }
+                @if (pode('INTERNACAO.GERENCIAR')) {
+                  <a class="btn btn--ghost btn--sm" routerLink="/assistencia/leitos" [queryParams]="{ acao: 'internar', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid, atendimentoId: a.uuid }">Internar</a>
+                }
               </div>
 
               @if (registrosBloqueio()) {
@@ -632,6 +653,21 @@
                     <ng-container *ngTemplateOutlet="recEvolucao; context: { $implicit: e, atId: a.uuid }"></ng-container>
                   } @empty { <p class="cell-sub">Nenhum registro.</p> }
                 </section>
+                <section class="dsec">
+                  <div class="dsec__h">
+                    <h3>Exames <span class="cnt">{{ examesDoAtendimento().length }}</span></h3>
+                    @if (pode('EXAME.SOLICITAR')) {
+                      <a class="btn btn--ghost btn--sm" routerLink="/assistencia/laboratorio" [queryParams]="{ acao: 'pedido', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid, atendimentoId: a.uuid }">+ Exames</a>
+                    }
+                  </div>
+                  <app-exames-paciente [exames]="examesDoAtendimento()" vazio="Nenhum exame pedido neste atendimento." />
+                </section>
+                @if (internacoesDoAtendimento().length) {
+                  <section class="dsec">
+                    <div class="dsec__h"><h3>Internação</h3></div>
+                    <app-internacoes-paciente [internacoes]="internacoesDoAtendimento()" />
+                  </section>
+                }
               }
               @if (podeAuditar()) {
                 <section class="dsec">

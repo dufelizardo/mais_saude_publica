@@ -9,6 +9,7 @@ import {
 } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
+import { AlertaAuditoriaService } from '../../core/services/alerta-auditoria';
 import { AcessoDaInterface, UsuarioAtualResponseDto } from '../../core/models/auth';
 
 const RH = ['RH.CONSULTAR', 'RH.GERENCIAR'];
@@ -24,17 +25,22 @@ const MENU: Record<string, string[]> = {
   '/administrativo': ADMINISTRATIVO,
   '/administrativo/setores': [],
   '/administrativo/modelo': ADMINISTRATIVO,
+  '/administrativo/equipamentos': ['ORGANIZACAO.GERENCIAR', 'ADMINISTRATIVO.CONSULTAR'],
   '/administrativo/necessidades-de-pessoal': [...ADMINISTRATIVO, ...RH],
   '/assistencia/pacientes': ['PACIENTE.CONSULTAR'],
+  '/assistencia/agenda': ['AGENDAMENTO.GERENCIAR', 'ATENDIMENTO.GERENCIAR', 'REGULACAO.REGULAR'],
   '/assistencia/atendimentos': ['ATENDIMENTO.GERENCIAR', 'PRONTUARIO.CONSULTAR', 'AGENDAMENTO.GERENCIAR'],
   '/assistencia/farmacia': ['FARMACIA.CONSULTAR', 'FARMACIA.DISPENSAR', 'FARMACIA.TRANSFERIR', 'FARMACIA.GERENCIAR_ESTOQUE'],
+  '/assistencia/regulacao': ['REGULACAO.CONSULTAR', 'REGULACAO.SOLICITAR', 'REGULACAO.REGULAR'],
+  '/assistencia/laboratorio': ['EXAME.SOLICITAR', 'LABORATORIO.COLETAR', 'LABORATORIO.ANALISAR', 'LABORATORIO.LIBERAR', 'LABORATORIO.GERENCIAR'],
+  '/assistencia/leitos': ['INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'LEITO.GERENCIAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],
   '/administracao/auditoria': ['AUDITORIA.CONSULTAR'],
 };
 
 /** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
 const GRUPOS: Record<string, string[]> = {
-  Assistência: ['/assistencia/pacientes', '/assistencia/atendimentos', '/assistencia/farmacia'],
+  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/laboratorio', '/assistencia/leitos'],
   Administração: ['/administracao/usuarios', '/administracao/auditoria'],
 };
 
@@ -48,6 +54,10 @@ export class AppShell {
   protected readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
+  private readonly alertaService = inject(AlertaAuditoriaService);
+
+  /** Alertas da auditoria abertos (ADR-0097), no item Auditoria do menu; só para quem audita. */
+  protected readonly alertasAbertos = this.alertaService.abertos;
 
   /** Quem está logado (ADR-0065); nulo com o login desligado. */
   protected readonly usuario = signal<UsuarioAtualResponseDto | null>(null);
@@ -69,7 +79,10 @@ export class AppShell {
 
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.usuario.set(u));
-    this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
+    this.authService.acessoDaInterface().subscribe((a) => {
+      this.acesso.set(a);
+      if (this.podeVer('/administracao/auditoria')) this.alertaService.atualizarContador();
+    });
     this.atualizarBreadcrumb();
     this.router.events.pipe(filter((evento) => evento instanceof NavigationEnd)).subscribe(() => {
       this.atualizarBreadcrumb();

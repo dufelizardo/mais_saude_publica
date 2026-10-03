@@ -89,6 +89,7 @@
               <th scope="col" class="num">Carga horária</th>
               <th scope="col">Validade</th>
               <th scope="col">Exigência</th>
+              @if (pode('RH.GERENCIAR')) { <th scope="col" class="num">Ações</th> }
             </tr>
           </thead>
           <tbody>
@@ -104,6 +105,9 @@
                     <span class="badge badge--muted">Opcional</span>
                   }
                 </td>
+                @if (pode('RH.GERENCIAR')) {
+                  <td class="num"><button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Editar ' + t.nome" (click)="abrirTreinamento(t)">Editar</button></td>
+                }
               </tr>
             }
           </tbody>
@@ -139,6 +143,7 @@
               <th scope="col">Período</th>
               <th scope="col" class="num">Duração</th>
               <th scope="col">Situação</th>
+              @if (pode('RH.GERENCIAR')) { <th scope="col" class="num">Ações</th> }
             </tr>
           </thead>
           <tbody>
@@ -149,6 +154,9 @@
                 <td class="mono">{{ dataBr(c.dataInicio) }} a {{ dataBr(c.dataFim) }}</td>
                 <td class="num mono">{{ duracaoDias(c) }} dias</td>
                 <td><span class="badge" [class]="'badge badge--' + st.classe"><span class="dot" aria-hidden="true"></span> {{ st.rotulo }}</span></td>
+                @if (pode('RH.GERENCIAR')) {
+                  <td class="num"><button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Editar ' + c.nome" (click)="abrirCiclo(c)">Editar</button></td>
+                }
               </tr>
             }
           </tbody>
@@ -159,7 +167,7 @@
 }
 
 @if (gaveta(); as g) {
-  <app-drawer [titulo]="g.tipo === 'treinamento' ? 'Novo treinamento' : 'Novo ciclo de avaliação'" (fechar)="fecharGaveta()">
+  <app-drawer [titulo]="tituloGaveta(g)" (fechar)="fecharGaveta()">
     @if (g.tipo === 'treinamento') {
       <form class="dw-form" [formGroup]="treinamentoForm" (ngSubmit)="salvar()" novalidate>
         <div class="dw-body">
@@ -194,7 +202,7 @@
         </div>
         <footer class="dw-foot">
           <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
-          <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Cadastrar treinamento' }}</button>
+          <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.item ? 'Salvar alterações' : 'Cadastrar treinamento') }}</button>
         </footer>
       </form>
     } @else {
@@ -221,7 +229,7 @@
         </div>
         <footer class="dw-foot">
           <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
-          <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Cadastrar ciclo' }}</button>
+          <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.item ? 'Salvar alterações' : 'Cadastrar ciclo') }}</button>
         </footer>
       </form>
     }

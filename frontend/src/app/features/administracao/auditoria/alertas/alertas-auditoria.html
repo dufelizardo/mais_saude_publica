@@ -1,0 +1,176 @@
+<section class="stats" aria-label="Resumo dos alertas">
+  <div class="stat">
+    <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Abertos</div>
+      <div class="stat__val mono">{{ resumo()?.abertos ?? '—' }}</div>
+      <div class="stat__sub">aguardando análise</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--alert" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Severidade alta</div>
+      <div class="stat__val mono">{{ resumo()?.abertosAlta ?? '—' }}</div>
+      <div class="stat__sub">abertos, avisados por e-mail</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Últimos 7 dias</div>
+      <div class="stat__val mono">{{ resumo()?.ultimos7Dias ?? '—' }}</div>
+      <div class="stat__sub">detectados</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Procedentes</div>
+      <div class="stat__val mono">{{ resumo()?.procedentes ?? '—' }}</div>
+      <div class="stat__sub">confirmados na análise</div>
+    </div>
+  </div>
+</section>
+
+<div class="toolbar" role="region" aria-label="Filtros dos alertas">
+  <label class="pill pill--select">
+    <span class="sr-only">Situação</span>
+    <select (change)="status.set($any($event.target).value); carregar()" aria-label="Situação do alerta">
+      <option value="ABERTO" [selected]="status() === 'ABERTO'">Abertos</option>
+      <option value="PROCEDENTE" [selected]="status() === 'PROCEDENTE'">Procedentes</option>
+      <option value="IMPROCEDENTE" [selected]="status() === 'IMPROCEDENTE'">Improcedentes</option>
+      <option value="" [selected]="status() === ''">Todas as situações</option>
+    </select>
+  </label>
+  <label class="pill pill--select">
+    <span class="sr-only">Tipo</span>
+    <select (change)="tipo.set($any($event.target).value); carregar()" aria-label="Tipo do alerta">
+      <option value="" [selected]="tipo() === ''">Todos os tipos</option>
+      @for (t of listaTipos; track t) { <option [value]="t" [selected]="tipo() === t">{{ tipos[t].rotulo }}</option> }
+    </select>
+  </label>
+  <label class="pill pill--select">
+    <span class="sr-only">Severidade</span>
+    <select (change)="severidade.set($any($event.target).value); carregar()" aria-label="Severidade do alerta">
+      <option value="" [selected]="severidade() === ''">Todas as severidades</option>
+      <option value="ALTA" [selected]="severidade() === 'ALTA'">Alta</option>
+      <option value="MEDIA" [selected]="severidade() === 'MEDIA'">Média</option>
+    </select>
+  </label>
+  <button type="button" class="btn btn--ghost btn--sm" [disabled]="verificando()" (click)="verificarAgora()"
+    title="A verificação roda sozinha a cada 5 minutos; aqui ela roda na hora.">{{ verificando() ? 'Verificando…' : 'Verificar agora' }}</button>
+</div>
+
+<section class="card">
+  <div class="card__head">
+    <div>
+      <h2>Alertas</h2>
+      <div class="sub">Padrões suspeitos achados na trilha. Cada um fica aberto até alguém concluir, com parecer (ADR-0096).</div>
+    </div>
+  </div>
+  @if (erro()) {
+    <div class="box box--err" role="alert" style="margin: var(--s-4);"><strong>{{ erro() }}</strong></div>
+  }
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Detectado</th>
+          <th scope="col">Alerta</th>
+          <th scope="col">Quem</th>
+          <th scope="col">Unidade</th>
+          <th scope="col">Período</th>
+          <th scope="col">Situação</th>
+          <th scope="col" class="num">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of alertas(); track a.uuid) {
+          <tr>
+            <td class="mono">{{ instante(a.detectadoEm) }}</td>
+            <td>
+              <span class="cell-main" style="display: block;">{{ tipos[a.tipo].rotulo }}</span>
+              <span [class]="'badge badge--' + severidades[a.severidade].classe"><span class="dot" aria-hidden="true"></span> {{ severidades[a.severidade].rotulo }}</span>
+            </td>
+            <td>{{ quem(a) }}@if (a.usuarioNome && a.usuarioCpf) { <span class="cell-sub mono">{{ formatCpf(a.usuarioCpf) }}</span> }</td>
+            <td>{{ a.unidadeNome || '—' }}</td>
+            <td class="mono">{{ periodo(a) }}<span class="cell-sub">{{ a.quantidade }} evento(s)</span></td>
+            <td><span [class]="'badge badge--' + statusAlerta[a.status].classe"><span class="dot" aria-hidden="true"></span> {{ statusAlerta[a.status].rotulo }}</span></td>
+            <td class="num">
+              <button type="button" [class]="a.status === 'ABERTO' ? 'btn btn--sm' : 'btn btn--ghost btn--sm'"
+                [attr.aria-label]="(a.status === 'ABERTO' ? 'Analisar alerta ' : 'Ver alerta ') + tipos[a.tipo].rotulo + ' de ' + quem(a)"
+                (click)="abrir(a)">{{ a.status === 'ABERTO' ? 'Analisar' : 'Ver' }}</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="7"><div class="empty"><strong>{{ carregando() ? 'Carregando…' : 'Nenhum alerta' }}</strong>@if (!carregando()) { <span>{{ status() === 'ABERTO' ? 'Nada aguardando análise no seu escopo.' : 'Ajuste os filtros.' }}</span> }</div></td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@if (selecionado(); as a) {
+  <app-drawer [titulo]="tipos[a.tipo].rotulo" (fechar)="fechar()">
+    <form class="dw-form" [formGroup]="analiseForm" (ngSubmit)="analisar()" novalidate>
+      <div class="dw-body">
+        @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+        <div class="dw-meta">
+          <span [class]="'badge badge--' + severidades[a.severidade].classe"><span class="dot" aria-hidden="true"></span> Severidade {{ severidades[a.severidade].rotulo.toLowerCase() }}</span>
+          <span [class]="'badge badge--' + statusAlerta[a.status].classe"><span class="dot" aria-hidden="true"></span> {{ statusAlerta[a.status].rotulo }}</span>
+        </div>
+        <p class="cell-sub">{{ tipos[a.tipo].descricao }}</p>
+        <div class="box box--warn"><div>{{ a.descricao }}</div></div>
+        <dl class="ro">
+          <div><dt>Quem</dt><dd>{{ quem(a) }}@if (a.usuarioCpf && a.usuarioNome) { <span class="cell-sub mono">{{ formatCpf(a.usuarioCpf) }}</span> }</dd></div>
+          <div><dt>Unidade</dt><dd>{{ a.unidadeNome || '—' }}</dd></div>
+          <div><dt>Primeiro evento</dt><dd class="mono">{{ instante(a.primeiroEventoEm) }}</dd></div>
+          <div><dt>Último evento</dt><dd class="mono">{{ instante(a.ultimoEventoEm) }}</dd></div>
+          <div><dt>Eventos</dt><dd class="mono">{{ a.quantidade }}</dd></div>
+          <div><dt>Detectado em</dt><dd class="mono">{{ instante(a.detectadoEm) }}</dd></div>
+          @if (a.pacienteId) { <div><dt>Paciente</dt><dd>{{ a.pacienteNome || 'Paciente' }}</dd></div> }
+        </dl>
+        @if (a.usuarioCpf) {
+          <div><button type="button" class="btn btn--ghost btn--sm" (click)="eventosDo(a)">Ver eventos de {{ quem(a) }}</button></div>
+        }
+
+        @if (a.status === 'ABERTO') {
+          <fieldset class="dw-field">
+            <legend>Conclusão <span class="req" aria-hidden="true">*</span></legend>
+            <div class="radios" role="radiogroup" aria-describedby="e-conclusao">
+              <label><input type="radio" formControlName="conclusao" value="PROCEDENTE" id="f-conclusao" />Procedente</label>
+              <label><input type="radio" formControlName="conclusao" value="IMPROCEDENTE" />Improcedente</label>
+            </div>
+            <p class="dw-hint">Procedente: o acesso não se justifica e pede providência. Improcedente: havia motivo.</p>
+            @if (erroCampo('conclusao')) { <p class="dw-err" id="e-conclusao">{{ erroCampo('conclusao') }}</p> }
+          </fieldset>
+          <div class="dw-field">
+            <label for="f-parecer">Parecer <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+            <textarea id="f-parecer" formControlName="parecer" rows="4" maxlength="2000" placeholder="O que foi verificado e a providência" [attr.aria-invalid]="!!erroCampo('parecer')" aria-describedby="e-parecer"></textarea>
+            @if (erroCampo('parecer')) { <p class="dw-err" id="e-parecer">{{ erroCampo('parecer') }}</p> }
+          </div>
+        } @else {
+          <section class="dsec">
+            <div class="dsec__h"><h3>Análise</h3></div>
+            <p class="reg-texto">{{ a.parecer }}</p>
+            <p class="cell-sub">{{ a.analisadoPorNome || a.analisadoPorCpf }} · {{ instante(a.analisadoEm) }}</p>
+          </section>
+        }
+      </div>
+      <footer class="dw-foot">
+        <button type="button" class="btn btn--ghost" (click)="fechar()">{{ a.status === 'ABERTO' ? 'Cancelar' : 'Fechar' }}</button>
+        @if (a.status === 'ABERTO') {
+          <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Registrando…' : 'Concluir análise' }}</button>
+        }
+      </footer>
+    </form>
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}

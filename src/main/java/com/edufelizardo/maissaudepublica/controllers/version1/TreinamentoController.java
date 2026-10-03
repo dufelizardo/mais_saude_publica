@@ -85,4 +85,15 @@ public class TreinamentoController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponseDto(successMessage, details));
     }
+
+    @RequerPermissao({"RH.GERENCIAR"})
+    @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Atualiza treinamento",
+            description = "Mesmos campos e regras da criação (ADR-0083). Inexistente → 404; nome já usado por outro → 409.",
+            tags = "Treinamento")
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> atualizar(@PathVariable UUID uuid, @Valid @RequestBody TreinamentoRequestDto dto) {
+        TreinamentoResponseDto r = service.atualizar(uuid, dto);
+        return ResponseEntity.ok(new SuccessResponseDto("Treinamento atualizado com sucesso!", "Nome: " + r.getNome()));
+    }
 }

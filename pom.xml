@@ -50,6 +50,15 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
+		<!-- Migrações versionadas do esquema (ADR-0090), no lugar do ddl-auto=update. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+		</dependency>
 		<!-- Recuperação de senha por e-mail (ADR-0081): SMTP configurável, desligado por padrão. -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -20,7 +20,8 @@ type Aba = 'setores' | 'responsabilidades';
 type Gaveta =
   | { tipo: 'setor'; setor: SetorResponseDto | null }
   | { tipo: 'responsabilidade' }
-  | { tipo: 'encerrar'; item: ResponsabilidadeAdministrativaResponseDto };
+  | { tipo: 'encerrar'; item: ResponsabilidadeAdministrativaResponseDto }
+  | { tipo: 'responsaveis'; setor: SetorResponseDto };
 
 const TIPOS: { valor: TipoSetor; rotulo: string; classe: string }[] = [
   { valor: 'ADMINISTRATIVO', rotulo: 'Administrativo', classe: 'info' },
@@ -50,6 +51,8 @@ export class Setores {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly dataBr = dataBr;
+  /** Responsáveis do setor aberto na gaveta (ADR-0083); null enquanto carrega. */
+  protected readonly responsaveisDoSetor = signal<ResponsabilidadeAdministrativaResponseDto[] | null>(null);
   protected readonly tipos = TIPOS;
   protected readonly abas: { id: Aba; rotulo: string }[] = [
     { id: 'setores', rotulo: 'Setores' },
@@ -198,9 +201,18 @@ export class Setores {
     );
   }
 
-  /** Do setor para as responsabilidades do responsável dele. */
+  /** Quem tem ou teve responsabilidade neste setor, vigentes primeiro (ADR-0083). */
   protected verResponsabilidades(s: SetorResponseDto): void {
-    const p = this.profissionais().find((x) => x.matricula === s.responsavelMatricula);
+    this.responsaveisDoSetor.set(null);
+    this.abrir({ tipo: 'responsaveis', setor: s });
+    this.responsabilidadeService.listarPorSetor(s.uuid).pipe(catchError(() => of([])))
+      .subscribe((l) => this.responsaveisDoSetor.set(l));
+  }
+
+  /** Da gaveta do setor para o histórico completo da pessoa, na aba Responsabilidades. */
+  protected verHistoricoDe(matricula: string): void {
+    const p = this.profissionais().find((x) => x.matricula === matricula);
+    this.fecharGaveta();
     if (p) this.escolherProfissional(p);
   }
 

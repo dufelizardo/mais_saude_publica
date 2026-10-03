@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -116,5 +117,37 @@ class TreinamentoControllerTest {
     void deveRetornarNotFoundAoBuscarIdInexistente() throws Exception {
         mockMvc.perform(get(BASE_URL + UUID.randomUUID()))
                 .andExpect(status().isNotFound());
+    }
+
+    // ── Edição (ADR-0083) ──────────────────────────────────────────────────────────────────────
+
+    @Test
+    void deveAtualizarOTreinamento() throws Exception {
+        UUID uuid = criarTreinamento(PREFIXO_NOME_TESTE + "NR-10");
+        String nome = PREFIXO_NOME_TESTE + "NR-10 reciclagem";
+        mockMvc.perform(patch(BASE_URL + uuid).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "%s", "cargaHoraria": 16, "validadeMeses": 24, "obrigatorio": false}
+                        """.formatted(nome)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Treinamento atualizado com sucesso!"));
+        mockMvc.perform(get(BASE_URL + uuid))
+                .andExpect(jsonPath("$.nome").value(nome))
+                .andExpect(jsonPath("$.cargaHoraria").value(16))
+                .andExpect(jsonPath("$.validadeMeses").value(24))
+                .andExpect(jsonPath("$.obrigatorio").value(false));
+    }
+
+    @Test
+    void atualizarTreinamentoInexistenteDa404ENomeRepetidoDa409() throws Exception {
+        mockMvc.perform(patch(BASE_URL + UUID.randomUUID()).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "%s", "cargaHoraria": 8, "validadeMeses": 12, "obrigatorio": true}
+                        """.formatted(PREFIXO_NOME_TESTE + "Fantasma")))
+                .andExpect(status().isNotFound());
+        criarTreinamento(PREFIXO_NOME_TESTE + "Primeiro");
+        UUID segundo = criarTreinamento(PREFIXO_NOME_TESTE + "Segundo");
+        mockMvc.perform(patch(BASE_URL + segundo).contentType(MediaType.APPLICATION_JSON).content("""
+                        {"nome": "%s", "cargaHoraria": 8, "validadeMeses": 12, "obrigatorio": true}
+                        """.formatted(PREFIXO_NOME_TESTE + "Primeiro")))
+                .andExpect(status().isConflict());
     }
 }

@@ -24,6 +24,17 @@ public class TreinamentoService {
         return TreinamentoResponseDto.fromTreinamento(treinamento);
     }
 
+    /** Edição do catálogo (ADR-0083): mesmos campos e regras da criação; nome repetido → 409. */
+    public TreinamentoResponseDto atualizar(UUID uuid, TreinamentoRequestDto dto) {
+        Treinamento treinamento = buscarEntidadePorId(uuid);
+        treinamento.setNome(dto.getNome());
+        treinamento.setCargaHoraria(dto.getCargaHoraria());
+        treinamento.setValidadeMeses(dto.getValidadeMeses());
+        treinamento.setObrigatorio(dto.getObrigatorio());
+        treinamento = treinamentoRepository.save(treinamento);
+        return TreinamentoResponseDto.fromTreinamento(treinamento);
+    }
+
     public List<TreinamentoResponseDto> listar() {
         return treinamentoRepository.findAll()
                 .stream()

@@ -1,6 +1,8 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.EventoAuditoria;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EventoAuditoriaResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PaginaAuditoriaResponseDto;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +46,9 @@ public class ConsultaAuditoriaService {
 
     public static final int TAMANHO_PADRAO = 20;
     public static final int TAMANHO_MAXIMO = 100;
+    /** Teto da exportação: acima disso, refinar o filtro (ADR-0082). */
+    public static final int EXPORTACAO_MAXIMO = 50_000;
+    private static final DateTimeFormatter DATA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final ZoneId FUSO = ZoneId.of("America/Sao_Paulo");
 
     /** Filtros da consulta; todos opcionais. {@code desde}/{@code ate} são dias inteiros no fuso de Brasília. */
@@ -108,6 +114,81 @@ public class ConsultaAuditoriaService {
             }
         }
         return new PaginaAuditoriaResponseDto(comNomes(eventos), total, pagina, tamanho, resumo);
+    }
+
+    /**
+     * A trilha filtrada em CSV (ADR-0082): separador ";" e BOM, para abrir direto no Excel em português; datas no fuso
+     * de Brasília; do mais recente ao mais antigo; mesmo escopo da consulta. Acima de {@value #EXPORTACAO_MAXIMO}
+     * eventos, 422 — refinar o filtro. Filtrar por paciente gera o relatório de acessos para o titular dos dados.
+     */
+    @Transactional(readOnly = true)
+    public String exportarCsv(Filtro f) {
+        if (f.desde() != null && f.ate() != null && f.ate().isBefore(f.desde())) {
+            throw new ResourceBadRequestException("O fim do período não pode ser antes do início.");
+        }
+        ContextoAuditoria.paciente(f.pacienteId());
+        Optional<Set<UUID>> escopo = controleDeAcesso.unidadesVisiveis("AUDITORIA.CONSULTAR");
+        List<EventoAuditoria> eventos = List.of();
+        if (escopo.isEmpty() || !escopo.get().isEmpty()) {
+            CriteriaBuilder cb = em.getCriteriaBuilder();
+            CriteriaQuery<Long> c = cb.createQuery(Long.class);
+            Root<EventoAuditoria> rc = c.from(EventoAuditoria.class);
+            long total = em.createQuery(c.select(cb.count(rc)).where(predicados(cb, rc, f, escopo))).getSingleResult();
+            if (total > EXPORTACAO_MAXIMO) {
+                ContextoAuditoria.detalhe("Recusada: " + total + " eventos, acima do teto de " + EXPORTACAO_MAXIMO + ".");
+                throw new ResourceUnprocessableEntityException("O filtro tem " + total + " eventos; a exportação vai até "
+                        + EXPORTACAO_MAXIMO + ". Reduza o período ou acrescente filtros.");
+            }
+            CriteriaQuery<EventoAuditoria> q = cb.createQuery(EventoAuditoria.class);
+            Root<EventoAuditoria> r = q.from(EventoAuditoria.class);
+            q.where(predicados(cb, r, f, escopo)).orderBy(cb.desc(r.get("ocorridoEm")));
+            eventos = em.createQuery(q).getResultList();
+        }
+        ContextoAuditoria.detalhe(eventos.size() + " eventos exportados; filtros: " + descrever(f) + ".");
+
+        StringBuilder csv = new StringBuilder("\uFEFF");
+        csv.append(String.join(";", "Data e hora (Brasília)", "Usuário (CPF)", "Usuário", "Ação", "Resultado", "Recurso",
+                "Método", "Rota", "Status HTTP", "Registro", "Paciente (id)", "Paciente", "Unidade (id)", "Unidade",
+                "Origem (IP)", "Detalhe")).append("\r\n");
+        for (EventoAuditoriaResponseDto e : comNomes(eventos)) {
+            csv.append(String.join(";",
+                    celula(e.getOcorridoEm() == null ? "" : DATA_HORA.format(e.getOcorridoEm().atZone(FUSO))),
+                    celula(e.getUsuarioCpf()), celula(e.getUsuarioNome()), celula(e.getAcao()), celula(e.getResultado()),
+                    celula(e.getRecurso()), celula(e.getMetodo()), celula(e.getRota()), celula(e.getStatusHttp()),
+                    celula(e.getRegistroId()), celula(e.getPacienteId()), celula(e.getPacienteNome()),
+                    celula(e.getUnidadeId()), celula(e.getUnidadeNome()), celula(e.getOrigemIp()), celula(e.getDetalhe())))
+                    .append("\r\n");
+        }
+        return csv.toString();
+    }
+
+    /** Aspas quando preciso, e um apóstrofo antes de =, +, - e @ para a planilha não executar fórmula. */
+    private static String celula(Object valor) {
+        if (valor == null) {
+            return "";
+        }
+        String s = valor.toString();
+        if (!s.isEmpty() && "=+-@".indexOf(s.charAt(0)) >= 0) {
+            s = "'" + s;
+        }
+        if (s.contains(";") || s.contains("\"") || s.contains("\n") || s.contains("\r")) {
+            s = "\"" + s.replace("\"", "\"\"") + "\"";
+        }
+        return s;
+    }
+
+    /** Quais filtros foram usados, sem repetir CPF nem nome na trilha. */
+    private static String descrever(Filtro f) {
+        List<String> partes = new ArrayList<>();
+        if (f.usuarioCpf() != null && !f.usuarioCpf().isBlank()) partes.add("usuário");
+        if (f.pacienteId() != null) partes.add("paciente");
+        if (f.registroId() != null) partes.add("registro");
+        if (f.unidadeId() != null) partes.add("unidade");
+        if (f.acao() != null) partes.add("ação " + f.acao());
+        if (f.resultado() != null) partes.add("resultado " + f.resultado());
+        if (f.desde() != null || f.ate() != null) partes.add("período " + (f.desde() == null ? "…" : f.desde()) + " a "
+                + (f.ate() == null ? "…" : f.ate()));
+        return partes.isEmpty() ? "nenhum" : String.join(", ", partes);
     }
 
     private Predicate[] predicados(CriteriaBuilder cb, Root<EventoAuditoria> r, Filtro f, Optional<Set<UUID>> escopo) {

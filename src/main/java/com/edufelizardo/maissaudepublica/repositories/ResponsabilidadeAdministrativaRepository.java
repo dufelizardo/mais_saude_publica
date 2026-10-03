@@ -8,4 +8,6 @@ import java.util.UUID;
 
 public interface ResponsabilidadeAdministrativaRepository extends JpaRepository<ResponsabilidadeAdministrativa, UUID> {
     List<ResponsabilidadeAdministrativa> findByProfissional_MatriculaOrderByDataInicioDesc(String matricula);
+
+    List<ResponsabilidadeAdministrativa> findBySetor_UuidOrderByDataInicioDesc(java.util.UUID setorId);
 }

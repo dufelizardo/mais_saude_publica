@@ -127,3 +127,5 @@ suíte Robot Framework) antes de cada promoção — detalhes em
 ## Mais documentação
 
 Decisões de arquitetura e roadmap técnico: [docs/adr/](docs/adr/README.md).
+
+O que falta e o estado de cada ambiente (o que está ligado ou desligado): [docs/PENDENCIAS.md](docs/PENDENCIAS.md).

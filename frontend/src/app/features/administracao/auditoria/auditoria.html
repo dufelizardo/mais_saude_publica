@@ -1,16 +1,33 @@
 <header class="page-head">
   <div>
     <h1>Auditoria</h1>
-    <p>Trilha imutável de quem acessou e alterou o quê — nada aqui pode ser editado ou apagado</p>
+    <p>Trilha imutável de quem acessou e alterou o quê — ninguém edita nem apaga@if (retencaoAnos()) {; guardada por {{ retencaoAnos() }} anos, e só a rotina de retenção remove o que passou do prazo}</p>
   </div>
   <div class="page-actions">
-    <button type="button" class="btn btn--ghost" disabled title="Em breve">
+    @if (aba() === 'eventos') {
+    <button type="button" class="btn btn--ghost" [disabled]="exportando()" (click)="exportar()"
+      title="Baixa o filtro atual em CSV (abre no Excel). Filtrado por paciente, serve de relatório de acessos para o titular dos dados.">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-      Exportar
+      {{ exportando() ? 'Exportando…' : 'Exportar CSV' }}
     </button>
+    }
   </div>
 </header>
 
+<div class="page-tabs" role="tablist" aria-label="Seções da auditoria">
+  <button type="button" role="tab" id="tab-eventos" aria-controls="pn-eventos" [attr.aria-selected]="aba() === 'eventos'"
+    [tabIndex]="aba() === 'eventos' ? 0 : -1" (click)="selecionarAba('eventos')" (keydown)="navegarAbas($event)">Eventos</button>
+  <button type="button" role="tab" id="tab-alertas" aria-controls="pn-alertas" [attr.aria-selected]="aba() === 'alertas'"
+    [tabIndex]="aba() === 'alertas' ? 0 : -1" (click)="selecionarAba('alertas')" (keydown)="navegarAbas($event)">Alertas
+    @if (alertasAbertos() !== null) { <span class="cnt">{{ alertasAbertos() }}</span> }</button>
+</div>
+
+@if (aba() === 'alertas') {
+  <div id="pn-alertas" role="tabpanel" aria-labelledby="tab-alertas">
+    <app-alertas-auditoria (verEventos)="verEventosDoAlerta($event)" />
+  </div>
+} @else {
+<div id="pn-eventos" role="tabpanel" aria-labelledby="tab-eventos">
 <section class="stats" aria-label="Resumo do filtro">
   <div class="stat">
     <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></span>
@@ -182,6 +199,8 @@
     </div>
   }
 </section>
+</div>
+}
 
 @if (selecionado(); as e) {
   <app-drawer titulo="Evento de auditoria" (fechar)="selecionado.set(null)">

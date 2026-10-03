@@ -13,7 +13,7 @@ import { ValorBeneficioService } from '../../../core/services/valor-beneficio';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { dataBr, hojeIso, moeda } from '../../../shared/formato';
 
-type Gaveta = { tipo: 'novo' } | { tipo: 'valores'; beneficio: TipoBeneficioResponseDto };
+type Gaveta = { tipo: 'tipo'; item: TipoBeneficioResponseDto | null } | { tipo: 'valores'; beneficio: TipoBeneficioResponseDto };
 
 const CUSTEIOS: { valor: CusteioBeneficio; rotulo: string; classe: string; ajuda: string }[] = [
   { valor: 'EMPRESA', rotulo: 'Empresa', classe: 'ok', ajuda: 'a rede paga tudo' },
@@ -114,7 +114,13 @@ export class Beneficios {
 
   protected abrirNovo(): void {
     this.tipoForm.reset({ nome: '', custeio: '' });
-    this.abrir({ tipo: 'novo' });
+    this.abrir({ tipo: 'tipo', item: null });
+  }
+
+  /** Edição do nome e do custeio (ADR-0083); os valores seguem no histórico próprio. */
+  protected abrirEdicao(t: TipoBeneficioResponseDto): void {
+    this.tipoForm.reset({ nome: t.nome, custeio: t.custeio });
+    this.abrir({ tipo: 'tipo', item: t });
   }
 
   protected abrirValores(beneficio: TipoBeneficioResponseDto): void {
@@ -161,18 +167,31 @@ export class Beneficios {
 
   protected salvar(): void {
     const g = this.gaveta();
-    if (g?.tipo === 'novo') this.salvarTipo();
+    if (g?.tipo === 'tipo') this.salvarTipo(g.item);
     if (g?.tipo === 'valores') this.salvarValor(g.beneficio);
   }
 
-  private salvarTipo(): void {
+  private salvarTipo(item: TipoBeneficioResponseDto | null): void {
     const v = this.tipoForm.getRawValue();
     const erros: Record<string, string> = {};
     if (!v.nome.trim()) erros['nome'] = 'Informe o nome do benefício.';
     if (!v.custeio) erros['custeio'] = 'Escolha quem custeia.';
     if (!this.validar(erros)) return;
     this.submitting.set(true);
-    this.tipoService.criar({ nome: v.nome.trim(), custeio: v.custeio as CusteioBeneficio }).subscribe({
+    const dto = { nome: v.nome.trim(), custeio: v.custeio as CusteioBeneficio };
+    if (item) {
+      this.tipoService.atualizar(item.uuid, dto).subscribe({
+        next: () => {
+          this.submitting.set(false);
+          this.gaveta.set(null);
+          this.mostrarToast('Benefício atualizado', dto.nome);
+          this.carregar();
+        },
+        error: (e: HttpErrorResponse) => this.falhou(e),
+      });
+      return;
+    }
+    this.tipoService.criar(dto).subscribe({
       next: () => {
         this.submitting.set(false);
         this.gaveta.set(null);
