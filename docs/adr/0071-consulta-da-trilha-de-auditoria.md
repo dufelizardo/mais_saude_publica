@@ -76,8 +76,7 @@ ficam registradas.
 - A decisão de deixar o prontuário na rede inteira (ADR-0067) passa a ter fiscalização efetiva.
 
 **Negativas / pendências:**
-- Exportação (CSV ou PDF) para atender pedidos formais do titular dos dados.
-- Retenção e arquivamento da trilha.
+- ~~Exportação~~ em CSV e ~~retenção~~ de 20 anos feitas pela [ADR-0082](./0082-exportacao-e-retencao-da-auditoria.md); PDF formatado fica para quando houver pedido formal que o exija.
 - Alertas (ex.: muitas recusas seguidas, leituras fora do horário da escala).
 
 ## Referências

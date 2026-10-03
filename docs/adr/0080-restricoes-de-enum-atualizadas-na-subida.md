@@ -2,7 +2,12 @@
 
 ## Status
 
-Aceita e implementada. Corrige uma perda silenciosa de eventos de auditoria nos ambientes com banco anterior.
+Substituída pela [ADR-0090](./0090-migracoes-versionadas-com-flyway.md): com o Flyway, a restrição de enum é
+refeita por migração, e o teste `MigracoesDoEsquemaTest` acusa no CI a que ficou para trás. A rotina de subida
+foi removida.
+
+Originalmente: aceita e implementada. Corrigia uma perda silenciosa de eventos de auditoria nos ambientes com
+banco anterior.
 
 ## Contexto
 

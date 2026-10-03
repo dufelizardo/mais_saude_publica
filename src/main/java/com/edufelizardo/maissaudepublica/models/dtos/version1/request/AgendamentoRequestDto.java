@@ -40,4 +40,10 @@ public class AgendamentoRequestDto implements Serializable {
     private TipoAgendamento tipo;
 
     private String observacao;
+
+    /** Com unidade, a marcação segue a agenda do profissional ali: vaga livre, ou encaixe (ADR-0091). */
+    private UUID unidadeId;
+
+    /** Marcação fora das vagas da agenda. */
+    private Boolean encaixe;
 }

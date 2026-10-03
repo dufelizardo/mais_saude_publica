@@ -85,6 +85,7 @@ public class AuditoriaInterceptor implements HandlerInterceptor {
         if (RECUPERACAO.equals(rota) || REDEFINICAO.equals(rota)) return AcaoAuditoria.RECUPERACAO_DE_SENHA;
         switch (metodoHttp) {
             case "GET":
+                if (rota.endsWith("/exportacao")) return AcaoAuditoria.EXPORTACAO;
                 return metodo.hasMethodAnnotation(AuditarLeitura.class) ? AcaoAuditoria.LEITURA : null;
             case "DELETE":
                 return AcaoAuditoria.EXCLUSAO;

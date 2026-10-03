@@ -20,4 +20,9 @@ export class TipoBeneficioService {
   criar(dto: TipoBeneficioRequestDto): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/`, dto);
   }
+
+  /** Edição do tipo de benefício (ADR-0083). */
+  atualizar(uuid: string, dto: TipoBeneficioRequestDto): Observable<SuccessResponseDto> {
+    return this.http.patch<SuccessResponseDto>(`/api/v1/tipo-beneficio/${uuid}`, dto);
+  }
 }

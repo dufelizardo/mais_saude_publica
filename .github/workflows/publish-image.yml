@@ -2,8 +2,8 @@ name: Publicar imagem (ghcr.io)
 
 # Builda e publica a imagem em ghcr.io a cada push nas 4 branches do fluxo de promocao, tagueada
 # com o nome da branch - o ArgoCD (rodando no home-lab, ver ADR-0012) puxa essa tag pro ambiente
-# correspondente. So dispara em push (merge ja acontecido), nunca em pull_request - mesma logica
-# do deploy-prod.yml, pra nao publicar imagem de um PR ainda nao promovido.
+# correspondente. So dispara em push (merge ja acontecido), nunca em pull_request, pra nao publicar
+# imagem de um PR ainda nao promovido.
 on:
   push:
     branches:

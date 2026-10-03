@@ -6,6 +6,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MunicipalR
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RegionalRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.UnidadeSaudeRequestDto;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoOperacional;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -76,6 +77,24 @@ public class UnidadeDeSaude implements Serializable {
     @Column(name = "HORARIO_ATENDIMENTO")
     private Map<DayOfWeek, String> horarioAtendimento;
     private boolean ativo;
+
+    /** Código do Cadastro Nacional de Estabelecimentos de Saúde, 7 dígitos; opcional e único (ADR-0101). */
+    @Column(length = 7, unique = true)
+    private String cnes;
+
+    /** Situação operacional (ADR-0101). Em obra ou inoperante, a agenda fecha. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SituacaoOperacional situacaoOperacional = SituacaoOperacional.EM_OPERACAO;
+
+    @Column(length = 500)
+    private String motivoSituacao;
+
+    private java.time.LocalDate previsaoRetorno;
+
+    /** Funciona 24 horas (hospital, UPA): o horário estruturado não fecha a agenda (ADR-0101). */
+    @Column(name = "funciona_24h", nullable = false)
+    private boolean funciona24h;
 
     /**
      * CPF do responsável, informado no cadastro da unidade mesmo quando o {@link Profissional}

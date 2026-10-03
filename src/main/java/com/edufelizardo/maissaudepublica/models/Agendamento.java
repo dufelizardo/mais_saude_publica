@@ -55,6 +55,15 @@ public class Agendamento implements Serializable {
 
     private String observacao;
 
+    /** Onde o paciente vai ser atendido (ADR-0091). Nulo nos agendamentos anteriores à agenda. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unidade_id", referencedColumnName = "uuid")
+    private UnidadeDeSaude unidade;
+
+    /** Marcado fora das vagas da agenda (ADR-0091). */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean encaixe;
+
     public Agendamento(Paciente paciente, Profissional profissional, LocalDateTime dataHora,
                         StatusAgendamento status, TipoAgendamento tipo, String observacao) {
         this.paciente = paciente;

@@ -106,7 +106,7 @@ public class AgendamentoController {
     @RequerPermissao({"AGENDAMENTO.GERENCIAR"})
     @PatchMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Atualiza um agendamento",
-            description = "Substitui os campos editáveis por inteiro — cobre tanto corrigir dados quanto avançar o status (AGENDADO/CONFIRMADO/REALIZADO/CANCELADO).",
+            description = "Substitui os campos editáveis por inteiro — cobre tanto corrigir dados quanto avançar o status (AGENDADO/CONFIRMADO/REALIZADO/CANCELADO/FALTOU). Com unidadeId, a marcação segue a agenda: vaga livre ou encaixe (ADR-0091).",
             tags = "Agendamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(
@@ -123,5 +123,22 @@ public class AgendamentoController {
         String details = "Status: " + responseDto.getStatus();
 
         return ResponseEntity.ok(new SuccessResponseDto(successMessage, details));
+    }
+
+    @RequerPermissao({"AGENDAMENTO.GERENCIAR"})
+    @PostMapping(value = "{uuid}/falta", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra que o paciente faltou",
+            description = "Só agendamentos AGENDADO ou CONFIRMADO (422). A falta entra no resumo da agenda (ADR-0091).",
+            tags = "Agendamento")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> registrarFalta(@PathVariable UUID uuid) {
+        AgendamentoResponseDto responseDto = service.registrarFalta(uuid);
+        return ResponseEntity.ok(new SuccessResponseDto("Falta registrada!", "Paciente: " + responseDto.getPacienteNome()));
     }
 }

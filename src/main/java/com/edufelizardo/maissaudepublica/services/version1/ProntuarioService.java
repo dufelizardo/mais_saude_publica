@@ -29,6 +29,14 @@ import com.edufelizardo.maissaudepublica.repositories.EvolucaoEnfermagemReposito
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProcedimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.TriagemRepository;
+import com.edufelizardo.maissaudepublica.repositories.ItemPedidoExameRepository;
+import com.edufelizardo.maissaudepublica.repositories.PedidoExameRepository;
+import com.edufelizardo.maissaudepublica.models.PedidoExame;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ExameProntuarioDto;
+import java.util.Comparator;
+import com.edufelizardo.maissaudepublica.repositories.InternacaoRepository;
+import com.edufelizardo.maissaudepublica.repositories.EventoLeitoRepository;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.InternacaoResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -67,6 +75,18 @@ public class ProntuarioService {
     @Autowired
     private VinculoAssistencialService vinculoAssistencialService;
 
+    @Autowired
+    private PedidoExameRepository pedidoExameRepository;
+
+    @Autowired
+    private ItemPedidoExameRepository itemPedidoExameRepository;
+
+    @Autowired
+    private InternacaoRepository internacaoRepository;
+
+    @Autowired
+    private EventoLeitoRepository eventoLeitoRepository;
+
     public ProntuarioResponseDto buscarPorPacienteId(UUID pacienteId) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -84,7 +104,24 @@ public class ProntuarioService {
         response.setPacienteNome(paciente.getNome());
         response.setAtendimentos(atendimentos);
         response.setAcesso(acesso);
+        response.setExames(exames(pacienteId));
+        response.setInternacoes(internacaoRepository.findByPaciente_UuidOrderByAdmitidaEmDesc(pacienteId).stream()
+                .map(i -> InternacaoResponseDto.fromInternacao(i, eventoLeitoRepository.findByInternacao_UuidOrderByOcorridoEmAsc(i.getUuid()), true))
+                .collect(Collectors.toList()));
         return response;
+    }
+
+    /** Os exames laboratoriais do paciente, pedido mais recente primeiro (ADR-0095). */
+    private List<ExameProntuarioDto> exames(UUID pacienteId) {
+        List<PedidoExame> pedidos = pedidoExameRepository.findByPaciente_UuidOrderBySolicitadoEmDesc(pacienteId);
+        if (pedidos.isEmpty()) {
+            return List.of();
+        }
+        return itemPedidoExameRepository.findByPedido_UuidIn(pedidos.stream().map(PedidoExame::getUuid).toList()).stream()
+                .sorted(Comparator.comparing((com.edufelizardo.maissaudepublica.models.ItemPedidoExame i) -> i.getPedido().getSolicitadoEm())
+                        .reversed().thenComparing(i -> i.getExame().getNome()))
+                .map(ExameProntuarioDto::fromItem)
+                .collect(Collectors.toList());
     }
 
     /**

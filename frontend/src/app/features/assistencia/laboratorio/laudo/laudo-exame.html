@@ -1,0 +1,77 @@
+<div class="laudo-acoes">
+  <button type="button" class="btn" (click)="imprimir()" [disabled]="!liberados().length">Imprimir</button>
+  <button type="button" class="btn btn--ghost" (click)="fechar()">Fechar</button>
+</div>
+
+<main class="laudo">
+  @if (erro()) {
+    <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div>
+  } @else if (pedido(); as p) {
+    <header class="laudo__cab">
+      <div>
+        <p class="laudo__org">Mais Saúde Pública</p>
+        <h1>Laudo de exames laboratoriais</h1>
+      </div>
+      <div class="laudo__lab">
+        @for (l of laboratorios(); track l) { <div>{{ l }}</div> }
+      </div>
+    </header>
+
+    <dl class="laudo__dados">
+      <div><dt>Paciente</dt><dd>{{ p.pacienteNome }}</dd></div>
+      @if (paciente(); as pac) {
+        <div><dt>Nascimento</dt><dd>{{ data(pac.dataNascimento) }}</dd></div>
+        <div><dt>CPF</dt><dd>{{ pac.cpf ? formatCpf(pac.cpf) : '—' }}</dd></div>
+        <div><dt>Cartão SUS</dt><dd>{{ pac.cartaoSus || '—' }}</dd></div>
+      }
+      <div><dt>Pedido por</dt><dd>{{ p.profissionalSolicitanteNome }} · {{ p.profissionalSolicitanteMatricula }}</dd></div>
+      <div><dt>Unidade</dt><dd>{{ p.unidadeSolicitanteNome }}</dd></div>
+      <div><dt>Pedido em</dt><dd>{{ instante(p.solicitadoEm) }}</dd></div>
+    </dl>
+
+    @if (liberados().length) {
+      <table class="laudo__tbl">
+        <thead>
+          <tr>
+            <th scope="col">Exame</th>
+            <th scope="col">Resultado</th>
+            <th scope="col">Referência</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (i of liberados(); track i.uuid) {
+            <tr>
+              <td>
+                <strong>{{ i.exameNome }}</strong>
+                <span class="laudo__sub">{{ materiais[i.material] }} · amostra {{ i.amostraCodigo ?? '—' }} · coletada em {{ coleta(i.amostraCodigo) }}</span>
+              </td>
+              <td>
+                <strong class="laudo__valor">{{ valor(i.resultado) }}</strong>
+                @if (i.resultado?.interpretacao; as it) {
+                  <span class="laudo__sub" [class.laudo__fora]="it !== 'NORMAL'">{{ interpretacoes[it].rotulo }}</span>
+                }
+                @if (i.resultado?.observacao) { <span class="laudo__sub">{{ i.resultado?.observacao }}</span> }
+              </td>
+              <td>{{ faixa(i.resultado) }}</td>
+            </tr>
+            <tr class="laudo__assina">
+              <td colspan="3">
+                Liberado por {{ i.resultado?.liberadoPorNome }} ({{ i.resultado?.liberadoPorMatricula }}) em {{ instante(i.resultado?.liberadoEm) }}
+                @if (i.resultado?.retificacaoDeId) { · <strong>Resultado retificado:</strong> {{ i.resultado?.motivoRetificacao }} }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else {
+      <p class="laudo__aviso">Nenhum exame deste pedido tem resultado liberado ainda.</p>
+    }
+
+    <footer class="laudo__rod">
+      @if (pendentes()) { <p>{{ pendentes() }} exame(s) deste pedido ainda sem resultado liberado não aparecem neste laudo.</p> }
+      <p>Emitido em {{ instante(emitidoEm) }}. Documento sem assinatura digital: a validade é a do registro no sistema.</p>
+    </footer>
+  } @else {
+    <p class="laudo__aviso">Carregando o laudo…</p>
+  }
+</main>

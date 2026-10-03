@@ -95,8 +95,29 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0077](./0077-testes-de-frontend-com-robot-framework.md) | Testes de frontend com Robot Framework | Aceita e implementada (base e primeiras telas) |
 | [0078](./0078-sessoes-encerradas-na-hora.md) | Sessões encerradas na hora: versão de sessão no token | Aceita e implementada |
 | [0079](./0079-acoes-escondidas-sem-permissao.md) | Telas só oferecem as ações que o perfil permite | Aceita e implementada |
-| [0080](./0080-restricoes-de-enum-atualizadas-na-subida.md) | Restrições de enum atualizadas na subida | Aceita e implementada |
+| [0080](./0080-restricoes-de-enum-atualizadas-na-subida.md) | Restrições de enum atualizadas na subida | Substituída pela ADR-0090 |
 | [0081](./0081-recuperacao-de-senha-por-email.md) | Recuperação de senha por e-mail | Aceita e implementada (desligada até haver SMTP) |
+| [0082](./0082-exportacao-e-retencao-da-auditoria.md) | Exportação e retenção da trilha de auditoria | Aceita e implementada |
+| [0083](./0083-edicao-de-catalogos-de-rh-e-responsaveis-por-setor.md) | Edição de catálogos de RH e responsáveis por setor | Aceita e implementada |
+| [0084](./0084-abas-do-perfil-no-padrao-novo-dados-a-ajustes.md) | Abas do perfil do profissional no padrão novo (Dados a Ajustes) | Aceita e implementada |
+| [0085](./0085-abas-do-perfil-no-padrao-novo-afastamentos-a-sst.md) | Abas do perfil do profissional no padrão novo (Afastamentos a SST) | Aceita e implementada |
+| [0086](./0086-abas-do-perfil-no-padrao-novo-treinamentos-a-historico.md) | Abas do perfil do profissional no padrão novo (Treinamentos a Histórico) | Aceita e implementada |
+| [0087](./0087-regulacao-do-acesso-backend.md) | Regulação do acesso: backend | Aceita e implementada |
+| [0088](./0088-regulacao-do-acesso-tela.md) | Regulação do acesso: tela | Aceita e implementada |
+| [0089](./0089-regulacao-agendamento-desfecho-e-vinculo.md) | Regulação do acesso: agendamento, desfecho e vínculo | Aceita e implementada |
+| [0090](./0090-migracoes-versionadas-com-flyway.md) | Migrações versionadas com Flyway | Aceita e implementada |
+| [0091](./0091-agenda-do-profissional.md) | Agenda do profissional | Aceita e implementada |
+| [0092](./0092-agenda-do-profissional-tela.md) | Agenda do profissional: tela | Aceita e implementada |
+| [0093](./0093-laboratorio-backend.md) | Laboratório assistencial: backend | Aceita e implementada |
+| [0094](./0094-laboratorio-tela.md) | Laboratório assistencial: tela | Aceita e implementada |
+| [0095](./0095-laboratorio-prontuario-laudo-recoleta.md) | Laboratório assistencial: resultados no prontuário, laudo e recoleta | Aceita e implementada |
+| [0096](./0096-alertas-da-auditoria.md) | Alertas da auditoria: detecção e análise | Aceita e implementada |
+| [0097](./0097-alertas-da-auditoria-tela.md) | Alertas da auditoria: tela | Aceita e implementada |
+| [0098](./0098-leitos-e-internacao-backend.md) | Leitos e internação: backend | Aceita e implementada (parte 1 de 3) |
+| [0099](./0099-leitos-e-internacao-tela.md) | Leitos e internação: tela | Aceita e implementada (parte 2 de 3) |
+| [0100](./0100-leitos-e-internacao-prontuario.md) | Leitos e internação: prontuário e vínculo assistencial | Aceita e implementada |
+| [0101](./0101-equipamentos-de-saude-backend.md) | Equipamentos de Saúde: backend | Aceita e implementada (parte 1 de 2) |
+| [0102](./0102-equipamentos-de-saude-tela.md) | Equipamentos de Saúde: tela | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

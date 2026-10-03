@@ -14,7 +14,7 @@ import { Drawer } from '../../../shared/drawer/drawer';
 import { dataBr, hojeIso, proximaAba } from '../../../shared/formato';
 
 type Aba = 'treinamentos' | 'ciclos';
-type Gaveta = { tipo: 'treinamento' } | { tipo: 'ciclo' };
+type Gaveta = { tipo: 'treinamento'; item: TreinamentoResponseDto | null } | { tipo: 'ciclo'; item: CicloAvaliacaoResponseDto | null };
 type StatusCiclo = { rotulo: 'Agendado' | 'Em andamento' | 'Encerrado'; classe: string };
 
 /**
@@ -145,14 +145,25 @@ export class Desenvolvimento {
     this.gaveta.set(null);
   }
 
-  protected abrirTreinamento(): void {
-    this.treinamentoForm.reset({ nome: '', cargaHoraria: '', validadeMeses: '', obrigatorio: false });
-    this.abrir({ tipo: 'treinamento' });
+  /** Sem item, cadastro; com item, edição (ADR-0083). */
+  protected abrirTreinamento(item: TreinamentoResponseDto | null = null): void {
+    this.treinamentoForm.reset({
+      nome: item?.nome ?? '',
+      cargaHoraria: item?.cargaHoraria ? String(item.cargaHoraria) : '',
+      validadeMeses: item?.validadeMeses ? String(item.validadeMeses) : '',
+      obrigatorio: item?.obrigatorio ?? false,
+    });
+    this.abrir({ tipo: 'treinamento', item });
   }
 
-  protected abrirCiclo(): void {
-    this.cicloForm.reset({ nome: '', dataInicio: hojeIso(), dataFim: '' });
-    this.abrir({ tipo: 'ciclo' });
+  protected abrirCiclo(item: CicloAvaliacaoResponseDto | null = null): void {
+    this.cicloForm.reset({ nome: item?.nome ?? '', dataInicio: item?.dataInicio ?? hojeIso(), dataFim: item?.dataFim ?? '' });
+    this.abrir({ tipo: 'ciclo', item });
+  }
+
+  protected tituloGaveta(g: Gaveta): string {
+    if (g.tipo === 'treinamento') return g.item ? 'Editar treinamento' : 'Novo treinamento';
+    return g.item ? 'Editar ciclo de avaliação' : 'Novo ciclo de avaliação';
   }
 
   protected erro(campo: string): string {
@@ -172,30 +183,31 @@ export class Desenvolvimento {
 
   protected salvar(): void {
     const g = this.gaveta();
-    if (g?.tipo === 'treinamento') this.salvarTreinamento();
-    if (g?.tipo === 'ciclo') this.salvarCiclo();
+    if (g?.tipo === 'treinamento') this.salvarTreinamento(g.item);
+    if (g?.tipo === 'ciclo') this.salvarCiclo(g.item);
   }
 
-  private salvarTreinamento(): void {
+  private salvarTreinamento(item: TreinamentoResponseDto | null): void {
     const v = this.treinamentoForm.getRawValue();
     const erros: Record<string, string> = {};
     if (!v.nome.trim()) erros['nome'] = 'Informe o nome do treinamento.';
     if (v.cargaHoraria && !(Number(v.cargaHoraria) > 0)) erros['cargaHoraria'] = 'A carga horária precisa ser maior que zero.';
     if (v.validadeMeses && !(Number(v.validadeMeses) > 0)) erros['validadeMeses'] = 'A validade precisa ser maior que zero.';
     if (!this.validar(erros)) return;
+    const dto = {
+      nome: v.nome.trim(),
+      cargaHoraria: v.cargaHoraria ? Number(v.cargaHoraria) : undefined,
+      validadeMeses: v.validadeMeses ? Number(v.validadeMeses) : undefined,
+      obrigatorio: v.obrigatorio,
+    };
     this.enviar(
-      this.treinamentoService.criar({
-        nome: v.nome.trim(),
-        cargaHoraria: v.cargaHoraria ? Number(v.cargaHoraria) : undefined,
-        validadeMeses: v.validadeMeses ? Number(v.validadeMeses) : undefined,
-        obrigatorio: v.obrigatorio,
-      }),
-      'Treinamento cadastrado',
+      item ? this.treinamentoService.atualizar(item.uuid, dto) : this.treinamentoService.criar(dto),
+      item ? 'Treinamento atualizado' : 'Treinamento cadastrado',
       v.nome.trim(),
     );
   }
 
-  private salvarCiclo(): void {
+  private salvarCiclo(item: CicloAvaliacaoResponseDto | null): void {
     const v = this.cicloForm.getRawValue();
     const erros: Record<string, string> = {};
     if (!v.nome.trim()) erros['nome'] = 'Informe o nome do ciclo.';
@@ -203,9 +215,10 @@ export class Desenvolvimento {
     if (!v.dataFim) erros['dataFim'] = 'Informe o fim.';
     else if (v.dataInicio && v.dataFim < v.dataInicio) erros['dataFim'] = 'O fim não pode ser antes do início.';
     if (!this.validar(erros)) return;
+    const dto = { nome: v.nome.trim(), dataInicio: v.dataInicio, dataFim: v.dataFim };
     this.enviar(
-      this.avaliacaoService.criarCiclo({ nome: v.nome.trim(), dataInicio: v.dataInicio, dataFim: v.dataFim }),
-      'Ciclo cadastrado',
+      item ? this.avaliacaoService.atualizarCiclo(item.uuid, dto) : this.avaliacaoService.criarCiclo(dto),
+      item ? 'Ciclo atualizado' : 'Ciclo cadastrado',
       `${v.nome.trim()} · ${dataBr(v.dataInicio)} a ${dataBr(v.dataFim)}`,
     );
   }

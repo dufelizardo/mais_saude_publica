@@ -29,4 +29,9 @@ export class AgendamentoService {
   atualizar(uuid: string, dto: AgendamentoRequestDto): Observable<SuccessResponseDto> {
     return this.http.patch<SuccessResponseDto>(`${this.baseUrl}/${uuid}`, dto);
   }
+
+  /** O paciente não compareceu (ADR-0091); só agendado ou confirmado. */
+  registrarFalta(uuid: string): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.baseUrl}/${uuid}/falta`, {});
+  }
 }

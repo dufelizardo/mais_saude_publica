@@ -42,8 +42,8 @@ import { TreinamentoService } from '../../core/services/treinamento';
 import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf, formatTelefone } from '../../shared/format-mask';
-import { Modal } from '../../shared/modal/modal';
-import { hojeIso } from '../../shared/formato';
+import { Drawer } from '../../shared/drawer/drawer';
+import { hojeIso, moeda } from '../../shared/formato';
 import { categoriaDoProfissional, iniciaisDoNome, situacaoDoProfissional } from '../../shared/profissional-categoria';
 import { AcessoDaInterface } from '../../core/models/auth';
 import { AuthService } from '../../core/services/auth';
@@ -57,9 +57,44 @@ interface EventoHistorico {
   descricao: string;
 }
 
+type GavetaPerfil =
+  | 'contato' | 'transferencia' | 'ajuste'
+  | 'afastamento' | 'licenca' | 'ponto' | 'correcao' | 'folha' | 'exame' | 'acidente' | 'epi'
+  | 'participacao' | 'avaliacao' | 'beneficio' | 'encerrarBeneficio' | 'rescisao';
+
+/** Rótulos dos enums mostrados nas tabelas e nas gavetas (ADR-0085). */
+const ROTULOS = {
+  tipoAfastamento: { FERIAS: 'Férias', LICENCA_MEDICA: 'Licença médica', LICENCA_PESSOAL: 'Licença pessoal', OUTROS: 'Outros' },
+  statusAfastamento: { SOLICITADO: 'Solicitado', APROVADO: 'Aprovado', EM_ANDAMENTO: 'Em andamento', CONCLUIDO: 'Concluído', CANCELADO: 'Cancelado' },
+  tipoLicenca: {
+    MATERNIDADE: 'Maternidade', PATERNIDADE: 'Paternidade', DOENCA: 'Doença', ACIDENTE_DE_TRABALHO: 'Acidente de trabalho',
+    FALECIMENTO: 'Falecimento', CASAMENTO: 'Casamento', OUTROS: 'Outros',
+  },
+  responsavelPagamento: { EMPRESA: 'Empresa', INSS: 'INSS', MISTO: 'Misto' },
+  tipoPonto: { ENTRADA: 'Entrada', INICIO_INTERVALO: 'Início do intervalo', FIM_INTERVALO: 'Fim do intervalo', SAIDA: 'Saída' },
+  tipoExame: { ADMISSIONAL: 'Admissional', PERIODICO: 'Periódico', DEMISSIONAL: 'Demissional', RETORNO: 'Retorno ao trabalho', MUDANCA_FUNCAO: 'Mudança de função' },
+  resultadoExame: { APTO: 'Apto', INAPTO: 'Inapto', APTO_COM_RESTRICAO: 'Apto com restrição' },
+  tipoDesligamento: {
+    SEM_JUSTA_CAUSA: 'Sem justa causa', COM_JUSTA_CAUSA: 'Com justa causa', PEDIDO_DEMISSAO: 'Pedido de demissão',
+    TERMINO_CONTRATO: 'Término de contrato', APOSENTADORIA: 'Aposentadoria', FALECIMENTO: 'Falecimento',
+  },
+} satisfies Record<string, Record<string, string>>;
+
+/** "aaaa-mm-ddThh:mm" local, o formato do input datetime-local. */
+function agoraLocal(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function competenciaAtual(): string {
+  const d = new Date();
+  return `${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+}
+
 @Component({
   selector: 'app-profissional-perfil',
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Modal, RouterLink],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Drawer, RouterLink],
   templateUrl: './profissional-perfil.html',
   styleUrl: './profissional-perfil.css',
 })
@@ -92,7 +127,10 @@ export class ProfissionalPerfil {
 
   protected readonly abaAtiva = signal<Aba>('dados');
 
-  protected readonly contatoModalAberto = signal(false);
+  /** Gaveta aberta nas abas já no padrão novo (ADR-0084). */
+  protected readonly gaveta = signal<GavetaPerfil | null>(null);
+  protected readonly toast = signal<{ titulo: string; detalhe: string } | null>(null);
+  private toastTimer: ReturnType<typeof setTimeout> | undefined;
   protected readonly submittingContato = signal(false);
   protected readonly contatoErrorMessage = signal<string | null>(null);
   protected readonly buscandoCepContato = signal(false);
@@ -341,7 +379,7 @@ export class ProfissionalPerfil {
       eventos.push({
         data: a.dataInicio,
         tipo: 'Afastamento',
-        descricao: `${a.tipo} (${a.status})` + (licenca ? ` — licença: ${licenca.tipoLegal}` : ''),
+        descricao: `${this.rotulo('tipoAfastamento', a.tipo)} (${this.rotulo('statusAfastamento', a.status)})` + (licenca ? ` — licença: ${this.rotulo('tipoLicenca', licenca.tipoLegal)}` : ''),
       });
     }
 
@@ -349,7 +387,7 @@ export class ProfissionalPerfil {
       eventos.push({
         data: aj.dataInicio,
         tipo: 'Ajuste individual',
-        descricao: `${this.rotuloMotivoAjuste(aj.motivo)}: ${aj.valor}`,
+        descricao: `${this.rotuloMotivoAjuste(aj.motivo)}: ${moeda(aj.valor)}`,
       });
     }
 
@@ -490,11 +528,142 @@ export class ProfissionalPerfil {
     });
     this.contatoErrorMessage.set(null);
     this.cepContatoNaoEncontrado.set(false);
-    this.contatoModalAberto.set(true);
+    this.gaveta.set('contato');
   }
 
-  protected fecharContatoModal(): void {
-    this.contatoModalAberto.set(false);
+  protected fecharGaveta(): void {
+    this.gaveta.set(null);
+    this.correcaoPontoAlvo.set(null);
+    this.encerrarBeneficioAlvo.set(null);
+  }
+
+  protected rotulo(grupo: keyof typeof ROTULOS, valor: string | null | undefined): string {
+    if (!valor) return '—';
+    return (ROTULOS[grupo] as Record<string, string>)[valor] ?? valor;
+  }
+
+  protected classeStatusAfastamento(status: StatusAfastamento): string {
+    return { SOLICITADO: 'info', APROVADO: 'ok', EM_ANDAMENTO: 'warn', CONCLUIDO: 'muted', CANCELADO: 'muted' }[status] ?? 'muted';
+  }
+
+  protected classeResultadoExame(resultado: ResultadoExameOcupacional): string {
+    return { APTO: 'ok', INAPTO: 'alert', APTO_COM_RESTRICAO: 'warn' }[resultado] ?? 'muted';
+  }
+
+  protected exameVencido(exame: ExameOcupacionalResponseDto): boolean {
+    return this.vencida(exame.dataValidade);
+  }
+
+  protected vencida(dataValidade: string | null | undefined): boolean {
+    return !!dataValidade && dataValidade < hojeIso();
+  }
+
+  protected classeEventoHistorico(tipo: string): string {
+    return ({ Lotação: 'info', Afastamento: 'warn', 'Ajuste individual': 'purple', Desligamento: 'alert' } as Record<string, string>)[tipo] ?? 'muted';
+  }
+
+  /** Mesma regra de antes: só depois do desligamento e uma vez só. */
+  protected podeRegistrarRescisao(): boolean {
+    const p = this.profissional();
+    return !!p && !p.ativo && !this.carregandoRescisao() && this.calculosRescisao().length === 0;
+  }
+
+  protected abrirParticipacao(): void {
+    this.participacaoForm.reset({ treinamentoId: '', dataConclusao: hojeIso(), certificadoUrl: '' });
+    this.participacaoErrorMessage.set(null);
+    this.gaveta.set('participacao');
+  }
+
+  protected abrirAvaliacao(): void {
+    this.avaliacaoForm.reset({ cicloId: '', avaliador: '', nota: '', observacao: '' });
+    this.avaliacaoErrorMessage.set(null);
+    this.gaveta.set('avaliacao');
+  }
+
+  protected abrirBeneficio(): void {
+    this.beneficioForm.reset({ tipoBeneficioId: '', dataInicio: hojeIso(), quantidadeDependentes: '' });
+    this.beneficioErrorMessage.set(null);
+    this.gaveta.set('beneficio');
+  }
+
+  protected abrirRescisao(): void {
+    this.rescisaoForm.reset({
+      tipoDesligamento: '', avisoPrevio: '', feriasVencidas: '', feriasProporcionais: '',
+      decimoTerceiroProporcional: '', multaFgts: '', total: '', documentoTrctUrl: '',
+    });
+    this.rescisaoErrorMessage.set(null);
+    this.gaveta.set('rescisao');
+  }
+
+  protected afastamentoDaLicenca(licenca: LicencaResponseDto): AfastamentoResponseDto | null {
+    return this.afastamentos().find((a) => a.uuid === licenca.afastamentoId) ?? null;
+  }
+
+  protected abrirAfastamento(): void {
+    this.afastamentoForm.reset({ tipo: '', dataInicio: hojeIso(), dataFim: '', status: 'APROVADO', observacao: '' });
+    this.afastamentoErrorMessage.set(null);
+    this.gaveta.set('afastamento');
+  }
+
+  protected abrirLicenca(): void {
+    const unico = this.afastamentosSemLicenca().length === 1 ? this.afastamentosSemLicenca()[0].uuid : '';
+    this.licencaForm.reset({ afastamentoId: unico, tipoLegal: '', responsavelPagamento: '', documentoUrl: '' });
+    this.licencaErrorMessage.set(null);
+    this.gaveta.set('licenca');
+  }
+
+  protected abrirPonto(): void {
+    this.pontoForm.reset({ tipo: '', dataHora: agoraLocal() });
+    this.pontoErrorMessage.set(null);
+    this.gaveta.set('ponto');
+  }
+
+  protected abrirFolha(): void {
+    this.folhaForm.reset({ competencia: competenciaAtual(), proventos: '', descontos: '', encargos: '', total: '' });
+    this.folhaErrorMessage.set(null);
+    this.gaveta.set('folha');
+  }
+
+  protected abrirExame(): void {
+    this.exameForm.reset({ tipo: '', dataRealizacao: hojeIso(), dataValidade: '', resultado: '', asoUrl: '' });
+    this.exameErrorMessage.set(null);
+    this.gaveta.set('exame');
+  }
+
+  protected abrirAcidente(): void {
+    this.acidenteForm.reset({ dataHora: agoraLocal(), descricao: '', catEmitida: false, catUrl: '', diasAfastamento: '' });
+    this.acidenteErrorMessage.set(null);
+    this.gaveta.set('acidente');
+  }
+
+  protected abrirEpi(): void {
+    this.epiForm.reset({ tipo: '', numeroCA: '', dataEntrega: hojeIso(), dataDevolucao: '' });
+    this.epiErrorMessage.set(null);
+    this.gaveta.set('epi');
+  }
+
+  private avisar(titulo: string, detalhe: string): void {
+    this.toast.set({ titulo, detalhe });
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+  }
+
+  protected abrirTransferencia(): void {
+    this.transferenciaForm.reset({ unidadeId: '', cargoId: '', jornadaSemanalHoras: '', dataInicio: hojeIso(), motivo: 'Transferência' });
+    this.transferenciaErrorMessage.set(null);
+    this.gaveta.set('transferencia');
+  }
+
+  protected abrirAjuste(): void {
+    this.ajusteForm.reset({ valor: '', motivo: '', dataInicio: hojeIso(), dataFim: '', referencia: '' });
+    this.ajusteErrorMessage.set(null);
+    this.gaveta.set('ajuste');
+  }
+
+  /** Vigente hoje: já começou e não terminou. */
+  protected ajusteVigente(item: { dataInicio: string; dataFim?: string | null }): boolean {
+    const hoje = hojeIso();
+    return item.dataInicio <= hoje && (!item.dataFim || item.dataFim >= hoje);
   }
 
   protected submitContato(): void {
@@ -525,7 +694,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingContato.set(false);
-          this.contatoModalAberto.set(false);
+          this.gaveta.set(null);
+          this.avisar('Contato atualizado', profissional.nome);
           this.profissionalService.buscarPorCpf(profissional.cpf).subscribe({
             next: (atualizado) => this.profissional.set(atualizado),
           });
@@ -639,13 +809,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingTransferencia.set(false);
-          this.transferenciaForm.reset({
-            unidadeId: '',
-            cargoId: '',
-            jornadaSemanalHoras: '',
-            dataInicio: '',
-            motivo: 'Transferência',
-          });
+          this.gaveta.set(null);
+          this.avisar('Transferência registrada', profissional.nome);
           this.carregarLotacao(profissional.matricula);
           this.carregarComposicao(profissional.matricula);
         },
@@ -703,7 +868,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingAjuste.set(false);
-          this.ajusteForm.reset({ valor: '', motivo: '', dataInicio: '', dataFim: '', referencia: '' });
+          this.gaveta.set(null);
+          this.avisar('Ajuste registrado', profissional.nome);
           this.carregarAjustes(profissional.matricula);
           this.carregarComposicao(profissional.matricula);
         },
@@ -754,7 +920,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingBeneficio.set(false);
-          this.beneficioForm.reset({ tipoBeneficioId: '', dataInicio: '', quantidadeDependentes: '' });
+          this.gaveta.set(null);
+          this.avisar('Adesão registrada', profissional.nome);
           this.carregarBeneficios(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -766,13 +933,10 @@ export class ProfissionalPerfil {
   }
 
   protected abrirEncerrarBeneficio(adesao: AdesaoBeneficioResponseDto): void {
-    this.encerrarBeneficioForm.reset({ dataFim: '' });
+    this.encerrarBeneficioForm.reset({ dataFim: hojeIso() });
     this.encerrarBeneficioErrorMessage.set(null);
     this.encerrarBeneficioAlvo.set(adesao);
-  }
-
-  protected fecharEncerrarBeneficio(): void {
-    this.encerrarBeneficioAlvo.set(null);
+    this.gaveta.set('encerrarBeneficio');
   }
 
   protected confirmarEncerrarBeneficio(): void {
@@ -790,7 +954,8 @@ export class ProfissionalPerfil {
     this.adesaoBeneficioService.encerrar(adesao.uuid, dataFim).subscribe({
       next: () => {
         this.submittingEncerrarBeneficio.set(false);
-        this.encerrarBeneficioAlvo.set(null);
+        this.fecharGaveta();
+        this.avisar('Adesão encerrada', adesao.tipoBeneficioNome);
         this.carregarBeneficios(profissional.matricula);
       },
       error: (error: HttpErrorResponse) => {
@@ -836,7 +1001,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingParticipacao.set(false);
-          this.participacaoForm.reset({ treinamentoId: '', dataConclusao: '', certificadoUrl: '' });
+          this.gaveta.set(null);
+          this.avisar('Participação registrada', profissional.nome);
           this.carregarTreinamentos(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -883,7 +1049,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingAvaliacao.set(false);
-          this.avaliacaoForm.reset({ cicloId: '', avaliador: '', nota: '', observacao: '' });
+          this.gaveta.set(null);
+          this.avisar('Avaliação registrada', profissional.nome);
           this.carregarAvaliacoes(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -934,16 +1101,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingRescisao.set(false);
-          this.rescisaoForm.reset({
-            tipoDesligamento: '',
-            avisoPrevio: '',
-            feriasVencidas: '',
-            feriasProporcionais: '',
-            decimoTerceiroProporcional: '',
-            multaFgts: '',
-            total: '',
-            documentoTrctUrl: '',
-          });
+          this.gaveta.set(null);
+          this.avisar('Cálculo de rescisão registrado', profissional.nome);
           this.carregarRescisao(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -991,7 +1150,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingAfastamento.set(false);
-          this.afastamentoForm.reset({ tipo: '', dataInicio: '', dataFim: '', status: '', observacao: '' });
+          this.gaveta.set(null);
+          this.avisar('Afastamento registrado', profissional.nome);
           this.carregarAfastamentos(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1037,7 +1197,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingLicenca.set(false);
-          this.licencaForm.reset({ afastamentoId: '', tipoLegal: '', responsavelPagamento: '', documentoUrl: '' });
+          this.gaveta.set(null);
+          this.avisar('Licença registrada', profissional.nome);
           this.carregarLicencas(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1083,7 +1244,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingPonto.set(false);
-          this.pontoForm.reset({ tipo: '', dataHora: '' });
+          this.gaveta.set(null);
+          this.avisar('Ponto registrado', profissional.nome);
           this.carregarPonto();
         },
         error: (error: HttpErrorResponse) => {
@@ -1102,10 +1264,7 @@ export class ProfissionalPerfil {
     });
     this.correcaoPontoErrorMessage.set(null);
     this.correcaoPontoAlvo.set(registro);
-  }
-
-  protected fecharCorrecaoPontoModal(): void {
-    this.correcaoPontoAlvo.set(null);
+    this.gaveta.set('correcao');
   }
 
   protected confirmarSolicitarCorrecaoPonto(): void {
@@ -1128,7 +1287,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingCorrecaoPonto.set(false);
-          this.correcaoPontoAlvo.set(null);
+          this.fecharGaveta();
+          this.avisar('Correção solicitada', 'Aguarda aprovação');
           this.carregarPonto();
         },
         error: (error: HttpErrorResponse) => {
@@ -1145,6 +1305,7 @@ export class ProfissionalPerfil {
     this.registroPontoService.aprovarCorrecao(registro.uuid).subscribe({
       next: () => {
         this.resolvendoCorrecaoUuid.set(null);
+        this.avisar('Correção aprovada', 'O registro foi atualizado');
         this.carregarPonto();
       },
       error: (error: HttpErrorResponse) => {
@@ -1161,6 +1322,7 @@ export class ProfissionalPerfil {
     this.registroPontoService.rejeitarCorrecao(registro.uuid).subscribe({
       next: () => {
         this.resolvendoCorrecaoUuid.set(null);
+        this.avisar('Correção rejeitada', 'O registro continua como estava');
         this.carregarPonto();
       },
       error: (error: HttpErrorResponse) => {
@@ -1208,7 +1370,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingFolha.set(false);
-          this.folhaForm.reset({ competencia: '', proventos: '', descontos: '', encargos: '', total: '' });
+          this.gaveta.set(null);
+          this.avisar('Folha registrada', profissional.nome);
           this.carregarFolhas(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1260,7 +1423,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingExame.set(false);
-          this.exameForm.reset({ tipo: '', dataRealizacao: '', dataValidade: '', resultado: '', asoUrl: '' });
+          this.gaveta.set(null);
+          this.avisar('Exame registrado', profissional.nome);
           this.carregarExames(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1308,7 +1472,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingAcidente.set(false);
-          this.acidenteForm.reset({ dataHora: '', descricao: '', catEmitida: false, catUrl: '', diasAfastamento: '' });
+          this.gaveta.set(null);
+          this.avisar('Acidente registrado', profissional.nome);
           this.carregarAcidentes(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {
@@ -1360,7 +1525,8 @@ export class ProfissionalPerfil {
       .subscribe({
         next: () => {
           this.submittingEpi.set(false);
-          this.epiForm.reset({ tipo: '', numeroCA: '', dataEntrega: '', dataDevolucao: '' });
+          this.gaveta.set(null);
+          this.avisar('EPI registrado', profissional.nome);
           this.carregarEpis(profissional.matricula);
         },
         error: (error: HttpErrorResponse) => {

@@ -70,12 +70,16 @@ Perfis que já vêm prontos:
 |---|---|---|
 | Administrador da plataforma | quem administra usuários, acessos e unidades | sem dado de saúde |
 | Gestor | gestão de RH, setor administrativo, estoque e acessos da unidade | concede acesso só na sua unidade |
-| Recepção | cadastro de paciente, agenda, acolhimento | não lê triagem nem prontuário |
-| Médico | consulta, prescrição, procedimento | |
+| Recepção | cadastro de paciente, agenda, acolhimento, andamento da regulação | não lê triagem, prontuário nem a justificativa da regulação |
+| Médico | consulta, prescrição, procedimento, solicitação de regulação | |
+| Médico regulador | fila da Central de Regulação do Acesso: autoriza com vaga, devolve, nega | escopo no município ou na regional (ADR-0087) |
 | Enfermeiro | classificação de risco, evolução, procedimento, medicação | |
 | Coordenador de enfermagem | tudo do enfermeiro + retificar registro de outro profissional | |
 | Técnico de enfermagem | procedimento e medicação | sem classificação de risco nem evolução (COFEN 661/2021) |
 | Farmacêutico | estoque, dispensação, transferências | |
+| Gestor de leitos (NIR) | mapa de leitos, internação, troca de leito, bloqueio e liberação | não dá alta (ADR-0098) |
+| Técnico de laboratório | coleta e análise de amostras, registro de resultados | não libera (ADR-0093) |
+| Responsável técnico do laboratório | análise, liberação e retificação de resultados, catálogo de exames | no escopo do laboratório |
 
 Para cada pessoa, decida:
 - **O perfil.** Uma pessoa pode ter mais de um, por exemplo Enfermeiro + Coordenador de enfermagem.
@@ -149,7 +153,11 @@ liberação explícita do responsável.
 - Para abrir o prontuário completo de um paciente, é preciso ter vínculo com ele. Há vínculo quando:
   - o paciente tem atendimento em aberto, ou nos últimos 30 dias, numa unidade do acesso da pessoa; ou
   - a pessoa é a profissional de um atendimento recente dele; ou
-  - a pessoa é a profissional de um agendamento próximo dele (até 30 dias antes ou depois).
+  - a pessoa é a profissional de um agendamento próximo dele (até 30 dias antes ou depois); ou
+  - o paciente tem uma solicitação de regulação em curso, ou realizada nos últimos 30 dias, em que a
+    unidade solicitante ou a executante está no acesso da pessoa (ADR-0089);
+  - o paciente está internado, ou teve alta nos últimos 30 dias, numa unidade do acesso da pessoa, ou a pessoa
+    é o médico responsável pela internação (ADR-0100).
 - Sem vínculo, a tela mostra **"Sem vínculo assistencial com este paciente"** e o botão
   **Acessar com justificativa**. A pessoa informa o motivo e um texto, e o acesso vale por 4 horas, só
   para ela.

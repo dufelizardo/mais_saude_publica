@@ -108,7 +108,8 @@ public abstract class AbstractHierarquicoService<RES> {
         }
     }
 
-    private static TipoUnidadeDeSaude tipoSuperiorEsperadoPara(TipoUnidadeDeSaude tipo) {
+    /** O nível que a unidade superior precisa ter (ADR-0009); também usado pelas rotas por id (ADR-0101). */
+    static TipoUnidadeDeSaude tipoSuperiorEsperadoPara(TipoUnidadeDeSaude tipo) {
         return switch (tipo) {
             case ESTADUAL -> TipoUnidadeDeSaude.FEDERAL;
             case MUNICIPAL -> TipoUnidadeDeSaude.ESTADUAL;

@@ -1,0 +1,518 @@
+<header class="page-head">
+  <div>
+    <h1>Equipamentos de Saúde</h1>
+    <p>{{ indicadores().total }} unidades de atendimento · {{ regionais().length }} regionais · CNES de cada unidade</p>
+  </div>
+  <div class="page-actions">
+    <button type="button" class="btn btn--ghost" disabled title="Em breve">Exportar</button>
+    <button type="button" class="btn btn--ghost" disabled title="Em breve: depende da integração com o CNES">Sincronizar CNES</button>
+    @if (podeEditar()) {
+      <button type="button" class="btn" (click)="abrirUnidade()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Nova unidade
+      </button>
+    }
+  </div>
+</header>
+
+<section class="stats" aria-label="Indicadores da rede">
+  <div class="stat">
+    <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 21v-6h6v6"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Unidades ativas</div>
+      <div class="stat__val mono">{{ indicadores().ativas }}<small style="font-size: 0.875rem; color: var(--ink-500);"> /{{ indicadores().total }}</small></div>
+      <div class="stat__sub">{{ indicadores().foraDeOperacao }} fora de operação</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg></span>
+    <div>
+      <div class="stat__lbl">UBS</div>
+      <div class="stat__val mono">{{ indicadores().atencaoBasica }}</div>
+      <div class="stat__sub">{{ indicadores().percentualBasica }}% da rede · atenção básica</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M2 12h20"></path></svg></span>
+    <div>
+      <div class="stat__lbl">UPA / Hospital / CAPS e especializadas</div>
+      <div class="stat__val mono">{{ indicadores().especializadas }}</div>
+      <div class="stat__sub">{{ indicadores().upa }} UPA · {{ indicadores().hospitais }} hosp. · {{ indicadores().caps }} CAPS</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Em manutenção / obras / inoperantes</div>
+      <div class="stat__val mono">{{ indicadores().foraDeOperacao }}</div>
+      <div class="stat__sub">sem vagas na agenda em obra ou inoperante</div>
+    </div>
+  </div>
+</section>
+
+<div class="toolbar" role="region" aria-label="Filtros da rede">
+  <label class="search search--icon">
+    <span class="sr-only">Buscar unidade</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+    <input type="search" placeholder="Buscar unidade ou CNES" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+  </label>
+  <label class="pill pill--select">
+    <span class="sr-only">Regional</span>
+    <select (change)="regionalFiltro.set($any($event.target).value)" aria-label="Regional">
+      <option value="" [selected]="regionalFiltro() === ''">Todas as regionais</option>
+      @for (r of regionais(); track r.uuid) { <option [value]="r.uuid" [selected]="regionalFiltro() === r.uuid">{{ r.nome }}</option> }
+    </select>
+  </label>
+  <label class="pill pill--select">
+    <span class="sr-only">Tipo</span>
+    <select (change)="tipoFiltro.set($any($event.target).value)" aria-label="Tipo de unidade">
+      <option value="" [selected]="tipoFiltro() === ''">Unidades de atendimento</option>
+      @for (t of tiposDeAtendimento; track t) { <option [value]="t" [selected]="tipoFiltro() === t">{{ tipos[t].rotulo }}</option> }
+      <option value="GESTAO" [selected]="tipoFiltro() === 'GESTAO'">Níveis de gestão</option>
+    </select>
+  </label>
+  <label class="pill pill--select">
+    <span class="sr-only">Situação</span>
+    <select (change)="situacaoFiltro.set($any($event.target).value)" aria-label="Situação operacional">
+      <option value="" [selected]="situacaoFiltro() === ''">Todas as situações</option>
+      @for (s of listaSituacoes; track s) { <option [value]="s" [selected]="situacaoFiltro() === s">{{ situacoes[s].rotulo }}</option> }
+    </select>
+  </label>
+  <div class="seg" role="group" aria-label="Visão" style="margin-left: auto;">
+    <button type="button" disabled title="Em breve: depende das coordenadas das unidades">Mapa</button>
+    <button type="button" aria-pressed="true">Lista</button>
+  </div>
+</div>
+
+@if (erro()) {
+  <div class="box box--err" role="alert" style="margin-bottom: var(--s-4);"><strong>{{ erro() }}</strong></div>
+}
+
+<section class="split">
+  <div class="card list-card">
+    <div class="list-head">
+      <div>
+        <h2>Unidades</h2>
+        <div class="sub">{{ filtradas().length }} na lista · A–Z</div>
+      </div>
+    </div>
+    <div class="list-body" role="listbox" aria-label="Unidades">
+      @for (u of filtradas(); track u.uuid) {
+        <div class="unit-row" role="option" tabindex="0" [attr.aria-selected]="selecionadaId() === u.uuid" [attr.aria-label]="u.nome"
+          (click)="selecionar(u.uuid)" (keydown)="teclaNaLinha($event, u.uuid)">
+          <span [class]="marcador(u)" aria-hidden="true">{{ tipos[u.tipo].sigla }}</span>
+          <div style="min-width: 0;">
+            <div class="unit-name">{{ u.nome }}</div>
+            <div class="unit-meta">{{ meta(u) }}</div>
+            @if (u.leitos) {
+              <div class="unit-bar" aria-hidden="true"><span [class]="classeBarra(ocupacao(u))" [style.width.%]="ocupacao(u)"></span></div>
+            }
+          </div>
+          <div class="unit-right">
+            @if (u.situacaoOperacional !== 'EM_OPERACAO' || !u.ativo) {
+              Situação<span class="v">{{ u.ativo ? situacoes[u.situacaoOperacional].rotulo : 'Inativa' }}</span>
+            } @else if (u.leitos) {
+              Leitos<span class="v">{{ ocupacao(u) }}%</span>
+            } @else {
+              Profissionais<span class="v">{{ u.profissionaisLotados }}</span>
+            }
+          </div>
+        </div>
+      } @empty {
+        <div class="empty"><strong>{{ carregando() ? 'Carregando a rede…' : 'Nenhuma unidade' }}</strong>@if (!carregando()) { <span>Ajuste os filtros ou cadastre uma unidade.</span> }</div>
+      }
+    </div>
+  </div>
+
+  @if (ficha(); as f) {
+    <aside class="card detail-card" aria-label="Detalhes da unidade">
+      <div class="detail-head">
+        <span class="detail-head__mark" aria-hidden="true">{{ tipos[f.resumo.tipo].sigla }}</span>
+        <div class="detail-head__info">
+          <h2>{{ f.resumo.nome }}</h2>
+          <div class="detail-head__ids">
+            <span>CNES <strong class="mono">{{ cnes(f.resumo.cnes) }}</strong></span>
+            @if (f.resumo.supervisaoRegionalNome) { <span>{{ f.resumo.supervisaoRegionalNome }}</span> }
+            @if (f.responsavelNome) { <span>Resp. <strong>{{ f.responsavelNome }}</strong></span> }
+          </div>
+          <div class="detail-head__chips">
+            <span class="tag tag--info">{{ tipos[f.resumo.tipo].rotulo }}</span>
+            <span [class]="'tag tag--' + situacoes[f.resumo.situacaoOperacional].classe"><span class="dot" aria-hidden="true"></span>{{ situacoes[f.resumo.situacaoOperacional].rotulo }}</span>
+            @if (f.resumo.funciona24h) { <span class="tag tag--purple">24 horas</span> }
+            @if (!f.resumo.ativo) { <span class="tag tag--alert">Inativa</span> }
+          </div>
+        </div>
+        <div class="detail-head__actions">
+          @if (podeEditar()) {
+            <button type="button" class="btn btn--ghost btn--sm" (click)="abrirUnidade(f)">Editar</button>
+          }
+          <a class="btn btn--ghost btn--sm" routerLink="/assistencia/agenda" [queryParams]="{ unidade: f.resumo.uuid }">Ver agenda</a>
+        </div>
+      </div>
+
+      @if (f.resumo.situacaoOperacional !== 'EM_OPERACAO') {
+        <div class="box box--warn" style="margin: var(--s-4) var(--s-5) 0;"><div>
+          <strong>{{ situacoes[f.resumo.situacaoOperacional].rotulo }}</strong>@if (f.resumo.motivoSituacao) { · {{ f.resumo.motivoSituacao }} }@if (f.resumo.previsaoRetorno) { · retorno previsto em {{ data(f.resumo.previsaoRetorno) }} }
+        </div></div>
+      }
+
+      <div class="tabs" role="tablist" aria-label="Seções da unidade">
+        <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'dados'" (click)="abaFicha.set('dados')">Dados gerais</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'operacional'" (click)="abaFicha.set('operacional')">Operacional</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'equipes'" (click)="abaFicha.set('equipes')">Equipes</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'vinculacoes'" (click)="abaFicha.set('vinculacoes')">Vinculações</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'historico'" (click)="abaFicha.set('historico')">Histórico</button>
+      </div>
+
+      @switch (abaFicha()) {
+        @case ('dados') {
+          <div class="info-grid info-grid--1">
+            <div class="info-block">
+              <h3>Dados gerais</h3>
+              <dl class="info-list">
+                <div><dt>Nome</dt><dd>{{ f.resumo.nome }}</dd></div>
+                <div><dt>CNES</dt><dd class="mono-data">{{ cnes(f.resumo.cnes) }}</dd></div>
+                <div><dt>Tipo de equipamento</dt><dd>{{ tipos[f.resumo.tipo].rotulo }}</dd></div>
+                <div><dt>Endereço</dt><dd>
+                  @if (f.logradouro) { {{ f.logradouro }}@if (f.numeroLogradouro) {, {{ f.numeroLogradouro }} }@if (f.bairro) { — {{ f.bairro }} } } @else { — }
+                  @if (f.cep || f.cidade) { <span class="cell-sub">@if (f.cep) { CEP {{ f.cep }} · }{{ f.cidade }}@if (f.uf) { / {{ f.uf }} }</span> }
+                </dd></div>
+                <div><dt>Contato</dt><dd>{{ f.telefones.length ? f.telefones.join(', ') : '—' }}@if (f.resumo.email) { · {{ f.resumo.email }} }</dd></div>
+                <div><dt>Responsável</dt><dd>{{ f.responsavelNome || (f.responsavelCpf ? 'CPF ' + f.responsavelCpf + ' (sem cadastro de profissional)' : '—') }}</dd></div>
+              </dl>
+            </div>
+          </div>
+        }
+        @case ('operacional') {
+          <div class="info-grid info-grid--1">
+            <div class="info-block">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Horário de funcionamento</h3>
+                @if (podeEditar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirHorario(f)">Editar horário</button> }
+              </div>
+              <table class="hours-table">
+                <tbody>
+                  @for (d of dias; track d.id) {
+                    <tr [class.is-today]="hoje(d.id)" [class.closed]="horarioDoDia(f, d.id) === 'Fechado'">
+                      <td>{{ d.rotulo }}@if (hoje(d.id)) { · hoje }</td>
+                      <td>{{ horarioDoDia(f, d.id) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+              @if (!f.turnos.length && !f.resumo.funciona24h) {
+                <p class="cell-sub">Sem horário estruturado: a agenda não fecha pelo horário da unidade.</p>
+              }
+            </div>
+            <div class="info-block">
+              <h3>Capacidade</h3>
+              <div class="cap-grid">
+                @if (f.resumo.leitos) {
+                  <div class="cap-row">
+                    <span class="lbl">Leitos</span>
+                    <span class="bar" aria-hidden="true"><span [class]="classeBarra(ocupacao(f.resumo))" [style.width.%]="ocupacao(f.resumo)"></span></span>
+                    <span class="val">{{ f.resumo.leitosOcupados }}/{{ f.resumo.leitos }}</span>
+                  </div>
+                }
+                <div class="cap-row"><span class="lbl">Consultórios</span><span class="cell-sub" style="flex: 1;">Em breve</span></div>
+                <div class="cap-row"><span class="lbl">Vagas semanais</span><span class="cell-sub" style="flex: 1;">Em breve: a ocupação está na Agenda de cada profissional</span></div>
+              </div>
+            </div>
+            <div class="info-block">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Status</h3>
+                @if (podeEditar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirSituacao(f)">Mudar situação</button> }
+              </div>
+              <dl class="info-list">
+                <div><dt>Status operacional</dt><dd>{{ situacoes[f.resumo.situacaoOperacional].rotulo }}</dd></div>
+                @if (f.resumo.motivoSituacao) { <div><dt>Motivo</dt><dd>{{ f.resumo.motivoSituacao }}</dd></div> }
+                @if (f.resumo.previsaoRetorno) { <div><dt>Previsão de retorno</dt><dd>{{ data(f.resumo.previsaoRetorno) }}</dd></div> }
+                <div><dt>Coordenadas, microáreas e acessibilidade</dt><dd class="cell-sub">Em breve</dd></div>
+              </dl>
+            </div>
+          </div>
+        }
+        @case ('equipes') {
+          <div class="teams">
+            <div class="team-card">
+              <h4>Profissionais lotados</h4>
+              <div class="meta">{{ f.profissionais.length }} profissional(is) com lotação vigente nesta unidade</div>
+              @if (f.profissionais.length) {
+                <div class="team-stack" aria-hidden="true">
+                  @for (p of f.profissionais.slice(0, 5); track p.matricula) { <span class="who__avatar">{{ iniciais(p.nome) }}</span> }
+                  @if (f.profissionais.length > 5) { <span class="more">+{{ f.profissionais.length - 5 }}</span> }
+                </div>
+                <ul class="eq-prof">
+                  @for (p of f.profissionais; track p.matricula) {
+                    <li><span class="cell-main">{{ p.nome }}</span><span class="cell-sub">{{ p.cargo || 'Sem cargo' }}@if (p.conselho) { · {{ p.conselho }} }@if (p.jornadaSemanalHoras) { · {{ p.jornadaSemanalHoras }}h/sem }</span></li>
+                  }
+                </ul>
+              }
+              <a class="btn btn--ghost btn--sm" routerLink="/profissionais" style="margin-top: 10px;">Ver profissionais</a>
+            </div>
+            <div class="empty-state" style="padding-top: var(--s-4);">
+              <div class="empty-state__title">Equipes de Saúde da Família: em breve</div>
+              <p class="empty-state__desc">Equipes, famílias adscritas e microáreas dependem do domínio Equipe, que ainda não existe.</p>
+            </div>
+          </div>
+        }
+        @case ('vinculacoes') {
+          <div class="info-grid info-grid--1">
+            <div class="info-block">
+              <h3>Hierarquia</h3>
+              <dl class="info-list">
+                <div><dt>Unidade superior</dt><dd>{{ f.resumo.unidadeSuperiorNome || '—' }}</dd></div>
+                <div><dt>Supervisão regional</dt><dd>{{ f.resumo.supervisaoRegionalNome || '—' }}</dd></div>
+              </dl>
+            </div>
+            @if (f.subordinadas.length) {
+              <div class="info-block">
+                <h3>Unidades vinculadas ({{ f.subordinadas.length }})</h3>
+                <ul class="eq-vinc">
+                  @for (s of f.subordinadas; track s.uuid) {
+                    <li><button type="button" class="link-btn" (click)="selecionar(s.uuid)">{{ s.nome }}</button> <span class="cell-sub" style="display: inline;">· {{ rotuloTipo(s.tipo) }}@if (!s.ativo) { · inativa }</span></li>
+                  }
+                </ul>
+              </div>
+            }
+            <div class="info-block">
+              <h3>Setores ({{ f.setoresDaUnidade.length }})</h3>
+              <ul class="eq-vinc">
+                @for (s of f.setoresDaUnidade; track s.uuid) { <li>{{ s.nome }} <span class="cell-sub" style="display: inline;">· {{ s.tipo.toLowerCase() }}@if (!s.ativo) { · inativo }</span></li> }
+                @empty { <li class="cell-sub">Nenhum setor cadastrado.</li> }
+              </ul>
+              <a class="btn btn--ghost btn--sm" routerLink="/administrativo/setores" style="margin-top: 8px;">Ver setores</a>
+            </div>
+            @if (f.resumo.leitos) {
+              <div class="info-block">
+                <h3>Leitos</h3>
+                <p>{{ f.resumo.leitosOcupados }} ocupado(s) de {{ f.resumo.leitos }} em uso.</p>
+                <a class="btn btn--ghost btn--sm" routerLink="/assistencia/leitos">Ver mapa de leitos</a>
+              </div>
+            }
+          </div>
+        }
+        @case ('historico') {
+          <div style="padding: var(--s-5);">
+            @if (f.historico.length) {
+              <div class="tl">
+                @for (h of f.historico; track $index) {
+                  <div class="tl-row">
+                    <div class="date mono">{{ instante(h.ocorridoEm) }}</div>
+                    <div class="title">{{ situacoes[h.situacaoAnterior].rotulo }} → {{ situacoes[h.situacao].rotulo }}</div>
+                    @if (h.motivo) { <div class="desc">{{ h.motivo }}</div> }
+                    @if (h.previsaoRetorno) { <div class="desc">Retorno previsto em {{ data(h.previsaoRetorno) }}</div> }
+                    <div class="desc">{{ h.registradoPorNome || h.registradoPorCpf || 'Sem login' }}</div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="cell-sub">Nenhuma mudança de situação registrada.</p>
+            }
+            <a class="btn btn--ghost btn--sm" routerLink="/administracao/auditoria" style="margin-top: 8px;">Ver tudo na auditoria</a>
+          </div>
+        }
+      }
+    </aside>
+  } @else if (carregandoFicha()) {
+    <aside class="card detail-card"><p class="cell-sub" style="padding: var(--s-5);">Carregando a unidade…</p></aside>
+  }
+</section>
+
+<!-- ── Gavetas ──────────────────────────────────────────────────────────────────────────────────── -->
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="tituloGaveta(g)" (fechar)="fecharGaveta()">
+    @switch (g.tipo) {
+      @case ('unidade') {
+        <form class="dw-form" [formGroup]="unidadeForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nome" type="text" formControlName="nome" maxlength="255" autocomplete="off" [attr.aria-invalid]="!!erroCampo('nome')" aria-describedby="e-nome" />
+              @if (erroCampo('nome')) { <p class="dw-err" id="e-nome">{{ erroCampo('nome') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipo">Tipo</label>
+                @if (g.ficha) {
+                  <input id="f-tipo" type="text" [value]="tipos[g.ficha.resumo.tipo].rotulo" disabled aria-describedby="h-tipo" />
+                  <p class="dw-hint" id="h-tipo">O tipo não muda pela edição.</p>
+                } @else {
+                  <select id="f-tipo" formControlName="tipo">
+                    @for (t of todosOsTipos; track t) { <option [value]="t">{{ tipos[t].rotulo }}</option> }
+                  </select>
+                }
+              </div>
+              <div class="dw-field">
+                <label for="f-cnes">CNES<span class="opt">opcional</span></label>
+                <input id="f-cnes" type="text" class="mono" inputmode="numeric" maxlength="7" formControlName="cnes" placeholder="7 dígitos" [attr.aria-invalid]="!!erroCampo('cnes')" aria-describedby="e-cnes" />
+                @if (erroCampo('cnes')) { <p class="dw-err" id="e-cnes">{{ erroCampo('cnes') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              @if (!g.ficha) {
+                <div class="dw-field">
+                  <label for="f-unidadeSuperiorId">Unidade superior<span class="opt">opcional</span></label>
+                  <select id="f-unidadeSuperiorId" formControlName="unidadeSuperiorId" aria-describedby="h-superior">
+                    <option value="">Nenhuma</option>
+                    @for (s of superioresPossiveis(); track s.uuid) { <option [value]="s.uuid">{{ s.nome }}</option> }
+                  </select>
+                  <p class="dw-hint" id="h-superior">Só o nível acima do tipo escolhido (unidade de atendimento: municipal).</p>
+                </div>
+              }
+              <div class="dw-field">
+                <label for="f-supervisaoRegionalId">Supervisão regional<span class="opt">opcional</span></label>
+                <select id="f-supervisaoRegionalId" formControlName="supervisaoRegionalId">
+                  <option value="">Nenhuma</option>
+                  @for (r of regionais(); track r.uuid) { <option [value]="r.uuid">{{ r.nome }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-telefone">Telefone<span class="opt">opcional</span></label>
+                <input id="f-telefone" type="tel" formControlName="telefone" />
+              </div>
+              <div class="dw-field">
+                <label for="f-email">E-mail<span class="opt">opcional</span></label>
+                <input id="f-email" type="email" formControlName="email" [attr.aria-invalid]="!!erroCampo('email')" aria-describedby="e-email" />
+                @if (erroCampo('email')) { <p class="dw-err" id="e-email">{{ erroCampo('email') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-logradouro">Logradouro<span class="opt">opcional</span></label>
+                <input id="f-logradouro" type="text" formControlName="logradouro" [attr.aria-invalid]="!!erroCampo('logradouro')" aria-describedby="e-logradouro" />
+                @if (erroCampo('logradouro')) { <p class="dw-err" id="e-logradouro">{{ erroCampo('logradouro') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-numeroLogradouro">Número</label>
+                <input id="f-numeroLogradouro" type="text" formControlName="numeroLogradouro" [attr.aria-invalid]="!!erroCampo('numeroLogradouro')" aria-describedby="e-numeroLogradouro" />
+                @if (erroCampo('numeroLogradouro')) { <p class="dw-err" id="e-numeroLogradouro">{{ erroCampo('numeroLogradouro') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-bairro">Bairro</label>
+                <input id="f-bairro" type="text" formControlName="bairro" [attr.aria-invalid]="!!erroCampo('bairro')" aria-describedby="e-bairro" />
+                @if (erroCampo('bairro')) { <p class="dw-err" id="e-bairro">{{ erroCampo('bairro') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-cep">CEP</label>
+                <input id="f-cep" type="text" inputmode="numeric" formControlName="cep" [attr.aria-invalid]="!!erroCampo('cep')" aria-describedby="e-cep" />
+                @if (erroCampo('cep')) { <p class="dw-err" id="e-cep">{{ erroCampo('cep') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-cidade">Cidade</label>
+                <input id="f-cidade" type="text" formControlName="cidade" [attr.aria-invalid]="!!erroCampo('cidade')" aria-describedby="e-cidade" />
+                @if (erroCampo('cidade')) { <p class="dw-err" id="e-cidade">{{ erroCampo('cidade') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-estado">UF</label>
+                <input id="f-estado" type="text" maxlength="2" formControlName="estado" [attr.aria-invalid]="!!erroCampo('estado')" aria-describedby="e-estado" />
+                @if (erroCampo('estado')) { <p class="dw-err" id="e-estado">{{ erroCampo('estado') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-responsavelCpf">CPF do responsável<span class="opt">opcional</span></label>
+              <input id="f-responsavelCpf" type="text" inputmode="numeric" formControlName="responsavelCpf" aria-describedby="h-responsavel" />
+              <p class="dw-hint" id="h-responsavel">Liga ao profissional de mesmo CPF; sem cadastro, fica pendente até ele existir.</p>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.ficha ? 'Salvar alterações' : 'Cadastrar unidade') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('horario') {
+        <form class="dw-form" (submit)="$event.preventDefault(); salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (erroCampo('horario')) { <div class="box box--err" role="alert" id="f-horario" tabindex="-1"><strong>{{ erroCampo('horario') }}</strong></div> }
+            <div class="dw-field">
+              <label class="switch" for="f-funciona24h">
+                <span><b style="font-weight: 500;">Funciona 24 horas</b><span class="cell-sub" id="h-24h">Hospital e UPA: o horário não fecha a agenda.</span></span>
+                <input type="checkbox" role="switch" id="f-funciona24h" [checked]="funciona24hEdit()" (change)="funciona24hEdit.set($any($event.target).checked)" aria-describedby="h-24h" />
+              </label>
+            </div>
+            <div class="box box--info"><div>A agenda só oferece vagas dentro dos turnos. Para um intervalo de almoço, use dois turnos no dia.</div></div>
+            <table class="eq-horario">
+              <thead><tr><th scope="col">Dia</th><th scope="col">Aberto</th><th scope="col">1º turno</th><th scope="col">2º turno (opcional)</th></tr></thead>
+              <tbody>
+                @for (d of horarioEdit(); track d.dia; let i = $index) {
+                  <tr>
+                    <th scope="row">{{ d.rotulo }}</th>
+                    <td><input type="checkbox" [checked]="d.aberto" (change)="mudarDia(i, 'aberto', $any($event.target).checked)" [attr.aria-label]="d.rotulo + ' aberto'" /></td>
+                    <td>
+                      <input type="time" [value]="d.abre1" [disabled]="!d.aberto" (change)="mudarDia(i, 'abre1', $any($event.target).value)" [attr.aria-label]="d.rotulo + ' abre'" />
+                      <input type="time" [value]="d.fecha1" [disabled]="!d.aberto" (change)="mudarDia(i, 'fecha1', $any($event.target).value)" [attr.aria-label]="d.rotulo + ' fecha'" />
+                    </td>
+                    <td>
+                      <input type="time" [value]="d.abre2" [disabled]="!d.aberto" (change)="mudarDia(i, 'abre2', $any($event.target).value)" [attr.aria-label]="d.rotulo + ' abre no segundo turno'" />
+                      <input type="time" [value]="d.fecha2" [disabled]="!d.aberto" (change)="mudarDia(i, 'fecha2', $any($event.target).value)" [attr.aria-label]="d.rotulo + ' fecha no segundo turno'" />
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Salvar horário' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('situacao') {
+        <form class="dw-form" [formGroup]="situacaoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Unidade</dt><dd>{{ g.ficha.resumo.nome }}</dd></div>
+              <div><dt>Situação atual</dt><dd>{{ situacoes[g.ficha.resumo.situacaoOperacional].rotulo }}</dd></div>
+            </dl>
+            <fieldset class="dw-field">
+              <legend>Nova situação</legend>
+              <div class="radios" role="radiogroup">
+                @for (s of listaSituacoes; track s; let first = $first) {
+                  <label><input type="radio" formControlName="situacao" [value]="s" [id]="first ? 'f-situacao' : null" />{{ situacoes[s].rotulo }}</label>
+                }
+              </div>
+            </fieldset>
+            @if (situacaoForm.controls.situacao.value === 'EM_OBRA' || situacaoForm.controls.situacao.value === 'INOPERANTE') {
+              <div class="box box--warn"><div>A agenda da unidade fecha: sem vagas e sem marcação nova até voltar à operação.</div></div>
+            }
+            @if (situacaoForm.controls.situacao.value !== 'EM_OPERACAO') {
+              <div class="dw-field">
+                <label for="f-motivoSituacao">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-motivoSituacao" type="text" formControlName="motivo" maxlength="500" placeholder="Ex.: reforma do telhado" [attr.aria-invalid]="!!erroCampo('motivoSituacao')" aria-describedby="e-motivoSituacao" />
+                @if (erroCampo('motivoSituacao')) { <p class="dw-err" id="e-motivoSituacao">{{ erroCampo('motivoSituacao') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-previsaoRetorno">Previsão de retorno<span class="opt">opcional</span></label>
+                <input id="f-previsaoRetorno" type="date" formControlName="previsaoRetorno" [attr.aria-invalid]="!!erroCampo('previsaoRetorno')" aria-describedby="e-previsaoRetorno" />
+                @if (erroCampo('previsaoRetorno')) { <p class="dw-err" id="e-previsaoRetorno">{{ erroCampo('previsaoRetorno') }}</p> }
+              </div>
+            }
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Mudar situação' }}</button>
+          </footer>
+        </form>
+      }
+    }
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}

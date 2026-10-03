@@ -24,6 +24,15 @@ public class TipoBeneficioService {
         return TipoBeneficioResponseDto.fromTipoBeneficio(tipoBeneficio);
     }
 
+    /** Edição do catálogo (ADR-0083): mesmos campos e regras da criação; nome repetido → 409. */
+    public TipoBeneficioResponseDto atualizar(UUID uuid, TipoBeneficioRequestDto dto) {
+        TipoBeneficio tipoBeneficio = buscarEntidadePorId(uuid);
+        tipoBeneficio.setNome(dto.getNome());
+        tipoBeneficio.setCusteio(dto.getCusteio());
+        tipoBeneficio = tipoBeneficioRepository.save(tipoBeneficio);
+        return TipoBeneficioResponseDto.fromTipoBeneficio(tipoBeneficio);
+    }
+
     public List<TipoBeneficioResponseDto> listar() {
         return tipoBeneficioRepository.findAll()
                 .stream()
