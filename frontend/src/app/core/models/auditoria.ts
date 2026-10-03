@@ -93,6 +93,7 @@ const RECURSOS: Record<string, string> = {
   LEITO: 'Leito',
   INTERNACAO: 'Internação',
   EQUIPE: 'Equipe',
+  ESCALA: 'Escala',
   AGENDA: 'Agenda',
   AUTH: 'Acesso ao sistema',
   USUARIO: 'Usuário',

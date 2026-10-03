@@ -128,8 +128,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - ~~**Perfil do profissional:** as 13 abas no padrão novo~~ — feito pelas ADRs 0084 a 0086.
 - ~~Responsáveis por setor~~ e ~~edição de treinamento, ciclo e tipo de benefício~~ — feitos pela ADR-0083.
 - Exportar e importar profissionais. ~~**Equipes**~~ — feitas pelas ADRs 0103 (backend) e 0104
-  (tela, com "Atribuir equipe" em Profissionais e a aba Equipes em Equipamentos); faltam as **Escalas** (ADRs 0105 e
-  0106). Fora do escopo das equipes: território (famílias, microáreas
+  (tela, com "Atribuir equipe" em Profissionais e a aba Equipes em Equipamentos); **Escalas** ganharam backend (ADR-0105); falta a tela
+  (ADR-0106). Fora do escopo das escalas: banco de horas e horas realizadas (ponto), confirmação do plantonista, troca
+  pedida pelo profissional, recorrência, adicional noturno e a agenda lendo a escala. Fora do escopo das equipes: território (famílias, microáreas
   georreferenciadas, cadastro domiciliar), indicadores do Previne/PMAQ, programas e sincronização com o CNES.
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
 
