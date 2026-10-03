@@ -132,7 +132,7 @@
         </div>
       </div>
       <div class="detail__actions">
-        <button type="button" class="btn btn--ghost btn--sm" disabled title="Em breve: escalas (ADR-0105)">Ver escala</button>
+        <a class="btn btn--ghost btn--sm" routerLink="/rh/escalas" [queryParams]="{ unidade: d.resumo.unidadeId, equipe: d.resumo.uuid }">Ver escala</a>
         @if (podeEditar()) {
           <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEquipe(d)">Editar</button>
           @if (d.resumo.ativa) { <button type="button" class="btn btn--sm" (click)="abrirMembro(d)">Adicionar membro</button> }

@@ -199,7 +199,11 @@
         </div>
         <div class="prof__actions">
           <a class="btn btn--ghost" routerLink="/profissionais/perfil" [queryParams]="{ cpf: i.profissional.cpf }">Ver perfil</a>
-          <button type="button" class="btn btn--ghost" disabled title="Em breve">Ver escala</button>
+          @if (i.lotacao) {
+            <a class="btn btn--ghost" routerLink="/rh/escalas" [queryParams]="{ unidade: i.lotacao.unidadeUuid }">Ver escala</a>
+          } @else {
+            <button type="button" class="btn btn--ghost" disabled title="Precisa de lotação vigente">Ver escala</button>
+          }
           @if (i.lotacao && pode('EQUIPE.GERENCIAR')) {
             <a class="btn btn--ghost" routerLink="/rh/equipes" [queryParams]="{ acao: 'membro', matricula: i.profissional.matricula, unidade: i.lotacao.unidadeUuid }">Atribuir equipe</a>
           } @else {

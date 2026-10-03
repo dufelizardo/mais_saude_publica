@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, catchError, of } from 'rxjs';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import {
@@ -36,7 +36,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-equipes',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, RouterLink, Drawer],
   templateUrl: './equipes.html',
 })
 export class Equipes {

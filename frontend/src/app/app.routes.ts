@@ -48,6 +48,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/rh/equipes/equipes').then((m) => m.Equipes),
         data: { breadcrumb: 'Equipes', area: 'Recursos Humanos' },
       },
+      // Escalas (ADR-0106), carregadas sob demanda.
+      {
+        path: 'rh/escalas',
+        loadComponent: () => import('./features/rh/escalas/escalas').then((m) => m.Escalas),
+        data: { breadcrumb: 'Escalas', area: 'Recursos Humanos' },
+      },
       // Catálogos de RH agrupados em telas com abas (ADR-0073), carregadas sob demanda.
       {
         path: 'rh/cargos-e-salarios',
