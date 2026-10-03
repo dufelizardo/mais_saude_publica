@@ -91,7 +91,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   autorização for ligada.
 
 ### Equipamentos de Saúde
-- Tela pelo protótipo `Equipamentos.html` (ADR-0102).
+- ~~Tela pelo protótipo~~ — feita pela ADR-0102 (lista e painel da unidade). "Em breve" na tela: mapa e
+  coordenadas, sincronização com o CNES, exportação, consultórios, vagas semanais da unidade, microáreas,
+  acessibilidade e equipes de Saúde da Família.
 - Fora do escopo da ADR-0101: sincronização com o CNES; coordenadas e mapa; microáreas e famílias; equipes de
   Saúde da Família; inspeção sanitária; capacidade de consultórios; exportação; horário de atendimento
   estruturado.

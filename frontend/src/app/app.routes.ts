@@ -76,6 +76,12 @@ export const routes: Routes = [
       { path: 'rh/vagas', redirectTo: () => para('/rh/recrutamento', {}) },
       { path: 'rh/vagas/:vagaId/candidatos', redirectTo: ({ params }) => para('/rh/recrutamento', { vaga: params['vagaId'] }) },
       { path: 'administrativo/setores', component: Setores, data: { breadcrumb: 'Setores', area: 'Administrativo' } },
+      // Equipamentos de Saúde (ADR-0102), carregados sob demanda.
+      {
+        path: 'administrativo/equipamentos',
+        loadComponent: () => import('./features/administrativo/equipamentos/equipamentos').then((m) => m.Equipamentos),
+        data: { breadcrumb: 'Equipamentos de Saúde', area: 'Administrativo' },
+      },
       {
         path: 'administrativo/modelo',
         loadComponent: () => import('./features/administrativo/modelo-administrativo/modelo-administrativo').then((m) => m.ModeloAdministrativo),
