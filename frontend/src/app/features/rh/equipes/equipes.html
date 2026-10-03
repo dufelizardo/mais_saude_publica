@@ -1,0 +1,413 @@
+<header class="page-head">
+  <div>
+    <h1>Equipes</h1>
+    <p>Equipes de saúde das unidades, com os membros e a composição mínima de cada tipo</p>
+  </div>
+  <div class="page-actions">
+    <button type="button" class="btn btn--ghost" disabled title="Em breve: depende da integração com o CNES">Sincronizar CNES</button>
+    @if (podeEditar()) {
+      <button type="button" class="btn" (click)="abrirEquipe()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Nova equipe
+      </button>
+    }
+  </div>
+</header>
+
+<section class="stats" aria-label="Indicadores das equipes">
+  <div class="stat">
+    <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Equipes ativas</div>
+      <div class="stat__val mono">{{ dados()?.ativas ?? '—' }}</div>
+      <div class="stat__sub">{{ dados()?.equipes ?? 0 }} cadastradas</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Equipes eSF · Saúde da Família</div>
+      <div class="stat__val mono">{{ dados()?.porTipo?.ESF ?? 0 }}</div>
+      <div class="stat__sub">cobertura do território: em breve</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"></circle><path d="M5.5 21a6.5 6.5 0 0 1 13 0"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Profissionais vinculados</div>
+      <div class="stat__val mono">{{ dados()?.profissionaisVinculados ?? '—' }}</div>
+      <div class="stat__sub">em equipes ativas</div>
+    </div>
+  </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+    <div>
+      <div class="stat__lbl">Equipes incompletas</div>
+      <div class="stat__val mono">{{ dados()?.incompletas ?? '—' }}</div>
+      <div class="stat__sub">sem a composição mínima do tipo</div>
+    </div>
+  </div>
+</section>
+
+<div class="type-tabs" role="group" aria-label="Tipo de equipe">
+  <button type="button" class="type-tab" [attr.aria-pressed]="tipoAba() === ''" (click)="tipoAba.set('')">Todas <span class="cnt">{{ contagemPorTipo().get('') ?? 0 }}</span></button>
+  @for (t of listaTipos; track t) {
+    <button type="button" class="type-tab" [attr.aria-pressed]="tipoAba() === t" (click)="tipoAba.set(t)">{{ tipos[t].rotulo }} <span class="cnt">{{ contagemPorTipo().get(t) ?? 0 }}</span></button>
+  }
+</div>
+
+<div class="toolbar" role="region" aria-label="Filtros das equipes">
+  <label class="search search--icon">
+    <span class="sr-only">Buscar equipe</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+    <input type="search" placeholder="Buscar equipe, INE ou membro" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+  </label>
+  <label class="pill pill--select">
+    <span class="sr-only">Unidade</span>
+    <select (change)="unidadeFiltro.set($any($event.target).value)" aria-label="Unidade">
+      <option value="" [selected]="unidadeFiltro() === ''">Todas as unidades</option>
+      @for (u of unidadesComEquipe(); track u.uuid) { <option [value]="u.uuid" [selected]="unidadeFiltro() === u.uuid">{{ u.nome }}</option> }
+    </select>
+  </label>
+  <label class="pill pill--select">
+    <span class="sr-only">Situação</span>
+    <select (change)="situacaoFiltro.set($any($event.target).value)" aria-label="Situação">
+      <option value="ATIVAS" [selected]="situacaoFiltro() === 'ATIVAS'">Ativas</option>
+      <option value="INCOMPLETAS" [selected]="situacaoFiltro() === 'INCOMPLETAS'">Incompletas</option>
+      <option value="INATIVAS" [selected]="situacaoFiltro() === 'INATIVAS'">Inativas</option>
+      <option value="" [selected]="situacaoFiltro() === ''">Todas</option>
+    </select>
+  </label>
+</div>
+
+@if (erro()) {
+  <div class="box box--err" role="alert" style="margin-bottom: var(--s-4);"><strong>{{ erro() }}</strong></div>
+}
+
+<section class="teams-grid" role="listbox" aria-label="Equipes">
+  @for (e of filtradas(); track e.uuid) {
+    <article class="team" role="option" tabindex="0" [attr.aria-selected]="selecionadaId() === e.uuid" [attr.aria-label]="e.nome"
+      (click)="selecionar(e.uuid)" (keydown)="teclaNoCartao($event, e.uuid)">
+      <header class="team__head">
+        <span [class]="'team__code ' + tipos[e.tipo].classe" aria-hidden="true">{{ tipos[e.tipo].sigla }}</span>
+        <div class="team__id">
+          <div class="team__name">{{ e.nome }}</div>
+          <div class="team__sub">{{ e.unidadeNome }}@if (e.microareas) { · microáreas {{ e.microareas }} }@if (!e.ativa) { · inativa }</div>
+        </div>
+      </header>
+      <div class="team__roles">
+        <div class="team__role"><span class="ic" aria-hidden="true">+</span><span class="lbl">{{ rotuloFuncoesClinicas(e) }}</span><span class="cnt">{{ e.membros - e.agentesComunitarios }}</span></div>
+        @if (e.tipo === 'ESF' || e.tipo === 'EAB') {
+          <div class="team__role"><span class="ic" aria-hidden="true">◎</span><span class="lbl">Agentes Comunitários (ACS)</span><span class="cnt">{{ e.agentesComunitarios }}</span></div>
+        }
+      </div>
+      <div class="team__cover">
+        <div class="team__cover-top"><span>{{ e.completa ? 'Composição completa' : 'Faltam: ' + faltando(e) }}</span><strong>{{ composicao(e) }}%</strong></div>
+        <div class="team__bar"><span [class]="e.completa ? 'ok' : 'warn'" [style.width.%]="composicao(e)"></span></div>
+      </div>
+      <div class="team__avatars" aria-hidden="true">
+        @for (n of e.nomesMembros.slice(0, 4); track $index) { <span class="who__avatar">{{ iniciais(n) }}</span> }
+        @if (e.nomesMembros.length > 4) { <span class="more">+{{ e.nomesMembros.length - 4 }}</span> }
+        @if (!e.nomesMembros.length) { <span class="cell-sub">Sem membros</span> }
+      </div>
+    </article>
+  } @empty {
+    <div class="card"><div class="empty"><strong>{{ carregando() ? 'Carregando as equipes…' : 'Nenhuma equipe' }}</strong>@if (!carregando()) { <span>Ajuste os filtros ou cadastre uma equipe.</span> }</div></div>
+  }
+</section>
+
+@if (detalhe(); as d) {
+  <section class="card detail" aria-label="Detalhes da equipe">
+    <div class="detail__head">
+      <span [class]="'detail__icon team__code ' + tipos[d.resumo.tipo].classe" aria-hidden="true">{{ tipos[d.resumo.tipo].sigla }}</span>
+      <div class="detail__id">
+        <h2>{{ d.resumo.nome }}</h2>
+        <div class="cell-sub">{{ d.resumo.unidadeNome }}@if (d.resumo.coordenadorNome) { · Coordenação: {{ d.resumo.coordenadorNome }} }@if (d.resumo.ine) { · INE <span class="mono">{{ d.resumo.ine }}</span> }</div>
+        <div class="detail__chips">
+          <span class="tag tag--info">{{ tipos[d.resumo.tipo].descricao }}</span>
+          @if (d.resumo.completa) { <span class="tag tag--ok"><span class="dot" aria-hidden="true"></span>Completa · {{ d.resumo.membros }} membro(s)</span> }
+          @else { <span class="tag tag--warn"><span class="dot" aria-hidden="true"></span>Incompleta · faltam {{ faltando(d.resumo) }}</span> }
+          @if (!d.resumo.ativa) { <span class="tag tag--alert">Inativa</span> }
+          @if (d.resumo.microareas) { <span class="tag tag--info">Microáreas {{ d.resumo.microareas }}</span> }
+        </div>
+      </div>
+      <div class="detail__actions">
+        <button type="button" class="btn btn--ghost btn--sm" disabled title="Em breve: escalas (ADR-0105)">Ver escala</button>
+        @if (podeEditar()) {
+          <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEquipe(d)">Editar</button>
+          @if (d.resumo.ativa) { <button type="button" class="btn btn--sm" (click)="abrirMembro(d)">Adicionar membro</button> }
+        }
+      </div>
+    </div>
+
+    <div class="eq-detalhe">
+      <div class="eq-detalhe__main">
+        <h3 class="section-h">Membros da equipe · {{ d.membros.length }} profissional(is)</h3>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Profissional</th>
+                <th scope="col">Função</th>
+                <th scope="col">Vínculo</th>
+                <th scope="col">Situação</th>
+                @if (podeEditar()) { <th scope="col" class="num">Ações</th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of d.membros; track m.uuid) {
+                <tr>
+                  <td>
+                    <div class="who-cell">
+                      <span class="who__avatar" aria-hidden="true">{{ iniciais(m.nome) }}</span>
+                      <div><span class="n">{{ m.nome }}</span><span class="r">{{ m.conselho || m.matricula }}@if (m.microarea) { · microárea {{ m.microarea }} }</span></div>
+                    </div>
+                  </td>
+                  <td>{{ funcoes[m.funcao] }}@if (m.cargo) { <span class="cell-sub">{{ m.cargo }}</span> }</td>
+                  <td>@if (m.jornadaSemanalHoras) { {{ m.jornadaSemanalHoras }}h } @else { — }<span class="cell-sub">desde {{ data(m.inicio) }}</span></td>
+                  <td>
+                    @if (m.afastamento) { <span class="badge badge--warn"><span class="dot" aria-hidden="true"></span> {{ situacaoMembro(m) }}</span> }
+                    @else { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Ativo</span> }
+                  </td>
+                  @if (podeEditar()) {
+                    <td class="num"><button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Registrar saída de ' + m.nome" (click)="abrirSaida(d, m)">Saída</button></td>
+                  }
+                </tr>
+              } @empty {
+                <tr><td colspan="5"><div class="empty"><strong>Sem membros</strong><span>Inclua profissionais com lotação na unidade.</span></div></td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (d.antigos.length) {
+          <details class="int-mov" style="margin-top: var(--s-3);">
+            <summary>Membros anteriores ({{ d.antigos.length }})</summary>
+            <ul>
+              @for (m of d.antigos; track m.uuid) { <li>{{ m.nome }} · {{ funcoes[m.funcao] }} · {{ data(m.inicio) }} a {{ data(m.fim) }}@if (m.motivoSaida) { · {{ m.motivoSaida }} }</li> }
+            </ul>
+          </details>
+        }
+      </div>
+
+      <aside class="eq-detalhe__side">
+        @if (microareas(d).length) {
+          <h3 class="section-h">Microáreas · território adscrito</h3>
+          <div class="micro-grid">
+            @for (mi of microareas(d); track mi.codigo) {
+              <div class="micro" [class.is-warn]="!mi.acs.length && (d.resumo.tipo === 'ESF' || d.resumo.tipo === 'EAB')">
+                <div class="id">M-{{ mi.codigo }}</div>
+                <div class="acs">@if (mi.acs.length) { {{ nomesAcs(mi.acs) }} } @else { sem ACS }</div>
+              </div>
+            }
+          </div>
+          <p class="cell-sub">Famílias e pacientes por microárea: em breve (cadastro do território).</p>
+        }
+
+        @if (d.apoiadas.length || d.apoiadaPor.length) {
+          <h3 class="section-h" style="margin-top: var(--s-4);">Apoio matricial</h3>
+          <ul class="eq-vinc">
+            @for (a of d.apoiadas; track a.uuid) { <li>Apoia <button type="button" class="link-btn" (click)="selecionar(a.uuid)">{{ a.nome }}</button> <span class="cell-sub" style="display: inline;">· {{ a.unidadeNome }}</span></li> }
+            @for (a of d.apoiadaPor; track a.uuid) { <li>Apoiada por <button type="button" class="link-btn" (click)="selecionar(a.uuid)">{{ a.nome }}</button></li> }
+          </ul>
+        }
+
+        <h3 class="section-h" style="margin-top: var(--s-4);">Reunião de equipe</h3>
+        @if (d.reuniaoDia) {
+          <div class="ind-row">
+            <span class="ic" aria-hidden="true">◷</span>
+            <div><div class="lbl">Reunião semanal</div><div class="sub">toda {{ rotuloDia(d.reuniaoDia).toLowerCase() }}@if (d.reuniaoInicio) { · {{ d.reuniaoInicio.slice(0, 5) }}@if (d.reuniaoFim) {–{{ d.reuniaoFim.slice(0, 5) }} } }@if (d.reuniaoLocal) { · {{ d.reuniaoLocal }} }</div></div>
+            <span class="v" style="font-size: 0.75rem;">Recorrente</span>
+          </div>
+        } @else {
+          <p class="cell-sub">Sem reunião cadastrada.</p>
+        }
+
+        <h3 class="section-h" style="margin-top: var(--s-4);">Programas e indicadores do território</h3>
+        <p class="cell-sub">Em breve: programas vinculados, famílias adscritas, cobertura vacinal, gestantes, HiperDia e visitas domiciliares dependem do cadastro do território.</p>
+      </aside>
+    </div>
+  </section>
+}
+
+<!-- ── Gavetas ──────────────────────────────────────────────────────────────────────────────────── -->
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="tituloGaveta(g)" (fechar)="fecharGaveta()">
+    @switch (g.tipo) {
+      @case ('equipe') {
+        <form class="dw-form" [formGroup]="equipeForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (!g.equipe) {
+              <div class="dw-row">
+                <div class="dw-field">
+                  <label for="f-unidadeId">Unidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <select id="f-unidadeId" formControlName="unidadeId" [attr.aria-invalid]="!!erroCampo('unidadeId')" aria-describedby="e-unidadeId">
+                    <option value="">Selecione…</option>
+                    @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+                  </select>
+                  @if (erroCampo('unidadeId')) { <p class="dw-err" id="e-unidadeId">{{ erroCampo('unidadeId') }}</p> }
+                </div>
+                <div class="dw-field">
+                  <label for="f-tipo">Tipo</label>
+                  <select id="f-tipo" formControlName="tipo">
+                    @for (t of listaTipos; track t) { <option [value]="t">{{ tipos[t].rotulo }}</option> }
+                  </select>
+                </div>
+              </div>
+            } @else {
+              <dl class="ro">
+                <div><dt>Unidade</dt><dd>{{ g.equipe.resumo.unidadeNome }}</dd></div>
+                <div><dt>Tipo</dt><dd>{{ tipos[g.equipe.resumo.tipo].descricao }}</dd></div>
+              </dl>
+            }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-nome" type="text" formControlName="nome" maxlength="80" autocomplete="off" placeholder="Ex.: SF-12" [attr.aria-invalid]="!!erroCampo('nome')" aria-describedby="e-nome" />
+                @if (erroCampo('nome')) { <p class="dw-err" id="e-nome">{{ erroCampo('nome') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-ine">INE<span class="opt">opcional</span></label>
+                <input id="f-ine" type="text" class="mono" inputmode="numeric" maxlength="10" formControlName="ine" placeholder="10 dígitos" [attr.aria-invalid]="!!erroCampo('ine')" aria-describedby="e-ine" />
+                @if (erroCampo('ine')) { <p class="dw-err" id="e-ine">{{ erroCampo('ine') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-microareas">Microáreas<span class="opt">opcional</span></label>
+              <input id="f-microareas" type="text" formControlName="microareas" placeholder="Ex.: 14, 17, 18" />
+            </div>
+            @if (g.equipe) {
+              <div class="dw-field">
+                <label for="f-coordenadorMatricula">Coordenação<span class="opt">opcional</span></label>
+                <select id="f-coordenadorMatricula" formControlName="coordenadorMatricula" aria-describedby="h-coord">
+                  <option value="">Sem coordenação</option>
+                  @for (m of g.equipe.membros; track m.uuid) { <option [value]="m.matricula">{{ m.nome }} · {{ funcoes[m.funcao] }}</option> }
+                </select>
+                <p class="dw-hint" id="h-coord">Só membros vigentes.</p>
+              </div>
+            }
+            <fieldset class="dw-field">
+              <legend>Reunião de equipe<span class="opt">opcional</span></legend>
+              <div class="dw-row">
+                <select id="f-reuniaoDia" formControlName="reuniaoDia" aria-label="Dia da reunião">
+                  <option value="">Sem reunião</option>
+                  @for (d of dias; track d.id) { <option [value]="d.id">{{ d.rotulo }}</option> }
+                </select>
+                <input id="f-reuniaoLocal" type="text" formControlName="reuniaoLocal" placeholder="Local, ex.: sala 2" aria-label="Local da reunião" />
+              </div>
+              <div class="dw-row">
+                <input id="f-reuniaoInicio" type="time" formControlName="reuniaoInicio" aria-label="Início da reunião" />
+                <input id="f-reuniaoFim" type="time" formControlName="reuniaoFim" aria-label="Fim da reunião" [attr.aria-invalid]="!!erroCampo('reuniaoFim')" aria-describedby="e-reuniaoFim" />
+              </div>
+              @if (erroCampo('reuniaoFim')) { <p class="dw-err" id="e-reuniaoFim">{{ erroCampo('reuniaoFim') }}</p> }
+            </fieldset>
+            @if ((g.equipe?.resumo?.tipo ?? equipeForm.controls.tipo.value) === 'EMULTI') {
+              <fieldset class="dw-field">
+                <legend>Equipes apoiadas</legend>
+                <div class="radios lab-checks" role="group" aria-label="Equipes apoiadas">
+                  @for (a of apoiaveis(); track a.uuid) {
+                    <label><input type="checkbox" [checked]="apoiadasMarcadas().has(a.uuid)" (change)="alternarApoiada(a.uuid)" />{{ a.nome }} <span class="cell-sub" style="display: inline;">· {{ a.unidadeNome }}</span></label>
+                  } @empty { <p class="dw-hint">Nenhuma eSF ou eAP ativa.</p> }
+                </div>
+              </fieldset>
+            }
+            @if (g.equipe) {
+              <div class="dw-field">
+                <label class="switch" for="f-ativa">
+                  <span><b style="font-weight: 500;">Ativa</b><span class="cell-sub" id="h-ativa">Inativa, não recebe membros nem conta nos indicadores.</span></span>
+                  <input type="checkbox" role="switch" id="f-ativa" formControlName="ativa" aria-describedby="h-ativa" />
+                </label>
+              </div>
+            }
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.equipe ? 'Salvar alterações' : 'Cadastrar equipe') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('membro') {
+        <form class="dw-form" [formGroup]="membroForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (!g.equipe) {
+              <div class="dw-field">
+                <label for="f-equipeId">Equipe <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-equipeId" formControlName="equipeId" [attr.aria-invalid]="!!erroCampo('equipeId')" aria-describedby="h-equipe e-equipeId">
+                  <option value="">Selecione…</option>
+                  @for (e of equipesParaIncluir(); track e.uuid) { <option [value]="e.uuid">{{ e.nome }} · {{ tipos[e.tipo].sigla }} · {{ e.unidadeNome }}</option> }
+                </select>
+                <p class="dw-hint" id="h-equipe">As equipes ativas da unidade de lotação do profissional.</p>
+                @if (erroCampo('equipeId')) { <p class="dw-err" id="e-equipeId">{{ erroCampo('equipeId') }}</p> }
+              </div>
+            }
+            <div class="dw-field">
+              <label for="f-profissionalMatricula">Profissional <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-profissionalMatricula" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erroCampo('profissionalMatricula')" aria-describedby="h-prof e-profissionalMatricula">
+                <option value="">Selecione…</option>
+                @for (q of lotadosNaUnidade(); track q.profissional.matricula) { <option [value]="q.profissional.matricula">{{ q.profissional.nome }} · {{ q.lotacao?.cargoNome }}</option> }
+              </select>
+              <p class="dw-hint" id="h-prof">Só quem tem lotação vigente na unidade da equipe.</p>
+              @if (erroCampo('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erroCampo('profissionalMatricula') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-funcao">Função na equipe</label>
+                <select id="f-funcao" formControlName="funcao">
+                  @for (f of listaFuncoes; track f) { <option [value]="f">{{ funcoes[f] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-microarea">Microárea<span class="opt">do ACS</span></label>
+                <input id="f-microarea" type="text" maxlength="20" formControlName="microarea" placeholder="Ex.: 14" />
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-inicio">Entrada<span class="opt">sem preencher, hoje</span></label>
+              <input id="f-inicio" type="date" formControlName="inicio" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Incluindo…' : 'Incluir na equipe' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('saida') {
+        <form class="dw-form" [formGroup]="saidaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Profissional</dt><dd>{{ g.membro.nome }}</dd></div>
+              <div><dt>Função</dt><dd>{{ funcoes[g.membro.funcao] }}</dd></div>
+              <div><dt>Equipe</dt><dd>{{ g.equipe.resumo.nome }}</dd></div>
+              <div><dt>Desde</dt><dd>{{ data(g.membro.inicio) }}</dd></div>
+            </dl>
+            <div class="dw-field">
+              <label for="f-motivoSaida">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-motivoSaida" type="text" formControlName="motivo" maxlength="500" placeholder="Ex.: transferência de unidade" [attr.aria-invalid]="!!erroCampo('motivoSaida')" aria-describedby="e-motivoSaida" />
+              @if (erroCampo('motivoSaida')) { <p class="dw-err" id="e-motivoSaida">{{ erroCampo('motivoSaida') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-fim">Data da saída<span class="opt">sem preencher, hoje</span></label>
+              <input id="f-fim" type="date" formControlName="fim" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Registrando…' : 'Registrar saída' }}</button>
+          </footer>
+        </form>
+      }
+    }
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}

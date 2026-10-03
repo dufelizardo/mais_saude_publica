@@ -200,7 +200,11 @@
         <div class="prof__actions">
           <a class="btn btn--ghost" routerLink="/profissionais/perfil" [queryParams]="{ cpf: i.profissional.cpf }">Ver perfil</a>
           <button type="button" class="btn btn--ghost" disabled title="Em breve">Ver escala</button>
-          <button type="button" class="btn btn--ghost" disabled title="Em breve">Atribuir equipe</button>
+          @if (i.lotacao && pode('EQUIPE.GERENCIAR')) {
+            <a class="btn btn--ghost" routerLink="/rh/equipes" [queryParams]="{ acao: 'membro', matricula: i.profissional.matricula, unidade: i.lotacao.unidadeUuid }">Atribuir equipe</a>
+          } @else {
+            <button type="button" class="btn btn--ghost" disabled [title]="i.lotacao ? 'Sem permissão para gerenciar equipes' : 'Precisa de lotação vigente'">Atribuir equipe</button>
+          }
         </div>
       </article>
     }

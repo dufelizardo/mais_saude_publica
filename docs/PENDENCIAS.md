@@ -93,7 +93,7 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Equipamentos de Saúde
 - ~~Tela pelo protótipo~~ — feita pela ADR-0102 (lista e painel da unidade). "Em breve" na tela: mapa e
   coordenadas, sincronização com o CNES, exportação, consultórios, vagas semanais da unidade, microáreas,
-  acessibilidade e equipes de Saúde da Família.
+  acessibilidade. As equipes da unidade aparecem na aba Equipes desde a ADR-0104.
 - Fora do escopo da ADR-0101: sincronização com o CNES; coordenadas e mapa; microáreas e famílias; equipes de
   Saúde da Família; inspeção sanitária; capacidade de consultórios; exportação; horário de atendimento
   estruturado.
@@ -127,8 +127,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Telas
 - ~~**Perfil do profissional:** as 13 abas no padrão novo~~ — feito pelas ADRs 0084 a 0086.
 - ~~Responsáveis por setor~~ e ~~edição de treinamento, ciclo e tipo de benefício~~ — feitos pela ADR-0083.
-- Exportar e importar profissionais. **Equipes** ganhou backend (ADR-0103); faltam a tela (ADR-0104) e as
-  **Escalas** (ADRs 0105 e 0106). Fora do escopo das equipes: território (famílias, microáreas
+- Exportar e importar profissionais. ~~**Equipes**~~ — feitas pelas ADRs 0103 (backend) e 0104
+  (tela, com "Atribuir equipe" em Profissionais e a aba Equipes em Equipamentos); faltam as **Escalas** (ADRs 0105 e
+  0106). Fora do escopo das equipes: território (famílias, microáreas
   georreferenciadas, cadastro domiciliar), indicadores do Previne/PMAQ, programas e sincronização com o CNES.
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
 

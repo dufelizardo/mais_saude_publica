@@ -22,6 +22,7 @@ const ADMINISTRATIVO = ['ADMINISTRATIVO.CONSULTAR', 'ADMINISTRATIVO.GERENCIAR'];
  */
 const MENU: Record<string, string[]> = {
   '/rh': RH,
+  '/rh/equipes': ['EQUIPE.GERENCIAR', ...RH, 'ADMINISTRATIVO.CONSULTAR'],
   '/administrativo': ADMINISTRATIVO,
   '/administrativo/setores': [],
   '/administrativo/modelo': ADMINISTRATIVO,
