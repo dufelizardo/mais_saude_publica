@@ -118,6 +118,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0100](./0100-leitos-e-internacao-prontuario.md) | Leitos e internação: prontuário e vínculo assistencial | Aceita e implementada |
 | [0101](./0101-equipamentos-de-saude-backend.md) | Equipamentos de Saúde: backend | Aceita e implementada (parte 1 de 2) |
 | [0102](./0102-equipamentos-de-saude-tela.md) | Equipamentos de Saúde: tela | Aceita e implementada |
+| [0103](./0103-equipes-backend.md) | Equipes de saúde: backend | Aceita e implementada (parte 1 de 4) |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

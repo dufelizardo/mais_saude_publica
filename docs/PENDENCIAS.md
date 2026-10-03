@@ -127,7 +127,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Telas
 - ~~**Perfil do profissional:** as 13 abas no padrão novo~~ — feito pelas ADRs 0084 a 0086.
 - ~~Responsáveis por setor~~ e ~~edição de treinamento, ciclo e tipo de benefício~~ — feitos pela ADR-0083.
-- Exportar e importar profissionais; **Equipes** e **Escalas**, que são domínios novos (ADR-0072).
+- Exportar e importar profissionais. **Equipes** ganhou backend (ADR-0103); faltam a tela (ADR-0104) e as
+  **Escalas** (ADRs 0105 e 0106). Fora do escopo das equipes: território (famílias, microáreas
+  georreferenciadas, cadastro domiciliar), indicadores do Previne/PMAQ, programas e sincronização com o CNES.
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
 
 ### Testes
