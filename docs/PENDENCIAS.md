@@ -5,7 +5,7 @@ para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou ab
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.5.0, promovida em 2026-10-03). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.6.0, promovida em 2026-10-06). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -93,7 +93,7 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Equipamentos de Saúde
 - ~~Tela pelo protótipo~~ — feita pela ADR-0102 (lista e painel da unidade). "Em breve" na tela: mapa e
   coordenadas, sincronização com o CNES, exportação, consultórios, vagas semanais da unidade, microáreas,
-  acessibilidade e equipes de Saúde da Família.
+  acessibilidade. As equipes da unidade aparecem na aba Equipes desde a ADR-0104.
 - Fora do escopo da ADR-0101: sincronização com o CNES; coordenadas e mapa; microáreas e famílias; equipes de
   Saúde da Família; inspeção sanitária; capacidade de consultórios; exportação; horário de atendimento
   estruturado.
@@ -127,7 +127,13 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Telas
 - ~~**Perfil do profissional:** as 13 abas no padrão novo~~ — feito pelas ADRs 0084 a 0086.
 - ~~Responsáveis por setor~~ e ~~edição de treinamento, ciclo e tipo de benefício~~ — feitos pela ADR-0083.
-- Exportar e importar profissionais; **Equipes** e **Escalas**, que são domínios novos (ADR-0072).
+- Exportar e importar profissionais. ~~**Equipes**~~ — feitas pelas ADRs 0103 (backend) e 0104
+  (tela, com "Atribuir equipe" em Profissionais e a aba Equipes em Equipamentos); ~~**Escalas**~~ — feitas pelas ADRs 0105 (backend) e 0106
+  (tela, com "Ver escala" em Profissionais e em Equipes); "Em breve" na tela: banco de horas, realizado, exportação,
+  cobertura de férias e filtro por função. Intervalo no turno e modelos de jornada (40h com 8h + 1h, 44h,
+  30h, 20h, 12x36) pela ADR-0107; modelos cadastráveis pelo usuário ficam para depois. Fora do escopo das escalas: banco de horas e horas realizadas (ponto), confirmação do plantonista, troca
+  pedida pelo profissional, recorrência, adicional noturno e a agenda lendo a escala. Fora do escopo das equipes: território (famílias, microáreas
+  georreferenciadas, cadastro domiciliar), indicadores do Previne/PMAQ, programas e sincronização com o CNES.
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
 
 ### Testes
@@ -146,7 +152,8 @@ real":
   - #16 Transporte sanitário;
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
     coletivas, programas, especialidade e equipe;
-  - na Enfermagem, `Cuidado`, `Escala` e prescrição com aprazamento.
+  - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);
+  - na Enfermagem, `Cuidado` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
   - #13 Estoque;
   - #14 Compras;

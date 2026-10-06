@@ -92,6 +92,8 @@ const RECURSOS: Record<string, string> = {
   EXAME_LABORATORIAL: 'Exame do catálogo',
   LEITO: 'Leito',
   INTERNACAO: 'Internação',
+  EQUIPE: 'Equipe',
+  ESCALA: 'Escala',
   AGENDA: 'Agenda',
   AUTH: 'Acesso ao sistema',
   USUARIO: 'Usuário',

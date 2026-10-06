@@ -20,6 +20,8 @@ import {
 import { TipoUnidadeDeSaude } from '../../../core/models/unidade-saude';
 import { AuthService } from '../../../core/services/auth';
 import { RedeUnidadesService } from '../../../core/services/rede-unidades';
+import { EquipeService } from '../../../core/services/equipe';
+import { EquipeResumoDto, TIPOS_EQUIPE } from '../../../core/models/equipe';
 import { Drawer } from '../../../shared/drawer/drawer';
 
 type AbaFicha = 'dados' | 'operacional' | 'equipes' | 'vinculacoes' | 'historico';
@@ -54,6 +56,7 @@ export class Equipamentos {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly redeService = inject(RedeUnidadesService);
+  private readonly equipeService = inject(EquipeService);
 
   protected readonly tipos = TIPOS_UNIDADE;
   protected readonly tiposDeAtendimento = UNIDADES_DE_ATENDIMENTO;
@@ -71,6 +74,9 @@ export class Equipamentos {
   protected readonly ficha = signal<FichaUnidadeDto | null>(null);
   protected readonly carregandoFicha = signal(false);
   protected readonly abaFicha = signal<AbaFicha>('dados');
+  /** Equipes da unidade (ADR-0104): `undefined` carregando, `null` sem acesso ou erro. */
+  protected readonly equipesDaUnidade = signal<EquipeResumoDto[] | null | undefined>(undefined);
+  protected readonly tiposEquipe = TIPOS_EQUIPE;
 
   protected readonly busca = signal('');
   protected readonly regionalFiltro = signal('');
@@ -187,6 +193,11 @@ export class Equipamentos {
     this.selecionadaId.set(uuid);
     this.carregandoFicha.set(true);
     if (atualizarUrl) this.router.navigate([], { queryParams: { unidade: uuid }, queryParamsHandling: 'merge', replaceUrl: true });
+    this.equipesDaUnidade.set(undefined);
+    this.equipeService.listar(uuid).subscribe({
+      next: (r) => this.equipesDaUnidade.set(r.lista),
+      error: () => this.equipesDaUnidade.set(null),
+    });
     this.redeService.ficha(uuid).subscribe({
       next: (f) => {
         this.ficha.set(f);
