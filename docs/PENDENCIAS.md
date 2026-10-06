@@ -5,7 +5,7 @@ para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou ab
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.5.0, promovida em 2026-10-03). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.6.0, promovida em 2026-10-06). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -152,7 +152,8 @@ real":
   - #16 Transporte sanitário;
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
     coletivas, programas, especialidade e equipe;
-  - na Enfermagem, `Cuidado`, `Escala` e prescrição com aprazamento.
+  - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);
+  - na Enfermagem, `Cuidado` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
   - #13 Estoque;
   - #14 Compras;
