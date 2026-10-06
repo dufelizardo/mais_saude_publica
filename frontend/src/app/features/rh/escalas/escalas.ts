@@ -7,11 +7,15 @@ import { Observable, catchError, map, of } from 'rxjs';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import { EquipeResumoDto, FUNCOES_EQUIPE, FuncaoEquipe } from '../../../core/models/equipe';
 import {
+  AplicacaoModeloResponseDto,
   AUSENCIAS,
   AusenciaEscalaDto,
   CopiaSemanaResponseDto,
   EscalaSemanaResponseDto,
+  INTERVALOS,
   LinhaEscalaDto,
+  MODELOS_JORNADA,
+  ModeloJornada,
   TIPOS_TURNO,
   TipoTurno,
   TurnoEscalaDto,
@@ -29,7 +33,8 @@ type Aba = 'semana' | 'plantoes' | 'ferias';
 type Gaveta =
   | { tipo: 'turno'; turno: TurnoEscalaDto | null }
   | { tipo: 'designar'; turno: TurnoEscalaDto }
-  | { tipo: 'copiar'; resultado: CopiaSemanaResponseDto | null };
+  | { tipo: 'copiar'; resultado: CopiaSemanaResponseDto | null }
+  | { tipo: 'modelo'; resultado: AplicacaoModeloResponseDto | null };
 
 interface Dia {
   iso: string;
@@ -99,6 +104,9 @@ export class Escalas {
   protected readonly ausenciasRotulo = AUSENCIAS;
   protected readonly funcoes = FUNCOES_EQUIPE;
   protected readonly listaFuncoes = Object.keys(FUNCOES_EQUIPE) as FuncaoEquipe[];
+  protected readonly intervalos = INTERVALOS;
+  protected readonly modelos = MODELOS_JORNADA;
+  protected readonly listaModelos = Object.keys(MODELOS_JORNADA) as ModeloJornada[];
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
 
@@ -130,6 +138,14 @@ export class Escalas {
     fim: ['13:00'],
     equipeId: [''],
     descricao: [''],
+    intervalo: [15],
+  });
+  protected readonly modeloForm = this.fb.nonNullable.group({
+    profissionalMatricula: [''],
+    modelo: ['H40_8H' as ModeloJornada],
+    inicio: ['08:00'],
+    intervalo: [60],
+    equipeId: [''],
   });
   protected readonly designarForm = this.fb.nonNullable.group({ profissionalMatricula: [''], motivo: [''] });
   protected readonly copiarForm = this.fb.nonNullable.group({ origem: [''] });
@@ -298,6 +314,60 @@ export class Escalas {
     return `${String(h).replace('.', ',')}h`;
   }
 
+  protected rotuloIntervalo(min: number): string {
+    if (!min) return 'sem intervalo';
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return h ? (m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`) : `${m}min`;
+  }
+
+  private static minutosDoDia(hhmm: string): number {
+    const [h, m] = hhmm.split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  /** "08h", "17h15": como os blocos da grade. */
+  private static rotuloHora(minutos: number): string {
+    const m = ((minutos % 1440) + 1440) % 1440;
+    const mm = m % 60;
+    return `${String(Math.floor(m / 60)).padStart(2, '0')}h${mm ? String(mm).padStart(2, '0') : ''}`;
+  }
+
+  /** Horas trabalhadas do turno na gaveta: do início ao fim (que pode virar o dia), menos o intervalo. */
+  protected horasDoFormulario(): string {
+    const v = this.turnoForm.getRawValue();
+    if (!v.inicio || !v.fim) return '—';
+    let duracao = Escalas.minutosDoDia(v.fim) - Escalas.minutosDoDia(v.inicio);
+    if (duracao <= 0) duracao += 1440;
+    return this.rotuloHoras(Math.round(((duracao - Number(v.intervalo)) / 60) * 10) / 10);
+  }
+
+  /** Os turnos que o modelo vai gerar, para conferir antes de aplicar (a mesma conta do backend). */
+  protected previaDoModelo(): { dia: string; faixa: string; horas: string; intervalo: string }[] {
+    const v = this.modeloForm.getRawValue();
+    const m = MODELOS_JORNADA[v.modelo];
+    if (!v.inicio) return [];
+    const ini = Escalas.minutosDoDia(v.inicio);
+    return m.dias.map(([d, trabalhado]) => {
+      const intervalo = m.plantao || trabalhado > 240 ? Number(v.intervalo) : 0;
+      const fim = ini + (m.plantao ? trabalhado : trabalhado + intervalo);
+      const horas = m.plantao ? trabalhado - intervalo : trabalhado;
+      return {
+        dia: `${DIAS_CURTOS[d]} ${this.data(somarDias(this.semana(), d))}`,
+        faixa: `${Escalas.rotuloHora(ini)}–${Escalas.rotuloHora(fim)}`,
+        horas: this.rotuloHoras(Math.round((horas / 60) * 10) / 10),
+        intervalo: this.rotuloIntervalo(intervalo),
+      };
+    });
+  }
+
+  protected horasDoModelo(): string {
+    const v = this.modeloForm.getRawValue();
+    const m = MODELOS_JORNADA[v.modelo];
+    const total = m.dias.reduce((s, [, t]) => s + (m.plantao ? t - Number(v.intervalo) : t), 0);
+    return this.rotuloHoras(Math.round((total / 60) * 10) / 10);
+  }
+
   protected iniciais(nome: string | null | undefined): string {
     return (nome ?? '?')
       .replace(/^(Dr|Dra|Enf|Téc|ACS)\.?\s+/i, '')
@@ -343,6 +413,7 @@ export class Escalas {
   protected tituloGaveta(g: Gaveta): string {
     if (g.tipo === 'turno') return g.turno ? (g.turno.vaga ? 'Vaga aberta' : 'Editar turno') : 'Novo turno';
     if (g.tipo === 'designar') return g.turno.vaga ? 'Designar profissional' : 'Trocar profissional';
+    if (g.tipo === 'modelo') return 'Aplicar modelo de jornada';
     return 'Copiar semana';
   }
 
@@ -368,6 +439,7 @@ export class Escalas {
       fim: TIPOS_TURNO[tipo].fim,
       equipeId: this.equipeId(),
       descricao: '',
+      intervalo: TIPOS_TURNO[tipo].intervalo,
     });
     this.abrir({ tipo: 'turno', turno: null });
   }
@@ -383,6 +455,7 @@ export class Escalas {
       fim: t.fimEm.slice(11, 16),
       equipeId: t.equipeId ?? '',
       descricao: t.descricao ?? '',
+      intervalo: t.intervaloMinutos ?? 0,
     });
     this.abrir({ tipo: 'turno', turno: t });
   }
@@ -390,7 +463,36 @@ export class Escalas {
   /** Ao trocar o tipo, sugere o horário dele. */
   protected aoTrocarTipo(): void {
     const t = TIPOS_TURNO[this.turnoForm.controls.tipo.value];
-    this.turnoForm.patchValue({ inicio: t.inicio, fim: t.fim });
+    this.turnoForm.patchValue({ inicio: t.inicio, fim: t.fim, intervalo: t.intervalo });
+  }
+
+  /** O modelo que a jornada contratada sugere (40h: 8h + 1h; 36h: 12x36 em unidade 24 horas). */
+  private modeloPelaJornada(matricula: string): ModeloJornada {
+    const jornada = this.dados()?.linhas.find((l) => l.matricula === matricula)?.jornadaSemanalHoras;
+    const achado = this.listaModelos.find((m) => MODELOS_JORNADA[m].jornada === jornada && (!MODELOS_JORNADA[m].plantao || !!this.dados()?.funciona24h));
+    return achado ?? 'H40_8H';
+  }
+
+  protected abrirModelo(matricula = ''): void {
+    const modelo = this.modeloPelaJornada(matricula);
+    this.modeloForm.reset({
+      profissionalMatricula: matricula,
+      modelo,
+      inicio: MODELOS_JORNADA[modelo].inicio,
+      intervalo: MODELOS_JORNADA[modelo].intervalo,
+      equipeId: this.equipeId(),
+    });
+    this.abrir({ tipo: 'modelo', resultado: null });
+  }
+
+  protected aoTrocarProfissionalDoModelo(): void {
+    const modelo = this.modeloPelaJornada(this.modeloForm.controls.profissionalMatricula.value);
+    this.modeloForm.patchValue({ modelo, inicio: MODELOS_JORNADA[modelo].inicio, intervalo: MODELOS_JORNADA[modelo].intervalo });
+  }
+
+  protected aoTrocarModelo(): void {
+    const m = MODELOS_JORNADA[this.modeloForm.controls.modelo.value];
+    this.modeloForm.patchValue({ inicio: m.inicio, intervalo: m.intervalo });
   }
 
   protected abrirDesignar(t: TurnoEscalaDto): void {
@@ -418,6 +520,7 @@ export class Escalas {
     this.erroApi.set(null);
     if (g.tipo === 'turno') this.salvarTurno(g.turno);
     else if (g.tipo === 'designar') this.salvarDesignacao(g.turno);
+    else if (g.tipo === 'modelo') this.salvarModelo();
     else this.salvarCopia();
   }
 
@@ -450,6 +553,7 @@ export class Escalas {
       fim: v.fim,
       equipeId: v.equipeId || undefined,
       descricao: v.descricao.trim() || undefined,
+      intervaloMinutos: Number(v.intervalo),
     };
     const nome = this.dados()?.linhas.find((l) => l.matricula === v.profissionalMatricula)?.nome ?? 'Vaga aberta';
     this.enviar(t ? this.escalaService.atualizar(t.uuid, dto) : this.escalaService.criar(dto), t ? 'Turno atualizado' : 'Turno criado',
@@ -462,6 +566,33 @@ export class Escalas {
     const nome = this.dados()?.linhas.find((l) => l.matricula === v.profissionalMatricula)?.nome ?? v.profissionalMatricula;
     this.enviar(this.escalaService.designar(t.uuid, v.profissionalMatricula, v.motivo.trim() || undefined),
       t.vaga ? 'Vaga preenchida' : 'Profissional trocado', `${nome} · ${this.faixa(t)} · ${this.data(t.data)}`);
+  }
+
+  private salvarModelo(): void {
+    const v = this.modeloForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.profissionalMatricula) erros['profissionalMatricula'] = 'Escolha o profissional.';
+    if (!v.inicio) erros['inicio'] = 'Informe o início.';
+    if (!this.validar(erros)) return;
+    this.submitting.set(true);
+    this.escalaService
+      .aplicarModelo({
+        unidadeId: this.unidadeId(),
+        profissionalMatricula: v.profissionalMatricula,
+        modelo: v.modelo,
+        semana: this.semana(),
+        inicio: v.inicio,
+        intervaloMinutos: Number(v.intervalo),
+        equipeId: v.equipeId || undefined,
+      })
+      .subscribe({
+        next: (r) => {
+          this.submitting.set(false);
+          this.gaveta.set({ tipo: 'modelo', resultado: r });
+          this.carregar();
+        },
+        error: (e: HttpErrorResponse) => this.falhou(e),
+      });
   }
 
   private salvarCopia(): void {

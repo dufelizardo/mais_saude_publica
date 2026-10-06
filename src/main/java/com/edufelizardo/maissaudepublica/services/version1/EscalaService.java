@@ -14,14 +14,18 @@ import com.edufelizardo.maissaudepublica.models.MembroEquipe;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.TurnoEscala;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AplicarModeloRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CopiarSemanaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesignarTurnoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TurnoEscalaRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AplicacaoModeloResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CopiaSemanaResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EscalaSemanaResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TurnoEscalaDto;
+import com.edufelizardo.maissaudepublica.models.enuns.ModeloJornada;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAfastamento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoAfastamento;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoTurno;
 import com.edufelizardo.maissaudepublica.repositories.AfastamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.EquipeRepository;
 import com.edufelizardo.maissaudepublica.repositories.HorarioUnidadeRepository;
@@ -288,7 +292,7 @@ public class EscalaService {
         List<CopiaSemanaResponseDto.Ignorado> ignorados = new ArrayList<>();
         for (TurnoEscala o : turnoRepository.daUnidadeEntre(unidade.getUuid(), origem.atStartOfDay(), origem.plusDays(7).atStartOfDay())) {
             TurnoEscala t = new TurnoEscala(null, unidade, o.getEquipe(), o.getProfissional(), o.getFuncao(), o.getTipo(),
-                    o.getInicioEm().plusDays(dias), o.getFimEm().plusDays(dias), o.getDescricao(), UsuarioAutenticado.cpf());
+                    o.getInicioEm().plusDays(dias), o.getFimEm().plusDays(dias), o.getDescricao(), o.getIntervaloMinutos(), UsuarioAutenticado.cpf());
             String nome = t.vaga() ? null : t.getProfissional().getNome();
             if (t.getInicioEm().toLocalDate().isBefore(LocalDate.now())) {
                 ignorados.add(new CopiaSemanaResponseDto.Ignorado(t.getInicioEm().toLocalDate(), nome, "O dia já passou."));
@@ -309,6 +313,64 @@ public class EscalaService {
         return new CopiaSemanaResponseDto(copiados, ignorados);
     }
 
+    /**
+     * Gera a semana do profissional por um modelo de jornada: um turno por dia do modelo, com o início e o intervalo
+     * escolhidos (ou os do modelo) e o fim pelas horas do dia mais o intervalo. Os que caem em dia passado ou quebram uma
+     * regra ficam de fora com o motivo, como na cópia de semana.
+     */
+    @Transactional
+    public AplicacaoModeloResponseDto aplicarModelo(AplicarModeloRequestDto dto) {
+        UnidadeDeSaude unidade = buscarUnidade(dto.getUnidadeId());
+        controleDeAcesso.exigir(GERENCIAR, unidade);
+        Profissional p = buscarProfissional(dto.getProfissionalMatricula().trim());
+        Equipe equipe = dto.getEquipeId() == null ? null : equipeDaUnidade(dto.getEquipeId(), unidade);
+        ModeloJornada modelo = dto.getModelo();
+        LocalDate seg = segunda(dto.getSemana());
+        LocalTime inicio = dto.getInicio() != null ? dto.getInicio() : modelo.inicio();
+        int intervalo = dto.getIntervaloMinutos() != null ? dto.getIntervaloMinutos() : modelo.intervalo();
+        int criados = 0;
+        long minutos = 0;
+        List<CopiaSemanaResponseDto.Ignorado> ignorados = new ArrayList<>();
+        for (Map.Entry<DayOfWeek, Integer> dia : modelo.dias().entrySet()) {
+            LocalDate data = seg.plusDays(dia.getKey().getValue() - 1L);
+            int trabalhado = dia.getValue();
+            TurnoEscala t = new TurnoEscala();
+            t.setUnidade(unidade);
+            t.setEquipe(equipe);
+            t.setProfissional(p);
+            t.setInicioEm(data.atTime(inicio));
+            if (modelo.plantao()) {
+                t.setTipo(TipoTurno.PLANTAO_12H);
+                t.setIntervaloMinutos(intervalo);
+                t.setFimEm(t.getInicioEm().plusMinutes(trabalhado));
+            } else {
+                int doDia = trabalhado > 4 * 60 ? intervalo : 0;
+                t.setTipo(trabalhado >= 7 * 60 ? TipoTurno.DIURNO : inicio.isBefore(LocalTime.NOON) ? TipoTurno.MANHA : TipoTurno.TARDE);
+                t.setIntervaloMinutos(doDia);
+                t.setFimEm(t.getInicioEm().plusMinutes(trabalhado + doDia));
+            }
+            completarFuncao(t);
+            t.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+            if (data.isBefore(LocalDate.now())) {
+                ignorados.add(new CopiaSemanaResponseDto.Ignorado(data, p.getNome(), "O dia já passou."));
+                continue;
+            }
+            try {
+                validar(t);
+            } catch (ResourceUnprocessableEntityException | ResourceConflictException | ResourceBadRequestException e) {
+                ignorados.add(new CopiaSemanaResponseDto.Ignorado(data, p.getNome(), e.getMessage()));
+                continue;
+            }
+            turnoRepository.save(t);
+            criados++;
+            minutos += t.minutos();
+        }
+        ContextoAuditoria.unidade(unidade);
+        ContextoAuditoria.detalhe("Modelo " + modelo + " para " + p.getMatricula() + " na semana de " + seg + ": " + criados
+                + " turno(s), " + ignorados.size() + " de fora.");
+        return new AplicacaoModeloResponseDto(criados, horas(minutos), ignorados);
+    }
+
     // ── Regras ─────────────────────────────────────────────────────────────────────────────────────
 
     private void aplicar(TurnoEscala t, TurnoEscalaRequestDto dto) {
@@ -320,6 +382,7 @@ public class EscalaService {
         t.setInicioEm(inicio);
         t.setFimEm(fim);
         t.setDescricao(dto.getDescricao() == null || dto.getDescricao().isBlank() ? null : dto.getDescricao().trim());
+        t.setIntervaloMinutos(dto.getIntervaloMinutos() == null ? 0 : dto.getIntervaloMinutos());
     }
 
     /** Sem função informada, vale a do profissional na equipe do turno. */
@@ -341,7 +404,13 @@ public class EscalaService {
             throw new ResourceUnprocessableEntityException("A " + u.getNome() + " está fechada (" + u.getSituacaoOperacional()
                     + "); não recebe escala.");
         }
-        long minutos = t.minutos();
+        long minutos = t.duracao();
+        if (t.getIntervaloMinutos() < 0 || t.getIntervaloMinutos() > 120) {
+            throw new ResourceBadRequestException("O intervalo vai de 0 a 2 horas (CLT, art. 71).");
+        }
+        if (t.getIntervaloMinutos() > 0 && t.getIntervaloMinutos() >= minutos) {
+            throw new ResourceBadRequestException("O intervalo precisa ser menor que o turno.");
+        }
         if (t.getTipo().mesmoDia() && !t.getFimEm().toLocalDate().equals(t.getInicioEm().toLocalDate())) {
             throw new ResourceBadRequestException("O turno de " + rotulo(t) + " termina no mesmo dia em que começa.");
         }
@@ -446,6 +515,20 @@ public class EscalaService {
         }
         List<TurnoEscala> trabalho = turnos.stream().filter(t -> t.getTipo().somaNaJornada())
                 .sorted(Comparator.comparing(TurnoEscala::getInicioEm)).toList();
+        for (TurnoEscala t : trabalho) {
+            boolean naSemana = !t.getInicioEm().isBefore(de) && t.getInicioEm().isBefore(ate);
+            if (!naSemana || t.getTipo().intervaloIndenizavel()) {
+                continue;
+            }
+            long trabalhado = t.minutos();
+            if (trabalhado > 6 * 60 && t.getIntervaloMinutos() < 60) {
+                alertas.add("Intervalo de " + t.getIntervaloMinutos() + "min em " + t.getInicioEm().format(DIA)
+                        + " (mínimo de 1h acima de 6h trabalhadas, CLT art. 71).");
+            } else if (trabalhado > 4 * 60 && t.getIntervaloMinutos() < 15) {
+                alertas.add("Intervalo de " + t.getIntervaloMinutos() + "min em " + t.getInicioEm().format(DIA)
+                        + " (mínimo de 15min acima de 4h trabalhadas, CLT art. 71).");
+            }
+        }
         for (int i = 1; i < trabalho.size(); i++) {
             TurnoEscala a = trabalho.get(i - 1);
             TurnoEscala b = trabalho.get(i);
@@ -466,7 +549,8 @@ public class EscalaService {
         return new TurnoEscalaDto(t.getUuid(), t.getUnidade().getUuid(), t.getUnidade().getNome(),
                 t.getEquipe() != null ? t.getEquipe().getUuid() : null, t.getEquipe() != null ? t.getEquipe().getNome() : null,
                 p != null ? p.getMatricula() : null, p != null ? p.getNome() : null, t.getFuncao(), t.getTipo(),
-                t.getInicioEm().toLocalDate(), t.getInicioEm(), t.getFimEm(), horas(t.minutos()), t.getDescricao(), t.vaga(), alertas);
+                t.getInicioEm().toLocalDate(), t.getInicioEm(), t.getFimEm(), horas(t.minutos()), t.getIntervaloMinutos(), t.getDescricao(), t.vaga(),
+                alertas);
     }
 
     private EscalaSemanaResponseDto.Ausencia ausencia(Afastamento a, Lotacao l) {
@@ -492,6 +576,7 @@ public class EscalaService {
         return switch (t.getTipo()) {
             case MANHA -> "manhã";
             case TARDE -> "tarde";
+            case DIURNO -> "dia inteiro";
             case NOITE -> "noite";
             case PLANTAO_12H -> "plantão de 12 horas";
             case PLANTAO_24H -> "plantão de 24 horas";

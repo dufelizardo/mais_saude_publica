@@ -152,3 +152,22 @@ UI Escalas - Aba De Plantoes
     Should Be Equal    ${aba}    Plantões
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Escalas - Aplicar Modelo 40h
+    [Documentation]    Aplica o modelo de 40h (8h + 1h) pela gaveta e confere a semana pela API.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${seg}=    Proxima Segunda
+    ${unidadeId}=    Seed A Unidade De Saude Uuid
+    ${matricula}=    Seed Um Profissional Lotado    ${unidadeId}
+    UI Escalas - Abrir Semana    ${unidadeId}    ${seg}
+    Clicar Botao    Aplicar modelo
+    Escolher Opcao Da Gaveta    profissionalMatricula    ${matricula}
+    Escolher Opcao Da Gaveta    modelo    H40_8H
+    Esperar Texto Aparecer    40h na semana
+    Enviar Gaveta
+    Esperar Texto Aparecer    5 turno(s) criado(s)
+    ${depois}=    UI Escalas - Semana Da API    ${unidadeId}    ${seg}
+    Should Be Equal As Integers    ${depois}[turnos]    5
+    Should Be Equal As Numbers    ${depois}[horasPrevistas]    40
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -154,6 +154,19 @@ class EscalaControllerTest {
                 tipo, data, inicio, fim)));
     }
 
+    private ResultActions turnoComIntervalo(UnidadeDeSaude u, String matricula, String tipo, LocalDate data, String inicio, String fim,
+                                            int intervalo) throws Exception {
+        return mockMvc.perform(post(URL + "turno").contentType(MediaType.APPLICATION_JSON).content("""
+                {"unidadeId": "%s", "profissionalMatricula": "ES-%s", "tipo": "%s", "data": "%s", "inicio": "%s", "fim": "%s", "intervaloMinutos": %d}
+                """.formatted(u.getUuid(), matricula, tipo, data, inicio, fim, intervalo)));
+    }
+
+    private ResultActions modelo(UnidadeDeSaude u, String matricula, String modelo) throws Exception {
+        return mockMvc.perform(post(URL + "aplicar-modelo").contentType(MediaType.APPLICATION_JSON).content("""
+                {"unidadeId": "%s", "profissionalMatricula": "ES-%s", "modelo": "%s", "semana": "%s"}
+                """.formatted(u.getUuid(), matricula, modelo, seg.plusDays(2))));
+    }
+
     private String criado(ResultActions r) throws Exception {
         return JsonPath.read(r.andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.uuid");
     }
@@ -237,19 +250,19 @@ class EscalaControllerTest {
     @Test
     void alertasDeJornadaEDescanso() throws Exception {
         for (int d = 0; d < 3; d++) {
-            turno(ubs, "MED", null, "MANHA", seg.plusDays(d), "07:00", "13:00").andExpect(status().isCreated())
+            turnoComIntervalo(ubs, "MED", "MANHA", seg.plusDays(d), "07:00", "13:15", 15).andExpect(status().isCreated())
                     .andExpect(jsonPath("$.alertas").isEmpty());
         }
-        turno(ubs, "MED", null, "TARDE", seg.plusDays(3), "13:00", "19:00").andExpect(status().isCreated())
+        turnoComIntervalo(ubs, "MED", "TARDE", seg.plusDays(3), "13:00", "19:00", 15).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.alertas[0]").value(containsString("acima da jornada contratada de 20h")));
 
         turno(upa, "PLA", null, "PLANTAO_12H", seg, "19:00", "07:00").andExpect(status().isCreated());
-        turno(upa, "PLA", null, "TARDE", seg.plusDays(1), "13:00", "19:00").andExpect(status().isCreated())
+        turnoComIntervalo(upa, "PLA", "TARDE", seg.plusDays(1), "13:00", "19:00", 15).andExpect(status().isCreated())
                 .andExpect(jsonPath("$.alertas[0]").value(containsString("Descanso de 6h")));
 
         mockMvc.perform(get(URL).param("unidadeId", ubs.getUuid().toString()).param("semana", seg.toString()))
                 .andExpect(jsonPath("$.comAlerta").value(1))
-                .andExpect(jsonPath("$.linhas[?(@.matricula == 'ES-MED')].horas").value(hasItem(24.0)));
+                .andExpect(jsonPath("$.linhas[?(@.matricula == 'ES-MED')].horas").value(hasItem(23.8)));
     }
 
     @Test
@@ -286,5 +299,51 @@ class EscalaControllerTest {
         mockMvc.perform(post(URL + "copiar-semana").contentType(MediaType.APPLICATION_JSON).content("""
                 {"unidadeId": "%s", "origem": "%s", "destino": "%s"}""".formatted(ubs.getUuid(), seg, seg.plusDays(1))))
                 .andExpect(status().isBadRequest());
+    }
+    @Test
+    void intervaloNaoContaNaJornada() throws Exception {
+        for (int d = 0; d < 5; d++) {
+            turnoComIntervalo(ubs, "ENF", "DIURNO", seg.plusDays(d), "08:00", "17:00", 60).andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.horas").value(8.0)).andExpect(jsonPath("$.intervaloMinutos").value(60))
+                    .andExpect(jsonPath("$.alertas").isEmpty());
+        }
+        mockMvc.perform(get(URL).param("unidadeId", ubs.getUuid().toString()).param("semana", seg.toString()))
+                .andExpect(jsonPath("$.linhas[?(@.matricula == 'ES-ENF')].horas").value(hasItem(40.0)))
+                .andExpect(jsonPath("$.horasPrevistas").value(40.0))
+                .andExpect(jsonPath("$.comAlerta").value(0));
+
+        turnoComIntervalo(ubs, "MED", "DIURNO", seg, "08:00", "17:00", 0).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.horas").value(9.0))
+                .andExpect(jsonPath("$.alertas[0]").value(containsString("Intervalo de 0min")));
+        turnoComIntervalo(ubs, "MED", "TARDE", seg.plusDays(1), "13:00", "17:00", 150).andExpect(status().isBadRequest());
+        turnoComIntervalo(ubs, "MED", "MANHA", seg.plusDays(1), "07:00", "08:00", 60).andExpect(status().isBadRequest());
+        turnoComIntervalo(upa, "PLA", "PLANTAO_12H", seg, "07:00", "19:00", 0).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.alertas").isEmpty());
+    }
+
+    @Test
+    void modelo40hGeraCincoDiasDe8hMais1h() throws Exception {
+        modelo(ubs, "ENF", "H40_8H").andExpect(status().isOk())
+                .andExpect(jsonPath("$.criados").value(5))
+                .andExpect(jsonPath("$.horas").value(40.0))
+                .andExpect(jsonPath("$.ignorados").isEmpty());
+        mockMvc.perform(get(URL).param("unidadeId", ubs.getUuid().toString()).param("semana", seg.toString()))
+                .andExpect(jsonPath("$.linhas[?(@.matricula == 'ES-ENF')].horas").value(hasItem(40.0)))
+                .andExpect(jsonPath("$.linhas[?(@.matricula == 'ES-ENF')].alertas[*]").isEmpty())
+                .andExpect(jsonPath("$.linhas[?(@.matricula == 'ES-ENF')].turnos[0].tipo").value(hasItem("DIURNO")))
+                .andExpect(jsonPath("$.linhas[?(@.matricula == 'ES-ENF')].turnos[0].fimEm").value(hasItem(seg + "T17:00:00")));
+    }
+
+    @Test
+    void modeloDeixaDeForaOQueQuebraRegra() throws Exception {
+        afastamentoRepository.save(new Afastamento(profissionalRepository.findByMatricula("ES-ENF").orElseThrow(), TipoAfastamento.FERIAS,
+                seg.plusDays(2), seg.plusDays(2), StatusAfastamento.APROVADO, null));
+        modelo(ubs, "ENF", "H40_8H").andExpect(jsonPath("$.criados").value(4))
+                .andExpect(jsonPath("$.ignorados[0].motivo").value(containsString("em férias")));
+        modelo(ubs, "MED", "H12X36").andExpect(jsonPath("$.criados").value(0)).andExpect(jsonPath("$.ignorados", hasSize(4)))
+                .andExpect(jsonPath("$.ignorados[0].motivo").value(containsString("24 horas")));
+        modelo(upa, "PLA", "H12X36").andExpect(jsonPath("$.criados").value(4)).andExpect(jsonPath("$.horas").value(48.0));
+        modelo(ubs, "MED", "H44_6X1").andExpect(jsonPath("$.criados").value(5))
+                .andExpect(jsonPath("$.ignorados[0].motivo").value(containsString("não abre")));
     }
 }

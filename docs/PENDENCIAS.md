@@ -130,7 +130,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - Exportar e importar profissionais. ~~**Equipes**~~ — feitas pelas ADRs 0103 (backend) e 0104
   (tela, com "Atribuir equipe" em Profissionais e a aba Equipes em Equipamentos); ~~**Escalas**~~ — feitas pelas ADRs 0105 (backend) e 0106
   (tela, com "Ver escala" em Profissionais e em Equipes); "Em breve" na tela: banco de horas, realizado, exportação,
-  cobertura de férias e filtro por função. Fora do escopo das escalas: banco de horas e horas realizadas (ponto), confirmação do plantonista, troca
+  cobertura de férias e filtro por função. Intervalo no turno e modelos de jornada (40h com 8h + 1h, 44h,
+  30h, 20h, 12x36) pela ADR-0107; modelos cadastráveis pelo usuário ficam para depois. Fora do escopo das escalas: banco de horas e horas realizadas (ponto), confirmação do plantonista, troca
   pedida pelo profissional, recorrência, adicional noturno e a agenda lendo a escala. Fora do escopo das equipes: território (famílias, microáreas
   georreferenciadas, cadastro domiciliar), indicadores do Previne/PMAQ, programas e sincronização com o CNES.
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).

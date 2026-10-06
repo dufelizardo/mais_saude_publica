@@ -3,9 +3,11 @@ package com.edufelizardo.maissaudepublica.controllers.version1;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AplicarModeloRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CopiarSemanaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesignarTurnoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TurnoEscalaRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AplicacaoModeloResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CopiaSemanaResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EscalaSemanaResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TurnoEscalaDto;
@@ -78,6 +80,16 @@ public class EscalaController {
     public ResponseEntity<Void> remover(@PathVariable UUID uuid) {
         service.remover(uuid);
         return ResponseEntity.noContent().build();
+    }
+
+    @RequerPermissao({"ESCALA.GERENCIAR"})
+    @PostMapping(value = "aplicar-modelo", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Aplica um modelo de jornada", description = "Gera a semana do profissional pelo modelo (40h com 8h + 1h de intervalo, 44h "
+            + "6x1, 30h, 20h ou 12x36), com o início e o intervalo escolhidos. Os turnos que caem em dia passado ou quebram uma regra "
+            + "ficam de fora e voltam com o motivo.", tags = "Escalas")
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<AplicacaoModeloResponseDto> aplicarModelo(@Valid @RequestBody AplicarModeloRequestDto dto) {
+        return ResponseEntity.ok(service.aplicarModelo(dto));
     }
 
     @RequerPermissao({"ESCALA.GERENCIAR"})

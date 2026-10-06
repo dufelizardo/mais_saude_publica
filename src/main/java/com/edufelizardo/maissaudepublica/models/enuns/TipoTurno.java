@@ -7,6 +7,8 @@ package com.edufelizardo.maissaudepublica.models.enuns;
 public enum TipoTurno {
     MANHA,
     TARDE,
+    /** O dia inteiro, com intervalo: o padrão das 40 horas (8h + 1h, ex.: 08:00 às 17:00). */
+    DIURNO,
     /** Atravessa a meia-noite; só em unidade 24 horas. */
     NOITE,
     PLANTAO_12H,
@@ -23,12 +25,12 @@ public enum TipoTurno {
 
     /** Precisa caber no horário de funcionamento da unidade (quando ela não é 24 horas). */
     public boolean dentroDoHorario() {
-        return this == MANHA || this == TARDE;
+        return this == MANHA || this == TARDE || this == DIURNO;
     }
 
     /** Termina no mesmo dia em que começa. */
     public boolean mesmoDia() {
-        return this == MANHA || this == TARDE || this == CAPACITACAO;
+        return this == MANHA || this == TARDE || this == DIURNO || this == CAPACITACAO;
     }
 
     /** Duração exigida em minutos; nulo quando a duração é livre, até o máximo. */
@@ -46,6 +48,11 @@ public enum TipoTurno {
 
     public boolean plantao() {
         return this == PLANTAO_12H || this == PLANTAO_24H || this == NOITE || this == SOBREAVISO;
+    }
+
+    /** Plantão de 12x36: o intervalo pode ser indenizado (CLT, art. 59-A), então a falta dele não gera alerta. */
+    public boolean intervaloIndenizavel() {
+        return this == PLANTAO_12H || this == PLANTAO_24H || this == SOBREAVISO;
     }
 
     public boolean somaNaJornada() {
