@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CopiaSemanaResponseDto, EscalaSemanaResponseDto, TurnoEscalaDto, TurnoEscalaRequestDto } from '../models/escala';
+import { AplicacaoModeloResponseDto, CopiaSemanaResponseDto, EscalaSemanaResponseDto, ModeloJornada, TurnoEscalaDto, TurnoEscalaRequestDto } from '../models/escala';
 
 /** Escalas (ADR-0105): semana da unidade, turnos, designação e troca, remoção e cópia de semana. */
 @Injectable({ providedIn: 'root' })
@@ -30,6 +30,18 @@ export class EscalaService {
 
   remover(uuid: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/turno/${uuid}`);
+  }
+
+  aplicarModelo(dto: {
+    unidadeId: string;
+    profissionalMatricula: string;
+    modelo: ModeloJornada;
+    semana: string;
+    inicio?: string;
+    intervaloMinutos?: number;
+    equipeId?: string;
+  }): Observable<AplicacaoModeloResponseDto> {
+    return this.http.post<AplicacaoModeloResponseDto>(`${this.baseUrl}/aplicar-modelo`, dto);
   }
 
   copiarSemana(unidadeId: string, origem: string, destino: string): Observable<CopiaSemanaResponseDto> {

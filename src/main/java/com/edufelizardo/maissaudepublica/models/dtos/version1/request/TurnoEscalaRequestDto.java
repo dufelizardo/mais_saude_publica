@@ -50,4 +50,9 @@ public class TurnoEscalaRequestDto implements Serializable {
 
     @Size(max = 120, message = "A descrição vai até 120 caracteres.")
     private String descricao;
+
+    /** Intervalo de repouso e alimentação, em minutos; não conta na jornada. Sem valor, sem intervalo. */
+    @Min(value = 0, message = "O intervalo não pode ser negativo.")
+    @Max(value = 120, message = "O intervalo vai até 2 horas (CLT, art. 71).")
+    private Integer intervaloMinutos;
 }

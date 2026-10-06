@@ -36,7 +36,9 @@ public class TurnoEscalaDto implements Serializable {
     private LocalDate data;
     private LocalDateTime inicioEm;
     private LocalDateTime fimEm;
+    /** Horas trabalhadas: a duração menos o intervalo. */
     private double horas;
+    private int intervaloMinutos;
     private String descricao;
     private boolean vaga;
     /** Avisos que não impedem: jornada semanal acima da contratada, descanso menor que 11 horas, fora da equipe. */

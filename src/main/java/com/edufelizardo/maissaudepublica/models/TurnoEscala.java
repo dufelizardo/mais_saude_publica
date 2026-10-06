@@ -69,13 +69,23 @@ public class TurnoEscala implements Serializable {
     @Column(length = 120)
     private String descricao;
 
+    /** Intervalo de repouso e alimentação dentro do turno, que não conta na jornada (CLT, art. 71, § 2º). */
+    @Column(nullable = false)
+    private int intervaloMinutos;
+
     private String registradoPorCpf;
 
     public boolean vaga() {
         return profissional == null;
     }
 
-    public long minutos() {
+    /** Do início ao fim, com o intervalo. */
+    public long duracao() {
         return Duration.between(inicioEm, fimEm).toMinutes();
+    }
+
+    /** Trabalhado: a duração menos o intervalo. É o que conta na jornada. */
+    public long minutos() {
+        return duracao() - intervaloMinutos;
     }
 }

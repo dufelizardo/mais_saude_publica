@@ -136,6 +136,35 @@ Escala - Remover - Status Code 204
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+Escala - Intervalo - Status Code 201
+    [Documentation]    Creates an 08:00-17:00 day shift with a 1h break; it counts 8 worked hours.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${seg}=    Proxima Segunda
+    ${unidadeId}=    Seed A Unidade De Saude Uuid
+    ${matricula}=    Seed Um Profissional Lotado    ${unidadeId}
+    ${payload}=    Payload De Turno    ${unidadeId}    ${matricula}    ${EMPTY}    DIURNO    ${seg}    08:00    17:00
+    Set To Dictionary    ${payload}    intervaloMinutos=${60}
+    ${response}=    POST Create Turno    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    201
+    Should Be Equal As Numbers    ${response.json()}[horas]    8
+    Should Be Equal As Integers    ${response.json()}[intervaloMinutos]    60
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Escala - Modelo - Status Code 200
+    [Documentation]    Applies the 40h model (8h + 1h): five shifts, 40 worked hours.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${seg}=    Proxima Segunda
+    ${unidadeId}=    Seed A Unidade De Saude Uuid
+    ${matricula}=    Seed Um Profissional Lotado    ${unidadeId}
+    ${payload}=    Create Dictionary    unidadeId=${unidadeId}    profissionalMatricula=${matricula}    modelo=H40_8H    semana=${seg}
+    ${response}=    POST Aplicar Modelo    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    200
+    Should Be Equal As Integers    ${response.json()}[criados]    5
+    Should Be Equal As Numbers    ${response.json()}[horas]    40
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Escala - By HTTP Status Code
     [Documentation]    Executes the schedule scenario for the given HTTP status code.
     [Arguments]    ${meuHTTP}
@@ -147,6 +176,8 @@ Escala - By HTTP Status Code
     ...    ELSE IF    '${meuHTTP}' == '200-designar'    Escala - Designar - Status Code 200
     ...    ELSE IF    '${meuHTTP}' == '200-copiar'    Escala - Copiar Semana - Status Code 200
     ...    ELSE IF    '${meuHTTP}' == '204'    Escala - Remover - Status Code 204
+    ...    ELSE IF    '${meuHTTP}' == '201-intervalo'    Escala - Intervalo - Status Code 201
+    ...    ELSE IF    '${meuHTTP}' == '200-modelo'    Escala - Modelo - Status Code 200
     ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Escala test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
