@@ -51,8 +51,9 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
 | 26 | [Saúde Mental](#26-saúde-mental) | 📐 | fatias SM1 a SM6 |
+| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 
-**Resumo:** 12 ✅ · 4 🟡 · 5 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
+**Resumo:** 12 ✅ · 4 🟡 · 6 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
 não iniciada do domínio 20.
 
 ## 2. Domínios
@@ -94,6 +95,7 @@ não iniciada do domínio 20.
 - [ ] Banco de horas e horas realizadas, ligando o ponto à escala.
 - [ ] Exportar e importar profissionais.
 - [ ] Modelos de jornada cadastráveis pelo usuário.
+- [ ] Turnos fora da lotação por mobilização em emergência ativa, como exceção controlada (domínio 27, E3).
 - [ ] Confirmação do plantonista e troca pedida pelo próprio profissional.
 - [ ] Recorrência de escala e adicional noturno.
 - [ ] Agenda lendo a escala.
@@ -251,6 +253,7 @@ não iniciada do domínio 20.
 - [ ] Censo diário formal.
 - [ ] Prescrição e dieta hospitalar.
 - [ ] Restrição de leito por idade (pediátrico, neonatal).
+- [ ] Leitos extras ativáveis em emergência (domínio 27, E3).
 - [ ] Modalidade da internação (voluntária, involuntária, compulsória) e comunicação ao Ministério Público em 72h na
   involuntária, pela Lei 10.216/2001 (domínio 26, SM3).
 - [ ] Sincronização com os leitos do CNES.
@@ -260,6 +263,7 @@ não iniciada do domínio 20.
 **Estado:** ⬜. Hoje só existe o rótulo `ESTOQUE` reservado no catálogo de capacidades (ADR-0032).
 
 **Falta:**
+- [ ] Consumido pela mobilização em emergência: reserva, consumo extraordinário, redistribuição (domínio 27, E4).
 - [ ] Desenho (ADR): produto, lote, estoque, movimentação, inventário, almoxarifado. Fica separado da Farmácia,
   porque medicamento tem regra própria.
 - [ ] Implementação.
@@ -285,6 +289,7 @@ não iniciada do domínio 20.
 **Estado:** ⬜
 
 **Falta:**
+- [ ] Consumido pela mobilização em emergência: veículos e ambulâncias (domínio 27, E4).
 - [ ] Desenho (ADR): veículo, solicitação de transporte. Integra com Patrimônio (veículo), RH (motorista) e
   Regulação (necessidade).
 - [ ] Implementação.
@@ -436,6 +441,21 @@ não iniciada do domínio 20.
 - [ ] **SM4 · Rede:** referência e contrarreferência pela Regulação; cuidado compartilhado e matriciamento.
 - [ ] **SM5 · CAPS e RAPS:** modalidades de CAPS e componentes da RAPS como capacidades da unidade (ADR-0053).
 - [ ] **SM6 · Intersetorialidade e indicadores:** instituições externas, encaminhamento intersetorial, indicadores.
+
+### 27. Gestão de Emergências e Desastres
+
+**Estado:** 📐. Desenhado na [ADR-0113](./adr/0113-emergencias-e-desastres.md); detalhe em
+[`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md).
+
+**Falta:**
+- [ ] **E1 · Núcleo:** evento, emergência, tipo (COBRADE), nível, situação, avaliação de impacto, território afetado.
+- [ ] **E2 · Contingência:** plano versionado, critérios de ativação, ações previstas, ativação com histórico.
+- [ ] **E3 · Mobilização:** mobilização (com a exceção de turnos fora da lotação na Escala), capacidade emergencial,
+  ações emergenciais, unidade afetada pela situação operacional.
+- [ ] **E4 · Integração da rede:** redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas,
+  pacientes deslocados; Estoque e Transporte quando existirem.
+- [ ] **E5 · Pós-evento:** desmobilização, relatório, lições aprendidas, revisão do plano, indicadores.
+- [ ] **E6 · Especializados:** eventos de massa, epidemias, desastres ambientais, hospital de campanha como capacidade.
 
 ## 3. Pendências transversais
 

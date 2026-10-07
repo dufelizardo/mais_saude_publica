@@ -9,11 +9,12 @@ onde cada módulo é posicionado dentro da plataforma inteira.
 
 ## 1. Contexto e como ler este documento
 
-Este documento nasceu de uma visão de 20 domínios trazida pelo usuário (hoje 26: o #21 Território e Adscrição
+Este documento nasceu de uma visão de 20 domínios trazida pelo usuário (hoje 27: o #21 Território e Adscrição
 entrou pela [ADR-0108](./adr/0108-territorio-e-adscricao.md) o #22 Programas, Ações e Linhas de Cuidado pela
 [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), o #23 Vigilância em Saúde e o #24 Imunização pela
-[ADR-0110](./adr/0110-vigilancia-em-saude.md), o #25 Saúde Bucal pela [ADR-0111](./adr/0111-saude-bucal.md) e o #26 Saúde Mental pela
-[ADR-0112](./adr/0112-saude-mental.md)) para o "Mais Saúde Pública"
+[ADR-0110](./adr/0110-vigilancia-em-saude.md), o #25 Saúde Bucal pela [ADR-0111](./adr/0111-saude-bucal.md) o #26 Saúde Mental pela
+[ADR-0112](./adr/0112-saude-mental.md) e o #27 Gestão de Emergências e Desastres pela
+[ADR-0113](./adr/0113-emergencias-e-desastres.md)) para o "Mais Saúde Pública"
 como plataforma completa de gestão de uma rede pública de saúde — não apenas cadastro de unidades.
 Recebe o **mesmo tratamento** que todo material externo já trazido para este projeto (a
 "Especificação Preliminar do Setor Administrativo Adaptativo" que originou o módulo Administrativo,
@@ -68,13 +69,14 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
                   ├── Indicadores / BI
                   ├── Território e Adscrição
                   ├── Programas, Ações e Linhas de Cuidado
+                  ├── Emergências e Desastres
                   └── Documentos
 ```
 
-Os **20 domínios** do usuário, mais o **#21 Território e Adscrição** (ADR-0108) o **#22 Programas, Ações e Linhas de Cuidado** (ADR-0109), o **#23 Vigilância em Saúde** e o **#24 Imunização** (ADR-0110) o **#25 Saúde Bucal** (ADR-0111) e o **#26 Saúde Mental** (ADR-0112), estão todos numerados abaixo (nenhum foi descartado), organizados
+Os **20 domínios** do usuário, mais o **#21 Território e Adscrição** (ADR-0108) o **#22 Programas, Ações e Linhas de Cuidado** (ADR-0109), o **#23 Vigilância em Saúde** e o **#24 Imunização** (ADR-0110) o **#25 Saúde Bucal** (ADR-0111) o **#26 Saúde Mental** (ADR-0112) e o **#27 Gestão de Emergências e Desastres** (ADR-0113), estão todos numerados abaixo (nenhum foi descartado), organizados
 dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 
-## 3. Os 26 domínios
+## 3. Os 27 domínios
 
 ### Organização
 
@@ -123,6 +125,7 @@ dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 | 19 | **Indicadores, BI e Gestão** | Transforma fatos operacionais (já registrados pelos domínios acima) em informação de gestão — nunca o inverso. | `Indicador`, `Dashboard` (camada de leitura, não fonte de dado) | ⏳ Não iniciado — depende dos domínios operacionais existirem primeiro para ter dado confiável para agregar |
 | 21 | **Território e Adscrição** | Base territorial da Atenção Primária: segmento, território (com finalidade), área sob responsabilidade da equipe, microárea do ACS, imóvel, família e a adscrição da população, com geolocalização. | `SegmentoTerritorial`, `Territorio`, `Area`, `Microarea`, `ResponsabilidadeTerritorial`, `AtribuicaoMicroarea`, `Imovel`, `Domicilio`, `NucleoFamiliar`, `Adscricao` | ⏳ Desenhado na [ADR-0108](./adr/0108-territorio-e-adscricao.md), detalhe em [`territorio/MODELO-TERRITORIO.md`](./territorio/MODELO-TERRITORIO.md); implementação nas fatias F1 (backend), F2 (tela com mapa), F3 (cadastro territorial) e F4 (escopo de acesso). Até a F1, as microáreas ficam como texto em `Equipe` e `MembroEquipe` (ADR-0103), de forma provisória |
 | 22 | **Programas, Ações e Linhas de Cuidado** | Organização programática da saúde: programas e campanhas cadastráveis pelo município, acompanhamento do cidadão no programa, ações programáticas, linhas de cuidado, metas e indicadores. Referencia Paciente, Equipe, Unidade e Território sem ser dono deles. | `CategoriaPrograma`, `Programa`, `AcompanhamentoProgramatico`, `Campanha`, `AcaoProgramatica`, `LinhaDeCuidado`, `MetaProgramatica`, `IndicadorProgramatico` | ⏳ Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), detalhe em [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md); fatias P1 (catálogo) a P6 (indicadores). Usa a adscrição do #21 e alimenta o #19 Indicadores e BI |
+| 27 | **Gestão de Emergências e Desastres** | Coordenação extraordinária da resposta em saúde quando um evento ultrapassa a operação normal: evento, emergência, plano de contingência, ativação, avaliação de impacto, capacidade emergencial, mobilização, ações, desmobilização e relatório pós-evento. Não é dono dos recursos (RH, Farmácia, Estoque, Transporte, Regulação, Leitos, Vigilância). | `EventoEmergencial`, `Emergencia`, `PlanoDeContingencia`, `AtivacaoPlano`, `AvaliacaoImpacto`, `CapacidadeEmergencial`, `Mobilizacao`, `AcaoEmergencial`, `RelatorioPosEvento` | 📐 Desenhado na [ADR-0113](./adr/0113-emergencias-e-desastres.md), detalhe em [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md); fatias E1 (núcleo) a E6 (eventos especializados). A Vigilância detecta; Emergências coordena a resposta |
 | — | **Documentos** | Anexos/documentos formais (contrato, prontuário, processo, compra) — reaproveitável por qualquer domínio, em vez de cada um ter seu próprio conceito de anexo. Citado na visão original do usuário, sem número na lista final de 20 — mantido aqui para não se perder. | `Documento`, `Versao`, `Tipo`, `Aprovacao`, `Assinatura` | ⏳ Não iniciado |
 
 ## 4. Ondas de implementação
