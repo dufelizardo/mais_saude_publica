@@ -41,6 +41,11 @@ O projeto segue avançando por **incrementos pequenos e discutidos** (mesma prá
 Administrativo) — este mapa existe para que a próxima década de decisões tenha um lugar único para
 ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez.
 
+> **Mapa fechado** pela [ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md): 31 itens numerados mais Documentos.
+> Domínio novo só se a necessidade não couber nos existentes, depois de passar pelos cinco passos da ADR-0116 (dado →
+> processo de domínio existente → configuração de equipamento → interface com outro setor ou sistema → só então
+> domínio novo, com justificativa). O estado real de cada item fica no [`STATUS-DOS-DOMINIOS.md`](./STATUS-DOS-DOMINIOS.md).
+
 ## 2. O mapa em 4 grupos
 
 ```text
