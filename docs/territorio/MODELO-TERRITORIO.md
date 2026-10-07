@@ -134,7 +134,7 @@ ser definidos localmente.
 | CAPS | território de referência | população e área de responsabilidade, **sem microárea de ACS** |
 | Hospital | área ou população de referência | região de cobertura; **não é microárea da APS** |
 | UPA | não | a geografia serve para origem dos pacientes, demanda, planejamento e indicadores |
-| Vigilância (epidemiológica, sanitária, ambiental, zoonoses, saúde do trabalhador) | sim, com finalidade própria | município → distrito → área → microárea → imóveis → eventos; não é necessariamente a microárea do ACS |
+| Vigilância (epidemiológica, sanitária, ambiental, zoonoses, saúde do trabalhador) | sim, com finalidade própria | município → distrito → área → microárea → imóveis → eventos; não é necessariamente a microárea do ACS. Desenhado na [ADR-0110](../adr/0110-vigilancia-em-saude.md): usa a finalidade vigilância e o imóvel, sem ficar preso à microárea |
 
 Por isso a microárea **não fica dentro da equipe de Saúde da Família**: o território tem uma **finalidade**
 (atenção primária, referência assistencial, vigilância) e a responsabilidade da equipe é uma associação separada.

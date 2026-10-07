@@ -47,8 +47,10 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | 📐 | fatias F1 a F4 |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 📐 | fatias P1 a P6 |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 📐 | fatias V1 a V5 |
+| 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 12 ✅ · 4 🟡 · 2 📐 · 7 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
+**Resumo:** 12 ✅ · 4 🟡 · 3 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
 não iniciada do domínio 20.
 
 ## 2. Domínios
@@ -129,7 +131,7 @@ não iniciada do domínio 20.
 
 **Falta:**
 - [ ] Aba Programas, indicador "Em programas de saúde" e filtro por programa (domínio 22, P2).
-- [ ] Aba Vacinação: não há domínio de imunização ainda.
+- [ ] Aba Vacinação: depende do domínio 24, Imunização.
 - [ ] Aba Anexos (domínio Documentos).
 - [ ] Vínculo do paciente com a unidade: vem pela adscrição (domínio 21, F3).
 - [ ] Indicador de risco: precisa de uma agregação sobre a triagem mais recente.
@@ -208,7 +210,7 @@ não iniciada do domínio 20.
 - [ ] Valores de referência por sexo e idade.
 - [ ] Integração com equipamentos (LIS, HL7, ASTM) e controle de qualidade.
 - [ ] Insumos de coleta (depende do Estoque, domínio 13).
-- [ ] LACEN e vigilância; SIGTAP e BPA.
+- [ ] LACEN e vigilância (vigilância: domínio 23); SIGTAP e BPA.
 
 ### 11. Regulação
 
@@ -367,6 +369,33 @@ não iniciada do domínio 20.
 - [ ] **P4 · Ações programáticas:** ações pendentes, busca ativa, programa na marcação da Agenda.
 - [ ] **P5 · Linhas de cuidado.**
 - [ ] **P6 · Metas e indicadores programáticos.**
+
+### 23. Vigilância em Saúde
+
+**Estado:** 📐. Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md); detalhe em
+[`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md).
+
+**Falta:**
+- [ ] **V1 · Fundação:** agravo com a ficha específica como dado, notificação e notificação negativa,
+  investigação e classificação; sugestão de notificação a partir de atendimento, internação e exame.
+- [ ] **V2 · Epidemiologia avançada:** contato, surto, medida de controle, mapa e linha do tempo dos casos
+  (o mapa depende das fatias F1 e F2 do Território).
+- [ ] **V3 · Sanitária:** estabelecimento regulado, inspeção, irregularidade, medida, licença (os autos dependem
+  do domínio Documentos).
+- [ ] **V4 · Ambiental e Zoonoses:** evento e risco ambiental, monitoramento, vistoria, foco, animal, ação de
+  controle (depende do imóvel, fatia F3 do Território).
+- [ ] **V5 · Saúde do Trabalhador e integrações:** evento do trabalho, risco ocupacional, investigação;
+  adaptadores, com o SINAN primeiro (depende do domínio 20, Integrações).
+
+### 24. Imunização
+
+**Estado:** ⬜. Reservado pela [ADR-0110](./adr/0110-vigilancia-em-saude.md).
+
+**Falta:**
+- [ ] Desenho (ADR): imunobiológico, calendário, dose aplicada, cobertura, eventos adversos, cadeia de frio.
+  Integra com Vigilância (23), Programas (22, campanha de vacinação), Estoque (13) e Paciente (aba Vacinação).
+- [ ] Implementação.
+- [ ] Integração com o SI-PNI (depende do domínio 20).
 
 ## 3. Pendências transversais
 

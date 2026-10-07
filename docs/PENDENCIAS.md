@@ -168,6 +168,8 @@ real":
   - #17 Financeiro;
   - #18 Qualidade;
   - #19 Indicadores e BI.
+- **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias V1 (fundação) a V5 (trabalhador e integrações).
+- **#24 Imunização** — reservado pela ADR-0110; a desenhar em ADR própria.
 - **#22 Programas, Ações e Linhas de Cuidado** — desenhado na ADR-0109; programas e campanhas cadastráveis.
   Fatias: P1 (catálogo), P2 (acompanhamento, com a aba Programas e o filtro em Pacientes), P3 (campanhas e
   consulta pública), P4 (ações e programa na Agenda), P5 (linhas de cuidado), P6 (metas e indicadores).
