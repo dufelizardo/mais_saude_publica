@@ -13,71 +13,46 @@
 ![visitors](https://visitor-badge.laobi.icu/badge?page_id=dufelizardo.visitor-mais_saude_publica)
 ![GitHub followers](https://img.shields.io/github/followers/dufelizardo?style=social)
 
-API REST para gestão da hierarquia de unidades de saúde do SUS — Federal, Estadual, Municipal e
-Regional —, construída em Spring Boot. Cada esfera expõe CRUD completo (criação, busca, listagem,
-atualização de dados de contato/horários e desabilitação) sobre suas próprias instituições.
+Plataforma de gestão de uma **rede pública de saúde** (SUS): a estrutura da rede e os equipamentos, as pessoas
+que trabalham nela, a assistência ao cidadão e a gestão da operação. Backend em Spring Boot e frontend em Angular,
+com auditoria, controle de acesso por perfil e unidade, e testes de aceitação de API e de interface.
 
 > **Quer ver como o sistema vai ficar?** Navegue pelo
 > [protótipo das telas](https://dufelizardo.github.io/mais_saude_publica/): páginas estáticas com
 > dados fictícios, sem precisar instalar nada (detalhes em [`prototipo/`](prototipo/)).
 
+## O que já funciona
+
+| Área | O que tem |
+|---|---|
+| **Organização da rede** | hierarquia federal → estadual → municipal → regional → unidade; Equipamentos de Saúde com horário estruturado e situação operacional |
+| **Recursos Humanos** | profissionais, lotação, cargos e salários, benefícios, desenvolvimento, recrutamento, folha, perfil; **equipes de saúde** e **escalas** com modelos de jornada |
+| **Administrativo** | setores, modelo administrativo, processos, necessidades de pessoal |
+| **Assistência** | pacientes, atendimentos, agenda do profissional, prontuário, enfermagem (triagem, evolução, medicação), farmácia (estoque, dispensação, transferência) |
+| **Rede assistencial** | laboratório (pedido, coleta, resultado, laudo), regulação do acesso (fila, agendamento, contrarreferência), leitos e internação |
+| **Governança** | login (JWT), perfis e permissões com escopo por unidade, trilha de auditoria com alertas, prontuário por vínculo assistencial |
+
+O que cada domínio já tem e o que falta está em [`docs/STATUS-DOS-DOMINIOS.md`](docs/STATUS-DOS-DOMINIOS.md). O mapa
+completo da plataforma (31 itens) está em [`docs/MAPA-DE-DOMINIOS.md`](docs/MAPA-DE-DOMINIOS.md).
+
+> **Ambientes:** o login, a exigência de permissão e o prontuário por vínculo são ligados por ambiente. Hoje o login
+> está ligado só em `dev`. O estado de cada ambiente está em [`docs/PENDENCIAS.md`](docs/PENDENCIAS.md), e o passo a
+> passo para ligar, em [`docs/acesso/GUIA-LIGAR-AUTORIZACAO.md`](docs/acesso/GUIA-LIGAR-AUTORIZACAO.md).
+
 ## Domínio
 
-A hierarquia é modelada como uma única entidade autorreferenciada (`UnidadeDeSaude`, ver
-[ADR-0002](docs/adr/0002-modelar-hierarquia-como-entidade-unica-autorreferenciada.md)), com 4
-níveis mapeados às esferas reais de gestão do SUS
-(ver [ADR-0009](docs/adr/0009-renomear-hierarquia-para-esferas-de-gestao-do-sus.md)):
-
-| Esfera | Vincula-se a | Campo geográfico próprio |
-|---|---|---|
-| Federal | — (topo da hierarquia) | — |
-| Estadual | Federal | `estado` |
-| Municipal | Estadual | `municipio` |
-| Regional | Municipal | `regiao` |
+A plataforma é organizada em domínios com fronteiras explícitas: cada domínio é dono de uma parte do negócio, e os
+demais o referenciam sem duplicar (por exemplo, o RH é dono do profissional; Equipes, Escalas e a Agenda só o usam).
+A unidade de saúde é uma entidade única autorreferenciada
+([ADR-0002](docs/adr/0002-modelar-hierarquia-como-entidade-unica-autorreferenciada.md)), com as esferas de gestão do
+SUS ([ADR-0009](docs/adr/0009-renomear-hierarquia-para-esferas-de-gestao-do-sus.md)). O comportamento de cada
+equipamento vem de perfis e capacidades, e não de tipos
+([ADR-0115](docs/adr/0115-modelo-operacional-dos-equipamentos.md)).
 
 ## Endpoints
 
-Cada domínio expõe o mesmo conjunto de 8 operações em `/api/v1/{federal,estadual,municipal,regional}/`:
-
-| Método | Path | Descrição |
-|---|---|---|
-| `POST` | `/` | Cria uma instituição |
-| `GET` | `/` | Lista todas as instituições do domínio |
-| `GET` | `/{nome}` | Busca uma instituição pelo nome |
-| `PATCH` | `/{nome}` | Atualiza o nome |
-| `PATCH` | `/contato/{nome}` | Atualiza e-mail/telefones |
-| `PATCH` | `/horario-de-funcionamento/{nome}` | Atualiza horário de funcionamento |
-| `PATCH` | `/horario-de-atendimento/{nome}` | Atualiza horário de atendimento |
-| `DELETE` | `/des-habilitar/{nome}` | Desabilita a instituição |
-
-Estadual, Municipal e Regional exigem também `administracaoSuperior` (o `nome` da instituição do
-nível acima, à qual essa unidade se vincula) no corpo de criação.
-
-**Exemplo — `POST /api/v1/federal/`:**
-
-```json
-{
-  "nome": "Ministério da Saúde",
-  "tipo": "FEDERAL",
-  "email": "contato@saude.gov.br",
-  "telefones": ["6134451000"],
-  "endereco": {
-    "cep": "70058-900",
-    "logradouro": "Esplanada dos Ministérios Bloco G",
-    "numeroLogradouro": "S/N",
-    "bairro": "Zona Cívico-Administrativa",
-    "cidade": "Brasília",
-    "estado": "DF",
-    "ddd": "61"
-  },
-  "horarioFuncionamento": { "MONDAY": "08:00 - 18:00" },
-  "horarioAtendimento": { "MONDAY": "08:00 - 17:00" }
-}
-```
-
-> **Autenticação:** não implementada nesta versão da API. Existe uma proposta em
-> [ADR-0006](docs/adr/0006-seguranca-jwt.md) (ainda não implementada) para autenticação/autorização
-> via JWT.
+A API está documentada no Swagger (abaixo). Todas as rotas ficam em `/api/v1/`, com a permissão exigida declarada em
+cada uma ([ADR-0067](docs/adr/0067-autorizacao-aplicada-nas-rotas-e-no-escopo.md)).
 
 ## Documentação interativa (Swagger)
 
@@ -126,6 +101,9 @@ suíte Robot Framework) antes de cada promoção — detalhes em
 
 ## Mais documentação
 
+**Índice de toda a documentação: [docs/README.md](docs/README.md).**
+
 Decisões de arquitetura e roadmap técnico: [docs/adr/](docs/adr/README.md).
 
 O que falta e o estado de cada ambiente (o que está ligado ou desligado): [docs/PENDENCIAS.md](docs/PENDENCIAS.md).
+O que cada domínio já tem e o que falta, para decidir os próximos passos: [docs/STATUS-DOS-DOMINIOS.md](docs/STATUS-DOS-DOMINIOS.md).

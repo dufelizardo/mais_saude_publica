@@ -9,7 +9,16 @@ onde cada módulo é posicionado dentro da plataforma inteira.
 
 ## 1. Contexto e como ler este documento
 
-Este documento nasceu de uma visão de 20 domínios trazida pelo usuário para o "Mais Saúde Pública"
+Este documento nasceu de uma visão de 20 domínios trazida pelo usuário (hoje 31: o #21 Território e Adscrição
+entrou pela [ADR-0108](./adr/0108-territorio-e-adscricao.md) o #22 Programas, Ações e Linhas de Cuidado pela
+[ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), o #23 Vigilância em Saúde e o #24 Imunização pela
+[ADR-0110](./adr/0110-vigilancia-em-saude.md), o #25 Saúde Bucal pela [ADR-0111](./adr/0111-saude-bucal.md) o #26 Saúde Mental pela
+[ADR-0112](./adr/0112-saude-mental.md) o #27 Gestão de Emergências e Desastres pela
+[ADR-0113](./adr/0113-emergencias-e-desastres.md) o #28 Comunicação e Educação em Saúde (futuro) pela
+[ADR-0114](./adr/0114-comunicacao-e-educacao-em-saude.md), e o #29 Modelo Operacional dos Equipamentos (camada), o #30 Gestão
+da Rede de Atenção e o #31 Intersetorialidade e Proteção Social pela
+[ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md). A numeração é estável: o plano de 31 itens trazido
+depois foi reconciliado sem renumerar, em [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md)) para o "Mais Saúde Pública"
 como plataforma completa de gestão de uma rede pública de saúde — não apenas cadastro de unidades.
 Recebe o **mesmo tratamento** que todo material externo já trazido para este projeto (a
 "Especificação Preliminar do Setor Administrativo Adaptativo" que originou o módulo Administrativo,
@@ -32,6 +41,11 @@ O projeto segue avançando por **incrementos pequenos e discutidos** (mesma prá
 Administrativo) — este mapa existe para que a próxima década de decisões tenha um lugar único para
 ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez.
 
+> **Mapa fechado** pela [ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md): 31 itens numerados mais Documentos.
+> Domínio novo só se a necessidade não couber nos existentes, depois de passar pelos cinco passos da ADR-0116 (dado →
+> processo de domínio existente → configuração de equipamento → interface com outro setor ou sistema → só então
+> domínio novo, com justificativa). O estado real de cada item fica no [`STATUS-DOS-DOMINIOS.md`](./STATUS-DOS-DOMINIOS.md).
+
 ## 2. O mapa em 4 grupos
 
 ```text
@@ -50,7 +64,11 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
         │                  └── Qualidade      ├── Laboratório
         │                                     ├── Regulação
         │                                     ├── Gestão de Leitos
-        │                                     └── Transporte Sanitário
+        │                                     ├── Transporte Sanitário
+        │                                     ├── Vigilância em Saúde
+        │                                     ├── Imunização
+        │                                     ├── Saúde Bucal
+        │                                     └── Saúde Mental
         │
         └────────────────── TRANSVERSAL ──────────────────
                            │
@@ -58,13 +76,20 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
                   ├── Auditoria
                   ├── Integrações
                   ├── Indicadores / BI
+                  ├── Território e Adscrição
+                  ├── Programas, Ações e Linhas de Cuidado
+                  ├── Emergências e Desastres
+                  ├── Comunicação e Educação em Saúde (futuro)
+                  ├── Modelo Operacional dos Equipamentos (camada)
+                  ├── Gestão da Rede de Atenção
+                  ├── Intersetorialidade e Proteção Social
                   └── Documentos
 ```
 
-Os **20 domínios** do usuário estão todos numerados abaixo (nenhum foi descartado), organizados
+Os **20 domínios** do usuário, mais o **#21 Território e Adscrição** (ADR-0108) o **#22 Programas, Ações e Linhas de Cuidado** (ADR-0109), o **#23 Vigilância em Saúde** e o **#24 Imunização** (ADR-0110) o **#25 Saúde Bucal** (ADR-0111) o **#26 Saúde Mental** (ADR-0112) o **#27 Gestão de Emergências e Desastres** (ADR-0113) o **#28 Comunicação e Educação em Saúde** (ADR-0114) e os **#29 a #31** (ADR-0115), estão todos numerados abaixo (nenhum foi descartado), organizados
 dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 
-## 3. Os 20 domínios
+## 3. Os 31 domínios
 
 ### Organização
 
@@ -98,15 +123,26 @@ dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 | 11 | **Regulação** | Coordena o acesso do cidadão a serviços que não estão na unidade de origem — filas, prioridades, referência/contrarreferência. | `SolicitacaoRegulacao`, `Fila`, `Encaminhamento` | 🔵 Em andamento — Central de Regulação do Acesso completa: catálogo, solicitação, fila e eventos (ADR-0087), tela com "Encaminhar" no atendimento (ADR-0088), agendamento na executante, desfecho com contrarreferência e vínculo assistencial (ADR-0089). Falta a regulação de urgência e de internação |
 | 12 | **Gestão de Leitos e Internação** | Leitos, ocupação, internação, alta — relevante principalmente para hospitais/UPA. | `Leito`, `Internacao` | 🔵 Em andamento — leito em setor assistencial, internação com troca de leito e alta médica, higienização, bloqueio, mapa e indicadores ([ADR-0098](./adr/0098-leitos-e-internacao-backend.md)); tela com mapa por setor e "Internar" no atendimento ([ADR-0099](./adr/0099-leitos-e-internacao-tela.md)); internações no prontuário e vínculo assistencial da equipe e do médico responsável ([ADR-0100](./adr/0100-leitos-e-internacao-prontuario.md)) |
 | 16 | **Transporte Sanitário** | Deslocamentos relacionados à saúde — ambulâncias, transferências entre unidades. | `Veiculo`, `SolicitacaoTransporte` | ⏳ Não iniciado — integra com Patrimônio (veículo), RH (motorista) e Regulação (necessidade) |
+| 23 | **Vigilância em Saúde** | Inteligência e intervenção sobre riscos, doenças, agravos e eventos de saúde pública: notificação, investigação, surtos, fiscalização sanitária, ambiente, zoonoses e vetores, saúde do trabalhador. | `Agravo`, `Notificacao`, `InvestigacaoEpidemiologica`, `Surto`, `EstabelecimentoRegulado`, `InspecaoSanitaria`, `Foco`, `EventoTrabalho` | 📐 Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md), detalhe em [`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md); fatias V1 (fundação) a V5 (trabalhador e integrações). Usa o Território (finalidade vigilância, imóvel) |
+| 24 | **Imunização** | Vacinação: calendário, aplicação e registro de doses, cobertura, eventos adversos, imunobiológicos e cadeia de frio. Atravessa vigilância, assistência e estoque. | `Imunobiologico`, `DoseAplicada`, `Calendario` (a desenhar) | ⏳ Reservado pela [ADR-0110](./adr/0110-vigilancia-em-saude.md); a desenhar em ADR própria. A campanha de vacinação é `Campanha` de Programas (ADR-0109) |
+| 25 | **Saúde Bucal** | Cuidado odontológico ao longo do tempo: avaliação, odontograma com histórico, plano de tratamento, procedimentos, encaminhamento, prótese e o detalhe das ações coletivas. Domínio assistencial especializado que reaproveita Paciente, Atendimento, Prontuário, Agenda, RH, Equipe (eSB) e Regulação. | `AvaliacaoOdontologica`, `CondicaoOdontologica`, `RegistroOdontograma`, `PlanoTratamento`, `TratamentoProtetico` | 📐 Desenhado na [ADR-0111](./adr/0111-saude-bucal.md), detalhe em [`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md); fatias SB1 (base) a SB5 (coletiva). Traz para todos a especialidade no atendimento e o catálogo geral de procedimentos |
+| 26 | **Saúde Mental** | Atenção psicossocial do primeiro contato ao acompanhamento longitudinal: acolhimento, avaliação, risco com histórico, Projeto Terapêutico Singular versionado, intervenções, crise, equipe de referência, rede de apoio e articulação da rede. CAPS é equipamento, não o domínio. | `AcolhimentoSaudeMental`, `AvaliacaoSaudeMental`, `AvaliacaoRisco`, `AcompanhamentoSaudeMental`, `ProjetoTerapeuticoSingular`, `IntervencaoSaudeMental`, `EventoCrise` | 📐 Desenhado na [ADR-0112](./adr/0112-saude-mental.md), detalhe em [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md); fatias SM1 (base) a SM6 (intersetorialidade e indicadores). Reaproveita Equipe (CAPS multi, eMulti), Programas (programa Saúde Mental), Internação e Regulação |
 
 ### Transversal
 
 | # | Domínio | Responsabilidade | Entidades candidatas | Hoje |
 |---|---|---|---|---|
 | 20 (parte) | **Identidade e Segurança** | Autenticação, papéis, permissões e escopo por contexto organizacional. | `Usuario`, `Papel`, `Permissao`, `EscopoAcesso`, `AtribuicaoAcesso` | 🔵 Em andamento — `Usuario` + login (CPF/matrícula) + JWT + toggle `app.security.enabled` por ambiente, backend e frontend (tela de Login, `AuthService`, guard, interceptor), implementados pela [ADR-0055](./adr/0055-primeira-implementacao-de-login-usuario-jwt-e-toggle-por-ambiente.md). Toggle **ligado em `dev`** (requer o `Secret` `app-secrets` provisionado no cluster, ver ADR-0055); `qaa`/`homologacao`/`prod` ligam quando promovidos. RBAC granular (`Papel`/`Permissao`/`EscopoAcesso`/`AtribuicaoAcesso`, ver [ADR-0054](./adr/0054-modelo-de-identidade-autorizacao-e-auditoria.md)) implementado em 3 fatias pela [ADR-0066](./adr/0066-papeis-permissoes-e-escopo-por-unidade.md): fatia 1 (catálogo de permissões, papéis padrão, atribuição com escopo por unidade, revogação e cálculo de autorização) feita; fatia 2 (exigir permissão nas rotas, filtro por escopo, regras de autoria e unidade) feita pela [ADR-0067](./adr/0067-autorizacao-aplicada-nas-rotas-e-no-escopo.md), atrás do toggle `app.security.authorization.enabled` (desligado em todos os ambientes); fatia 3 (tela Usuários & Perfis, cadastro de usuário e menu conforme as permissões) feita pela [ADR-0068](./adr/0068-tela-usuarios-e-perfis.md). Troca de senha e senha provisória: [ADR-0069](./adr/0069-troca-de-senha-e-senha-provisoria.md). Para ligar a exigência num ambiente: [guia](./acesso/GUIA-LIGAR-AUTORIZACAO.md). Acesso contextual ao prontuário (vínculo assistencial e acesso justificado): [ADR-0076](./adr/0076-prontuario-por-vinculo-assistencial.md). Quem está logado e profissional preenchido a partir do login: [ADR-0065](./adr/0065-profissional-preenchido-a-partir-do-login.md). |
-| 18 (parte) | **Auditoria** | Rastreabilidade: quem alterou o quê, quando — fundamental para sistema público e LGPD. | `EventoAuditoria` | ✅ Implementado — registro pela [ADR-0070](./adr/0070-trilha-de-auditoria.md) (alterações, leitura do detalhe de dado de saúde/pessoal, recusas 403, login e troca de senha; imutável, sem conteúdo) e consulta pela [ADR-0071](./adr/0071-consulta-da-trilha-de-auditoria.md) (tela Auditoria, "Quem acessou" no atendimento, `AUDITORIA.CONSULTAR` com escopo). Pendentes: exportação, retenção, alertas. Proposta original em `adr/DER.md` (entidade `AUDITORIA`), enriquecida pela [ADR-0054](./adr/0054-modelo-de-identidade-autorizacao-e-auditoria.md) |
+| 18 (parte) | **Auditoria** | Rastreabilidade: quem alterou o quê, quando — fundamental para sistema público e LGPD. | `EventoAuditoria` | ✅ Implementado — registro pela [ADR-0070](./adr/0070-trilha-de-auditoria.md) (alterações, leitura do detalhe de dado de saúde/pessoal, recusas 403, login e troca de senha; imutável, sem conteúdo) e consulta pela [ADR-0071](./adr/0071-consulta-da-trilha-de-auditoria.md) (tela Auditoria, "Quem acessou" no atendimento, `AUDITORIA.CONSULTAR` com escopo). Exportação CSV e retenção de 20 anos pela [ADR-0082](./adr/0082-exportacao-e-retencao-da-auditoria.md); alertas pelas ADRs [0096](./adr/0096-alertas-da-auditoria.md) e [0097](./adr/0097-alertas-da-auditoria-tela.md). Proposta original em `adr/DER.md` (entidade `AUDITORIA`), enriquecida pela [ADR-0054](./adr/0054-modelo-de-identidade-autorizacao-e-auditoria.md) |
 | 20 (parte) | **Integrações** | Adapters para sistemas externos (SUS, CNES, DATASUS, e-SUS, SIGTAP). | *(camada de integração, não entidade de domínio)* | ⏳ Não iniciado — arquitetura de adapters antes de implementar qualquer integração específica |
 | 19 | **Indicadores, BI e Gestão** | Transforma fatos operacionais (já registrados pelos domínios acima) em informação de gestão — nunca o inverso. | `Indicador`, `Dashboard` (camada de leitura, não fonte de dado) | ⏳ Não iniciado — depende dos domínios operacionais existirem primeiro para ter dado confiável para agregar |
+| 21 | **Território e Adscrição** | Base territorial da Atenção Primária: segmento, território (com finalidade), área sob responsabilidade da equipe, microárea do ACS, imóvel, família e a adscrição da população, com geolocalização. | `SegmentoTerritorial`, `Territorio`, `Area`, `Microarea`, `ResponsabilidadeTerritorial`, `AtribuicaoMicroarea`, `Imovel`, `Domicilio`, `NucleoFamiliar`, `Adscricao` | ⏳ Desenhado na [ADR-0108](./adr/0108-territorio-e-adscricao.md), detalhe em [`territorio/MODELO-TERRITORIO.md`](./territorio/MODELO-TERRITORIO.md); implementação nas fatias F1 (backend), F2 (tela com mapa), F3 (cadastro territorial) e F4 (escopo de acesso). Até a F1, as microáreas ficam como texto em `Equipe` e `MembroEquipe` (ADR-0103), de forma provisória |
+| 22 | **Programas, Ações e Linhas de Cuidado** | Organização programática da saúde: programas e campanhas cadastráveis pelo município, acompanhamento do cidadão no programa, ações programáticas, linhas de cuidado, metas e indicadores. Referencia Paciente, Equipe, Unidade e Território sem ser dono deles. | `CategoriaPrograma`, `Programa`, `AcompanhamentoProgramatico`, `Campanha`, `AcaoProgramatica`, `LinhaDeCuidado`, `MetaProgramatica`, `IndicadorProgramatico` | ⏳ Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), detalhe em [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md); fatias P1 (catálogo) a P6 (indicadores). Usa a adscrição do #21 e alimenta o #19 Indicadores e BI |
+| 27 | **Gestão de Emergências e Desastres** | Coordenação extraordinária da resposta em saúde quando um evento ultrapassa a operação normal: evento, emergência, plano de contingência, ativação, avaliação de impacto, capacidade emergencial, mobilização, ações, desmobilização e relatório pós-evento. Não é dono dos recursos (RH, Farmácia, Estoque, Transporte, Regulação, Leitos, Vigilância). | `EventoEmergencial`, `Emergencia`, `PlanoDeContingencia`, `AtivacaoPlano`, `AvaliacaoImpacto`, `CapacidadeEmergencial`, `Mobilizacao`, `AcaoEmergencial`, `RelatorioPosEvento` | 📐 Desenhado na [ADR-0113](./adr/0113-emergencias-e-desastres.md), detalhe em [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md); fatias E1 (núcleo) a E6 (eventos especializados). A Vigilância detecta; Emergências coordena a resposta |
+| 28 | **Comunicação e Educação em Saúde** | Conecta conhecimento, campanhas de comunicação, ações educativas e comunicação com os públicos da saúde (cidadão, comunidade, profissionais), inclusive a comunicação de emergência. Não é dono de programas, território, profissionais nem eventos assistenciais; não é um portal de notícias. | `ConteudoEducativo`, `MaterialEducativo`, `Comunicado`, `Publicacao`, `CanalComunicacao`, `CampanhaComunicacao`, `PublicoAlvo` | 📐 **Futuro.** Desenhado na [ADR-0114](./adr/0114-comunicacao-e-educacao-em-saude.md), detalhe em [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md); fatias C1 (comunicação básica) a C6 (avaliação). A campanha operacional continua em Programas; a capacitação, no `Treinamento` do RH |
+| 29 | **Modelo Operacional dos Equipamentos** (camada) | Camada entre Organização e os domínios especializados: perfis operacionais, capacidades assistenciais, serviços e pontos operacionais da unidade. O equipamento define contexto e capacidades; os domínios definem os processos. | `PerfilOperacional`, `CapacidadeAssistencial`, `ServicoUnidade`, `PontoOperacional` | 📐 Desenhado na [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md) (aceita e completa a ADR-0053), matriz e detalhe em [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md); fatias MO1 a MO4. A MO1 é pré-requisito de CAPS (SM5), CEO (SB4) e capacidade emergencial (E3) |
+| 30 | **Gestão da Rede de Atenção** | Como os equipamentos trabalham juntos: oferta e pactuação assistencial, cotas da PPI, redes temáticas (RAPS, Rede de Urgência, Rede Cegonha), participação na rede, referência estrutural e cobertura. A Regulação processa a necessidade individual; este domínio define as relações estruturais. | `RedeDeAtencao`, `ParticipacaoRede`, `OfertaAssistencial`, `Pactuacao` (a desenhar) | ⏳ Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md); a desenhar em ADR própria |
+| 31 | **Intersetorialidade e Proteção Social** | Interface da saúde com CRAS, CREAS, escolas, Conselho Tutelar, Defensoria, Ministério Público, abrigos e serviços sociais: catálogo único de instituições externas e encaminhamento intersetorial. A saúde não implementa o sistema social. | `InstituicaoExterna`, `EncaminhamentoIntersetorial` (a desenhar) | ⏳ Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md); reaproveitado por Saúde Mental (SM6), Vigilância, Emergências e Comunicação |
 | — | **Documentos** | Anexos/documentos formais (contrato, prontuário, processo, compra) — reaproveitável por qualquer domínio, em vez de cada um ter seu próprio conceito de anexo. Citado na visão original do usuário, sem número na lista final de 20 — mantido aqui para não se perder. | `Documento`, `Versao`, `Tipo`, `Aprovacao`, `Assinatura` | ⏳ Não iniciado |
 
 ## 4. Ondas de implementação

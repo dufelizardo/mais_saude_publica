@@ -69,6 +69,9 @@ Aceita e implementada (parte 1 de 4 de Equipes e Escalas).
 
 - Equipamentos de Saúde, Profissionais e as Escalas passam a ter de onde ler a equipe. A tela vem na
   ADR-0104.
+- A eSB é a equipe do domínio Saúde Bucal ([ADR-0111](./0111-saude-bucal.md)), que não cria equipe própria.
+- As microáreas ficam como texto (`Equipe.microareas`, `MembroEquipe.microarea`) até o domínio Território
+  ([ADR-0108](./0108-territorio-e-adscricao.md)), cuja fatia F1 as migra para entidades.
 - **Fora do escopo** (em `PENDENCIAS.md`):
   - território (famílias e pacientes adscritos, microáreas georreferenciadas, cadastro domiciliar);
   - indicadores do Previne e do PMAQ;
