@@ -113,6 +113,10 @@ Colunas:
 
 ## 4. Modelo conceitual de composição
 
+> **Evoluído pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md)** (Modelo Operacional dos Equipamentos):
+> perfil operacional, capacidades, serviços, pontos operacionais, os seis padrões e a matriz equipamentos ×
+> capacidades estão em [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md).
+
 O documento-fonte e a investigação do código convergem no mesmo modelo, já usado no domínio
 Administrativo (`Setor`/`Perfil`/`CapacidadeAdministrativa`, ADR-0030/0031/0032/0037) e compatível
 com a organização de profissionais do módulo RH:

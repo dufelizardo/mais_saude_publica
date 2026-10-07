@@ -93,7 +93,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Equipamentos de Saúde
 - ~~Tela pelo protótipo~~ — feita pela ADR-0102 (lista e painel da unidade). "Em breve" na tela: mapa e
   coordenadas, sincronização com o CNES, exportação, consultórios, vagas semanais da unidade, microáreas,
-  acessibilidade. As equipes da unidade aparecem na aba Equipes desde a ADR-0104.
+  acessibilidade. As equipes da unidade aparecem na aba Equipes desde a ADR-0104. Mapa, coordenadas e
+  microáreas vêm pelo domínio Território (ADR-0108, fatias F1 e F2).
 - Fora do escopo da ADR-0101: sincronização com o CNES; coordenadas e mapa; microáreas e famílias; equipes de
   Saúde da Família; inspeção sanitária; capacidade de consultórios; exportação; horário de atendimento
   estruturado.
@@ -116,7 +117,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Agenda (diferenças com o protótipo `Agenda.html`, ADR-0092)
 - Visão Mês, exportação e filtro de especialidade ("Em breve").
 - Atividades coletivas (grupo, vacinação aberta, coleta com N pacientes, reunião, capacitação, visita do
-  ACS), programas nas marcações (HiperDia, pré-natal) e sala: dependem de domínios que não existem.
+  ACS), programas nas marcações (HiperDia, pré-natal) e sala: dependem de domínios que não existem. Os programas
+  na marcação vêm pela fatia P4 de Programas (ADR-0109).
 - Vaga liberada por falta oferecida à fila da Regulação ou a encaixe.
 - ~~Horário de funcionamento da unidade fechando a agenda~~ — feito pela ADR-0101 (horário estruturado em
   turnos e unidade em obra ou inoperante sem vagas).
@@ -132,8 +134,10 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   (tela, com "Ver escala" em Profissionais e em Equipes); "Em breve" na tela: banco de horas, realizado, exportação,
   cobertura de férias e filtro por função. Intervalo no turno e modelos de jornada (40h com 8h + 1h, 44h,
   30h, 20h, 12x36) pela ADR-0107; modelos cadastráveis pelo usuário ficam para depois. Fora do escopo das escalas: banco de horas e horas realizadas (ponto), confirmação do plantonista, troca
-  pedida pelo profissional, recorrência, adicional noturno e a agenda lendo a escala. Fora do escopo das equipes: território (famílias, microáreas
-  georreferenciadas, cadastro domiciliar), indicadores do Previne/PMAQ, programas e sincronização com o CNES.
+  pedida pelo profissional, recorrência, adicional noturno e a agenda lendo a escala. Território (famílias, microáreas georreferenciadas, cadastro domiciliar, cobertura) desenhado na ADR-0108, a
+  implementar nas fatias F1 a F4. Fora do escopo das equipes: território (famílias, microáreas
+  georreferenciadas, cadastro domiciliar), indicadores do Previne/PMAQ, programas e sincronização com o CNES. Programas vinculados à equipe vêm pela
+  fatia P2 de Programas (ADR-0109).
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
 
 ### Testes
@@ -142,6 +146,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   Profissionais, Usuários & Perfis (além do encerramento de sessões) e Auditoria.
 
 ## 6. Roadmap de domínios
+
+O estado de cada domínio, com o que já temos e o que falta, está em
+[`STATUS-DOS-DOMINIOS.md`](./STATUS-DOS-DOMINIOS.md).
 
 Detalhe em [`MAPA-DE-DOMINIOS.md`](./MAPA-DE-DOMINIOS.md), seção 4. Todos "só quando houver requisito
 real":
@@ -161,6 +168,23 @@ real":
   - #17 Financeiro;
   - #18 Qualidade;
   - #19 Indicadores e BI.
+- **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053; fatias MO1 a
+  MO4 (a MO1 é pré-requisito de SB4, SM5 e E3).
+- **#30 Gestão da Rede de Atenção** e **#31 Intersetorialidade e Proteção Social** — reservados pela ADR-0115; a
+  desenhar em ADRs próprias.
+- **#28 Comunicação e Educação em Saúde** (futuro) — desenhado na ADR-0114; fatias C1 (comunicação básica) a C6
+  (avaliação).
+- **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; fatias E1 (núcleo) a E6 (eventos
+  especializados).
+- **#26 Saúde Mental** — desenhado na ADR-0112; fatias SM1 (base) a SM6 (intersetorialidade e indicadores).
+- **#25 Saúde Bucal** — desenhado na ADR-0111; fatias SB1 (base) a SB5 (coletiva).
+- **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias V1 (fundação) a V5 (trabalhador e integrações).
+- **#24 Imunização** — reservado pela ADR-0110; a desenhar em ADR própria.
+- **#22 Programas, Ações e Linhas de Cuidado** — desenhado na ADR-0109; programas e campanhas cadastráveis.
+  Fatias: P1 (catálogo), P2 (acompanhamento, com a aba Programas e o filtro em Pacientes), P3 (campanhas e
+  consulta pública), P4 (ações e programa na Agenda), P5 (linhas de cuidado), P6 (metas e indicadores).
+- **#21 Território e Adscrição** — desenhado na ADR-0108; implementação em F1 (backend), F2 (tela com mapa),
+  F3 (cadastro territorial) e F4 (escopo de acesso).
 - **Integrações** (SUS, CNES, e-SUS, SIGTAP) e **Documentos**.
 
 ## 7. Fluxo de promoção
