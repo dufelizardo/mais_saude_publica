@@ -249,7 +249,7 @@ As permissões se combinam com o vínculo e a equipe de referência.
 | `EventoCrise` | paciente, local, etapas, intervenção, serviços acionados, encaminhamento, pós-crise, notificação sugerida | SM3 |
 | modalidade e comunicação na `Internacao` | modalidade, comunicação ao Ministério Público (prazo, data, responsável) | SM3 |
 | capacidades de CAPS e RAPS na unidade | modalidade, componente da RAPS, serviços | SM5 |
-| `InstituicaoExterna`, `EncaminhamentoIntersetorial` | nome, setor, contato; acompanhamento, motivo, retorno | SM6 |
+| `InstituicaoExterna`, `EncaminhamentoIntersetorial` | nome, setor, contato; acompanhamento, motivo, retorno | SM6; vêm do item #31 Intersetorialidade e Proteção Social ([ADR-0115](../adr/0115-modelo-operacional-dos-equipamentos.md)), que este domínio reaproveita |
 
 Organização lógica prevista:
 
