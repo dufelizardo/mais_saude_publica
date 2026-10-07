@@ -49,8 +49,9 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 📐 | fatias P1 a P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 📐 | fatias V1 a V5 |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
+| 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
 
-**Resumo:** 12 ✅ · 4 🟡 · 3 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
+**Resumo:** 12 ✅ · 4 🟡 · 4 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
 não iniciada do domínio 20.
 
 ## 2. Domínios
@@ -73,6 +74,7 @@ não iniciada do domínio 20.
 - [ ] Acessibilidade.
 - [ ] Exportação.
 - [ ] Inspeção sanitária.
+- [ ] Tipo de unidade do CEO (Centro de Especialidades Odontológicas), pelo critério da ADR-0053 (domínio 25, SB4).
 
 ### 2. RH
 
@@ -118,6 +120,7 @@ não iniciada do domínio 20.
 - A partir do atendimento: pedir exames (ADR-0094), encaminhar à Regulação (ADR-0088) e internar (ADR-0099).
 
 **Falta:**
+- [ ] Especialidade no atendimento (domínio 25, SB1; serve a todas as especialidades).
 - [ ] Atividades coletivas: grupo, vacinação aberta, coleta com vários pacientes, reunião, capacitação, visita do
   ACS. Dependem das ações programáticas (domínio 22, P4) e do Território (domínio 21).
 
@@ -159,7 +162,8 @@ não iniciada do domínio 20.
 - A agenda respeita o horário e a situação da unidade (ADR-0101).
 
 **Falta:**
-- [ ] Visão Mês, exportação e filtro de especialidade.
+- [ ] Visão Mês e exportação.
+- [ ] Filtro de especialidade (a especialidade vem pelo domínio 25, SB1).
 - [ ] Sala.
 - [ ] Programas na marcação, como HiperDia e pré-natal (domínio 22, P4).
 - [ ] Atividades coletivas (domínio 22, P4).
@@ -397,7 +401,26 @@ não iniciada do domínio 20.
 - [ ] Implementação.
 - [ ] Integração com o SI-PNI (depende do domínio 20).
 
+### 25. Saúde Bucal
+
+**Estado:** 📐. Desenhado na [ADR-0111](./adr/0111-saude-bucal.md); detalhe em
+[`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md). A equipe eSB já existe (ADR-0103).
+
+**Falta:**
+- [ ] **SB1 · Base:** especialidade no atendimento e na Agenda; avaliação odontológica.
+- [ ] **SB2 · Odontograma:** catálogo de condições, registros com histórico (notação FDI), projeção por data, tela.
+- [ ] **SB3 · Tratamento:** catálogo geral de procedimentos, complemento odontológico (dente e faces), plano de
+  tratamento e evolução.
+- [ ] **SB4 · Regulação e prótese:** especialidades odontológicas no catálogo da Regulação, CEO como executante,
+  tratamento protético.
+- [ ] **SB5 · Saúde bucal coletiva:** detalhe odontológico das ações coletivas (depende de Programas P4 e do
+  Território).
+
 ## 3. Pendências transversais
+
+**Catálogos de procedimento:**
+- [ ] Unificar os catálogos de Regulação (`ProcedimentoRegulado`), Laboratório (`ExameLaboratorial`) e o catálogo
+  geral de procedimentos que vem com a ADR-0111.
 
 **Domínio "Documentos"** (⬜): anexos e documentos formais reaproveitáveis por qualquer domínio, com versão,
 aprovação e assinatura.
