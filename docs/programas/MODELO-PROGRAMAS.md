@@ -182,7 +182,7 @@ Os atributos são uma previsão; a ADR de cada fatia fecha o desenho.
 | `AcompanhamentoProgramatico` | paciente, programa, início, fim, motivo de saída, situação, unidade, equipe e profissional responsáveis | P2 |
 | `Campanha` | nome, descrição, programa (opcional), início, fim, situação (planejada, em andamento, encerrada), público, meta | P3 |
 | `LocalCampanha` | campanha, unidade da rede ou local temporário (nome, endereço) | P3 |
-| `AcaoProgramatica` | programa ou campanha, tipo (busca ativa, grupo, aferição, exame, vacina, visita), responsável, data prevista, situação, ligação com o registro assistencial que a cumpriu | P4 |
+| `AcaoProgramatica` | programa ou campanha, tipo (busca ativa, grupo, aferição, exame, vacina, visita), responsável, data prevista, situação, ligação com o registro assistencial que a cumpriu; a ação coletiva de saúde bucal é uma ação programática com detalhe odontológico ([ADR-0111](../adr/0111-saude-bucal.md)) | P4 |
 | `LinhaDeCuidado`, `EtapaLinha` | nome, programa, etapas com serviço e unidade de referência | P5 |
 | `MetaProgramatica`, `IndicadorProgramatico` | programa ou campanha, indicador, meta, período, apuração | P6 |
 
