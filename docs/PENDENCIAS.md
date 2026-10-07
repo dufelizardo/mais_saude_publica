@@ -168,6 +168,8 @@ real":
   - #17 Financeiro;
   - #18 Qualidade;
   - #19 Indicadores e BI.
+- **#28 Comunicação e Educação em Saúde** (futuro) — desenhado na ADR-0114; fatias C1 (comunicação básica) a C6
+  (avaliação).
 - **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; fatias E1 (núcleo) a E6 (eventos
   especializados).
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias SM1 (base) a SM6 (intersetorialidade e indicadores).
