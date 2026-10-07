@@ -130,7 +130,8 @@ Surto de dengue → microáreas 04, 05 e 06 → 37 casos → investigação terr
 
 A rede detecta, mas **não notifica sozinha**. Um CID de agravo notificável registrado no atendimento, na internação
 (que já guarda CID) ou no resultado de exame gera uma **sugestão de notificação** para o profissional. A notificação
-é ato profissional, o mesmo princípio do público-alvo em Programas (ADR-0109).
+é ato profissional, o mesmo princípio do público-alvo em Programas (ADR-0109). A crise em saúde mental com
+autoagressão também gera a sugestão de notificação de violência autoprovocada ([ADR-0112](../adr/0112-saude-mental.md)).
 
 ## 4. Vigilância Sanitária
 

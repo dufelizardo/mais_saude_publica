@@ -50,8 +50,9 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 📐 | fatias V1 a V5 |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
+| 26 | [Saúde Mental](#26-saúde-mental) | 📐 | fatias SM1 a SM6 |
 
-**Resumo:** 12 ✅ · 4 🟡 · 4 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
+**Resumo:** 12 ✅ · 4 🟡 · 5 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
 não iniciada do domínio 20.
 
 ## 2. Domínios
@@ -74,6 +75,7 @@ não iniciada do domínio 20.
 - [ ] Acessibilidade.
 - [ ] Exportação.
 - [ ] Inspeção sanitária.
+- [ ] Modalidades de CAPS (I, II, III, i, AD, AD III) e componentes da RAPS como capacidades da unidade (domínio 26, SM5).
 - [ ] Tipo de unidade do CEO (Centro de Especialidades Odontológicas), pelo critério da ADR-0053 (domínio 25, SB4).
 
 ### 2. RH
@@ -226,7 +228,7 @@ não iniciada do domínio 20.
 - Agendamento na executante, desfecho com contrarreferência e vínculo assistencial (ADR-0089).
 
 **Falta:**
-- [ ] Regulação de urgência e SAMU.
+- [ ] Regulação de urgência e SAMU (também pedida pela crise em saúde mental, domínio 26, SM3).
 - [ ] Regulação de internação e de leitos entre unidades (com o domínio 12).
 - [ ] Cotas por unidade e procedimento (PPI); hoje o regulador informa a vaga.
 - [ ] Integração com SISREG e SIGTAP.
@@ -249,6 +251,8 @@ não iniciada do domínio 20.
 - [ ] Censo diário formal.
 - [ ] Prescrição e dieta hospitalar.
 - [ ] Restrição de leito por idade (pediátrico, neonatal).
+- [ ] Modalidade da internação (voluntária, involuntária, compulsória) e comunicação ao Ministério Público em 72h na
+  involuntária, pela Lei 10.216/2001 (domínio 26, SM3).
 - [ ] Sincronização com os leitos do CNES.
 
 ### 13. Estoque / Almoxarifado
@@ -415,6 +419,23 @@ não iniciada do domínio 20.
   tratamento protético.
 - [ ] **SB5 · Saúde bucal coletiva:** detalhe odontológico das ações coletivas (depende de Programas P4 e do
   Território).
+
+### 26. Saúde Mental
+
+**Estado:** 📐. Desenhado na [ADR-0112](./adr/0112-saude-mental.md); detalhe em
+[`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md).
+
+**Falta:**
+- [ ] **SM1 · Base:** acolhimento, avaliação, acompanhamento ligado ao programa Saúde Mental (Programas P2), equipe
+  e técnico de referência.
+- [ ] **SM2 · PTS:** objetivos, metas, intervenções previstas, rede de apoio, versões e revisão; registro de
+  intervenções.
+- [ ] **SM3 · Risco e crise:** avaliação de risco com histórico, evento de crise, pós-crise, sugestão de notificação
+  (Vigilância V1); modalidade da internação e comunicação ao Ministério Público (depende da regulação de urgência
+  para acionar o SAMU).
+- [ ] **SM4 · Rede:** referência e contrarreferência pela Regulação; cuidado compartilhado e matriciamento.
+- [ ] **SM5 · CAPS e RAPS:** modalidades de CAPS e componentes da RAPS como capacidades da unidade (ADR-0053).
+- [ ] **SM6 · Intersetorialidade e indicadores:** instituições externas, encaminhamento intersetorial, indicadores.
 
 ## 3. Pendências transversais
 

@@ -168,6 +168,7 @@ real":
   - #17 Financeiro;
   - #18 Qualidade;
   - #19 Indicadores e BI.
+- **#26 Saúde Mental** — desenhado na ADR-0112; fatias SM1 (base) a SM6 (intersetorialidade e indicadores).
 - **#25 Saúde Bucal** — desenhado na ADR-0111; fatias SB1 (base) a SB5 (coletiva).
 - **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias V1 (fundação) a V5 (trabalhador e integrações).
 - **#24 Imunização** — reservado pela ADR-0110; a desenhar em ADR própria.
