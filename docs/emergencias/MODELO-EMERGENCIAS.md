@@ -324,7 +324,8 @@ EVENTO → DETECÇÃO E REGISTRO → AVALIAÇÃO PRELIMINAR ─┬─ NORMAL ─
 - abrigos como domínio;
 - hospital de campanha completo;
 - comando e controle militarizado;
-- comunicação de risco à população;
+- comunicação de risco à população: fica com o domínio Comunicação e Educação em Saúde
+  ([ADR-0114](../adr/0114-comunicacao-e-educacao-em-saude.md)), como comunicado emergencial;
 - qualquer duplicação de Vigilância, Estoque, RH, Transporte ou Regulação.
 
 ## 18. Referências

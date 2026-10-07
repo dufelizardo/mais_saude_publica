@@ -52,8 +52,9 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
 | 26 | [Saúde Mental](#26-saúde-mental) | 📐 | fatias SM1 a SM6 |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
+| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
 
-**Resumo:** 12 ✅ · 4 🟡 · 6 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
+**Resumo:** 12 ✅ · 4 🟡 · 7 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
 não iniciada do domínio 20.
 
 ## 2. Domínios
@@ -95,6 +96,7 @@ não iniciada do domínio 20.
 - [ ] Banco de horas e horas realizadas, ligando o ponto à escala.
 - [ ] Exportar e importar profissionais.
 - [ ] Modelos de jornada cadastráveis pelo usuário.
+- [ ] Conteúdo e material didático ligados aos treinamentos (domínio 28, C4).
 - [ ] Turnos fora da lotação por mobilização em emergência ativa, como exceção controlada (domínio 27, E3).
 - [ ] Confirmação do plantonista e troca pedida pelo próprio profissional.
 - [ ] Recorrência de escala e adicional noturno.
@@ -456,6 +458,23 @@ não iniciada do domínio 20.
   pacientes deslocados; Estoque e Transporte quando existirem.
 - [ ] **E5 · Pós-evento:** desmobilização, relatório, lições aprendidas, revisão do plano, indicadores.
 - [ ] **E6 · Especializados:** eventos de massa, epidemias, desastres ambientais, hospital de campanha como capacidade.
+- [ ] Comunicação de risco à população: feita pelo domínio 28 (comunicado emergencial).
+
+### 28. Comunicação e Educação em Saúde
+
+**Estado:** 📐 **futuro**. Desenhado na [ADR-0114](./adr/0114-comunicacao-e-educacao-em-saude.md); detalhe em
+[`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md).
+
+**Falta:**
+- [ ] **C1 · Comunicação básica:** comunicado, conteúdo educativo com validação técnica, publicação, canal; portal
+  (landing page) e e-mail.
+- [ ] **C2 · Campanhas de comunicação:** `CampanhaComunicacao` ligada a programa ou campanha operacional, público-alvo,
+  material educativo (os arquivos dependem do domínio Documentos).
+- [ ] **C3 · Educação em saúde:** conteúdo e material nas ações educativas de Programas (P4).
+- [ ] **C4 · Educação permanente:** conteúdo e material ligados ao `Treinamento` do RH; competências.
+- [ ] **C5 · Multicanal:** adaptadores de SMS, notificação, aplicativo e painel (Integrações, #20); consentimento e
+  descadastro.
+- [ ] **C6 · Avaliação:** alcance, participação e efetividade, para o #19.
 
 ## 3. Pendências transversais
 
