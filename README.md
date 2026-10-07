@@ -129,3 +129,4 @@ suíte Robot Framework) antes de cada promoção — detalhes em
 Decisões de arquitetura e roadmap técnico: [docs/adr/](docs/adr/README.md).
 
 O que falta e o estado de cada ambiente (o que está ligado ou desligado): [docs/PENDENCIAS.md](docs/PENDENCIAS.md).
+O que cada domínio já tem e o que falta, para decidir os próximos passos: [docs/STATUS-DOS-DOMINIOS.md](docs/STATUS-DOS-DOMINIOS.md).
