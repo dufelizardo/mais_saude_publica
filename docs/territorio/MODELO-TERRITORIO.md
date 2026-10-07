@@ -183,7 +183,7 @@ fim**, não campo que se sobrescreve (mesma regra do RH).
 | `Imovel` | microárea, tipo (domicílio, comércio, escola, outro), endereço, ponto (lat/long) | F3 |
 | `Domicilio` | imóvel, condições do domicílio (do cadastro do e-SUS) | F3 |
 | `NucleoFamiliar` | domicílio, responsável (paciente), renda, membros (pacientes) | F3 |
-| `Adscricao` | núcleo familiar ou paciente, equipe, início, fim | F3 |
+| `Adscricao` | núcleo familiar ou paciente, equipe, início, fim; base das perguntas por microárea do acompanhamento programático ([ADR-0109](../adr/0109-programas-acoes-e-linhas-de-cuidado.md)) | F3 |
 
 Coordenadas da unidade (latitude e longitude em `UnidadeDeSaude`) entram na F1, para os pinos do mapa e para o mapa
 de Equipamentos, que hoje mostra "Em breve".
