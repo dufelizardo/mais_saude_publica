@@ -53,8 +53,11 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 26 | [Saúde Mental](#26-saúde-mental) | 📐 | fatias SM1 a SM6 |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
+| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 📐 | fatias MO1 a MO4 |
+| 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
+| 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 12 ✅ · 4 🟡 · 7 📐 · 8 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
+**Resumo:** 12 ✅ · 4 🟡 · 8 📐 · 10 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
 não iniciada do domínio 20.
 
 ## 2. Domínios
@@ -77,7 +80,10 @@ não iniciada do domínio 20.
 - [ ] Acessibilidade.
 - [ ] Exportação.
 - [ ] Inspeção sanitária.
-- [ ] Modalidades de CAPS (I, II, III, i, AD, AD III) e componentes da RAPS como capacidades da unidade (domínio 26, SM5).
+- [ ] Modalidades de CAPS (I, II, III, i, AD, AD III) e componentes da RAPS como capacidades da unidade (domínio 26, SM5;
+  depende do catálogo de capacidades, item 29, MO1).
+- [ ] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1); serviços (MO2); coordenadas e
+  pontos operacionais (MO3).
 - [ ] Tipo de unidade do CEO (Centro de Especialidades Odontológicas), pelo critério da ADR-0053 (domínio 25, SB4).
 
 ### 2. RH
@@ -127,6 +133,7 @@ não iniciada do domínio 20.
 
 **Falta:**
 - [ ] Especialidade no atendimento (domínio 25, SB1; serve a todas as especialidades).
+- [ ] Local de realização do atendimento (domicílio, via pública, local do evento, unidade móvel), item 29, MO3.
 - [ ] Atividades coletivas: grupo, vacinação aberta, coleta com vários pacientes, reunião, capacitação, visita do
   ACS. Dependem das ações programáticas (domínio 22, P4) e do Território (domínio 21).
 
@@ -234,7 +241,8 @@ não iniciada do domínio 20.
 **Falta:**
 - [ ] Regulação de urgência e SAMU (também pedida pela crise em saúde mental, domínio 26, SM3).
 - [ ] Regulação de internação e de leitos entre unidades (com o domínio 12).
-- [ ] Cotas por unidade e procedimento (PPI); hoje o regulador informa a vaga.
+- [ ] Cotas por unidade e procedimento (PPI); hoje o regulador informa a vaga. Pertencem à Gestão da Rede de Atenção
+  (item 30).
 - [ ] Integração com SISREG e SIGTAP.
 - [ ] Conceder o papel Médico regulador quando a autorização for ligada.
 
@@ -255,7 +263,7 @@ não iniciada do domínio 20.
 - [ ] Censo diário formal.
 - [ ] Prescrição e dieta hospitalar.
 - [ ] Restrição de leito por idade (pediátrico, neonatal).
-- [ ] Leitos extras ativáveis em emergência (domínio 27, E3).
+- [ ] Leitos extras ativáveis em emergência (domínio 27, E3; sobre a capacidade do item 29, MO1).
 - [ ] Modalidade da internação (voluntária, involuntária, compulsória) e comunicação ao Ministério Público em 72h na
   involuntária, pela Lei 10.216/2001 (domínio 26, SM3).
 - [ ] Sincronização com os leitos do CNES.
@@ -442,7 +450,8 @@ não iniciada do domínio 20.
   para acionar o SAMU).
 - [ ] **SM4 · Rede:** referência e contrarreferência pela Regulação; cuidado compartilhado e matriciamento.
 - [ ] **SM5 · CAPS e RAPS:** modalidades de CAPS e componentes da RAPS como capacidades da unidade (ADR-0053).
-- [ ] **SM6 · Intersetorialidade e indicadores:** instituições externas, encaminhamento intersetorial, indicadores.
+- [ ] **SM6 · Intersetorialidade e indicadores:** instituições externas e encaminhamento intersetorial (pelo item 31),
+  indicadores.
 
 ### 27. Gestão de Emergências e Desastres
 
@@ -475,6 +484,39 @@ não iniciada do domínio 20.
 - [ ] **C5 · Multicanal:** adaptadores de SMS, notificação, aplicativo e painel (Integrações, #20); consentimento e
   descadastro.
 - [ ] **C6 · Avaliação:** alcance, participação e efetividade, para o #19.
+
+### 29. Modelo Operacional dos Equipamentos
+
+**Estado:** 📐 (camada transversal, não domínio de negócio). Desenhado na
+[ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md), que aceita e completa a ADR-0053; matriz e detalhe em
+[`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md).
+
+**Falta:**
+- [ ] **MO1 · Perfis e capacidades:** catálogos de perfil operacional e de capacidade assistencial, associação à
+  unidade, aba "Capacidades" em Equipamentos (pré-requisito de SB4, SM5 e E3).
+- [ ] **MO2 · Serviços:** serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina), ligados a
+  setores.
+- [ ] **MO3 · Ponto operacional:** local de realização no Atendimento; base, localização e rota da unidade móvel.
+- [ ] **MO4 · Domínios consultam capacidades:** Leitos, Agenda, Saúde Mental, Saúde Bucal, Emergências.
+
+### 30. Gestão da Rede de Atenção
+
+**Estado:** ⬜. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md).
+
+**Falta:**
+- [ ] Desenho (ADR): rede de atenção, participação de cada unidade, oferta e pactuação assistencial, cotas da PPI,
+  redes temáticas (RAPS, Rede de Urgência, Rede Cegonha), referência estrutural, cobertura.
+- [ ] Implementação. A Regulação (item 11) passa a ler cotas e ofertas daqui.
+
+### 31. Intersetorialidade e Proteção Social
+
+**Estado:** ⬜. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md).
+
+**Falta:**
+- [ ] Desenho (ADR): catálogo único de instituições externas (CRAS, CREAS, escolas, Conselho Tutelar, Defensoria,
+  Ministério Público, abrigos) e encaminhamento intersetorial com retorno.
+- [ ] Implementação, reaproveitada por Saúde Mental (SM6), Vigilância (violência), Emergências (abrigos) e
+  Comunicação.
 
 ## 3. Pendências transversais
 

@@ -2,7 +2,8 @@
 
 ## Status
 
-Proposta.
+Aceita, complementada pela [ADR-0115](./0115-modelo-operacional-dos-equipamentos.md) (Modelo Operacional dos
+Equipamentos), que dá forma ao catálogo de capacidades e ao conceito de perfil operacional previstos aqui.
 
 ## Contexto
 

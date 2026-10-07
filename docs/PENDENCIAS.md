@@ -168,6 +168,10 @@ real":
   - #17 Financeiro;
   - #18 Qualidade;
   - #19 Indicadores e BI.
+- **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053; fatias MO1 a
+  MO4 (a MO1 é pré-requisito de SB4, SM5 e E3).
+- **#30 Gestão da Rede de Atenção** e **#31 Intersetorialidade e Proteção Social** — reservados pela ADR-0115; a
+  desenhar em ADRs próprias.
 - **#28 Comunicação e Educação em Saúde** (futuro) — desenhado na ADR-0114; fatias C1 (comunicação básica) a C6
   (avaliação).
 - **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; fatias E1 (núcleo) a E6 (eventos
