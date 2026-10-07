@@ -93,7 +93,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Equipamentos de Saúde
 - ~~Tela pelo protótipo~~ — feita pela ADR-0102 (lista e painel da unidade). "Em breve" na tela: mapa e
   coordenadas, sincronização com o CNES, exportação, consultórios, vagas semanais da unidade, microáreas,
-  acessibilidade. As equipes da unidade aparecem na aba Equipes desde a ADR-0104.
+  acessibilidade. As equipes da unidade aparecem na aba Equipes desde a ADR-0104. Mapa, coordenadas e
+  microáreas vêm pelo domínio Território (ADR-0108, fatias F1 e F2).
 - Fora do escopo da ADR-0101: sincronização com o CNES; coordenadas e mapa; microáreas e famílias; equipes de
   Saúde da Família; inspeção sanitária; capacidade de consultórios; exportação; horário de atendimento
   estruturado.
@@ -132,7 +133,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   (tela, com "Ver escala" em Profissionais e em Equipes); "Em breve" na tela: banco de horas, realizado, exportação,
   cobertura de férias e filtro por função. Intervalo no turno e modelos de jornada (40h com 8h + 1h, 44h,
   30h, 20h, 12x36) pela ADR-0107; modelos cadastráveis pelo usuário ficam para depois. Fora do escopo das escalas: banco de horas e horas realizadas (ponto), confirmação do plantonista, troca
-  pedida pelo profissional, recorrência, adicional noturno e a agenda lendo a escala. Fora do escopo das equipes: território (famílias, microáreas
+  pedida pelo profissional, recorrência, adicional noturno e a agenda lendo a escala. Território (famílias, microáreas georreferenciadas, cadastro domiciliar, cobertura) desenhado na ADR-0108, a
+  implementar nas fatias F1 a F4. Fora do escopo das equipes: território (famílias, microáreas
   georreferenciadas, cadastro domiciliar), indicadores do Previne/PMAQ, programas e sincronização com o CNES.
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
 
@@ -161,6 +163,8 @@ real":
   - #17 Financeiro;
   - #18 Qualidade;
   - #19 Indicadores e BI.
+- **#21 Território e Adscrição** — desenhado na ADR-0108; implementação em F1 (backend), F2 (tela com mapa),
+  F3 (cadastro territorial) e F4 (escopo de acesso).
 - **Integrações** (SUS, CNES, e-SUS, SIGTAP) e **Documentos**.
 
 ## 7. Fluxo de promoção
