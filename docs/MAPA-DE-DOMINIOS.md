@@ -9,10 +9,11 @@ onde cada módulo é posicionado dentro da plataforma inteira.
 
 ## 1. Contexto e como ler este documento
 
-Este documento nasceu de uma visão de 20 domínios trazida pelo usuário (hoje 25: o #21 Território e Adscrição
+Este documento nasceu de uma visão de 20 domínios trazida pelo usuário (hoje 26: o #21 Território e Adscrição
 entrou pela [ADR-0108](./adr/0108-territorio-e-adscricao.md) o #22 Programas, Ações e Linhas de Cuidado pela
 [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), o #23 Vigilância em Saúde e o #24 Imunização pela
-[ADR-0110](./adr/0110-vigilancia-em-saude.md), e o #25 Saúde Bucal pela [ADR-0111](./adr/0111-saude-bucal.md)) para o "Mais Saúde Pública"
+[ADR-0110](./adr/0110-vigilancia-em-saude.md), o #25 Saúde Bucal pela [ADR-0111](./adr/0111-saude-bucal.md) e o #26 Saúde Mental pela
+[ADR-0112](./adr/0112-saude-mental.md)) para o "Mais Saúde Pública"
 como plataforma completa de gestão de uma rede pública de saúde — não apenas cadastro de unidades.
 Recebe o **mesmo tratamento** que todo material externo já trazido para este projeto (a
 "Especificação Preliminar do Setor Administrativo Adaptativo" que originou o módulo Administrativo,
@@ -56,7 +57,8 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
         │                                     ├── Transporte Sanitário
         │                                     ├── Vigilância em Saúde
         │                                     ├── Imunização
-        │                                     └── Saúde Bucal
+        │                                     ├── Saúde Bucal
+        │                                     └── Saúde Mental
         │
         └────────────────── TRANSVERSAL ──────────────────
                            │
@@ -69,10 +71,10 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
                   └── Documentos
 ```
 
-Os **20 domínios** do usuário, mais o **#21 Território e Adscrição** (ADR-0108) o **#22 Programas, Ações e Linhas de Cuidado** (ADR-0109), o **#23 Vigilância em Saúde** e o **#24 Imunização** (ADR-0110) e o **#25 Saúde Bucal** (ADR-0111), estão todos numerados abaixo (nenhum foi descartado), organizados
+Os **20 domínios** do usuário, mais o **#21 Território e Adscrição** (ADR-0108) o **#22 Programas, Ações e Linhas de Cuidado** (ADR-0109), o **#23 Vigilância em Saúde** e o **#24 Imunização** (ADR-0110) o **#25 Saúde Bucal** (ADR-0111) e o **#26 Saúde Mental** (ADR-0112), estão todos numerados abaixo (nenhum foi descartado), organizados
 dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 
-## 3. Os 25 domínios
+## 3. Os 26 domínios
 
 ### Organização
 
@@ -109,6 +111,7 @@ dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 | 23 | **Vigilância em Saúde** | Inteligência e intervenção sobre riscos, doenças, agravos e eventos de saúde pública: notificação, investigação, surtos, fiscalização sanitária, ambiente, zoonoses e vetores, saúde do trabalhador. | `Agravo`, `Notificacao`, `InvestigacaoEpidemiologica`, `Surto`, `EstabelecimentoRegulado`, `InspecaoSanitaria`, `Foco`, `EventoTrabalho` | 📐 Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md), detalhe em [`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md); fatias V1 (fundação) a V5 (trabalhador e integrações). Usa o Território (finalidade vigilância, imóvel) |
 | 24 | **Imunização** | Vacinação: calendário, aplicação e registro de doses, cobertura, eventos adversos, imunobiológicos e cadeia de frio. Atravessa vigilância, assistência e estoque. | `Imunobiologico`, `DoseAplicada`, `Calendario` (a desenhar) | ⏳ Reservado pela [ADR-0110](./adr/0110-vigilancia-em-saude.md); a desenhar em ADR própria. A campanha de vacinação é `Campanha` de Programas (ADR-0109) |
 | 25 | **Saúde Bucal** | Cuidado odontológico ao longo do tempo: avaliação, odontograma com histórico, plano de tratamento, procedimentos, encaminhamento, prótese e o detalhe das ações coletivas. Domínio assistencial especializado que reaproveita Paciente, Atendimento, Prontuário, Agenda, RH, Equipe (eSB) e Regulação. | `AvaliacaoOdontologica`, `CondicaoOdontologica`, `RegistroOdontograma`, `PlanoTratamento`, `TratamentoProtetico` | 📐 Desenhado na [ADR-0111](./adr/0111-saude-bucal.md), detalhe em [`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md); fatias SB1 (base) a SB5 (coletiva). Traz para todos a especialidade no atendimento e o catálogo geral de procedimentos |
+| 26 | **Saúde Mental** | Atenção psicossocial do primeiro contato ao acompanhamento longitudinal: acolhimento, avaliação, risco com histórico, Projeto Terapêutico Singular versionado, intervenções, crise, equipe de referência, rede de apoio e articulação da rede. CAPS é equipamento, não o domínio. | `AcolhimentoSaudeMental`, `AvaliacaoSaudeMental`, `AvaliacaoRisco`, `AcompanhamentoSaudeMental`, `ProjetoTerapeuticoSingular`, `IntervencaoSaudeMental`, `EventoCrise` | 📐 Desenhado na [ADR-0112](./adr/0112-saude-mental.md), detalhe em [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md); fatias SM1 (base) a SM6 (intersetorialidade e indicadores). Reaproveita Equipe (CAPS multi, eMulti), Programas (programa Saúde Mental), Internação e Regulação |
 
 ### Transversal
 
