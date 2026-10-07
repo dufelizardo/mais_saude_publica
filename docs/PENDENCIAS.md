@@ -147,6 +147,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 
 ## 6. Roadmap de domínios
 
+O estado de cada domínio, com o que já temos e o que falta, está em
+[`STATUS-DOS-DOMINIOS.md`](./STATUS-DOS-DOMINIOS.md).
+
 Detalhe em [`MAPA-DE-DOMINIOS.md`](./MAPA-DE-DOMINIOS.md), seção 4. Todos "só quando houver requisito
 real":
 - **Operação Assistencial:**
