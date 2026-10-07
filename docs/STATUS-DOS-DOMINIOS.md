@@ -6,6 +6,8 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 
 - **Atualizado em:** 2026-10-07
 - **Release em produção:** v1.6.0
+- **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
+  itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
 - **Fontes:**
   - [`MAPA-DE-DOMINIOS.md`](./MAPA-DE-DOMINIOS.md): responsabilidades e entidades;
   - [`PENDENCIAS.md`](./PENDENCIAS.md): ambientes e detalhes técnicos;
@@ -57,8 +59,53 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 12 ✅ · 4 🟡 · 8 📐 · 10 ⬜. A Qualidade é a parte não iniciada do domínio 18; as Integrações, a parte
-não iniciada do domínio 20.
+**Resumo:** 31 itens mais Documentos: 9 ✅ · 5 🟡 · 8 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
+
+### Ordem e dependências das fatias
+
+**Prontas para começar** (não dependem de nada que falte):
+
+| Fatia | Domínio | O que é |
+|---|---|---|
+| MO1 | 29 Modelo Operacional | perfis e capacidades da unidade |
+| P1 | 22 Programas | catálogo de programas, tela em cartões |
+| F1 | 21 Território | backend do território (área, microárea, GeoJSON) |
+| V1 | 23 Vigilância | agravos, notificação, investigação |
+| SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
+| C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
+
+**Dependências entre fatias** (A → B: B precisa de A):
+
+```text
+MO1 ──► SB4 (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
+MO3 ──► SAMU e unidade móvel (com Transporte, 16)
+
+P1 ──► P2 ──► SM1 (acompanhamento em saúde mental) · P4 · P6
+P1 ──► P3 ──► C2 (campanha de comunicação)
+P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
+
+F1 ──► F2 ──► V2 (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real
+F1 ──► F3 ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea · F4
+
+V1 ──► V2 · SM3 (notificação de autoagressão) · V5
+SB1 ──► SB2 ──► SB3 ──► SB4
+SM1 ──► SM2 · SM3 · SM4 · SM6
+E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
+C1 ──► C2 · C4 · C5
+```
+
+**Dependem de itens ainda não desenhados** (precisam de ADR de domínio antes):
+
+| Pré-requisito ainda sem desenho | Fatias que espera |
+|---|---|
+| Documentos | V3 (autos da VISA), C2 (arquivos dos materiais) |
+| Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
+| Estoque (13) e Transporte (16) | E4 (insumos e veículos), SAMU |
+| Regulação de urgência (11) | SM3 (acionar SAMU), E4 |
+| Gestão da Rede (30) | cotas PPI da Regulação |
+| Intersetorialidade (31) | SM6, encaminhamentos da Vigilância e das Emergências |
+| Imunização (24) | aba Vacinação de Pacientes, doses das campanhas |
 
 ## 2. Domínios
 
