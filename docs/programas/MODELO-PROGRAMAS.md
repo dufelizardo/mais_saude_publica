@@ -120,7 +120,8 @@ Campanha Nacional de Vacinação
  └── ações: vacinação, busca ativa, comunicação, mobilização, registro
 ```
 
-A campanha **pode** estar ligada a um programa (por exemplo, Imunização), mas não é um programa.
+A campanha **pode** estar ligada a um programa (por exemplo, Imunização), mas não é um programa. Na campanha de
+vacinação, as doses aplicadas são registradas pelo domínio #24 Imunização ([ADR-0110](../adr/0110-vigilancia-em-saude.md)).
 
 ## 5. Linha de cuidado
 

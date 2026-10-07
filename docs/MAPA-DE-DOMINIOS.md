@@ -9,9 +9,10 @@ onde cada módulo é posicionado dentro da plataforma inteira.
 
 ## 1. Contexto e como ler este documento
 
-Este documento nasceu de uma visão de 20 domínios trazida pelo usuário (hoje 22: o #21 Território e Adscrição
-entrou pela [ADR-0108](./adr/0108-territorio-e-adscricao.md) e o #22 Programas, Ações e Linhas de Cuidado pela
-[ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md)) para o "Mais Saúde Pública"
+Este documento nasceu de uma visão de 20 domínios trazida pelo usuário (hoje 24: o #21 Território e Adscrição
+entrou pela [ADR-0108](./adr/0108-territorio-e-adscricao.md) o #22 Programas, Ações e Linhas de Cuidado pela
+[ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), e o #23 Vigilância em Saúde e o #24 Imunização pela
+[ADR-0110](./adr/0110-vigilancia-em-saude.md)) para o "Mais Saúde Pública"
 como plataforma completa de gestão de uma rede pública de saúde — não apenas cadastro de unidades.
 Recebe o **mesmo tratamento** que todo material externo já trazido para este projeto (a
 "Especificação Preliminar do Setor Administrativo Adaptativo" que originou o módulo Administrativo,
@@ -52,7 +53,9 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
         │                  └── Qualidade      ├── Laboratório
         │                                     ├── Regulação
         │                                     ├── Gestão de Leitos
-        │                                     └── Transporte Sanitário
+        │                                     ├── Transporte Sanitário
+        │                                     ├── Vigilância em Saúde
+        │                                     └── Imunização
         │
         └────────────────── TRANSVERSAL ──────────────────
                            │
@@ -65,10 +68,10 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
                   └── Documentos
 ```
 
-Os **20 domínios** do usuário, mais o **#21 Território e Adscrição** (ADR-0108) e o **#22 Programas, Ações e Linhas de Cuidado** (ADR-0109), estão todos numerados abaixo (nenhum foi descartado), organizados
+Os **20 domínios** do usuário, mais o **#21 Território e Adscrição** (ADR-0108) o **#22 Programas, Ações e Linhas de Cuidado** (ADR-0109), o **#23 Vigilância em Saúde** e o **#24 Imunização** (ADR-0110), estão todos numerados abaixo (nenhum foi descartado), organizados
 dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 
-## 3. Os 22 domínios
+## 3. Os 24 domínios
 
 ### Organização
 
@@ -102,6 +105,8 @@ dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 | 11 | **Regulação** | Coordena o acesso do cidadão a serviços que não estão na unidade de origem — filas, prioridades, referência/contrarreferência. | `SolicitacaoRegulacao`, `Fila`, `Encaminhamento` | 🔵 Em andamento — Central de Regulação do Acesso completa: catálogo, solicitação, fila e eventos (ADR-0087), tela com "Encaminhar" no atendimento (ADR-0088), agendamento na executante, desfecho com contrarreferência e vínculo assistencial (ADR-0089). Falta a regulação de urgência e de internação |
 | 12 | **Gestão de Leitos e Internação** | Leitos, ocupação, internação, alta — relevante principalmente para hospitais/UPA. | `Leito`, `Internacao` | 🔵 Em andamento — leito em setor assistencial, internação com troca de leito e alta médica, higienização, bloqueio, mapa e indicadores ([ADR-0098](./adr/0098-leitos-e-internacao-backend.md)); tela com mapa por setor e "Internar" no atendimento ([ADR-0099](./adr/0099-leitos-e-internacao-tela.md)); internações no prontuário e vínculo assistencial da equipe e do médico responsável ([ADR-0100](./adr/0100-leitos-e-internacao-prontuario.md)) |
 | 16 | **Transporte Sanitário** | Deslocamentos relacionados à saúde — ambulâncias, transferências entre unidades. | `Veiculo`, `SolicitacaoTransporte` | ⏳ Não iniciado — integra com Patrimônio (veículo), RH (motorista) e Regulação (necessidade) |
+| 23 | **Vigilância em Saúde** | Inteligência e intervenção sobre riscos, doenças, agravos e eventos de saúde pública: notificação, investigação, surtos, fiscalização sanitária, ambiente, zoonoses e vetores, saúde do trabalhador. | `Agravo`, `Notificacao`, `InvestigacaoEpidemiologica`, `Surto`, `EstabelecimentoRegulado`, `InspecaoSanitaria`, `Foco`, `EventoTrabalho` | 📐 Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md), detalhe em [`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md); fatias V1 (fundação) a V5 (trabalhador e integrações). Usa o Território (finalidade vigilância, imóvel) |
+| 24 | **Imunização** | Vacinação: calendário, aplicação e registro de doses, cobertura, eventos adversos, imunobiológicos e cadeia de frio. Atravessa vigilância, assistência e estoque. | `Imunobiologico`, `DoseAplicada`, `Calendario` (a desenhar) | ⏳ Reservado pela [ADR-0110](./adr/0110-vigilancia-em-saude.md); a desenhar em ADR própria. A campanha de vacinação é `Campanha` de Programas (ADR-0109) |
 
 ### Transversal
 
