@@ -9,7 +9,8 @@ onde cada módulo é posicionado dentro da plataforma inteira.
 
 ## 1. Contexto e como ler este documento
 
-Este documento nasceu de uma visão de 20 domínios trazida pelo usuário para o "Mais Saúde Pública"
+Este documento nasceu de uma visão de 20 domínios trazida pelo usuário (hoje 21: o #21 Território e Adscrição
+entrou pela [ADR-0108](./adr/0108-territorio-e-adscricao.md)) para o "Mais Saúde Pública"
 como plataforma completa de gestão de uma rede pública de saúde — não apenas cadastro de unidades.
 Recebe o **mesmo tratamento** que todo material externo já trazido para este projeto (a
 "Especificação Preliminar do Setor Administrativo Adaptativo" que originou o módulo Administrativo,
@@ -58,13 +59,14 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
                   ├── Auditoria
                   ├── Integrações
                   ├── Indicadores / BI
+                  ├── Território e Adscrição
                   └── Documentos
 ```
 
-Os **20 domínios** do usuário estão todos numerados abaixo (nenhum foi descartado), organizados
+Os **20 domínios** do usuário, mais o **#21 Território e Adscrição** (ADR-0108), estão todos numerados abaixo (nenhum foi descartado), organizados
 dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 
-## 3. Os 20 domínios
+## 3. Os 21 domínios
 
 ### Organização
 
@@ -107,6 +109,7 @@ dentro desses 4 grupos e atribuídos a uma onda de implementação (seção 4).
 | 18 (parte) | **Auditoria** | Rastreabilidade: quem alterou o quê, quando — fundamental para sistema público e LGPD. | `EventoAuditoria` | ✅ Implementado — registro pela [ADR-0070](./adr/0070-trilha-de-auditoria.md) (alterações, leitura do detalhe de dado de saúde/pessoal, recusas 403, login e troca de senha; imutável, sem conteúdo) e consulta pela [ADR-0071](./adr/0071-consulta-da-trilha-de-auditoria.md) (tela Auditoria, "Quem acessou" no atendimento, `AUDITORIA.CONSULTAR` com escopo). Pendentes: exportação, retenção, alertas. Proposta original em `adr/DER.md` (entidade `AUDITORIA`), enriquecida pela [ADR-0054](./adr/0054-modelo-de-identidade-autorizacao-e-auditoria.md) |
 | 20 (parte) | **Integrações** | Adapters para sistemas externos (SUS, CNES, DATASUS, e-SUS, SIGTAP). | *(camada de integração, não entidade de domínio)* | ⏳ Não iniciado — arquitetura de adapters antes de implementar qualquer integração específica |
 | 19 | **Indicadores, BI e Gestão** | Transforma fatos operacionais (já registrados pelos domínios acima) em informação de gestão — nunca o inverso. | `Indicador`, `Dashboard` (camada de leitura, não fonte de dado) | ⏳ Não iniciado — depende dos domínios operacionais existirem primeiro para ter dado confiável para agregar |
+| 21 | **Território e Adscrição** | Base territorial da Atenção Primária: segmento, território (com finalidade), área sob responsabilidade da equipe, microárea do ACS, imóvel, família e a adscrição da população, com geolocalização. | `SegmentoTerritorial`, `Territorio`, `Area`, `Microarea`, `ResponsabilidadeTerritorial`, `AtribuicaoMicroarea`, `Imovel`, `Domicilio`, `NucleoFamiliar`, `Adscricao` | ⏳ Desenhado na [ADR-0108](./adr/0108-territorio-e-adscricao.md), detalhe em [`territorio/MODELO-TERRITORIO.md`](./territorio/MODELO-TERRITORIO.md); implementação nas fatias F1 (backend), F2 (tela com mapa), F3 (cadastro territorial) e F4 (escopo de acesso). Até a F1, as microáreas ficam como texto em `Equipe` e `MembroEquipe` (ADR-0103), de forma provisória |
 | — | **Documentos** | Anexos/documentos formais (contrato, prontuário, processo, compra) — reaproveitável por qualquer domínio, em vez de cada um ter seu próprio conceito de anexo. Citado na visão original do usuário, sem número na lista final de 20 — mantido aqui para não se perder. | `Documento`, `Versao`, `Tipo`, `Aprovacao`, `Assinatura` | ⏳ Não iniciado |
 
 ## 4. Ondas de implementação
