@@ -124,7 +124,8 @@ Surto
 Surto de dengue → microáreas 04, 05 e 06 → 37 casos → investigação territorial → controle do vetor
 ```
 
-É onde Território, Vigilância, Programas e Atendimento se encontram.
+É onde Território, Vigilância, Programas e Atendimento se encontram. Um surto pode originar um evento emergencial, e a
+resposta coordenada fica com o domínio Emergências e Desastres ([ADR-0113](../adr/0113-emergencias-e-desastres.md)).
 
 ### 3.5 Detecção a partir da rede
 
