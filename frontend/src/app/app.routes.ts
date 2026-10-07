@@ -42,6 +42,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/profissional-perfil/profissional-perfil').then((m) => m.ProfissionalPerfil),
         data: { breadcrumb: 'Perfil do profissional', area: 'Recursos Humanos' },
       },
+      // Equipes de saúde (ADR-0104), carregadas sob demanda.
+      {
+        path: 'rh/equipes',
+        loadComponent: () => import('./features/rh/equipes/equipes').then((m) => m.Equipes),
+        data: { breadcrumb: 'Equipes', area: 'Recursos Humanos' },
+      },
+      // Escalas (ADR-0106), carregadas sob demanda.
+      {
+        path: 'rh/escalas',
+        loadComponent: () => import('./features/rh/escalas/escalas').then((m) => m.Escalas),
+        data: { breadcrumb: 'Escalas', area: 'Recursos Humanos' },
+      },
       // Catálogos de RH agrupados em telas com abas (ADR-0073), carregadas sob demanda.
       {
         path: 'rh/cargos-e-salarios',

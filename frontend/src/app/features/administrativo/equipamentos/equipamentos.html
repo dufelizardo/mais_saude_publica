@@ -250,10 +250,27 @@
               }
               <a class="btn btn--ghost btn--sm" routerLink="/profissionais" style="margin-top: 10px;">Ver profissionais</a>
             </div>
-            <div class="empty-state" style="padding-top: var(--s-4);">
-              <div class="empty-state__title">Equipes de Saúde da Família: em breve</div>
-              <p class="empty-state__desc">Equipes, famílias adscritas e microáreas dependem do domínio Equipe, que ainda não existe.</p>
-            </div>
+            @if (equipesDaUnidade(); as equipes) {
+              @for (e of equipes; track e.uuid) {
+                <div class="team-card">
+                  <h4><span [class]="'team__code ' + tiposEquipe[e.tipo].classe" aria-hidden="true">{{ tiposEquipe[e.tipo].sigla }}</span> {{ e.nome }}</h4>
+                  <div class="meta">{{ tiposEquipe[e.tipo].descricao }} · {{ e.membros }} membro(s)@if (e.microareas) { · microáreas {{ e.microareas }} }@if (!e.ativa) { · inativa }</div>
+                  @if (e.ativa && !e.completa) { <span class="badge badge--warn"><span class="dot" aria-hidden="true"></span> Composição incompleta</span> }
+                  <a class="btn btn--ghost btn--sm" routerLink="/rh/equipes" [queryParams]="{ equipe: e.uuid }" style="margin-top: 10px;">Ver equipe</a>
+                </div>
+              } @empty {
+                <div class="empty-state" style="padding-top: var(--s-4);">
+                  <div class="empty-state__title">Nenhuma equipe nesta unidade</div>
+                  <p class="empty-state__desc">As equipes são cadastradas na tela Equipes, em Recursos Humanos.</p>
+                  <a class="btn btn--ghost btn--sm" routerLink="/rh/equipes">Ir para Equipes</a>
+                </div>
+              }
+              <p class="cell-sub" style="grid-column: 1 / -1;">Famílias adscritas e cobertura do território: em breve.</p>
+            } @else if (equipesDaUnidade() === null) {
+              <p class="cell-sub">Não foi possível carregar as equipes (é preciso ter acesso ao RH ou às equipes).</p>
+            } @else {
+              <p class="cell-sub">Carregando as equipes…</p>
+            }
           </div>
         }
         @case ('vinculacoes') {
