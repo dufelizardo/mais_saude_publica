@@ -124,7 +124,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0106](./0106-escalas-tela.md) | Escalas: tela | Aceita e implementada (parte 4 de 4) |
 | [0107](./0107-escalas-intervalo-e-modelos-de-jornada.md) | Escalas: intervalo no turno e modelos de jornada | Aceita e implementada |
 | [0108](./0108-territorio-e-adscricao.md) | Território e Adscrição: domínio próprio | Aceita (desenho; implementação nas fatias F1 a F4) |
-| [0109](./0109-programas-acoes-e-linhas-de-cuidado.md) | Programas, Ações e Linhas de Cuidado: domínio próprio | Aceita (desenho; implementação nas fatias P1 a P6) |
+| [0109](./0109-programas-acoes-e-linhas-de-cuidado.md) | Programas, Ações e Linhas de Cuidado: domínio próprio | Aceita (desenho; P1 na ADR-0118, P2 a P6 a fazer) |
 | [0110](./0110-vigilancia-em-saude.md) | Vigilância em Saúde: domínio próprio (e Imunização reservada como #24) | Aceita (desenho; implementação nas fatias V1 a V5) |
 | [0111](./0111-saude-bucal.md) | Saúde Bucal: domínio assistencial especializado | Aceita (desenho; implementação nas fatias SB1 a SB5) |
 | [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; implementação nas fatias SM1 a SM6) |
@@ -133,6 +133,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0115](./0115-modelo-operacional-dos-equipamentos.md) | Modelo Operacional dos Equipamentos e reconciliação do mapa (#29 a #31) | Aceita (desenho; MO1 na ADR-0117, MO2 a MO4 a fazer) |
 | [0116](./0116-marco-mapa-de-dominios-fechado.md) | Marco: mapa de domínios fechado e regra para novos domínios | Aceita |
 | [0117](./0117-modelo-operacional-perfis-e-capacidades.md) | Modelo operacional: perfis e capacidades da unidade (MO1) | Aceita e implementada |
+| [0118](./0118-programas-catalogo.md) | Programas de saúde: catálogo (P1) | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 
