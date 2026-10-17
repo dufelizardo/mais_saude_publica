@@ -31,6 +31,7 @@ import com.edufelizardo.maissaudepublica.repositories.LotacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.SetorRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
+import com.edufelizardo.maissaudepublica.repositories.UnidadePerfilOperacionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -89,6 +90,9 @@ public class RedeUnidadesService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private UnidadePerfilOperacionalRepository unidadePerfilRepository;
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
@@ -262,7 +266,7 @@ public class RedeUnidadesService {
     }
 
     private record Contagens(Map<UUID, Long> lotados, Map<UUID, Long> setores, Map<UUID, Long> leitos, Map<UUID, Long> ocupados,
-                             Set<UUID> comHorario) {
+                             Set<UUID> comHorario, Map<UUID, List<String>> perfis) {
     }
 
     private Contagens contagens() {
@@ -277,7 +281,11 @@ public class RedeUnidadesService {
         Map<UUID, Long> ocupados = leitosAtivos.stream().filter(l -> l.getSituacao() == SituacaoLeito.OCUPADO)
                 .collect(Collectors.groupingBy(l -> l.getUnidade().getUuid(), Collectors.counting()));
         Set<UUID> comHorario = horarioRepository.findAll().stream().map(h -> h.getUnidade().getUuid()).collect(Collectors.toSet());
-        return new Contagens(lotados, setores, leitos, ocupados, comHorario);
+        // Perfis operacionais vigentes (ADR-0117), para o filtro da rede.
+        Map<UUID, List<String>> perfis = unidadePerfilRepository.findVigentesComPerfil().stream()
+                .collect(Collectors.groupingBy(a -> a.getUnidade().getUuid(), Collectors.mapping(a -> a.getPerfil().getCodigo(),
+                        Collectors.collectingAndThen(Collectors.toList(), l -> l.stream().sorted().toList()))));
+        return new Contagens(lotados, setores, leitos, ocupados, comHorario, perfis);
     }
 
     private RedeUnidadeResumoDto resumo(UnidadeDeSaude u, Contagens c) {
@@ -295,7 +303,8 @@ public class RedeUnidadesService {
                 u.getSupervisaoRegional() != null ? u.getSupervisaoRegional().getNome() : null,
                 endereco == null || endereco.isBlank() ? null : endereco, telefone, u.getEmail(),
                 c.lotados().getOrDefault(u.getUuid(), 0L), c.setores().getOrDefault(u.getUuid(), 0L),
-                c.leitos().getOrDefault(u.getUuid(), 0L), c.ocupados().getOrDefault(u.getUuid(), 0L), c.comHorario().contains(u.getUuid()));
+                c.leitos().getOrDefault(u.getUuid(), 0L), c.ocupados().getOrDefault(u.getUuid(), 0L), c.comHorario().contains(u.getUuid()),
+                c.perfis().getOrDefault(u.getUuid(), List.of()));
     }
 
     private FichaUnidadeDto montarFicha(UnidadeDeSaude u) {
