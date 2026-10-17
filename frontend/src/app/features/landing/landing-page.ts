@@ -1,7 +1,9 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { VersaoService } from '../../core/services/versao';
+import { ProgramaPublicoDto } from '../../core/models/programa';
+import { ProgramaService } from '../../core/services/programa';
 
 type FontSize = 'default' | 'lg' | 'xl';
 
@@ -14,6 +16,19 @@ export class LandingPage {
   private readonly document = inject(DOCUMENT);
 
   protected readonly versao = inject(VersaoService).versao;
+  private readonly programaService = inject(ProgramaService);
+
+  /** Consulta pública dos programas de saúde (ADR-0118): `undefined` carregando, `null` indisponível. */
+  protected readonly programas = signal<ProgramaPublicoDto[] | null | undefined>(undefined);
+  protected readonly programasPorCategoria = computed(() => {
+    const grupos: { categoria: string; programas: ProgramaPublicoDto[] }[] = [];
+    for (const p of this.programas() ?? []) {
+      const g = grupos.find((x) => x.categoria === p.categoria);
+      if (g) g.programas.push(p);
+      else grupos.push({ categoria: p.categoria, programas: [p] });
+    }
+    return grupos;
+  });
 
   protected readonly fontSize = signal<FontSize>('default');
   protected readonly highContrast = signal(false);
@@ -21,6 +36,7 @@ export class LandingPage {
 
   constructor() {
     this.restorePreferences();
+    this.programaService.publico().subscribe({ next: (p) => this.programas.set(p), error: () => this.programas.set(null) });
   }
 
   protected setFontSize(value: FontSize): void {

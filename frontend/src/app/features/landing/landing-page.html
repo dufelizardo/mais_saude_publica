@@ -461,6 +461,43 @@
   </section>
 
   <!-- ========= Campaigns / News ========= -->
+  <section id="programas" class="block" aria-labelledby="prg-title">
+    <div class="container">
+      <header class="block-head">
+        <span class="eyebrow">Programas de saúde</span>
+        <h2 id="prg-title" style="margin-top: var(--s-4);">Cuidado organizado para cada fase da vida</h2>
+        <p style="margin-top: var(--s-4); color: var(--ink-500); font-size: 1.0625rem;">Os programas da rede municipal, para quem são e onde procurar. Para participar, procure a sua unidade de saúde.</p>
+      </header>
+      @if (programas() === undefined) {
+        <p style="color: var(--ink-500);">Carregando os programas…</p>
+      } @else if (programas() === null) {
+        <p style="color: var(--ink-500);">Não foi possível carregar os programas agora. Tente mais tarde.</p>
+      } @else {
+        @for (g of programasPorCategoria(); track g.categoria) {
+          <h3 class="prg-cat">{{ g.categoria }}</h3>
+          <div class="services prg-grid">
+            @for (p of g.programas; track p.nome) {
+              <article class="svc-card prg-card" [attr.aria-label]="p.nome">
+                <div class="svc-card__title">{{ p.nome }}</div>
+                @if (p.descricao) { <div class="svc-card__desc">{{ p.descricao }}</div> }
+                <div class="prg-card__publico"><strong>Para:</strong> {{ p.publico }}</div>
+                <div class="prg-card__onde">
+                  @if (p.unidades.length) {
+                    <strong>Onde:</strong> {{ p.unidades.slice(0, 3).join(', ') }}@if (p.unidades.length > 3) { e mais {{ p.unidades.length - 3 }} }
+                  } @else {
+                    Procure a unidade de saúde mais próxima.
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        } @empty {
+          <p style="color: var(--ink-500);">Nenhum programa publicado no momento.</p>
+        }
+      }
+    </div>
+  </section>
+
   <section id="campanhas" class="block" aria-labelledby="cmp-title">
     <div class="container">
       <header class="block-head" style="display:flex; justify-content:space-between; align-items:end; max-width:none; gap:var(--s-6); flex-wrap:wrap;">

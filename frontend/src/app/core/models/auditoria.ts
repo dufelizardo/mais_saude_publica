@@ -93,6 +93,8 @@ const RECURSOS: Record<string, string> = {
   LEITO: 'Leito',
   INTERNACAO: 'Internação',
   EQUIPE: 'Equipe',
+  PROGRAMA: 'Programa de saúde',
+  CATEGORIA_PROGRAMA: 'Categoria de programa',
   PERFIL_OPERACIONAL: 'Perfil operacional',
   CAPACIDADE_ASSISTENCIAL: 'Capacidade assistencial',
   MODELO_OPERACIONAL: 'Modelo operacional da unidade',

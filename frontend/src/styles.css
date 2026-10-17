@@ -1744,3 +1744,33 @@ button.shift--off { text-align: center; }
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
   html { scroll-behavior: auto; }
 }
+
+/* ── Programas de Saúde (ADR-0118), pelo protótipo Programas.html: grade de cartões ─────────────────────────────────── */
+.pg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s-3); margin-bottom: var(--s-5); }
+.program { background: var(--white); border: 1px solid var(--ink-200); border-radius: 12px; padding: var(--s-4); display: grid; gap: var(--s-3); cursor: pointer; text-align: left; font: inherit; color: inherit; }
+.program:hover { border-color: var(--blue-700); box-shadow: var(--shadow-md); transform: translateY(-1px); transition: all 0.15s; }
+.program[aria-pressed="true"] { border-color: var(--blue-700); box-shadow: 0 0 0 3px rgba(19,81,180,0.12); }
+.program:focus-visible { outline: 3px solid var(--focus, #ffbf47); outline-offset: 2px; }
+.pg__head { display: flex; gap: 10px; align-items: flex-start; }
+.pg__icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; font-weight: 700; font-size: 0.75rem; }
+.pg__icon--blue { background: var(--blue-50); color: var(--blue-700); }
+.pg__icon--ok { background: var(--ok-bg); color: var(--ok); }
+.pg__icon--pink { background: var(--teal-bg); color: var(--teal); }
+.pg__icon--purple { background: var(--purple-bg); color: var(--purple); }
+.pg__icon--warn { background: var(--warn-bg); color: var(--warn); }
+.pg__title { font-size: 1rem; font-weight: 600; }
+.pg__sub { font-size: 0.72rem; color: var(--ink-500); margin-top: 1px; }
+.pg__counts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pg__count { background: var(--ink-50); border-radius: 8px; padding: 8px 10px; }
+.pg__count .lbl { font-size: 0.66rem; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.pg__count .val { font-weight: 600; font-size: 1.125rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.pg__count .val.soon { font-size: 0.75rem; font-weight: 500; color: var(--ink-500); }
+.pg__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--ink-500); min-height: 20px; }
+.pg__foot .resp { display: inline-flex; align-items: center; gap: 4px; }
+.pg-cond { display: flex; gap: 4px; flex-wrap: wrap; }
+.stat__val--soon { font-size: 1rem; font-weight: 500; color: var(--ink-500); }
+/* Landing: consulta pública dos programas (ADR-0118). */
+.prg-cat { font-size: 1.0625rem; margin: var(--s-6) 0 var(--s-3); }
+.prg-grid { margin-top: 0; }
+.prg-card { cursor: default; gap: 8px; }
+.prg-card__publico, .prg-card__onde { font-size: var(--fs-sm, 0.875rem); color: var(--ink-700); }

@@ -143,6 +143,11 @@ export const routes: Routes = [
       },
       // Leitos e internação (ADR-0099), carregados sob demanda.
       {
+        path: 'assistencia/programas',
+        loadComponent: () => import('./features/assistencia/programas/programas').then((m) => m.Programas),
+        data: { breadcrumb: 'Programas de Saúde', area: 'Assistência' },
+      },
+      {
         path: 'assistencia/leitos',
         loadComponent: () => import('./features/assistencia/leitos/leitos').then((m) => m.Leitos),
         data: { breadcrumb: 'Leitos', area: 'Assistência' },
