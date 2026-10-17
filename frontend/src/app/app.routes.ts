@@ -100,6 +100,11 @@ export const routes: Routes = [
         data: { breadcrumb: 'Modelo administrativo', area: 'Administrativo' },
       },
       {
+        path: 'administrativo/modelo-operacional',
+        loadComponent: () => import('./features/administrativo/modelo-operacional/modelo-operacional').then((m) => m.ModeloOperacional),
+        data: { breadcrumb: 'Modelo operacional', area: 'Administrativo' },
+      },
+      {
         path: 'administrativo/necessidades-de-pessoal',
         loadComponent: () => import('./features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal').then((m) => m.NecessidadesDePessoal),
         data: { breadcrumb: 'Necessidades de pessoal', area: 'Administrativo' },

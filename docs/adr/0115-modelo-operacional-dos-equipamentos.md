@@ -2,8 +2,9 @@
 
 ## Status
 
-Aceita. **Aceita e completa a [ADR-0053](./0053-criterio-de-governanca-para-equipamentos-de-saude.md).** Desenho,
-sem implementação: as fatias MO1 a MO4 vêm depois, cada uma com ADR própria. O detalhe, com a matriz dos equipamentos,
+Aceita. **Aceita e completa a [ADR-0053](./0053-criterio-de-governanca-para-equipamentos-de-saude.md).** Desenho;
+cada fatia tem ADR própria. A MO1 (perfis e capacidades) foi implementada na
+[ADR-0117](./0117-modelo-operacional-perfis-e-capacidades.md); MO2 a MO4 vêm depois. O detalhe, com a matriz dos equipamentos,
 está em [`equipamentos/MODELO-OPERACIONAL.md`](../equipamentos/MODELO-OPERACIONAL.md).
 
 ## Contexto

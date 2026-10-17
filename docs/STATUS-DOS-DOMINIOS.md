@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-07
+- **Atualizado em:** 2026-10-17
 - **Release em produção:** v1.6.0
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -55,11 +55,11 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 26 | [Saúde Mental](#26-saúde-mental) | 📐 | fatias SM1 a SM6 |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
-| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 📐 | fatias MO1 a MO4 |
+| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 9 ✅ · 5 🟡 · 8 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 9 ✅ · 6 🟡 · 7 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,17 +68,17 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| MO1 | 29 Modelo Operacional | perfis e capacidades da unidade |
 | P1 | 22 Programas | catálogo de programas, tela em cartões |
 | F1 | 21 Território | backend do território (área, microárea, GeoJSON) |
 | V1 | 23 Vigilância | agravos, notificação, investigação |
 | SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
+| SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
-MO1 ──► SB4 (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
+MO1 ✅ ──► SB4 (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
 P1 ──► P2 ──► SM1 (acompanhamento em saúde mental) · P4 · P6
@@ -127,10 +127,10 @@ C1 ──► C2 · C4 · C5
 - [ ] Acessibilidade.
 - [ ] Exportação.
 - [ ] Inspeção sanitária.
-- [ ] Modalidades de CAPS (I, II, III, i, AD, AD III) e componentes da RAPS como capacidades da unidade (domínio 26, SM5;
-  depende do catálogo de capacidades, item 29, MO1).
-- [ ] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1); serviços (MO2); coordenadas e
-  pontos operacionais (MO3).
+- [ ] Componentes da RAPS e serviços do CAPS (domínio 26, SM5). As modalidades de CAPS (I, II, III, i, AD, AD III) já
+  são capacidades no catálogo da MO1 ([ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
+- [x] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1, [ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
+- [ ] Serviços (MO2); coordenadas e pontos operacionais (MO3).
 - [ ] Tipo de unidade do CEO (Centro de Especialidades Odontológicas), pelo critério da ADR-0053 (domínio 25, SB4).
 
 ### 2. RH
@@ -534,13 +534,17 @@ C1 ──► C2 · C4 · C5
 
 ### 29. Modelo Operacional dos Equipamentos
 
-**Estado:** 📐 (camada transversal, não domínio de negócio). Desenhado na
+**Estado:** 🟡 (camada transversal, não domínio de negócio). Desenhado na
 [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md), que aceita e completa a ADR-0053; matriz e detalhe em
 [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md).
 
+**Temos:**
+- [x] **MO1 · Perfis e capacidades** ([ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)): catálogos editáveis de perfil operacional (10) e de
+  capacidade assistencial (46, 4 transversais), associação à unidade como histórico, coerência entre capacidade e
+  perfil, perfis na rede, aba Capacidades e filtro por perfil em Equipamentos, tela Modelo operacional. Destrava SB4,
+  SM5 e E3.
+
 **Falta:**
-- [ ] **MO1 · Perfis e capacidades:** catálogos de perfil operacional e de capacidade assistencial, associação à
-  unidade, aba "Capacidades" em Equipamentos (pré-requisito de SB4, SM5 e E3).
 - [ ] **MO2 · Serviços:** serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina), ligados a
   setores.
 - [ ] **MO3 · Ponto operacional:** local de realização no Atendimento; base, localização e rota da unidade móvel.

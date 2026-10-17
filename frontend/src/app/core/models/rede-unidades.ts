@@ -29,6 +29,8 @@ export interface RedeUnidadeResumoDto {
   leitos: number;
   leitosOcupados: number;
   comHorario: boolean;
+  /** Códigos dos perfis operacionais vigentes (ADR-0117). */
+  perfis: string[];
 }
 
 export interface RedeUnidadesResponseDto {
