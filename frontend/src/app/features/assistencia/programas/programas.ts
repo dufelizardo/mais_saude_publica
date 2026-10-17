@@ -324,8 +324,9 @@ export class Programas {
     if (!v.categoriaId) erros['categoriaId'] = 'Escolha a categoria.';
     if (v.situacao === 'ENCERRADO' && !v.fim) erros['fim'] = 'Informe o fim do programa encerrado.';
     if (v.inicio && v.fim && v.fim < v.inicio) erros['fim'] = 'O fim não pode ser antes do início.';
-    const min = v.idadeMinima.trim() === '' ? null : Number(v.idadeMinima);
-    const max = v.idadeMaxima.trim() === '' ? null : Number(v.idadeMaxima);
+    // input type="number" devolve número (ou null) no formulário reativo, não string.
+    const min = String(v.idadeMinima ?? '').trim() === '' ? null : Number(v.idadeMinima);
+    const max = String(v.idadeMaxima ?? '').trim() === '' ? null : Number(v.idadeMaxima);
     if (min != null && (!Number.isInteger(min) || min < 0 || min > 130)) erros['idadeMinima'] = 'Idade de 0 a 130 anos.';
     if (max != null && (!Number.isInteger(max) || max < 0 || max > 130)) erros['idadeMaxima'] = 'Idade de 0 a 130 anos.';
     if (min != null && max != null && max < min) erros['idadeMaxima'] = 'A idade máxima não pode ser menor que a mínima.';
@@ -380,7 +381,7 @@ export class Programas {
     const v = this.categoriaForm.getRawValue();
     const erros: Record<string, string> = {};
     if (!v.nome.trim()) erros['nomeCategoria'] = 'Informe o nome.';
-    const ordem = v.ordem.trim() === '' ? null : Number(v.ordem);
+    const ordem = String(v.ordem ?? '').trim() === '' ? null : Number(v.ordem);
     if (ordem != null && (!Number.isInteger(ordem) || ordem < 0)) erros['ordem'] = 'A ordem é um número inteiro, 0 ou mais.';
     if (!this.validar(erros)) return;
     const atual = this.categoriaEditando();
