@@ -48,7 +48,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | 📐 | fatias F1 a F4 |
-| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 📐 | fatias P1 a P6 |
+| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | fatias P2 a P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 📐 | fatias V1 a V5 |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 9 ✅ · 6 🟡 · 7 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 9 ✅ · 7 🟡 · 6 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,7 +68,8 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| P1 | 22 Programas | catálogo de programas, tela em cartões |
+| P2 | 22 Programas | acompanhamento do paciente no programa; aba Programas e filtro em Pacientes |
+| P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
 | F1 | 21 Território | backend do território (área, microárea, GeoJSON) |
 | V1 | 23 Vigilância | agravos, notificação, investigação |
 | SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
@@ -81,8 +82,8 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 MO1 ✅ ──► SB4 (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
-P1 ──► P2 ──► SM1 (acompanhamento em saúde mental) · P4 · P6
-P1 ──► P3 ──► C2 (campanha de comunicação)
+P1 ✅ ──► P2 ──► SM1 (acompanhamento em saúde mental) · P4 · P6
+P1 ✅ ──► P3 ──► C2 (campanha de comunicação)
 P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ──► F2 ──► V2 (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real
@@ -428,14 +429,18 @@ C1 ──► C2 · C4 · C5
 
 ### 22. Programas, Ações e Linhas de Cuidado
 
-**Estado:** 📐. Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md); detalhe em
 [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md).
 
+**Temos:**
+- [x] **P1 · Catálogo** ([ADR-0118](./adr/0118-programas-catalogo.md)): categorias e programas cadastráveis (carga de 4 categorias e 13
+  programas), público-alvo como dado (idade, sexo, gestante, CID-10/CIAP-2), coordenação, marca de sensível,
+  unidades e equipes participantes como histórico, permissão `PROGRAMA.GERENCIAR`; tela Programas de Saúde pelo
+  protótipo e consulta pública na landing page (`/api/v1/publico/programa`, sem login).
+
 **Falta:**
-- [ ] **P1 · Catálogo:** programas e categorias cadastráveis, público-alvo e carga inicial; tela em cartões do
-  protótipo.
 - [ ] **P2 · Acompanhamento:** inscrever e encerrar; aba Programas e filtro em Pacientes; programas na equipe.
-- [ ] **P3 · Campanhas:** cadastro, tela e consulta pública na landing page.
+- [ ] **P3 · Campanhas:** cadastro, tela e consulta pública na landing page (a seção de programas já existe).
 - [ ] **P4 · Ações programáticas:** ações pendentes, busca ativa, programa na marcação da Agenda.
 - [ ] **P5 · Linhas de cuidado.**
 - [ ] **P6 · Metas e indicadores programáticos.**

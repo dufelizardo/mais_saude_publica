@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.controllers.version1;
 
 import com.edufelizardo.maissaudepublica.config.LiberadoParaAutenticados;
+import com.edufelizardo.maissaudepublica.config.RotaPublica;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.AtribuicaoAcesso;
@@ -299,7 +300,13 @@ class AutorizacaoControllerTest {
             }
             boolean liberado = metodo.hasMethodAnnotation(LiberadoParaAutenticados.class)
                     || AnnotatedElementUtils.hasAnnotation(metodo.getBeanType(), LiberadoParaAutenticados.class);
-            if (requer == null && !liberado) {
+            // Consulta pública (ADR-0118): só sob /api/v1/publico/, que o SecurityConfig libera sem login.
+            boolean publica = metodo.hasMethodAnnotation(RotaPublica.class)
+                    && info.getPatternValues().stream().allMatch(p -> p.startsWith("/api/v1/publico/"));
+            if (metodo.hasMethodAnnotation(RotaPublica.class) && !publica) {
+                semDefinicao.add(nome(metodo) + " (@RotaPublica fora de /api/v1/publico/)");
+            }
+            if (requer == null && !liberado && !publica) {
                 semDefinicao.add(nome(metodo));
             }
             if (requer != null) {

@@ -67,3 +67,5 @@ Resource    ../../schema/internacao/internacao_schema.resource
 Resource    ../../schema/equipamentos/equipamentos_schema.resource
 Resource    ../../schema/equipes/equipes_schema.resource
 Resource    ../../schema/escalas/escalas_schema.resource
+# PROGRAMAS (ADR-0118)
+Resource    ../../schema/programas/programas_schema.resource
