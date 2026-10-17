@@ -25,7 +25,7 @@ com auditoria, controle de acesso por perfil e unidade, e testes de aceitação 
 
 | Área | O que tem |
 |---|---|
-| **Organização da rede** | hierarquia federal → estadual → municipal → regional → unidade; Equipamentos de Saúde com horário estruturado e situação operacional |
+| **Organização da rede** | hierarquia federal → estadual → municipal → regional → unidade; Equipamentos de Saúde com horário estruturado, situação operacional e modelo operacional (perfis e capacidades de cada unidade) |
 | **Recursos Humanos** | profissionais, lotação, cargos e salários, benefícios, desenvolvimento, recrutamento, folha, perfil; **equipes de saúde** e **escalas** com modelos de jornada |
 | **Administrativo** | setores, modelo administrativo, processos, necessidades de pessoal |
 | **Assistência** | pacientes, atendimentos, agenda do profissional, prontuário, enfermagem (triagem, evolução, medicação), farmácia (estoque, dispensação, transferência) |
