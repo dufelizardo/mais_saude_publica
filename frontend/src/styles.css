@@ -1441,6 +1441,10 @@ tfoot .linha-total th { text-align: left; }
 .team-stack .more { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 2px solid var(--ink-50); color: var(--ink-500); display: grid; place-items: center; font-size: 0.65rem; font-weight: 600; margin-left: -8px; }
 .eq-prof, .eq-vinc { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; font-size: 0.8125rem; }
 .eq-prof li { display: grid; }
+/* Modelo operacional na ficha da unidade (ADR-0117): linha com ação à direita e título do grupo. */
+.eq-prof li.mo-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.eq-prof li.mo-row > span { display: grid; min-width: 0; }
+.mo-grupo { margin: 14px 0 0; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-500); }
 .eq-horario { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
 .eq-horario th, .eq-horario td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--ink-100); }
 .eq-horario input[type="time"] { width: 96px; min-height: 32px; }

@@ -91,6 +91,13 @@
               </a>
             }
 
+            @if (podeVer('/administrativo/modelo-operacional')) {
+              <a routerLink="/administrativo/modelo-operacional" routerLinkActive #rlaModeloOperacional="routerLinkActive" [attr.aria-current]="rlaModeloOperacional.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path></svg>
+                <span class="nav-item__label">Modelo operacional</span>
+              </a>
+            }
+
             @if (podeVer('/administrativo/modelo')) {
               <a routerLink="/administrativo/modelo" routerLinkActive #rlaModelo="routerLinkActive" [attr.aria-current]="rlaModelo.isActive ? 'page' : null" class="nav-item">
                 <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>

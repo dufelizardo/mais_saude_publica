@@ -78,6 +78,15 @@
       @for (s of listaSituacoes; track s) { <option [value]="s" [selected]="situacaoFiltro() === s">{{ situacoes[s].rotulo }}</option> }
     </select>
   </label>
+  @if (catalogoPerfis().length) {
+    <label class="pill pill--select">
+      <span class="sr-only">Perfil operacional</span>
+      <select (change)="perfilFiltro.set($any($event.target).value)" aria-label="Perfil operacional">
+        <option value="" [selected]="perfilFiltro() === ''">Todos os perfis</option>
+        @for (p of catalogoPerfis(); track p.uuid) { <option [value]="p.codigo" [selected]="perfilFiltro() === p.codigo">{{ p.nome }}</option> }
+      </select>
+    </label>
+  }
   <div class="seg" role="group" aria-label="Visão" style="margin-left: auto;">
     <button type="button" disabled title="Em breve: depende das coordenadas das unidades">Mapa</button>
     <button type="button" aria-pressed="true">Lista</button>
@@ -159,6 +168,7 @@
       <div class="tabs" role="tablist" aria-label="Seções da unidade">
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'dados'" (click)="abaFicha.set('dados')">Dados gerais</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'operacional'" (click)="abaFicha.set('operacional')">Operacional</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'capacidades'" (click)="abaFicha.set('capacidades')">Capacidades</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'equipes'" (click)="abaFicha.set('equipes')">Equipes</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'vinculacoes'" (click)="abaFicha.set('vinculacoes')">Vinculações</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'historico'" (click)="abaFicha.set('historico')">Histórico</button>
@@ -231,6 +241,84 @@
               </dl>
             </div>
           </div>
+        }
+        @case ('capacidades') {
+          @if (modelo(); as m) {
+            @if (m.nivelDeGestao) {
+              <div class="empty-state" style="padding: var(--s-5);">
+                <div class="empty-state__title">Nível de gestão</div>
+                <p class="empty-state__desc">Perfis e capacidades são das unidades de atendimento; {{ tipos[m.tipo].rotulo.toLowerCase() }} não opera assistência.</p>
+              </div>
+            } @else {
+              <div class="info-grid info-grid--1">
+                <div class="info-block">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Perfis operacionais</h3>
+                    @if (podeEditar() && perfisDisponiveis(m).length) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirPerfil(m)">Adicionar perfil</button> }
+                  </div>
+                  @if (m.perfis.length) {
+                    <ul class="eq-prof" aria-label="Perfis vigentes">
+                      @for (p of m.perfis; track p.uuid) {
+                        <li class="mo-row">
+                          <span><span class="tag tag--info">{{ p.nome }}</span> <span class="cell-sub" style="display: inline;">desde {{ data(p.inicio) }}</span></span>
+                          @if (podeEditar()) { <button type="button" class="link-btn" (click)="abrirEncerrar(m, 'perfil', p.uuid, p.nome)" [attr.aria-label]="'Encerrar ' + p.nome">Encerrar</button> }
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="cell-sub">Nenhum perfil: diga o que esta unidade opera (atenção primária, urgência, internação…).</p>
+                  }
+                </div>
+                <div class="info-block">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Capacidades</h3>
+                    @if (podeEditar() && capacidadesDisponiveis(m).length) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirCapacidade(m)">Adicionar capacidade</button> }
+                  </div>
+                  @for (grupo of gruposDeCapacidades(m); track grupo.nome) {
+                    @if (grupo.capacidades.length || grupo.nome !== 'Transversais') {
+                      <h4 class="mo-grupo">{{ grupo.nome }}</h4>
+                      <ul class="eq-prof" [attr.aria-label]="'Capacidades: ' + grupo.nome">
+                        @for (c of grupo.capacidades; track c.uuid) {
+                          <li class="mo-row">
+                            <span><span class="cell-main">{{ c.nome }}</span><span class="cell-sub">desde {{ data(c.inicio) }}@if (c.observacao) { · {{ c.observacao }} }</span></span>
+                            @if (podeEditar()) { <button type="button" class="link-btn" (click)="abrirEncerrar(m, 'capacidade', c.uuid, c.nome)" [attr.aria-label]="'Encerrar ' + c.nome">Encerrar</button> }
+                          </li>
+                        } @empty {
+                          <li class="cell-sub">Nenhuma capacidade deste perfil.</li>
+                        }
+                      </ul>
+                    }
+                  }
+                  @if (!m.capacidades.length && !m.perfis.length) { <p class="cell-sub">Inclua um perfil para ver as capacidades do grupo; as transversais (acolhimento, demanda espontânea) valem em qualquer unidade.</p> }
+                </div>
+                @if (m.perfisEncerrados.length || m.capacidadesEncerradas.length) {
+                  <div class="info-block">
+                    <label class="switch" for="f-mostrarEncerradas">
+                      <span><b style="font-weight: 500;">Mostrar encerrados</b><span class="cell-sub">{{ m.perfisEncerrados.length }} perfil(is) e {{ m.capacidadesEncerradas.length }} capacidade(s) no histórico</span></span>
+                      <input type="checkbox" role="switch" id="f-mostrarEncerradas" [checked]="mostrarEncerradas()" (change)="mostrarEncerradas.set($any($event.target).checked)" />
+                    </label>
+                    @if (mostrarEncerradas()) {
+                      <ul class="eq-prof" aria-label="Encerrados">
+                        @for (p of m.perfisEncerrados; track p.uuid) {
+                          <li><span class="cell-main">{{ p.nome }} <span class="cell-sub" style="display: inline;">· perfil</span></span><span class="cell-sub">{{ data(p.inicio) }} a {{ data(p.fim) }}@if (p.motivoFim) { · {{ p.motivoFim }} }</span></li>
+                        }
+                        @for (c of m.capacidadesEncerradas; track c.uuid) {
+                          <li><span class="cell-main">{{ c.nome }} <span class="cell-sub" style="display: inline;">· capacidade</span></span><span class="cell-sub">{{ data(c.inicio) }} a {{ data(c.fim) }}@if (c.motivoFim) { · {{ c.motivoFim }} }</span></li>
+                        }
+                      </ul>
+                    }
+                  </div>
+                }
+                <div class="info-block">
+                  <a class="btn btn--ghost btn--sm" routerLink="/administrativo/modelo-operacional">Ver catálogo de perfis e capacidades</a>
+                </div>
+              </div>
+            }
+          } @else if (modelo() === null) {
+            <p class="cell-sub" style="padding: var(--s-5);">Não foi possível carregar os perfis e as capacidades da unidade.</p>
+          } @else {
+            <p class="cell-sub" style="padding: var(--s-5);">Carregando os perfis e as capacidades…</p>
+          }
         }
         @case ('equipes') {
           <div class="teams">
@@ -481,6 +569,100 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Salvar horário' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('perfil') {
+        <form class="dw-form" [formGroup]="perfilForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Unidade</dt><dd>{{ g.modelo.unidadeNome }}</dd></div></dl>
+            <div class="dw-field">
+              <label for="f-perfilId">Perfil operacional <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-perfilId" formControlName="perfilId" [attr.aria-invalid]="!!erroCampo('perfilId')" aria-describedby="e-perfilId">
+                <option value="">Escolha…</option>
+                @for (p of perfisDisponiveis(g.modelo); track p.uuid) { <option [value]="p.uuid">{{ p.nome }}</option> }
+              </select>
+              @if (erroCampo('perfilId')) { <p class="dw-err" id="e-perfilId">{{ erroCampo('perfilId') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-inicioPerfil">Desde<span class="opt">opcional</span></label>
+              <input id="f-inicioPerfil" type="date" formControlName="inicio" [attr.aria-invalid]="!!erroCampo('inicioPerfil')" aria-describedby="h-inicioPerfil e-inicioPerfil" />
+              <p class="dw-hint" id="h-inicioPerfil">Sem data, hoje.</p>
+              @if (erroCampo('inicioPerfil')) { <p class="dw-err" id="e-inicioPerfil">{{ erroCampo('inicioPerfil') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Incluir perfil' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('capacidade') {
+        <form class="dw-form" [formGroup]="capacidadeForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Unidade</dt><dd>{{ g.modelo.unidadeNome }}</dd></div></dl>
+            <div class="dw-field">
+              <label for="f-capacidadeId">Capacidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-capacidadeId" formControlName="capacidadeId" [attr.aria-invalid]="!!erroCampo('capacidadeId')" aria-describedby="h-capacidadeId e-capacidadeId">
+                <option value="">Escolha…</option>
+                @for (grupo of capacidadesDisponiveis(g.modelo); track grupo.nome) {
+                  <optgroup [label]="grupo.nome">
+                    @for (c of grupo.itens; track c.uuid) { <option [value]="c.uuid">{{ c.nome }}</option> }
+                  </optgroup>
+                }
+              </select>
+              <p class="dw-hint" id="h-capacidadeId">Só as transversais e as dos perfis que a unidade tem.</p>
+              @if (erroCampo('capacidadeId')) { <p class="dw-err" id="e-capacidadeId">{{ erroCampo('capacidadeId') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-inicioCapacidade">Desde<span class="opt">opcional</span></label>
+                <input id="f-inicioCapacidade" type="date" formControlName="inicio" [attr.aria-invalid]="!!erroCampo('inicioCapacidade')" aria-describedby="e-inicioCapacidade" />
+                @if (erroCampo('inicioCapacidade')) { <p class="dw-err" id="e-inicioCapacidade">{{ erroCampo('inicioCapacidade') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-observacao">Observação<span class="opt">opcional</span></label>
+                <input id="f-observacao" type="text" maxlength="300" formControlName="observacao" placeholder="Ex.: portaria de habilitação" />
+              </div>
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Incluir capacidade' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('encerrar') {
+        <form class="dw-form" [formGroup]="encerrarForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Unidade</dt><dd>{{ g.modelo.unidadeNome }}</dd></div>
+              <div><dt>{{ g.alvo === 'perfil' ? 'Perfil' : 'Capacidade' }}</dt><dd>{{ g.nome }}</dd></div>
+            </dl>
+            @if (g.alvo === 'perfil') {
+              <div class="box box--info"><div>O perfil só encerra depois das capacidades do grupo dele. O registro fica no histórico.</div></div>
+            }
+            <div class="dw-field">
+              <label for="f-motivoFim">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-motivoFim" type="text" maxlength="500" formControlName="motivo" placeholder="Ex.: reclassificação da habilitação" [attr.aria-invalid]="!!erroCampo('motivoFim')" aria-describedby="e-motivoFim" />
+              @if (erroCampo('motivoFim')) { <p class="dw-err" id="e-motivoFim">{{ erroCampo('motivoFim') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-fim">Encerrado em<span class="opt">opcional</span></label>
+              <input id="f-fim" type="date" formControlName="fim" [attr.aria-invalid]="!!erroCampo('fim')" aria-describedby="h-fim e-fim" />
+              <p class="dw-hint" id="h-fim">Sem data, hoje.</p>
+              @if (erroCampo('fim')) { <p class="dw-err" id="e-fim">{{ erroCampo('fim') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Encerrar' }}</button>
           </footer>
         </form>
       }
