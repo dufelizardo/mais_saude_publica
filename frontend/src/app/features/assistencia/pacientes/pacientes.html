@@ -384,6 +384,14 @@
                   <span>
                     <span [class]="'tag tag--' + situacoesAcompanhamento[a.situacao].classe">{{ situacoesAcompanhamento[a.situacao].rotulo }}</span>
                     @if (a.atrasado) { <span class="tag tag--warn">Atrasado</span> }
+                    @if (pode('PROGRAMA.ACOMPANHAR')) {
+                      @if (a.situacao === 'FALTOSO') {
+                        <button type="button" class="link-btn" (click)="abrirSituacaoPrograma(a, 'ATIVO')" [attr.aria-label]="'Voltar a ativo: ' + a.programaNome">Voltar a ativo</button>
+                      } @else {
+                        <button type="button" class="link-btn" (click)="abrirSituacaoPrograma(a, 'FALTOSO')" [attr.aria-label]="'Marcar faltoso: ' + a.programaNome">Marcar faltoso</button>
+                      }
+                      <button type="button" class="link-btn" (click)="abrirSaidaPrograma(a)" [attr.aria-label]="'Registrar saída: ' + a.programaNome">Saída</button>
+                    }
                   </span>
                 </li>
               }
@@ -408,7 +416,7 @@
           </ul>
         }
         @if (pode('PROGRAMA.ACOMPANHAR')) {
-          <a routerLink="/assistencia/programas" class="btn btn--ghost btn--block" style="margin-top: var(--s-3);">Inscrever ou gerenciar em Programas de Saúde</a>
+          <a routerLink="/assistencia/programas" class="btn btn--ghost btn--block" style="margin-top: var(--s-3);">Inscrever em um programa</a>
         }
         </div>
       }
@@ -573,4 +581,59 @@
       </div>
     </form>
   </app-modal>
+}
+
+<!-- ── Faltoso e saída pela aba Programas (ADR-0119) ─────────────────────────────────────────────── -->
+@if (gavetaPrograma(); as g) {
+  <app-drawer [titulo]="g.tipo === 'saida' ? 'Registrar saída do programa' : (g.nova === 'FALTOSO' ? 'Marcar como faltoso' : 'Voltar a ativo')" (fechar)="fecharGavetaPrograma()">
+    <form class="dw-form" (submit)="$event.preventDefault(); salvarGavetaPrograma()" novalidate>
+      <div class="dw-body">
+        @if (erroPrograma()) { <div class="box box--err" role="alert"><strong>{{ erroPrograma() }}</strong></div> }
+        <dl class="ro">
+          <div><dt>Paciente</dt><dd>{{ g.acompanhamento.pacienteNome }}</dd></div>
+          <div><dt>Programa</dt><dd>{{ g.acompanhamento.programaNome }} · {{ g.acompanhamento.unidadeNome }}</dd></div>
+        </dl>
+        @if (g.tipo === 'situacao') {
+          <div class="dw-field" [formGroup]="situacaoProgramaForm">
+            <label for="f-motivoSituacaoPrograma">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+            <input id="f-motivoSituacaoPrograma" type="text" maxlength="500" formControlName="motivo" [attr.aria-invalid]="!!erroCampoPrograma('motivoSituacaoPrograma')" aria-describedby="e-motivoSituacaoPrograma" />
+            @if (erroCampoPrograma('motivoSituacaoPrograma')) { <p class="dw-err" id="e-motivoSituacaoPrograma">{{ erroCampoPrograma('motivoSituacaoPrograma') }}</p> }
+          </div>
+        } @else {
+          <div [formGroup]="saidaProgramaForm">
+            <div class="dw-field">
+              <label for="f-motivoSaidaPrograma">Motivo da saída <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-motivoSaidaPrograma" formControlName="motivoSaida" [attr.aria-invalid]="!!erroCampoPrograma('motivoSaidaPrograma')" aria-describedby="e-motivoSaidaPrograma">
+                <option value="">Escolha…</option>
+                @for (m of listaMotivosSaida; track m) { <option [value]="m">{{ motivosSaida[m] }}</option> }
+              </select>
+              @if (erroCampoPrograma('motivoSaidaPrograma')) { <p class="dw-err" id="e-motivoSaidaPrograma">{{ erroCampoPrograma('motivoSaidaPrograma') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-observacaoSaidaPrograma">Descrição <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-observacaoSaidaPrograma" type="text" maxlength="500" formControlName="observacao" [attr.aria-invalid]="!!erroCampoPrograma('observacaoSaidaPrograma')" aria-describedby="e-observacaoSaidaPrograma" />
+              @if (erroCampoPrograma('observacaoSaidaPrograma')) { <p class="dw-err" id="e-observacaoSaidaPrograma">{{ erroCampoPrograma('observacaoSaidaPrograma') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-fimSaidaPrograma">Data da saída<span class="opt">opcional</span></label>
+              <input id="f-fimSaidaPrograma" type="date" formControlName="fim" [attr.aria-invalid]="!!erroCampoPrograma('fimSaidaPrograma')" aria-describedby="e-fimSaidaPrograma" />
+              @if (erroCampoPrograma('fimSaidaPrograma')) { <p class="dw-err" id="e-fimSaidaPrograma">{{ erroCampoPrograma('fimSaidaPrograma') }}</p> }
+            </div>
+            <div class="box box--info"><div>Alta conclui o acompanhamento; os outros motivos encerram. O registro fica no histórico.</div></div>
+          </div>
+        }
+      </div>
+      <footer class="dw-foot">
+        <button type="button" class="btn btn--ghost" (click)="fecharGavetaPrograma()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="salvandoPrograma()">{{ salvandoPrograma() ? 'Salvando…' : (g.tipo === 'saida' ? 'Registrar saída' : (g.nova === 'FALTOSO' ? 'Marcar faltoso' : 'Voltar a ativo')) }}</button>
+      </footer>
+    </form>
+  </app-drawer>
+}
+
+@if (avisoPrograma(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
 }

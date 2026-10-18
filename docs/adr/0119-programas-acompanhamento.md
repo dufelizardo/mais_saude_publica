@@ -89,8 +89,10 @@ Aceita e implementada (fatia P2 da [ADR-0109](./0109-programas-acoes-e-linhas-de
      - o filtro por programa, para quem acompanha;
      - "Programas vinculados" no resumo e a aba Programas, com vigentes, histórico e restritos;
      - o bloqueio por vínculo usa o mesmo "Acessar com justificativa" do prontuário.
-     - **A inscrição e as ações ficam na tela Programas de Saúde**, para onde a aba leva. Assim não há duas gavetas
-       iguais em duas telas.
+     - **A inscrição fica na tela Programas de Saúde**, para onde a aba leva ("Inscrever em um programa").
+     - **Adendo (2026-10-18):** a aba Programas também tem Marcar faltoso, Voltar a ativo e Registrar saída em cada
+       programa vigente, para quem tem `PROGRAMA.ACOMPANHAR`. São os mesmos endpoints e as mesmas regras (motivo
+       obrigatório; saída com motivo e descrição). Quem atende o paciente não precisa trocar de tela.
    - **Equipes:** "Programas vinculados", com os programas em que a equipe participa e os inscritos e faltosos dela.
 
 ## Consequências
@@ -125,4 +127,4 @@ Aceita e implementada (fatia P2 da [ADR-0109](./0109-programas-acoes-e-linhas-de
     (resolvido num banco limpo, como na ADR-0118).
 - **Robot de API** (`test/programas/acompanhamento`): 7 casos.
 - **Robot de interface** (`UI_programas.robot`): mais 3 casos — inscrever pela tela, marcar faltoso e a aba Programas
-  em Pacientes.
+  em Pacientes. O adendo soma o CT-010, marcar faltoso pela aba do paciente.

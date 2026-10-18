@@ -180,3 +180,28 @@ UI Programas - Aba Programas Do Paciente
     Wait For Elements State    css=[aria-label="Programas vigentes do paciente"] >> text=${nome} >> nth=0    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Faltoso Pela Aba Do Paciente
+    [Documentation]    Na aba Programas de Pacientes, marca o programa como faltoso com motivo.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${acompanhamento}    ${programa}    ${paciente}    ${unidade}=    Seed Acompanhamento
+    ${detalhe}=    GET Programa    ${programa}
+    ${nome}=    Set Variable    ${detalhe.json()}[resumo][nome]
+    ${inscritos}=    GET Inscritos Do Programa    ${programa}
+    ${nomePaciente}=    Set Variable    ${inscritos.json()}[lista][0][pacienteNome]
+    UI Pacientes - Abrir Tela
+    UI Pacientes - Buscar    ${nomePaciente}
+    UI Pacientes - Abrir Paciente    ${nomePaciente}
+    Clicar Aba    Programas
+    Clicar Botao    Marcar faltoso: ${nome}
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    motivoSituacaoPrograma
+    Should Contain    ${erro}    motivo
+    Preencher Campo Da Gaveta    motivoSituacaoPrograma    Não veio às últimas consultas
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Marcado como faltoso
+    ${depois}=    GET Inscritos Do Programa    ${programa}
+    Should Be Equal As Integers    ${depois.json()}[faltosos]    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
