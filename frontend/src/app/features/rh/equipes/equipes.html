@@ -222,8 +222,21 @@
           <p class="cell-sub">Sem reunião cadastrada.</p>
         }
 
-        <h3 class="section-h" style="margin-top: var(--s-4);">Programas e indicadores do território</h3>
-        <p class="cell-sub">Em breve: programas vinculados, famílias adscritas, cobertura vacinal, gestantes, HiperDia e visitas domiciliares dependem do cadastro do território.</p>
+        <h3 class="section-h" style="margin-top: var(--s-4);">Programas vinculados</h3>
+        @if (programasDaEquipe(); as ps) {
+          @for (pg of ps; track pg.uuid) {
+            <div class="ind-row">
+              <span class="ic" aria-hidden="true">♥</span>
+              <div><div class="lbl">{{ pg.nome }}</div><div class="sub">{{ pg.categoriaNome }}@if (pg.faltosos) { · {{ pg.faltosos }} faltoso(s) }@if (pg.atrasados) { · {{ pg.atrasados }} atrasado(s) }</div></div>
+              <span class="v">{{ pg.inscritos }}<small style="font-size: 0.65rem; color: var(--ink-500);"> inscr.</small></span>
+            </div>
+          } @empty {
+            <p class="cell-sub">A equipe não participa de nenhum programa. A participação é cadastrada em Programas de Saúde.</p>
+          }
+        } @else {
+          <p class="cell-sub">Carregando os programas…</p>
+        }
+        <p class="cell-sub" style="margin-top: 6px;">Famílias adscritas, cobertura vacinal e visitas domiciliares: em breve, com o cadastro do território.</p>
       </aside>
     </div>
   </section>

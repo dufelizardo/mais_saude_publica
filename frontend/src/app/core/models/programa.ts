@@ -35,6 +35,10 @@ export interface ProgramaResumoDto {
   condicoes: string[];
   publico: string;
   unidades: number;
+  /** Acompanhamentos vigentes (ADR-0119); com filtro de unidade ou equipe, só os dela. */
+  inscritos: number;
+  faltosos: number;
+  atrasados: number;
 }
 
 export interface ParticipacaoProgramaDto {
@@ -97,6 +101,83 @@ export const PERIODICIDADES: Record<PeriodicidadeAcompanhamento, string> = {
   SEMESTRAL: 'Semestral',
   ANUAL: 'Anual',
   SEM_PERIODICIDADE: 'Sem periodicidade',
+};
+
+// ── Acompanhamento programático (ADR-0119) ─────────────────────────────────────────────────────
+
+export type SituacaoAcompanhamento = 'ATIVO' | 'FALTOSO' | 'CONCLUIDO' | 'ENCERRADO';
+export type MotivoSaidaAcompanhamento = 'ALTA' | 'TRANSFERENCIA' | 'MUDANCA_DE_MUNICIPIO' | 'ABANDONO' | 'OBITO' | 'OUTRO';
+
+export interface EventoAcompanhamentoDto {
+  ocorridoEm: string;
+  situacaoAnterior?: SituacaoAcompanhamento | null;
+  situacao: SituacaoAcompanhamento;
+  motivo?: string | null;
+  registradoPorCpf?: string | null;
+}
+
+export interface AcompanhamentoDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  pacienteIdade?: number | null;
+  programaId: string;
+  programaCodigo: string;
+  programaNome: string;
+  sensivel: boolean;
+  unidadeId: string;
+  unidadeNome: string;
+  equipeId?: string | null;
+  equipeNome?: string | null;
+  profissionalMatricula?: string | null;
+  profissionalNome?: string | null;
+  inicio: string;
+  fim?: string | null;
+  situacao: SituacaoAcompanhamento;
+  motivoSaida?: MotivoSaidaAcompanhamento | null;
+  observacaoSaida?: string | null;
+  ultimoAtendimento?: string | null;
+  atrasado: boolean;
+  avisoPublico?: string | null;
+  eventos: EventoAcompanhamentoDto[];
+}
+
+export interface AcompanhamentosDoPacienteDto {
+  pacienteId: string;
+  acesso?: { base: string; descricao?: string; expiraEm?: string | null } | null;
+  vigentes: AcompanhamentoDto[];
+  encerrados: AcompanhamentoDto[];
+  restritos: number;
+}
+
+export interface InscritosProgramaDto {
+  programaId: string;
+  inscritos: number;
+  faltosos: number;
+  atrasados: number;
+  lista: AcompanhamentoDto[];
+}
+
+export interface ResumoAcompanhamentosDto {
+  pacientes: number;
+  acompanhamentos: number;
+  faltosos: number;
+}
+
+export const SITUACOES_ACOMPANHAMENTO: Record<SituacaoAcompanhamento, { rotulo: string; classe: string }> = {
+  ATIVO: { rotulo: 'Ativo', classe: 'ok' },
+  FALTOSO: { rotulo: 'Faltoso', classe: 'alert' },
+  CONCLUIDO: { rotulo: 'Concluído', classe: 'info' },
+  ENCERRADO: { rotulo: 'Encerrado', classe: 'muted' },
+};
+
+export const MOTIVOS_SAIDA: Record<MotivoSaidaAcompanhamento, string> = {
+  ALTA: 'Alta (metas atingidas)',
+  TRANSFERENCIA: 'Transferência para outra unidade',
+  MUDANCA_DE_MUNICIPIO: 'Mudança de município',
+  ABANDONO: 'Abandono',
+  OBITO: 'Óbito',
+  OUTRO: 'Outro',
 };
 
 /** Cor do ícone do cartão pela posição da categoria (o protótipo usa uma cor por eixo). */

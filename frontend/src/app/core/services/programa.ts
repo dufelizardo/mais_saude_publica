@@ -1,7 +1,19 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CategoriaProgramaDto, ProgramaDto, ProgramaPublicoDto, ProgramaRequestDto, ProgramaResumoDto } from '../models/programa';
+import {
+  AcompanhamentoDto,
+  AcompanhamentosDoPacienteDto,
+  CategoriaProgramaDto,
+  InscritosProgramaDto,
+  MotivoSaidaAcompanhamento,
+  ProgramaDto,
+  ProgramaPublicoDto,
+  ProgramaRequestDto,
+  ProgramaResumoDto,
+  ResumoAcompanhamentosDto,
+  SituacaoAcompanhamento,
+} from '../models/programa';
 
 /** Programas de saúde (ADR-0118): catálogo, categorias, participação das unidades e a consulta pública. */
 @Injectable({ providedIn: 'root' })
@@ -21,10 +33,11 @@ export class ProgramaService {
     return this.http.patch<CategoriaProgramaDto>(`${this.api}/categoria-programa/${uuid}`, dto);
   }
 
-  listar(filtro: { categoriaId?: string; unidadeId?: string } = {}): Observable<ProgramaResumoDto[]> {
+  listar(filtro: { categoriaId?: string; unidadeId?: string; equipeId?: string } = {}): Observable<ProgramaResumoDto[]> {
     let params = new HttpParams();
     if (filtro.categoriaId) params = params.set('categoriaId', filtro.categoriaId);
     if (filtro.unidadeId) params = params.set('unidadeId', filtro.unidadeId);
+    if (filtro.equipeId) params = params.set('equipeId', filtro.equipeId);
     return this.http.get<ProgramaResumoDto[]>(`${this.api}/programa/`, { params });
   }
 
@@ -47,6 +60,35 @@ export class ProgramaService {
 
   encerrarParticipacao(programaId: string, participacaoId: string, motivo: string, fim?: string | null): Observable<ProgramaDto> {
     return this.http.post<ProgramaDto>(`${this.api}/programa/${programaId}/participacao/${participacaoId}/encerramento`, { motivo, fim: fim || null });
+  }
+
+  // ── Acompanhamento programático (ADR-0119) ───────────────────────────────────────────────────
+
+  inscrever(programaId: string, dto: { pacienteId: string; unidadeId: string; equipeId?: string | null; profissionalMatricula?: string | null; inicio?: string | null }): Observable<AcompanhamentoDto> {
+    return this.http.post<AcompanhamentoDto>(`${this.api}/programa/${programaId}/acompanhamento`, dto);
+  }
+
+  inscritos(programaId: string, filtro: { unidadeId?: string; situacao?: SituacaoAcompanhamento } = {}): Observable<InscritosProgramaDto> {
+    let params = new HttpParams();
+    if (filtro.unidadeId) params = params.set('unidadeId', filtro.unidadeId);
+    if (filtro.situacao) params = params.set('situacao', filtro.situacao);
+    return this.http.get<InscritosProgramaDto>(`${this.api}/programa/${programaId}/acompanhamentos`, { params });
+  }
+
+  mudarSituacao(acompanhamentoId: string, situacao: 'ATIVO' | 'FALTOSO', motivo: string): Observable<AcompanhamentoDto> {
+    return this.http.post<AcompanhamentoDto>(`${this.api}/acompanhamento/${acompanhamentoId}/situacao`, { situacao, motivo });
+  }
+
+  encerrarAcompanhamento(acompanhamentoId: string, motivoSaida: MotivoSaidaAcompanhamento, observacao: string, fim?: string | null): Observable<AcompanhamentoDto> {
+    return this.http.post<AcompanhamentoDto>(`${this.api}/acompanhamento/${acompanhamentoId}/encerramento`, { motivoSaida, observacao, fim: fim || null });
+  }
+
+  doPaciente(pacienteId: string): Observable<AcompanhamentosDoPacienteDto> {
+    return this.http.get<AcompanhamentosDoPacienteDto>(`${this.api}/paciente/${pacienteId}/programas`);
+  }
+
+  resumoAcompanhamentos(): Observable<ResumoAcompanhamentosDto> {
+    return this.http.get<ResumoAcompanhamentosDto>(`${this.api}/acompanhamento/resumo`);
   }
 
   publico(): Observable<ProgramaPublicoDto[]> {

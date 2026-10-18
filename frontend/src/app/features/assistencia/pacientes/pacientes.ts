@@ -18,6 +18,8 @@ import { AgendamentoResponseDto } from '../../../core/models/agendamento';
 import { AgendamentoService } from '../../../core/services/agendamento';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import { AuthService } from '../../../core/services/auth';
+import { AcompanhamentosDoPacienteDto, ProgramaResumoDto, SITUACOES_ACOMPANHAMENTO, MOTIVOS_SAIDA } from '../../../core/models/programa';
+import { ProgramaService } from '../../../core/services/programa';
 
 type AbaDetalhe = 'resumo' | 'historico' | 'programas' | 'vacinacao' | 'anexos';
 type ModoVisualizacao = 'lista' | 'cartoes';
@@ -43,6 +45,20 @@ export class Pacientes {
   private readonly cepService = inject(CepService);
   private readonly prontuarioService = inject(ProntuarioService);
   private readonly agendamentoService = inject(AgendamentoService);
+  private readonly programaService = inject(ProgramaService);
+
+  // ── Programas de saúde do paciente (ADR-0119) ──────────────────────────────────────────────
+  protected readonly situacoesAcompanhamento = SITUACOES_ACOMPANHAMENTO;
+  protected readonly motivosSaida = MOTIVOS_SAIDA;
+  /** `undefined` carregando, `null` sem acesso ou bloqueado (ver programasBloqueio). */
+  protected readonly programasDoPaciente = signal<AcompanhamentosDoPacienteDto | null | undefined>(undefined);
+  protected readonly programasBloqueio = signal<string | null>(null);
+  /** Pacientes em algum programa, na rede (agregado). */
+  protected readonly emProgramas = signal<number | null>(null);
+  protected readonly catalogoProgramas = signal<ProgramaResumoDto[]>([]);
+  protected readonly filtroPrograma = signal('');
+  /** Ids dos pacientes do programa filtrado (no escopo de quem lê); `null` sem filtro. */
+  private readonly noPrograma = signal<Set<string> | null>(null);
 
   protected readonly sexos: Sexo[] = ['MASCULINO', 'FEMININO', 'IGNORADO'];
   protected readonly modoVisualizacao = signal<ModoVisualizacao>('lista');
@@ -156,6 +172,10 @@ export class Pacientes {
       if (faixa !== 'TODAS' && this.faixaEtaria(p.dataNascimento) !== faixa) {
         return false;
       }
+      const noPrograma = this.noPrograma();
+      if (noPrograma && !noPrograma.has(p.uuid)) {
+        return false;
+      }
       return true;
     });
   });
@@ -205,6 +225,10 @@ export class Pacientes {
       .subscribe((cep) => this.buscarCep(cep));
 
     this.carregarPacientes();
+    this.programaService.resumoAcompanhamentos().subscribe({ next: (r) => this.emProgramas.set(r.pacientes), error: () => this.emProgramas.set(null) });
+    if (this.pode('PROGRAMA.ACOMPANHAR')) {
+      this.programaService.listar().subscribe({ next: (ps) => this.catalogoProgramas.set(ps.filter((p) => p.inscritos > 0 || p.situacao === 'ATIVO')), error: () => this.catalogoProgramas.set([]) });
+    }
   }
 
   protected pode(...permissoes: string[]): boolean {
@@ -251,6 +275,52 @@ export class Pacientes {
   private carregarDetalhe(pacienteId: string): void {
     this.carregarProntuario(pacienteId);
     this.carregarAgendamentos(pacienteId);
+    this.carregarProgramas(pacienteId);
+  }
+
+  /** Programas do paciente com as regras do prontuário (vínculo ou acesso justificado; leitura auditada). */
+  protected carregarProgramas(pacienteId: string): void {
+    this.programasBloqueio.set(null);
+    if (!this.pode('PRONTUARIO.CONSULTAR', 'PROGRAMA.ACOMPANHAR')) {
+      this.programasDoPaciente.set(null);
+      return;
+    }
+    this.programasDoPaciente.set(undefined);
+    this.programaService.doPaciente(pacienteId).subscribe({
+      next: (r) => {
+        if (this.selecionado()?.uuid === pacienteId) this.programasDoPaciente.set(r);
+      },
+      error: (e) => {
+        if (this.selecionado()?.uuid !== pacienteId) return;
+        this.programasDoPaciente.set(null);
+        this.programasBloqueio.set(semVinculo(e));
+      },
+    });
+  }
+
+  /** Filtro por programa: só os pacientes acompanhados nele, nas unidades do acesso de quem lê. */
+  protected filtrarPorPrograma(programaId: string): void {
+    this.filtroPrograma.set(programaId);
+    if (!programaId) {
+      this.noPrograma.set(null);
+      return;
+    }
+    this.programaService.inscritos(programaId).subscribe({
+      next: (r) => this.noPrograma.set(new Set(r.lista.map((a) => a.pacienteId))),
+      error: () => this.noPrograma.set(new Set()),
+    });
+  }
+
+  /** Depois de um acesso justificado: libera o prontuário e os programas. */
+  protected liberado(pacienteId: string): void {
+    this.carregarProntuario(pacienteId);
+    this.carregarProgramas(pacienteId);
+  }
+
+  protected dataCurta(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    const [y, m, d] = iso.slice(0, 10).split('-');
+    return `${d}/${m}/${y}`;
   }
 
   private carregarAgendamentos(pacienteId: string): void {
