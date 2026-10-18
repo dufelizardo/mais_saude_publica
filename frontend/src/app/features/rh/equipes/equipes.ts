@@ -1,3 +1,5 @@
+import { ProgramaResumoDto } from '../../../core/models/programa';
+import { ProgramaService } from '../../../core/services/programa';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -32,7 +34,7 @@ type Gaveta =
 /**
  * Equipes (ADR-0104), pelo protótipo `Equipes.html`: indicadores, abas por tipo com contagem, a grade de cartões de equipe
  * e o detalhe da equipe escolhida (membros, microáreas, reunião, apoio), com as gavetas de equipe, membro e saída. O
- * território, os programas e os indicadores assistenciais ficam "Em breve". O backend é a ADR-0103.
+ * território e os indicadores assistenciais ficam "Em breve"; os programas vinculados vêm da ADR-0119. O backend é a ADR-0103.
  */
 @Component({
   selector: 'app-equipes',
@@ -47,6 +49,7 @@ export class Equipes {
   private readonly equipeService = inject(EquipeService);
   private readonly profissionalService = inject(ProfissionalService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
+  private readonly programaService = inject(ProgramaService);
 
   protected readonly tipos = TIPOS_EQUIPE;
   protected readonly listaTipos = Object.keys(TIPOS_EQUIPE) as TipoEquipe[];
@@ -63,6 +66,8 @@ export class Equipes {
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly selecionadaId = signal<string | null>(null);
   protected readonly detalhe = signal<EquipeResponseDto | null>(null);
+  /** Programas de saúde em que a equipe participa, com os inscritos dela (ADR-0119). */
+  protected readonly programasDaEquipe = signal<ProgramaResumoDto[] | null>(null);
 
   protected readonly tipoAba = signal<TipoEquipe | ''>('');
   protected readonly busca = signal('');
@@ -179,6 +184,8 @@ export class Equipes {
     this.selecionadaId.set(uuid);
     if (atualizarUrl) this.router.navigate([], { queryParams: { equipe: uuid }, queryParamsHandling: 'merge', replaceUrl: true });
     this.equipeService.buscar(uuid).subscribe({ next: (d) => this.detalhe.set(d), error: () => this.detalhe.set(null) });
+    this.programasDaEquipe.set(null);
+    this.programaService.listar({ equipeId: uuid }).subscribe({ next: (ps) => this.programasDaEquipe.set(ps), error: () => this.programasDaEquipe.set([]) });
   }
 
   protected teclaNoCartao(event: KeyboardEvent, uuid: string): void {

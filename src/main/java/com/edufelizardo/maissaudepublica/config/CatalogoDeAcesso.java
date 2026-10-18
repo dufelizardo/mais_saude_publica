@@ -55,6 +55,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("ADMINISTRATIVO.GERENCIAR", new Def("Registrar e alterar o setor administrativo", OPERACAO));
         // Catálogo de programas de saúde (ADR-0118); o acompanhamento de pacientes (PROGRAMA.ACOMPANHAR) vem na P2.
         PERMISSOES.put("PROGRAMA.GERENCIAR", new Def("Cadastrar programas de saúde, categorias e as unidades que os oferecem", OPERACAO));
+        // Acompanhamento programático (ADR-0119): estar num programa revela diagnóstico.
+        PERMISSOES.put("PROGRAMA.ACOMPANHAR", new Def("Inscrever pacientes em programas de saúde e acompanhar a situação", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("PACIENTE.CONSULTAR", new Def("Consultar cadastro de pacientes", OPERACAO));
         PERMISSOES.put("PACIENTE.CADASTRAR", new Def("Cadastrar e atualizar pacientes", OPERACAO));
         PERMISSOES.put("AGENDAMENTO.GERENCIAR", new Def("Agendar, confirmar e cancelar", OPERACAO));
@@ -118,7 +120,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "Consulta, prescrição e procedimentos.",
                 List.of("PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
                         "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
-                        "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA")));
+                        "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA",
+                        // Acompanhamento programático (ADR-0119).
+                        "PROGRAMA.ACOMPANHAR")));
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
                 "Regula a fila da Central de Regulação do Acesso no seu escopo (ADR-0087).",
                 List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR")));
@@ -129,13 +133,15 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         // Pedido de exames em protocolos da atenção básica e do pré-natal (ADR-0093).
                         "EXAME.SOLICITAR", "LABORATORIO.COLETAR",
                         // Admissão, troca de leito e liberação depois da higienização (ADR-0098); a alta é do médico.
-                        "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR")));
+                        "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR",
+                        // Acompanhamento programático (ADR-0119).
+                        "PROGRAMA.ACOMPANHAR")));
         PAPEIS.put("COORDENADOR_DE_ENFERMAGEM", new PapelPadrao("Coordenador de enfermagem",
                 "O que o enfermeiro faz, mais retificar registro clínico de outro profissional.",
                 List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
                         "EVOLUCAO.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
                         "REGISTRO_CLINICO.RETIFICAR_DE_OUTROS", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR",
-                        "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR")));
+                        "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR")));
         PAPEIS.put("TECNICO_DE_ENFERMAGEM", new PapelPadrao("Técnico de enfermagem",
                 "Procedimentos e medicação. Sem classificação de risco nem evolução (COFEN 661/2021).",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",

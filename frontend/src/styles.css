@@ -1774,3 +1774,13 @@ button.shift--off { text-align: center; }
 .prg-grid { margin-top: 0; }
 .prg-card { cursor: default; gap: 8px; }
 .prg-card__publico, .prg-card__onde { font-size: var(--fs-sm, 0.875rem); color: var(--ink-700); }
+/* Acompanhamento programático (ADR-0119): indicadores do programa e busca de paciente na gaveta. */
+.prg-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); padding: var(--s-4) var(--s-5) 0; }
+@media (max-width: 720px) { .prg-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.prg-kpis .kpi { background: var(--ink-50); border: 1px solid var(--ink-200); border-radius: 10px; padding: var(--s-3) var(--s-4); }
+.prg-kpis .kpi__val { font-size: 1.375rem; font-weight: 600; line-height: 1.1; }
+.prg-kpis .kpi__val--alert { color: var(--alert); }
+.prg-kpis .kpi__val--warn { color: var(--warn); }
+.prg-kpis .kpi__val--soon { font-size: 1rem; font-weight: 500; color: var(--ink-500); }
+.prg-kpis .kpi__lbl { color: var(--ink-500); font-size: 0.72rem; margin-top: 4px; }
+.prg-busca { border: 1px solid var(--ink-200); border-radius: 8px; padding: 6px 10px; margin-top: 6px; max-height: 220px; overflow: auto; }

@@ -1,7 +1,7 @@
 <header class="page-head">
   <div>
     <h1>Programas de Saúde</h1>
-    <p>{{ indicadores().ativos }} programa(s) ativo(s) · {{ indicadores().categorias }} categoria(s) · acompanhamento de pacientes em breve</p>
+    <p>{{ indicadores().ativos }} programa(s) ativo(s) · {{ indicadores().inscritos }} acompanhamento(s) · {{ indicadores().categorias }} categoria(s)</p>
   </div>
   <div class="page-actions">
     <button type="button" class="btn btn--ghost" disabled title="Em breve: depende dos indicadores (P6)">Exportar relatório</button>
@@ -35,17 +35,17 @@
   <div class="stat">
     <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
     <div>
-      <div class="stat__lbl">Pacientes acompanhados</div>
-      <div class="stat__val stat__val--soon">Em breve</div>
-      <div class="stat__sub">com o acompanhamento programático</div>
+      <div class="stat__lbl">Acompanhamentos vigentes</div>
+      <div class="stat__val mono">{{ indicadores().inscritos }}</div>
+      <div class="stat__sub">pacientes nos programas</div>
     </div>
   </div>
   <div class="stat">
     <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line></svg></span>
     <div>
-      <div class="stat__lbl">Cobertura e busca ativa</div>
-      <div class="stat__val stat__val--soon">Em breve</div>
-      <div class="stat__sub">indicadores programáticos</div>
+      <div class="stat__lbl">Faltosos / atrasados</div>
+      <div class="stat__val mono">{{ indicadores().faltosos }}<small class="stat__unid"> / {{ indicadores().atrasados }}</small></div>
+      <div class="stat__sub">pedem busca ativa</div>
     </div>
   </div>
 </section>
@@ -89,12 +89,13 @@
       </span>
       <span class="pg__counts">
         <span class="pg__count"><span class="lbl" style="display: block;">Unidades</span><span class="val mono" style="display: block;">{{ p.unidades }}</span></span>
-        <span class="pg__count"><span class="lbl" style="display: block;">Pacientes</span><span class="val soon" style="display: block;">Em breve</span></span>
+        <span class="pg__count"><span class="lbl" style="display: block;">Pacientes</span><span class="val mono" style="display: block;">{{ p.inscritos }}</span></span>
       </span>
       <span class="pg__foot">
         <span>
           @if (p.situacao !== 'ATIVO') { <span [class]="'tag tag--' + situacoes[p.situacao].classe">{{ situacoes[p.situacao].rotulo }}</span> }
           @if (p.sensivel) { <span class="tag tag--purple">Sensível</span> }
+          @if (p.faltosos) { <span class="tag tag--alert">{{ p.faltosos }} faltoso(s)</span> }
         </span>
         @if (p.coordenadorNome) {
           <span class="resp"><span class="who__avatar" aria-hidden="true" style="width: 18px; height: 18px; font-size: 0.55rem;">{{ iniciais(p.coordenadorNome) }}</span> {{ p.coordenadorNome }}</span>
@@ -124,10 +125,20 @@
         </div>
       </div>
       <div class="detail-head__actions">
-        <button type="button" class="btn btn--ghost btn--sm" disabled title="Em breve: acompanhamento programático (P2)">Ver pacientes</button>
+        @if (podeAcompanhar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="verPacientes()">Ver pacientes</button> }
         @if (podeGerenciar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirPrograma(d)">Editar</button> }
-        <button type="button" class="btn btn--sm" disabled title="Em breve: acompanhamento programático (P2)">Inscrever paciente</button>
+        @if (podeAcompanhar()) {
+          <button type="button" class="btn btn--sm" (click)="abrirInscrever(d)" [disabled]="d.resumo.situacao !== 'ATIVO' || !d.participacoes.length"
+            [title]="d.resumo.situacao !== 'ATIVO' ? 'O programa não está ativo' : !d.participacoes.length ? 'Inclua uma unidade participante antes' : ''">Inscrever paciente</button>
+        }
       </div>
+    </div>
+
+    <div class="detail__kpis prg-kpis">
+      <div class="kpi"><div class="kpi__val mono">{{ d.resumo.inscritos }}</div><div class="kpi__lbl">Pacientes inscritos</div></div>
+      <div class="kpi"><div class="kpi__val mono" [class.kpi__val--alert]="d.resumo.faltosos > 0">{{ d.resumo.faltosos }}</div><div class="kpi__lbl">Faltosos</div></div>
+      <div class="kpi"><div class="kpi__val mono" [class.kpi__val--warn]="d.resumo.atrasados > 0">{{ d.resumo.atrasados }}</div><div class="kpi__lbl">Atrasados · sem atendimento no período</div></div>
+      <div class="kpi"><div class="kpi__val kpi__val--soon">Em breve</div><div class="kpi__lbl">Controle clínico (PA, HbA1c…)</div></div>
     </div>
 
     <div class="info-grid info-grid--1">
@@ -177,9 +188,59 @@
       </div>
       <div class="info-block">
         <h3>Indicadores do programa</h3>
-        <p class="cell-sub">Em breve: inscritos, faltosos e busca ativa (acompanhamento, P2); cobertura, controle e evolução de 12 meses (indicadores, P6).</p>
+        <p class="cell-sub">"Atrasado" é sugestão: o paciente está sem atendimento na unidade responsável há mais tempo que a periodicidade ({{ periodicidades[d.resumo.periodicidade].toLowerCase() }}). Cobertura, controle clínico e evolução de 12 meses vêm com os indicadores (P6).</p>
       </div>
     </div>
+
+    @if (podeAcompanhar()) {
+      <div class="info-block" id="inscritos" style="margin: 0 var(--s-5) var(--s-5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <h3>Pacientes acompanhados <span class="cell-sub" style="display: inline;">· nas unidades do seu acesso</span></h3>
+          <div class="seg" role="group" aria-label="Filtro dos acompanhados">
+            <button type="button" [attr.aria-pressed]="situacaoInscritos() === ''" (click)="situacaoInscritos.set('')">Todos</button>
+            <button type="button" [attr.aria-pressed]="situacaoInscritos() === 'FALTOSO'" (click)="situacaoInscritos.set('FALTOSO')">Faltosos</button>
+            <button type="button" [attr.aria-pressed]="situacaoInscritos() === 'ATRASADO'" (click)="situacaoInscritos.set('ATRASADO')">Atrasados</button>
+          </div>
+        </div>
+        @if (inscritos() === undefined) {
+          <p class="cell-sub">Carregando os acompanhados…</p>
+        } @else if (inscritos() === null) {
+          <p class="cell-sub">Não foi possível carregar os acompanhados.</p>
+        } @else if (!inscritosFiltrados().length) {
+          <p class="cell-sub">Nenhum paciente {{ situacaoInscritos() ? 'nesta situação' : 'acompanhado neste programa' }} nas unidades do seu acesso.</p>
+        } @else {
+          <div class="tbl-wrap">
+            <table aria-label="Pacientes acompanhados">
+              <thead><tr><th scope="col">Paciente</th><th scope="col">Unidade</th><th scope="col">Desde</th><th scope="col">Último atendimento</th><th scope="col">Situação</th><th scope="col" class="num">Ações</th></tr></thead>
+              <tbody>
+                @for (a of inscritosFiltrados(); track a.uuid) {
+                  <tr>
+                    <td><span class="cell-main">{{ a.pacienteNome }}</span>@if (a.pacienteIdade != null) { <span class="cell-sub">{{ a.pacienteIdade }} anos</span> }</td>
+                    <td>{{ a.unidadeNome }}@if (a.equipeNome) { <span class="cell-sub">{{ a.equipeNome }}</span> }</td>
+                    <td class="mono">{{ data(a.inicio) }}</td>
+                    <td class="mono">{{ data(a.ultimoAtendimento) }}</td>
+                    <td>
+                      <span [class]="'tag tag--' + situacoesAcompanhamento[a.situacao].classe">{{ situacoesAcompanhamento[a.situacao].rotulo }}</span>
+                      @if (a.atrasado) { <span class="tag tag--warn">Atrasado</span> }
+                    </td>
+                    <td class="num">
+                      <div class="row-actions">
+                        @if (a.situacao === 'FALTOSO') {
+                          <button type="button" class="btn btn--ghost btn--sm" (click)="abrirSituacao(a, 'ATIVO')" [attr.aria-label]="'Voltar a ativo: ' + a.pacienteNome">Voltar a ativo</button>
+                        } @else {
+                          <button type="button" class="btn btn--ghost btn--sm" (click)="abrirSituacao(a, 'FALTOSO')" [attr.aria-label]="'Marcar faltoso: ' + a.pacienteNome">Marcar faltoso</button>
+                        }
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="abrirSaida(a)" [attr.aria-label]="'Registrar saída: ' + a.pacienteNome">Saída</button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
   </section>
 }
 
@@ -361,6 +422,130 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Encerrar' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('inscrever') {
+        <form class="dw-form" [formGroup]="inscreverForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Programa</dt><dd>{{ g.programa.resumo.nome }}</dd></div>
+              <div><dt>Público-alvo</dt><dd>{{ g.programa.resumo.publico }}</dd></div>
+            </dl>
+            <div class="dw-field">
+              <label for="f-buscaPaciente">Paciente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-buscaPaciente" type="search" autocomplete="off" placeholder="Nome, CPF ou cartão SUS" [value]="buscaPaciente()"
+                (input)="buscaPaciente.set($any($event.target).value); inscreverForm.patchValue({ pacienteId: '' })"
+                [attr.aria-invalid]="!!erroCampo('buscaPaciente')" aria-describedby="e-buscaPaciente" />
+              @if (erroCampo('buscaPaciente')) { <p class="dw-err" id="e-buscaPaciente">{{ erroCampo('buscaPaciente') }}</p> }
+              @if (!inscreverForm.controls.pacienteId.value && pacientesEncontrados().length) {
+                <ul class="eq-prof prg-busca" role="listbox" aria-label="Pacientes encontrados">
+                  @for (p of pacientesEncontrados(); track p.uuid) {
+                    <li><button type="button" class="link-btn" role="option" (click)="escolherPaciente(p)">{{ p.nome }}</button><span class="cell-sub">CPF {{ p.cpf }}@if (p.dataNascimento) { · nasc. {{ data(p.dataNascimento) }} }</span></li>
+                  }
+                </ul>
+              }
+              @if (pacienteEscolhido(); as pe) { <p class="dw-hint">Escolhido: <strong>{{ pe.nome }}</strong></p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-unidadeResponsavel">Unidade responsável <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-unidadeResponsavel" [value]="inscreverForm.controls.unidadeId.value" (change)="escolherUnidadeResponsavel($any($event.target).value)"
+                  [attr.aria-invalid]="!!erroCampo('unidadeResponsavel')" aria-describedby="h-unidadeResponsavel e-unidadeResponsavel">
+                  <option value="">Escolha…</option>
+                  @for (u of unidadesDoPrograma(g.programa); track u.unidadeId) { <option [value]="u.unidadeId">{{ u.unidadeNome }}</option> }
+                </select>
+                <p class="dw-hint" id="h-unidadeResponsavel">Só as unidades que oferecem o programa.</p>
+                @if (erroCampo('unidadeResponsavel')) { <p class="dw-err" id="e-unidadeResponsavel">{{ erroCampo('unidadeResponsavel') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-equipeAcompanhamento">Equipe<span class="opt">opcional</span></label>
+                <select id="f-equipeAcompanhamento" formControlName="equipeId">
+                  <option value="">Sem equipe</option>
+                  @for (e of equipesDaUnidade(); track e.uuid) { <option [value]="e.uuid">{{ e.nome }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-profissionalResponsavel">Profissional responsável (matrícula)<span class="opt">opcional</span></label>
+                <input id="f-profissionalResponsavel" type="text" list="dl-profissionais" formControlName="profissionalMatricula" autocomplete="off" />
+              </div>
+              <div class="dw-field">
+                <label for="f-inicioAcompanhamento">Desde<span class="opt">opcional</span></label>
+                <input id="f-inicioAcompanhamento" type="date" formControlName="inicio" [attr.aria-invalid]="!!erroCampo('inicioAcompanhamento')" aria-describedby="e-inicioAcompanhamento" />
+                @if (erroCampo('inicioAcompanhamento')) { <p class="dw-err" id="e-inicioAcompanhamento">{{ erroCampo('inicioAcompanhamento') }}</p> }
+              </div>
+            </div>
+            <datalist id="dl-profissionais">
+              @for (p of profissionais(); track p.matricula) { <option [value]="p.matricula">{{ p.nome }}</option> }
+            </datalist>
+            @if (g.programa.resumo.sensivel) {
+              <div class="box box--info"><div>Programa sensível: só quem acompanha nesta unidade vai ver que o paciente participa.</div></div>
+            }
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Inscrever' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('situacao') {
+        <form class="dw-form" [formGroup]="situacaoAcompForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Paciente</dt><dd>{{ g.acompanhamento.pacienteNome }}</dd></div>
+              <div><dt>Programa</dt><dd>{{ g.acompanhamento.programaNome }}</dd></div>
+            </dl>
+            <div class="dw-field">
+              <label for="f-motivoSituacao">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-motivoSituacao" type="text" maxlength="500" formControlName="motivo" [placeholder]="g.nova === 'FALTOSO' ? 'Ex.: não compareceu às 3 últimas consultas' : 'Ex.: voltou às consultas'"
+                [attr.aria-invalid]="!!erroCampo('motivoSituacao')" aria-describedby="e-motivoSituacao" />
+              @if (erroCampo('motivoSituacao')) { <p class="dw-err" id="e-motivoSituacao">{{ erroCampo('motivoSituacao') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.nova === 'FALTOSO' ? 'Marcar faltoso' : 'Voltar a ativo') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('saida') {
+        <form class="dw-form" [formGroup]="saidaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Paciente</dt><dd>{{ g.acompanhamento.pacienteNome }}</dd></div>
+              <div><dt>Programa</dt><dd>{{ g.acompanhamento.programaNome }}</dd></div>
+            </dl>
+            <div class="dw-field">
+              <label for="f-motivoSaida">Motivo da saída <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-motivoSaida" formControlName="motivoSaida" [attr.aria-invalid]="!!erroCampo('motivoSaida')" aria-describedby="e-motivoSaida">
+                <option value="">Escolha…</option>
+                @for (m of listaMotivosSaida; track m) { <option [value]="m">{{ motivosSaida[m] }}</option> }
+              </select>
+              @if (erroCampo('motivoSaida')) { <p class="dw-err" id="e-motivoSaida">{{ erroCampo('motivoSaida') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-observacaoSaida">Descrição <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-observacaoSaida" type="text" maxlength="500" formControlName="observacao" [attr.aria-invalid]="!!erroCampo('observacaoSaida')" aria-describedby="e-observacaoSaida" />
+              @if (erroCampo('observacaoSaida')) { <p class="dw-err" id="e-observacaoSaida">{{ erroCampo('observacaoSaida') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-fimAcompanhamento">Data da saída<span class="opt">opcional</span></label>
+              <input id="f-fimAcompanhamento" type="date" formControlName="fim" [attr.aria-invalid]="!!erroCampo('fimAcompanhamento')" aria-describedby="e-fimAcompanhamento" />
+              @if (erroCampo('fimAcompanhamento')) { <p class="dw-err" id="e-fimAcompanhamento">{{ erroCampo('fimAcompanhamento') }}</p> }
+            </div>
+            <div class="box box--info"><div>Alta conclui o acompanhamento; os outros motivos encerram. O registro fica no histórico do paciente.</div></div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar saída' }}</button>
           </footer>
         </form>
       }

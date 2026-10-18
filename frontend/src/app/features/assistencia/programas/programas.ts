@@ -9,9 +9,14 @@ import { ErrorResponseDto, ProfissionalResponseDto } from '../../../core/models/
 import {
   ABRANGENCIAS,
   AbrangenciaPrograma,
+  AcompanhamentoDto,
   CORES_CATEGORIA,
   CategoriaProgramaDto,
+  InscritosProgramaDto,
+  MOTIVOS_SAIDA,
+  MotivoSaidaAcompanhamento,
   PERIODICIDADES,
+  SITUACOES_ACOMPANHAMENTO,
   PeriodicidadeAcompanhamento,
   ProgramaDto,
   ProgramaRequestDto,
@@ -21,6 +26,8 @@ import {
   SituacaoPrograma,
 } from '../../../core/models/programa';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
+import { PacienteResponseDto } from '../../../core/models/paciente';
+import { PacienteService } from '../../../core/services/paciente';
 import { AuthService } from '../../../core/services/auth';
 import { EquipeService } from '../../../core/services/equipe';
 import { ProfissionalService } from '../../../core/services/profissional';
@@ -32,12 +39,16 @@ type Gaveta =
   | { tipo: 'programa'; item: ProgramaDto | null }
   | { tipo: 'participacao'; programa: ProgramaDto }
   | { tipo: 'encerrar'; programa: ProgramaDto; participacaoId: string; nome: string }
-  | { tipo: 'categorias' };
+  | { tipo: 'categorias' }
+  | { tipo: 'inscrever'; programa: ProgramaDto }
+  | { tipo: 'situacao'; acompanhamento: AcompanhamentoDto; nova: 'ATIVO' | 'FALTOSO' }
+  | { tipo: 'saida'; acompanhamento: AcompanhamentoDto };
 
 /**
  * Programas de Saúde (ADR-0118), pelo protótipo `Programas.html`: indicadores, pílulas por categoria, a grade de cartões e
- * o detalhe do programa escolhido, com o público-alvo e as unidades e equipes que o oferecem. O catálogo não tem dado de
- * paciente: inscritos, faltosos e os indicadores clínicos ficam "Em breve" (P2 e P6).
+ * o detalhe do programa escolhido, com o público-alvo e as unidades e equipes que o oferecem. Com o acompanhamento
+ * (ADR-0119): os números de inscritos, faltosos e atrasados, a inscrição de pacientes e a lista de acompanhados do escopo,
+ * com faltoso e saída. Os indicadores clínicos ficam "Em breve" (P6).
  */
 @Component({
   selector: 'app-programas',
@@ -53,6 +64,7 @@ export class Programas {
   private readonly unidadeService = inject(UnidadeSaudeService);
   private readonly profissionalService = inject(ProfissionalService);
   private readonly equipeService = inject(EquipeService);
+  private readonly pacienteService = inject(PacienteService);
 
   protected readonly abrangencias = ABRANGENCIAS;
   protected readonly listaAbrangencias = Object.keys(ABRANGENCIAS) as AbrangenciaPrograma[];
@@ -60,6 +72,9 @@ export class Programas {
   protected readonly listaSituacoes = Object.keys(SITUACOES_PROGRAMA) as SituacaoPrograma[];
   protected readonly periodicidades = PERIODICIDADES;
   protected readonly listaPeriodicidades = Object.keys(PERIODICIDADES) as PeriodicidadeAcompanhamento[];
+  protected readonly situacoesAcompanhamento = SITUACOES_ACOMPANHAMENTO;
+  protected readonly motivosSaida = MOTIVOS_SAIDA;
+  protected readonly listaMotivosSaida = Object.keys(MOTIVOS_SAIDA) as MotivoSaidaAcompanhamento[];
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
   protected readonly categorias = signal<CategoriaProgramaDto[]>([]);
@@ -75,6 +90,12 @@ export class Programas {
   protected readonly selecionadoId = signal<string | null>(null);
   protected readonly detalhe = signal<ProgramaDto | null>(null);
   protected readonly mostrarEncerradas = signal(false);
+  /** Inscritos do programa no escopo (ADR-0119): `undefined` carregando, `null` sem acesso. */
+  protected readonly inscritos = signal<InscritosProgramaDto | null | undefined>(undefined);
+  /** Filtro da lista de acompanhados: todos, só faltosos ou só atrasados. */
+  protected readonly situacaoInscritos = signal<'' | 'FALTOSO' | 'ATRASADO'>('');
+  protected readonly pacientes = signal<PacienteResponseDto[]>([]);
+  protected readonly buscaPaciente = signal('');
 
   protected readonly gaveta = signal<Gaveta | null>(null);
   protected readonly equipesDaUnidade = signal<EquipeResumoDto[]>([]);
@@ -107,10 +128,30 @@ export class Programas {
   protected readonly participacaoForm = this.fb.nonNullable.group({ unidadeId: [''], equipeId: [''], inicio: [''] });
   protected readonly encerrarForm = this.fb.nonNullable.group({ motivo: [''], fim: [''] });
   protected readonly categoriaForm = this.fb.nonNullable.group({ nome: [''], ordem: [''], ativa: [true] });
+  protected readonly inscreverForm = this.fb.nonNullable.group({ pacienteId: [''], unidadeId: [''], equipeId: [''], profissionalMatricula: [''], inicio: [''] });
+  protected readonly situacaoAcompForm = this.fb.nonNullable.group({ motivo: [''] });
+  protected readonly saidaForm = this.fb.nonNullable.group({ motivoSaida: ['' as MotivoSaidaAcompanhamento | ''], observacao: [''], fim: [''] });
 
   // ── Derivados ──────────────────────────────────────────────────────────────────────────────
 
   protected readonly podeGerenciar = computed(() => this.pode('PROGRAMA.GERENCIAR'));
+  protected readonly podeAcompanhar = computed(() => this.pode('PROGRAMA.ACOMPANHAR'));
+
+  /** Inscritos filtrados pela situação escolhida na lista. */
+  protected readonly inscritosFiltrados = computed(() => {
+    const s = this.situacaoInscritos();
+    return (this.inscritos()?.lista ?? []).filter((a) => !s || (s === 'FALTOSO' ? a.situacao === 'FALTOSO' : a.atrasado));
+  });
+
+  /** Pacientes para a gaveta de inscrição: busca por nome, CPF ou CNS, até 8. */
+  protected readonly pacientesEncontrados = computed(() => {
+    const q = this.buscaPaciente().trim().toLowerCase();
+    if (q.length < 2) return [];
+    const digitos = q.replace(/\D/g, '');
+    return this.pacientes()
+      .filter((p) => p.ativo && (p.nome.toLowerCase().includes(q) || (digitos.length >= 3 && ((p.cpf ?? '').includes(digitos) || (p.cartaoSus ?? '').includes(digitos)))))
+      .slice(0, 8);
+  });
 
   protected readonly filtrados = computed(() => {
     const q = this.busca().trim().toLowerCase();
@@ -129,6 +170,9 @@ export class Programas {
       categorias: this.categorias().filter((c) => c.ativa).length,
       comUnidades: ativos.filter((p) => p.unidades > 0).length,
       sensiveis: ps.filter((p) => p.sensivel).length,
+      inscritos: ps.reduce((s, p) => s + (p.inscritos ?? 0), 0),
+      faltosos: ps.reduce((s, p) => s + (p.faltosos ?? 0), 0),
+      atrasados: ps.reduce((s, p) => s + (p.atrasados ?? 0), 0),
     };
   });
 
@@ -178,6 +222,22 @@ export class Programas {
     this.mostrarEncerradas.set(false);
     if (atualizarUrl) this.router.navigate([], { queryParams: { programa: uuid }, queryParamsHandling: 'merge', replaceUrl: true });
     this.service.buscar(uuid).subscribe({ next: (d) => this.detalhe.set(d), error: () => this.detalhe.set(null) });
+    this.carregarInscritos(uuid);
+  }
+
+  /** Lista de acompanhados do programa, só para quem acompanha (PROGRAMA.ACOMPANHAR); leitura auditada. */
+  protected carregarInscritos(programaId: string): void {
+    this.situacaoInscritos.set('');
+    if (!this.podeAcompanhar()) {
+      this.inscritos.set(null);
+      return;
+    }
+    this.inscritos.set(undefined);
+    this.service.inscritos(programaId).subscribe({ next: (r) => this.inscritos.set(r), error: () => this.inscritos.set(null) });
+  }
+
+  protected verPacientes(): void {
+    document.getElementById('inscritos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   // ── Apresentação ───────────────────────────────────────────────────────────────────────────
@@ -221,6 +281,9 @@ export class Programas {
     if (g.tipo === 'programa') return g.item ? 'Editar programa' : 'Novo programa';
     if (g.tipo === 'participacao') return 'Incluir unidade participante';
     if (g.tipo === 'encerrar') return 'Encerrar participação';
+    if (g.tipo === 'inscrever') return 'Inscrever paciente';
+    if (g.tipo === 'situacao') return g.nova === 'FALTOSO' ? 'Marcar como faltoso' : 'Voltar a ativo';
+    if (g.tipo === 'saida') return 'Registrar saída do programa';
     return 'Categorias de programas';
   }
 
@@ -275,6 +338,53 @@ export class Programas {
     this.abrir({ tipo: 'encerrar', programa, participacaoId, nome });
   }
 
+  protected abrirInscrever(programa: ProgramaDto): void {
+    const unidades = this.unidadesDoPrograma(programa);
+    this.inscreverForm.reset({ pacienteId: '', unidadeId: unidades.length === 1 ? unidades[0].unidadeId : '', equipeId: '', profissionalMatricula: '', inicio: '' });
+    this.buscaPaciente.set('');
+    if (!this.pacientes().length) this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
+    if (unidades.length === 1) this.carregarEquipes(unidades[0].unidadeId);
+    else this.equipesDaUnidade.set([]);
+    this.abrir({ tipo: 'inscrever', programa });
+  }
+
+  /** As unidades que oferecem o programa (uma por unidade, mesmo com várias equipes). */
+  protected unidadesDoPrograma(programa: ProgramaDto): { unidadeId: string; unidadeNome: string }[] {
+    const vistos = new Set<string>();
+    return programa.participacoes.filter((x) => !vistos.has(x.unidadeId) && vistos.add(x.unidadeId)).map((x) => ({ unidadeId: x.unidadeId, unidadeNome: x.unidadeNome }));
+  }
+
+  protected escolherPaciente(p: PacienteResponseDto): void {
+    this.inscreverForm.patchValue({ pacienteId: p.uuid });
+    this.buscaPaciente.set(p.nome);
+  }
+
+  protected pacienteEscolhido(): PacienteResponseDto | undefined {
+    const id = this.inscreverForm.controls.pacienteId.value;
+    return id ? this.pacientes().find((p) => p.uuid === id) : undefined;
+  }
+
+  protected escolherUnidadeResponsavel(uuid: string): void {
+    this.inscreverForm.patchValue({ unidadeId: uuid, equipeId: '' });
+    this.carregarEquipes(uuid);
+  }
+
+  private carregarEquipes(uuid: string): void {
+    this.equipesDaUnidade.set([]);
+    if (!uuid) return;
+    this.equipeService.listar(uuid).pipe(catchError(() => of(null))).subscribe((r) => this.equipesDaUnidade.set(r?.lista.filter((e) => e.ativa) ?? []));
+  }
+
+  protected abrirSituacao(acompanhamento: AcompanhamentoDto, nova: 'ATIVO' | 'FALTOSO'): void {
+    this.situacaoAcompForm.reset({ motivo: '' });
+    this.abrir({ tipo: 'situacao', acompanhamento, nova });
+  }
+
+  protected abrirSaida(acompanhamento: AcompanhamentoDto): void {
+    this.saidaForm.reset({ motivoSaida: '', observacao: '', fim: '' });
+    this.abrir({ tipo: 'saida', acompanhamento });
+  }
+
   protected abrirCategorias(): void {
     this.editarCategoria(null);
     this.abrir({ tipo: 'categorias' });
@@ -297,6 +407,9 @@ export class Programas {
     if (g.tipo === 'programa') this.salvarPrograma(g.item);
     else if (g.tipo === 'participacao') this.salvarParticipacao(g.programa);
     else if (g.tipo === 'encerrar') this.salvarEncerramento(g);
+    else if (g.tipo === 'inscrever') this.salvarInscricao(g.programa);
+    else if (g.tipo === 'situacao') this.salvarSituacaoAcompanhamento(g);
+    else if (g.tipo === 'saida') this.salvarSaida(g.acompanhamento);
     else this.salvarCategoria();
   }
 
@@ -375,6 +488,72 @@ export class Programas {
     if (!this.validar(erros)) return;
     this.enviar(this.service.encerrarParticipacao(g.programa.resumo.uuid, g.participacaoId, v.motivo.trim(), v.fim),
       'Participação encerrada', `${g.programa.resumo.nome} · ${g.nome}`, false);
+  }
+
+  private salvarInscricao(programa: ProgramaDto): void {
+    const v = this.inscreverForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.pacienteId) erros['buscaPaciente'] = 'Escolha o paciente na lista.';
+    if (!v.unidadeId) erros['unidadeResponsavel'] = 'Escolha a unidade responsável.';
+    if (v.inicio && v.inicio > this.hojeIso()) erros['inicioAcompanhamento'] = 'O início não pode ser no futuro.';
+    if (!this.validar(erros)) return;
+    this.submitting.set(true);
+    this.service.inscrever(programa.resumo.uuid, {
+      pacienteId: v.pacienteId, unidadeId: v.unidadeId, equipeId: v.equipeId || null,
+      profissionalMatricula: v.profissionalMatricula.trim() || null, inicio: v.inicio || null,
+    }).subscribe({
+      next: (a) => {
+        this.submitting.set(false);
+        this.fecharGaveta();
+        this.mostrarToast('Paciente inscrito', a.avisoPublico ? `${a.pacienteNome} · atenção: ${a.avisoPublico}` : `${a.pacienteNome} · ${a.programaNome}`);
+        this.atualizarDepoisDoAcompanhamento(programa.resumo.uuid);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.erroApi.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível inscrever. Tente novamente.');
+      },
+    });
+  }
+
+  private salvarSituacaoAcompanhamento(g: Extract<Gaveta, { tipo: 'situacao' }>): void {
+    const v = this.situacaoAcompForm.getRawValue();
+    if (!this.validar(v.motivo.trim() ? {} : { motivoSituacao: 'Informe o motivo.' })) return;
+    this.enviarAcompanhamento(this.service.mudarSituacao(g.acompanhamento.uuid, g.nova, v.motivo.trim()),
+      g.nova === 'FALTOSO' ? 'Marcado como faltoso' : 'Voltou a ativo', g.acompanhamento);
+  }
+
+  private salvarSaida(a: AcompanhamentoDto): void {
+    const v = this.saidaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.motivoSaida) erros['motivoSaida'] = 'Escolha o motivo.';
+    if (!v.observacao.trim()) erros['observacaoSaida'] = 'Descreva a saída.';
+    if (v.fim && v.fim > this.hojeIso()) erros['fimAcompanhamento'] = 'A saída não pode ser no futuro.';
+    if (!this.validar(erros)) return;
+    this.enviarAcompanhamento(this.service.encerrarAcompanhamento(a.uuid, v.motivoSaida as MotivoSaidaAcompanhamento, v.observacao.trim(), v.fim),
+      'Saída registrada', a);
+  }
+
+  private enviarAcompanhamento(req: Observable<AcompanhamentoDto>, titulo: string, a: AcompanhamentoDto): void {
+    this.submitting.set(true);
+    req.subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.fecharGaveta();
+        this.mostrarToast(titulo, `${a.pacienteNome} · ${a.programaNome}`);
+        this.atualizarDepoisDoAcompanhamento(a.programaId);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.erroApi.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar. Tente novamente.');
+      },
+    });
+  }
+
+  /** Recarrega os números do catálogo, o detalhe e a lista de inscritos. */
+  private atualizarDepoisDoAcompanhamento(programaId: string): void {
+    this.service.listar({ unidadeId: this.unidadeFiltro() || undefined }).subscribe((ps) => this.programas.set(ps));
+    this.service.buscar(programaId).subscribe((d) => this.detalhe.set(d));
+    this.service.inscritos(programaId).subscribe({ next: (r) => this.inscritos.set(r), error: () => this.inscritos.set(null) });
   }
 
   private salvarCategoria(): void {
