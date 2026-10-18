@@ -30,7 +30,7 @@ com auditoria, controle de acesso por perfil e unidade, e testes de aceitação 
 | **Administrativo** | setores, modelo administrativo, processos, necessidades de pessoal |
 | **Assistência** | pacientes, atendimentos, agenda do profissional, prontuário, enfermagem (triagem, evolução, medicação), farmácia (estoque, dispensação, transferência) |
 | **Rede assistencial** | laboratório (pedido, coleta, resultado, laudo), regulação do acesso (fila, agendamento, contrarreferência), leitos e internação |
-| **Programas de saúde** | catálogo de programas com público-alvo e unidades participantes; consulta pública na página inicial |
+| **Programas de saúde** | catálogo de programas com público-alvo e unidades participantes; acompanhamento dos pacientes (inscrição, faltosos, atrasados); consulta pública na página inicial |
 | **Governança** | login (JWT), perfis e permissões com escopo por unidade, trilha de auditoria com alertas, prontuário por vínculo assistencial |
 
 O que cada domínio já tem e o que falta está em [`docs/STATUS-DOS-DOMINIOS.md`](docs/STATUS-DOS-DOMINIOS.md). O mapa

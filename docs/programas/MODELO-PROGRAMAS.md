@@ -1,8 +1,9 @@
 # Modelo do domínio Programas, Ações e Linhas de Cuidado
 
-**Data:** 2026-10-07 (criado) · 2026-10-17 (P1 implementada)
+**Data:** 2026-10-07 (criado) · 2026-10-17 (P1 implementada) · 2026-10-18 (P2 implementada)
 **Status:** desenho aprovado na [ADR-0109](../adr/0109-programas-acoes-e-linhas-de-cuidado.md). **A P1 (catálogo)
-está implementada** na [ADR-0118](../adr/0118-programas-catalogo.md); P2 a P6 vêm depois (seção 12).
+e a P2 (acompanhamento) estão implementadas** nas ADRs [0118](../adr/0118-programas-catalogo.md) e
+[0119](../adr/0119-programas-acompanhamento.md); P3 a P6 vêm depois (seção 12).
 
 Este documento detalha o domínio: os conceitos e por que ficam separados, as entidades, o acompanhamento do cidadão,
 o dado sensível, como o protótipo `Programas.html` se encaixa nas fatias e onde o domínio liga com o que já existe.

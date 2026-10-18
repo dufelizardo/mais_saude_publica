@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-17
+- **Atualizado em:** 2026-10-18
 - **Release em produção:** v1.6.0
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -48,7 +48,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | 📐 | fatias F1 a F4 |
-| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | fatias P2 a P6 |
+| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | fatias P3 a P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 📐 | fatias V1 a V5 |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
@@ -68,7 +68,8 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| P2 | 22 Programas | acompanhamento do paciente no programa; aba Programas e filtro em Pacientes |
+| P4 | 22 Programas | ações programáticas ligadas ao atendimento; busca ativa; programa na Agenda |
+| SM1 | 26 Saúde Mental | acolhimento, avaliação e acompanhamento em saúde mental (sobre o acompanhamento da P2) |
 | P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
 | F1 | 21 Território | backend do território (área, microárea, GeoJSON) |
 | V1 | 23 Vigilância | agravos, notificação, investigação |
@@ -82,7 +83,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 MO1 ✅ ──► SB4 (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
-P1 ✅ ──► P2 ──► SM1 (acompanhamento em saúde mental) · P4 · P6
+P1 ✅ ──► P2 ✅ ──► SM1 (acompanhamento em saúde mental) · P4 · P6
 P1 ✅ ──► P3 ──► C2 (campanha de comunicação)
 P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 
@@ -437,9 +438,13 @@ C1 ──► C2 · C4 · C5
   programas), público-alvo como dado (idade, sexo, gestante, CID-10/CIAP-2), coordenação, marca de sensível,
   unidades e equipes participantes como histórico, permissão `PROGRAMA.GERENCIAR`; tela Programas de Saúde pelo
   protótipo e consulta pública na landing page (`/api/v1/publico/programa`, sem login).
+- [x] **P2 · Acompanhamento** ([ADR-0119](./adr/0119-programas-acompanhamento.md)): inscrever, faltoso, saída e reinscrição como histórico; atrasado
+  pela periodicidade; programas do paciente com vínculo assistencial e auditoria de leitura; programa sensível
+  restrito; inscritos no escopo; aba Programas, indicador e filtro em Pacientes; programas na equipe; permissão
+  `PROGRAMA.ACOMPANHAR`.
 
 **Falta:**
-- [ ] **P2 · Acompanhamento:** inscrever e encerrar; aba Programas e filtro em Pacientes; programas na equipe.
+- [ ] Lista de elegíveis pelo público-alvo (depois da adscrição, Território F3).
 - [ ] **P3 · Campanhas:** cadastro, tela e consulta pública na landing page (a seção de programas já existe).
 - [ ] **P4 · Ações programáticas:** ações pendentes, busca ativa, programa na marcação da Agenda.
 - [ ] **P5 · Linhas de cuidado.**

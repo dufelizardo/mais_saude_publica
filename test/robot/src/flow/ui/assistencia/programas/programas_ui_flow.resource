@@ -2,6 +2,8 @@
 Library     String
 Resource    ../../../../pom/ui/assistencia/programas/programas_ui_pom.resource
 Resource    ../../../programas/programa/programa_flow.resource
+Resource    ../../../programas/acompanhamento/acompanhamento_flow.resource
+Resource    ../../../../pom/ui/assistencia/pacientes/pacientes_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os programas e as unidades de apoio são criados pela API; a ação sob teste é feita pela tela.
@@ -118,5 +120,63 @@ UI Programas - Consulta Publica Na Landing
     Wait For Elements State    css=#programas article[aria-label="${nome}"]    visible
     ${texto}=    Get Text    css=#programas article[aria-label="${nome}"]
     Should Contain    ${texto}    ${nomeUnidade}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Inscrever Paciente
+    [Documentation]    Inscreve um paciente pela gaveta (busca pelo nome) e o vê na lista de acompanhados.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${programa}    ${nome}    ${unidade}=    Seed Programa Com Unidade
+    ${paciente}    ${cpf}    ${cns}    ${nomePaciente}=    Seed A Paciente
+    UI Programas - Abrir Programa    ${programa}
+    Wait Until Keyword Succeeds    10s    500ms    UI Programas - Detalhe Deve Ser    ${nome}
+    Clicar Botao    Inscrever paciente
+    Preencher Campo Da Gaveta    buscaPaciente    ${nomePaciente}
+    Click    css=app-drawer [role="listbox"] >> role=option[name="${nomePaciente}"]
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Paciente inscrito
+    Wait For Elements State    css=table[aria-label="Pacientes acompanhados"] >> text=${nomePaciente}    visible
+    ${inscritos}=    GET Inscritos Do Programa    ${programa}
+    Should Be Equal As Integers    ${inscritos.json()}[inscritos]    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Marcar Faltoso
+    [Documentation]    Marca o acompanhado como faltoso pela lista, com motivo.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${acompanhamento}    ${programa}    ${paciente}    ${unidade}=    Seed Acompanhamento
+    ${detalhe}=    GET Programa    ${programa}
+    ${nome}=    Set Variable    ${detalhe.json()}[resumo][nome]
+    ${inscritos}=    GET Inscritos Do Programa    ${programa}
+    ${nomePaciente}=    Set Variable    ${inscritos.json()}[lista][0][pacienteNome]
+    UI Programas - Abrir Programa    ${programa}
+    Wait Until Keyword Succeeds    10s    500ms    UI Programas - Detalhe Deve Ser    ${nome}
+    Clicar Botao    Marcar faltoso: ${nomePaciente}
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    motivoSituacao
+    Should Contain    ${erro}    motivo
+    Preencher Campo Da Gaveta    motivoSituacao    Não compareceu às três últimas consultas
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Marcado como faltoso
+    ${depois}=    GET Inscritos Do Programa    ${programa}
+    Should Be Equal As Integers    ${depois.json()}[faltosos]    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Aba Programas Do Paciente
+    [Documentation]    A aba Programas de Pacientes mostra o programa em que o paciente é acompanhado.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${acompanhamento}    ${programa}    ${paciente}    ${unidade}=    Seed Acompanhamento
+    ${detalhe}=    GET Programa    ${programa}
+    ${nome}=    Set Variable    ${detalhe.json()}[resumo][nome]
+    ${inscritos}=    GET Inscritos Do Programa    ${programa}
+    ${nomePaciente}=    Set Variable    ${inscritos.json()}[lista][0][pacienteNome]
+    UI Pacientes - Abrir Tela
+    UI Pacientes - Buscar    ${nomePaciente}
+    UI Pacientes - Abrir Paciente    ${nomePaciente}
+    Clicar Aba    Programas
+    Wait For Elements State    css=[aria-label="Programas vigentes do paciente"] >> text=${nome} >> nth=0    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
