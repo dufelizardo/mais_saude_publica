@@ -46,4 +46,9 @@ public class ProgramaResumoDto implements Serializable {
     private String publico;
     /** Unidades com participação vigente. */
     private long unidades;
+    /** Acompanhamentos vigentes (ADR-0119); com filtro de unidade ou equipe, só os dela. */
+    private long inscritos;
+    private long faltosos;
+    /** Sem atendimento na unidade responsável há mais que a periodicidade. */
+    private long atrasados;
 }

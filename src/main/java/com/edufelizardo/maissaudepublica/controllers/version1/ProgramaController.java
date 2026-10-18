@@ -34,11 +34,12 @@ public class ProgramaController {
     @LiberadoParaAutenticados
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os programas", description = "Por categoria e nome, com o público-alvo e quantas unidades oferecem cada um. Filtros: "
-            + "categoriaId e unidadeId. Aberto a quem está logado: o catálogo não tem dado de paciente.", tags = "Programas de Saúde")
+            + "categoriaId, unidadeId e equipeId (que também restringem a contagem de inscritos). Aberto a quem está logado: o catálogo não tem dado de paciente.", tags = "Programas de Saúde")
     @ApiErrorResponsesListagem
     public ResponseEntity<List<ProgramaResumoDto>> listar(@RequestParam(required = false) UUID categoriaId,
-                                                          @RequestParam(required = false) UUID unidadeId) {
-        return ResponseEntity.ok(service.listar(categoriaId, unidadeId));
+                                                          @RequestParam(required = false) UUID unidadeId,
+                                                          @RequestParam(required = false) UUID equipeId) {
+        return ResponseEntity.ok(service.listar(categoriaId, unidadeId, equipeId));
     }
 
     @LiberadoParaAutenticados

@@ -79,6 +79,9 @@ public class ProgramaService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private AcompanhamentoService acompanhamentoService;
+
     // ── Categorias ─────────────────────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
@@ -122,18 +125,26 @@ public class ProgramaService {
 
     // ── Programas ──────────────────────────────────────────────────────────────────────────────────
 
-    /** O catálogo, por categoria e nome; com unidadeId, só os que a unidade oferece. */
+    /**
+     * O catálogo, por categoria e nome; com unidadeId ou equipeId, só os que a unidade ou a equipe oferece, e os inscritos
+     * contados só dela (ADR-0119). Os números não identificam ninguém.
+     */
     @Transactional(readOnly = true)
-    public List<ProgramaResumoDto> listar(UUID categoriaId, UUID unidadeId) {
+    public List<ProgramaResumoDto> listar(UUID categoriaId, UUID unidadeId, UUID equipeId) {
         List<ParticipacaoPrograma> vigentes = participacaoRepository.findVigentesComUnidade();
         Map<UUID, Long> unidades = unidadesPorPrograma(vigentes);
         Set<UUID> daUnidade = unidadeId == null ? null : vigentes.stream()
                 .filter(p -> p.getUnidade().getUuid().equals(unidadeId)).map(p -> p.getPrograma().getUuid()).collect(Collectors.toSet());
+        Set<UUID> daEquipe = equipeId == null ? null : vigentes.stream()
+                .filter(p -> p.getEquipe() != null && p.getEquipe().getUuid().equals(equipeId)).map(p -> p.getPrograma().getUuid())
+                .collect(Collectors.toSet());
+        Map<UUID, long[]> contagens = acompanhamentoService.contagensPorPrograma(unidadeId, equipeId);
         return programaRepository.findAllComCategoria().stream()
                 .filter(p -> categoriaId == null || p.getCategoria().getUuid().equals(categoriaId))
                 .filter(p -> daUnidade == null || daUnidade.contains(p.getUuid()))
+                .filter(p -> daEquipe == null || daEquipe.contains(p.getUuid()))
                 .sorted(ordem())
-                .map(p -> resumo(p, unidades.getOrDefault(p.getUuid(), 0L)))
+                .map(p -> resumo(p, unidades.getOrDefault(p.getUuid(), 0L), contagens.getOrDefault(p.getUuid(), new long[3])))
                 .toList();
     }
 
@@ -322,7 +333,8 @@ public class ProgramaService {
         List<ProgramaDto.Participacao> encerradas = todas.stream().filter(x -> !x.vigente())
                 .sorted(Comparator.comparing(ParticipacaoPrograma::getFim).reversed()).map(this::participacao).toList();
         long unidades = vigentes.stream().map(ProgramaDto.Participacao::getUnidadeId).distinct().count();
-        return new ProgramaDto(resumo(p, unidades), vigentes, encerradas);
+        return new ProgramaDto(resumo(p, unidades, acompanhamentoService.contagensPorPrograma(null, null)
+                .getOrDefault(p.getUuid(), new long[3])), vigentes, encerradas);
     }
 
     private ProgramaDto.Participacao participacao(ParticipacaoPrograma x) {
@@ -331,13 +343,14 @@ public class ProgramaService {
                 x.getInicio(), x.getFim(), x.getMotivoFim());
     }
 
-    private ProgramaResumoDto resumo(Programa p, long unidades) {
+    /** contagens: inscritos, faltosos e atrasados vigentes (ADR-0119). */
+    private ProgramaResumoDto resumo(Programa p, long unidades, long[] contagens) {
         Profissional c = p.getCoordenador();
         return new ProgramaResumoDto(p.getUuid(), p.getCodigo(), p.getNome(), p.getDescricao(), p.getCategoria().getUuid(),
                 p.getCategoria().getNome(), p.getAbrangencia(), p.getSituacao(), p.getInicio(), p.getFim(),
                 c != null ? c.getMatricula() : null, c != null ? c.getNome() : null, p.getPeriodicidade(), p.isSensivel(),
                 p.getIdadeMinima(), p.getIdadeMaxima(), p.getPublicoSexo(), p.isGestante(), List.copyOf(p.getCondicoes()),
-                publico(p, true), unidades);
+                publico(p, true), unidades, contagens[0], contagens[1], contagens[2]);
     }
 
     /** "Gestantes", "60 anos ou mais", "mulheres de 25 a 64 anos"; com condições, só na tela interna. */
