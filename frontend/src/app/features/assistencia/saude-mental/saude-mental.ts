@@ -1,0 +1,436 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Observable, catchError, of } from 'rxjs';
+import { AcessoDaInterface } from '../../../core/models/auth';
+import { EquipeResumoDto, MembroEquipeDto } from '../../../core/models/equipe';
+import { PacienteResponseDto } from '../../../core/models/paciente';
+import { ErrorResponseDto } from '../../../core/models/profissional';
+import { MOTIVOS_SAIDA, MotivoSaidaAcompanhamento, SITUACOES_ACOMPANHAMENTO } from '../../../core/models/programa';
+import {
+  AcompanhamentoSaudeMentalDto,
+  CasosSaudeMentalDto,
+  DESFECHOS,
+  DESFECHOS_QUE_ACOMPANHAM,
+  DesfechoAcolhimentoSaudeMental,
+  RISCOS,
+  RiscoInicialSaudeMental,
+} from '../../../core/models/saude-mental';
+import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
+import { AuthService } from '../../../core/services/auth';
+import { EquipeService } from '../../../core/services/equipe';
+import { PacienteService } from '../../../core/services/paciente';
+import { semVinculo } from '../../../core/services/prontuario';
+import { SaudeMentalService } from '../../../core/services/saude-mental';
+import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
+import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-prontuario';
+import { Drawer } from '../../../shared/drawer/drawer';
+
+type Gaveta =
+  | { tipo: 'acolher' }
+  | { tipo: 'avaliar'; caso: AcompanhamentoSaudeMentalDto }
+  | { tipo: 'referencia'; caso: AcompanhamentoSaudeMentalDto }
+  | { tipo: 'encerrar'; caso: AcompanhamentoSaudeMentalDto };
+
+type Aba = 'resumo' | 'acolhimentos' | 'avaliacoes' | 'referencia';
+
+/**
+ * Saúde Mental, fatia SM1 (ADR-0120): os casos do escopo (meus, da equipe, todos), o acolhimento que abre o caso, e o
+ * detalhe com acolhimentos, avaliações e a referência como histórico. O conteúdo clínico só aparece com
+ * {@code conteudoLiberado}; sem ele, o caso mostra só quem é a referência e oferece o acesso justificado (ADR-0076).
+ */
+@Component({
+  selector: 'app-saude-mental',
+  imports: [ReactiveFormsModule, Drawer, AcessoProntuario],
+  templateUrl: './saude-mental.html',
+})
+export class SaudeMental {
+  private readonly fb = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly service = inject(SaudeMentalService);
+  private readonly unidadeService = inject(UnidadeSaudeService);
+  private readonly equipeService = inject(EquipeService);
+  private readonly pacienteService = inject(PacienteService);
+
+  protected readonly riscos = RISCOS;
+  protected readonly listaRiscos = Object.keys(RISCOS) as RiscoInicialSaudeMental[];
+  protected readonly desfechos = DESFECHOS;
+  protected readonly listaDesfechos = Object.keys(DESFECHOS) as DesfechoAcolhimentoSaudeMental[];
+  protected readonly situacoes = SITUACOES_ACOMPANHAMENTO;
+  protected readonly motivosSaida = MOTIVOS_SAIDA;
+  protected readonly listaMotivosSaida = Object.keys(MOTIVOS_SAIDA) as MotivoSaidaAcompanhamento[];
+
+  private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
+  protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
+  protected readonly casos = signal<CasosSaudeMentalDto | null>(null);
+  protected readonly carregando = signal(true);
+  protected readonly erro = signal<string | null>(null);
+
+  protected readonly escopo = signal<'' | 'TECNICO' | 'EQUIPE'>('');
+  protected readonly unidadeFiltro = signal('');
+  protected readonly pacienteFiltro = signal<string | null>(null);
+  protected readonly busca = signal('');
+  protected readonly selecionadoId = signal<string | null>(null);
+  protected readonly detalhe = signal<AcompanhamentoSaudeMentalDto | null>(null);
+  protected readonly bloqueio = signal<string | null>(null);
+  protected readonly aba = signal<Aba>('resumo');
+
+  protected readonly pacientes = signal<PacienteResponseDto[]>([]);
+  protected readonly buscaPaciente = signal('');
+  protected readonly equipes = signal<EquipeResumoDto[]>([]);
+  protected readonly membros = signal<MembroEquipeDto[]>([]);
+
+  protected readonly gaveta = signal<Gaveta | null>(null);
+  protected readonly submitting = signal(false);
+  protected readonly erroApi = signal<string | null>(null);
+  protected readonly erros = signal<Record<string, string>>({});
+  protected readonly toast = signal<{ titulo: string; detalhe: string } | null>(null);
+  private toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+  protected readonly acolherForm = this.fb.nonNullable.group({
+    pacienteId: [''],
+    unidadeId: [''],
+    motivoProcura: [''],
+    necessidadeImediata: [''],
+    vulnerabilidade: [''],
+    riscoInicial: ['' as RiscoInicialSaudeMental | ''],
+    desfecho: ['' as DesfechoAcolhimentoSaudeMental | ''],
+    encaminhamentoDestino: [''],
+    equipeId: [''],
+    tecnicoMatricula: [''],
+  });
+  protected readonly avaliacaoForm = this.fb.nonNullable.group({
+    contextoHistoria: [''],
+    aspectosPsicossociais: [''],
+    fatoresRisco: [''],
+    fatoresProtecao: [''],
+    necessidades: [''],
+    cid: [''],
+  });
+  protected readonly referenciaForm = this.fb.nonNullable.group({ equipeId: [''], tecnicoMatricula: [''], motivo: [''] });
+  protected readonly encerrarForm = this.fb.nonNullable.group({ motivoSaida: ['' as MotivoSaidaAcompanhamento | ''], observacao: [''], fim: [''] });
+
+  // ── Derivados ──────────────────────────────────────────────────────────────────────────────
+
+  protected readonly podeAcolher = computed(() => this.pode('SAUDE_MENTAL.ACOLHER'));
+  protected readonly podeAcompanhar = computed(() => this.pode('SAUDE_MENTAL.ACOMPANHAR'));
+
+  protected readonly filtrados = computed(() => {
+    const q = this.busca().trim().toLowerCase();
+    return (this.casos()?.lista ?? []).filter((c) => !q || `${c.pacienteNome} ${c.tecnicoNome ?? ''} ${c.equipeNome ?? ''}`.toLowerCase().includes(q));
+  });
+
+  protected readonly pacientesEncontrados = computed(() => {
+    const q = this.buscaPaciente().trim().toLowerCase();
+    if (q.length < 2) return [];
+    const digitos = q.replace(/\D/g, '');
+    return this.pacientes()
+      .filter((p) => p.ativo && (p.nome.toLowerCase().includes(q) || (digitos.length >= 3 && ((p.cpf ?? '').includes(digitos) || (p.cartaoSus ?? '').includes(digitos)))))
+      .slice(0, 8);
+  });
+
+  /** O desfecho escolhido no acolhimento pede equipe e técnico de referência. */
+  protected readonly acolhimentoAcompanha = signal(false);
+  protected readonly acolhimentoEncaminha = signal(false);
+
+  constructor() {
+    this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
+    this.unidadeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
+    this.pacienteFiltro.set(this.route.snapshot.queryParamMap.get('paciente'));
+    this.selecionadoId.set(this.route.snapshot.queryParamMap.get('caso'));
+    this.carregar();
+  }
+
+  protected pode(...permissoes: string[]): boolean {
+    const a = this.acesso();
+    return !a.restrito || permissoes.some((p) => a.permissoes.has(p));
+  }
+
+  protected carregar(): void {
+    this.carregando.set(true);
+    this.erro.set(null);
+    this.service.casos({ unidadeId: this.unidadeFiltro() || undefined, pacienteId: this.pacienteFiltro() || undefined, escopo: this.escopo() }).subscribe({
+      next: (r) => {
+        this.casos.set(r);
+        this.carregando.set(false);
+        const atual = this.selecionadoId();
+        if (atual) this.selecionar(atual, false);
+        else if (this.pacienteFiltro() && r.lista.length) this.selecionar(r.lista[0].uuid, false);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.carregando.set(false);
+        this.casos.set(null);
+        this.erro.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível carregar os casos.');
+      },
+    });
+  }
+
+  protected filtrarEscopo(e: '' | 'TECNICO' | 'EQUIPE'): void {
+    this.escopo.set(e);
+    this.carregar();
+  }
+
+  protected filtrarUnidade(uuid: string): void {
+    this.unidadeFiltro.set(uuid);
+    this.carregar();
+  }
+
+  protected limparPaciente(): void {
+    this.pacienteFiltro.set(null);
+    this.router.navigate([], { queryParams: { paciente: null }, queryParamsHandling: 'merge', replaceUrl: true });
+    this.carregar();
+  }
+
+  /** Abre o caso: leitura auditada, com vínculo; sem conteúdo liberado, mostra só a referência. */
+  protected selecionar(uuid: string, atualizarUrl = true): void {
+    this.selecionadoId.set(uuid);
+    this.aba.set('resumo');
+    this.bloqueio.set(null);
+    if (atualizarUrl) this.router.navigate([], { queryParams: { caso: uuid }, queryParamsHandling: 'merge', replaceUrl: true });
+    this.service.caso(uuid).subscribe({
+      next: (d) => this.detalhe.set(d),
+      error: (e: unknown) => {
+        this.detalhe.set(null);
+        this.bloqueio.set(semVinculo(e) ?? 'Não foi possível abrir o caso.');
+      },
+    });
+  }
+
+  protected recarregarDetalhe(): void {
+    const id = this.selecionadoId();
+    if (id) this.selecionar(id, false);
+  }
+
+  // ── Apresentação ───────────────────────────────────────────────────────────────────────────
+
+  protected data(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    const [y, m, d] = iso.slice(0, 10).split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  protected dataHora(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  protected iniciais(nome: string): string {
+    return nome
+      .split(/\s+/)
+      .filter((p) => p.length > 2 && !p.endsWith('.'))
+      .slice(0, 2)
+      .map((p) => p[0].toUpperCase())
+      .join('');
+  }
+
+  protected erroCampo(campo: string): string {
+    return this.erros()[campo] ?? '';
+  }
+
+  // ── Gavetas ────────────────────────────────────────────────────────────────────────────────
+
+  protected tituloGaveta(g: Gaveta): string {
+    if (g.tipo === 'acolher') return 'Acolhimento em saúde mental';
+    if (g.tipo === 'avaliar') return 'Nova avaliação';
+    if (g.tipo === 'referencia') return 'Trocar referência';
+    return 'Encerrar o caso';
+  }
+
+  private abrir(g: Gaveta): void {
+    this.erros.set({});
+    this.erroApi.set(null);
+    this.gaveta.set(g);
+  }
+
+  protected fecharGaveta(): void {
+    this.gaveta.set(null);
+  }
+
+  protected abrirAcolher(): void {
+    this.acolherForm.reset({
+      pacienteId: '', unidadeId: this.unidadeFiltro(), motivoProcura: '', necessidadeImediata: '', vulnerabilidade: '',
+      riscoInicial: '', desfecho: '', encaminhamentoDestino: '', equipeId: '', tecnicoMatricula: '',
+    });
+    this.acolhimentoAcompanha.set(false);
+    this.acolhimentoEncaminha.set(false);
+    this.buscaPaciente.set('');
+    this.membros.set([]);
+    if (!this.pacientes().length) this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
+    this.carregarEquipes(this.unidadeFiltro());
+    this.abrir({ tipo: 'acolher' });
+  }
+
+  protected escolherPaciente(p: PacienteResponseDto): void {
+    this.acolherForm.patchValue({ pacienteId: p.uuid });
+    this.buscaPaciente.set(p.nome);
+  }
+
+  protected escolherUnidadeAcolhimento(uuid: string): void {
+    this.acolherForm.patchValue({ unidadeId: uuid, equipeId: '', tecnicoMatricula: '' });
+    this.membros.set([]);
+    this.carregarEquipes(uuid);
+  }
+
+  protected escolherDesfecho(d: string): void {
+    this.acolherForm.patchValue({ desfecho: d as DesfechoAcolhimentoSaudeMental | '' });
+    this.acolhimentoAcompanha.set(DESFECHOS_QUE_ACOMPANHAM.includes(d as DesfechoAcolhimentoSaudeMental));
+    this.acolhimentoEncaminha.set(d === 'ENCAMINHAMENTO');
+  }
+
+  /** Equipe de referência: os técnicos são os membros vigentes dela. */
+  protected escolherEquipe(uuid: string, form: 'acolher' | 'referencia'): void {
+    (form === 'acolher' ? this.acolherForm : this.referenciaForm).patchValue({ equipeId: uuid, tecnicoMatricula: '' });
+    this.membros.set([]);
+    if (!uuid) return;
+    this.equipeService.buscar(uuid).pipe(catchError(() => of(null))).subscribe((e) => this.membros.set(e?.membros.filter((m) => !m.fim) ?? []));
+  }
+
+  private carregarEquipes(unidadeId: string): void {
+    this.equipes.set([]);
+    if (!unidadeId) return;
+    this.equipeService.listar(unidadeId).pipe(catchError(() => of(null))).subscribe((r) => this.equipes.set(r?.lista.filter((e) => e.ativa) ?? []));
+  }
+
+  protected abrirAvaliar(caso: AcompanhamentoSaudeMentalDto): void {
+    this.avaliacaoForm.reset({ contextoHistoria: '', aspectosPsicossociais: '', fatoresRisco: '', fatoresProtecao: '', necessidades: '', cid: '' });
+    this.abrir({ tipo: 'avaliar', caso });
+  }
+
+  protected abrirReferencia(caso: AcompanhamentoSaudeMentalDto): void {
+    this.referenciaForm.reset({ equipeId: '', tecnicoMatricula: '', motivo: '' });
+    this.membros.set([]);
+    this.carregarEquipes(caso.unidadeId);
+    this.abrir({ tipo: 'referencia', caso });
+  }
+
+  protected abrirEncerrar(caso: AcompanhamentoSaudeMentalDto): void {
+    this.encerrarForm.reset({ motivoSaida: '', observacao: '', fim: '' });
+    this.abrir({ tipo: 'encerrar', caso });
+  }
+
+  // ── Envio ──────────────────────────────────────────────────────────────────────────────────
+
+  protected salvar(): void {
+    const g = this.gaveta();
+    if (!g || this.submitting()) return;
+    this.erros.set({});
+    this.erroApi.set(null);
+    if (g.tipo === 'acolher') this.salvarAcolhimento();
+    else if (g.tipo === 'avaliar') this.salvarAvaliacao(g.caso);
+    else if (g.tipo === 'referencia') this.salvarReferencia(g.caso);
+    else this.salvarEncerramento(g.caso);
+  }
+
+  private validar(erros: Record<string, string>): boolean {
+    this.erros.set(erros);
+    const campos = Object.keys(erros);
+    if (campos.length) {
+      setTimeout(() => document.getElementById('f-' + campos[0])?.focus());
+      return false;
+    }
+    return true;
+  }
+
+  private hojeIso(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  private salvarAcolhimento(): void {
+    const v = this.acolherForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.pacienteId) erros['buscaPaciente'] = 'Escolha o paciente na lista.';
+    if (!v.unidadeId) erros['unidadeAcolhimento'] = 'Escolha a unidade.';
+    if (!v.motivoProcura.trim()) erros['motivoProcura'] = 'Descreva o motivo da procura.';
+    if (!v.riscoInicial) erros['riscoInicial'] = 'Informe o risco percebido.';
+    if (!v.desfecho) erros['desfecho'] = 'Escolha o desfecho.';
+    if (v.desfecho === 'ENCAMINHAMENTO' && !v.encaminhamentoDestino.trim()) erros['encaminhamentoDestino'] = 'Informe para onde.';
+    if (this.acolhimentoAcompanha() && !v.equipeId) erros['equipeReferencia'] = 'Escolha a equipe de referência.';
+    if (this.acolhimentoAcompanha() && !v.tecnicoMatricula) erros['tecnicoReferencia'] = 'Escolha o técnico de referência.';
+    if (!this.validar(erros)) return;
+    this.submitting.set(true);
+    this.service.acolher({
+      pacienteId: v.pacienteId, unidadeId: v.unidadeId, motivoProcura: v.motivoProcura.trim(),
+      necessidadeImediata: v.necessidadeImediata.trim() || null, vulnerabilidade: v.vulnerabilidade.trim() || null,
+      riscoInicial: v.riscoInicial as RiscoInicialSaudeMental, desfecho: v.desfecho as DesfechoAcolhimentoSaudeMental,
+      encaminhamentoDestino: v.encaminhamentoDestino.trim() || null,
+      equipeId: this.acolhimentoAcompanha() ? v.equipeId || null : null,
+      tecnicoMatricula: this.acolhimentoAcompanha() ? v.tecnicoMatricula || null : null,
+    }).subscribe({
+      next: (a) => {
+        this.submitting.set(false);
+        this.fecharGaveta();
+        this.mostrarToast('Acolhimento registrado', a.aviso ?? (a.acompanhamentoId ? 'O caso foi aberto.' : DESFECHOS[a.desfecho!]));
+        if (a.acompanhamentoId) this.selecionadoId.set(a.acompanhamentoId);
+        this.carregar();
+      },
+      error: (e: HttpErrorResponse) => this.falhou(e),
+    });
+  }
+
+  private salvarAvaliacao(caso: AcompanhamentoSaudeMentalDto): void {
+    const v = this.avaliacaoForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.contextoHistoria.trim()) erros['contextoHistoria'] = 'Descreva o contexto e a história.';
+    if (!v.necessidades.trim()) erros['necessidades'] = 'Descreva as necessidades identificadas.';
+    if (v.cid.trim() && !/^[A-Za-z][0-9]{2}(\.?[0-9A-Za-z]{1,2})?$/.test(v.cid.trim())) erros['cid'] = 'CID-10 inválido (ex.: F32.1).';
+    if (!this.validar(erros)) return;
+    this.enviarCaso(this.service.avaliar(caso.uuid, {
+      contextoHistoria: v.contextoHistoria.trim(), aspectosPsicossociais: v.aspectosPsicossociais.trim() || null,
+      fatoresRisco: v.fatoresRisco.trim() || null, fatoresProtecao: v.fatoresProtecao.trim() || null,
+      necessidades: v.necessidades.trim(), cid: v.cid.trim() || null,
+    }), 'Avaliação registrada', caso, 'avaliacoes');
+  }
+
+  private salvarReferencia(caso: AcompanhamentoSaudeMentalDto): void {
+    const v = this.referenciaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.equipeId) erros['equipeTroca'] = 'Escolha a equipe de referência.';
+    if (!v.tecnicoMatricula) erros['tecnicoTroca'] = 'Escolha o técnico de referência.';
+    if (!v.motivo.trim()) erros['motivoTroca'] = 'Informe o motivo da troca.';
+    if (!this.validar(erros)) return;
+    this.enviarCaso(this.service.trocarReferencia(caso.uuid, { equipeId: v.equipeId, tecnicoMatricula: v.tecnicoMatricula, motivo: v.motivo.trim() }),
+      'Referência trocada', caso, 'referencia');
+  }
+
+  private salvarEncerramento(caso: AcompanhamentoSaudeMentalDto): void {
+    const v = this.encerrarForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.motivoSaida) erros['motivoSaidaCaso'] = 'Escolha o motivo.';
+    if (!v.observacao.trim()) erros['observacaoSaidaCaso'] = 'Descreva a saída.';
+    if (v.fim && v.fim > this.hojeIso()) erros['fimCaso'] = 'A saída não pode ser no futuro.';
+    if (!this.validar(erros)) return;
+    this.enviarCaso(this.service.encerrar(caso.uuid, v.motivoSaida as MotivoSaidaAcompanhamento, v.observacao.trim(), v.fim),
+      'Caso encerrado', caso, 'resumo');
+  }
+
+  private enviarCaso(req: Observable<AcompanhamentoSaudeMentalDto>, titulo: string, caso: AcompanhamentoSaudeMentalDto, aba: Aba): void {
+    this.submitting.set(true);
+    req.subscribe({
+      next: (d) => {
+        this.submitting.set(false);
+        this.fecharGaveta();
+        this.mostrarToast(titulo, caso.pacienteNome);
+        this.detalhe.set(d);
+        this.aba.set(aba);
+        this.service.casos({ unidadeId: this.unidadeFiltro() || undefined, pacienteId: this.pacienteFiltro() || undefined, escopo: this.escopo() })
+          .subscribe({ next: (r) => this.casos.set(r), error: () => undefined });
+      },
+      error: (e: HttpErrorResponse) => this.falhou(e),
+    });
+  }
+
+  private falhou(e: HttpErrorResponse): void {
+    this.submitting.set(false);
+    this.erroApi.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar. Tente novamente.');
+  }
+
+  private mostrarToast(titulo: string, detalhe: string): void {
+    this.toast.set({ titulo, detalhe });
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+  }
+}

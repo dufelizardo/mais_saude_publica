@@ -26,6 +26,7 @@ import com.edufelizardo.maissaudepublica.models.enuns.Sexo;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoAcompanhamento;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoPrograma;
 import com.edufelizardo.maissaudepublica.repositories.AcompanhamentoProgramaticoRepository;
+import com.edufelizardo.maissaudepublica.repositories.AcompanhamentoSaudeMentalRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.EquipeRepository;
 import com.edufelizardo.maissaudepublica.repositories.EventoAcompanhamentoRepository;
@@ -93,6 +94,9 @@ public class AcompanhamentoService {
 
     @Autowired
     private AtendimentoRepository atendimentoRepository;
+
+    @Autowired
+    private AcompanhamentoSaudeMentalRepository casoSaudeMentalRepository;
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
@@ -186,6 +190,11 @@ public class AcompanhamentoService {
         ContextoAuditoria.paciente(a.getPaciente().getUuid());
         if (!a.vigente()) {
             throw new ResourceUnprocessableEntityException("Este acompanhamento já foi encerrado.");
+        }
+        // O caso em saúde mental é quem encerra o seu acompanhamento do programa (ADR-0120).
+        if (casoSaudeMentalRepository.existsByAcompanhamentoProgramatico_UuidAndFimIsNull(a.getUuid())) {
+            throw new ResourceUnprocessableEntityException("Este acompanhamento tem um caso em saúde mental em aberto; "
+                    + "registre a saída pela tela de Saúde Mental.");
         }
         LocalDate fim = dto.getFim() != null ? dto.getFim() : LocalDate.now();
         if (fim.isBefore(a.getInicio()) || fim.isAfter(LocalDate.now())) {

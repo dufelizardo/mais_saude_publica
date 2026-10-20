@@ -147,6 +147,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/assistencia/programas/programas').then((m) => m.Programas),
         data: { breadcrumb: 'Programas de Saúde', area: 'Assistência' },
       },
+      // Saúde Mental (ADR-0120), carregada sob demanda.
+      {
+        path: 'assistencia/saude-mental',
+        loadComponent: () => import('./features/assistencia/saude-mental/saude-mental').then((m) => m.SaudeMental),
+        data: { breadcrumb: 'Saúde Mental', area: 'Assistência' },
+      },
       {
         path: 'assistencia/leitos',
         loadComponent: () => import('./features/assistencia/leitos/leitos').then((m) => m.Leitos),

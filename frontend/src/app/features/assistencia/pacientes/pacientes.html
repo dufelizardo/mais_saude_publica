@@ -390,7 +390,12 @@
                       } @else {
                         <button type="button" class="link-btn" (click)="abrirSituacaoPrograma(a, 'FALTOSO')" [attr.aria-label]="'Marcar faltoso: ' + a.programaNome">Marcar faltoso</button>
                       }
-                      <button type="button" class="link-btn" (click)="abrirSaidaPrograma(a)" [attr.aria-label]="'Registrar saída: ' + a.programaNome">Saída</button>
+                      @if (a.programaCodigo !== 'SAUDE_MENTAL') {
+                        <button type="button" class="link-btn" (click)="abrirSaidaPrograma(a)" [attr.aria-label]="'Registrar saída: ' + a.programaNome">Saída</button>
+                      }
+                    }
+                    @if (a.programaCodigo === 'SAUDE_MENTAL' && pode('SAUDE_MENTAL.ACOMPANHAR')) {
+                      <a class="link-btn" routerLink="/assistencia/saude-mental" [queryParams]="{ paciente: a.pacienteId }" [attr.aria-label]="'Abrir em Saúde Mental: ' + a.pacienteNome">Abrir em Saúde Mental</a>
                     }
                   </span>
                 </li>
