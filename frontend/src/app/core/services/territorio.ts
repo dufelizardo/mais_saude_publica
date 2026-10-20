@@ -59,6 +59,10 @@ export class TerritorioService {
     return this.http.post<AreaDetalheDto>(`${this.api}/microarea/${microareaId}/atribuicao`, { membroId, inicio: inicio || null, motivo: motivo || null });
   }
 
+  coordenadas(unidadeId: string, latitude: number | null, longitude: number | null): Observable<UnidadeNoMapaDto> {
+    return this.http.put<UnidadeNoMapaDto>(`${this.api}/unidade/${unidadeId}/coordenadas`, { latitude, longitude });
+  }
+
   encerrarAcs(microareaId: string, motivo: string, fim?: string | null): Observable<AreaDetalheDto> {
     return this.http.post<AreaDetalheDto>(`${this.api}/microarea/${microareaId}/atribuicao/encerrar`, { motivo, fim: fim || null });
   }

@@ -158,6 +158,52 @@
           }
         </div>
 
+        <div class="info-block" id="mapa-territorio">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--s-2); flex-wrap: wrap;">
+            <h3>Mapa</h3>
+            <div class="seg" role="group" aria-label="O que o mapa mostra">
+              <button type="button" [attr.aria-pressed]="visaoMapa() === 'area'" (click)="visaoMapa.set('area')">Esta área</button>
+              <button type="button" [attr.aria-pressed]="visaoMapa() === 'territorio'" (click)="visaoMapa.set('territorio')">Território inteiro</button>
+            </div>
+          </div>
+          @if (desenhando(); as g) {
+            <div class="box box--info" role="status" style="margin-top: var(--s-2);">
+              <div>
+                <strong>Desenhando a {{ g.tipo === 'area' ? 'área ' + g.area.codigo : 'microárea ' + g.microarea?.codigo }}.</strong>
+                Use as ferramentas do canto do mapa: polígono ou retângulo para desenhar, editar para mover vértices, recortar para abrir buracos e apagar.
+                @if (g.tipo === 'microarea') { O contorno tracejado é a área; as outras microáreas aparecem como referência. }
+                @if (hectaresDoDesenho() != null) { <span class="cell-sub">{{ hectaresDoDesenho() }} ha desenhados.</span> }
+              </div>
+            </div>
+          }
+          <div style="margin-top: var(--s-2);">
+            <app-mapa [poligonos]="poligonosDoMapa()" [pinos]="pinosDoMapa()" [selecionado]="microareaSelecionada()" [edicao]="edicaoDoMapa()"
+              [altura]="320" [rotulo]="'Mapa da área ' + d.area.codigo" (selecionar)="noMapa($event)" (desenho)="desenhoAtual.set($event)" />
+          </div>
+          <div class="mapa-legenda" aria-hidden="true">
+            <span><i style="border: 2px dashed #1d4ed8;"></i>Área</span>
+            <span><i style="background: rgba(20, 184, 166, 0.4); border: 1px solid #0f766e;"></i>Microárea</span>
+            <span><i style="background: rgba(245, 158, 11, 0.45); border: 1px solid #b45309;"></i>Sem ACS</span>
+            <span><i class="unit-pin" style="min-width: 12px; height: 12px;"></i>Unidade</span>
+          </div>
+          @if (desenhando()) {
+            @for (a of avisosDoDesenho(); track a) { <div class="box box--warn" style="margin-top: var(--s-2);"><strong>{{ a }}</strong></div> }
+            @if (erroDesenho()) { <div class="box box--err" role="alert" style="margin-top: var(--s-2);"><strong>{{ erroDesenho() }}</strong></div> }
+            <div class="mapa-barra">
+              <button type="button" class="btn btn--sm" (click)="salvarDesenho()" [disabled]="salvandoDesenho()">{{ salvandoDesenho() ? 'Salvando…' : 'Salvar desenho' }}</button>
+              <button type="button" class="btn btn--ghost btn--sm" (click)="cancelarDesenho()">Cancelar</button>
+              @if (!desenhoAtual()) { <span class="cell-sub">Sem polígono, salvar apaga o desenho.</span> }
+            </div>
+          } @else {
+            @if (!d.area.geometria) { <p class="cell-sub" style="margin-top: var(--s-2);">A área ainda não tem desenho.</p> }
+            @if (podeEditar()) {
+              <div class="mapa-barra">
+                <button type="button" class="btn btn--ghost btn--sm" (click)="desenharArea(d.area)">{{ d.area.geometria ? 'Editar desenho da área' : 'Desenhar área' }}</button>
+              </div>
+            }
+          }
+        </div>
+
         <div class="info-block">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Microáreas</h3>
@@ -166,7 +212,8 @@
           @if (d.area.microareas.length) {
             <ul aria-label="Microáreas da área" style="list-style: none; margin: 0; padding: 0;">
               @for (m of d.area.microareas; track m.uuid) {
-                <li style="display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); justify-content: space-between; padding: var(--s-3) 0; border-top: 1px solid var(--ink-100);">
+                <li [id]="'mi-' + m.uuid" style="display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); justify-content: space-between; padding: var(--s-3) var(--s-2); border-top: 1px solid var(--ink-100);"
+                  [style.background]="microareaSelecionada() === m.uuid ? 'var(--blue-50)' : null" (click)="microareaSelecionada.set(m.uuid)">
                   <div style="min-width: 0;">
                     <span class="cell-main"><span class="mono">{{ m.codigo }}</span>@if (m.nome) { · {{ m.nome }} }</span>
                     <span class="cell-sub">@if (m.populacaoReferencia != null) { {{ m.populacaoReferencia }} pessoas } @else { população não informada }</span>
@@ -189,6 +236,7 @@
                       @if (m.acs) {
                         <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEncerrar(m)" [attr.aria-label]="'Deixar a microárea ' + m.codigo + ' sem ACS'">Sem ACS</button>
                       }
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="desenharMicroarea(d.area, m)" [attr.aria-label]="(m.geometria ? 'Editar desenho da microárea ' : 'Desenhar microárea ') + m.codigo">{{ m.geometria ? 'Editar desenho' : 'Desenhar' }}</button>
                       <button type="button" class="btn btn--ghost btn--sm" (click)="abrirMicroarea(d.area, m)" [attr.aria-label]="'Editar microárea ' + m.codigo">Editar</button>
                     </div>
                   }
@@ -201,14 +249,6 @@
           @if (d.acsSemMicroarea.length) {
             <p class="cell-sub" style="margin-top: var(--s-3);">ACS da equipe sem microárea: {{ nomes(d.acsSemMicroarea) }}</p>
           }
-        </div>
-
-        <div class="info-block">
-          <h3>Mapa</h3>
-          <div class="empty-state">
-            <div class="empty-state__title">Em breve: mapa</div>
-            <div class="empty-state__desc">O desenho das áreas e microáreas no mapa, com os pinos das unidades, chega na próxima fatia. Por enquanto, a geometria entra como GeoJSON.</div>
-          </div>
         </div>
 
         <div class="info-block">
@@ -382,8 +422,8 @@
               placeholder='{"type": "Polygon", "coordinates": [[[-47.06, -22.90], …]]}'></textarea>
             <p class="dw-hint" id="h-geometria">Polygon ou MultiPolygon em WGS84 (longitude, latitude), ou uma Feature com um deles.@if (g.tipo === 'microarea') { A microárea precisa ficar dentro da área e não pode se sobrepor às outras. }</p>
             @if (erro('geometria')) { <p class="dw-err" id="e-geometria">{{ erro('geometria') }}</p> }
-            <label class="btn btn--ghost btn--sm" for="f-arquivo" style="margin-top: var(--s-2); align-self: flex-start;">Importar arquivo .geojson</label>
-            <input id="f-arquivo" type="file" accept=".geojson,.json,application/geo+json,application/json" class="sr-only" (change)="importarArquivo($event)" />
+            <label class="btn btn--ghost btn--sm" for="f-arquivo" style="margin-top: var(--s-2); align-self: flex-start;">Importar arquivo .geojson ou .kml</label>
+            <input id="f-arquivo" type="file" accept=".geojson,.json,.kml,application/geo+json,application/json,application/vnd.google-earth.kml+xml" class="sr-only" (change)="importarArquivo($event)" />
           </div>
         }
 

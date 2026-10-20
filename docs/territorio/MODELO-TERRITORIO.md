@@ -1,8 +1,9 @@
 # Modelo do domínio Território e Adscrição
 
 **Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0108](../adr/0108-territorio-e-adscricao.md). **F1 implementada** na
-[ADR-0125](../adr/0125-territorio-fundacao.md); as fatias F2 a F4 (seção 11) vêm cada uma com ADR própria.
+**Status:** desenho aprovado na [ADR-0108](../adr/0108-territorio-e-adscricao.md). **F1 e F2 implementadas** nas
+[ADR-0125](../adr/0125-territorio-fundacao.md) e [ADR-0126](../adr/0126-territorio-mapa.md); F3 e F4 (seção 11) vêm
+cada uma com ADR própria.
 
 Este documento é o detalhamento do domínio: conceitos, entidades, relações com os outros domínios, uso por tipo de
 unidade e de equipe, escopo de acesso e geolocalização. A ADR-0108 registra as decisões; aqui fica o porquê e o
@@ -218,7 +219,7 @@ prontuário por vínculo (ADR-0076).
   - Destaques: a **área inteira** em contorno, as **microáreas coloridas**, cada uma com código e ACS, e os pinos das
     unidades.
   - Microárea sem ACS fica em âmbar, como em Equipes (ADR-0104).
-- **Desenho:** polígonos desenhados na tela com `leaflet-draw`, ou importados de GeoJSON ou KML (exportados de outro
+- **Desenho:** polígonos desenhados na tela com o `leaflet-geoman` (a ADR-0126 trocou o `leaflet-draw`, sem manutenção), ou importados de GeoJSON ou KML (exportados de outro
   SIG ou do Google My Maps).
 - **Tela:** pelo modelo de `Equipamentos.html`, com lista e detalhe e o mapa no lugar do SVG esquemático do
   protótipo.
@@ -228,7 +229,7 @@ prontuário por vínculo (ADR-0076).
 | Fatia | Entrega | Depende de |
 |---|---|---|
 | **F1** · backend do território ✅ ([ADR-0125](../adr/0125-territorio-fundacao.md)) | segmento, território, área e microárea com GeoJSON; responsabilidade equipe ↔ área; atribuição ACS ↔ microárea; coordenadas da unidade; migração dos textos `Equipe.microareas` e `MembroEquipe.microarea`; regras de microárea dentro da área e sem sobreposição | ADR-0103 |
-| **F2** · tela Território | lista e detalhe com mapa Leaflet; destaque da área e das microáreas; desenho e edição de polígonos; pinos das unidades; mapa real em Equipamentos | F1 |
+| **F2** · tela Território ✅ ([ADR-0126](../adr/0126-territorio-mapa.md)) | lista e detalhe com mapa Leaflet; destaque da área e das microáreas; desenho e edição de polígonos; pinos das unidades; mapa real em Equipamentos | F1 |
 | **F3** · cadastro territorial | imóvel, domicílio e núcleo familiar com o paciente; adscrição à equipe; geocodificação opcional do endereço; famílias, pacientes e cobertura em Equipes | F1, F2 |
 | **F4** · escopo territorial | ACS restrito à microárea e equipe à área, atrás de toggle | F3, ADR-0066 |
 
