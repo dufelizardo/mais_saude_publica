@@ -38,6 +38,14 @@
       <div class="stat__sub">casos ainda sem avaliação registrada</div>
     </div>
   </div>
+  <div class="stat">
+    <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></span>
+    <div>
+      <div class="stat__lbl">Sem PTS / a revisar</div>
+      <div class="stat__val mono">{{ casos()?.semPts ?? 0 }}<small class="stat__unid"> / {{ casos()?.ptsARevisar ?? 0 }}</small></div>
+      <div class="stat__sub">projeto terapêutico por elaborar ou vencido</div>
+    </div>
+  </div>
 </section>
 
 <div class="toolbar" role="region" aria-label="Filtros dos casos">
@@ -50,6 +58,11 @@
     <button type="button" [attr.aria-pressed]="escopo() === ''" (click)="filtrarEscopo('')">Todos do meu acesso</button>
     <button type="button" [attr.aria-pressed]="escopo() === 'TECNICO'" (click)="filtrarEscopo('TECNICO')">Sou o técnico</button>
     <button type="button" [attr.aria-pressed]="escopo() === 'EQUIPE'" (click)="filtrarEscopo('EQUIPE')">Da minha equipe</button>
+  </div>
+  <div class="seg" role="group" aria-label="Pendência">
+    <button type="button" [attr.aria-pressed]="pendencia() === 'SEM_AVALIACAO'" (click)="filtrarPendencia('SEM_AVALIACAO')">Sem avaliação</button>
+    <button type="button" [attr.aria-pressed]="pendencia() === 'SEM_PTS'" (click)="filtrarPendencia('SEM_PTS')">Sem PTS</button>
+    <button type="button" [attr.aria-pressed]="pendencia() === 'PTS_A_REVISAR'" (click)="filtrarPendencia('PTS_A_REVISAR')">PTS a revisar</button>
   </div>
   <label class="pill pill--select" style="margin-left: auto;">
     <span class="sr-only">Unidade</span>
@@ -73,7 +86,7 @@
   @if (filtrados().length) {
     <div class="tbl-wrap">
       <table aria-label="Casos em acompanhamento">
-        <thead><tr><th scope="col">Paciente</th><th scope="col">Unidade</th><th scope="col">Referência</th><th scope="col">Desde</th><th scope="col">Última avaliação</th><th scope="col">Situação</th><th scope="col" class="num">Ações</th></tr></thead>
+        <thead><tr><th scope="col">Paciente</th><th scope="col">Unidade</th><th scope="col">Referência</th><th scope="col">Desde</th><th scope="col">Última avaliação</th><th scope="col">PTS</th><th scope="col">Situação</th><th scope="col" class="num">Ações</th></tr></thead>
         <tbody>
           @for (c of filtrados(); track c.uuid) {
             <tr [class.is-selected]="selecionadoId() === c.uuid">
@@ -82,6 +95,7 @@
               <td>{{ c.tecnicoNome ?? '—' }}@if (c.equipeNome) { <span class="cell-sub">{{ c.equipeNome }}</span> }</td>
               <td class="mono">{{ data(c.inicio) }}</td>
               <td class="mono">@if (c.ultimaAvaliacaoEm) { {{ data(c.ultimaAvaliacaoEm) }} } @else { <span class="tag tag--warn">Sem avaliação</span> }</td>
+              <td>@if (c.ptsVersao) { <span class="mono">v{{ c.ptsVersao }}</span>@if (c.ptsRevisaoVencida) { <span class="tag tag--warn">A revisar</span> } } @else { <span class="tag tag--warn">Sem PTS</span> }</td>
               <td><span [class]="'tag tag--' + situacoes[c.situacao].classe">{{ situacoes[c.situacao].rotulo }}</span></td>
               <td class="num"><button type="button" class="btn btn--ghost btn--sm" (click)="selecionar(c.uuid)" [attr.aria-label]="'Abrir caso: ' + c.pacienteNome">Abrir</button></td>
             </tr>
@@ -116,6 +130,7 @@
       </div>
       @if (!d.fim && d.conteudoLiberado && podeAcompanhar()) {
         <div class="detail-head__actions">
+          <button type="button" class="btn btn--ghost btn--sm" (click)="abrirIntervencao(d)">Registrar intervenção</button>
           <button type="button" class="btn btn--ghost btn--sm" (click)="abrirReferencia(d)">Trocar referência</button>
           <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEncerrar(d)">Encerrar</button>
           <button type="button" class="btn btn--sm" (click)="abrirAvaliar(d)">Nova avaliação</button>
@@ -133,6 +148,9 @@
       }
       <div class="tabs" role="tablist" aria-label="Seções do caso">
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'resumo'" (click)="aba.set('resumo')">Resumo</button>
+        <button type="button" role="tab" [attr.aria-selected]="aba() === 'pts'" (click)="aba.set('pts')">PTS@if (d.ptsVersao) { <span class="cnt">v{{ d.ptsVersao }}</span> }</button>
+        <button type="button" role="tab" [attr.aria-selected]="aba() === 'intervencoes'" (click)="aba.set('intervencoes')">Intervenções <span class="cnt">{{ d.intervencoes.length }}</span></button>
+        <button type="button" role="tab" [attr.aria-selected]="aba() === 'rede'" (click)="aba.set('rede')">Rede de apoio <span class="cnt">{{ redeVigente(d).length }}</span></button>
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'acolhimentos'" (click)="aba.set('acolhimentos')">Acolhimentos <span class="cnt">{{ d.acolhimentos.length }}</span></button>
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'avaliacoes'" (click)="aba.set('avaliacoes')">Avaliações <span class="cnt">{{ d.avaliacoes.length }}</span></button>
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'referencia'" (click)="aba.set('referencia')">Referência</button>
@@ -154,7 +172,102 @@
             }
           </dl>
           @if (d.conteudoLiberado) {
-            <p class="cell-sub" style="margin-top: var(--s-3);">Projeto terapêutico singular, intervenções e registro de crise chegam nas próximas fatias (SM2 e SM3).</p>
+            @if (d.faltasSeguidas >= 2 && d.situacao === 'ATIVO') {
+              <div class="box box--warn" style="margin-top: var(--s-3);"><div>{{ d.faltasSeguidas }} faltas seguidas nas intervenções: avalie marcar como faltoso no programa e a busca ativa.</div></div>
+            }
+            <p class="cell-sub" style="margin-top: var(--s-3);">Avaliação de risco com histórico e registro de crise chegam na próxima fatia (SM3).</p>
+          }
+        }
+        @case ('pts') {
+          @if (ptsVigente(d); as v) {
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+              <h3 style="margin: 0;">Versão {{ v.versao }} · {{ dataHora(v.elaboradoEm) }}@if (v.profissionalNome) { · {{ v.profissionalNome }} }</h3>
+              @if (!d.fim && podeAcompanhar()) { <button type="button" class="btn btn--sm" (click)="abrirPts(d)">Revisar PTS</button> }
+            </div>
+            <dl class="info-list" style="margin-top: var(--s-3);">
+              <div><dt>Necessidades</dt><dd>{{ v.necessidades }}</dd></div>
+              <div><dt>Revisão</dt><dd>{{ periodicidades[v.periodicidadeRevisao] }} · revisar em {{ data(v.revisarEm) }}@if (v.revisaoVencida) { <span class="tag tag--warn" style="margin-left: 4px;">Vencida</span> }</dd></div>
+              <div><dt>Pactuação</dt><dd>{{ v.pactuadoComPessoa ? 'Pactuado com a pessoa ou a família' : 'Ainda não pactuado' }}@if (v.pactuacaoObservacao) { · {{ v.pactuacaoObservacao }} }</dd></div>
+              @if (v.sinteseRevisao) { <div><dt>Síntese da revisão</dt><dd>{{ v.sinteseRevisao }}</dd></div> }
+            </dl>
+            <h4 class="mo-grupo">Objetivos</h4>
+            <ul class="eq-prof" aria-label="Objetivos do PTS">
+              @for (o of v.objetivos; track o.uuid) {
+                <li>
+                  <span class="cell-main">{{ o.descricao }} <span [class]="'tag tag--' + situacoesObjetivo[o.situacao].classe">{{ situacoesObjetivo[o.situacao].rotulo }}</span></span>
+                  <span class="cell-sub">@if (o.meta) { Meta: {{ o.meta }} · }@if (o.prazo) { prazo {{ data(o.prazo) }} · }{{ o.responsavelNome ?? 'sem responsável' }}</span>
+                </li>
+              }
+            </ul>
+            <h4 class="mo-grupo">Intervenções previstas</h4>
+            @if (v.intervencoesPrevistas.length) {
+              <ul class="eq-prof" aria-label="Intervenções previstas">
+                @for (i of v.intervencoesPrevistas; track i.uuid) {
+                  <li><span class="cell-main">{{ i.tipoNome }}@if (i.frequencia) { · {{ i.frequencia }} }</span><span class="cell-sub">{{ i.responsavelNome ?? 'sem responsável' }}@if (i.servico) { · {{ i.servico }} }</span></li>
+                }
+              </ul>
+            } @else { <p class="cell-sub">Nenhuma intervenção prevista.</p> }
+            @if (d.pts.length > 1) {
+              <h4 class="mo-grupo">Versões anteriores</h4>
+              <ul class="eq-prof" aria-label="Versões anteriores do PTS">
+                @for (a of d.pts.slice(1); track a.uuid) {
+                  <li>
+                    <button type="button" class="link-btn" (click)="versaoAberta.set(versaoAberta() === a.versao ? null : a.versao)" [attr.aria-expanded]="versaoAberta() === a.versao">Versão {{ a.versao }} · {{ dataHora(a.elaboradoEm) }}</button>
+                    @if (a.sinteseRevisao) { <span class="cell-sub">{{ a.sinteseRevisao }}</span> }
+                    @if (versaoAberta() === a.versao) {
+                      <span class="cell-sub">Necessidades: {{ a.necessidades }}</span>
+                      @for (o of a.objetivos; track o.uuid) { <span class="cell-sub">· {{ o.descricao }} ({{ situacoesObjetivo[o.situacao].rotulo.toLowerCase() }})</span> }
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          } @else {
+            <p class="cell-sub">O caso ainda não tem Projeto Terapêutico Singular. Ele é construído em equipe, com a pessoa e a família.</p>
+            @if (!d.fim && podeAcompanhar()) { <button type="button" class="btn btn--sm" (click)="abrirPts(d)">Elaborar PTS</button> }
+          }
+        }
+        @case ('intervencoes') {
+          @if (d.intervencoes.length) {
+            <ul class="eq-prof" aria-label="Intervenções do caso">
+              @for (i of d.intervencoes; track i.uuid) {
+                <li>
+                  <span class="cell-main">{{ dataHora(i.realizadaEm) }} · {{ i.tipoNome }} <span [class]="'tag tag--' + situacoesIntervencao[i.situacao].classe">{{ situacoesIntervencao[i.situacao].rotulo }}</span></span>
+                  <span class="cell-sub">{{ i.profissionalNome ?? '—' }}@if (i.compartilhadoComNome) { · com {{ i.compartilhadoComNome }} }</span>
+                  <span class="cell-sub">{{ i.resumo }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="cell-sub">Nenhuma intervenção registrada.</p>
+          }
+        }
+        @case ('rede') {
+          <div style="display: flex; justify-content: flex-end;">
+            @if (!d.fim && podeAcompanhar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirRede(d)">Incluir pessoa</button> }
+          </div>
+          @if (redeVigente(d).length) {
+            <ul class="eq-prof" aria-label="Rede de apoio">
+              @for (r of redeVigente(d); track r.uuid) {
+                <li class="mo-row">
+                  <span>
+                    <span class="cell-main">{{ r.nome }} <span class="tag tag--info">{{ papeisRede[r.papel] }}</span></span>
+                    <span class="cell-sub">@if (r.vinculo) { {{ r.vinculo }} · }@if (r.telefone) { {{ r.telefone }} · }desde {{ data(r.inicio) }}@if (r.observacao) { · {{ r.observacao }} }</span>
+                  </span>
+                  @if (!d.fim && podeAcompanhar()) { <button type="button" class="link-btn" (click)="abrirSairRede(d, r)" [attr.aria-label]="'Tirar da rede: ' + r.nome">Tirar da rede</button> }
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="cell-sub">Ninguém na rede de apoio ainda: familiares, cuidadores, pessoas de referência e serviços.</p>
+          }
+          @if (redeAnterior(d).length) {
+            <h4 class="mo-grupo">Histórico</h4>
+            <ul class="eq-prof" aria-label="Rede de apoio anterior">
+              @for (r of redeAnterior(d); track r.uuid) {
+                <li><span class="cell-main">{{ r.nome }} · {{ papeisRede[r.papel] }}</span><span class="cell-sub">{{ data(r.inicio) }} a {{ data(r.fim) }}@if (r.motivoFim) { · {{ r.motivoFim }} }</span></li>
+              }
+            </ul>
           }
         }
         @case ('acolhimentos') {
@@ -394,6 +507,248 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Trocar referência' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('pts') {
+        <form class="dw-form" [formGroup]="ptsForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Paciente</dt><dd>{{ g.caso.pacienteNome }}</dd></div>
+              @if (g.base) { <div><dt>Revisão de</dt><dd>versão {{ g.base.versao }}; a anterior fica no histórico</dd></div> }
+            </dl>
+            @if (g.base) {
+              <div class="dw-field">
+                <label for="f-sinteseRevisao">Síntese da revisão <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <textarea id="f-sinteseRevisao" rows="2" maxlength="2000" formControlName="sinteseRevisao" placeholder="Ex.: adesão alcançada; novo objetivo de retorno ao trabalho" [attr.aria-invalid]="!!erroCampo('sinteseRevisao')" aria-describedby="e-sinteseRevisao"></textarea>
+                @if (erroCampo('sinteseRevisao')) { <p class="dw-err" id="e-sinteseRevisao">{{ erroCampo('sinteseRevisao') }}</p> }
+              </div>
+            }
+            <div class="dw-field">
+              <label for="f-necessidadesPts">Necessidades <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-necessidadesPts" rows="2" maxlength="4000" formControlName="necessidades" [attr.aria-invalid]="!!erroCampo('necessidadesPts')" aria-describedby="e-necessidadesPts"></textarea>
+              @if (erroCampo('necessidadesPts')) { <p class="dw-err" id="e-necessidadesPts">{{ erroCampo('necessidadesPts') }}</p> }
+            </div>
+            <fieldset class="dw-field" formArrayName="objetivos">
+              <legend>Objetivos</legend>
+              @for (o of objetivos.controls; track o; let i = $index) {
+                <div [formGroupName]="i" style="border-bottom: 1px solid var(--ink-100); padding-bottom: var(--s-3); margin-bottom: var(--s-3);">
+                  <div class="dw-field">
+                    <label [for]="'f-objetivoDescricao-' + i">Objetivo {{ i + 1 }} <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                    <input [id]="'f-objetivoDescricao-' + i" type="text" maxlength="1000" formControlName="descricao" [attr.aria-invalid]="!!erroCampo('objetivoDescricao-' + i)" [attr.aria-describedby]="'e-objetivoDescricao-' + i" />
+                    @if (erroCampo('objetivoDescricao-' + i)) { <p class="dw-err" [id]="'e-objetivoDescricao-' + i">{{ erroCampo('objetivoDescricao-' + i) }}</p> }
+                  </div>
+                  <div class="dw-row">
+                    <div class="dw-field">
+                      <label [for]="'f-objetivoMeta-' + i">Meta<span class="opt">opcional</span></label>
+                      <input [id]="'f-objetivoMeta-' + i" type="text" maxlength="1000" formControlName="meta" />
+                    </div>
+                    <div class="dw-field">
+                      <label [for]="'f-objetivoPrazo-' + i">Prazo<span class="opt">opcional</span></label>
+                      <input [id]="'f-objetivoPrazo-' + i" type="date" formControlName="prazo" />
+                    </div>
+                  </div>
+                  <div class="dw-row">
+                    <div class="dw-field">
+                      <label [for]="'f-objetivoResponsavel-' + i">Responsável<span class="opt">opcional</span></label>
+                      <select [id]="'f-objetivoResponsavel-' + i" formControlName="responsavelMatricula">
+                        <option value="">Sem responsável</option>
+                        @for (m of membros(); track m.uuid) { <option [value]="m.matricula">{{ m.nome }}</option> }
+                      </select>
+                    </div>
+                    <div class="dw-field">
+                      <label [for]="'f-objetivoSituacao-' + i">Situação</label>
+                      <select [id]="'f-objetivoSituacao-' + i" formControlName="situacao">
+                        @for (st of listaSituacoesObjetivo; track st) { <option [value]="st">{{ situacoesObjetivo[st].rotulo }}</option> }
+                      </select>
+                    </div>
+                  </div>
+                  @if (objetivos.length > 1) { <button type="button" class="link-btn" (click)="removerObjetivo(i)" [attr.aria-label]="'Remover objetivo ' + (i + 1)">Remover</button> }
+                </div>
+              }
+              <button type="button" class="btn btn--ghost btn--sm" (click)="adicionarObjetivo()">Adicionar objetivo</button>
+            </fieldset>
+            <fieldset class="dw-field" formArrayName="previstas">
+              <legend>Intervenções previstas</legend>
+              @for (pv of previstas.controls; track pv; let i = $index) {
+                <div [formGroupName]="i" style="border-bottom: 1px solid var(--ink-100); padding-bottom: var(--s-3); margin-bottom: var(--s-3);">
+                  <div class="dw-row">
+                    <div class="dw-field">
+                      <label [for]="'f-previstaTipo-' + i">Tipo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                      <select [id]="'f-previstaTipo-' + i" formControlName="tipoId" [attr.aria-invalid]="!!erroCampo('previstaTipo-' + i)" [attr.aria-describedby]="'e-previstaTipo-' + i">
+                        <option value="">Escolha…</option>
+                        @for (t of tipos(); track t.uuid) { @if (t.ativo) { <option [value]="t.uuid">{{ t.nome }}</option> } }
+                      </select>
+                      @if (erroCampo('previstaTipo-' + i)) { <p class="dw-err" [id]="'e-previstaTipo-' + i">{{ erroCampo('previstaTipo-' + i) }}</p> }
+                    </div>
+                    <div class="dw-field">
+                      <label [for]="'f-previstaFrequencia-' + i">Frequência<span class="opt">opcional</span></label>
+                      <input [id]="'f-previstaFrequencia-' + i" type="text" maxlength="100" formControlName="frequencia" placeholder="Ex.: semanal" />
+                    </div>
+                  </div>
+                  <div class="dw-row">
+                    <div class="dw-field">
+                      <label [for]="'f-previstaResponsavel-' + i">Responsável<span class="opt">opcional</span></label>
+                      <select [id]="'f-previstaResponsavel-' + i" formControlName="responsavelMatricula">
+                        <option value="">Sem responsável</option>
+                        @for (m of membros(); track m.uuid) { <option [value]="m.matricula">{{ m.nome }}</option> }
+                      </select>
+                    </div>
+                    <div class="dw-field">
+                      <label [for]="'f-previstaServico-' + i">Serviço envolvido<span class="opt">opcional</span></label>
+                      <input [id]="'f-previstaServico-' + i" type="text" maxlength="300" formControlName="servico" placeholder="Ex.: CRAS Centro" />
+                    </div>
+                  </div>
+                  <button type="button" class="link-btn" (click)="removerPrevista(i)" [attr.aria-label]="'Remover intervenção prevista ' + (i + 1)">Remover</button>
+                </div>
+              }
+              <button type="button" class="btn btn--ghost btn--sm" (click)="adicionarPrevista()">Adicionar intervenção prevista</button>
+            </fieldset>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-periodicidadeRevisao">Revisão</label>
+                <select id="f-periodicidadeRevisao" formControlName="periodicidadeRevisao">
+                  @for (pr of listaPeriodicidades; track pr) { <option [value]="pr">{{ periodicidades[pr] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-revisarEm">Revisar em<span class="opt">opcional</span></label>
+                <input id="f-revisarEm" type="date" formControlName="revisarEm" [attr.aria-invalid]="!!erroCampo('revisarEm')" aria-describedby="h-revisarEm e-revisarEm" />
+                <p class="dw-hint" id="h-revisarEm">Sem data, hoje mais a periodicidade.</p>
+                @if (erroCampo('revisarEm')) { <p class="dw-err" id="e-revisarEm">{{ erroCampo('revisarEm') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label class="switch" for="f-pactuadoComPessoa"><span><b style="font-weight: 500;">Pactuado com a pessoa ou a família</b><span class="cell-sub">O PTS é construído junto, não só pela equipe.</span></span><input type="checkbox" role="switch" id="f-pactuadoComPessoa" formControlName="pactuadoComPessoa" /></label>
+            </div>
+            <div class="dw-field">
+              <label for="f-pactuacaoObservacao">Observação da pactuação<span class="opt">opcional</span></label>
+              <input id="f-pactuacaoObservacao" type="text" maxlength="1000" formControlName="pactuacaoObservacao" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.base ? 'Salvar revisão' : 'Salvar PTS') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('intervencao') {
+        <form class="dw-form" [formGroup]="intervencaoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Paciente</dt><dd>{{ g.caso.pacienteNome }}</dd></div></dl>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipoIntervencao">Tipo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoIntervencao" formControlName="tipoId" [attr.aria-invalid]="!!erroCampo('tipoIntervencao')" aria-describedby="e-tipoIntervencao">
+                  <option value="">Escolha…</option>
+                  @for (t of tipos(); track t.uuid) { @if (t.ativo) { <option [value]="t.uuid">{{ t.nome }}</option> } }
+                </select>
+                @if (erroCampo('tipoIntervencao')) { <p class="dw-err" id="e-tipoIntervencao">{{ erroCampo('tipoIntervencao') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-situacaoIntervencao">Situação</label>
+                <select id="f-situacaoIntervencao" formControlName="situacao">
+                  <option value="REALIZADA">Realizada</option>
+                  <option value="NAO_COMPARECEU">Não compareceu</option>
+                </select>
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-realizadaEm">Quando<span class="opt">opcional</span></label>
+                <input id="f-realizadaEm" type="datetime-local" formControlName="realizadaEm" [attr.aria-invalid]="!!erroCampo('realizadaEm')" aria-describedby="h-realizadaEm e-realizadaEm" />
+                <p class="dw-hint" id="h-realizadaEm">Sem data, agora.</p>
+                @if (erroCampo('realizadaEm')) { <p class="dw-err" id="e-realizadaEm">{{ erroCampo('realizadaEm') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-compartilhadoCom">Compartilhado com (matrícula)<span class="opt">opcional</span></label>
+                <input id="f-compartilhadoCom" type="text" formControlName="compartilhadoComMatricula" autocomplete="off" />
+              </div>
+            </div>
+            @if (previstasVigentes(g.caso).length) {
+              <div class="dw-field">
+                <label for="f-previstaIntervencao">Cumpre a intervenção prevista<span class="opt">opcional</span></label>
+                <select id="f-previstaIntervencao" formControlName="previstaId">
+                  <option value="">Nenhuma</option>
+                  @for (pv of previstasVigentes(g.caso); track pv.uuid) { <option [value]="pv.uuid">{{ pv.tipoNome }}@if (pv.frequencia) { · {{ pv.frequencia }} }</option> }
+                </select>
+              </div>
+            }
+            <div class="dw-field">
+              <label for="f-resumoIntervencao">Resumo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-resumoIntervencao" rows="3" maxlength="2000" formControlName="resumo" [attr.aria-invalid]="!!erroCampo('resumoIntervencao')" aria-describedby="e-resumoIntervencao"></textarea>
+              @if (erroCampo('resumoIntervencao')) { <p class="dw-err" id="e-resumoIntervencao">{{ erroCampo('resumoIntervencao') }}</p> }
+            </div>
+            <div class="box box--info"><div>Da psicoterapia, registre só que aconteceu e um resumo: o conteúdo das sessões não vai para o prontuário compartilhado.</div></div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('rede') {
+        <form class="dw-form" [formGroup]="redeForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Paciente</dt><dd>{{ g.caso.pacienteNome }}</dd></div></dl>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-nomeRede">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-nomeRede" type="text" maxlength="200" formControlName="nome" [attr.aria-invalid]="!!erroCampo('nomeRede')" aria-describedby="e-nomeRede" />
+                @if (erroCampo('nomeRede')) { <p class="dw-err" id="e-nomeRede">{{ erroCampo('nomeRede') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-papelRede">Papel <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-papelRede" formControlName="papel" [attr.aria-invalid]="!!erroCampo('papelRede')" aria-describedby="e-papelRede">
+                  <option value="">Escolha…</option>
+                  @for (pp of listaPapeisRede; track pp) { <option [value]="pp">{{ papeisRede[pp] }}</option> }
+                </select>
+                @if (erroCampo('papelRede')) { <p class="dw-err" id="e-papelRede">{{ erroCampo('papelRede') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-vinculoRede">Vínculo<span class="opt">opcional</span></label>
+                <input id="f-vinculoRede" type="text" maxlength="100" formControlName="vinculo" placeholder="Ex.: mãe, vizinha" />
+              </div>
+              <div class="dw-field">
+                <label for="f-telefoneRede">Telefone<span class="opt">opcional</span></label>
+                <input id="f-telefoneRede" type="tel" maxlength="30" formControlName="telefone" />
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-observacaoRede">Observação<span class="opt">opcional</span></label>
+              <input id="f-observacaoRede" type="text" maxlength="500" formControlName="observacao" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Incluir' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('sairRede') {
+        <form class="dw-form" [formGroup]="sairRedeForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Pessoa</dt><dd>{{ g.pessoa.nome }} · {{ papeisRede[g.pessoa.papel] }}</dd></div></dl>
+            <div class="dw-field">
+              <label for="f-motivoSaidaRede">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-motivoSaidaRede" type="text" maxlength="500" formControlName="motivo" [attr.aria-invalid]="!!erroCampo('motivoSaidaRede')" aria-describedby="e-motivoSaidaRede" />
+              @if (erroCampo('motivoSaidaRede')) { <p class="dw-err" id="e-motivoSaidaRede">{{ erroCampo('motivoSaidaRede') }}</p> }
+            </div>
+            <div class="box box--info"><div>A pessoa fica no histórico da rede de apoio do caso.</div></div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Tirar da rede' }}</button>
           </footer>
         </form>
       }

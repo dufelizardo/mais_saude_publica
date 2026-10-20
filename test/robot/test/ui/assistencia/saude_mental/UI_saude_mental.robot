@@ -1,11 +1,12 @@
 *** Settings ***
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_ui_scenario.resource
+Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_pts_ui_scenario.resource
 Resource    ../../../../src/scenario/common/ui_sessao_scenario.resource
 Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Assistência - Saúde Mental
-Metadata    Test Suite Description        Valida a tela Saúde Mental: acolhimento, avaliação, referência e saída (ADR-0120).
+Metadata    Test Suite Description        Valida a tela Saúde Mental: acolhimento, avaliação, referência e saída (ADR-0120); PTS, intervenções e rede de apoio (ADR-0121).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiSaudeMental    MaisSaudePublicaFrontend
@@ -47,5 +48,37 @@ CT-004 - Encerrar o caso
     [Tags]    UI    UiSaudeMental
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - SAUDE MENTAL - ENCERRAR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-005 - Elaborar o PTS
+    [Documentation]    Mensagem sem necessidades; versão 1 com objetivo e intervenção prevista.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - ELABORAR PTS
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-006 - Revisar o PTS
+    [Documentation]    Revisão preenchida, síntese obrigatória; a versão 1 no histórico.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - REVISAR PTS
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-007 - Registrar intervenção
+    [Documentation]    Mensagem sem resumo; a intervenção na aba.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - REGISTRAR INTERVENCAO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-008 - Rede de apoio
+    [Documentation]    Incluir e tirar da rede, com histórico.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - REDE DE APOIO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

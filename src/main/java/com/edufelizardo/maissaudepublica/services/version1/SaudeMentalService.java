@@ -16,6 +16,7 @@ import com.edufelizardo.maissaudepublica.models.Equipe;
 import com.edufelizardo.maissaudepublica.models.MembroEquipe;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
+import com.edufelizardo.maissaudepublica.models.ProjetoTerapeuticoSingular;
 import com.edufelizardo.maissaudepublica.models.Programa;
 import com.edufelizardo.maissaudepublica.models.ReferenciaSaudeMental;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
@@ -125,6 +126,9 @@ public class SaudeMentalService {
 
     @Autowired
     private VinculoAssistencialService vinculoService;
+
+    @Autowired
+    private TerapeuticoLeitura terapeutico;
 
     // ── Escrita ────────────────────────────────────────────────────────────────────────────────────
 
@@ -300,10 +304,11 @@ public class SaudeMentalService {
 
     /**
      * Os casos vigentes nas unidades do escopo, sem conteúdo clínico. {@code escopo}: TECNICO (sou o técnico de
-     * referência) ou EQUIPE (sou de uma equipe de referência); sem escopo, todos os do meu acesso.
+     * referência) ou EQUIPE (sou de uma equipe de referência); sem escopo, todos os do meu acesso. {@code pendencia}:
+     * SEM_AVALIACAO, SEM_PTS ou PTS_A_REVISAR (ADR-0121).
      */
     @Transactional(readOnly = true)
-    public CasosSaudeMentalDto casos(UUID unidadeId, UUID pacienteId, String escopo, SituacaoAcompanhamento situacao) {
+    public CasosSaudeMentalDto casos(UUID unidadeId, UUID pacienteId, String escopo, SituacaoAcompanhamento situacao, String pendencia) {
         List<AcompanhamentoSaudeMental> vigentes = controleDeAcesso.filtrar(casoRepository.findVigentes().stream(),
                         c -> java.util.stream.Stream.of(c.getUnidade()), ACOMPANHAR)
                 .filter(c -> unidadeId == null || c.getUnidade().getUuid().equals(unidadeId))
@@ -312,6 +317,7 @@ public class SaudeMentalService {
         List<UUID> ids = vigentes.stream().map(AcompanhamentoSaudeMental::getUuid).toList();
         Map<UUID, ReferenciaSaudeMental> referencias = vigentesPorCaso(ids);
         Map<UUID, Instant> ultimas = ultimasAvaliacoes(ids);
+        Map<UUID, ProjetoTerapeuticoSingular> pts = terapeutico.ptsVigentes(ids);
         String cpf = UsuarioAutenticado.cpf();
         Set<UUID> minhasEquipes = cpf == null ? Set.of() : minhasEquipes(cpf);
         List<AcompanhamentoSaudeMentalDto> todos = vigentes.stream()
@@ -325,17 +331,23 @@ public class SaudeMentalService {
                     }
                     return r != null && minhasEquipes.contains(r.getEquipe().getUuid());
                 })
-                .map(c -> resumo(c, referencias.get(c.getUuid()), ultimas.get(c.getUuid())))
+                .map(c -> resumo(c, referencias.get(c.getUuid()), ultimas.get(c.getUuid()), pts.get(c.getUuid())))
                 .toList();
         List<AcompanhamentoSaudeMentalDto> lista = todos.stream()
                 .filter(d -> situacao == null || d.getSituacao() == situacao)
+                .filter(d -> pendencia == null || pendencia.isBlank()
+                        || ("SEM_AVALIACAO".equalsIgnoreCase(pendencia) && d.getUltimaAvaliacaoEm() == null)
+                        || ("SEM_PTS".equalsIgnoreCase(pendencia) && d.getPtsVersao() == null)
+                        || ("PTS_A_REVISAR".equalsIgnoreCase(pendencia) && d.isPtsRevisaoVencida()))
                 .sorted(Comparator.comparing((AcompanhamentoSaudeMentalDto d) -> d.getSituacao() != SituacaoAcompanhamento.FALTOSO)
                         .thenComparing(d -> d.getUltimaAvaliacaoEm() != null)
                         .thenComparing(AcompanhamentoSaudeMentalDto::getPacienteNome, String.CASE_INSENSITIVE_ORDER))
                 .toList();
         return new CasosSaudeMentalDto(todos.size(),
                 todos.stream().filter(d -> d.getSituacao() == SituacaoAcompanhamento.FALTOSO).count(),
-                todos.stream().filter(d -> d.getUltimaAvaliacaoEm() == null).count(), lista);
+                todos.stream().filter(d -> d.getUltimaAvaliacaoEm() == null).count(),
+                todos.stream().filter(d -> d.getPtsVersao() == null).count(),
+                todos.stream().filter(AcompanhamentoSaudeMentalDto::isPtsRevisaoVencida).count(), lista);
     }
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
@@ -370,7 +382,7 @@ public class SaudeMentalService {
     }
 
     /** Para escrever no caso: vigente, a permissão na unidade e o conteúdo liberado (a referência ou o acesso justificado). */
-    private AcompanhamentoSaudeMental casoParaEscrever(UUID casoId) {
+    AcompanhamentoSaudeMental casoParaEscrever(UUID casoId) {
         AcompanhamentoSaudeMental caso = buscarCaso(casoId);
         controleDeAcesso.exigir(ACOMPANHAR, caso.getUnidade());
         ContextoAuditoria.paciente(caso.getPaciente().getUuid());
@@ -381,6 +393,18 @@ public class SaudeMentalService {
         if (!liberado(caso, null)) {
             throw new ResourceForbiddenException("Só a equipe de referência do caso, ou quem registrar um acesso justificado, "
                     + "registra neste caso.");
+        }
+        return caso;
+    }
+
+    /** Para ler o conteúdo do caso: vínculo assistencial e conteúdo liberado; sem ele, 403 (ADR-0121). */
+    AcompanhamentoSaudeMental casoParaLer(UUID casoId) {
+        AcompanhamentoSaudeMental caso = buscarCaso(casoId);
+        ContextoAuditoria.paciente(caso.getPaciente().getUuid());
+        ContextoAuditoria.registro(caso.getUuid());
+        AcessoProntuarioDto acesso = vinculoService.exigirVinculo(caso.getPaciente().getUuid());
+        if (!liberado(caso, acesso)) {
+            throw new ResourceForbiddenException("O conteúdo deste caso é da equipe de referência; registre um acesso justificado.");
         }
         return caso;
     }
@@ -407,7 +431,8 @@ public class SaudeMentalService {
         boolean autor = acolhimentoRepository.findDoPaciente(caso.getPaciente().getUuid()).stream()
                 .anyMatch(a -> a.getAcompanhamento() != null && a.getAcompanhamento().getUuid().equals(caso.getUuid())
                         && cpf.equals(a.getRegistradoPorCpf()))
-                || avaliacaoRepository.findDoAcompanhamento(caso.getUuid()).stream().anyMatch(a -> cpf.equals(a.getRegistradoPorCpf()));
+                || avaliacaoRepository.findDoAcompanhamento(caso.getUuid()).stream().anyMatch(a -> cpf.equals(a.getRegistradoPorCpf()))
+                || terapeutico.autor(caso.getUuid(), cpf);
         return autor || vinculoService.acessoJustificadoVigente(cpf, caso.getPaciente().getUuid());
     }
 
@@ -485,7 +510,23 @@ public class SaudeMentalService {
         return p;
     }
 
-    private Profissional profissionalDoUsuario() {
+    /** O caso com o conteúdo, depois de uma escrita (o casoParaEscrever já conferiu o acesso). */
+    AcompanhamentoSaudeMentalDto detalheLiberado(AcompanhamentoSaudeMental caso) {
+        return detalhe(caso, null, true);
+    }
+
+    /** O profissional é o técnico ou membro vigente da equipe de referência do caso (responsável no PTS, ADR-0121). */
+    boolean daReferencia(AcompanhamentoSaudeMental caso, Profissional p) {
+        ReferenciaSaudeMental r = vigentesPorCaso(List.of(caso.getUuid())).get(caso.getUuid());
+        if (r == null) {
+            return false;
+        }
+        return r.getTecnico().getUuid().equals(p.getUuid())
+                || membroRepository.findByEquipe_UuidInAndFimIsNull(List.of(r.getEquipe().getUuid())).stream()
+                .anyMatch(m -> m.getProfissional().getUuid().equals(p.getUuid()));
+    }
+
+    Profissional profissionalDoUsuario() {
         String cpf = UsuarioAutenticado.cpf();
         return cpf == null ? null : profissionalRepository.findByCpfAndAtivoTrue(cpf).orElse(null);
     }
@@ -495,7 +536,8 @@ public class SaudeMentalService {
         ReferenciaSaudeMental vigente = referencias.stream().filter(ReferenciaSaudeMental::vigente).findFirst()
                 .orElse(referencias.isEmpty() ? null : referencias.get(0));
         List<AvaliacaoSaudeMental> avaliacoes = avaliacaoRepository.findDoAcompanhamento(caso.getUuid());
-        AcompanhamentoSaudeMentalDto d = resumo(caso, vigente, avaliacoes.isEmpty() ? null : avaliacoes.get(0).getRealizadaEm());
+        AcompanhamentoSaudeMentalDto d = resumo(caso, vigente, avaliacoes.isEmpty() ? null : avaliacoes.get(0).getRealizadaEm(),
+                terapeutico.ptsVigentes(List.of(caso.getUuid())).get(caso.getUuid()));
         d.setConteudoLiberado(liberado);
         d.setAcesso(acesso);
         d.setReferencias(referencias.stream().map(r -> new AcompanhamentoSaudeMentalDto.Referencia(r.getEquipe().getUuid(),
@@ -508,11 +550,16 @@ public class SaudeMentalService {
             d.setAvaliacoes(avaliacoes.stream().map(a -> new AvaliacaoSaudeMentalDto(a.getUuid(), a.getRealizadaEm(),
                     a.getProfissional() != null ? a.getProfissional().getNome() : null, a.getContextoHistoria(),
                     a.getAspectosPsicossociais(), a.getFatoresRisco(), a.getFatoresProtecao(), a.getNecessidades(), a.getCid())).toList());
+            d.setPts(terapeutico.versoes(caso.getUuid()));
+            d.setIntervencoes(terapeutico.intervencoes(caso.getUuid()));
+            d.setFaltasSeguidas(TerapeuticoLeitura.faltasSeguidas(d.getIntervencoes()));
+            d.setRedeApoio(terapeutico.redeApoio(caso.getUuid()));
         }
         return d;
     }
 
-    private static AcompanhamentoSaudeMentalDto resumo(AcompanhamentoSaudeMental c, ReferenciaSaudeMental r, Instant ultimaAvaliacao) {
+    private static AcompanhamentoSaudeMentalDto resumo(AcompanhamentoSaudeMental c, ReferenciaSaudeMental r, Instant ultimaAvaliacao,
+                                                       ProjetoTerapeuticoSingular pts) {
         Paciente pac = c.getPaciente();
         AcompanhamentoProgramatico programatico = c.getAcompanhamentoProgramatico();
         SituacaoAcompanhamento situacao = c.vigente() ? programatico.getSituacao()
@@ -524,7 +571,9 @@ public class SaudeMentalService {
                 c.getMotivoSaida(), c.getObservacaoSaida(),
                 r != null ? r.getEquipe().getUuid() : null, r != null ? r.getEquipe().getNome() : null,
                 r != null ? r.getTecnico().getMatricula() : null, r != null ? r.getTecnico().getNome() : null,
-                ultimaAvaliacao, false, null, List.of(), List.of(), List.of());
+                ultimaAvaliacao, false, null, List.of(), List.of(), List.of(),
+                pts != null ? pts.getVersao() : null, pts != null ? pts.getRevisarEm() : null, TerapeuticoLeitura.revisaoVencida(pts), 0,
+                List.of(), List.of(), List.of());
     }
 
     private static AcolhimentoSaudeMentalDto acolhimentoDto(AcolhimentoSaudeMental a, boolean liberado) {

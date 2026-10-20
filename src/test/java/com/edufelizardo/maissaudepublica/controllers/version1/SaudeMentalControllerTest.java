@@ -113,6 +113,12 @@ class SaudeMentalControllerTest {
     static void limparDados(JdbcTemplate jdbc, String prefixo, String matricula) {
         String unidades = "(select uuid from tb_unidade_de_saude where nome like '" + prefixo + "%')";
         String casos = "(select uuid from tb_acompanhamento_saude_mental where unidade_id in " + unidades + ")";
+        String pts = "(select uuid from tb_projeto_terapeutico_singular where acompanhamento_id in " + casos + ")";
+        jdbc.update("delete from tb_intervencao_saude_mental where acompanhamento_id in " + casos);
+        jdbc.update("delete from tb_intervencao_prevista where pts_id in " + pts);
+        jdbc.update("delete from tb_objetivo_terapeutico where pts_id in " + pts);
+        jdbc.update("delete from tb_projeto_terapeutico_singular where acompanhamento_id in " + casos);
+        jdbc.update("delete from tb_pessoa_rede_apoio where acompanhamento_id in " + casos);
         jdbc.update("delete from tb_avaliacao_saude_mental where acompanhamento_id in " + casos);
         jdbc.update("delete from tb_acolhimento_saude_mental where unidade_id in " + unidades + " or acompanhamento_id in " + casos);
         jdbc.update("delete from tb_referencia_saude_mental where acompanhamento_id in " + casos);
