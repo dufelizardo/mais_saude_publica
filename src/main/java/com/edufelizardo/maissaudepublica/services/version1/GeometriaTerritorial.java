@@ -65,6 +65,11 @@ final class GeometriaTerritorial {
         return a.intersects(b) && a.intersection(b).getArea() > SOBREPOSICAO_MINIMA;
     }
 
+    /** O ponto (longitude, latitude) cai na geometria, com a folga de borda (ADR-0127). */
+    static boolean contem(Geometry g, double latitude, double longitude) {
+        return g.buffer(TOLERANCIA_BORDA).covers(FABRICA.createPoint(new Coordinate(longitude, latitude)));
+    }
+
     // ── Leitura ────────────────────────────────────────────────────────────────────────────────────
 
     private static JsonNode ler(String texto) {

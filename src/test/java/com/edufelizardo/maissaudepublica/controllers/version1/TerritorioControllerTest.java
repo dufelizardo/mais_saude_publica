@@ -126,6 +126,14 @@ class TerritorioControllerTest {
                 + " or membro_id in (select uuid from tb_membro_equipe where equipe_id in (" + equipes + "))", codigo + "%", prefixo + "%");
         jdbc.update("delete from tb_responsabilidade_territorial where area_id in (" + areas + ") or equipe_id in (" + equipes + ")",
                 codigo + "%", prefixo + "%");
+        // Cadastro territorial (ADR-0127): membros, famílias, domicílios e imóveis das microáreas.
+        String imoveis = "select uuid from tb_imovel where microarea_id in (select uuid from tb_microarea where area_id in (" + areas + "))";
+        String domicilios = "select uuid from tb_domicilio where imovel_id in (" + imoveis + ")";
+        String nucleos = "select uuid from tb_nucleo_familiar where domicilio_id in (" + domicilios + ")";
+        jdbc.update("delete from tb_membro_nucleo where nucleo_id in (" + nucleos + ")", codigo + "%");
+        jdbc.update("delete from tb_nucleo_familiar where uuid in (" + nucleos + ")", codigo + "%");
+        jdbc.update("delete from tb_domicilio where uuid in (" + domicilios + ")", codigo + "%");
+        jdbc.update("delete from tb_imovel where uuid in (" + imoveis + ")", codigo + "%");
         jdbc.update("delete from tb_microarea where area_id in (" + areas + ")", codigo + "%");
         jdbc.update("delete from tb_area where uuid in (" + areas + ")", codigo + "%");
         jdbc.update("delete from tb_territorio where segmento_id in (select uuid from tb_segmento_territorial where codigo like ?)", codigo + "%");

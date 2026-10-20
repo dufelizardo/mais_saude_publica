@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
@@ -27,6 +27,8 @@ import { Drawer } from '../../../shared/drawer/drawer';
 import { EdicaoMapa, Mapa, PinoMapa, PoligonoMapa } from '../../../shared/mapa/mapa';
 import { emComum, foraDe, geometriaDoArquivo, hectares, relevante } from '../../../shared/mapa/geometria';
 import { TIPOS_UNIDADE } from '../../../core/models/rede-unidades';
+import { ImovelDto, TIPOS_IMOVEL } from '../../../core/models/cadastro-territorial';
+import { ImoveisDaArea } from './imoveis-da-area';
 
 /** Valores do formulário único das gavetas. */
 const VAZIO = {
@@ -67,11 +69,12 @@ type Gaveta =
  * Território (ADR-0125, fatia F1 da ADR-0108): segmento → território → área → microárea, com a equipe responsável
  * pela área e o ACS de cada microárea como histórico. Layout de lista e detalhe de Equipamentos de Saúde. O mapa
  * (ADR-0126, F2) mostra a área, as microáreas (sem ACS em âmbar) e as unidades, e desenha os polígonos; o GeoJSON
- * colado ou importado (inclusive KML) continua nas gavetas.
+ * colado ou importado (inclusive KML) continua nas gavetas. Os imóveis e as famílias da área (ADR-0127, F3a) ficam no
+ * componente {@link ImoveisDaArea}; os imóveis com ponto aparecem no mapa.
  */
 @Component({
   selector: 'app-territorio',
-  imports: [ReactiveFormsModule, RouterLink, Drawer, Mapa],
+  imports: [ReactiveFormsModule, RouterLink, Drawer, Mapa, ImoveisDaArea],
   templateUrl: './territorio.html',
 })
 export class Territorio {
@@ -106,6 +109,10 @@ export class Territorio {
   protected readonly erroDesenho = signal<string | null>(null);
   protected readonly salvandoDesenho = signal(false);
 
+  /** Imóveis da área aberta (ADR-0127), para os pinos do mapa. */
+  protected readonly imoveisDaArea = signal<ImovelDto[]>([]);
+  private readonly cadastro = viewChild(ImoveisDaArea);
+
   protected readonly gaveta = signal<Gaveta | null>(null);
   protected readonly submitting = signal(false);
   protected readonly erroApi = signal<string | null>(null);
@@ -125,7 +132,7 @@ export class Territorio {
     this.carregar();
   }
 
-  private carregar(): void {
+  protected carregar(): void {
     this.carregando.set(true);
     forkJoin({
       arvore: this.service.arvore().pipe(catchError(() => of(null))),
@@ -208,13 +215,23 @@ export class Territorio {
 
   protected readonly pinosDoMapa = computed<PinoMapa[]>(() => {
     const unidadeDaEquipe = this.detalhe()?.area.equipe?.unidadeId;
-    return this.unidades()
+    const imoveis: PinoMapa[] = this.imoveisDaArea()
+      .filter((i) => i.latitude != null && i.longitude != null && i.ativo)
+      .map((i) => ({
+        id: 'imovel:' + i.uuid, lat: i.latitude!, lng: i.longitude!, sigla: TIPOS_IMOVEL[i.tipo].sigla, classe: 'unit-pin t-imovel',
+        descricao: `${TIPOS_IMOVEL[i.tipo].rotulo}: ${i.enderecoTexto}`,
+      }));
+    return imoveis.concat(this.unidades()
       .filter((u) => u.latitude != null && u.longitude != null)
       .map((u) => ({
         id: 'unidade:' + u.uuid, lat: u.latitude!, lng: u.longitude!, sigla: TIPOS_UNIDADE[u.tipo]?.sigla ?? 'U',
         classe: `unit-pin ${TIPOS_UNIDADE[u.tipo]?.familia ?? ''}`, descricao: u.nome, destaque: u.uuid === unidadeDaEquipe,
-      }));
+      })));
   });
+
+  /** Áreas para o destino da mudança de família. */
+  protected readonly rotulosDasAreas = computed(() =>
+    this.todosTerritorios().flatMap((t) => t.areas.map((a) => ({ uuid: a.uuid, rotulo: `Área ${a.codigo} · ${a.nome} (${t.nome})` }))));
 
   /** A geometria de partida do desenho em curso. */
   protected readonly edicaoDoMapa = computed<EdicaoMapa | null>(() => {
@@ -248,6 +265,10 @@ export class Territorio {
 
   protected noMapa(id: string): void {
     if (id.startsWith('unidade:')) return;
+    if (id.startsWith('imovel:')) {
+      this.cadastro()?.abrirImovel(id.substring('imovel:'.length));
+      return;
+    }
     this.microareaSelecionada.set(id);
     setTimeout(() => document.getElementById('mi-' + id)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
   }
@@ -320,6 +341,7 @@ export class Territorio {
     if (uuid !== this.selecionadaId()) {
       this.cancelarDesenho();
       this.microareaSelecionada.set(null);
+      this.imoveisDaArea.set([]);
     }
     this.selecionadaId.set(uuid);
     this.service.area(uuid).pipe(catchError(() => of(null))).subscribe((d) => this.detalhe.set(d));

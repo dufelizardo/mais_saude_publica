@@ -35,6 +35,9 @@ import com.edufelizardo.maissaudepublica.models.enuns.FuncaoEquipe;
 import com.edufelizardo.maissaudepublica.repositories.AreaRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtribuicaoMicroareaRepository;
 import com.edufelizardo.maissaudepublica.repositories.EquipeRepository;
+import com.edufelizardo.maissaudepublica.repositories.ImovelRepository;
+import com.edufelizardo.maissaudepublica.repositories.MembroNucleoRepository;
+import com.edufelizardo.maissaudepublica.repositories.NucleoFamiliarRepository;
 import com.edufelizardo.maissaudepublica.repositories.MembroEquipeRepository;
 import com.edufelizardo.maissaudepublica.repositories.MicroareaRepository;
 import com.edufelizardo.maissaudepublica.repositories.ResponsabilidadeTerritorialRepository;
@@ -98,6 +101,15 @@ public class TerritorioService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private ImovelRepository imovelRepository;
+
+    @Autowired
+    private NucleoFamiliarRepository nucleoRepository;
+
+    @Autowired
+    private MembroNucleoRepository membroNucleoRepository;
+
     // ── Leitura ────────────────────────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
@@ -127,7 +139,12 @@ public class TerritorioService {
                 (int) todasAreas.stream().filter(a -> a.getEquipe() == null).count(), todasMicro.size(),
                 (int) todasMicro.stream().filter(m -> m.getAcs() == null).count(),
                 (int) (todasAreas.stream().filter(a -> a.getGeometria() == null).count() + todasMicro.stream().filter(m -> m.getGeometria() == null).count()),
-                (int) todasMicro.stream().filter(m -> m.getPopulacaoReferencia() != null && m.getPopulacaoReferencia() > Microarea.POPULACAO_REFERENCIA_CNES).count());
+                (int) todasMicro.stream().filter(m -> m.getPopulacaoReferencia() != null && m.getPopulacaoReferencia() > Microarea.POPULACAO_REFERENCIA_CNES).count(),
+                0, 0, 0);
+        contar(todasMicro);
+        indicadores.setImoveis(todasMicro.stream().mapToInt(MicroareaNo::getImoveis).sum());
+        indicadores.setFamilias(todasMicro.stream().mapToInt(MicroareaNo::getFamilias).sum());
+        indicadores.setPessoas(todasMicro.stream().mapToInt(MicroareaNo::getPessoas).sum());
         return new ArvoreTerritorialDto(indicadores, segmentos);
     }
 
@@ -502,8 +519,29 @@ public class TerritorioService {
     private AreaNo areaNo(Area a) {
         Map<UUID, AtribuicaoMicroarea> acs = atribuicaoRepository.findByMicroarea_Area_UuidAndFimIsNull(a.getUuid()).stream()
                 .collect(Collectors.toMap(x -> x.getMicroarea().getUuid(), Function.identity(), (x, y) -> x));
-        return areaNo(a, responsabilidadeRepository.findByArea_UuidAndFimIsNull(a.getUuid()).orElse(null),
-                microareaRepository.findByArea_UuidOrderByCodigoAsc(a.getUuid()).stream().map(m -> microareaNo(m, acs.get(m.getUuid()))).toList());
+        List<MicroareaNo> microareas = microareaRepository.findByArea_UuidOrderByCodigoAsc(a.getUuid()).stream()
+                .map(m -> microareaNo(m, acs.get(m.getUuid()))).toList();
+        contar(microareas);
+        return areaNo(a, responsabilidadeRepository.findByArea_UuidAndFimIsNull(a.getUuid()).orElse(null), microareas);
+    }
+
+    /** Imóveis, famílias e pessoas de cada microárea (ADR-0127): só contagens, abertas a quem está logado. */
+    private void contar(List<MicroareaNo> microareas) {
+        if (microareas.isEmpty()) {
+            return;
+        }
+        Map<UUID, Integer> imoveis = porMicroarea(imovelRepository.contarPorMicroarea());
+        Map<UUID, Integer> familias = porMicroarea(nucleoRepository.contarVigentesPorMicroarea());
+        Map<UUID, Integer> pessoas = porMicroarea(membroNucleoRepository.contarVigentesPorMicroarea());
+        for (MicroareaNo m : microareas) {
+            m.setImoveis(imoveis.getOrDefault(m.getUuid(), 0));
+            m.setFamilias(familias.getOrDefault(m.getUuid(), 0));
+            m.setPessoas(pessoas.getOrDefault(m.getUuid(), 0));
+        }
+    }
+
+    private static Map<UUID, Integer> porMicroarea(List<Object[]> linhas) {
+        return linhas.stream().collect(Collectors.toMap(l -> (UUID) l[0], l -> ((Number) l[1]).intValue()));
     }
 
     private static AreaNo areaNo(Area a, ResponsabilidadeTerritorial r, List<MicroareaNo> microareas) {
@@ -525,7 +563,8 @@ public class TerritorioService {
         }
         AcsRef acs = a == null ? null : new AcsRef(a.getMembro().getUuid(), a.getMembro().getProfissional().getMatricula(),
                 a.getMembro().getProfissional().getNome(), a.getInicio());
-        return new MicroareaNo(m.getUuid(), m.getArea().getUuid(), m.getCodigo(), m.getNome(), m.getGeometria(), m.getPopulacaoReferencia(), acs, avisos);
+        return new MicroareaNo(m.getUuid(), m.getArea().getUuid(), m.getCodigo(), m.getNome(), m.getGeometria(), m.getPopulacaoReferencia(), acs, avisos,
+                0, 0, 0);
     }
 
     private ArvoreTerritorialDto.Segmento segmento(SegmentoTerritorial s) {

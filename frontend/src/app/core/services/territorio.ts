@@ -12,6 +12,15 @@ import {
   TerritorioRequestDto,
   UnidadeNoMapaDto,
 } from '../models/territorio';
+import {
+  DomicilioRequestDto,
+  FamiliaRequestDto,
+  ImovelDetalheDto,
+  ImovelDto,
+  ImovelRequestDto,
+  Parentesco,
+  FaixaRendaFamiliar,
+} from '../models/cadastro-territorial';
 
 /** Território (ADR-0125): a árvore, o cadastro, a equipe da área, o ACS da microárea e as coordenadas da unidade. */
 @Injectable({ providedIn: 'root' })
@@ -61,6 +70,52 @@ export class TerritorioService {
 
   coordenadas(unidadeId: string, latitude: number | null, longitude: number | null): Observable<UnidadeNoMapaDto> {
     return this.http.put<UnidadeNoMapaDto>(`${this.api}/unidade/${unidadeId}/coordenadas`, { latitude, longitude });
+  }
+
+  // ── Cadastro territorial (ADR-0127) ──────────────────────────────────────────────────────────────
+
+  imoveis(areaId: string): Observable<ImovelDto[]> {
+    return this.http.get<ImovelDto[]>(`${this.api}/area/${areaId}/imoveis`);
+  }
+
+  imovel(uuid: string): Observable<ImovelDetalheDto> {
+    return this.http.get<ImovelDetalheDto>(`${this.api}/imovel/${uuid}`);
+  }
+
+  salvarImovel(uuid: string | null, dto: ImovelRequestDto): Observable<ImovelDetalheDto> {
+    return uuid ? this.http.patch<ImovelDetalheDto>(`${this.api}/imovel/${uuid}`, dto) : this.http.post<ImovelDetalheDto>(`${this.api}/imovel`, dto);
+  }
+
+  salvarDomicilio(uuid: string | null, dto: DomicilioRequestDto): Observable<ImovelDetalheDto> {
+    return uuid ? this.http.patch<ImovelDetalheDto>(`${this.api}/domicilio/${uuid}`, dto) : this.http.post<ImovelDetalheDto>(`${this.api}/domicilio`, dto);
+  }
+
+  criarFamilia(dto: FamiliaRequestDto): Observable<ImovelDetalheDto> {
+    return this.http.post<ImovelDetalheDto>(`${this.api}/familia`, dto);
+  }
+
+  renda(familiaId: string, rendaFamiliar: FaixaRendaFamiliar | null): Observable<ImovelDetalheDto> {
+    return this.http.patch<ImovelDetalheDto>(`${this.api}/familia/${familiaId}/renda`, { rendaFamiliar });
+  }
+
+  incluirMembro(familiaId: string, pacienteId: string, parentesco: Parentesco, inicio?: string | null): Observable<ImovelDetalheDto> {
+    return this.http.post<ImovelDetalheDto>(`${this.api}/familia/${familiaId}/membro`, { pacienteId, parentesco, inicio: inicio || null });
+  }
+
+  saidaMembro(membroId: string, motivo: string, fim?: string | null): Observable<ImovelDetalheDto> {
+    return this.http.post<ImovelDetalheDto>(`${this.api}/familia/membro/${membroId}/saida`, { motivo, fim: fim || null });
+  }
+
+  trocarResponsavel(familiaId: string, membroId: string, parentescoDoAnterior: Parentesco): Observable<ImovelDetalheDto> {
+    return this.http.post<ImovelDetalheDto>(`${this.api}/familia/${familiaId}/responsavel`, { membroId, parentescoDoAnterior });
+  }
+
+  mudanca(familiaId: string, domicilioId: string, motivo?: string | null, data?: string | null): Observable<ImovelDetalheDto> {
+    return this.http.post<ImovelDetalheDto>(`${this.api}/familia/${familiaId}/mudanca`, { domicilioId, motivo: motivo || null, data: data || null });
+  }
+
+  enderecoDoImovel(membroId: string): Observable<ImovelDetalheDto> {
+    return this.http.post<ImovelDetalheDto>(`${this.api}/familia/membro/${membroId}/endereco-do-imovel`, {});
   }
 
   encerrarAcs(microareaId: string, motivo: string, fim?: string | null): Observable<AreaDetalheDto> {
