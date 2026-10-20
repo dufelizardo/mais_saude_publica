@@ -14,7 +14,8 @@ import java.util.UUID;
 /**
  * Um caso em saúde mental (ADR-0120). A situação vem do acompanhamento do programa Saúde Mental. Sem
  * {@code conteudoLiberado}, ficam só a existência do caso e a referência (para saber a quem procurar); acolhimentos e
- * avaliações vão vazios. Na lista, as coleções também vão vazias.
+ * avaliações vão vazios, como o PTS, as intervenções e a rede de apoio da SM2 (ADR-0121). Na lista, as coleções também
+ * vão vazias.
  */
 @Getter
 @Setter
@@ -48,6 +49,16 @@ public class AcompanhamentoSaudeMentalDto implements Serializable {
     private List<Referencia> referencias;
     private List<AcolhimentoSaudeMentalDto> acolhimentos;
     private List<AvaliacaoSaudeMentalDto> avaliacoes;
+    /** Versão vigente do PTS (ADR-0121); nula sem PTS. */
+    private Integer ptsVersao;
+    private LocalDate ptsRevisarEm;
+    private boolean ptsRevisaoVencida;
+    /** Faltas seguidas nas intervenções mais recentes: sugere marcar faltoso. */
+    private int faltasSeguidas;
+    /** As versões do PTS, a vigente primeiro; só com conteúdo liberado. */
+    private List<ProjetoTerapeuticoDto> pts;
+    private List<IntervencaoSaudeMentalDto> intervencoes;
+    private List<PessoaRedeApoioDto> redeApoio;
 
     @Getter
     @Setter

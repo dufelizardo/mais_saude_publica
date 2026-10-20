@@ -1,4 +1,4 @@
-import { MotivoSaidaAcompanhamento, SituacaoAcompanhamento } from './programa';
+import { MotivoSaidaAcompanhamento, PeriodicidadeAcompanhamento, SituacaoAcompanhamento } from './programa';
 import { AcessoProntuarioDto } from './prontuario';
 
 // ── Saúde Mental, fatia SM1 (ADR-0120) ─────────────────────────────────────────────────────────
@@ -93,12 +93,21 @@ export interface AcompanhamentoSaudeMentalDto {
   referencias: ReferenciaSaudeMentalDto[];
   acolhimentos: AcolhimentoSaudeMentalDto[];
   avaliacoes: AvaliacaoSaudeMentalDto[];
+  ptsVersao?: number | null;
+  ptsRevisarEm?: string | null;
+  ptsRevisaoVencida: boolean;
+  faltasSeguidas: number;
+  pts: ProjetoTerapeuticoDto[];
+  intervencoes: IntervencaoSaudeMentalDto[];
+  redeApoio: PessoaRedeApoioDto[];
 }
 
 export interface CasosSaudeMentalDto {
   emAcompanhamento: number;
   faltosos: number;
   semAvaliacao: number;
+  semPts: number;
+  ptsARevisar: number;
   lista: AcompanhamentoSaudeMentalDto[];
 }
 
@@ -122,4 +131,111 @@ export interface AvaliacaoSaudeMentalRequestDto {
   fatoresProtecao?: string | null;
   necessidades: string;
   cid?: string | null;
+}
+
+// ── SM2: PTS, intervenções e rede de apoio (ADR-0121) ──────────────────────────────────────────
+
+export type SituacaoObjetivoTerapeutico = 'EM_ANDAMENTO' | 'ALCANCADO' | 'NAO_ALCANCADO' | 'SUSPENSO';
+export type SituacaoIntervencaoSaudeMental = 'REALIZADA' | 'NAO_COMPARECEU';
+export type PapelRedeApoio = 'FAMILIAR' | 'CUIDADOR' | 'PESSOA_DE_REFERENCIA' | 'SERVICO' | 'OUTRO';
+export type PendenciaSaudeMental = '' | 'SEM_AVALIACAO' | 'SEM_PTS' | 'PTS_A_REVISAR';
+
+export const SITUACOES_OBJETIVO: Record<SituacaoObjetivoTerapeutico, { rotulo: string; classe: string }> = {
+  EM_ANDAMENTO: { rotulo: 'Em andamento', classe: 'info' },
+  ALCANCADO: { rotulo: 'Alcançado', classe: 'ok' },
+  NAO_ALCANCADO: { rotulo: 'Não alcançado', classe: 'warn' },
+  SUSPENSO: { rotulo: 'Suspenso', classe: 'alert' },
+};
+
+export const SITUACOES_INTERVENCAO: Record<SituacaoIntervencaoSaudeMental, { rotulo: string; classe: string }> = {
+  REALIZADA: { rotulo: 'Realizada', classe: 'ok' },
+  NAO_COMPARECEU: { rotulo: 'Não compareceu', classe: 'warn' },
+};
+
+export const PAPEIS_REDE: Record<PapelRedeApoio, string> = {
+  FAMILIAR: 'Familiar',
+  CUIDADOR: 'Cuidador',
+  PESSOA_DE_REFERENCIA: 'Pessoa de referência',
+  SERVICO: 'Serviço',
+  OUTRO: 'Outro',
+};
+
+export interface TipoIntervencaoSaudeMentalDto {
+  uuid: string;
+  codigo: string;
+  nome: string;
+  ativo: boolean;
+}
+
+export interface ObjetivoTerapeuticoDto {
+  uuid: string;
+  descricao: string;
+  meta?: string | null;
+  prazo?: string | null;
+  responsavelMatricula?: string | null;
+  responsavelNome?: string | null;
+  situacao: SituacaoObjetivoTerapeutico;
+}
+
+export interface IntervencaoPrevistaDto {
+  uuid: string;
+  tipoId: string;
+  tipoNome: string;
+  frequencia?: string | null;
+  responsavelMatricula?: string | null;
+  responsavelNome?: string | null;
+  servico?: string | null;
+}
+
+export interface ProjetoTerapeuticoDto {
+  uuid: string;
+  versao: number;
+  vigente: boolean;
+  necessidades: string;
+  periodicidadeRevisao: PeriodicidadeAcompanhamento;
+  revisarEm: string;
+  revisaoVencida: boolean;
+  pactuadoComPessoa: boolean;
+  pactuacaoObservacao?: string | null;
+  sinteseRevisao?: string | null;
+  elaboradoEm: string;
+  profissionalNome?: string | null;
+  objetivos: ObjetivoTerapeuticoDto[];
+  intervencoesPrevistas: IntervencaoPrevistaDto[];
+}
+
+export interface IntervencaoSaudeMentalDto {
+  uuid: string;
+  tipoId: string;
+  tipoNome: string;
+  realizadaEm: string;
+  situacao: SituacaoIntervencaoSaudeMental;
+  profissionalNome?: string | null;
+  compartilhadoComNome?: string | null;
+  previstaId?: string | null;
+  resumo: string;
+}
+
+export interface PessoaRedeApoioDto {
+  uuid: string;
+  nome: string;
+  papel: PapelRedeApoio;
+  vinculo?: string | null;
+  telefone?: string | null;
+  observacao?: string | null;
+  inicio: string;
+  fim?: string | null;
+  motivoFim?: string | null;
+}
+
+export interface ProjetoTerapeuticoRequestDto {
+  versaoBase?: number | null;
+  necessidades: string;
+  objetivos: { descricao: string; meta?: string | null; prazo?: string | null; responsavelMatricula?: string | null; situacao?: SituacaoObjetivoTerapeutico }[];
+  intervencoesPrevistas: { tipoId: string; frequencia?: string | null; responsavelMatricula?: string | null; servico?: string | null }[];
+  periodicidadeRevisao?: PeriodicidadeAcompanhamento | null;
+  revisarEm?: string | null;
+  pactuadoComPessoa: boolean;
+  pactuacaoObservacao?: string | null;
+  sinteseRevisao?: string | null;
 }

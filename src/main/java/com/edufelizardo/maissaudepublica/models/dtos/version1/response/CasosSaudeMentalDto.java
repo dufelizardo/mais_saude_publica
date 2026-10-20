@@ -6,7 +6,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
-/** Os casos em saúde mental do escopo (ADR-0120), com os números da tela: em acompanhamento, faltosos e sem avaliação. */
+/** Os casos em saúde mental do escopo (ADR-0120), com os números da tela: em acompanhamento, faltosos, sem avaliação, sem PTS e PTS a revisar (ADR-0121). */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,5 +20,7 @@ public class CasosSaudeMentalDto implements Serializable {
     private long emAcompanhamento;
     private long faltosos;
     private long semAvaliacao;
+    private long semPts;
+    private long ptsARevisar;
     private List<AcompanhamentoSaudeMentalDto> lista;
 }

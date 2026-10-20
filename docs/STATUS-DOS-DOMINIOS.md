@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-19
+- **Atualizado em:** 2026-10-20
 - **Release em produção:** v1.6.0
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -52,7 +52,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 📐 | fatias V1 a V5 |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
-| 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 feita; PTS, crise e rede (SM2 a SM6) |
+| 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 e SM2 feitas; crise, rede, CAPS e indicadores (SM3 a SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
@@ -69,7 +69,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 | P4 | 22 Programas | ações programáticas ligadas ao atendimento; busca ativa; programa na Agenda |
-| SM2 | 26 Saúde Mental | Projeto Terapêutico Singular, intervenções e rede de apoio (sobre o caso da SM1) |
 | SM4 | 26 Saúde Mental | referência e contrarreferência pela Regulação; cuidado compartilhado e matriciamento |
 | P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
 | F1 | 21 Território | backend do território (área, microárea, GeoJSON) |
@@ -93,7 +92,7 @@ F1 ──► F3 ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microáre
 
 V1 ──► V2 · SM3 (notificação de autoagressão) · V5
 SB1 ──► SB2 ──► SB3 ──► SB4
-SM1 ✅ ──► SM2 · SM3 · SM4 · SM6
+SM1 ✅ ──► SM2 ✅ ──► SM6 · SM3 · SM4
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
 ```
@@ -505,10 +504,12 @@ C1 ──► C2 · C4 · C5
   como vínculo assistencial), conteúdo só para a referência, os autores e o acesso justificado; permissões
   `SAUDE_MENTAL.ACOLHER` e `SAUDE_MENTAL.ACOMPANHAR`, papéis Psicólogo e Assistente social; tela Saúde Mental e
   atalho na aba Programas de Pacientes. Não depende da SB1: o atendimento é opcional.
+- [x] **SM2 · PTS** ([ADR-0121](./adr/0121-saude-mental-pts-intervencoes.md)): PTS versionado (a revisão não
+  sobrescreve; revisão concorrente recusada), com objetivos, situação, intervenções previstas, pactuação e "revisar
+  em"; intervenções realizadas com tipo de catálogo, compartilhamento e faltas seguidas; rede de apoio como histórico;
+  indicadores "Sem PTS" e "PTS a revisar". Grupo ligado à atividade coletiva fica para a P4.
 
 **Falta:**
-- [ ] **SM2 · PTS:** objetivos, metas, intervenções previstas, rede de apoio, versões e revisão; registro de
-  intervenções.
 - [ ] **SM3 · Risco e crise:** avaliação de risco com histórico, evento de crise, pós-crise, sugestão de notificação
   (Vigilância V1); modalidade da internação e comunicação ao Ministério Público (depende da regulação de urgência
   para acionar o SAMU).

@@ -60,14 +60,16 @@ public class SaudeMentalController {
     @RequerPermissao({"SAUDE_MENTAL.ACOMPANHAR"})
     @GetMapping(value = "acompanhamentos", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Casos em saúde mental", description = "Casos vigentes nas unidades do seu escopo, sem conteúdo clínico; faltosos e "
-            + "sem avaliação primeiro. Filtros: unidadeId, pacienteId, escopo (TECNICO ou EQUIPE) e situacao. Leitura auditada.",
+            + "sem avaliação primeiro. Filtros: unidadeId, pacienteId, escopo (TECNICO ou EQUIPE), situacao e pendencia (SEM_AVALIACAO, "
+            + "SEM_PTS, PTS_A_REVISAR). Leitura auditada.",
             tags = "Saúde Mental")
     @ApiErrorResponsesListagem
     public ResponseEntity<CasosSaudeMentalDto> casos(@RequestParam(required = false) UUID unidadeId,
                                                      @RequestParam(required = false) UUID pacienteId,
                                                      @RequestParam(required = false) String escopo,
-                                                     @RequestParam(required = false) SituacaoAcompanhamento situacao) {
-        return ResponseEntity.ok(service.casos(unidadeId, pacienteId, escopo, situacao));
+                                                     @RequestParam(required = false) SituacaoAcompanhamento situacao,
+                                                     @RequestParam(required = false) String pendencia) {
+        return ResponseEntity.ok(service.casos(unidadeId, pacienteId, escopo, situacao, pendencia));
     }
 
     @AuditarLeitura

@@ -238,4 +238,33 @@ class SaudeMentalAutorizacaoControllerTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.emAcompanhamento").value(0));
         mockMvc.perform(como(GESTOR, get(caso))).andExpect(status().isForbidden());
     }
+
+    @Test
+    void ptsIntervencoesERedeSoComOConteudoLiberado() throws Exception {
+        String r = mockMvc.perform(como(PSI_REF, post("/api/v1/saude-mental/acompanhamento")).contentType(MediaType.APPLICATION_JSON)
+                .content(abertura())).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String caso = "/api/v1/saude-mental/acompanhamento/" + JsonPath.read(r, "$.uuid");
+        String pts = "{\"necessidades\": \"Vínculo e adesão.\", \"objetivos\": [{\"descricao\": \"Vínculo com o CAPS\"}]}";
+        String intervencao = "{\"tipoId\": \"%s\", \"resumo\": \"Escuta.\"}".formatted(jdbc.queryForObject(
+                "select uuid::text from tb_tipo_intervencao_saude_mental where codigo = 'ORIENTACAO'", String.class));
+
+        // O colega com vínculo, fora da referência, não elabora, não registra e não lê o PTS.
+        mockMvc.perform(como(PSI_OUTRO, post(caso + "/pts")).contentType(MediaType.APPLICATION_JSON).content(pts)).andExpect(status().isForbidden());
+        mockMvc.perform(como(PSI_OUTRO, post(caso + "/intervencao")).contentType(MediaType.APPLICATION_JSON).content(intervencao))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(PSI_OUTRO, post(caso + "/rede-apoio")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nome\": \"Ana\", \"papel\": \"FAMILIAR\"}")).andExpect(status().isForbidden());
+
+        mockMvc.perform(como(PSI_REF, post(caso + "/pts")).contentType(MediaType.APPLICATION_JSON).content(pts)).andExpect(status().isCreated());
+        mockMvc.perform(como(PSI_REF, post(caso + "/intervencao")).contentType(MediaType.APPLICATION_JSON).content(intervencao))
+                .andExpect(status().isCreated());
+        mockMvc.perform(como(PSI_REF, get(caso + "/pts"))).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+        mockMvc.perform(como(PSI_OUTRO, get(caso + "/pts"))).andExpect(status().isForbidden());
+        // No detalhe, o colega vê que há PTS (a versão), sem o conteúdo.
+        mockMvc.perform(como(PSI_OUTRO, get(caso))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.ptsVersao").value(1))
+                .andExpect(jsonPath("$.pts.length()").value(0))
+                .andExpect(jsonPath("$.intervencoes.length()").value(0));
+        mockMvc.perform(como(GESTOR, get("/api/v1/saude-mental/tipos-intervencao"))).andExpect(status().isForbidden());
+    }
 }
