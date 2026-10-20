@@ -7,6 +7,8 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceConflictException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.AcompanhamentoSaudeMental;
+import com.edufelizardo.maissaudepublica.models.Equipe;
+import com.edufelizardo.maissaudepublica.models.ReferenciaSaudeMental;
 import com.edufelizardo.maissaudepublica.models.IntervencaoPrevista;
 import com.edufelizardo.maissaudepublica.models.IntervencaoSaudeMental;
 import com.edufelizardo.maissaudepublica.models.ObjetivoTerapeutico;
@@ -26,6 +28,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TipoInter
 import com.edufelizardo.maissaudepublica.models.enuns.PeriodicidadeAcompanhamento;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoIntervencaoSaudeMental;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoObjetivoTerapeutico;
+import com.edufelizardo.maissaudepublica.repositories.EquipeRepository;
 import com.edufelizardo.maissaudepublica.repositories.IntervencaoPrevistaRepository;
 import com.edufelizardo.maissaudepublica.repositories.IntervencaoSaudeMentalRepository;
 import com.edufelizardo.maissaudepublica.repositories.ObjetivoTerapeuticoRepository;
@@ -81,6 +84,12 @@ public class ProjetoTerapeuticoService {
 
     @Autowired
     private ProfissionalRepository profissionalRepository;
+
+    @Autowired
+    private EquipeRepository equipeRepository;
+
+    /** Tipo de intervenção do apoio matricial (ADR-0122): pede a equipe matriciada. */
+    static final String MATRICIAMENTO = "MATRICIAMENTO";
 
     @Transactional(readOnly = true)
     public List<TipoIntervencaoSaudeMentalDto> tipos() {
@@ -193,9 +202,12 @@ public class ProjetoTerapeuticoService {
                 throw new ResourceUnprocessableEntityException(compartilhado.getNome() + " está inativo.");
             }
         }
+        TipoIntervencaoSaudeMental tipo = tipoAtivo(dto.getTipoId());
+        Equipe matriciada = equipeMatriciada(caso, tipo, dto.getEquipeMatriciadaId());
         IntervencaoSaudeMental i = new IntervencaoSaudeMental();
         i.setAcompanhamento(caso);
-        i.setTipo(tipoAtivo(dto.getTipoId()));
+        i.setTipo(tipo);
+        i.setEquipeMatriciada(matriciada);
         i.setRealizadaEm(quando);
         i.setProfissional(saudeMentalService.profissionalDoUsuario());
         i.setCompartilhadoCom(compartilhado);
@@ -260,6 +272,33 @@ public class ProjetoTerapeuticoService {
                     + "responsável no PTS.");
         }
         return p;
+    }
+
+    /**
+     * No matriciamento, a equipe com quem o caso foi discutido é obrigatória, e o apoio matricial da ADR-0103 precisa
+     * existir entre ela e a equipe de referência, em qualquer sentido. Nos outros tipos, não se informa.
+     */
+    private Equipe equipeMatriciada(AcompanhamentoSaudeMental caso, TipoIntervencaoSaudeMental tipo, UUID equipeId) {
+        if (!MATRICIAMENTO.equals(tipo.getCodigo())) {
+            if (equipeId != null) {
+                throw new ResourceBadRequestException("A equipe matriciada só vale na discussão de caso em apoio matricial.");
+            }
+            return null;
+        }
+        if (equipeId == null) {
+            throw new ResourceBadRequestException("No matriciamento, informe a equipe com quem o caso foi discutido.");
+        }
+        Equipe matriciada = equipeRepository.findById(equipeId).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar uma equipe com o id " + equipeId + " em nossos registros."));
+        ReferenciaSaudeMental r = saudeMentalService.referenciaVigente(caso);
+        Equipe referencia = r != null ? r.getEquipe() : null;
+        boolean apoio = referencia != null && (referencia.getApoiadas().stream().anyMatch(e -> e.getUuid().equals(matriciada.getUuid()))
+                || matriciada.getApoiadas().stream().anyMatch(e -> e.getUuid().equals(referencia.getUuid())));
+        if (!apoio) {
+            throw new ResourceUnprocessableEntityException("Não há apoio matricial entre a equipe " + matriciada.getNome()
+                    + " e a equipe de referência do caso (cadastre o apoio na equipe, ADR-0103).");
+        }
+        return matriciada;
     }
 
     private TipoIntervencaoSaudeMental tipoAtivo(UUID tipoId) {

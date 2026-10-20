@@ -13,6 +13,8 @@ import {
   ProjetoTerapeuticoRequestDto,
   SituacaoIntervencaoSaudeMental,
   TipoIntervencaoSaudeMentalDto,
+  TransferenciaCuidadoDto,
+  TransferenciasCuidadoDto,
 } from '../models/saude-mental';
 
 /** Saúde Mental, fatia SM1 (ADR-0120): acolhimento, caso, referência, avaliação e saída. */
@@ -62,7 +64,7 @@ export class SaudeMentalService {
   }
 
   registrarIntervencao(uuid: string, dto: { tipoId: string; situacao: SituacaoIntervencaoSaudeMental; resumo: string; realizadaEm?: string | null;
-    compartilhadoComMatricula?: string | null; previstaId?: string | null }): Observable<AcompanhamentoSaudeMentalDto> {
+    compartilhadoComMatricula?: string | null; previstaId?: string | null; equipeMatriciadaId?: string | null }): Observable<AcompanhamentoSaudeMentalDto> {
     return this.http.post<AcompanhamentoSaudeMentalDto>(`${this.api}/acompanhamento/${uuid}/intervencao`, dto);
   }
 
@@ -72,5 +74,42 @@ export class SaudeMentalService {
 
   encerrarNaRede(uuid: string, pessoaId: string, motivo: string): Observable<AcompanhamentoSaudeMentalDto> {
     return this.http.post<AcompanhamentoSaudeMentalDto>(`${this.api}/acompanhamento/${uuid}/rede-apoio/${pessoaId}/encerramento`, { motivo });
+  }
+
+  // ── SM4 (ADR-0122) ─────────────────────────────────────────────────────────────────────────
+
+  encaminhar(uuid: string, dto: { solicitacaoId?: string | null; procedimentoId?: string | null; cid?: string | null; justificativa?: string | null;
+    prioridade?: string | null; profissionalMatricula?: string | null }): Observable<AcompanhamentoSaudeMentalDto> {
+    return this.http.post<AcompanhamentoSaudeMentalDto>(`${this.api}/acompanhamento/${uuid}/encaminhamento`, dto);
+  }
+
+  compartilhar(uuid: string, equipeId: string, objetivo: string): Observable<AcompanhamentoSaudeMentalDto> {
+    return this.http.post<AcompanhamentoSaudeMentalDto>(`${this.api}/acompanhamento/${uuid}/compartilhamento`, { equipeId, objetivo });
+  }
+
+  encerrarCompartilhamento(uuid: string, compartilhamentoId: string, motivo: string): Observable<AcompanhamentoSaudeMentalDto> {
+    return this.http.post<AcompanhamentoSaudeMentalDto>(`${this.api}/acompanhamento/${uuid}/compartilhamento/${compartilhamentoId}/encerramento`, { motivo });
+  }
+
+  proporTransferencia(uuid: string, unidadeDestinoId: string, resumo: string): Observable<AcompanhamentoSaudeMentalDto> {
+    return this.http.post<AcompanhamentoSaudeMentalDto>(`${this.api}/acompanhamento/${uuid}/transferencia`, { unidadeDestinoId, resumo });
+  }
+
+  aceitarTransferencia(uuid: string, equipeId: string, tecnicoMatricula: string): Observable<AcompanhamentoSaudeMentalDto> {
+    return this.http.post<AcompanhamentoSaudeMentalDto>(`${this.api}/transferencia/${uuid}/aceite`, { equipeId, tecnicoMatricula });
+  }
+
+  recusarTransferencia(uuid: string, motivo: string): Observable<TransferenciaCuidadoDto> {
+    return this.http.post<TransferenciaCuidadoDto>(`${this.api}/transferencia/${uuid}/recusa`, { motivo });
+  }
+
+  cancelarTransferencia(uuid: string, motivo: string): Observable<TransferenciaCuidadoDto> {
+    return this.http.post<TransferenciaCuidadoDto>(`${this.api}/transferencia/${uuid}/cancelamento`, { motivo });
+  }
+
+  transferencias(unidadeId?: string): Observable<TransferenciasCuidadoDto> {
+    let params = new HttpParams();
+    if (unidadeId) params = params.set('unidadeId', unidadeId);
+    return this.http.get<TransferenciasCuidadoDto>(`${this.api}/transferencias`, { params });
   }
 }

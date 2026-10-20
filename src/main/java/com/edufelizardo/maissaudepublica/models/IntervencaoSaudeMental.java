@@ -63,4 +63,9 @@ public class IntervencaoSaudeMental implements Serializable {
 
     @Column(updatable = false)
     private String registradoPorCpf;
+
+    /** No matriciamento (ADR-0122): a equipe apoiada, ou que apoia, com quem o caso foi discutido. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "equipe_matriciada_id", referencedColumnName = "uuid", updatable = false)
+    private Equipe equipeMatriciada;
 }

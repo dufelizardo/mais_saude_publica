@@ -187,6 +187,19 @@ public class AcompanhamentoService {
     public AcompanhamentoDto encerrar(UUID acompanhamentoId, EncerramentoAcompanhamentoRequestDto dto) {
         AcompanhamentoProgramatico a = acompanhamento(acompanhamentoId);
         controleDeAcesso.exigir(ACOMPANHAR, a.getUnidade());
+        return encerrar(a, dto);
+    }
+
+    /**
+     * A saída do programa pedida pelo caso em saúde mental, que já conferiu o acesso (ADR-0120). Na transferência do
+     * cuidado (ADR-0122), quem aceita no destino não tem a permissão na unidade de origem.
+     */
+    @Transactional
+    AcompanhamentoDto encerrarPelaSaudeMental(UUID acompanhamentoId, EncerramentoAcompanhamentoRequestDto dto) {
+        return encerrar(acompanhamento(acompanhamentoId), dto);
+    }
+
+    private AcompanhamentoDto encerrar(AcompanhamentoProgramatico a, EncerramentoAcompanhamentoRequestDto dto) {
         ContextoAuditoria.paciente(a.getPaciente().getUuid());
         if (!a.vigente()) {
             throw new ResourceUnprocessableEntityException("Este acompanhamento já foi encerrado.");

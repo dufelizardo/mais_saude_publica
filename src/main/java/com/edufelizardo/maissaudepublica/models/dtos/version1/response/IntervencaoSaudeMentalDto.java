@@ -28,4 +28,5 @@ public class IntervencaoSaudeMentalDto implements Serializable {
     private String compartilhadoComNome;
     private UUID previstaId;
     private String resumo;
+    private String equipeMatriciadaNome;
 }

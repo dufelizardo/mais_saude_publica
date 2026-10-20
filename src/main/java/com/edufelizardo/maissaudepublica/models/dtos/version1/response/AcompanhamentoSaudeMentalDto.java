@@ -59,6 +59,12 @@ public class AcompanhamentoSaudeMentalDto implements Serializable {
     private List<ProjetoTerapeuticoDto> pts;
     private List<IntervencaoSaudeMentalDto> intervencoes;
     private List<PessoaRedeApoioDto> redeApoio;
+    /** Rede de atenção (ADR-0122): encaminhamentos pela Regulação, cuidado compartilhado e transferências. */
+    private List<EncaminhamentoSaudeMentalDto> encaminhamentos;
+    private List<CompartilhamentoCuidadoDto> compartilhamentos;
+    private List<TransferenciaCuidadoDto> transferencias;
+    /** O caso de onde este veio, por transferência do cuidado. */
+    private UUID casoAnteriorId;
 
     @Getter
     @Setter

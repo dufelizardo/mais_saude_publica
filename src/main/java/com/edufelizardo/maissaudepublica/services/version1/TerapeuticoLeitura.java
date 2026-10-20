@@ -93,7 +93,8 @@ public class TerapeuticoLeitura {
                 i.getTipo().getUuid(), i.getTipo().getNome(), i.getRealizadaEm(), i.getSituacao(),
                 i.getProfissional() != null ? i.getProfissional().getNome() : null,
                 i.getCompartilhadoCom() != null ? i.getCompartilhadoCom().getNome() : null,
-                i.getPrevista() != null ? i.getPrevista().getUuid() : null, i.getResumo())).toList();
+                i.getPrevista() != null ? i.getPrevista().getUuid() : null, i.getResumo(),
+                i.getEquipeMatriciada() != null ? i.getEquipeMatriciada().getNome() : null)).toList();
     }
 
     /** Quantas das intervenções mais recentes, em sequência, foram faltas (sugere marcar faltoso). */

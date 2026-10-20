@@ -100,6 +100,10 @@ export interface AcompanhamentoSaudeMentalDto {
   pts: ProjetoTerapeuticoDto[];
   intervencoes: IntervencaoSaudeMentalDto[];
   redeApoio: PessoaRedeApoioDto[];
+  encaminhamentos: EncaminhamentoSaudeMentalDto[];
+  compartilhamentos: CompartilhamentoCuidadoDto[];
+  transferencias: TransferenciaCuidadoDto[];
+  casoAnteriorId?: string | null;
 }
 
 export interface CasosSaudeMentalDto {
@@ -214,6 +218,7 @@ export interface IntervencaoSaudeMentalDto {
   compartilhadoComNome?: string | null;
   previstaId?: string | null;
   resumo: string;
+  equipeMatriciadaNome?: string | null;
 }
 
 export interface PessoaRedeApoioDto {
@@ -238,4 +243,79 @@ export interface ProjetoTerapeuticoRequestDto {
   pactuadoComPessoa: boolean;
   pactuacaoObservacao?: string | null;
   sinteseRevisao?: string | null;
+}
+
+// ── SM4: rede de atenção (ADR-0122) ────────────────────────────────────────────────────────────
+
+export type SituacaoTransferenciaCuidado = 'PROPOSTA' | 'ACEITA' | 'RECUSADA' | 'CANCELADA';
+
+export const SITUACOES_TRANSFERENCIA: Record<SituacaoTransferenciaCuidado, { rotulo: string; classe: string }> = {
+  PROPOSTA: { rotulo: 'Aguardando o destino', classe: 'warn' },
+  ACEITA: { rotulo: 'Aceita', classe: 'ok' },
+  RECUSADA: { rotulo: 'Recusada', classe: 'alert' },
+  CANCELADA: { rotulo: 'Cancelada', classe: 'muted' },
+};
+
+/** Situação da solicitação na Regulação, como na tela da Regulação (ADR-0088). */
+export const STATUS_ENCAMINHAMENTO: Record<string, { rotulo: string; classe: string }> = {
+  SOLICITADA: { classe: 'info', rotulo: 'Na fila' },
+  DEVOLVIDA: { classe: 'warn', rotulo: 'Devolvida' },
+  AUTORIZADA: { classe: 'ok', rotulo: 'Autorizada' },
+  NEGADA: { classe: 'alert', rotulo: 'Negada' },
+  AGENDADA: { classe: 'ok', rotulo: 'Agendada' },
+  REALIZADA: { classe: 'purple', rotulo: 'Realizada' },
+  FALTOU: { classe: 'alert', rotulo: 'Faltou' },
+  CANCELADA: { classe: 'muted', rotulo: 'Cancelada' },
+};
+
+export const PRIORIDADES_ENCAMINHAMENTO: Record<string, string> = {
+  VERMELHO: 'Vermelho · emergência',
+  AMARELO: 'Amarelo · urgente',
+  VERDE: 'Verde · não urgente',
+  AZUL: 'Azul · eletivo',
+};
+
+export interface EncaminhamentoSaudeMentalDto {
+  uuid: string;
+  solicitacaoId: string;
+  procedimentoNome: string;
+  status: string;
+  prioridade: string;
+  solicitadoEm: string;
+  unidadeExecutanteNome?: string | null;
+  dataHoraPrevista?: string | null;
+  contrarreferencia?: string | null;
+}
+
+export interface CompartilhamentoCuidadoDto {
+  uuid: string;
+  equipeId: string;
+  equipeNome: string;
+  unidadeNome: string;
+  objetivo: string;
+  inicio: string;
+  fim?: string | null;
+  motivoFim?: string | null;
+}
+
+export interface TransferenciaCuidadoDto {
+  uuid: string;
+  casoId: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeOrigemId: string;
+  unidadeOrigemNome: string;
+  unidadeDestinoId: string;
+  unidadeDestinoNome: string;
+  resumo: string;
+  situacao: SituacaoTransferenciaCuidado;
+  propostaEm: string;
+  decididaEm?: string | null;
+  motivoDecisao?: string | null;
+  casoDestinoId?: string | null;
+}
+
+export interface TransferenciasCuidadoDto {
+  recebidas: TransferenciaCuidadoDto[];
+  enviadas: TransferenciaCuidadoDto[];
 }

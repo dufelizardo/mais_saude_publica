@@ -232,7 +232,7 @@ class ProjetoTerapeuticoControllerTest {
                 .andExpect(jsonPath("$.intervencoes.length()").value(3))
                 .andExpect(jsonPath("$.faltasSeguidas").value(2));
         mockMvc.perform(get("/api/v1/saude-mental/tipos-intervencao")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(8))
+                .andExpect(jsonPath("$.length()").value(9))
                 .andExpect(jsonPath("$[0].codigo").value("ATENDIMENTO_INDIVIDUAL"));
     }
 

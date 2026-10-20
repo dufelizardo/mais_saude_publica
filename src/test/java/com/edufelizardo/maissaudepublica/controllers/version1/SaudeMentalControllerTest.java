@@ -114,6 +114,13 @@ class SaudeMentalControllerTest {
         String unidades = "(select uuid from tb_unidade_de_saude where nome like '" + prefixo + "%')";
         String casos = "(select uuid from tb_acompanhamento_saude_mental where unidade_id in " + unidades + ")";
         String pts = "(select uuid from tb_projeto_terapeutico_singular where acompanhamento_id in " + casos + ")";
+        String solicitacoes = "(select uuid from tb_solicitacao_regulacao where unidade_solicitante_id in " + unidades + ")";
+        jdbc.update("delete from tb_transferencia_cuidado where acompanhamento_id in " + casos + " or unidade_destino_id in " + unidades);
+        jdbc.update("delete from tb_encaminhamento_saude_mental where acompanhamento_id in " + casos);
+        jdbc.update("delete from tb_compartilhamento_cuidado where acompanhamento_id in " + casos);
+        jdbc.update("delete from tb_evento_regulacao where solicitacao_id in " + solicitacoes);
+        jdbc.update("delete from tb_solicitacao_regulacao where uuid in " + solicitacoes);
+        jdbc.update("delete from tb_procedimento_regulado where nome like '" + prefixo + "%'");
         jdbc.update("delete from tb_intervencao_saude_mental where acompanhamento_id in " + casos);
         jdbc.update("delete from tb_intervencao_prevista where pts_id in " + pts);
         jdbc.update("delete from tb_objetivo_terapeutico where pts_id in " + pts);
@@ -128,6 +135,8 @@ class SaudeMentalControllerTest {
         jdbc.update("delete from tb_acompanhamento_programatico where unidade_id in " + unidades);
         jdbc.update("delete from tb_participacao_programa where unidade_id in " + unidades);
         jdbc.update("delete from tb_atendimento where unidade_id in " + unidades);
+        jdbc.update("delete from tb_equipe_apoio where equipe_id in (select uuid from tb_equipe where unidade_id in " + unidades + ") "
+                + "or apoiada_id in (select uuid from tb_equipe where unidade_id in " + unidades + ")");
         jdbc.update("delete from tb_membro_equipe where equipe_id in (select uuid from tb_equipe where unidade_id in " + unidades + ")");
         jdbc.update("delete from tb_equipe where unidade_id in " + unidades);
         jdbc.update("delete from tb_profissional where matricula like '" + matricula + "%'");

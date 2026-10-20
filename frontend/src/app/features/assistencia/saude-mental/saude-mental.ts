@@ -4,7 +4,8 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, catchError, of } from 'rxjs';
 import { AcessoDaInterface } from '../../../core/models/auth';
-import { EquipeResumoDto, MembroEquipeDto } from '../../../core/models/equipe';
+import { EquipeResumoDto, MembroEquipeDto, VinculoEquipeDto } from '../../../core/models/equipe';
+import { ProcedimentoReguladoResponseDto } from '../../../core/models/regulacao';
 import { PacienteResponseDto } from '../../../core/models/paciente';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { MOTIVOS_SAIDA, MotivoSaidaAcompanhamento, PERIODICIDADES, PeriodicidadeAcompanhamento, SITUACOES_ACOMPANHAMENTO } from '../../../core/models/programa';
@@ -14,7 +15,13 @@ import {
   DESFECHOS,
   DESFECHOS_QUE_ACOMPANHAM,
   DesfechoAcolhimentoSaudeMental,
+  CompartilhamentoCuidadoDto,
   PAPEIS_REDE,
+  PRIORIDADES_ENCAMINHAMENTO,
+  SITUACOES_TRANSFERENCIA,
+  STATUS_ENCAMINHAMENTO,
+  TransferenciaCuidadoDto,
+  TransferenciasCuidadoDto,
   PapelRedeApoio,
   PendenciaSaudeMental,
   PessoaRedeApoioDto,
@@ -31,6 +38,7 @@ import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { AuthService } from '../../../core/services/auth';
 import { EquipeService } from '../../../core/services/equipe';
 import { PacienteService } from '../../../core/services/paciente';
+import { RegulacaoService } from '../../../core/services/regulacao';
 import { semVinculo } from '../../../core/services/prontuario';
 import { SaudeMentalService } from '../../../core/services/saude-mental';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
@@ -45,9 +53,16 @@ type Gaveta =
   | { tipo: 'pts'; caso: AcompanhamentoSaudeMentalDto; base: ProjetoTerapeuticoDto | null }
   | { tipo: 'intervencao'; caso: AcompanhamentoSaudeMentalDto }
   | { tipo: 'rede'; caso: AcompanhamentoSaudeMentalDto }
-  | { tipo: 'sairRede'; caso: AcompanhamentoSaudeMentalDto; pessoa: PessoaRedeApoioDto };
+  | { tipo: 'sairRede'; caso: AcompanhamentoSaudeMentalDto; pessoa: PessoaRedeApoioDto }
+  | { tipo: 'encaminhar'; caso: AcompanhamentoSaudeMentalDto }
+  | { tipo: 'compartilhar'; caso: AcompanhamentoSaudeMentalDto }
+  | { tipo: 'fimCompartilhamento'; caso: AcompanhamentoSaudeMentalDto; compartilhamento: CompartilhamentoCuidadoDto }
+  | { tipo: 'transferir'; caso: AcompanhamentoSaudeMentalDto }
+  | { tipo: 'aceitar'; transferencia: TransferenciaCuidadoDto }
+  | { tipo: 'recusar'; transferencia: TransferenciaCuidadoDto }
+  | { tipo: 'cancelarTransferencia'; caso: AcompanhamentoSaudeMentalDto; transferencia: TransferenciaCuidadoDto };
 
-type Aba = 'resumo' | 'pts' | 'intervencoes' | 'rede' | 'acolhimentos' | 'avaliacoes' | 'referencia';
+type Aba = 'resumo' | 'pts' | 'intervencoes' | 'rede' | 'atencao' | 'acolhimentos' | 'avaliacoes' | 'referencia';
 
 /**
  * Saúde Mental, fatia SM1 (ADR-0120): os casos do escopo (meus, da equipe, todos), o acolhimento que abre o caso, e o
@@ -70,6 +85,7 @@ export class SaudeMental {
   private readonly unidadeService = inject(UnidadeSaudeService);
   private readonly equipeService = inject(EquipeService);
   private readonly pacienteService = inject(PacienteService);
+  private readonly regulacaoService = inject(RegulacaoService);
 
   protected readonly riscos = RISCOS;
   protected readonly listaRiscos = Object.keys(RISCOS) as RiscoInicialSaudeMental[];
@@ -85,6 +101,10 @@ export class SaudeMental {
   protected readonly situacoesIntervencao = SITUACOES_INTERVENCAO;
   protected readonly papeisRede = PAPEIS_REDE;
   protected readonly listaPapeisRede = Object.keys(PAPEIS_REDE) as PapelRedeApoio[];
+  protected readonly statusEncaminhamento = STATUS_ENCAMINHAMENTO;
+  protected readonly prioridades = PRIORIDADES_ENCAMINHAMENTO;
+  protected readonly listaPrioridades = Object.keys(PRIORIDADES_ENCAMINHAMENTO);
+  protected readonly situacoesTransferencia = SITUACOES_TRANSFERENCIA;
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
@@ -95,6 +115,12 @@ export class SaudeMental {
   protected readonly escopo = signal<'' | 'TECNICO' | 'EQUIPE'>('');
   protected readonly pendencia = signal<PendenciaSaudeMental>('');
   protected readonly tipos = signal<TipoIntervencaoSaudeMentalDto[]>([]);
+  /** Transferências pendentes do escopo (ADR-0122): `null` sem acesso. */
+  protected readonly transferencias = signal<TransferenciasCuidadoDto | null>(null);
+  protected readonly procedimentos = signal<ProcedimentoReguladoResponseDto[]>([]);
+  /** Equipes que podem ser parceiras no compartilhamento (todas as ativas) e as do apoio matricial da referência. */
+  protected readonly todasEquipes = signal<EquipeResumoDto[]>([]);
+  protected readonly equipesMatriciamento = signal<VinculoEquipeDto[]>([]);
   /** Versão do PTS aberta no histórico (null: nenhuma). */
   protected readonly versaoAberta = signal<number | null>(null);
   protected readonly unidadeFiltro = signal('');
@@ -151,9 +177,17 @@ export class SaudeMental {
   });
   protected readonly intervencaoForm = this.fb.nonNullable.group({
     tipoId: [''], situacao: ['REALIZADA' as SituacaoIntervencaoSaudeMental], realizadaEm: [''], resumo: [''], compartilhadoComMatricula: [''], previstaId: [''],
+    equipeMatriciadaId: [''],
   });
   protected readonly redeForm = this.fb.nonNullable.group({ nome: [''], papel: ['' as PapelRedeApoio | ''], vinculo: [''], telefone: [''], observacao: [''] });
   protected readonly sairRedeForm = this.fb.nonNullable.group({ motivo: [''] });
+  protected readonly encaminharForm = this.fb.nonNullable.group({
+    modo: ['NOVO' as 'NOVO' | 'VINCULAR'], solicitacaoId: [''], procedimentoId: [''], cid: [''], justificativa: [''], prioridade: [''], profissionalMatricula: [''],
+  });
+  protected readonly compartilharForm = this.fb.nonNullable.group({ equipeId: [''], objetivo: [''] });
+  protected readonly motivoRedeForm = this.fb.nonNullable.group({ motivo: [''] });
+  protected readonly transferirForm = this.fb.nonNullable.group({ unidadeDestinoId: [''], resumo: [''] });
+  protected readonly aceiteForm = this.fb.nonNullable.group({ equipeId: [''], tecnicoMatricula: [''] });
 
   protected get objetivos(): FormArray<FormGroup> {
     return this.ptsForm.controls.objetivos;
@@ -190,6 +224,7 @@ export class SaudeMental {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.unidadeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
     this.service.tiposIntervencao().pipe(catchError(() => of([]))).subscribe((t) => this.tipos.set(t));
+    this.carregarTransferencias();
     this.pacienteFiltro.set(this.route.snapshot.queryParamMap.get('paciente'));
     this.selecionadoId.set(this.route.snapshot.queryParamMap.get('caso'));
     this.carregar();
@@ -217,6 +252,12 @@ export class SaudeMental {
         this.erro.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível carregar os casos.');
       },
     });
+  }
+
+  /** Transferências que chegam e saem das unidades do escopo (ADR-0122). */
+  protected carregarTransferencias(): void {
+    if (!this.pode('SAUDE_MENTAL.ACOMPANHAR')) return;
+    this.service.transferencias(this.unidadeFiltro() || undefined).pipe(catchError(() => of(null))).subscribe((t) => this.transferencias.set(t));
   }
 
   private filtroCasos() {
@@ -301,6 +342,13 @@ export class SaudeMental {
     if (g.tipo === 'intervencao') return 'Registrar intervenção';
     if (g.tipo === 'rede') return 'Incluir na rede de apoio';
     if (g.tipo === 'sairRede') return 'Tirar da rede de apoio';
+    if (g.tipo === 'encaminhar') return 'Encaminhar pela Regulação';
+    if (g.tipo === 'compartilhar') return 'Compartilhar o cuidado';
+    if (g.tipo === 'fimCompartilhamento') return 'Encerrar o compartilhamento';
+    if (g.tipo === 'transferir') return 'Transferir o cuidado';
+    if (g.tipo === 'aceitar') return 'Aceitar a transferência';
+    if (g.tipo === 'recusar') return 'Recusar a transferência';
+    if (g.tipo === 'cancelarTransferencia') return 'Cancelar a transferência';
     return 'Encerrar o caso';
   }
 
@@ -424,7 +472,13 @@ export class SaudeMental {
   }
 
   protected abrirIntervencao(caso: AcompanhamentoSaudeMentalDto): void {
-    this.intervencaoForm.reset({ tipoId: '', situacao: 'REALIZADA', realizadaEm: '', resumo: '', compartilhadoComMatricula: '', previstaId: '' });
+    this.intervencaoForm.reset({ tipoId: '', situacao: 'REALIZADA', realizadaEm: '', resumo: '', compartilhadoComMatricula: '', previstaId: '', equipeMatriciadaId: '' });
+    this.equipesMatriciamento.set([]);
+    if (caso.equipeId) {
+      // Apoio matricial da ADR-0103, nos dois sentidos: as equipes que a referência apoia e as que a apoiam.
+      this.equipeService.buscar(caso.equipeId).pipe(catchError(() => of(null)))
+        .subscribe((e) => this.equipesMatriciamento.set([...(e?.apoiadas ?? []), ...(e?.apoiadaPor ?? [])]));
+    }
     this.abrir({ tipo: 'intervencao', caso });
   }
 
@@ -441,6 +495,71 @@ export class SaudeMental {
   protected abrirSairRede(caso: AcompanhamentoSaudeMentalDto, pessoa: PessoaRedeApoioDto): void {
     this.sairRedeForm.reset({ motivo: '' });
     this.abrir({ tipo: 'sairRede', caso, pessoa });
+  }
+
+  /** O tipo escolhido na intervenção é a discussão de caso em apoio matricial. */
+  protected tipoEhMatriciamento(): boolean {
+    return this.tipos().find((t) => t.uuid === this.intervencaoForm.controls.tipoId.value)?.codigo === 'MATRICIAMENTO';
+  }
+
+  protected abrirEncaminhar(caso: AcompanhamentoSaudeMentalDto): void {
+    this.encaminharForm.reset({ modo: 'NOVO', solicitacaoId: '', procedimentoId: '', cid: '', justificativa: '', prioridade: '', profissionalMatricula: '' });
+    if (!this.procedimentos().length) {
+      this.regulacaoService.listarProcedimentos().pipe(catchError(() => of([]))).subscribe((p) => this.procedimentos.set(p.filter((x) => x.ativo)));
+    }
+    this.abrir({ tipo: 'encaminhar', caso });
+  }
+
+  protected abrirCompartilhar(caso: AcompanhamentoSaudeMentalDto): void {
+    this.compartilharForm.reset({ equipeId: '', objetivo: '' });
+    if (!this.todasEquipes().length) {
+      this.equipeService.listar().pipe(catchError(() => of(null))).subscribe((r) => this.todasEquipes.set(r?.lista.filter((e) => e.ativa) ?? []));
+    }
+    this.abrir({ tipo: 'compartilhar', caso });
+  }
+
+  /** Equipes para o compartilhamento: todas as ativas, menos a de referência e as já parceiras. */
+  protected equipesParceiras(caso: AcompanhamentoSaudeMentalDto): EquipeResumoDto[] {
+    const fora = new Set([caso.equipeId, ...caso.compartilhamentos.filter((c) => !c.fim).map((c) => c.equipeId)]);
+    return this.todasEquipes().filter((e) => !fora.has(e.uuid));
+  }
+
+  protected abrirFimCompartilhamento(caso: AcompanhamentoSaudeMentalDto, compartilhamento: CompartilhamentoCuidadoDto): void {
+    this.motivoRedeForm.reset({ motivo: '' });
+    this.abrir({ tipo: 'fimCompartilhamento', caso, compartilhamento });
+  }
+
+  protected abrirTransferir(caso: AcompanhamentoSaudeMentalDto): void {
+    this.transferirForm.reset({ unidadeDestinoId: '', resumo: '' });
+    this.abrir({ tipo: 'transferir', caso });
+  }
+
+  protected abrirAceitar(transferencia: TransferenciaCuidadoDto): void {
+    this.aceiteForm.reset({ equipeId: '', tecnicoMatricula: '' });
+    this.membros.set([]);
+    this.carregarEquipes(transferencia.unidadeDestinoId);
+    this.abrir({ tipo: 'aceitar', transferencia });
+  }
+
+  protected escolherEquipeAceite(uuid: string): void {
+    this.aceiteForm.patchValue({ equipeId: uuid, tecnicoMatricula: '' });
+    this.membros.set([]);
+    if (!uuid) return;
+    this.equipeService.buscar(uuid).pipe(catchError(() => of(null))).subscribe((e) => this.membros.set(e?.membros.filter((m) => !m.fim) ?? []));
+  }
+
+  protected abrirRecusar(transferencia: TransferenciaCuidadoDto): void {
+    this.motivoRedeForm.reset({ motivo: '' });
+    this.abrir({ tipo: 'recusar', transferencia });
+  }
+
+  protected abrirCancelarTransferencia(caso: AcompanhamentoSaudeMentalDto, transferencia: TransferenciaCuidadoDto): void {
+    this.motivoRedeForm.reset({ motivo: '' });
+    this.abrir({ tipo: 'cancelarTransferencia', caso, transferencia });
+  }
+
+  protected transferenciaPendente(caso: AcompanhamentoSaudeMentalDto): TransferenciaCuidadoDto | undefined {
+    return caso.transferencias.find((t) => t.situacao === 'PROPOSTA');
   }
 
   protected ptsVigente(caso: AcompanhamentoSaudeMentalDto): ProjetoTerapeuticoDto | undefined {
@@ -469,6 +588,13 @@ export class SaudeMental {
     else if (g.tipo === 'intervencao') this.salvarIntervencao(g.caso);
     else if (g.tipo === 'rede') this.salvarRede(g.caso);
     else if (g.tipo === 'sairRede') this.salvarSairRede(g.caso, g.pessoa);
+    else if (g.tipo === 'encaminhar') this.salvarEncaminhamento(g.caso);
+    else if (g.tipo === 'compartilhar') this.salvarCompartilhamento(g.caso);
+    else if (g.tipo === 'fimCompartilhamento') this.salvarFimCompartilhamento(g.caso, g.compartilhamento);
+    else if (g.tipo === 'transferir') this.salvarTransferencia(g.caso);
+    else if (g.tipo === 'aceitar') this.salvarAceite(g.transferencia);
+    else if (g.tipo === 'recusar') this.salvarDecisao(g.transferencia, 'recusar');
+    else if (g.tipo === 'cancelarTransferencia') this.salvarDecisao(g.transferencia, 'cancelar', g.caso);
     else this.salvarEncerramento(g.caso);
   }
 
@@ -592,11 +718,13 @@ export class SaudeMental {
     if (!v.tipoId) erros['tipoIntervencao'] = 'Escolha o tipo.';
     if (!v.resumo.trim()) erros['resumoIntervencao'] = 'Escreva o resumo.';
     if (v.realizadaEm && new Date(v.realizadaEm).getTime() > Date.now()) erros['realizadaEm'] = 'A intervenção não pode ser no futuro.';
+    if (this.tipoEhMatriciamento() && !v.equipeMatriciadaId) erros['equipeMatriciada'] = 'Escolha a equipe com quem o caso foi discutido.';
     if (!this.validar(erros)) return;
     this.enviarCaso(this.service.registrarIntervencao(caso.uuid, {
       tipoId: v.tipoId, situacao: v.situacao, resumo: v.resumo.trim(),
       realizadaEm: v.realizadaEm ? new Date(v.realizadaEm).toISOString() : null,
       compartilhadoComMatricula: v.compartilhadoComMatricula.trim() || null, previstaId: v.previstaId || null,
+      equipeMatriciadaId: this.tipoEhMatriciamento() ? v.equipeMatriciadaId || null : null,
     }), v.situacao === 'REALIZADA' ? 'Intervenção registrada' : 'Falta registrada', caso, 'intervencoes');
   }
 
@@ -616,6 +744,85 @@ export class SaudeMental {
     const v = this.sairRedeForm.getRawValue();
     if (!this.validar(v.motivo.trim() ? {} : { motivoSaidaRede: 'Informe o motivo.' })) return;
     this.enviarCaso(this.service.encerrarNaRede(caso.uuid, pessoa.uuid, v.motivo.trim()), 'Saiu da rede de apoio', caso, 'rede');
+  }
+
+  private salvarEncaminhamento(caso: AcompanhamentoSaudeMentalDto): void {
+    const v = this.encaminharForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (v.modo === 'VINCULAR') {
+      if (!v.solicitacaoId.trim()) erros['solicitacaoId'] = 'Informe o número da solicitação.';
+    } else {
+      if (!v.procedimentoId) erros['procedimentoEncaminhamento'] = 'Escolha o procedimento.';
+      if (!/^[A-Za-z][0-9]{2}(\.?[0-9A-Za-z]{1,2})?$/.test(v.cid.trim())) erros['cidEncaminhamento'] = 'Informe o CID-10 (ex.: F32.1).';
+      if (v.justificativa.trim().length < 10) erros['justificativaEncaminhamento'] = 'Escreva a justificativa clínica (10 caracteres ou mais).';
+      if (!v.prioridade) erros['prioridadeEncaminhamento'] = 'Escolha a prioridade.';
+    }
+    if (!this.validar(erros)) return;
+    this.enviarCaso(this.service.encaminhar(caso.uuid, v.modo === 'VINCULAR'
+      ? { solicitacaoId: v.solicitacaoId.trim() }
+      : { procedimentoId: v.procedimentoId, cid: v.cid.trim(), justificativa: v.justificativa.trim(), prioridade: v.prioridade,
+        profissionalMatricula: v.profissionalMatricula.trim() || null }), 'Encaminhamento registrado', caso, 'atencao');
+  }
+
+  private salvarCompartilhamento(caso: AcompanhamentoSaudeMentalDto): void {
+    const v = this.compartilharForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.equipeId) erros['equipeParceira'] = 'Escolha a equipe parceira.';
+    if (!v.objetivo.trim()) erros['objetivoCompartilhamento'] = 'Descreva o objetivo.';
+    if (!this.validar(erros)) return;
+    this.enviarCaso(this.service.compartilhar(caso.uuid, v.equipeId, v.objetivo.trim()), 'Cuidado compartilhado', caso, 'atencao');
+  }
+
+  private salvarFimCompartilhamento(caso: AcompanhamentoSaudeMentalDto, c: CompartilhamentoCuidadoDto): void {
+    const v = this.motivoRedeForm.getRawValue();
+    if (!this.validar(v.motivo.trim() ? {} : { motivoRede: 'Informe o motivo.' })) return;
+    this.enviarCaso(this.service.encerrarCompartilhamento(caso.uuid, c.uuid, v.motivo.trim()), 'Compartilhamento encerrado', caso, 'atencao');
+  }
+
+  private salvarTransferencia(caso: AcompanhamentoSaudeMentalDto): void {
+    const v = this.transferirForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.unidadeDestinoId) erros['unidadeDestino'] = 'Escolha a unidade de destino.';
+    if (!v.resumo.trim()) erros['resumoTransferencia'] = 'Escreva o resumo de contrarreferência.';
+    if (!this.validar(erros)) return;
+    this.enviarCaso(this.service.proporTransferencia(caso.uuid, v.unidadeDestinoId, v.resumo.trim()), 'Transferência proposta', caso, 'atencao');
+    this.carregarTransferencias();
+  }
+
+  private salvarAceite(t: TransferenciaCuidadoDto): void {
+    const v = this.aceiteForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.equipeId) erros['equipeAceite'] = 'Escolha a equipe de referência.';
+    if (!v.tecnicoMatricula) erros['tecnicoAceite'] = 'Escolha o técnico de referência.';
+    if (!this.validar(erros)) return;
+    this.submitting.set(true);
+    this.service.aceitarTransferencia(t.uuid, v.equipeId, v.tecnicoMatricula).subscribe({
+      next: (d) => {
+        this.submitting.set(false);
+        this.fecharGaveta();
+        this.mostrarToast('Transferência aceita', `${t.pacienteNome} · caso aberto na ${t.unidadeDestinoNome}`);
+        this.selecionadoId.set(d.uuid);
+        this.carregarTransferencias();
+        this.carregar();
+      },
+      error: (e: HttpErrorResponse) => this.falhou(e),
+    });
+  }
+
+  private salvarDecisao(t: TransferenciaCuidadoDto, acao: 'recusar' | 'cancelar', caso?: AcompanhamentoSaudeMentalDto): void {
+    const v = this.motivoRedeForm.getRawValue();
+    if (!this.validar(v.motivo.trim() ? {} : { motivoRede: 'Informe o motivo.' })) return;
+    this.submitting.set(true);
+    (acao === 'recusar' ? this.service.recusarTransferencia(t.uuid, v.motivo.trim()) : this.service.cancelarTransferencia(t.uuid, v.motivo.trim())).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.fecharGaveta();
+        this.mostrarToast(acao === 'recusar' ? 'Transferência recusada' : 'Transferência cancelada', t.pacienteNome);
+        this.carregarTransferencias();
+        if (caso) this.recarregarDetalhe();
+      },
+      error: (e: HttpErrorResponse) => this.falhou(e),
+    });
   }
 
   private enviarCaso(req: Observable<AcompanhamentoSaudeMentalDto>, titulo: string, caso: AcompanhamentoSaudeMentalDto, aba: Aba): void {

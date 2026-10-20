@@ -61,6 +61,11 @@ public class AcompanhamentoSaudeMental implements Serializable {
     @Column(updatable = false)
     private String registradoPorCpf;
 
+    /** O caso de onde este veio por transferência do cuidado (ADR-0122); nulo nos demais. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "caso_anterior_id", referencedColumnName = "uuid", updatable = false)
+    private AcompanhamentoSaudeMental casoAnterior;
+
     public boolean vigente() {
         return fim == null;
     }
