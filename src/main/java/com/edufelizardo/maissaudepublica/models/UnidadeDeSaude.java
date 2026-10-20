@@ -106,6 +106,11 @@ public class UnidadeDeSaude implements Serializable {
     @JoinColumn(name = "responsavel_id", referencedColumnName = "uuid", nullable = true)
     private Profissional responsavel;
 
+    /** Ponto da unidade em WGS84 (ADR-0125), para os pinos do mapa do território e de Equipamentos. */
+    private Double latitude;
+
+    private Double longitude;
+
     public UnidadeDeSaude(FederalRequestDto dto) {
         this.ativo = true;
         this.nome = dto.getNome();

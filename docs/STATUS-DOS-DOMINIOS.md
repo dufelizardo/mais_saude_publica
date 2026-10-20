@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-20 (V1)
+- **Atualizado em:** 2026-10-20 (F1)
 - **Release em produção:** v1.6.0
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -47,7 +47,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
-| 21 | [Território e Adscrição](#21-território-e-adscrição) | 📐 | fatias F1 a F4 |
+| 21 | [Território e Adscrição](#21-território-e-adscrição) | 🟡 | F1 feita; mapa, cadastro territorial e escopo (F2 a F4) |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | fatias P3 a P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 feita; surto, sanitária, ambiental e trabalhador (V2 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 9 ✅ · 9 🟡 · 4 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 9 ✅ · 10 🟡 · 3 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -70,8 +70,9 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 |---|---|---|
 | P4 | 22 Programas | ações programáticas ligadas ao atendimento; busca ativa; programa na Agenda |
 | P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
-| F1 | 21 Território | backend do território (área, microárea, GeoJSON) |
-| V2 | 23 Vigilância | contato, surto e medida de controle (o mapa dos casos espera o Território F1/F2) |
+| F2 | 21 Território | mapa Leaflet, desenho dos polígonos e mapa real em Equipamentos |
+| F3 | 21 Território | imóvel, domicílio, núcleo familiar e adscrição (a F2 pode vir junto ou depois) |
+| V2 | 23 Vigilância | contato, surto e medida de controle (o mapa dos casos espera o Território F2) |
 | SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
@@ -86,8 +87,8 @@ P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 · P6
 P1 ✅ ──► P3 ──► C2 (campanha de comunicação)
 P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 
-F1 ──► F2 ──► V2 (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real
-F1 ──► F3 ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea · F4
+F1 ✅ ──► F2 ──► V2 (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real
+F1 ✅ ──► F3 ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea · F4
 
 V1 ✅ ──► V2 · SM3 (notificação de autoagressão ✅) · V5
 SB1 ──► SB2 ──► SB3 ──► SB4
@@ -121,7 +122,7 @@ C1 ──► C2 · C4 · C5
 - Equipes da unidade na ficha (ADR-0104).
 
 **Falta:**
-- [ ] Mapa e coordenadas reais das unidades: vêm pelas fatias F1 e F2 do Território (ADR-0108).
+- [ ] Mapa real das unidades: as coordenadas chegaram com a F1 do Território (ADR-0125); o mapa vem na F2.
 - [ ] Sincronização com o CNES (depende de Integrações, domínio 20).
 - [ ] Consultórios e capacidade.
 - [ ] Vagas semanais da unidade.
@@ -416,12 +417,17 @@ C1 ──► C2 · C4 · C5
 
 ### 21. Território e Adscrição
 
-**Estado:** 📐. Desenhado na [ADR-0108](./adr/0108-territorio-e-adscricao.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0108](./adr/0108-territorio-e-adscricao.md); detalhe em
 [`territorio/MODELO-TERRITORIO.md`](./territorio/MODELO-TERRITORIO.md).
 
+**Temos:**
+- [x] **F1 · Fundação** ([ADR-0125](./adr/0125-territorio-fundacao.md)): segmento, território com finalidade, área e
+  microárea com GeoJSON validado (JTS, sem PostGIS); microárea dentro da área e sem sobreposição; equipe da área e ACS
+  da microárea como histórico; coordenadas da unidade; as microáreas em texto de Equipes migradas, com o Território
+  como fonte; tela Território (árvore, detalhe e gavetas, sem mapa).
+
 **Falta:**
-- [ ] **F1 · Backend:** segmento, território, área e microárea com GeoJSON; responsabilidade equipe ↔ área e
-  atribuição ACS ↔ microárea; coordenadas da unidade; migração das microáreas que hoje são texto em Equipe.
+- [ ] Remover os campos de texto `Equipe.microareas` e `MembroEquipe.microarea` (migração seguinte).
 - [ ] **F2 · Tela Território:** mapa Leaflet com a área e as microáreas destacadas; mapa real em Equipamentos.
 - [ ] **F3 · Cadastro territorial:** imóvel, domicílio, núcleo familiar e adscrição; famílias e cobertura em
   Equipes.

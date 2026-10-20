@@ -48,7 +48,10 @@ public class Equipe implements Serializable {
     @Column(nullable = false)
     private boolean ativa;
 
-    /** Códigos das microáreas atendidas, separados por vírgula (ex.: "14, 17, 18"). */
+    /**
+     * Códigos das microáreas atendidas, separados por vírgula (ex.: "14, 17, 18"). Legado (ADR-0125): com área no
+     * Território, a lista vem de lá; o campo sai numa migração seguinte.
+     */
     @Column(length = 300)
     private String microareas;
 

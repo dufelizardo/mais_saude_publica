@@ -30,6 +30,8 @@ export interface EquipeResumoDto {
   faltando: string[];
   nomesMembros: string[];
   equipesApoiadas: number;
+  /** As microáreas vêm do Território (ADR-0125): a equipe tem área, e elas se editam por lá. */
+  microareasPeloTerritorio?: boolean;
 }
 
 export interface EquipesResponseDto {

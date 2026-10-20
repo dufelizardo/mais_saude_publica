@@ -71,3 +71,4 @@ Resource    ../../schema/escalas/escalas_schema.resource
 Resource    ../../schema/programas/programas_schema.resource
 Resource    ../../schema/saude_mental/saude_mental_schema.resource
 Resource    ../../schema/vigilancia/vigilancia_schema.resource
+Resource    ../../schema/territorio/territorio_schema.resource

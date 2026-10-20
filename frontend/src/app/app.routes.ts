@@ -104,6 +104,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/modelo-operacional/modelo-operacional').then((m) => m.ModeloOperacional),
         data: { breadcrumb: 'Modelo operacional', area: 'Administrativo' },
       },
+      // Território (ADR-0125), carregado sob demanda.
+      {
+        path: 'administrativo/territorio',
+        loadComponent: () => import('./features/administrativo/territorio/territorio').then((m) => m.Territorio),
+        data: { breadcrumb: 'Território', area: 'Administrativo' },
+      },
       {
         path: 'administrativo/necessidades-de-pessoal',
         loadComponent: () => import('./features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal').then((m) => m.NecessidadesDePessoal),

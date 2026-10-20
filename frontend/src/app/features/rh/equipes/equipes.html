@@ -200,7 +200,11 @@
               </div>
             }
           </div>
-          <p class="cell-sub">Famílias e pacientes por microárea: em breve (cadastro do território).</p>
+          @if (d.resumo.microareasPeloTerritorio) {
+            <p class="cell-sub">Da área da equipe no <a routerLink="/administrativo/territorio" [queryParams]="{ equipe: d.resumo.uuid }">Território</a>. Famílias e pacientes por microárea: em breve.</p>
+          } @else {
+            <p class="cell-sub">Famílias e pacientes por microárea: em breve (cadastro do território).</p>
+          }
         }
 
         @if (d.apoiadas.length || d.apoiadaPor.length) {
@@ -287,7 +291,12 @@
             </div>
             <div class="dw-field">
               <label for="f-microareas">Microáreas<span class="opt">opcional</span></label>
-              <input id="f-microareas" type="text" formControlName="microareas" placeholder="Ex.: 14, 17, 18" />
+              @if (g.equipe?.resumo?.microareasPeloTerritorio) {
+                <input id="f-microareas" type="text" formControlName="microareas" readonly aria-describedby="h-microareas" />
+                <p class="dw-hint" id="h-microareas">Vêm da área da equipe no <a routerLink="/administrativo/territorio" [queryParams]="{ equipe: g.equipe?.resumo?.uuid }">Território</a>, onde se editam.</p>
+              } @else {
+                <input id="f-microareas" type="text" formControlName="microareas" placeholder="Ex.: 14, 17, 18" />
+              }
             </div>
             @if (g.equipe) {
               <div class="dw-field">
@@ -371,10 +380,12 @@
                   @for (f of listaFuncoes; track f) { <option [value]="f">{{ funcoes[f] }}</option> }
                 </select>
               </div>
-              <div class="dw-field">
-                <label for="f-microarea">Microárea<span class="opt">do ACS</span></label>
-                <input id="f-microarea" type="text" maxlength="20" formControlName="microarea" placeholder="Ex.: 14" />
-              </div>
+              @if (!g.equipe?.resumo?.microareasPeloTerritorio) {
+                <div class="dw-field">
+                  <label for="f-microarea">Microárea<span class="opt">do ACS</span></label>
+                  <input id="f-microarea" type="text" maxlength="20" formControlName="microarea" placeholder="Ex.: 14" />
+                </div>
+              }
             </div>
             <div class="dw-field">
               <label for="f-inicio">Entrada<span class="opt">sem preencher, hoje</span></label>
