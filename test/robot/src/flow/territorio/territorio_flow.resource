@@ -33,10 +33,11 @@ Seed Territorio APS
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 Seed Area Territorial
-    [Documentation]    Creates a segment, an APS territory and an area 0.02° wide; returns the area uuid.
+    [Documentation]    Creates a segment, an APS territory and an area 0.02° wide from the corner (lon, lat); returns the area uuid.
+    [Arguments]    ${lon}=-47.0    ${lat}=-22.0
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${territorio}    ${sufixo}=    Seed Territorio APS
-    ${geometria}=    Quadrado GeoJSON    -47.0    -22.0    0.02
+    ${geometria}=    Quadrado GeoJSON    ${lon}    ${lat}    0.02
     ${area}=    Create Dictionary    territorioId=${territorio}    codigo=01    nome=Área Robot ${sufixo}    geometria=${geometria}
     ${a}=    POST Area Territorial    ${area}
     Should Be Equal As Integers    ${a.status_code}    201

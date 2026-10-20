@@ -101,6 +101,10 @@ public class TerritorioService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    /** Os moradores da área seguem a equipe dela (ADR-0128). */
+    @Autowired
+    private AdscricaoService adscricaoService;
+
     @Autowired
     private ImovelRepository imovelRepository;
 
@@ -327,7 +331,8 @@ public class TerritorioService {
                 atribuicaoRepository.saveAndFlush(at);
             }
         }
-        responsabilidadeRepository.save(new ResponsabilidadeTerritorial(null, a, e, inicio, null, null, UsuarioAutenticado.cpf()));
+        responsabilidadeRepository.saveAndFlush(new ResponsabilidadeTerritorial(null, a, e, inicio, null, null, UsuarioAutenticado.cpf()));
+        adscricaoService.recalcularArea(a, inicio, "Equipe responsável pela área: " + e.getNome());
         ContextoAuditoria.registro(a.getUuid());
         ContextoAuditoria.detalhe("Equipe " + e.getNome() + " responsável pela área " + a.getCodigo() + ".");
         return detalhe(a);

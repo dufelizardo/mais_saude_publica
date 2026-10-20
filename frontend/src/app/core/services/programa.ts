@@ -1,4 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { ElegiveisDto } from '../models/adscricao';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
@@ -81,6 +82,13 @@ export class ProgramaService {
 
   encerrarAcompanhamento(acompanhamentoId: string, motivoSaida: MotivoSaidaAcompanhamento, observacao: string, fim?: string | null): Observable<AcompanhamentoDto> {
     return this.http.post<AcompanhamentoDto>(`${this.api}/acompanhamento/${acompanhamentoId}/encerramento`, { motivoSaida, observacao, fim: fim || null });
+  }
+
+  /** Elegíveis do programa entre os adscritos da equipe (ADR-0128). */
+  elegiveis(programaId: string, equipeId: string, microareaId?: string | null): Observable<ElegiveisDto> {
+    let params = new HttpParams().set('equipeId', equipeId);
+    if (microareaId) params = params.set('microareaId', microareaId);
+    return this.http.get<ElegiveisDto>(`${this.api}/programa/${programaId}/elegiveis`, { params });
   }
 
   doPaciente(pacienteId: string): Observable<AcompanhamentosDoPacienteDto> {

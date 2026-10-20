@@ -5,6 +5,7 @@ import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.Usuario;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.repositories.AtribuicaoAcessoRepository;
+import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.PapelRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
@@ -71,6 +72,7 @@ class CadastroTerritorialAutorizacaoControllerTest {
 
     private UnidadeDeSaude ubs;
     private String microarea;
+    private String equipe;
 
     @BeforeEach
     void seed() throws Exception {
@@ -91,7 +93,8 @@ class CadastroTerritorialAutorizacaoControllerTest {
         String m = enviar(GESTOR, post("/api/v1/territorio/microarea"), "{\"areaId\": \"%s\", \"codigo\": \"07\"}".formatted(area), 201);
         microarea = JsonPath.read(m, "$.area.microareas[0].uuid");
         String e = enviar(GESTOR, post("/api/v1/equipe/"), "{\"unidadeId\": \"%s\", \"tipo\": \"ESF\", \"nome\": \"%sSF\"}".formatted(ubs.getUuid(), PREFIXO), 201);
-        enviar(GESTOR, post("/api/v1/territorio/area/" + area + "/responsabilidade"), "{\"equipeId\": \"%s\"}".formatted(JsonPath.<String>read(e, "$.resumo.uuid")), 200);
+        equipe = JsonPath.read(e, "$.resumo.uuid");
+        enviar(GESTOR, post("/api/v1/territorio/area/" + area + "/responsabilidade"), "{\"equipeId\": \"%s\"}".formatted(equipe), 200);
     }
 
     @AfterEach
@@ -102,6 +105,9 @@ class CadastroTerritorialAutorizacaoControllerTest {
             jdbc.update("delete from tb_evento_auditoria where usuario_cpf = ?", cpf);
         }
         TerritorioControllerTest.limparDados(jdbc, PREFIXO, CODIGO);
+        jdbc.update("delete from tb_adscricao where paciente_id in (select uuid from tb_paciente where nome like ?)", PREFIXO + "%");
+        jdbc.update("delete from tb_evento_auditoria where paciente_id in (select uuid from tb_paciente where nome like ?)", PREFIXO + "%");
+        jdbc.update("delete from tb_paciente where nome like ?", PREFIXO + "%");
         jdbc.update("delete from tb_equipe where unidade_id in (select uuid from tb_unidade_de_saude where nome like ?)", PREFIXO + "%");
         unidadeDeSaudeRepository.deleteAll(unidadeDeSaudeRepository.findAll().stream()
                 .filter(u -> u.getNome() != null && u.getNome().startsWith(PREFIXO)).toList());
@@ -150,5 +156,19 @@ class CadastroTerritorialAutorizacaoControllerTest {
                 Integer.class, ACS, id)).isGreaterThanOrEqualTo(1);
         // A árvore, só com contagens, é de quem está logado.
         mockMvc.perform(como(ENF_OUTRA, get("/api/v1/territorio/arvore"))).andExpect(status().isOk());
+    }
+
+    @Test
+    void equipeDeReferenciaLidaPorQuemConsultaPacienteEAdscricaoManualNoEscopo(@Autowired PacienteRepository pacienteRepository) throws Exception {
+        com.edufelizardo.maissaudepublica.models.Paciente p = new com.edufelizardo.maissaudepublica.models.Paciente();
+        p.setNome(PREFIXO + "Paciente");
+        p.setCpf("93900000001");
+        p.setAtivo(true);
+        String id = pacienteRepository.save(p).getUuid().toString();
+        String corpo = "{\"equipeId\": \"%s\", \"motivo\": \"Situação de rua\"}".formatted(equipe);
+        enviar(ENF_OUTRA, post("/api/v1/territorio/paciente/" + id + "/adscricao"), corpo, 403);
+        enviar(ACS, post("/api/v1/territorio/paciente/" + id + "/adscricao"), corpo, 200);
+        mockMvc.perform(como(ENF_OUTRA, get("/api/v1/territorio/paciente/" + id + "/adscricao"))).andExpect(status().isOk());
+        mockMvc.perform(como(GESTOR, get("/api/v1/territorio/equipe/" + equipe + "/cobertura"))).andExpect(status().isOk());
     }
 }

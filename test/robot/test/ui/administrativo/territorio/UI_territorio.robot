@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Administrativo - Territorio
-Metadata    Test Suite Description        Valida a tela Território (ADRs 0125 a 0127): cadastro, ACS, mapa e desenho, imóveis e famílias; e o mapa de Equipamentos.
+Metadata    Test Suite Description        Valida a tela Território (ADRs 0125 a 0128): cadastro, ACS, mapa e desenho, imóveis e famílias, adscrição e elegíveis; e o mapa de Equipamentos.
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiTerritorio    MaisSaudePublicaFrontend
@@ -103,5 +103,29 @@ CT-011 - Endereço do imóvel e saída com motivo
     [Tags]    UI    UiTerritorio    UiCadastroTerritorial
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - TERRITORIO - ENDERECO E SAIDA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-012 - Equipe de referência na ficha do paciente
+    [Documentation]    Pelo domicílio, com a microárea.
+    [Tags]    UI    UiTerritorio    UiAdscricao
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - TERRITORIO - EQUIPE DE REFERENCIA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-013 - Adscrição manual pela ficha
+    [Documentation]    Sem motivo, a mensagem; com motivo, manual.
+    [Tags]    UI    UiTerritorio    UiAdscricao
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - TERRITORIO - ADSCRICAO MANUAL
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-014 - Elegíveis do programa e inscrição
+    [Documentation]    O adscrito elegível, inscrito pela lista.
+    [Tags]    UI    UiTerritorio    UiAdscricao
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - TERRITORIO - ELEGIVEIS
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

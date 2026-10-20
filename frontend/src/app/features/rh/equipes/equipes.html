@@ -197,13 +197,16 @@
               <div class="micro" [class.is-warn]="!mi.acs.length && (d.resumo.tipo === 'ESF' || d.resumo.tipo === 'EAB')">
                 <div class="id">M-{{ mi.codigo }}</div>
                 <div class="acs">@if (mi.acs.length) { {{ nomesAcs(mi.acs) }} } @else { sem ACS }</div>
+                @if (pessoasNaMicroarea(mi.codigo) != null) { <div class="acs">{{ pessoasNaMicroarea(mi.codigo) }} pessoa(s)</div> }
               </div>
             }
           </div>
           @if (d.resumo.microareasPeloTerritorio) {
-            <p class="cell-sub">Da área da equipe no <a routerLink="/administrativo/territorio" [queryParams]="{ equipe: d.resumo.uuid }">Território</a>. Famílias e pacientes por microárea: em breve.</p>
+            <p class="cell-sub">Da área da equipe no <a routerLink="/administrativo/territorio" [queryParams]="{ equipe: d.resumo.uuid }">Território</a>.
+              @if (cobertura(); as c) { {{ c.pessoasAdscritas }} pessoa(s) adscrita(s)@if (c.adscritasManual) { ({{ c.adscritasManual }} manual) } · {{ c.familias }} família(s) · {{ c.imoveis }} imóvel(is)@if (c.microareasSemCadastro) { · {{ c.microareasSemCadastro }} microárea(s) sem cadastro }. }
+            </p>
           } @else {
-            <p class="cell-sub">Famílias e pacientes por microárea: em breve (cadastro do território).</p>
+            <p class="cell-sub">Microáreas em texto: o cadastro de famílias e a cobertura vêm quando a equipe tiver área no Território.</p>
           }
         }
 

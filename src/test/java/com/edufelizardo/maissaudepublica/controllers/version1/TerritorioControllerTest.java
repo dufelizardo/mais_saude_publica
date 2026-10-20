@@ -122,6 +122,9 @@ class TerritorioControllerTest {
         String areas = "select a.uuid from tb_area a join tb_territorio t on t.uuid = a.territorio_id "
                 + "join tb_segmento_territorial s on s.uuid = t.segmento_id where s.codigo like ?";
         String equipes = "select e.uuid from tb_equipe e join tb_unidade_de_saude u on u.uuid = e.unidade_id where u.nome like ?";
+        // Adscrições (ADR-0128) das microáreas e das equipes do teste.
+        jdbc.update("delete from tb_adscricao where microarea_id in (select uuid from tb_microarea where area_id in (" + areas + "))"
+                + " or equipe_id in (" + equipes + ")", codigo + "%", prefixo + "%");
         jdbc.update("delete from tb_atribuicao_microarea where microarea_id in (select uuid from tb_microarea where area_id in (" + areas + "))"
                 + " or membro_id in (select uuid from tb_membro_equipe where equipe_id in (" + equipes + "))", codigo + "%", prefixo + "%");
         jdbc.update("delete from tb_responsabilidade_territorial where area_id in (" + areas + ") or equipe_id in (" + equipes + ")",

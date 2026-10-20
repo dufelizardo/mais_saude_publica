@@ -64,7 +64,8 @@ E não `Programa = Serviço`.
 
 O público-alvo é **dado do programa** (faixa etária, sexo, condição como gestante, condição clínica por CID ou CIAP),
 não regra codificada. Ele **sugere elegíveis**, como gestantes fora do pré-natal ou idosos sem acompanhamento, e
-**não inscreve sozinho**: a inscrição é ato de profissional.
+**não inscreve sozinho**: a inscrição é ato de profissional. Os elegíveis saem da adscrição da equipe (ADR-0128), por
+idade e sexo; gestação e condição clínica ainda não são avaliadas.
 
 ## 3. Acompanhamento programático
 

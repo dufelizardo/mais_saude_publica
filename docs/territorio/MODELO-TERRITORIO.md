@@ -1,10 +1,10 @@
 # Modelo do domínio Território e Adscrição
 
 **Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0108](../adr/0108-territorio-e-adscricao.md). **F1, F2 e F3a implementadas** nas
-[ADR-0125](../adr/0125-territorio-fundacao.md), [ADR-0126](../adr/0126-territorio-mapa.md) e
-[ADR-0127](../adr/0127-cadastro-territorial.md); a F3b (adscrição e cobertura) e a F4 (seção 11) vêm cada uma com ADR
-própria.
+**Status:** desenho aprovado na [ADR-0108](../adr/0108-territorio-e-adscricao.md). **F1 a F3 implementadas** nas
+[ADR-0125](../adr/0125-territorio-fundacao.md), [ADR-0126](../adr/0126-territorio-mapa.md),
+[ADR-0127](../adr/0127-cadastro-territorial.md) e [ADR-0128](../adr/0128-adscricao-e-cobertura.md); a F4 (seção 11) vem
+com ADR própria.
 
 Este documento é o detalhamento do domínio: conceitos, entidades, relações com os outros domínios, uso por tipo de
 unidade e de equipe, escopo de acesso e geolocalização. A ADR-0108 registra as decisões; aqui fica o porquê e o
@@ -231,7 +231,7 @@ prontuário por vínculo (ADR-0076).
 |---|---|---|
 | **F1** · backend do território ✅ ([ADR-0125](../adr/0125-territorio-fundacao.md)) | segmento, território, área e microárea com GeoJSON; responsabilidade equipe ↔ área; atribuição ACS ↔ microárea; coordenadas da unidade; migração dos textos `Equipe.microareas` e `MembroEquipe.microarea`; regras de microárea dentro da área e sem sobreposição | ADR-0103 |
 | **F2** · tela Território ✅ ([ADR-0126](../adr/0126-territorio-mapa.md)) | lista e detalhe com mapa Leaflet; destaque da área e das microáreas; desenho e edição de polígonos; pinos das unidades; mapa real em Equipamentos | F1 |
-| **F3** · cadastro territorial | **F3a** ✅ ([ADR-0127](../adr/0127-cadastro-territorial.md)): imóvel, domicílio e núcleo familiar com o paciente (sem geocodificação externa, por LGPD). **F3b**: adscrição à equipe; famílias, pacientes e cobertura em Equipes | F1, F2 |
+| **F3** · cadastro territorial | **F3a** ✅ ([ADR-0127](../adr/0127-cadastro-territorial.md)): imóvel, domicílio e núcleo familiar com o paciente (sem geocodificação externa, por LGPD). **F3b** ✅ ([ADR-0128](../adr/0128-adscricao-e-cobertura.md)): adscrição à equipe (pelo domicílio e manual); cobertura em Equipes; elegíveis dos programas | F1, F2 |
 | **F4** · escopo territorial | ACS restrito à microárea e equipe à área, atrás de toggle | F3, ADR-0066 |
 
 **Transição do texto livre:**

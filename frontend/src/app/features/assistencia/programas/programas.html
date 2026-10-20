@@ -240,6 +240,9 @@
           </div>
         }
       </div>
+      <!-- Elegíveis entre os adscritos (ADR-0128). -->
+      <app-elegiveis-do-programa [programa]="d" [podeInscrever]="d.resumo.situacao === 'ATIVO'" [versao]="versaoElegiveis()"
+        (inscreverPaciente)="inscreverElegivel(d, $event)" />
     }
   </section>
 }
