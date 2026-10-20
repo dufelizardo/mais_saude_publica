@@ -127,7 +127,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0109](./0109-programas-acoes-e-linhas-de-cuidado.md) | Programas, Ações e Linhas de Cuidado: domínio próprio | Aceita (desenho; P1 e P2 nas ADRs 0118 e 0119, P3 a P6 a fazer) |
 | [0110](./0110-vigilancia-em-saude.md) | Vigilância em Saúde: domínio próprio (e Imunização reservada como #24) | Aceita (desenho; implementação nas fatias V1 a V5) |
 | [0111](./0111-saude-bucal.md) | Saúde Bucal: domínio assistencial especializado | Aceita (desenho; implementação nas fatias SB1 a SB5) |
-| [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; SM1, SM2 e SM4 nas ADRs 0120 a 0122; SM3, SM5 e SM6 a fazer) |
+| [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; SM1 a SM4 nas ADRs 0120 a 0123; SM5 e SM6 a fazer) |
 | [0113](./0113-emergencias-e-desastres.md) | Gestão de Emergências e Desastres: coordenação extraordinária | Aceita (desenho; implementação nas fatias E1 a E6) |
 | [0114](./0114-comunicacao-e-educacao-em-saude.md) | Comunicação e Educação em Saúde: domínio futuro | Aceita (desenho; implementação nas fatias C1 a C6) |
 | [0115](./0115-modelo-operacional-dos-equipamentos.md) | Modelo Operacional dos Equipamentos e reconciliação do mapa (#29 a #31) | Aceita (desenho; MO1 na ADR-0117, MO2 a MO4 a fazer) |
@@ -138,6 +138,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0120](./0120-saude-mental-base.md) | Saúde Mental: base (SM1) | Aceita e implementada |
 | [0121](./0121-saude-mental-pts-intervencoes.md) | Saúde Mental: PTS, intervenções e rede de apoio (SM2) | Aceita e implementada |
 | [0122](./0122-saude-mental-rede.md) | Saúde Mental: rede de atenção (SM4) | Aceita e implementada |
+| [0123](./0123-saude-mental-risco-crise.md) | Saúde Mental: risco com histórico, crise e internação psiquiátrica (SM3) | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

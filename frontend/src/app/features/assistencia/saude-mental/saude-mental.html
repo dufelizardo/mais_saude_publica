@@ -4,6 +4,9 @@
     <p>Acolhimento e casos em acompanhamento · conteúdo restrito à equipe de referência</p>
   </div>
   <div class="page-actions">
+    @if (pode('SAUDE_MENTAL.CRISE')) {
+      <button type="button" class="btn btn--ghost" (click)="abrirNovaCrise(null)">Registrar crise</button>
+    }
     @if (podeAcolher()) {
       <button type="button" class="btn" (click)="abrirAcolher()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -63,6 +66,8 @@
     <button type="button" [attr.aria-pressed]="pendencia() === 'SEM_AVALIACAO'" (click)="filtrarPendencia('SEM_AVALIACAO')">Sem avaliação</button>
     <button type="button" [attr.aria-pressed]="pendencia() === 'SEM_PTS'" (click)="filtrarPendencia('SEM_PTS')">Sem PTS</button>
     <button type="button" [attr.aria-pressed]="pendencia() === 'PTS_A_REVISAR'" (click)="filtrarPendencia('PTS_A_REVISAR')">PTS a revisar</button>
+    <button type="button" [attr.aria-pressed]="pendencia() === 'RISCO_ALTO'" (click)="filtrarPendencia('RISCO_ALTO')">Risco alto <span class="cnt">{{ casos()?.riscoAlto ?? 0 }}</span></button>
+    <button type="button" [attr.aria-pressed]="pendencia() === 'REAVALIACAO_VENCIDA'" (click)="filtrarPendencia('REAVALIACAO_VENCIDA')">Reavaliação vencida</button>
   </div>
   <label class="pill pill--select" style="margin-left: auto;">
     <span class="sr-only">Unidade</span>
@@ -80,6 +85,23 @@
 }
 @if (erro()) {
   <div class="box box--err" role="alert" style="margin-bottom: var(--s-4);"><strong>{{ erro() }}</strong></div>
+}
+
+@if (crisesEmAtencao().length) {
+  <section class="card" aria-label="Crises em atenção" style="margin-bottom: var(--s-4); padding: var(--s-4) var(--s-5);">
+    <h3 style="margin: 0 0 var(--s-3);">Crises em curso ou com notificação pendente <span class="cnt">{{ crisesEmAtencao().length }}</span></h3>
+    <ul class="eq-prof">
+      @for (c of crisesEmAtencao(); track c.uuid) {
+        <li class="mo-row">
+          <span>
+            <span class="cell-main">{{ c.pacienteNome }}@if (c.tipo) { · {{ tiposCrise[c.tipo] }} } <span [class]="c.situacao === 'EM_CURSO' ? 'tag tag--alert' : 'tag tag--muted'">{{ c.situacao === 'EM_CURSO' ? 'Em curso' : 'Encerrada' }}</span>@if (c.notificacaoPendente) { <span class="tag tag--warn">Notificação pendente</span> }</span>
+            <span class="cell-sub">{{ dataHora(c.identificadaEm) }} · {{ c.unidadeNome }}</span>
+          </span>
+          <button type="button" class="btn btn--ghost btn--sm" (click)="abrirCrise(c.uuid)" [attr.aria-label]="'Abrir crise: ' + c.pacienteNome">Abrir</button>
+        </li>
+      }
+    </ul>
+  </section>
 }
 
 @if (transferencias()?.recebidas?.length) {
@@ -112,7 +134,7 @@
         <tbody>
           @for (c of filtrados(); track c.uuid) {
             <tr [class.is-selected]="selecionadoId() === c.uuid">
-              <td><span class="cell-main">{{ c.pacienteNome }}</span>@if (c.pacienteIdade != null) { <span class="cell-sub">{{ c.pacienteIdade }} anos</span> }</td>
+              <td><span class="cell-main">{{ c.pacienteNome }}@if (c.riscoAlto) { <span class="tag tag--alert">Risco alto</span> }</span>@if (c.pacienteIdade != null) { <span class="cell-sub">{{ c.pacienteIdade }} anos</span> }</td>
               <td>{{ c.unidadeNome }}</td>
               <td>{{ c.tecnicoNome ?? '—' }}@if (c.equipeNome) { <span class="cell-sub">{{ c.equipeNome }}</span> }</td>
               <td class="mono">{{ data(c.inicio) }}</td>
@@ -152,6 +174,7 @@
       </div>
       @if (!d.fim && d.conteudoLiberado && podeAcompanhar()) {
         <div class="detail-head__actions">
+          @if (pode('SAUDE_MENTAL.CRISE')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirNovaCrise(d)">Registrar crise</button> }
           <button type="button" class="btn btn--ghost btn--sm" (click)="abrirIntervencao(d)">Registrar intervenção</button>
           <button type="button" class="btn btn--ghost btn--sm" (click)="abrirReferencia(d)">Trocar referência</button>
           <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEncerrar(d)">Encerrar</button>
@@ -170,6 +193,7 @@
       }
       <div class="tabs" role="tablist" aria-label="Seções do caso">
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'resumo'" (click)="aba.set('resumo')">Resumo</button>
+        <button type="button" role="tab" [attr.aria-selected]="aba() === 'risco'" (click)="aba.set('risco')">Risco@if (d.riscoAlto) { <span class="cnt">alto</span> }</button>
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'pts'" (click)="aba.set('pts')">PTS@if (d.ptsVersao) { <span class="cnt">v{{ d.ptsVersao }}</span> }</button>
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'intervencoes'" (click)="aba.set('intervencoes')">Intervenções <span class="cnt">{{ d.intervencoes.length }}</span></button>
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'rede'" (click)="aba.set('rede')">Rede de apoio <span class="cnt">{{ redeVigente(d).length }}</span></button>
@@ -289,6 +313,53 @@
             <ul class="eq-prof" aria-label="Rede de apoio anterior">
               @for (r of redeAnterior(d); track r.uuid) {
                 <li><span class="cell-main">{{ r.nome }} · {{ papeisRede[r.papel] }}</span><span class="cell-sub">{{ data(r.inicio) }} a {{ data(r.fim) }}@if (r.motivoFim) { · {{ r.motivoFim }} }</span></li>
+              }
+            </ul>
+          }
+        }
+        @case ('risco') {
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <h4 class="mo-grupo" style="margin: 0;">Risco vigente</h4>
+            @if (!d.fim && podeAcompanhar()) { <button type="button" class="btn btn--sm" (click)="abrirRisco(d)">Avaliar risco</button> }
+          </div>
+          @if (riscosVigentes(d).length) {
+            <ul class="eq-prof" aria-label="Risco vigente">
+              @for (r of riscosVigentes(d); track r.uuid) {
+                <li class="mo-row">
+                  <span>
+                    <span class="cell-main">{{ tiposRisco[r.tipo] }} <span [class]="'tag tag--' + niveisRisco[r.nivel].classe">{{ niveisRisco[r.nivel].rotulo }}</span>@if (r.reavaliacaoVencida) { <span class="tag tag--warn">Reavaliação vencida</span> }</span>
+                    <span class="cell-sub">{{ dataHora(r.avaliadaEm) }}@if (r.medidas) { · {{ r.medidas }} }@if (r.planoSeguranca) { · plano de segurança }@if (r.frequenciaContato) { · contato {{ r.frequenciaContato }} }@if (r.reavaliarEm) { · reavaliar em {{ data(r.reavaliarEm) }} }</span>
+                  </span>
+                  @if (!d.fim && podeAcompanhar()) { <button type="button" class="link-btn" (click)="abrirRisco(d, r.tipo)" [attr.aria-label]="'Reavaliar: ' + tiposRisco[r.tipo]">Reavaliar</button> }
+                </li>
+              }
+            </ul>
+          } @else { <p class="cell-sub">Sem risco vigente registrado.</p> }
+          @if (d.riscos.length) {
+            <h4 class="mo-grupo">Histórico</h4>
+            <ul class="eq-prof" aria-label="Histórico de risco">
+              @for (r of d.riscos; track r.uuid) {
+                <li><span class="cell-main">{{ dataHora(r.avaliadaEm) }} · {{ tiposRisco[r.tipo] }} · {{ niveisRisco[r.nivel].rotulo }}</span>@if (r.fatores) { <span class="cell-sub">Fatores: {{ r.fatores }}</span> }@if (r.profissionalNome) { <span class="cell-sub">{{ r.profissionalNome }}</span> }</li>
+              }
+            </ul>
+          }
+          @if (d.crises.length) {
+            <h4 class="mo-grupo">Crises</h4>
+            <ul class="eq-prof" aria-label="Crises do caso">
+              @for (c of d.crises; track c.uuid) {
+                <li class="mo-row">
+                  <span><span class="cell-main">{{ dataHora(c.identificadaEm) }}@if (c.tipo) { · {{ tiposCrise[c.tipo] }} } <span [class]="c.situacao === 'EM_CURSO' ? 'tag tag--alert' : 'tag tag--muted'">{{ c.situacao === 'EM_CURSO' ? 'Em curso' : 'Encerrada' }}</span></span>
+                    <span class="cell-sub">{{ c.unidadeNome }}@if (c.desfecho) { · {{ desfechosCrise[c.desfecho] }} }</span></span>
+                  <button type="button" class="link-btn" (click)="abrirCrise(c.uuid)">Abrir</button>
+                </li>
+              }
+            </ul>
+          }
+          @if (d.internacoes.length) {
+            <h4 class="mo-grupo">Internações do paciente</h4>
+            <ul class="eq-prof" aria-label="Internações do paciente">
+              @for (i of d.internacoes; track i.uuid) {
+                <li><span class="cell-main">{{ i.unidadeNome }} · {{ dataHora(i.admitidaEm) }}@if (i.altaEm) { a {{ dataHora(i.altaEm) }} }</span><span class="cell-sub">{{ i.status === 'INTERNADO' ? 'Internado' : 'Alta' }}@if (i.modalidade) { · {{ i.modalidade.toLowerCase() }} }</span></li>
               }
             </ul>
           }
@@ -1049,6 +1120,192 @@
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Cancelar a transferência' }}</button>
           </footer>
         </form>
+      }
+
+      @case ('risco') {
+        <form class="dw-form" [formGroup]="riscoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Paciente</dt><dd>{{ g.caso.pacienteNome }}</dd></div></dl>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipoRisco">Tipo de risco <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoRisco" formControlName="tipo" [attr.aria-invalid]="!!erroCampo('tipoRisco')" aria-describedby="e-tipoRisco">
+                  <option value="">Escolha…</option>
+                  @for (t of listaTiposRisco; track t) { <option [value]="t">{{ $any(tiposRisco)[t] }}</option> }
+                </select>
+                @if (erroCampo('tipoRisco')) { <p class="dw-err" id="e-tipoRisco">{{ erroCampo('tipoRisco') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-nivelRisco">Nível <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-nivelRisco" formControlName="nivel" [attr.aria-invalid]="!!erroCampo('nivelRisco')" aria-describedby="e-nivelRisco">
+                  <option value="">Escolha…</option>
+                  @for (n of listaNiveisRisco; track n) { <option [value]="n">{{ $any(niveisRisco)[n].rotulo }}</option> }
+                </select>
+                @if (erroCampo('nivelRisco')) { <p class="dw-err" id="e-nivelRisco">{{ erroCampo('nivelRisco') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-fatoresRisco">Fatores identificados<span class="opt">opcional</span></label>
+              <textarea id="f-fatoresRisco" rows="2" maxlength="2000" formControlName="fatores"></textarea>
+            </div>
+            <div class="dw-field">
+              <label for="f-medidasRisco">Medidas adotadas<span class="opt">obrigatórias de moderado para cima</span></label>
+              <textarea id="f-medidasRisco" rows="2" maxlength="2000" formControlName="medidas" [attr.aria-invalid]="!!erroCampo('medidasRisco')" aria-describedby="e-medidasRisco"></textarea>
+              @if (erroCampo('medidasRisco')) { <p class="dw-err" id="e-medidasRisco">{{ erroCampo('medidasRisco') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-frequenciaContato">Contato combinado<span class="opt">opcional</span></label>
+                <input id="f-frequenciaContato" type="text" maxlength="100" formControlName="frequenciaContato" placeholder="Ex.: diário, semanal" />
+              </div>
+              <div class="dw-field">
+                <label for="f-reavaliarEm">Reavaliar em<span class="opt">obrigatória no risco alto</span></label>
+                <input id="f-reavaliarEm" type="date" formControlName="reavaliarEm" [attr.aria-invalid]="!!erroCampo('reavaliarEm')" aria-describedby="e-reavaliarEm" />
+                @if (erroCampo('reavaliarEm')) { <p class="dw-err" id="e-reavaliarEm">{{ erroCampo('reavaliarEm') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label class="switch" for="f-planoSeguranca"><span><b style="font-weight: 500;">Plano de segurança</b><span class="cell-sub">Combinado com a pessoa e a rede de apoio.</span></span><input type="checkbox" role="switch" id="f-planoSeguranca" formControlName="planoSeguranca" /></label>
+            </div>
+            <div class="box box--info"><div>Cada avaliação é um registro novo: o risco vigente de cada tipo é o mais recente, e "sem risco atual" fecha o tipo.</div></div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar avaliação' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('novaCrise') {
+        <form class="dw-form" [formGroup]="criseForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (g.caso) {
+              <dl class="ro"><div><dt>Paciente</dt><dd>{{ g.caso.pacienteNome }}</dd></div></dl>
+            } @else {
+              <div class="dw-field">
+                <label for="f-buscaPacienteCrise">Paciente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-buscaPacienteCrise" type="search" autocomplete="off" placeholder="Nome, CPF ou cartão SUS" [value]="buscaPaciente()"
+                  (input)="buscaPaciente.set($any($event.target).value); criseForm.patchValue({ pacienteId: '' })"
+                  [attr.aria-invalid]="!!erroCampo('buscaPacienteCrise')" aria-describedby="e-buscaPacienteCrise" />
+                @if (erroCampo('buscaPacienteCrise')) { <p class="dw-err" id="e-buscaPacienteCrise">{{ erroCampo('buscaPacienteCrise') }}</p> }
+                @if (!criseForm.controls.pacienteId.value && pacientesEncontrados().length) {
+                  <ul class="eq-prof prg-busca" role="listbox" aria-label="Pacientes encontrados">
+                    @for (p of pacientesEncontrados(); track p.uuid) {
+                      <li><button type="button" class="link-btn" role="option" (click)="escolherPacienteCrise(p)">{{ p.nome }}</button><span class="cell-sub">CPF {{ p.cpf }}</span></li>
+                    }
+                  </ul>
+                }
+              </div>
+            }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-unidadeCrise">Unidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-unidadeCrise" formControlName="unidadeId" [attr.aria-invalid]="!!erroCampo('unidadeCrise')" aria-describedby="e-unidadeCrise">
+                  <option value="">Escolha…</option>
+                  @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+                </select>
+                @if (erroCampo('unidadeCrise')) { <p class="dw-err" id="e-unidadeCrise">{{ erroCampo('unidadeCrise') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-tipoCrise">Tipo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoCrise" formControlName="tipo" [attr.aria-invalid]="!!erroCampo('tipoCrise')" aria-describedby="e-tipoCrise">
+                  <option value="">Escolha…</option>
+                  @for (t of listaTiposCrise; track t) { <option [value]="t">{{ $any(tiposCrise)[t] }}</option> }
+                </select>
+                @if (erroCampo('tipoCrise')) { <p class="dw-err" id="e-tipoCrise">{{ erroCampo('tipoCrise') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-localCrise">Local<span class="opt">opcional</span></label>
+              <input id="f-localCrise" type="text" maxlength="200" formControlName="localOcorrencia" placeholder="Ex.: domicílio, recepção da unidade" />
+            </div>
+            <div class="dw-field">
+              <label for="f-descricaoCrise">Descrição <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-descricaoCrise" rows="3" maxlength="2000" formControlName="descricao" [attr.aria-invalid]="!!erroCampo('descricaoCrise')" aria-describedby="e-descricaoCrise"></textarea>
+              @if (erroCampo('descricaoCrise')) { <p class="dw-err" id="e-descricaoCrise">{{ erroCampo('descricaoCrise') }}</p> }
+            </div>
+            @if (criseForm.controls.tipo.value === 'AUTOAGRESSAO' || criseForm.controls.tipo.value === 'TENTATIVA_DE_SUICIDIO') {
+              <div class="box box--warn"><div>Violência autoprovocada é de notificação compulsória (ficha do SINAN). Depois de notificar, registre aqui que a notificação foi feita.</div></div>
+            }
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar crise' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('crise') {
+        <div class="dw-form">
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (criseAberta(); as c) {
+              <dl class="ro">
+                <div><dt>Paciente</dt><dd>{{ c.pacienteNome }}</dd></div>
+                <div><dt>Unidade</dt><dd>{{ c.unidadeNome }}@if (c.localOcorrencia) { · {{ c.localOcorrencia }} }</dd></div>
+                <div><dt>Tipo</dt><dd>{{ c.tipo ? tiposCrise[c.tipo] : '—' }} · {{ c.situacao === 'EM_CURSO' ? 'em curso' : 'encerrada' }}@if (c.desfecho) { · {{ desfechosCrise[c.desfecho] }} }</dd></div>
+              </dl>
+              <p class="reg-texto">{{ c.descricao }}</p>
+              @if (c.notificacaoSugerida) {
+                @if (c.notificacaoPendente) {
+                  <div class="box box--warn"><div>Notificação compulsória de violência autoprovocada pendente. A notificação no sistema chega com a Vigilância; registre aqui que foi feita.</div></div>
+                  <form [formGroup]="notificacaoForm" (ngSubmit)="registrarNotificacao(c)" class="dw-row" novalidate>
+                    <div class="dw-field">
+                      <label for="f-numeroNotificacao">Número da notificação<span class="opt">opcional</span></label>
+                      <input id="f-numeroNotificacao" type="text" maxlength="40" formControlName="numero" class="mono" />
+                    </div>
+                    <div class="dw-field" style="align-self: end;"><button type="submit" class="btn btn--sm" [disabled]="submitting()">Registrar notificação</button></div>
+                  </form>
+                } @else { <p class="cell-sub">Notificada em {{ data(c.notificadaEm) }}@if (c.notificacaoNumero) { · nº {{ c.notificacaoNumero }} }.</p> }
+              }
+              <h4 class="mo-grupo">Linha do tempo</h4>
+              <div class="tl" aria-label="Etapas da crise">
+                <div class="tl-row"><div class="date mono">{{ dataHora(c.identificadaEm) }}</div><div class="title">Identificação</div>@if (c.profissionalNome) { <div class="desc">{{ c.profissionalNome }}</div> }</div>
+                @for (e of c.etapas; track e.uuid) {
+                  <div class="tl-row"><div class="date mono">{{ dataHora(e.ocorridaEm) }}</div><div class="title">{{ etapasCrise[e.etapa] }}</div><div class="desc">{{ e.descricao }}</div>@if (e.profissionalNome) { <div class="desc">{{ e.profissionalNome }}</div> }</div>
+                }
+              </div>
+              @if (c.situacao === 'EM_CURSO' && pode('SAUDE_MENTAL.CRISE')) {
+                <form [formGroup]="etapaForm" (ngSubmit)="registrarEtapa(c)" novalidate style="margin-top: var(--s-3);">
+                  <div class="dw-row">
+                    <div class="dw-field">
+                      <label for="f-etapaCrise">Etapa <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                      <select id="f-etapaCrise" formControlName="etapa" [attr.aria-invalid]="!!erroCampo('etapaCrise')" aria-describedby="e-etapaCrise">
+                        <option value="">Escolha…</option>
+                        @for (e of listaEtapasCrise; track e) { <option [value]="e">{{ $any(etapasCrise)[e] }}</option> }
+                      </select>
+                      @if (erroCampo('etapaCrise')) { <p class="dw-err" id="e-etapaCrise">{{ erroCampo('etapaCrise') }}</p> }
+                    </div>
+                  </div>
+                  <div class="dw-field">
+                    <label for="f-descricaoEtapa">Descrição <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                    <textarea id="f-descricaoEtapa" rows="2" maxlength="2000" formControlName="descricao" [attr.aria-invalid]="!!erroCampo('descricaoEtapa')" aria-describedby="e-descricaoEtapa"></textarea>
+                    @if (erroCampo('descricaoEtapa')) { <p class="dw-err" id="e-descricaoEtapa">{{ erroCampo('descricaoEtapa') }}</p> }
+                  </div>
+                  <button type="submit" class="btn btn--ghost btn--sm" [disabled]="submitting()">Registrar etapa</button>
+                </form>
+                <form [formGroup]="desfechoForm" (ngSubmit)="encerrarCrise(c)" class="dw-row" novalidate style="margin-top: var(--s-3);">
+                  <div class="dw-field">
+                    <label for="f-desfechoCrise">Desfecho</label>
+                    <select id="f-desfechoCrise" formControlName="desfecho" [attr.aria-invalid]="!!erroCampo('desfechoCrise')" aria-describedby="h-desfechoCrise e-desfechoCrise">
+                      <option value="">Escolha…</option>
+                      @for (d of listaDesfechosCrise; track d) { <option [value]="d">{{ $any(desfechosCrise)[d] }}</option> }
+                    </select>
+                    <p class="dw-hint" id="h-desfechoCrise">Encerrar pede a etapa de pós-crise.</p>
+                    @if (erroCampo('desfechoCrise')) { <p class="dw-err" id="e-desfechoCrise">{{ erroCampo('desfechoCrise') }}</p> }
+                  </div>
+                  <div class="dw-field" style="align-self: end;"><button type="submit" class="btn btn--sm" [disabled]="submitting()">Encerrar a crise</button></div>
+                </form>
+              }
+              @if (c.situacao === 'ENCERRADA' && c.acompanhamentoId) {
+                <div class="box box--info"><div>Com caso em acompanhamento: reavalie o risco e revise o PTS depois da crise.</div></div>
+              }
+            } @else if (!erroApi()) { <p class="cell-sub">Carregando a crise…</p> }
+          </div>
+          <footer class="dw-foot"><button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button></footer>
+        </div>
       }
 
       @case ('encerrar') {

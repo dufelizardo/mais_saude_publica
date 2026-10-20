@@ -115,6 +115,10 @@ class SaudeMentalControllerTest {
         String casos = "(select uuid from tb_acompanhamento_saude_mental where unidade_id in " + unidades + ")";
         String pts = "(select uuid from tb_projeto_terapeutico_singular where acompanhamento_id in " + casos + ")";
         String solicitacoes = "(select uuid from tb_solicitacao_regulacao where unidade_solicitante_id in " + unidades + ")";
+        String crises = "(select uuid from tb_evento_crise where unidade_id in " + unidades + " or acompanhamento_id in " + casos + ")";
+        jdbc.update("delete from tb_etapa_crise where crise_id in " + crises);
+        jdbc.update("delete from tb_evento_crise where uuid in " + crises);
+        jdbc.update("delete from tb_avaliacao_risco where acompanhamento_id in " + casos);
         jdbc.update("delete from tb_transferencia_cuidado where acompanhamento_id in " + casos + " or unidade_destino_id in " + unidades);
         jdbc.update("delete from tb_encaminhamento_saude_mental where acompanhamento_id in " + casos);
         jdbc.update("delete from tb_compartilhamento_cuidado where acompanhamento_id in " + casos);

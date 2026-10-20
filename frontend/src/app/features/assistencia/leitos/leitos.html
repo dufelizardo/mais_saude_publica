@@ -13,6 +13,17 @@
   </div>
 </header>
 
+@if (pendentesMp().length) {
+  <div class="box box--warn" role="status" aria-label="Comunicação ao Ministério Público pendente" style="margin-bottom: var(--s-4);">
+    <div>
+      <strong>Comunicação ao Ministério Público pendente</strong> · internação involuntária, em até 72 horas da admissão e da alta (Lei 10.216/2001).
+      @for (i of pendentesMp(); track i.uuid) {
+        <button type="button" class="link-btn" (click)="abrirInternacao(i.uuid)" [attr.aria-label]="'Abrir internação: ' + i.pacienteNome">{{ i.pacienteNome }}@if (i.comunicacaoMpVencida) { (vencida) }</button>
+      }
+    </div>
+  </div>
+}
+
 <section class="stats" aria-label="Indicadores dos leitos">
   <div class="stat">
     <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg></span>
@@ -348,6 +359,52 @@
               <section class="dsec">
                 <div class="dsec__h"><h3>Motivo da internação</h3></div>
                 <p class="reg-texto">{{ d.motivo }}</p>
+              </section>
+              <section class="dsec" aria-label="Internação psiquiátrica">
+                <div class="dsec__h"><h3>Internação psiquiátrica</h3></div>
+                @if (erroPsiq()) { <div class="box box--err" role="alert"><strong>{{ erroPsiq() }}</strong></div> }
+                <p class="cell-sub">Modalidade: {{ d.modalidade ? modalidades[d.modalidade] : 'não informada (internação não psiquiátrica)' }}@if (d.ordemJudicial) { · ordem judicial {{ d.ordemJudicial }} }</p>
+                @if (pode('INTERNACAO.GERENCIAR')) {
+                  <form [formGroup]="modalidadeForm" (ngSubmit)="salvarModalidade(d)" class="dw-row" novalidate>
+                    <div class="dw-field">
+                      <label for="f-modalidadeInternacao">Modalidade</label>
+                      <select id="f-modalidadeInternacao" formControlName="modalidade">
+                        <option value="">Escolha…</option>
+                        @for (m of listaModalidades; track m) { <option [value]="m">{{ modalidades[m] }}</option> }
+                      </select>
+                    </div>
+                    @if (modalidadeForm.controls.modalidade.value === 'COMPULSORIA') {
+                      <div class="dw-field">
+                        <label for="f-ordemJudicial">Ordem judicial</label>
+                        <input id="f-ordemJudicial" type="text" maxlength="60" formControlName="ordemJudicial" class="mono" />
+                      </div>
+                    }
+                    <div class="dw-field" style="align-self: end;"><button type="submit" class="btn btn--ghost btn--sm" [disabled]="salvandoPsiq()">Salvar modalidade</button></div>
+                  </form>
+                }
+                @if (d.modalidade === 'INVOLUNTARIA') {
+                  @for (c of d.comunicacoesMp ?? []; track c.uuid) {
+                    <p class="cell-sub">Comunicada ao Ministério Público ({{ c.momento === 'ALTA' ? 'alta' : 'admissão' }}) em {{ instante(c.comunicadaEm) }}@if (c.responsavelNome) { · {{ c.responsavelNome }} }@if (c.protocolo) { · protocolo {{ c.protocolo }} }</p>
+                  }
+                  @if (d.comunicacaoMpPendente) {
+                    <div [class]="d.comunicacaoMpVencida ? 'box box--err' : 'box box--warn'">
+                      <div>Comunicar a {{ d.comunicacaoMpPendente === 'ALTA' ? 'alta' : 'admissão' }} ao Ministério Público até {{ instante(d.prazoComunicacaoMp!) }}@if (d.comunicacaoMpVencida) { — <strong>prazo vencido</strong> }.</div>
+                    </div>
+                    @if (pode('INTERNACAO.GERENCIAR')) {
+                      <form [formGroup]="mpForm" (ngSubmit)="registrarComunicacaoMp(d)" class="dw-row" novalidate>
+                        <div class="dw-field">
+                          <label for="f-protocoloMp">Protocolo<span class="opt">opcional</span></label>
+                          <input id="f-protocoloMp" type="text" maxlength="60" formControlName="protocolo" class="mono" />
+                        </div>
+                        <div class="dw-field">
+                          <label for="f-observacaoMp">Observação<span class="opt">opcional</span></label>
+                          <input id="f-observacaoMp" type="text" maxlength="500" formControlName="observacao" />
+                        </div>
+                        <div class="dw-field" style="align-self: end;"><button type="submit" class="btn btn--sm" [disabled]="salvandoPsiq()">Registrar comunicação</button></div>
+                      </form>
+                    }
+                  }
+                }
               </section>
               @if (d.sumarioAlta) {
                 <section class="dsec">

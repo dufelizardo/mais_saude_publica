@@ -314,4 +314,21 @@ class SaudeMentalAutorizacaoControllerTest {
                 .andExpect(jsonPath("$.situacao").value("ENCERRADO"));
         mockMvc.perform(como(MED_B, get("/api/v1/saude-mental/acompanhamento/" + JsonPath.read(novo, "$.uuid")))).andExpect(status().isOk());
     }
+
+    @Test
+    void criseSoParaAUnidadeOuAReferencia() throws Exception {
+        String corpo = "{\"pacienteId\": \"%s\", \"unidadeId\": \"%s\", \"tipo\": \"AUTOAGRESSAO\", \"descricao\": \"Autolesão na unidade.\"}"
+                .formatted(paciente.getUuid(), caps.getUuid());
+        mockMvc.perform(como(GESTOR, post("/api/v1/saude-mental/crise")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isForbidden());
+        String r = mockMvc.perform(como(PSI_OUTRO, post("/api/v1/saude-mental/crise")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String crise = "/api/v1/saude-mental/crise/" + JsonPath.read(r, "$.uuid");
+        mockMvc.perform(como(PSI_REF, get(crise))).andExpect(status().isOk()).andExpect(jsonPath("$.descricao").value("Autolesão na unidade."));
+        // O médico de outra unidade não lê a crise nem a vê na lista; a lista dele fica vazia.
+        mockMvc.perform(como(MED_B, get(crise))).andExpect(status().isForbidden());
+        mockMvc.perform(como(MED_B, get("/api/v1/saude-mental/crises"))).andExpect(status().isOk()).andExpect(jsonPath("$.lista.length()").value(0));
+        mockMvc.perform(como(MED_B, post(crise + "/etapa")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"etapa\": \"AVALIACAO\", \"descricao\": \"Tentativa de fora.\"}")).andExpect(status().isForbidden());
+    }
 }

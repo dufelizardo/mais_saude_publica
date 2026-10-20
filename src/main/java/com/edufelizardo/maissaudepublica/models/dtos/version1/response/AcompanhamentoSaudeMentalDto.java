@@ -65,6 +65,13 @@ public class AcompanhamentoSaudeMentalDto implements Serializable {
     private List<TransferenciaCuidadoDto> transferencias;
     /** O caso de onde este veio, por transferência do cuidado. */
     private UUID casoAnteriorId;
+    /** Risco (ADR-0123): algum tipo vigente em alto, e alguma reavaliação vencida. Também na lista. */
+    private boolean riscoAlto;
+    private boolean reavaliacaoRiscoVencida;
+    /** O histórico de risco, o mais recente primeiro; os vigentes vêm marcados. */
+    private List<AvaliacaoRiscoDto> riscos;
+    private List<EventoCriseDto> crises;
+    private List<InternacaoResumoSaudeMentalDto> internacoes;
 
     @Getter
     @Setter

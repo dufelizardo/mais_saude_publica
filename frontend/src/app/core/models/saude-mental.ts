@@ -104,6 +104,11 @@ export interface AcompanhamentoSaudeMentalDto {
   compartilhamentos: CompartilhamentoCuidadoDto[];
   transferencias: TransferenciaCuidadoDto[];
   casoAnteriorId?: string | null;
+  riscoAlto: boolean;
+  reavaliacaoRiscoVencida: boolean;
+  riscos: AvaliacaoRiscoDto[];
+  crises: EventoCriseDto[];
+  internacoes: InternacaoResumoSaudeMentalDto[];
 }
 
 export interface CasosSaudeMentalDto {
@@ -112,6 +117,8 @@ export interface CasosSaudeMentalDto {
   semAvaliacao: number;
   semPts: number;
   ptsARevisar: number;
+  riscoAlto: number;
+  reavaliacaoRiscoVencida: number;
   lista: AcompanhamentoSaudeMentalDto[];
 }
 
@@ -142,7 +149,7 @@ export interface AvaliacaoSaudeMentalRequestDto {
 export type SituacaoObjetivoTerapeutico = 'EM_ANDAMENTO' | 'ALCANCADO' | 'NAO_ALCANCADO' | 'SUSPENSO';
 export type SituacaoIntervencaoSaudeMental = 'REALIZADA' | 'NAO_COMPARECEU';
 export type PapelRedeApoio = 'FAMILIAR' | 'CUIDADOR' | 'PESSOA_DE_REFERENCIA' | 'SERVICO' | 'OUTRO';
-export type PendenciaSaudeMental = '' | 'SEM_AVALIACAO' | 'SEM_PTS' | 'PTS_A_REVISAR';
+export type PendenciaSaudeMental = '' | 'SEM_AVALIACAO' | 'SEM_PTS' | 'PTS_A_REVISAR' | 'RISCO_ALTO' | 'REAVALIACAO_VENCIDA';
 
 export const SITUACOES_OBJETIVO: Record<SituacaoObjetivoTerapeutico, { rotulo: string; classe: string }> = {
   EM_ANDAMENTO: { rotulo: 'Em andamento', classe: 'info' },
@@ -318,4 +325,84 @@ export interface TransferenciaCuidadoDto {
 export interface TransferenciasCuidadoDto {
   recebidas: TransferenciaCuidadoDto[];
   enviadas: TransferenciaCuidadoDto[];
+}
+
+// ── SM3: risco e crise (ADR-0123) ──────────────────────────────────────────────────────────────
+
+export type TipoRiscoSaudeMental = 'AUTOAGRESSAO' | 'HETEROAGRESSAO' | 'USO_DE_SUBSTANCIAS' | 'VULNERABILIDADE' | 'OUTRO';
+export type NivelRiscoSaudeMental = 'SEM_RISCO_ATUAL' | 'BAIXO' | 'MODERADO' | 'ALTO';
+export type TipoCriseSaudeMental = 'AUTOAGRESSAO' | 'TENTATIVA_DE_SUICIDIO' | 'HETEROAGRESSAO' | 'AGITACAO_PSICOMOTORA' | 'SURTO_PSICOTICO' | 'INTOXICACAO' | 'OUTRO';
+export type EtapaCriseSaudeMental = 'AVALIACAO' | 'INTERVENCAO' | 'ACIONAMENTO_DA_REDE' | 'ENCAMINHAMENTO' | 'POS_CRISE';
+export type DesfechoCriseSaudeMental = 'PERMANECEU_NA_UNIDADE' | 'RETORNO_AO_DOMICILIO' | 'ENCAMINHADO_A_URGENCIA' | 'INTERNACAO' | 'OUTRO';
+
+export const TIPOS_RISCO: Record<TipoRiscoSaudeMental, string> = {
+  AUTOAGRESSAO: 'Autoagressão', HETEROAGRESSAO: 'Heteroagressão', USO_DE_SUBSTANCIAS: 'Uso de substâncias', VULNERABILIDADE: 'Vulnerabilidade', OUTRO: 'Outro',
+};
+export const NIVEIS_RISCO: Record<NivelRiscoSaudeMental, { rotulo: string; classe: string }> = {
+  SEM_RISCO_ATUAL: { rotulo: 'Sem risco atual', classe: 'ok' }, BAIXO: { rotulo: 'Baixo', classe: 'info' },
+  MODERADO: { rotulo: 'Moderado', classe: 'warn' }, ALTO: { rotulo: 'Alto', classe: 'alert' },
+};
+export const TIPOS_CRISE: Record<TipoCriseSaudeMental, string> = {
+  AUTOAGRESSAO: 'Autoagressão', TENTATIVA_DE_SUICIDIO: 'Tentativa de suicídio', HETEROAGRESSAO: 'Heteroagressão',
+  AGITACAO_PSICOMOTORA: 'Agitação psicomotora', SURTO_PSICOTICO: 'Surto psicótico', INTOXICACAO: 'Intoxicação', OUTRO: 'Outro',
+};
+export const ETAPAS_CRISE: Record<EtapaCriseSaudeMental, string> = {
+  AVALIACAO: 'Avaliação', INTERVENCAO: 'Intervenção', ACIONAMENTO_DA_REDE: 'Acionamento da rede', ENCAMINHAMENTO: 'Encaminhamento', POS_CRISE: 'Pós-crise',
+};
+export const DESFECHOS_CRISE: Record<DesfechoCriseSaudeMental, string> = {
+  PERMANECEU_NA_UNIDADE: 'Permaneceu na unidade', RETORNO_AO_DOMICILIO: 'Retorno ao domicílio', ENCAMINHADO_A_URGENCIA: 'Encaminhado à urgência',
+  INTERNACAO: 'Internação', OUTRO: 'Outro',
+};
+
+export interface AvaliacaoRiscoDto {
+  uuid: string;
+  tipo: TipoRiscoSaudeMental;
+  nivel: NivelRiscoSaudeMental;
+  fatores?: string | null;
+  medidas?: string | null;
+  planoSeguranca: boolean;
+  frequenciaContato?: string | null;
+  reavaliarEm?: string | null;
+  reavaliacaoVencida: boolean;
+  avaliadaEm: string;
+  profissionalNome?: string | null;
+  vigente: boolean;
+}
+
+export interface EventoCriseDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  acompanhamentoId?: string | null;
+  identificadaEm: string;
+  situacao: 'EM_CURSO' | 'ENCERRADA';
+  conteudoLiberado: boolean;
+  tipo?: TipoCriseSaudeMental | null;
+  localOcorrencia?: string | null;
+  descricao?: string | null;
+  desfecho?: DesfechoCriseSaudeMental | null;
+  encerradaEm?: string | null;
+  notificacaoSugerida: boolean;
+  notificacaoPendente: boolean;
+  notificadaEm?: string | null;
+  notificacaoNumero?: string | null;
+  profissionalNome?: string | null;
+  etapas: { uuid: string; etapa: EtapaCriseSaudeMental; descricao: string; ocorridaEm: string; profissionalNome?: string | null }[];
+}
+
+export interface CrisesSaudeMentalDto {
+  emCurso: number;
+  notificacoesPendentes: number;
+  lista: EventoCriseDto[];
+}
+
+export interface InternacaoResumoSaudeMentalDto {
+  uuid: string;
+  unidadeNome: string;
+  admitidaEm: string;
+  altaEm?: string | null;
+  status: string;
+  modalidade?: string | null;
 }

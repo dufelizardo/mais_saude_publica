@@ -201,3 +201,62 @@ GET Transferencias Saude Mental
     RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Risco Saude Mental
+    [Documentation]    Assesses a risk in the case.
+    [Arguments]    ${caso}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/acompanhamento/${caso}/risco    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Crise Saude Mental
+    [Documentation]    Registers a crisis.
+    [Arguments]    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/crise    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Etapa Crise Saude Mental
+    [Documentation]    Registers a crisis step.
+    [Arguments]    ${crise}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/crise/${crise}/etapa    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Encerrar Crise Saude Mental
+    [Documentation]    Closes a crisis.
+    [Arguments]    ${crise}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/crise/${crise}/encerramento    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Notificacao Crise Saude Mental
+    [Documentation]    Registers that the compulsory notification was made.
+    [Arguments]    ${crise}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/crise/${crise}/notificacao    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+GET Crises Saude Mental
+    [Documentation]    Lists the crises in scope.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    GET On Session    msp_session    ${BASE_URL}/saude-mental/crises    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

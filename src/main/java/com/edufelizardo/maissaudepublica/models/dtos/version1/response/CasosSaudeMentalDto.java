@@ -22,5 +22,7 @@ public class CasosSaudeMentalDto implements Serializable {
     private long semAvaliacao;
     private long semPts;
     private long ptsARevisar;
+    private long riscoAlto;
+    private long reavaliacaoRiscoVencida;
     private List<AcompanhamentoSaudeMentalDto> lista;
 }

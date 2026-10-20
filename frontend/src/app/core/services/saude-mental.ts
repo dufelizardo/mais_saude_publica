@@ -8,6 +8,8 @@ import {
   AcompanhamentoSaudeMentalDto,
   AvaliacaoSaudeMentalRequestDto,
   CasosSaudeMentalDto,
+  CrisesSaudeMentalDto,
+  EventoCriseDto,
   PapelRedeApoio,
   PendenciaSaudeMental,
   ProjetoTerapeuticoRequestDto,
@@ -111,5 +113,39 @@ export class SaudeMentalService {
     let params = new HttpParams();
     if (unidadeId) params = params.set('unidadeId', unidadeId);
     return this.http.get<TransferenciasCuidadoDto>(`${this.api}/transferencias`, { params });
+  }
+
+  // ── SM3 (ADR-0123) ─────────────────────────────────────────────────────────────────────────
+
+  avaliarRisco(uuid: string, dto: { tipo: string; nivel: string; fatores?: string | null; medidas?: string | null; planoSeguranca?: boolean;
+    frequenciaContato?: string | null; reavaliarEm?: string | null }): Observable<AcompanhamentoSaudeMentalDto> {
+    return this.http.post<AcompanhamentoSaudeMentalDto>(`${this.api}/acompanhamento/${uuid}/risco`, dto);
+  }
+
+  registrarCrise(dto: { pacienteId: string; unidadeId: string; tipo: string; descricao: string; localOcorrencia?: string | null }): Observable<EventoCriseDto> {
+    return this.http.post<EventoCriseDto>(`${this.api}/crise`, dto);
+  }
+
+  crises(unidadeId?: string, situacao?: string): Observable<CrisesSaudeMentalDto> {
+    let params = new HttpParams();
+    if (unidadeId) params = params.set('unidadeId', unidadeId);
+    if (situacao) params = params.set('situacao', situacao);
+    return this.http.get<CrisesSaudeMentalDto>(`${this.api}/crises`, { params });
+  }
+
+  crise(uuid: string): Observable<EventoCriseDto> {
+    return this.http.get<EventoCriseDto>(`${this.api}/crise/${uuid}`);
+  }
+
+  etapaCrise(uuid: string, etapa: string, descricao: string): Observable<EventoCriseDto> {
+    return this.http.post<EventoCriseDto>(`${this.api}/crise/${uuid}/etapa`, { etapa, descricao });
+  }
+
+  encerrarCrise(uuid: string, desfecho: string): Observable<EventoCriseDto> {
+    return this.http.post<EventoCriseDto>(`${this.api}/crise/${uuid}/encerramento`, { desfecho });
+  }
+
+  notificarCrise(uuid: string, numero?: string | null): Observable<EventoCriseDto> {
+    return this.http.post<EventoCriseDto>(`${this.api}/crise/${uuid}/notificacao`, { numero: numero || null });
   }
 }
