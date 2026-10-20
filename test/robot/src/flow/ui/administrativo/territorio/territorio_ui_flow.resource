@@ -3,6 +3,9 @@ Library     String
 Resource    ../../../../pom/ui/administrativo/territorio/territorio_ui_pom.resource
 Resource    ../../../territorio/territorio_flow.resource
 Resource    ../../../territorio/cadastro_territorial_flow.resource
+Resource    ../../../territorio/adscricao_flow.resource
+Resource    ../../../../pom/ui/assistencia/pacientes/pacientes_ui_pom.resource
+Resource    ../../../../pom/ui/assistencia/programas/programas_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     O território, as equipes e os ACS de partida são criados pela API; a ação sob teste é feita pela tela.
@@ -297,5 +300,59 @@ UI Territorio - Endereco E Saida
     Esperar Texto Aparecer    Nenhuma família morando aqui.
     ${daAna}=    GET Familia Do Paciente    ${ana}
     Should Be Equal    ${daAna.json()}[familia]    ${None}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Territorio - Equipe De Referencia Na Ficha
+    [Documentation]    A ficha do paciente mostra a equipe de referência pelo domicílio e a microárea.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${paciente}    ${equipe}    ${unidade}    ${familia}    ${nome}=    Seed Familia Adscrita
+    UI Pacientes - Abrir Tela
+    UI Pacientes - Buscar    ${nome}
+    UI Pacientes - Abrir Paciente    ${nome}
+    Wait For Elements State    css=[aria-label="Equipe de referência"] >> text=Pelo domicílio    visible
+    Wait For Elements State    css=[aria-label="Equipe de referência"] >> text=microárea 07    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Territorio - Adscricao Manual Na Ficha
+    [Documentation]    Adscreve o paciente sem domicílio à mão, com motivo, pela ficha.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${paciente}    ${cpf}    ${cns}    ${nome}=    Seed A Paciente
+    ${equipe}    ${nomeEquipe}    ${unidade}=    Seed Uma Equipe
+    UI Pacientes - Abrir Tela
+    UI Pacientes - Buscar    ${nome}
+    UI Pacientes - Abrir Paciente    ${nome}
+    Clicar Botao    Adscrever manualmente
+    Wait For Elements State    css=#f-equipeId option[value="${equipe}"]    attached
+    Escolher Opcao Da Gaveta    equipeId    ${equipe}
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    motivo
+    Should Contain    ${erro}    motivo
+    Preencher Campo Da Gaveta    motivo    Situação de rua
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Equipe de referência"] .tag >> text="Manual"    visible
+    ${a}=    GET Adscricao Do Paciente    ${paciente}
+    Should Be Equal    ${a.json()}[atual][origem]    MANUAL
+    Should Be Equal    ${a.json()}[atual][equipeId]    ${equipe}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Territorio - Elegiveis E Inscricao
+    [Documentation]    No programa, os elegíveis da equipe e a inscrição já preenchida.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${paciente}    ${equipe}    ${unidade}    ${familia}    ${nome}=    Seed Familia Adscrita
+    ${programa}=    Seed Programa Adulto Na Unidade    ${unidade}
+    UI Programas - Abrir Programa    ${programa}
+    Wait For Elements State    css=select[aria-label="Equipe dos elegíveis"] option[value="${equipe}"]    attached
+    Select Options By    css=select[aria-label="Equipe dos elegíveis"]    value    ${equipe}
+    Clicar Botao    Inscrever ${nome}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Paciente inscrito
+    Esperar Texto Aparecer    Nenhum elegível fora do programa.
+    ${params}=    Create Dictionary    equipeId=${equipe}
+    ${r}=    GET Elegiveis Do Programa    ${programa}    ${params}
+    Length Should Be    ${r.json()}[elegiveis]    0
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

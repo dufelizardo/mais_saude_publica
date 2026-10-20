@@ -7,6 +7,7 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceConflictException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.AcompanhamentoProgramatico;
+import com.edufelizardo.maissaudepublica.models.Adscricao;
 import com.edufelizardo.maissaudepublica.models.Equipe;
 import com.edufelizardo.maissaudepublica.models.EventoAcompanhamento;
 import com.edufelizardo.maissaudepublica.models.Paciente;
@@ -19,6 +20,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoAc
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcessoProntuarioDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcompanhamentoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcompanhamentosDoPacienteDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AdscricaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.InscritosProgramaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ResumoAcompanhamentosDto;
 import com.edufelizardo.maissaudepublica.models.enuns.MotivoSaidaAcompanhamento;
@@ -44,6 +46,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -401,6 +404,72 @@ public class AcompanhamentoService {
     private AcompanhamentoProgramatico acompanhamento(UUID uuid) {
         return acompanhamentoRepository.findById(uuid).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar o acompanhamento " + uuid + " em nossos registros."));
+    }
+
+    // ── Elegíveis (ADR-0128) ───────────────────────────────────────────────────────────────────────
+
+    @Autowired
+    private AdscricaoService adscricaoService;
+
+    /**
+     * Os adscritos da equipe (ou de uma microárea dela) que cabem no público do programa e não estão inscritos nele. Avalia
+     * idade e sexo; gestação e condição clínica ficam como critérios não avaliados (não há registro estruturado delas).
+     */
+    @Transactional(readOnly = true)
+    public AdscricaoDto.Elegiveis elegiveis(UUID programaId, UUID equipeId, UUID microareaId) {
+        Programa programa = programa(programaId);
+        Equipe equipe = equipeRepository.findById(equipeId).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar uma equipe com o id " + equipeId + " em nossos registros."));
+        controleDeAcesso.exigir(ACOMPANHAR, equipe.getUnidade());
+        ContextoAuditoria.registro(programa.getUuid());
+        List<String> avaliados = new ArrayList<>();
+        if (programa.getIdadeMinima() != null || programa.getIdadeMaxima() != null) {
+            avaliados.add("idade " + (programa.getIdadeMinima() != null ? "de " + programa.getIdadeMinima() + " " : "")
+                    + (programa.getIdadeMaxima() != null ? "até " + programa.getIdadeMaxima() + " " : "") + "anos");
+        }
+        if (programa.getPublicoSexo() != null) {
+            avaliados.add("sexo " + programa.getPublicoSexo());
+        }
+        List<String> naoAvaliados = new ArrayList<>();
+        if (programa.isGestante()) {
+            naoAvaliados.add("gestação");
+        }
+        if (!programa.getCondicoes().isEmpty()) {
+            naoAvaliados.add("condição (" + String.join(", ", programa.getCondicoes()) + ")");
+        }
+        boolean porIdade = programa.getIdadeMinima() != null || programa.getIdadeMaxima() != null;
+        LocalDate hoje = LocalDate.now();
+        int semNascimento = 0;
+        List<AdscricaoDto.Elegivel> lista = new ArrayList<>();
+        for (Adscricao a : adscricaoService.vigentesDaEquipe(equipe.getUuid())) {
+            if (microareaId != null && (a.getMicroarea() == null || !a.getMicroarea().getUuid().equals(microareaId))) {
+                continue;
+            }
+            Paciente p = a.getPaciente();
+            if (!p.isAtivo() || (programa.getPublicoSexo() != null && programa.getPublicoSexo() != p.getSexo())) {
+                continue;
+            }
+            Integer idade = p.getDataNascimento() == null ? null : Period.between(p.getDataNascimento(), hoje).getYears();
+            if (porIdade) {
+                if (idade == null) {
+                    semNascimento++;
+                    continue;
+                }
+                if ((programa.getIdadeMinima() != null && idade < programa.getIdadeMinima())
+                        || (programa.getIdadeMaxima() != null && idade > programa.getIdadeMaxima())) {
+                    continue;
+                }
+            }
+            if (acompanhamentoRepository.existsByPaciente_UuidAndPrograma_UuidAndFimIsNull(p.getUuid(), programa.getUuid())) {
+                continue;
+            }
+            lista.add(new AdscricaoDto.Elegivel(p.getUuid(), p.getNome(), idade, p.getSexo(),
+                    a.getMicroarea() != null ? a.getMicroarea().getCodigo() : null, adscricaoService.acsDaMicroarea(a.getMicroarea())));
+        }
+        lista.sort(Comparator.comparing((AdscricaoDto.Elegivel e) -> Objects.toString(e.getMicroareaCodigo(), "~"))
+                .thenComparing(e -> e.getNome(), String.CASE_INSENSITIVE_ORDER));
+        return new AdscricaoDto.Elegiveis(programa.getUuid(), equipe.getUuid(), microareaId,
+                avaliados, naoAvaliados, semNascimento, lista);
     }
 
     private Programa programa(UUID uuid) {

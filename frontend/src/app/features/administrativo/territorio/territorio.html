@@ -217,7 +217,7 @@
                   [style.background]="microareaSelecionada() === m.uuid ? 'var(--blue-50)' : null" (click)="microareaSelecionada.set(m.uuid)">
                   <div style="min-width: 0;">
                     <span class="cell-main"><span class="mono">{{ m.codigo }}</span>@if (m.nome) { · {{ m.nome }} }</span>
-                    <span class="cell-sub">@if (m.populacaoReferencia != null) { {{ m.populacaoReferencia }} pessoas } @else { população não informada }</span>
+                    <span class="cell-sub">@if (m.populacaoReferencia != null) { referência de {{ m.populacaoReferencia }} pessoas } @else { população de referência não informada } · {{ m.pessoas }} pessoa(s) em {{ m.familias }} família(s) cadastrada(s)</span>
                     @for (av of m.avisos; track av) {
                       @if (av !== 'Sem ACS') { <span [class]="acimaDaReferencia(m) && av.startsWith('População') ? 'tag tag--alert' : 'tag tag--muted'">{{ av }}</span> }
                     }

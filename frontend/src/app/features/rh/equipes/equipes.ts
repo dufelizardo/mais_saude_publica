@@ -25,6 +25,8 @@ import { EquipeService } from '../../../core/services/equipe';
 import { ProfissionalService } from '../../../core/services/profissional';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { CoberturaDto } from '../../../core/models/adscricao';
+import { TerritorioService } from '../../../core/services/territorio';
 
 type Gaveta =
   | { tipo: 'equipe'; equipe: EquipeResponseDto | null }
@@ -66,6 +68,9 @@ export class Equipes {
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly selecionadaId = signal<string | null>(null);
   protected readonly detalhe = signal<EquipeResponseDto | null>(null);
+  /** Cobertura da equipe pelo cadastro territorial (ADR-0128): só números. */
+  protected readonly cobertura = signal<CoberturaDto | null>(null);
+  private readonly territorioService = inject(TerritorioService);
   /** Programas de saúde em que a equipe participa, com os inscritos dela (ADR-0119). */
   protected readonly programasDaEquipe = signal<ProgramaResumoDto[] | null>(null);
 
@@ -184,6 +189,10 @@ export class Equipes {
     this.selecionadaId.set(uuid);
     if (atualizarUrl) this.router.navigate([], { queryParams: { equipe: uuid }, queryParamsHandling: 'merge', replaceUrl: true });
     this.equipeService.buscar(uuid).subscribe({ next: (d) => this.detalhe.set(d), error: () => this.detalhe.set(null) });
+    this.cobertura.set(null);
+    this.territorioService.cobertura(uuid).pipe(catchError(() => of(null))).subscribe((c) => {
+      if (this.selecionadaId() === uuid) this.cobertura.set(c);
+    });
     this.programasDaEquipe.set(null);
     this.programaService.listar({ equipeId: uuid }).subscribe({ next: (ps) => this.programasDaEquipe.set(ps), error: () => this.programasDaEquipe.set([]) });
   }
@@ -215,6 +224,11 @@ export class Equipes {
 
   protected faltando(e: EquipeResumoDto): string {
     return e.faltando.map((f) => f.split(' ou ').map((x) => this.funcoes[x as FuncaoEquipe] ?? x).join(' ou ')).join(', ');
+  }
+
+  /** Pessoas cadastradas na microárea, pela cobertura (ADR-0128). */
+  protected pessoasNaMicroarea(codigo: string): number | null {
+    return this.cobertura()?.microareas.find((m) => m.codigo === codigo)?.pessoas ?? null;
   }
 
   protected microareas(e: EquipeResponseDto): { codigo: string; acs: MembroEquipeDto[] }[] {

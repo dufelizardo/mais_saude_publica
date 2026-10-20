@@ -21,9 +21,10 @@ Endereco Do Imovel
 
 Seed Area Com Equipe E Microarea
     [Documentation]    Creates an area 0.02° wide with a team and the micro-area 07 drawn; returns the area and the micro-area.
+    [Arguments]    ${lon}=-47.0    ${lat}=-22.0
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${area}=    Seed Area Territorial
-    ${geometria}=    Quadrado GeoJSON    -47.0    -22.0    0.01
+    ${area}=    Seed Area Territorial    ${lon}    ${lat}
+    ${geometria}=    Quadrado GeoJSON    ${lon}    ${lat}    0.01
     ${micro}=    Seed Microarea    ${area}    07    ${geometria}
     ${equipe}    ${nome}    ${unidadeId}=    Seed Uma Equipe
     ${resp}=    Create Dictionary    equipeId=${equipe}
@@ -52,9 +53,14 @@ Seed Domicilio
 Cadastro - Imovel - Status Code 201
     [Documentation]    A property inside the micro-area, found by the point, with a valid schema.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${area}    ${micro}=    Seed Area Com Equipe E Microarea
+    # Lugar aleatório: o ponto acha a microárea entre todas, e outros testes desenham no mesmo canto.
+    ${lon}=    Evaluate    round(-60 + random.random() * 15, 4)    modules=random
+    ${lat}=    Evaluate    round(-30 + random.random() * 20, 4)    modules=random
+    ${area}    ${micro}=    Seed Area Com Equipe E Microarea    ${lon}    ${lat}
     ${endereco}=    Endereco Do Imovel    Rua A    100
-    ${payload}=    Create Dictionary    tipo=DOMICILIO    endereco=${endereco}    latitude=${-21.995}    longitude=${-46.995}
+    ${plat}=    Evaluate    ${lat} + 0.005
+    ${plon}=    Evaluate    ${lon} + 0.005
+    ${payload}=    Create Dictionary    tipo=DOMICILIO    endereco=${endereco}    latitude=${plat}    longitude=${plon}
     ${response}=    POST Imovel    ${payload}
     Should Be Equal As Integers    ${response.status_code}    201
     Validate Object Schema    ${response.json()}    ${IMOVEL_DETALHE_SCHEMA}

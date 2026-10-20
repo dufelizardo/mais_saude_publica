@@ -56,7 +56,8 @@ import java.util.stream.Stream;
  * Cadastro territorial, fatia F3a (ADR-0127): imóvel na microárea (o ponto, quando há, dentro dela), domicílio com as
  * condições, família com início e fim no domicílio e os membros, que são os pacientes que já existem. Cadastrar pede
  * {@value #CADASTRAR} na unidade da equipe responsável pela área; ler família e domicílio pede o cadastro ou a gestão do
- * território no escopo, e o detalhe entra na auditoria (dado pessoal).
+ * território no escopo, e o detalhe entra na auditoria (dado pessoal). Cada entrada, saída ou mudança acerta a adscrição
+ * do paciente à equipe da área (ADR-0128).
  */
 @Service
 public class CadastroTerritorialService {
@@ -90,6 +91,10 @@ public class CadastroTerritorialService {
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
+
+    /** A adscrição segue a moradia (ADR-0128). */
+    @Autowired
+    private AdscricaoService adscricaoService;
 
     // ── Leitura ────────────────────────────────────────────────────────────────────────────────────
 
@@ -170,6 +175,7 @@ public class CadastroTerritorialService {
         Imovel i = buscarImovel(uuid);
         exigirCadastro(i.getMicroarea().getArea());
         UUID areaAntes = i.getMicroarea().getArea().getUuid();
+        UUID microareaAntes = i.getMicroarea().getUuid();
         aplicar(i, dto);
         if (!i.getMicroarea().getArea().getUuid().equals(areaAntes)) {
             throw new ResourceUnprocessableEntityException("O imóvel não muda de área pela edição; ele fica em outra microárea da mesma área.");
@@ -177,8 +183,12 @@ public class CadastroTerritorialService {
         if (i.getTipo() != TipoImovel.DOMICILIO && !domicilioRepository.findByImovel_UuidOrderByIdentificacaoAsc(i.getUuid()).isEmpty()) {
             throw new ResourceUnprocessableEntityException("O imóvel tem domicílio cadastrado; ele continua sendo de moradia.");
         }
+        i = imovelRepository.save(i);
+        if (!i.getMicroarea().getUuid().equals(microareaAntes)) {
+            adscricaoService.recalcularImovel(i, LocalDate.now(), "O imóvel passou à microárea " + i.getMicroarea().getCodigo());
+        }
         ContextoAuditoria.registro(i.getUuid());
-        return detalhe(imovelRepository.save(i));
+        return detalhe(i);
     }
 
     @Transactional
@@ -238,10 +248,12 @@ public class CadastroTerritorialService {
         exigirSemFamilia(responsavel);
         NucleoFamiliar n = nucleoRepository.save(new NucleoFamiliar(null, d, responsavel, dto.getRendaFamiliar(), inicio, null, null, UsuarioAutenticado.cpf()));
         membroRepository.save(new MembroNucleo(null, n, responsavel, Parentesco.RESPONSAVEL, inicio, null, null, UsuarioAutenticado.cpf()));
+        adscricaoService.recalcular(responsavel, inicio, "Entrada na família");
         for (MembroFamiliaRequestDto m : outros) {
             Paciente p = buscarPaciente(m.getPacienteId());
             exigirSemFamilia(p);
             membroRepository.save(new MembroNucleo(null, n, p, m.getParentesco(), inicio, null, null, UsuarioAutenticado.cpf()));
+            adscricaoService.recalcular(p, inicio, "Entrada na família");
         }
         ContextoAuditoria.registro(n.getUuid());
         ContextoAuditoria.detalhe("Família de " + responsavel.getNome() + " com " + (outros.size() + 1) + " pessoa(s).");
@@ -272,6 +284,7 @@ public class CadastroTerritorialService {
             throw new ResourceBadRequestException("A entrada não pode ser antes do início da família (" + n.getInicio() + ").");
         }
         membroRepository.save(new MembroNucleo(null, n, p, dto.getParentesco(), inicio, null, null, UsuarioAutenticado.cpf()));
+        adscricaoService.recalcular(p, inicio, "Entrada na família");
         ContextoAuditoria.registro(n.getUuid());
         ContextoAuditoria.paciente(p.getUuid());
         return detalhe(n.getDomicilio().getImovel());
@@ -308,6 +321,7 @@ public class CadastroTerritorialService {
             n.setMotivoFim("Família sem membros: " + motivo);
             nucleoRepository.save(n);
         }
+        adscricaoService.recalcular(m.getPaciente(), fim, "Saída da família: " + motivo);
         ContextoAuditoria.registro(n.getUuid());
         ContextoAuditoria.paciente(m.getPaciente().getUuid());
         return detalhe(n.getDomicilio().getImovel());
@@ -375,6 +389,7 @@ public class CadastroTerritorialService {
                 UsuarioAutenticado.cpf()));
         for (MembroNucleo m : membros) {
             membroRepository.save(new MembroNucleo(null, novo, m.getPaciente(), m.getParentesco(), data, null, null, UsuarioAutenticado.cpf()));
+            adscricaoService.recalcular(m.getPaciente(), data, motivo);
         }
         ContextoAuditoria.registro(novo.getUuid());
         ContextoAuditoria.detalhe(motivo);

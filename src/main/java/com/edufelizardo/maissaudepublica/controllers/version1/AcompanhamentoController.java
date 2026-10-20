@@ -9,6 +9,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Acompanham
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EncerramentoAcompanhamentoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoAcompanhamentoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcompanhamentoDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AdscricaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcompanhamentosDoPacienteDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.InscritosProgramaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ResumoAcompanhamentosDto;
@@ -52,6 +53,17 @@ public class AcompanhamentoController {
     public ResponseEntity<InscritosProgramaDto> inscritos(@PathVariable UUID uuid, @RequestParam(required = false) UUID unidadeId,
                                                           @RequestParam(required = false) SituacaoAcompanhamento situacao) {
         return ResponseEntity.ok(service.inscritos(uuid, unidadeId, situacao));
+    }
+
+    @AuditarLeitura
+    @RequerPermissao({"PROGRAMA.ACOMPANHAR"})
+    @GetMapping(value = "programa/{uuid}/elegiveis", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Elegíveis do programa", description = "Os adscritos da equipe (ou da microárea) no público do programa e ainda não "
+            + "inscritos (ADR-0128). Avalia idade e sexo; gestação e condição vêm como não avaliadas. Leitura auditada.", tags = "Acompanhamento Programático")
+    @ApiErrorResponsesListagem
+    public ResponseEntity<AdscricaoDto.Elegiveis> elegiveis(
+            @PathVariable UUID uuid, @RequestParam UUID equipeId, @RequestParam(required = false) UUID microareaId) {
+        return ResponseEntity.ok(service.elegiveis(uuid, equipeId, microareaId));
     }
 
     @RequerPermissao({"PROGRAMA.ACOMPANHAR"})

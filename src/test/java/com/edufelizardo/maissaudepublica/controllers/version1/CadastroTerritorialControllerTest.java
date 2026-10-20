@@ -86,6 +86,7 @@ class CadastroTerritorialControllerTest {
     /** O território dos testes, as equipes, os pacientes e a unidade do prefixo. */
     static void limparDados(JdbcTemplate jdbc) {
         TerritorioControllerTest.limparDados(jdbc, PREFIXO, CODIGO);
+        jdbc.update("delete from tb_adscricao where paciente_id in (select uuid from tb_paciente where nome like ?)", PREFIXO + "%");
         jdbc.update("delete from tb_membro_nucleo where paciente_id in (select uuid from tb_paciente where nome like ?)", PREFIXO + "%");
         jdbc.update("delete from tb_nucleo_familiar where responsavel_id in (select uuid from tb_paciente where nome like ?)", PREFIXO + "%");
         jdbc.update("delete from tb_evento_auditoria where paciente_id in (select uuid from tb_paciente where nome like ?)", PREFIXO + "%");

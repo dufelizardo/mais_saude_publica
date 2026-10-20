@@ -21,6 +21,7 @@ import {
   Parentesco,
   FaixaRendaFamiliar,
 } from '../models/cadastro-territorial';
+import { AdscricaoDoPacienteDto, CoberturaDto } from '../models/adscricao';
 
 /** Território (ADR-0125): a árvore, o cadastro, a equipe da área, o ACS da microárea e as coordenadas da unidade. */
 @Injectable({ providedIn: 'root' })
@@ -116,6 +117,24 @@ export class TerritorioService {
 
   enderecoDoImovel(membroId: string): Observable<ImovelDetalheDto> {
     return this.http.post<ImovelDetalheDto>(`${this.api}/familia/membro/${membroId}/endereco-do-imovel`, {});
+  }
+
+  // ── Adscrição e cobertura (ADR-0128) ─────────────────────────────────────────────────────────────
+
+  adscricao(pacienteId: string): Observable<AdscricaoDoPacienteDto> {
+    return this.http.get<AdscricaoDoPacienteDto>(`${this.api}/paciente/${pacienteId}/adscricao`);
+  }
+
+  adscrever(pacienteId: string, equipeId: string, motivo: string, inicio?: string | null): Observable<AdscricaoDoPacienteDto> {
+    return this.http.post<AdscricaoDoPacienteDto>(`${this.api}/paciente/${pacienteId}/adscricao`, { equipeId, motivo, inicio: inicio || null });
+  }
+
+  encerrarAdscricao(pacienteId: string, motivo: string, fim?: string | null): Observable<AdscricaoDoPacienteDto> {
+    return this.http.post<AdscricaoDoPacienteDto>(`${this.api}/paciente/${pacienteId}/adscricao/encerrar`, { motivo, fim: fim || null });
+  }
+
+  cobertura(equipeId: string): Observable<CoberturaDto> {
+    return this.http.get<CoberturaDto>(`${this.api}/equipe/${equipeId}/cobertura`);
   }
 
   encerrarAcs(microareaId: string, motivo: string, fim?: string | null): Observable<AreaDetalheDto> {

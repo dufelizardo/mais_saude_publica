@@ -34,6 +34,7 @@ import { ProfissionalService } from '../../../core/services/profissional';
 import { ProgramaService } from '../../../core/services/programa';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { ElegiveisDoPrograma } from './elegiveis-do-programa';
 
 type Gaveta =
   | { tipo: 'programa'; item: ProgramaDto | null }
@@ -52,7 +53,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-programas',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, Drawer, ElegiveisDoPrograma],
   templateUrl: './programas.html',
 })
 export class Programas {
@@ -338,6 +339,18 @@ export class Programas {
     this.abrir({ tipo: 'encerrar', programa, participacaoId, nome });
   }
 
+  /** Muda depois de cada inscrição, para os elegíveis recarregarem (ADR-0128). */
+  protected readonly versaoElegiveis = signal(0);
+
+  /** "Inscrever" na lista de elegíveis: a inscrição já com o paciente, a unidade e a equipe da adscrição. */
+  protected inscreverElegivel(programa: ProgramaDto, e: { pacienteId: string; nome: string; unidadeId: string; equipeId: string }): void {
+    this.abrirInscrever(programa);
+    this.inscreverForm.patchValue({ pacienteId: e.pacienteId, unidadeId: e.unidadeId });
+    this.buscaPaciente.set(e.nome);
+    this.carregarEquipes(e.unidadeId);
+    this.inscreverForm.patchValue({ equipeId: e.equipeId });
+  }
+
   protected abrirInscrever(programa: ProgramaDto): void {
     const unidades = this.unidadesDoPrograma(programa);
     this.inscreverForm.reset({ pacienteId: '', unidadeId: unidades.length === 1 ? unidades[0].unidadeId : '', equipeId: '', profissionalMatricula: '', inicio: '' });
@@ -507,6 +520,7 @@ export class Programas {
         this.fecharGaveta();
         this.mostrarToast('Paciente inscrito', a.avisoPublico ? `${a.pacienteNome} · atenção: ${a.avisoPublico}` : `${a.pacienteNome} · ${a.programaNome}`);
         this.atualizarDepoisDoAcompanhamento(programa.resumo.uuid);
+        this.versaoElegiveis.update((n) => n + 1);
       },
       error: (e: HttpErrorResponse) => {
         this.submitting.set(false);
