@@ -88,8 +88,8 @@
     </label>
   }
   <div class="seg" role="group" aria-label="Visão" style="margin-left: auto;">
-    <button type="button" disabled title="Em breve: depende das coordenadas das unidades">Mapa</button>
-    <button type="button" aria-pressed="true">Lista</button>
+    <button type="button" [attr.aria-pressed]="visao() === 'mapa'" (click)="mudarVisao('mapa')">Mapa</button>
+    <button type="button" [attr.aria-pressed]="visao() === 'lista'" (click)="mudarVisao('lista')">Lista</button>
   </div>
 </div>
 
@@ -98,6 +98,23 @@
 }
 
 <section class="split">
+  @if (visao() === 'mapa') {
+    <div class="card list-card">
+      <div class="list-head">
+        <div>
+          <h2>Mapa da rede</h2>
+          <div class="sub">{{ pinosDaRede().length }} no mapa@if (semCoordenadas()) { · {{ semCoordenadas() }} sem coordenadas }</div>
+        </div>
+      </div>
+      <div style="padding: var(--s-3);">
+        <app-mapa [pinos]="pinosDaRede()" [selecionado]="selecionadaId()" [altura]="560" [reenquadrar]="reenquadrar()" rotulo="Mapa das unidades de saúde"
+          (selecionar)="selecionar($event)" />
+        @if (semCoordenadas()) {
+          <p class="cell-sub" style="margin-top: var(--s-2);">As unidades sem coordenadas ficam só na lista; marque a localização na ficha, em Dados gerais.</p>
+        }
+      </div>
+    </div>
+  } @else {
   <div class="card list-card">
     <div class="list-head">
       <div>
@@ -132,6 +149,7 @@
       }
     </div>
   </div>
+  }
 
   @if (ficha(); as f) {
     <aside class="card detail-card" aria-label="Detalhes da unidade">
@@ -190,6 +208,42 @@
                 <div><dt>Contato</dt><dd>{{ f.telefones.length ? f.telefones.join(', ') : '—' }}@if (f.resumo.email) { · {{ f.resumo.email }} }</dd></div>
                 <div><dt>Responsável</dt><dd>{{ f.responsavelNome || (f.responsavelCpf ? 'CPF ' + f.responsavelCpf + ' (sem cadastro de profissional)' : '—') }}</dd></div>
               </dl>
+            </div>
+            <div class="info-block">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Localização</h3>
+                @if (podeEditar() && !marcando()) {
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="marcarNoMapa(f)">{{ localizacao(f) ? 'Mudar no mapa' : 'Marcar no mapa' }}</button>
+                }
+              </div>
+              @if (marcando()) {
+                <p class="cell-sub">Clique no mapa onde fica a unidade, ou digite as coordenadas (WGS84).</p>
+                <div class="dw-row" style="margin: var(--s-2) 0;">
+                  <div class="dw-field">
+                    <label for="f-latitude">Latitude</label>
+                    <input id="f-latitude" type="text" inputmode="decimal" class="mono" [value]="pontoMarcado().lat ?? ''" (change)="mudarPonto('lat', $any($event.target).value)" />
+                  </div>
+                  <div class="dw-field">
+                    <label for="f-longitude">Longitude</label>
+                    <input id="f-longitude" type="text" inputmode="decimal" class="mono" [value]="pontoMarcado().lng ?? ''" (change)="mudarPonto('lng', $any($event.target).value)" />
+                  </div>
+                </div>
+              } @else if (localizacao(f); as c) {
+                <p class="cell-sub mono">{{ c.latitude }}, {{ c.longitude }}</p>
+              } @else {
+                <p class="cell-sub">Sem coordenadas: a unidade não aparece no mapa da rede nem no do território.</p>
+              }
+              @if (marcando() || localizacao(f)) {
+                <app-mapa [pinos]="pinoDaFicha(f)" [altura]="220" [marcarPonto]="marcando()" [rotulo]="'Localização de ' + f.resumo.nome"
+                  (ponto)="pontoMarcado.set({ lat: $event.lat, lng: $event.lng })" />
+              }
+              @if (marcando()) {
+                @if (erroLocalizacao()) { <div class="box box--err" role="alert" style="margin-top: var(--s-2);"><strong>{{ erroLocalizacao() }}</strong></div> }
+                <div class="mapa-barra">
+                  <button type="button" class="btn btn--sm" (click)="salvarLocalizacao(f)" [disabled]="salvandoLocalizacao()">{{ salvandoLocalizacao() ? 'Salvando…' : 'Salvar localização' }}</button>
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="marcando.set(false)">Cancelar</button>
+                </div>
+              }
             </div>
           </div>
         }

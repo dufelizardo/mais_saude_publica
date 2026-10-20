@@ -784,7 +784,8 @@ tbody tr:hover { background: var(--ink-50); }
 /* ====== Layout dividido: lista + painel de detalhe (ver ADR-0052) ====== */
 .split { display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--s-4); align-items: start; }
 @media (max-width: 1100px) { .split { grid-template-columns: 1fr; } }
-.split .detail-card { position: sticky; top: calc(var(--top-h) + var(--s-4)); }
+/* Painel fixo, mas com rolagem própria: mais alto que a janela (ficha com mapa), o fim ficava inalcançável (ADR-0126). */
+.split .detail-card { position: sticky; top: calc(var(--top-h) + var(--s-4)); max-height: calc(100vh - var(--top-h) - 2 * var(--s-4)); overflow-y: auto; }
 @media (max-width: 1100px) { .split .detail-card { position: static; } }
 
 /* ====== Avatar com iniciais (linha da tabela e cabeçalho do painel, ver ADR-0052) ====== */
@@ -1784,3 +1785,16 @@ button.shift--off { text-align: center; }
 .prg-kpis .kpi__val--soon { font-size: 1rem; font-weight: 500; color: var(--ink-500); }
 .prg-kpis .kpi__lbl { color: var(--ink-500); font-size: 0.72rem; margin-top: 4px; }
 .prg-busca { border: 1px solid var(--ink-200); border-radius: 8px; padding: 6px 10px; margin-top: 6px; max-height: 220px; overflow: auto; }
+
+/* ── Mapa (ADR-0126) ─────────────────────────────────────────────────────────────────────────── */
+.mapa { position: relative; border: 1px solid var(--ink-100); border-radius: 10px; overflow: hidden; background: var(--ink-50); }
+.mapa__alvo { position: absolute; inset: 0; }
+.mapa__alvo--marcar { cursor: crosshair; }
+.mapa__alvo--marcar .leaflet-grab { cursor: crosshair; }
+.mapa__carregando { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-500); font-size: 0.85rem; }
+.mapa__rotulo { background: transparent; border: 0; box-shadow: none; font-weight: 700; font-size: 0.72rem; color: var(--ink-900); text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
+.mapa__rotulo::before { display: none; }
+.unit-pin--destaque { outline: 3px solid var(--warn); outline-offset: 1px; }
+.mapa-barra { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; margin: var(--s-2) 0; }
+.mapa-legenda { display: flex; flex-wrap: wrap; gap: var(--s-3); font-size: 0.72rem; color: var(--ink-500); margin-top: var(--s-2); }
+.mapa-legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }

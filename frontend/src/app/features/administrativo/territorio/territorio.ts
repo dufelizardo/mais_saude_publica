@@ -24,6 +24,9 @@ import { AuthService } from '../../../core/services/auth';
 import { EquipeService } from '../../../core/services/equipe';
 import { TerritorioService } from '../../../core/services/territorio';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { EdicaoMapa, Mapa, PinoMapa, PoligonoMapa } from '../../../shared/mapa/mapa';
+import { emComum, foraDe, geometriaDoArquivo, hectares, relevante } from '../../../shared/mapa/geometria';
+import { TIPOS_UNIDADE } from '../../../core/models/rede-unidades';
 
 /** Valores do formulário único das gavetas. */
 const VAZIO = {
@@ -44,6 +47,13 @@ const VAZIO = {
   motivo: '',
 };
 
+/** O desenho em curso no mapa (ADR-0126). */
+interface Desenho {
+  tipo: 'area' | 'microarea';
+  area: AreaNoDto;
+  microarea: MicroareaNoDto | null;
+}
+
 type Gaveta =
   | { tipo: 'segmento'; item: SegmentoDto | null }
   | { tipo: 'territorio'; item: TerritorioNoDto | null }
@@ -55,12 +65,13 @@ type Gaveta =
 
 /**
  * Território (ADR-0125, fatia F1 da ADR-0108): segmento → território → área → microárea, com a equipe responsável
- * pela área e o ACS de cada microárea como histórico. O mapa (Leaflet) vem na F2; aqui a geometria entra como GeoJSON
- * colado ou importado de arquivo. Layout de lista e detalhe de Equipamentos de Saúde.
+ * pela área e o ACS de cada microárea como histórico. Layout de lista e detalhe de Equipamentos de Saúde. O mapa
+ * (ADR-0126, F2) mostra a área, as microáreas (sem ACS em âmbar) e as unidades, e desenha os polígonos; o GeoJSON
+ * colado ou importado (inclusive KML) continua nas gavetas.
  */
 @Component({
   selector: 'app-territorio',
-  imports: [ReactiveFormsModule, RouterLink, Drawer],
+  imports: [ReactiveFormsModule, RouterLink, Drawer, Mapa],
   templateUrl: './territorio.html',
 })
 export class Territorio {
@@ -86,6 +97,14 @@ export class Territorio {
   protected readonly busca = signal('');
   protected readonly selecionadaId = signal<string | null>(null);
   protected readonly detalhe = signal<AreaDetalheDto | null>(null);
+
+  /** Mapa: a área sozinha ou com as vizinhas do território, a microárea em destaque e o desenho em curso. */
+  protected readonly visaoMapa = signal<'area' | 'territorio'>('area');
+  protected readonly microareaSelecionada = signal<string | null>(null);
+  protected readonly desenhando = signal<Desenho | null>(null);
+  protected readonly desenhoAtual = signal<string | null>(null);
+  protected readonly erroDesenho = signal<string | null>(null);
+  protected readonly salvandoDesenho = signal(false);
 
   protected readonly gaveta = signal<Gaveta | null>(null);
   protected readonly submitting = signal(false);
@@ -162,6 +181,129 @@ export class Territorio {
     return codigo.length <= 3 ? codigo : codigo.slice(0, 3);
   }
 
+  // ── Mapa ───────────────────────────────────────────────────────────────────────────────────────
+
+  protected readonly poligonosDoMapa = computed<PoligonoMapa[]>(() => {
+    const d = this.detalhe();
+    if (!d) return [];
+    const lista: PoligonoMapa[] = [];
+    if (this.visaoMapa() === 'territorio') {
+      const territorio = this.todosTerritorios().find((t) => t.uuid === d.area.territorioId);
+      for (const a of territorio?.areas ?? []) {
+        if (a.uuid !== d.area.uuid && a.geometria) {
+          lista.push({ id: a.uuid, geometria: a.geometria, rotulo: a.codigo, descricao: `Área ${a.codigo}`, tipo: 'vizinha' });
+        }
+      }
+    }
+    if (d.area.geometria) lista.push({ id: d.area.uuid, geometria: d.area.geometria, descricao: `Área ${d.area.codigo}`, tipo: 'area' });
+    for (const m of d.area.microareas) {
+      if (!m.geometria) continue;
+      lista.push({
+        id: m.uuid, geometria: m.geometria, rotulo: m.codigo, tipo: m.acs ? 'microarea' : 'sem-acs',
+        descricao: `Microárea ${m.codigo}, ${m.acs ? 'ACS ' + m.acs.nome : 'sem ACS'}`,
+      });
+    }
+    return lista;
+  });
+
+  protected readonly pinosDoMapa = computed<PinoMapa[]>(() => {
+    const unidadeDaEquipe = this.detalhe()?.area.equipe?.unidadeId;
+    return this.unidades()
+      .filter((u) => u.latitude != null && u.longitude != null)
+      .map((u) => ({
+        id: 'unidade:' + u.uuid, lat: u.latitude!, lng: u.longitude!, sigla: TIPOS_UNIDADE[u.tipo]?.sigla ?? 'U',
+        classe: `unit-pin ${TIPOS_UNIDADE[u.tipo]?.familia ?? ''}`, descricao: u.nome, destaque: u.uuid === unidadeDaEquipe,
+      }));
+  });
+
+  /** A geometria de partida do desenho em curso. */
+  protected readonly edicaoDoMapa = computed<EdicaoMapa | null>(() => {
+    const g = this.desenhando();
+    if (!g) return null;
+    return g.tipo === 'area'
+      ? { id: g.area.uuid, geometria: g.area.geometria ?? null, nome: `área ${g.area.codigo}` }
+      : { id: g.microarea!.uuid, geometria: g.microarea!.geometria ?? null, nome: `microárea ${g.microarea!.codigo}` };
+  });
+
+  /** Avisos enquanto se desenha (o backend decide; ADR-0125). */
+  protected readonly avisosDoDesenho = computed<string[]>(() => {
+    const g = this.desenhando();
+    const atual = this.desenhoAtual();
+    if (!g || !atual) return [];
+    const avisos: string[] = [];
+    if (g.tipo === 'microarea') {
+      if (g.area.geometria && relevante(foraDe(atual, g.area.geometria))) avisos.push(`Parte do desenho sai do contorno da área ${g.area.codigo}.`);
+      for (const m of g.area.microareas) {
+        if (m.uuid !== g.microarea!.uuid && m.geometria && relevante(emComum(atual, m.geometria))) avisos.push(`Sobrepõe a microárea ${m.codigo}.`);
+      }
+    } else {
+      for (const m of g.area.microareas) {
+        if (m.geometria && relevante(foraDe(m.geometria, atual))) avisos.push(`A microárea ${m.codigo} ficaria fora da área.`);
+      }
+    }
+    return avisos;
+  });
+
+  protected readonly hectaresDoDesenho = computed(() => hectares(this.desenhoAtual()));
+
+  protected noMapa(id: string): void {
+    if (id.startsWith('unidade:')) return;
+    this.microareaSelecionada.set(id);
+    setTimeout(() => document.getElementById('mi-' + id)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+  }
+
+  protected desenharArea(area: AreaNoDto): void {
+    this.iniciarDesenho({ tipo: 'area', area, microarea: null }, area.geometria ?? null);
+  }
+
+  protected desenharMicroarea(area: AreaNoDto, m: MicroareaNoDto): void {
+    this.microareaSelecionada.set(m.uuid);
+    this.iniciarDesenho({ tipo: 'microarea', area, microarea: m }, m.geometria ?? null);
+  }
+
+  private iniciarDesenho(d: Desenho, geometria: string | null): void {
+    this.desenhoAtual.set(geometria);
+    this.erroDesenho.set(null);
+    this.desenhando.set(d);
+    setTimeout(() => document.getElementById('mapa-territorio')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }));
+  }
+
+  protected cancelarDesenho(): void {
+    this.desenhando.set(null);
+    this.desenhoAtual.set(null);
+    this.erroDesenho.set(null);
+  }
+
+  protected salvarDesenho(): void {
+    const g = this.desenhando();
+    if (!g || this.salvandoDesenho()) return;
+    const geometria = this.desenhoAtual();
+    const req: Observable<AreaDetalheDto> = g.tipo === 'area'
+      ? this.service.salvarArea(g.area.uuid, { territorioId: g.area.territorioId, codigo: g.area.codigo, codigoCnes: g.area.codigoCnes ?? null, nome: g.area.nome, geometria })
+      : this.service.salvarMicroarea(g.microarea!.uuid, {
+        areaId: g.area.uuid, codigo: g.microarea!.codigo, nome: g.microarea!.nome ?? null,
+        populacaoReferencia: g.microarea!.populacaoReferencia ?? null, geometria,
+      });
+    this.salvandoDesenho.set(true);
+    this.erroDesenho.set(null);
+    req.subscribe({
+      next: (d) => {
+        this.salvandoDesenho.set(false);
+        this.desenhando.set(null);
+        this.desenhoAtual.set(null);
+        this.detalhe.set(d);
+        this.toast.set({ titulo: 'Desenho salvo', detalhe: g.tipo === 'area' ? `Área ${g.area.codigo}` : `Microárea ${g.microarea!.codigo}` });
+        clearTimeout(this.toastTimer);
+        this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+        this.carregar();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.salvandoDesenho.set(false);
+        this.erroDesenho.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar o desenho.');
+      },
+    });
+  }
+
   protected nomes(lista: { nome: string }[]): string {
     return lista.map((a) => a.nome).join(', ');
   }
@@ -175,6 +317,10 @@ export class Territorio {
   // ── Seleção ────────────────────────────────────────────────────────────────────────────────────
 
   protected selecionar(uuid: string): void {
+    if (uuid !== this.selecionadaId()) {
+      this.cancelarDesenho();
+      this.microareaSelecionada.set(null);
+    }
     this.selecionadaId.set(uuid);
     this.service.area(uuid).pipe(catchError(() => of(null))).subscribe((d) => this.detalhe.set(d));
   }
@@ -253,10 +399,17 @@ export class Territorio {
       .sort((a, b) => a.nome.localeCompare(b.nome));
   }
 
+  /** GeoJSON passa como veio; KML vira GeoJSON (ADR-0126). */
   protected importarArquivo(event: Event): void {
     const arquivo = (event.target as HTMLInputElement).files?.[0];
     if (!arquivo) return;
-    arquivo.text().then((t) => this.form.controls.geometria.setValue(t.trim()));
+    arquivo.text()
+      .then((t) => geometriaDoArquivo(arquivo.name, t))
+      .then((g) => {
+        this.form.controls.geometria.setValue(g);
+        this.erros.update((e) => ({ ...e, geometria: '' }));
+      })
+      .catch((e: Error) => this.erros.update((x) => ({ ...x, geometria: e.message || 'Não foi possível ler o arquivo.' })));
   }
 
   // ── Salvar ─────────────────────────────────────────────────────────────────────────────────────

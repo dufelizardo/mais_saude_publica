@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import {
@@ -31,6 +31,9 @@ import {
   PerfilOperacionalDto,
 } from '../../../core/models/modelo-operacional';
 import { ModeloOperacionalService } from '../../../core/services/modelo-operacional';
+import { UnidadeNoMapaDto } from '../../../core/models/territorio';
+import { TerritorioService } from '../../../core/services/territorio';
+import { Mapa, PinoMapa } from '../../../shared/mapa/mapa';
 
 type AbaFicha = 'dados' | 'operacional' | 'capacidades' | 'equipes' | 'vinculacoes' | 'historico';
 type Gaveta =
@@ -63,11 +66,11 @@ const ESPECIALIZADAS: TipoUnidadeDeSaude[] = ['HOSPITAL', 'UPA', 'CAPS', 'CENTRO
  * Equipamentos de Saúde (ADR-0102), pelo protótipo `Equipamentos.html`: indicadores, filtros, a lista de unidades e o
  * painel da unidade selecionada (dados gerais, operacional, equipes, vinculações e histórico), com as gavetas de
  * cadastro, horário e situação. O backend é a ADR-0101. A aba Capacidades mostra o modelo operacional da unidade
- * (perfis e capacidades, ADR-0117).
+ * (perfis e capacidades, ADR-0117). A visão Mapa e a localização da unidade são da ADR-0126.
  */
 @Component({
   selector: 'app-equipamentos',
-  imports: [ReactiveFormsModule, RouterLink, Drawer],
+  imports: [ReactiveFormsModule, RouterLink, Drawer, Mapa],
   templateUrl: './equipamentos.html',
 })
 export class Equipamentos {
@@ -78,6 +81,7 @@ export class Equipamentos {
   private readonly redeService = inject(RedeUnidadesService);
   private readonly equipeService = inject(EquipeService);
   private readonly modeloService = inject(ModeloOperacionalService);
+  private readonly territorioService = inject(TerritorioService);
 
   protected readonly tipos = TIPOS_UNIDADE;
   protected readonly tiposDeAtendimento = UNIDADES_DE_ATENDIMENTO;
@@ -116,6 +120,16 @@ export class Equipamentos {
   protected readonly erros = signal<Record<string, string>>({});
   protected readonly toast = signal<{ titulo: string; detalhe: string } | null>(null);
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /** Visão da rede (ADR-0126): lista ou mapa com os pinos; o mapa usa os filtros da lista. */
+  protected readonly visao = signal<'lista' | 'mapa'>('lista');
+  protected readonly reenquadrar = signal(0);
+  protected readonly coordenadas = signal<UnidadeNoMapaDto[]>([]);
+  /** Marcando a localização da unidade na ficha: o ponto escolhido (ainda não salvo). */
+  protected readonly marcando = signal(false);
+  protected readonly pontoMarcado = signal<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
+  protected readonly erroLocalizacao = signal<string | null>(null);
+  protected readonly salvandoLocalizacao = signal(false);
 
   protected readonly horarioEdit = signal<DiaEditavel[]>([]);
   protected readonly funciona24hEdit = signal(false);
@@ -195,6 +209,8 @@ export class Equipamentos {
     this.modeloService.perfis().subscribe({ next: (p) => this.catalogoPerfis.set(p), error: () => this.catalogoPerfis.set([]) });
     this.modeloService.capacidades().subscribe({ next: (c) => this.catalogoCapacidades.set(c), error: () => this.catalogoCapacidades.set([]) });
     this.carregar();
+    this.carregarCoordenadas();
+    if (this.route.snapshot.queryParamMap.get('visao') === 'mapa') this.visao.set('mapa');
   }
 
   protected pode(...permissoes: string[]): boolean {
@@ -222,7 +238,83 @@ export class Equipamentos {
     });
   }
 
+  // ── Mapa (ADR-0126) ────────────────────────────────────────────────────────────────────────────
+
+  private carregarCoordenadas(): void {
+    this.territorioService.unidades().pipe(catchError(() => of([]))).subscribe((u) => this.coordenadas.set(u));
+  }
+
+  private coordenadaDe(uuid: string): UnidadeNoMapaDto | undefined {
+    return this.coordenadas().find((c) => c.uuid === uuid && c.latitude != null && c.longitude != null);
+  }
+
+  /** As unidades da lista filtrada que têm coordenadas, com a cor do tipo e da situação. */
+  protected readonly pinosDaRede = computed<PinoMapa[]>(() => {
+    const selecionada = this.selecionadaId();
+    return this.filtradas().flatMap((u) => {
+      const c = this.coordenadaDe(u.uuid);
+      return c ? [{ id: u.uuid, lat: c.latitude!, lng: c.longitude!, sigla: this.tipos[u.tipo].sigla, classe: this.marcador(u), descricao: u.nome, destaque: u.uuid === selecionada }] : [];
+    });
+  });
+
+  protected readonly semCoordenadas = computed(() => this.filtradas().filter((u) => !this.coordenadaDe(u.uuid)).length);
+
+  protected mudarVisao(v: 'lista' | 'mapa'): void {
+    this.visao.set(v);
+    if (v === 'mapa') this.reenquadrar.update((n) => n + 1);
+  }
+
+  /** O pino da unidade na ficha: o ponto sendo marcado, ou o salvo. */
+  protected pinoDaFicha(f: FichaUnidadeDto): PinoMapa[] {
+    const marcado = this.pontoMarcado();
+    const salvo = this.coordenadaDe(f.resumo.uuid);
+    const lat = this.marcando() ? marcado.lat : salvo?.latitude;
+    const lng = this.marcando() ? marcado.lng : salvo?.longitude;
+    if (lat == null || lng == null) return [];
+    return [{ id: f.resumo.uuid, lat, lng, sigla: this.tipos[f.resumo.tipo].sigla, classe: `unit-pin ${this.tipos[f.resumo.tipo].familia}`, descricao: f.resumo.nome }];
+  }
+
+  protected localizacao(f: FichaUnidadeDto): UnidadeNoMapaDto | undefined {
+    return this.coordenadaDe(f.resumo.uuid);
+  }
+
+  protected marcarNoMapa(f: FichaUnidadeDto): void {
+    const c = this.coordenadaDe(f.resumo.uuid);
+    this.pontoMarcado.set({ lat: c?.latitude ?? null, lng: c?.longitude ?? null });
+    this.erroLocalizacao.set(null);
+    this.marcando.set(true);
+  }
+
+  protected mudarPonto(campo: 'lat' | 'lng', valor: string): void {
+    const n = valor.trim() === '' ? null : Number(valor.replace(',', '.'));
+    this.pontoMarcado.update((p) => ({ ...p, [campo]: n != null && Number.isFinite(n) ? n : null }));
+  }
+
+  protected salvarLocalizacao(f: FichaUnidadeDto): void {
+    const p = this.pontoMarcado();
+    if ((p.lat == null) !== (p.lng == null)) {
+      this.erroLocalizacao.set('Informe a latitude e a longitude juntas, ou nenhuma das duas.');
+      return;
+    }
+    this.salvandoLocalizacao.set(true);
+    this.territorioService.coordenadas(f.resumo.uuid, p.lat, p.lng).subscribe({
+      next: () => {
+        this.salvandoLocalizacao.set(false);
+        this.marcando.set(false);
+        this.toast.set({ titulo: 'Localização salva', detalhe: f.resumo.nome });
+        clearTimeout(this.toastTimer);
+        this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+        this.carregarCoordenadas();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.salvandoLocalizacao.set(false);
+        this.erroLocalizacao.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar a localização.');
+      },
+    });
+  }
+
   protected selecionar(uuid: string, atualizarUrl = true): void {
+    this.marcando.set(false);
     this.selecionadaId.set(uuid);
     this.carregandoFicha.set(true);
     if (atualizarUrl) this.router.navigate([], { queryParams: { unidade: uuid }, queryParamsHandling: 'merge', replaceUrl: true });
