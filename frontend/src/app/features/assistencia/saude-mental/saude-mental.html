@@ -1250,7 +1250,10 @@
               <p class="reg-texto">{{ c.descricao }}</p>
               @if (c.notificacaoSugerida) {
                 @if (c.notificacaoPendente) {
-                  <div class="box box--warn"><div>Notificação compulsória de violência autoprovocada pendente. A notificação no sistema chega com a Vigilância; registre aqui que foi feita.</div></div>
+                  <div class="box box--warn"><div>Notificação compulsória de violência autoprovocada pendente. Notifique pela Vigilância (a crise fica notificada) ou registre aqui que foi feita em outro sistema.</div></div>
+                  @if (pode('VIGILANCIA.NOTIFICAR')) {
+                    <a class="btn btn--sm" routerLink="/vigilancia" [queryParams]="{ notificar: 1, agravo: 'VIOLENCIA_INTERPESSOAL_AUTOPROVOCADA', origem: 'SAUDE_MENTAL', criseId: c.uuid, pacienteId: c.pacienteId, pacienteNome: c.pacienteNome, unidadeId: c.unidadeId }">Notificar na Vigilância</a>
+                  }
                   <form [formGroup]="notificacaoForm" (ngSubmit)="registrarNotificacao(c)" class="dw-row" novalidate>
                     <div class="dw-field">
                       <label for="f-numeroNotificacao">Número da notificação<span class="opt">opcional</span></label>

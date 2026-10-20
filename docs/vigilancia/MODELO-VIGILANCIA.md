@@ -311,7 +311,7 @@ Assim o modelo dos sistemas externos não contamina o domínio interno.
 
 | Fatia | Entrega | Depende de |
 |---|---|---|
-| **V1** · fundação | agravo (catálogo e ficha como dado), notificação e notificação negativa, investigação, classificação; sugestão de notificação a partir de atendimento, internação e exame | Paciente, Atendimento; Território opcional |
+| **V1** · fundação ✅ ([ADR-0124](../adr/0124-vigilancia-epidemiologica-fundacao.md)) | agravo (catálogo e ficha como dado), notificação e notificação negativa, investigação, classificação; sugestão de notificação a partir de atendimento, internação e exame | Paciente, Atendimento; Território opcional |
 | **V2** · epidemiologia avançada | contato, surto, medida de controle, mapa e linha do tempo dos casos | V1; Território F1 e F2 para o mapa |
 | **V3** · sanitária | estabelecimento regulado, inspeção, irregularidade, medida, licença | Documentos (autos) |
 | **V4** · ambiental e zoonoses | evento e risco ambiental, monitoramento, vistoria, foco, animal, ação de controle | Território F3 (imóvel) |

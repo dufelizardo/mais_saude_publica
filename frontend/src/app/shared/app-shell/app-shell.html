@@ -194,6 +194,25 @@
         </div>
       }
 
+      @if (grupoVisivel('Vigilância')) {
+        <div class="nav-group">
+          <button type="button" class="nav-group__label" (click)="toggleGrupo('Vigilância')" [attr.aria-expanded]="estaExpandido('Vigilância')">
+            <span>Vigilância</span>
+            <svg class="nav-group__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          @if (estaExpandido('Vigilância')) {
+            <div class="nav-group__items">
+              @if (podeVer('/vigilancia')) {
+                <a routerLink="/vigilancia" routerLinkActive #rlaVigilancia="routerLinkActive" [attr.aria-current]="rlaVigilancia.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                  <span class="nav-item__label">Vigilância epidemiológica</span>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      }
+
       @if (grupoVisivel('Administração')) {
         <div class="nav-group">
           <button type="button" class="nav-group__label" (click)="toggleGrupo('Administração')" [attr.aria-expanded]="estaExpandido('Administração')">

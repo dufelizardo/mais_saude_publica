@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-20 (SM3)
+- **Atualizado em:** 2026-10-20 (V1)
 - **Release em produção:** v1.6.0
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -49,7 +49,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | 📐 | fatias F1 a F4 |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | fatias P3 a P6 |
-| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 📐 | fatias V1 a V5 |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 feita; surto, sanitária, ambiental e trabalhador (V2 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 9 ✅ · 8 🟡 · 5 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 9 ✅ · 9 🟡 · 4 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -71,7 +71,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | P4 | 22 Programas | ações programáticas ligadas ao atendimento; busca ativa; programa na Agenda |
 | P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
 | F1 | 21 Território | backend do território (área, microárea, GeoJSON) |
-| V1 | 23 Vigilância | agravos, notificação, investigação |
+| V2 | 23 Vigilância | contato, surto e medida de controle (o mapa dos casos espera o Território F1/F2) |
 | SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
@@ -89,7 +89,7 @@ P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 F1 ──► F2 ──► V2 (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real
 F1 ──► F3 ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea · F4
 
-V1 ──► V2 · SM3 (notificação de autoagressão) · V5
+V1 ✅ ──► V2 · SM3 (notificação de autoagressão ✅) · V5
 SB1 ──► SB2 ──► SB3 ──► SB4
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
@@ -451,12 +451,18 @@ C1 ──► C2 · C4 · C5
 
 ### 23. Vigilância em Saúde
 
-**Estado:** 📐. Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md); detalhe em
 [`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md).
 
+**Temos:**
+- [x] **V1 · Fundação** ([ADR-0124](./adr/0124-vigilancia-epidemiologica-fundacao.md)): catálogo de 22 agravos da
+  Lista Nacional com a ficha específica como dado e versionada; notificação com as respostas validadas pela ficha,
+  investigação, classificação com histórico e encerramento com prazo; notificação negativa por semana epidemiológica;
+  sugestões de notificação a partir de internação, pedido de exame e crise em saúde mental (que fica notificada);
+  agravos sensíveis restritos à vigilância; boletim só com agregados; tela Vigilância epidemiológica.
+
 **Falta:**
-- [ ] **V1 · Fundação:** agravo com a ficha específica como dado, notificação e notificação negativa,
-  investigação e classificação; sugestão de notificação a partir de atendimento, internação e exame.
+- [ ] Sugestão de notificação por exame positivo (o catálogo de exames não liga exame a agravo).
 - [ ] **V2 · Epidemiologia avançada:** contato, surto, medida de controle, mapa e linha do tempo dos casos
   (o mapa depende das fatias F1 e F2 do Território).
 - [ ] **V3 · Sanitária:** estabelecimento regulado, inspeção, irregularidade, medida, licença (os autos dependem

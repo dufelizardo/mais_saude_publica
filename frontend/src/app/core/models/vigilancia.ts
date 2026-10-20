@@ -1,0 +1,166 @@
+// ── Vigilância epidemiológica, fatia V1 (ADR-0124) ─────────────────────────────────────────────
+
+export type PeriodicidadeNotificacao = 'IMEDIATA' | 'SEMANAL';
+export type CriterioClassificacao = 'LABORATORIAL' | 'CLINICO_EPIDEMIOLOGICO' | 'CLINICO';
+export type OrigemNotificacao = 'ATENDIMENTO' | 'INTERNACAO' | 'EXAME' | 'SAUDE_MENTAL' | 'BUSCA_ATIVA' | 'COMUNIDADE' | 'OUTRA';
+export type SituacaoNotificacao = 'NOTIFICADA' | 'EM_INVESTIGACAO' | 'ENCERRADA';
+export type ClassificacaoCaso = 'SUSPEITO' | 'PROVAVEL' | 'CONFIRMADO' | 'DESCARTADO' | 'INCONCLUSIVO';
+export type EvolucaoCaso = 'CURA' | 'OBITO_PELO_AGRAVO' | 'OBITO_POR_OUTRA_CAUSA' | 'IGNORADA';
+export type TipoCampoFicha = 'SIM_NAO' | 'TEXTO' | 'NUMERO' | 'DATA' | 'OPCAO' | 'MULTIPLA';
+
+export const PERIODICIDADES_NOTIFICACAO: Record<PeriodicidadeNotificacao, string> = { IMEDIATA: 'Imediata (até 24 horas)', SEMANAL: 'Semanal' };
+export const CRITERIOS: Record<CriterioClassificacao, string> = {
+  LABORATORIAL: 'Laboratorial', CLINICO_EPIDEMIOLOGICO: 'Clínico-epidemiológico', CLINICO: 'Clínico',
+};
+export const ORIGENS: Record<OrigemNotificacao, string> = {
+  ATENDIMENTO: 'Atendimento', INTERNACAO: 'Internação', EXAME: 'Exame', SAUDE_MENTAL: 'Saúde mental (crise)',
+  BUSCA_ATIVA: 'Busca ativa', COMUNIDADE: 'Comunidade', OUTRA: 'Outra',
+};
+export const SITUACOES_NOTIFICACAO: Record<SituacaoNotificacao, { rotulo: string; classe: string }> = {
+  NOTIFICADA: { rotulo: 'Notificada', classe: 'info' },
+  EM_INVESTIGACAO: { rotulo: 'Em investigação', classe: 'warn' },
+  ENCERRADA: { rotulo: 'Encerrada', classe: 'muted' },
+};
+export const CLASSIFICACOES: Record<ClassificacaoCaso, { rotulo: string; classe: string }> = {
+  SUSPEITO: { rotulo: 'Suspeito', classe: 'info' },
+  PROVAVEL: { rotulo: 'Provável', classe: 'warn' },
+  CONFIRMADO: { rotulo: 'Confirmado', classe: 'alert' },
+  DESCARTADO: { rotulo: 'Descartado', classe: 'ok' },
+  INCONCLUSIVO: { rotulo: 'Inconclusivo', classe: 'muted' },
+};
+export const EVOLUCOES: Record<EvolucaoCaso, string> = {
+  CURA: 'Cura', OBITO_PELO_AGRAVO: 'Óbito pelo agravo', OBITO_POR_OUTRA_CAUSA: 'Óbito por outra causa', IGNORADA: 'Ignorada',
+};
+export const TIPOS_CAMPO: Record<TipoCampoFicha, string> = {
+  SIM_NAO: 'Sim/Não', TEXTO: 'Texto', NUMERO: 'Número', DATA: 'Data', OPCAO: 'Uma opção', MULTIPLA: 'Várias opções',
+};
+
+export interface CampoFichaDto {
+  chave: string;
+  rotulo: string;
+  tipo: TipoCampoFicha;
+  obrigatorio?: boolean | null;
+  opcoes?: string[] | null;
+}
+
+export interface AgravoDto {
+  uuid: string;
+  codigo: string;
+  nome: string;
+  descricao?: string | null;
+  cids: string[];
+  compulsorio: boolean;
+  periodicidade: PeriodicidadeNotificacao;
+  prazoEncerramentoDias: number;
+  criterios: CriterioClassificacao[];
+  sensivel: boolean;
+  ativo: boolean;
+  fichaVersao?: number | null;
+  ficha: CampoFichaDto[];
+}
+
+export interface NotificacaoDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  agravoId: string;
+  agravoCodigo: string;
+  agravoNome: string;
+  sensivel: boolean;
+  periodicidade: PeriodicidadeNotificacao;
+  unidadeId: string;
+  unidadeNome: string;
+  profissionalNome?: string | null;
+  dataPrimeirosSintomas?: string | null;
+  dataNotificacao: string;
+  origem: OrigemNotificacao;
+  criseId?: string | null;
+  localProvavel?: string | null;
+  respostas?: Record<string, unknown> | null;
+  fichaVersao?: number | null;
+  ficha: CampoFichaDto[];
+  situacao: SituacaoNotificacao;
+  prazoEncerramento: string;
+  encerramentoAtrasado: boolean;
+  classificacaoAtual?: ClassificacaoCaso | null;
+  classificacaoFinal?: ClassificacaoCaso | null;
+  evolucao?: EvolucaoCaso | null;
+  encerradaEm?: string | null;
+  aviso?: string | null;
+  investigacao?: { investigadorNome?: string | null; iniciadaEm: string; exposicao?: string | null; localProvavelInfeccao?: string | null;
+    medidas?: string | null; examesIds: string[] } | null;
+  classificacoes: { classificacao: ClassificacaoCaso; criterio?: CriterioClassificacao | null; justificativa?: string | null; classificadaEm: string;
+    responsavelNome?: string | null }[];
+}
+
+export interface NotificacoesDto {
+  abertas: number;
+  emInvestigacao: number;
+  encerramentoAtrasado: number;
+  lista: NotificacaoDto[];
+}
+
+export interface SugestaoNotificacaoDto {
+  origem: OrigemNotificacao;
+  referenciaId: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  agravoId: string;
+  agravoCodigo: string;
+  agravoNome: string;
+  cid?: string | null;
+  detectadaEm: string;
+}
+
+export interface NotificacaoNegativaDto {
+  uuid?: string | null;
+  unidadeId: string;
+  unidadeNome: string;
+  ano: number;
+  semana: number;
+  inicio: string;
+  fim: string;
+  responsavelNome?: string | null;
+  declaradaEm?: string | null;
+}
+
+export interface SemanasEpidemiologicasDto {
+  anoAtual: number;
+  semanaAtual: number;
+  declaradas: NotificacaoNegativaDto[];
+  pendentes: NotificacaoNegativaDto[];
+}
+
+export interface BoletimVigilanciaDto {
+  linhas: { agravoCodigo: string; agravoNome: string; notificadas: number; emInvestigacao: number; encerradas: number; confirmadas: number; descartadas: number }[];
+}
+
+export interface NotificacaoRequestDto {
+  pacienteId: string;
+  agravoId: string;
+  unidadeId: string;
+  origem: OrigemNotificacao;
+  dataPrimeirosSintomas?: string | null;
+  dataNotificacao?: string | null;
+  atendimentoId?: string | null;
+  internacaoId?: string | null;
+  pedidoExameId?: string | null;
+  criseId?: string | null;
+  localProvavel?: string | null;
+  respostas?: Record<string, unknown>;
+}
+
+export interface AgravoRequestDto {
+  codigo: string;
+  nome: string;
+  descricao?: string | null;
+  cids: string[];
+  compulsorio: boolean;
+  periodicidade: PeriodicidadeNotificacao;
+  prazoEncerramentoDias: number;
+  criterios: CriterioClassificacao[];
+  sensivel: boolean;
+  ativo: boolean;
+}
