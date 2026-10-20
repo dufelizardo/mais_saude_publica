@@ -97,6 +97,14 @@ export class ImoveisDaArea {
   /** Áreas para o destino da mudança: id e rótulo. */
   readonly areas = input<{ uuid: string; rotulo: string }[]>([]);
   readonly podeCadastrar = input(false);
+  /** Escopo territorial (ADR-0129): as microáreas alcançadas nesta área; nulo, sem restrição. */
+  readonly microareasDoEscopo = input<string[] | null>(null);
+
+  /** As microáreas que entram nos filtros e no cadastro: as do escopo, ou todas. */
+  protected readonly microareasPermitidas = computed(() => {
+    const escopo = this.microareasDoEscopo();
+    return this.area().microareas.filter((m) => !escopo || escopo.includes(m.uuid));
+  });
 
   /** A lista carregada, para os pinos do mapa da área. */
   readonly imoveisCarregados = output<ImovelDto[]>();
@@ -149,7 +157,8 @@ export class ImoveisDaArea {
       const id = this.areaId();
       untracked(() => {
         this.aberto.set(null);
-        this.filtroMicroarea.set('');
+        const escopo = this.microareasDoEscopo();
+        this.filtroMicroarea.set(escopo?.length === 1 ? escopo[0] : '');
         this.carregar(id);
       });
     });

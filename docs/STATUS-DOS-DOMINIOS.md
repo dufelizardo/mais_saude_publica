@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-20 (F3b)
+- **Atualizado em:** 2026-10-20 (F4)
 - **Release em produção:** v1.6.0
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -47,7 +47,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
-| 21 | [Território e Adscrição](#21-território-e-adscrição) | 🟡 | F1 a F3 feitas; escopo territorial de acesso (F4) |
+| 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | fatias P3 a P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 feita; surto, sanitária, ambiental e trabalhador (V2 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 9 ✅ · 10 🟡 · 3 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 10 ✅ · 9 🟡 · 3 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -70,7 +70,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 |---|---|---|
 | P4 | 22 Programas | ações programáticas ligadas ao atendimento; busca ativa; programa na Agenda |
 | P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
-| F4 | 21 Território | escopo territorial: o ACS na própria microárea e a equipe na própria área, atrás de toggle |
 | V2 | 23 Vigilância | contato, surto, medida de controle e o mapa dos casos (o mapa já existe, ADR-0126) |
 | SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
@@ -87,7 +86,7 @@ P1 ✅ ──► P3 ──► C2 (campanha de comunicação)
 P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2 (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
-F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea ✅ · F4
+F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
 V1 ✅ ──► V2 · SM3 (notificação de autoagressão ✅) · V5
 SB1 ──► SB2 ──► SB3 ──► SB4
@@ -416,7 +415,7 @@ C1 ──► C2 · C4 · C5
 
 ### 21. Território e Adscrição
 
-**Estado:** 🟡. Desenhado na [ADR-0108](./adr/0108-territorio-e-adscricao.md); detalhe em
+**Estado:** ✅. Desenhado na [ADR-0108](./adr/0108-territorio-e-adscricao.md); detalhe em
 [`territorio/MODELO-TERRITORIO.md`](./territorio/MODELO-TERRITORIO.md).
 
 **Temos:**
@@ -437,10 +436,15 @@ C1 ──► C2 · C4 · C5
   pelo domicílio (entrada, mudança, saída, troca de equipe da área) e manual com motivo, que a calculada não troca;
   cobertura por equipe e microárea; equipe de referência na ficha do paciente; pessoas por microárea em Equipes;
   elegíveis dos programas (idade e sexo) com inscrição pela lista.
+- [x] **F4 · Escopo territorial** ([ADR-0129](./adr/0129-escopo-territorial.md)): atrás de interruptor, o ACS na sua
+  microárea e a equipe na sua área (cadastro, adscrição manual, elegíveis); quem gere sem restrição; a adscrição à
+  equipe vira vínculo para o prontuário (ADR-0076); `meu-escopo` e a tela aberta no alcance; o texto livre das
+  microáreas saiu (V22), com o que sobrava migrado para o Território.
 
 **Falta:**
-- [ ] Remover os campos de texto `Equipe.microareas` e `MembroEquipe.microarea` (migração seguinte).
-- [ ] **F4 · Escopo territorial de acesso:** o ACS vê a própria microárea e a equipe a própria área.
+- [ ] Ligar o escopo territorial (`app.security.escopo-territorial.enabled`) quando a rede tiver equipes, áreas e ACS
+  cadastrados (ADR-0129).
+- [ ] Restringir a busca de pacientes por território (ficou fora: o ACS precisa achar quem ainda não está no cadastro).
 
 ### 22. Programas, Ações e Linhas de Cuidado
 

@@ -85,7 +85,6 @@ export interface EquipeRequestDto {
   nome: string;
   ine?: string;
   ativa?: boolean;
-  microareas?: string;
   coordenadorMatricula?: string;
   reuniaoDia?: string;
   reuniaoInicio?: string;

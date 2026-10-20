@@ -29,6 +29,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ArvoreTer
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ArvoreTerritorialDto.AreaNo;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ArvoreTerritorialDto.EquipeRef;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ArvoreTerritorialDto.MicroareaNo;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.MeuEscopoTerritorialDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TerritorioDaEquipeDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UnidadeNoMapaDto;
 import com.edufelizardo.maissaudepublica.models.enuns.FuncaoEquipe;
@@ -106,6 +107,9 @@ public class TerritorioService {
     private AdscricaoService adscricaoService;
 
     @Autowired
+    private EscopoTerritorial escopo;
+
+    @Autowired
     private ImovelRepository imovelRepository;
 
     @Autowired
@@ -167,6 +171,25 @@ public class TerritorioService {
                     return new TerritorioDaEquipeDto(e.getUuid(), t.getNome(), t.getFinalidade(), areaNo(r.getArea()));
                 })
                 .orElseGet(() -> new TerritorioDaEquipeDto(e.getUuid(), null, null, null));
+    }
+
+    /** O escopo territorial de quem está logado (ADR-0129), para a tela abrir no que ele alcança. */
+    @Transactional(readOnly = true)
+    public MeuEscopoTerritorialDto meuEscopo() {
+        var alcance = escopo.alcance();
+        if (alcance.isEmpty()) {
+            return new MeuEscopoTerritorialDto(escopo.ativo(), false, List.of(), List.of());
+        }
+        var a = alcance.get();
+        var micro = a.microareas().stream().map(id -> microareaRepository.findById(id).orElse(null)).filter(Objects::nonNull)
+                .map(m -> new MeuEscopoTerritorialDto.Item(m.getUuid(), m.getCodigo(),
+                        m.getArea().getUuid(), m.getArea().getCodigo()))
+                .sorted(Comparator.comparing(MeuEscopoTerritorialDto.Item::getCodigo)).toList();
+        var areas = a.areas().stream().map(id -> areaRepository.findById(id).orElse(null)).filter(Objects::nonNull)
+                .map(x -> new MeuEscopoTerritorialDto.Item(x.getUuid(), x.getCodigo(),
+                        x.getUuid(), x.getCodigo()))
+                .sorted(Comparator.comparing(MeuEscopoTerritorialDto.Item::getCodigo)).toList();
+        return new MeuEscopoTerritorialDto(true, true, micro, areas);
     }
 
     @Transactional(readOnly = true)

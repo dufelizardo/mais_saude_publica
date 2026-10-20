@@ -79,6 +79,9 @@ public class AdscricaoService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private EscopoTerritorial escopo;
+
     // ── Cálculo pelo território ────────────────────────────────────────────────────────────────────
 
     /**
@@ -174,6 +177,7 @@ public class AdscricaoService {
         Equipe e = equipeRepository.findById(dto.getEquipeId()).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar uma equipe com o id " + dto.getEquipeId() + " em nossos registros."));
         controleDeAcesso.exigir(CadastroTerritorialService.CADASTRAR, e.getUnidade());
+        escopo.exigir(e);
         if (!e.isAtiva()) {
             throw new ResourceUnprocessableEntityException("A equipe " + e.getNome() + " está inativa.");
         }
@@ -203,6 +207,7 @@ public class AdscricaoService {
         Adscricao atual = adscricaoRepository.findByPaciente_UuidAndFimIsNull(p.getUuid())
                 .orElseThrow(() -> new ResourceUnprocessableEntityException(p.getNome() + " não tem adscrição vigente."));
         controleDeAcesso.exigir(CadastroTerritorialService.CADASTRAR, atual.getEquipe().getUnidade());
+        escopo.exigir(atual.getEquipe());
         if (atual.getOrigem() != OrigemAdscricao.MANUAL) {
             throw new ResourceUnprocessableEntityException("A adscrição vem do território: ela muda com a família (saída ou mudança) ou com a equipe da área.");
         }

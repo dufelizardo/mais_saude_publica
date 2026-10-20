@@ -102,7 +102,7 @@ class RiscoCriseControllerTest {
         psi.setNome(PREFIXO + "PSI");
         psi.setAtivo(true);
         psi = profissionalRepository.save(psi);
-        membroRepository.save(new MembroEquipe(null, equipe, psi, FuncaoEquipe.PSICOLOGO, null, LocalDate.now().minusMonths(6), null, null, null));
+        membroRepository.save(new MembroEquipe(null, equipe, psi, FuncaoEquipe.PSICOLOGO, LocalDate.now().minusMonths(6), null, null, null));
         maria = paciente("Maria", "90088899911");
         jose = paciente("José", "90088899912");
     }

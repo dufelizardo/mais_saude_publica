@@ -136,7 +136,7 @@ class SaudeMentalAutorizacaoControllerTest {
         equipe.setAtiva(true);
         equipe = equipeRepository.save(equipe);
         Profissional ref = profissional("REF", PSI_REF);
-        membroRepository.save(new MembroEquipe(null, equipe, ref, FuncaoEquipe.PSICOLOGO, null, LocalDate.now().minusMonths(6), null, null, null));
+        membroRepository.save(new MembroEquipe(null, equipe, ref, FuncaoEquipe.PSICOLOGO, LocalDate.now().minusMonths(6), null, null, null));
         Profissional outro = profissional("OUTRO", PSI_OUTRO);
         Paciente p = new Paciente();
         p.setNome(PREFIXO + "Paciente");
@@ -279,7 +279,7 @@ class SaudeMentalAutorizacaoControllerTest {
         esf.setNome("eSF C");
         esf.setAtiva(true);
         esf = equipeRepository.save(esf);
-        membroRepository.save(new MembroEquipe(null, esf, profissional("MEDB", MED_B), FuncaoEquipe.MEDICO, null, LocalDate.now().minusMonths(6),
+        membroRepository.save(new MembroEquipe(null, esf, profissional("MEDB", MED_B), FuncaoEquipe.MEDICO, LocalDate.now().minusMonths(6),
                 null, null, null));
         String r = mockMvc.perform(como(PSI_REF, post("/api/v1/saude-mental/acompanhamento")).contentType(MediaType.APPLICATION_JSON)
                 .content(abertura())).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();

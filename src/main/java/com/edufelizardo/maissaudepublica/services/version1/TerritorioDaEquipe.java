@@ -74,10 +74,6 @@ class TerritorioDaEquipe {
         return porEquipe;
     }
 
-    boolean temArea(UUID equipeId) {
-        return responsabilidadeRepository.findByEquipe_UuidAndFimIsNull(equipeId).isPresent();
-    }
-
     /** O ACS saiu da equipe: a microárea fica sem ele na mesma data. */
     void encerrarDoMembro(MembroEquipe membro, LocalDate fim, String motivo) {
         atribuicaoRepository.findByMembro_UuidAndFimIsNull(membro.getUuid()).ifPresent(a -> {

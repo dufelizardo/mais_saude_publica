@@ -411,6 +411,9 @@ public class AcompanhamentoService {
     @Autowired
     private AdscricaoService adscricaoService;
 
+    @Autowired
+    private EscopoTerritorial escopo;
+
     /**
      * Os adscritos da equipe (ou de uma microárea dela) que cabem no público do programa e não estão inscritos nele. Avalia
      * idade e sexo; gestação e condição clínica ficam como critérios não avaliados (não há registro estruturado delas).
@@ -421,6 +424,9 @@ public class AcompanhamentoService {
         Equipe equipe = equipeRepository.findById(equipeId).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar uma equipe com o id " + equipeId + " em nossos registros."));
         controleDeAcesso.exigir(ACOMPANHAR, equipe.getUnidade());
+        // Escopo territorial (ADR-0129): só a própria equipe, e o ACS só a sua microárea.
+        escopo.exigir(equipe);
+        java.util.Optional<EscopoTerritorial.Alcance> alcance = escopo.alcance();
         ContextoAuditoria.registro(programa.getUuid());
         List<String> avaliados = new ArrayList<>();
         if (programa.getIdadeMinima() != null || programa.getIdadeMaxima() != null) {
@@ -443,6 +449,9 @@ public class AcompanhamentoService {
         List<AdscricaoDto.Elegivel> lista = new ArrayList<>();
         for (Adscricao a : adscricaoService.vigentesDaEquipe(equipe.getUuid())) {
             if (microareaId != null && (a.getMicroarea() == null || !a.getMicroarea().getUuid().equals(microareaId))) {
+                continue;
+            }
+            if (alcance.isPresent() && !EscopoTerritorial.alcanca(alcance.get(), a)) {
                 continue;
             }
             Paciente p = a.getPaciente();

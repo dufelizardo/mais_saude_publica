@@ -15,6 +15,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SegmentoTe
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TerritorioRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AreaDetalheDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ArvoreTerritorialDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.MeuEscopoTerritorialDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TerritorioDaEquipeDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.UnidadeNoMapaDto;
 import com.edufelizardo.maissaudepublica.services.version1.TerritorioService;
@@ -65,6 +66,15 @@ public class TerritorioController {
     @ApiErrorResponsesBusca
     public ResponseEntity<TerritorioDaEquipeDto> daEquipe(@PathVariable UUID uuid) {
         return ResponseEntity.ok(service.daEquipe(uuid));
+    }
+
+    @LiberadoParaAutenticados
+    @GetMapping(value = "meu-escopo", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Meu escopo territorial", description = "Se o escopo territorial está ligado e o que você alcança: as "
+            + "microáreas (ACS) e as áreas das suas equipes (ADR-0129).", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<MeuEscopoTerritorialDto> meuEscopo() {
+        return ResponseEntity.ok(service.meuEscopo());
     }
 
     @LiberadoParaAutenticados

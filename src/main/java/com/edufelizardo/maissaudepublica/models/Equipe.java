@@ -12,7 +12,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-/** Equipe de saúde de uma unidade (ADR-0103): tipo, INE, microáreas, coordenação, reunião e, na eMulti, as equipes apoiadas. */
+/**
+ * Equipe de saúde de uma unidade (ADR-0103): tipo, INE, coordenação, reunião e, na eMulti, as equipes apoiadas. As
+ * microáreas são do Território (área da equipe; ADR-0125), não da equipe.
+ */
 @Entity
 @Table(name = "TB_EQUIPE", uniqueConstraints = @UniqueConstraint(name = "uk_equipe_nome_por_unidade", columnNames = {"unidade_id", "nome"}))
 @Getter
@@ -47,13 +50,6 @@ public class Equipe implements Serializable {
 
     @Column(nullable = false)
     private boolean ativa;
-
-    /**
-     * Códigos das microáreas atendidas, separados por vírgula (ex.: "14, 17, 18"). Legado (ADR-0125): com área no
-     * Território, a lista vem de lá; o campo sai numa migração seguinte.
-     */
-    @Column(length = 300)
-    private String microareas;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coordenador_id", referencedColumnName = "uuid")

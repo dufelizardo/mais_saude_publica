@@ -188,8 +188,9 @@ real":
   Fatias: ~~P1 (catálogo)~~ — ADR-0118; ~~P2 (acompanhamento)~~ — ADR-0119 (elegíveis por idade e sexo na
   ADR-0128; os critérios clínicos ficam para depois); P3 (campanhas e consulta pública), P4 (ações e programa na Agenda), P5 (linhas de cuidado), P6 (metas e indicadores).
 - **#21 Território e Adscrição** — desenhado na ADR-0108; ~~F1 (fundação)~~ — ADR-0125; ~~F2 (mapa)~~ — ADR-0126;
-  ~~F3a (imóvel, domicílio e família)~~ — ADR-0127; ~~F3b (adscrição e cobertura)~~ — ADR-0128; faltam F4
-  (escopo de acesso) e a remoção dos campos de texto das microáreas.
+  ~~F3a (imóvel, domicílio e família)~~ — ADR-0127; ~~F3b (adscrição e cobertura)~~ — ADR-0128; ~~F4
+  (escopo de acesso e fim do texto das microáreas)~~ — ADR-0129. Falta ligar o escopo territorial quando a rede tiver o
+  cadastro.
 - **Integrações** (SUS, CNES, e-SUS, SIGTAP) e **Documentos**.
 
 ## 7. Fluxo de promoção

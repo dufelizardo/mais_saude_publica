@@ -20,6 +20,7 @@ import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusInternacao;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusSolicitacaoRegulacao;
 import com.edufelizardo.maissaudepublica.repositories.AcessoJustificadoRepository;
+import com.edufelizardo.maissaudepublica.repositories.AdscricaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.CompartilhamentoCuidadoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
@@ -53,6 +54,7 @@ import java.util.UUID;
  *   responsável (ADR-0100);</li>
  *   <li>ser o técnico de referência, ou membro da equipe de referência, de um caso em saúde mental em aberto (ADR-0120),
  *   ou membro de uma equipe com quem o cuidado do caso é compartilhado (ADR-0122);</li>
+ *   <li>ser membro vigente da equipe a que o paciente está adscrito (ADR-0129);</li>
  *   <li>ou um acesso justificado ainda válido, declarado por quem lê.</li>
  * </ol>
  * {@value #SEM_VINCULO} dispensa o vínculo (auditoria clínica, regulação) e não entra em papel padrão.
@@ -77,6 +79,10 @@ public class VinculoAssistencialService {
 
     @Value("${app.security.prontuario-por-vinculo.justificativa-minimo:20}")
     private int minimoJustificativa;
+
+    /** A adscrição à equipe conta como vínculo (ADR-0129). */
+    @Autowired
+    private AdscricaoRepository adscricaoRepository;
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
@@ -261,6 +267,16 @@ public class VinculoAssistencialService {
                     .anyMatch(m -> cpf.equals(m.getProfissional().getCpf()));
             if (membro) {
                 return Optional.of("Cuidado compartilhado em saúde mental: " + c.getEquipe().getNome());
+            }
+        }
+
+        // 7. Paciente adscrito à equipe de que quem lê é membro vigente (ADR-0129): a eSF responde pela sua população.
+        var adscricao = adscricaoRepository.findByPaciente_UuidAndFimIsNull(pacienteId);
+        if (adscricao.isPresent()) {
+            boolean membro = membroEquipeRepository.findByEquipe_UuidInAndFimIsNull(List.of(adscricao.get().getEquipe().getUuid())).stream()
+                    .anyMatch(m -> cpf.equals(m.getProfissional().getCpf()));
+            if (membro) {
+                return Optional.of("Paciente adscrito à equipe " + adscricao.get().getEquipe().getNome());
             }
         }
         return Optional.empty();

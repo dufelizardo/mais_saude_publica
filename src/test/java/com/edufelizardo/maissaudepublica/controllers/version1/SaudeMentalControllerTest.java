@@ -176,7 +176,7 @@ class SaudeMentalControllerTest {
     }
 
     private void membro(Equipe e, Profissional p, FuncaoEquipe funcao) {
-        membroRepository.save(new MembroEquipe(null, e, p, funcao, null, LocalDate.now().minusMonths(6), null, null, null));
+        membroRepository.save(new MembroEquipe(null, e, p, funcao, LocalDate.now().minusMonths(6), null, null, null));
     }
 
     private Paciente paciente(String nome, String cpf) {

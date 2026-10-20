@@ -122,7 +122,6 @@ public class EquipeService {
         e.setTipo(dto.getTipo());
         e.setNome(nome);
         e.setAtiva(dto.getAtiva() == null || dto.getAtiva());
-        e.setMicroareas(texto(dto.getMicroareas()));
         aplicar(e, dto, List.of());
         e = equipeRepository.save(e);
         ContextoAuditoria.unidade(unidade);
@@ -130,10 +129,7 @@ public class EquipeService {
         return detalhe(e);
     }
 
-    /**
-     * Edita nome, INE, situação, microáreas, coordenação, reunião e apoiadas. Unidade e tipo ficam. Com área no
-     * Território (ADR-0125), as microáreas vêm de lá: mandar outras dá 422.
-     */
+    /** Edita nome, INE, situação, coordenação, reunião e apoiadas. Unidade e tipo ficam; as microáreas são do Território. */
     @Transactional
     public EquipeResponseDto atualizar(UUID uuid, EquipeRequestDto dto) {
         Equipe e = buscar(uuid);
@@ -144,15 +140,6 @@ public class EquipeService {
         String nome = dto.getNome().trim();
         if (!nome.equalsIgnoreCase(e.getNome()) && equipeRepository.existsByUnidade_UuidAndNomeIgnoreCase(e.getUnidade().getUuid(), nome)) {
             throw new ResourceConflictException("Já existe a equipe " + nome + " nesta unidade.");
-        }
-        Optional<TerritorioDaEquipe.Vinculo> vinculo = territorio.daEquipe(e.getUuid(), List.of());
-        if (vinculo.isPresent()) {
-            if (!codigos(dto.getMicroareas()).equals(codigos(vinculo.get().microareasTexto()))) {
-                throw new ResourceUnprocessableEntityException("As microáreas da equipe vêm do Território (área "
-                        + vinculo.get().area().getCodigo() + "); edite por lá.");
-            }
-        } else {
-            e.setMicroareas(texto(dto.getMicroareas()));
         }
         e.setNome(nome);
         e.setAtiva(dto.getAtiva() == null || dto.getAtiva());
@@ -193,11 +180,7 @@ public class EquipeService {
         if (inicio.isAfter(LocalDate.now())) {
             throw new ResourceBadRequestException("A entrada não pode ser no futuro.");
         }
-        String microarea = texto(dto.getMicroarea());
-        if (microarea != null && territorio.temArea(e.getUuid())) {
-            throw new ResourceUnprocessableEntityException("A equipe tem área no Território; atribua a microárea do ACS por lá.");
-        }
-        MembroEquipe m = new MembroEquipe(null, e, p, dto.getFuncao(), microarea, inicio, null, null, UsuarioAutenticado.cpf());
+        MembroEquipe m = new MembroEquipe(null, e, p, dto.getFuncao(), inicio, null, null, UsuarioAutenticado.cpf());
         membroRepository.save(m);
         ContextoAuditoria.detalhe("Entrada de " + p.getMatricula() + " como " + dto.getFuncao() + ".");
         return detalhe(e);
@@ -270,16 +253,6 @@ public class EquipeService {
         e.getApoiadas().addAll(alvo);
     }
 
-    private static String texto(String valor) {
-        return valor == null || valor.isBlank() ? null : valor.trim();
-    }
-
-    /** Os códigos de um texto de microáreas, para comparar sem ligar para ordem e espaços. */
-    private static Set<String> codigos(String texto) {
-        return texto == null ? Set.of() : Stream.of(texto.split(",")).map(String::trim).filter(c -> !c.isEmpty())
-                .map(String::toUpperCase).collect(Collectors.toSet());
-    }
-
     private List<Equipe> visiveis(UUID unidadeId) {
         return controleDeAcesso.filtrar(equipeRepository.findAllByOrderByNomeAsc().stream(), e -> Stream.of(e.getUnidade()), VER)
                 .filter(e -> unidadeId == null || e.getUnidade().getUuid().equals(unidadeId))
@@ -294,7 +267,7 @@ public class EquipeService {
                 .collect(Collectors.groupingBy(m -> m.getEquipe().getUuid()));
     }
 
-    /** Com área no Território, as microáreas são as de lá (ADR-0125); sem área, o texto antigo da equipe. */
+    /** As microáreas são as da área da equipe no Território (ADR-0125); sem área, nenhuma. */
     private EquipeResumoDto resumo(Equipe e, List<MembroEquipe> vigentes, boolean peloTerritorio, String microareasDoTerritorio) {
         Set<FuncaoEquipe> presentes = vigentes.stream().map(MembroEquipe::getFuncao).collect(Collectors.toSet());
         List<String> faltando = e.getTipo().composicaoMinima().stream()
@@ -302,7 +275,7 @@ public class EquipeService {
                 .map(grupo -> grupo.stream().map(Enum::name).sorted().collect(Collectors.joining(" ou ")))
                 .toList();
         return new EquipeResumoDto(e.getUuid(), e.getNome(), e.getTipo(), e.getIne(), e.isAtiva(), e.getUnidade().getUuid(),
-                e.getUnidade().getNome(), peloTerritorio ? microareasDoTerritorio : e.getMicroareas(),
+                e.getUnidade().getNome(), microareasDoTerritorio,
                 e.getCoordenador() != null ? e.getCoordenador().getNome() : null,
                 vigentes.size(), (int) vigentes.stream().filter(m -> m.getFuncao() == FuncaoEquipe.ACS).count(), faltando.isEmpty(), faltando,
                 vigentes.stream().map(m -> m.getProfissional().getNome()).sorted(String.CASE_INSENSITIVE_ORDER).toList(), e.getApoiadas().size(),
@@ -325,7 +298,7 @@ public class EquipeService {
             Afastamento a = m.vigente() ? afastados.get(p.getMatricula()) : null;
             return new EquipeResponseDto.Membro(m.getUuid(), p.getMatricula(), p.getNome(),
                     p.getConselhoClasse() == null ? null : p.getConselhoClasse() + " " + Objects.toString(p.getNumeroConselho(), ""),
-                    m.getFuncao(), vinculo.isPresent() ? microareaPorMembro.get(m.getUuid()) : m.getMicroarea(), m.getInicio(), m.getFim(), m.getMotivoSaida(),
+                    m.getFuncao(), microareaPorMembro.get(m.getUuid()), m.getInicio(), m.getFim(), m.getMotivoSaida(),
                     l != null && l.getCargo() != null ? l.getCargo().getNome() : null, l != null ? l.getJornadaSemanalHoras() : null,
                     a != null ? a.getTipo().name() : null, a != null ? a.getDataFim() : null);
         };

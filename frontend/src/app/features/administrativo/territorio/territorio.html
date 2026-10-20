@@ -15,6 +15,10 @@
   }
 </header>
 
+@if (faixaDoEscopo(); as f) {
+  <div class="box box--info" role="status" style="margin-bottom: var(--s-4);"><div>{{ f }}</div></div>
+}
+
 @if (indicadores(); as i) {
   <section class="stats" aria-label="Resumo do território">
     <div class="stat">
@@ -252,7 +256,8 @@
           }
         </div>
 
-        <app-imoveis-da-area [area]="d.area" [areas]="rotulosDasAreas()" [podeCadastrar]="pode('TERRITORIO.CADASTRAR')"
+        <app-imoveis-da-area [area]="d.area" [areas]="rotulosDasAreas()" [microareasDoEscopo]="microareasDoEscopo()"
+          [podeCadastrar]="pode('TERRITORIO.CADASTRAR') && microareasDoEscopo()?.length !== 0"
           (imoveisCarregados)="imoveisDaArea.set($event)" (alterado)="carregar()" />
 
         <div class="info-block">

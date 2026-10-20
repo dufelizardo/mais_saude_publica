@@ -12,6 +12,7 @@ import {
   ArvoreTerritorialDto,
   FINALIDADES,
   FinalidadeTerritorio,
+  MeuEscopoTerritorialDto,
   MicroareaNoDto,
   POPULACAO_REFERENCIA_CNES,
   SegmentoDto,
@@ -94,6 +95,8 @@ export class Territorio {
   protected readonly arvore = signal<ArvoreTerritorialDto | null>(null);
   protected readonly unidades = signal<UnidadeNoMapaDto[]>([]);
   protected readonly equipes = signal<EquipeResumoDto[]>([]);
+  /** Escopo territorial (ADR-0129): nulo enquanto carrega. */
+  protected readonly escopo = signal<MeuEscopoTerritorialDto | null>(null);
   protected readonly carregando = signal(true);
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
 
@@ -138,14 +141,18 @@ export class Territorio {
       arvore: this.service.arvore().pipe(catchError(() => of(null))),
       unidades: this.service.unidades().pipe(catchError(() => of([]))),
       equipes: this.equipeService.listar().pipe(map((r) => r.lista), catchError(() => of([]))),
+      escopo: this.service.meuEscopo().pipe(catchError(() => of(null))),
     }).subscribe((r) => {
       this.arvore.set(r.arvore);
+      this.escopo.set(r.escopo);
       this.unidades.set(r.unidades);
       this.equipes.set(r.equipes);
       this.carregando.set(false);
       const daEquipe = this.equipeDaUrl ? this.todasAreas().find((a) => a.equipe?.uuid === this.equipeDaUrl)?.uuid : undefined;
       this.equipeDaUrl = null;
-      const id = daEquipe ?? this.selecionadaId() ?? this.todasAreas()[0]?.uuid ?? null;
+      // Com o escopo territorial, abre na área de quem está logado.
+      const doEscopo = r.escopo?.restrito ? (r.escopo.areas[0]?.areaId ?? r.escopo.microareas[0]?.areaId) : undefined;
+      const id = daEquipe ?? this.selecionadaId() ?? doEscopo ?? this.todasAreas()[0]?.uuid ?? null;
       if (id) this.selecionar(id);
     });
   }
@@ -156,6 +163,30 @@ export class Territorio {
   }
 
   protected readonly podeEditar = computed(() => this.pode('TERRITORIO.GERENCIAR'));
+
+  /**
+   * As microáreas da área aberta que o escopo territorial alcança: nulo quando não há restrição (escopo desligado, quem
+   * gere, ou a área inteira é da equipe de quem está logado); lista (às vezes vazia) quando só algumas.
+   */
+  protected readonly microareasDoEscopo = computed<string[] | null>(() => {
+    const e = this.escopo();
+    const d = this.detalhe();
+    if (!e?.restrito || !d) return null;
+    if (e.areas.some((a) => a.uuid === d.area.uuid)) return null;
+    return e.microareas.filter((m) => m.areaId === d.area.uuid).map((m) => m.uuid);
+  });
+
+  /** O texto da faixa do escopo territorial. */
+  protected readonly faixaDoEscopo = computed(() => {
+    const e = this.escopo();
+    if (!e?.restrito) return null;
+    const partes = [
+      ...e.areas.map((a) => `a área ${a.codigo}`),
+      ...e.microareas.map((m) => `a microárea ${m.codigo} da área ${m.areaCodigo}`),
+    ];
+    return partes.length ? `Escopo territorial: você cadastra e vê as famílias de ${partes.join(', ')}.`
+      : 'Escopo territorial: você não tem equipe com área no Território, então não vê o cadastro das famílias.';
+  });
 
   // ── Derivados ──────────────────────────────────────────────────────────────────────────────────
 

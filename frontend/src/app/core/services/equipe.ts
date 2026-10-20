@@ -26,7 +26,7 @@ export class EquipeService {
     return this.http.patch<EquipeResponseDto>(`${this.baseUrl}/${uuid}`, dto);
   }
 
-  adicionarMembro(equipeId: string, dto: { profissionalMatricula: string; funcao: FuncaoEquipe; microarea?: string; inicio?: string }): Observable<EquipeResponseDto> {
+  adicionarMembro(equipeId: string, dto: { profissionalMatricula: string; funcao: FuncaoEquipe; inicio?: string }): Observable<EquipeResponseDto> {
     return this.http.post<EquipeResponseDto>(`${this.baseUrl}/${equipeId}/membro`, dto);
   }
 

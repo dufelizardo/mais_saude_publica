@@ -10,6 +10,7 @@ import {
   SegmentoRequestDto,
   TerritorioNoDto,
   TerritorioRequestDto,
+  MeuEscopoTerritorialDto,
   UnidadeNoMapaDto,
 } from '../models/territorio';
 import {
@@ -35,6 +36,10 @@ export class TerritorioService {
 
   area(uuid: string): Observable<AreaDetalheDto> {
     return this.http.get<AreaDetalheDto>(`${this.api}/area/${uuid}`);
+  }
+
+  meuEscopo(): Observable<MeuEscopoTerritorialDto> {
+    return this.http.get<MeuEscopoTerritorialDto>(`${this.api}/meu-escopo`);
   }
 
   unidades(): Observable<UnidadeNoMapaDto[]> {
