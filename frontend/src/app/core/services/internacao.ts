@@ -56,12 +56,22 @@ export class InternacaoService {
 
   // ── Internações ──
 
-  listar(filtro: { unidadeId?: string; status?: StatusInternacao | ''; pacienteId?: string } = {}): Observable<InternacaoResponseDto[]> {
+  listar(filtro: { unidadeId?: string; status?: StatusInternacao | ''; pacienteId?: string; comunicacaoMpPendente?: boolean } = {}): Observable<InternacaoResponseDto[]> {
     let params = new HttpParams();
     for (const [chave, valor] of Object.entries(filtro)) {
-      if (valor) params = params.set(chave, valor);
+      if (valor) params = params.set(chave, String(valor));
     }
     return this.http.get<InternacaoResponseDto[]>(`${this.internacaoUrl}/`, { params });
+  }
+
+  /** Modalidade da internação psiquiátrica (ADR-0123). */
+  definirModalidade(uuid: string, modalidade: string, ordemJudicial?: string | null): Observable<InternacaoResponseDto> {
+    return this.http.post<InternacaoResponseDto>(`${this.internacaoUrl}/${uuid}/modalidade`, { modalidade, ordemJudicial: ordemJudicial || null });
+  }
+
+  /** Comunicação da involuntária ao Ministério Público (ADR-0123). */
+  comunicarMp(uuid: string, dto: { momento: string; protocolo?: string | null; observacao?: string | null; responsavelMatricula?: string | null }): Observable<InternacaoResponseDto> {
+    return this.http.post<InternacaoResponseDto>(`${this.internacaoUrl}/${uuid}/comunicacao-mp`, dto);
   }
 
   /** Detalhe com motivo, sumário e movimentos; leitura auditada. */

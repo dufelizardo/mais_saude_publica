@@ -69,7 +69,7 @@ detalhe está em [`saude-mental/MODELO-SAUDE-MENTAL.md`](../saude-mental/MODELO-
 15. **Fatias:**
     - **SM1 · Base:** acolhimento, avaliação, acompanhamento e referência. Feita na [ADR-0120](./0120-saude-mental-base.md).
     - **SM2 · PTS** e intervenções. Feita na [ADR-0121](./0121-saude-mental-pts-intervencoes.md).
-    - **SM3 · Risco e crise,** com a modalidade da internação.
+    - **SM3 · Risco e crise,** com a modalidade da internação. Feita na [ADR-0123](./0123-saude-mental-risco-crise.md), sem a notificação no sistema e o SAMU.
     - **SM4 · Rede.** Feita na [ADR-0122](./0122-saude-mental-rede.md).
     - **SM5 · CAPS e RAPS** como capacidades.
     - **SM6 · Intersetorialidade e indicadores.**

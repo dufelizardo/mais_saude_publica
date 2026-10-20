@@ -2,12 +2,13 @@
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_ui_scenario.resource
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_pts_ui_scenario.resource
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_rede_ui_scenario.resource
+Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_risco_crise_ui_scenario.resource
 Resource    ../../../../src/scenario/common/ui_sessao_scenario.resource
 Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Assistência - Saúde Mental
-Metadata    Test Suite Description        Valida a tela Saúde Mental: acolhimento, avaliação, referência e saída (ADR-0120); PTS, intervenções e rede de apoio (ADR-0121); rede de atenção (ADR-0122).
+Metadata    Test Suite Description        Valida a tela Saúde Mental: acolhimento, avaliação, referência e saída (ADR-0120); PTS, intervenções e rede de apoio (ADR-0121); rede de atenção (ADR-0122); risco e crise (ADR-0123).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiSaudeMental    MaisSaudePublicaFrontend
@@ -113,5 +114,29 @@ CT-012 - Aceitar a transferência
     [Tags]    UI    UiSaudeMental
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - SAUDE MENTAL - ACEITAR TRANSFERENCIA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-013 - Avaliar risco
+    [Documentation]    Mensagem sem medidas; risco vigente.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - AVALIAR RISCO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-014 - Registrar e encerrar crise
+    [Documentation]    Crise no caso, pós-crise e desfecho.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - CRISE
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-015 - Registrar a notificação da crise
+    [Documentation]    Pelo painel de crises.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - NOTIFICACAO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

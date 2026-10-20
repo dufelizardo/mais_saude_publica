@@ -16,6 +16,13 @@ import {
   DESFECHOS_QUE_ACOMPANHAM,
   DesfechoAcolhimentoSaudeMental,
   CompartilhamentoCuidadoDto,
+  CrisesSaudeMentalDto,
+  DESFECHOS_CRISE,
+  ETAPAS_CRISE,
+  EventoCriseDto,
+  NIVEIS_RISCO,
+  TIPOS_CRISE,
+  TIPOS_RISCO,
   PAPEIS_REDE,
   PRIORIDADES_ENCAMINHAMENTO,
   SITUACOES_TRANSFERENCIA,
@@ -60,9 +67,12 @@ type Gaveta =
   | { tipo: 'transferir'; caso: AcompanhamentoSaudeMentalDto }
   | { tipo: 'aceitar'; transferencia: TransferenciaCuidadoDto }
   | { tipo: 'recusar'; transferencia: TransferenciaCuidadoDto }
-  | { tipo: 'cancelarTransferencia'; caso: AcompanhamentoSaudeMentalDto; transferencia: TransferenciaCuidadoDto };
+  | { tipo: 'cancelarTransferencia'; caso: AcompanhamentoSaudeMentalDto; transferencia: TransferenciaCuidadoDto }
+  | { tipo: 'risco'; caso: AcompanhamentoSaudeMentalDto }
+  | { tipo: 'novaCrise'; caso: AcompanhamentoSaudeMentalDto | null }
+  | { tipo: 'crise'; criseId: string };
 
-type Aba = 'resumo' | 'pts' | 'intervencoes' | 'rede' | 'atencao' | 'acolhimentos' | 'avaliacoes' | 'referencia';
+type Aba = 'resumo' | 'risco' | 'pts' | 'intervencoes' | 'rede' | 'atencao' | 'acolhimentos' | 'avaliacoes' | 'referencia';
 
 /**
  * Saúde Mental, fatia SM1 (ADR-0120): os casos do escopo (meus, da equipe, todos), o acolhimento que abre o caso, e o
@@ -105,6 +115,16 @@ export class SaudeMental {
   protected readonly prioridades = PRIORIDADES_ENCAMINHAMENTO;
   protected readonly listaPrioridades = Object.keys(PRIORIDADES_ENCAMINHAMENTO);
   protected readonly situacoesTransferencia = SITUACOES_TRANSFERENCIA;
+  protected readonly tiposRisco = TIPOS_RISCO;
+  protected readonly listaTiposRisco = Object.keys(TIPOS_RISCO);
+  protected readonly niveisRisco = NIVEIS_RISCO;
+  protected readonly listaNiveisRisco = Object.keys(NIVEIS_RISCO);
+  protected readonly tiposCrise = TIPOS_CRISE;
+  protected readonly listaTiposCrise = Object.keys(TIPOS_CRISE);
+  protected readonly etapasCrise = ETAPAS_CRISE;
+  protected readonly listaEtapasCrise = Object.keys(ETAPAS_CRISE);
+  protected readonly desfechosCrise = DESFECHOS_CRISE;
+  protected readonly listaDesfechosCrise = Object.keys(DESFECHOS_CRISE);
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
@@ -115,6 +135,9 @@ export class SaudeMental {
   protected readonly escopo = signal<'' | 'TECNICO' | 'EQUIPE'>('');
   protected readonly pendencia = signal<PendenciaSaudeMental>('');
   protected readonly tipos = signal<TipoIntervencaoSaudeMentalDto[]>([]);
+  /** Crises do escopo (ADR-0123) e a crise aberta na gaveta. */
+  protected readonly crisesEscopo = signal<CrisesSaudeMentalDto | null>(null);
+  protected readonly criseAberta = signal<EventoCriseDto | null>(null);
   /** Transferências pendentes do escopo (ADR-0122): `null` sem acesso. */
   protected readonly transferencias = signal<TransferenciasCuidadoDto | null>(null);
   protected readonly procedimentos = signal<ProcedimentoReguladoResponseDto[]>([]);
@@ -188,6 +211,13 @@ export class SaudeMental {
   protected readonly motivoRedeForm = this.fb.nonNullable.group({ motivo: [''] });
   protected readonly transferirForm = this.fb.nonNullable.group({ unidadeDestinoId: [''], resumo: [''] });
   protected readonly aceiteForm = this.fb.nonNullable.group({ equipeId: [''], tecnicoMatricula: [''] });
+  protected readonly riscoForm = this.fb.nonNullable.group({
+    tipo: [''], nivel: [''], fatores: [''], medidas: [''], planoSeguranca: [false], frequenciaContato: [''], reavaliarEm: [''],
+  });
+  protected readonly criseForm = this.fb.nonNullable.group({ pacienteId: [''], unidadeId: [''], tipo: [''], descricao: [''], localOcorrencia: [''] });
+  protected readonly etapaForm = this.fb.nonNullable.group({ etapa: [''], descricao: [''] });
+  protected readonly desfechoForm = this.fb.nonNullable.group({ desfecho: [''] });
+  protected readonly notificacaoForm = this.fb.nonNullable.group({ numero: [''] });
 
   protected get objetivos(): FormArray<FormGroup> {
     return this.ptsForm.controls.objetivos;
@@ -225,6 +255,7 @@ export class SaudeMental {
     this.unidadeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
     this.service.tiposIntervencao().pipe(catchError(() => of([]))).subscribe((t) => this.tipos.set(t));
     this.carregarTransferencias();
+    this.carregarCrises();
     this.pacienteFiltro.set(this.route.snapshot.queryParamMap.get('paciente'));
     this.selecionadoId.set(this.route.snapshot.queryParamMap.get('caso'));
     this.carregar();
@@ -252,6 +283,17 @@ export class SaudeMental {
         this.erro.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível carregar os casos.');
       },
     });
+  }
+
+  /** Crises das unidades do escopo (ADR-0123). */
+  protected carregarCrises(): void {
+    if (!this.pode('SAUDE_MENTAL.CRISE', 'SAUDE_MENTAL.ACOMPANHAR')) return;
+    this.service.crises(this.unidadeFiltro() || undefined).pipe(catchError(() => of(null))).subscribe((c) => this.crisesEscopo.set(c));
+  }
+
+  /** As crises em curso ou com notificação pendente: o painel do topo. */
+  protected crisesEmAtencao(): EventoCriseDto[] {
+    return (this.crisesEscopo()?.lista ?? []).filter((c) => c.situacao === 'EM_CURSO' || c.notificacaoPendente);
   }
 
   /** Transferências que chegam e saem das unidades do escopo (ADR-0122). */
@@ -349,6 +391,9 @@ export class SaudeMental {
     if (g.tipo === 'aceitar') return 'Aceitar a transferência';
     if (g.tipo === 'recusar') return 'Recusar a transferência';
     if (g.tipo === 'cancelarTransferencia') return 'Cancelar a transferência';
+    if (g.tipo === 'risco') return 'Avaliar risco';
+    if (g.tipo === 'novaCrise') return 'Registrar crise';
+    if (g.tipo === 'crise') return 'Crise';
     return 'Encerrar o caso';
   }
 
@@ -558,6 +603,71 @@ export class SaudeMental {
     this.abrir({ tipo: 'cancelarTransferencia', caso, transferencia });
   }
 
+  protected abrirRisco(caso: AcompanhamentoSaudeMentalDto, tipo = ''): void {
+    this.riscoForm.reset({ tipo, nivel: '', fatores: '', medidas: '', planoSeguranca: false, frequenciaContato: '', reavaliarEm: '' });
+    this.abrir({ tipo: 'risco', caso });
+  }
+
+  protected riscosVigentes(caso: AcompanhamentoSaudeMentalDto) {
+    return caso.riscos.filter((r) => r.vigente && r.nivel !== 'SEM_RISCO_ATUAL');
+  }
+
+  protected abrirNovaCrise(caso: AcompanhamentoSaudeMentalDto | null): void {
+    this.criseForm.reset({ pacienteId: caso?.pacienteId ?? '', unidadeId: caso?.unidadeId ?? this.unidadeFiltro(), tipo: '', descricao: '', localOcorrencia: '' });
+    this.buscaPaciente.set(caso?.pacienteNome ?? '');
+    if (!caso && !this.pacientes().length) this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
+    this.abrir({ tipo: 'novaCrise', caso });
+  }
+
+  protected escolherPacienteCrise(p: PacienteResponseDto): void {
+    this.criseForm.patchValue({ pacienteId: p.uuid });
+    this.buscaPaciente.set(p.nome);
+  }
+
+  protected abrirCrise(criseId: string): void {
+    this.criseAberta.set(null);
+    this.etapaForm.reset({ etapa: '', descricao: '' });
+    this.desfechoForm.reset({ desfecho: '' });
+    this.notificacaoForm.reset({ numero: '' });
+    this.abrir({ tipo: 'crise', criseId });
+    this.service.crise(criseId).subscribe({ next: (c) => this.criseAberta.set(c), error: (e: HttpErrorResponse) => this.falhou(e) });
+  }
+
+  protected registrarEtapa(c: EventoCriseDto): void {
+    const v = this.etapaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.etapa) erros['etapaCrise'] = 'Escolha a etapa.';
+    if (!v.descricao.trim()) erros['descricaoEtapa'] = 'Descreva a etapa.';
+    if (!this.validar(erros)) return;
+    this.enviarCrise(this.service.etapaCrise(c.uuid, v.etapa, v.descricao.trim()), 'Etapa registrada');
+    this.etapaForm.reset({ etapa: '', descricao: '' });
+  }
+
+  protected encerrarCrise(c: EventoCriseDto): void {
+    const v = this.desfechoForm.getRawValue();
+    if (!this.validar(v.desfecho ? {} : { desfechoCrise: 'Escolha o desfecho.' })) return;
+    this.enviarCrise(this.service.encerrarCrise(c.uuid, v.desfecho), 'Crise encerrada');
+  }
+
+  protected registrarNotificacao(c: EventoCriseDto): void {
+    this.enviarCrise(this.service.notificarCrise(c.uuid, this.notificacaoForm.getRawValue().numero.trim()), 'Notificação registrada');
+  }
+
+  private enviarCrise(req: Observable<EventoCriseDto>, titulo: string): void {
+    this.submitting.set(true);
+    this.erroApi.set(null);
+    req.subscribe({
+      next: (c) => {
+        this.submitting.set(false);
+        this.criseAberta.set(c);
+        this.mostrarToast(titulo, c.pacienteNome);
+        this.carregarCrises();
+        if (c.acompanhamentoId && this.selecionadoId() === c.acompanhamentoId) this.recarregarDetalhe();
+      },
+      error: (e: HttpErrorResponse) => this.falhou(e),
+    });
+  }
+
   protected transferenciaPendente(caso: AcompanhamentoSaudeMentalDto): TransferenciaCuidadoDto | undefined {
     return caso.transferencias.find((t) => t.situacao === 'PROPOSTA');
   }
@@ -595,7 +705,9 @@ export class SaudeMental {
     else if (g.tipo === 'aceitar') this.salvarAceite(g.transferencia);
     else if (g.tipo === 'recusar') this.salvarDecisao(g.transferencia, 'recusar');
     else if (g.tipo === 'cancelarTransferencia') this.salvarDecisao(g.transferencia, 'cancelar', g.caso);
-    else this.salvarEncerramento(g.caso);
+    else if (g.tipo === 'risco') this.salvarRisco(g.caso);
+    else if (g.tipo === 'novaCrise') this.salvarCrise();
+    else if (g.tipo === 'encerrar') this.salvarEncerramento(g.caso);
   }
 
   private validar(erros: Record<string, string>): boolean {
@@ -744,6 +856,43 @@ export class SaudeMental {
     const v = this.sairRedeForm.getRawValue();
     if (!this.validar(v.motivo.trim() ? {} : { motivoSaidaRede: 'Informe o motivo.' })) return;
     this.enviarCaso(this.service.encerrarNaRede(caso.uuid, pessoa.uuid, v.motivo.trim()), 'Saiu da rede de apoio', caso, 'rede');
+  }
+
+  private salvarRisco(caso: AcompanhamentoSaudeMentalDto): void {
+    const v = this.riscoForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.tipo) erros['tipoRisco'] = 'Escolha o tipo de risco.';
+    if (!v.nivel) erros['nivelRisco'] = 'Escolha o nível.';
+    if ((v.nivel === 'MODERADO' || v.nivel === 'ALTO') && !v.medidas.trim()) erros['medidasRisco'] = 'Descreva as medidas adotadas.';
+    if (v.nivel === 'ALTO' && !v.reavaliarEm) erros['reavaliarEm'] = 'Com risco alto, informe quando reavaliar.';
+    if (v.reavaliarEm && v.reavaliarEm < this.hojeIso()) erros['reavaliarEm'] = 'A reavaliação não pode ser no passado.';
+    if (!this.validar(erros)) return;
+    this.enviarCaso(this.service.avaliarRisco(caso.uuid, {
+      tipo: v.tipo, nivel: v.nivel, fatores: v.fatores.trim() || null, medidas: v.medidas.trim() || null, planoSeguranca: v.planoSeguranca,
+      frequenciaContato: v.frequenciaContato.trim() || null, reavaliarEm: v.reavaliarEm || null,
+    }), 'Risco avaliado', caso, 'risco');
+  }
+
+  private salvarCrise(): void {
+    const v = this.criseForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.pacienteId) erros['buscaPacienteCrise'] = 'Escolha o paciente na lista.';
+    if (!v.unidadeId) erros['unidadeCrise'] = 'Escolha a unidade.';
+    if (!v.tipo) erros['tipoCrise'] = 'Escolha o tipo.';
+    if (!v.descricao.trim()) erros['descricaoCrise'] = 'Descreva a crise.';
+    if (!this.validar(erros)) return;
+    this.submitting.set(true);
+    this.service.registrarCrise({ pacienteId: v.pacienteId, unidadeId: v.unidadeId, tipo: v.tipo, descricao: v.descricao.trim(),
+      localOcorrencia: v.localOcorrencia.trim() || null }).subscribe({
+      next: (c) => {
+        this.submitting.set(false);
+        this.mostrarToast('Crise registrada', c.notificacaoSugerida ? `${c.pacienteNome} · notificação compulsória sugerida` : c.pacienteNome);
+        this.carregarCrises();
+        this.abrirCrise(c.uuid);
+        if (c.acompanhamentoId && this.selecionadoId() === c.acompanhamentoId) this.recarregarDetalhe();
+      },
+      error: (e: HttpErrorResponse) => this.falhou(e),
+    });
   }
 
   private salvarEncaminhamento(caso: AcompanhamentoSaudeMentalDto): void {

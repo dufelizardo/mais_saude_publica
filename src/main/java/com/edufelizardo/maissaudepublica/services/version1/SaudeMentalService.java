@@ -133,6 +133,9 @@ public class SaudeMentalService {
     @Autowired
     private RedeLeitura rede;
 
+    @Autowired
+    private CriseLeitura crise;
+
     // ── Escrita ────────────────────────────────────────────────────────────────────────────────────
 
     /**
@@ -175,7 +178,9 @@ public class SaudeMentalService {
             }
         }
         if (dto.getRiscoInicial() == RiscoInicialSaudeMental.ALTO) {
-            String risco = "Risco alto: conduza pela rede de urgência. O registro da crise chega na próxima fatia (SM3).";
+            String risco = caso != null
+                    ? "Risco alto: registre a avaliação de risco no caso e, se for crise, o evento de crise."
+                    : "Risco alto: se for crise, registre o evento de crise.";
             aviso = aviso == null ? risco : aviso + " " + risco;
         }
         AcolhimentoSaudeMental a = acolhimentoRepository.save(new AcolhimentoSaudeMental(null, paciente, unidade, profissionalDoUsuario(),
@@ -316,7 +321,7 @@ public class SaudeMentalService {
     /**
      * Os casos vigentes nas unidades do escopo, sem conteúdo clínico. {@code escopo}: TECNICO (sou o técnico de
      * referência) ou EQUIPE (sou de uma equipe de referência); sem escopo, todos os do meu acesso. {@code pendencia}:
-     * SEM_AVALIACAO, SEM_PTS ou PTS_A_REVISAR (ADR-0121).
+     * SEM_AVALIACAO, SEM_PTS ou PTS_A_REVISAR (ADR-0121); RISCO_ALTO ou REAVALIACAO_VENCIDA (ADR-0123).
      */
     @Transactional(readOnly = true)
     public CasosSaudeMentalDto casos(UUID unidadeId, UUID pacienteId, String escopo, SituacaoAcompanhamento situacao, String pendencia) {
@@ -329,6 +334,7 @@ public class SaudeMentalService {
         Map<UUID, ReferenciaSaudeMental> referencias = vigentesPorCaso(ids);
         Map<UUID, Instant> ultimas = ultimasAvaliacoes(ids);
         Map<UUID, ProjetoTerapeuticoSingular> pts = terapeutico.ptsVigentes(ids);
+        Map<UUID, boolean[]> riscos = crise.indicadores(ids);
         String cpf = UsuarioAutenticado.cpf();
         Set<UUID> minhasEquipes = cpf == null ? Set.of() : minhasEquipes(cpf);
         List<AcompanhamentoSaudeMentalDto> todos = vigentes.stream()
@@ -342,15 +348,18 @@ public class SaudeMentalService {
                     }
                     return r != null && minhasEquipes.contains(r.getEquipe().getUuid());
                 })
-                .map(c -> resumo(c, referencias.get(c.getUuid()), ultimas.get(c.getUuid()), pts.get(c.getUuid())))
+                .map(c -> resumo(c, referencias.get(c.getUuid()), ultimas.get(c.getUuid()), pts.get(c.getUuid()), riscos.get(c.getUuid())))
                 .toList();
         List<AcompanhamentoSaudeMentalDto> lista = todos.stream()
                 .filter(d -> situacao == null || d.getSituacao() == situacao)
                 .filter(d -> pendencia == null || pendencia.isBlank()
                         || ("SEM_AVALIACAO".equalsIgnoreCase(pendencia) && d.getUltimaAvaliacaoEm() == null)
                         || ("SEM_PTS".equalsIgnoreCase(pendencia) && d.getPtsVersao() == null)
-                        || ("PTS_A_REVISAR".equalsIgnoreCase(pendencia) && d.isPtsRevisaoVencida()))
-                .sorted(Comparator.comparing((AcompanhamentoSaudeMentalDto d) -> d.getSituacao() != SituacaoAcompanhamento.FALTOSO)
+                        || ("PTS_A_REVISAR".equalsIgnoreCase(pendencia) && d.isPtsRevisaoVencida())
+                        || ("RISCO_ALTO".equalsIgnoreCase(pendencia) && d.isRiscoAlto())
+                        || ("REAVALIACAO_VENCIDA".equalsIgnoreCase(pendencia) && d.isReavaliacaoRiscoVencida()))
+                .sorted(Comparator.comparing((AcompanhamentoSaudeMentalDto d) -> !d.isRiscoAlto())
+                        .thenComparing(d -> d.getSituacao() != SituacaoAcompanhamento.FALTOSO)
                         .thenComparing(d -> d.getUltimaAvaliacaoEm() != null)
                         .thenComparing(AcompanhamentoSaudeMentalDto::getPacienteNome, String.CASE_INSENSITIVE_ORDER))
                 .toList();
@@ -358,7 +367,9 @@ public class SaudeMentalService {
                 todos.stream().filter(d -> d.getSituacao() == SituacaoAcompanhamento.FALTOSO).count(),
                 todos.stream().filter(d -> d.getUltimaAvaliacaoEm() == null).count(),
                 todos.stream().filter(d -> d.getPtsVersao() == null).count(),
-                todos.stream().filter(AcompanhamentoSaudeMentalDto::isPtsRevisaoVencida).count(), lista);
+                todos.stream().filter(AcompanhamentoSaudeMentalDto::isPtsRevisaoVencida).count(),
+                todos.stream().filter(AcompanhamentoSaudeMentalDto::isRiscoAlto).count(),
+                todos.stream().filter(AcompanhamentoSaudeMentalDto::isReavaliacaoRiscoVencida).count(), lista);
     }
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
@@ -535,6 +546,11 @@ public class SaudeMentalService {
         return buscarCaso(casoId);
     }
 
+    /** O conteúdo do caso está liberado para quem está logado (crise ligada ao caso, ADR-0123). */
+    boolean conteudoLiberado(AcompanhamentoSaudeMental caso) {
+        return liberado(caso, null);
+    }
+
     /** O caso com o conteúdo, depois de uma escrita (o casoParaEscrever já conferiu o acesso). */
     AcompanhamentoSaudeMentalDto detalheLiberado(AcompanhamentoSaudeMental caso) {
         return detalhe(caso, null, true);
@@ -562,7 +578,8 @@ public class SaudeMentalService {
                 .orElse(referencias.isEmpty() ? null : referencias.get(0));
         List<AvaliacaoSaudeMental> avaliacoes = avaliacaoRepository.findDoAcompanhamento(caso.getUuid());
         AcompanhamentoSaudeMentalDto d = resumo(caso, vigente, avaliacoes.isEmpty() ? null : avaliacoes.get(0).getRealizadaEm(),
-                terapeutico.ptsVigentes(List.of(caso.getUuid())).get(caso.getUuid()));
+                terapeutico.ptsVigentes(List.of(caso.getUuid())).get(caso.getUuid()),
+                crise.indicadores(List.of(caso.getUuid())).get(caso.getUuid()));
         d.setConteudoLiberado(liberado);
         d.setAcesso(acesso);
         d.setReferencias(referencias.stream().map(r -> new AcompanhamentoSaudeMentalDto.Referencia(r.getEquipe().getUuid(),
@@ -582,12 +599,15 @@ public class SaudeMentalService {
             d.setEncaminhamentos(rede.encaminhamentos(caso.getUuid()));
             d.setCompartilhamentos(rede.compartilhamentos(caso.getUuid()));
             d.setTransferencias(rede.transferencias(caso.getUuid()));
+            d.setRiscos(crise.riscos(caso.getUuid()));
+            d.setCrises(crise.crisesDoCaso(caso.getPaciente().getUuid(), caso.getUuid()));
+            d.setInternacoes(crise.internacoes(caso.getPaciente().getUuid()));
         }
         return d;
     }
 
     private static AcompanhamentoSaudeMentalDto resumo(AcompanhamentoSaudeMental c, ReferenciaSaudeMental r, Instant ultimaAvaliacao,
-                                                       ProjetoTerapeuticoSingular pts) {
+                                                       ProjetoTerapeuticoSingular pts, boolean[] risco) {
         Paciente pac = c.getPaciente();
         AcompanhamentoProgramatico programatico = c.getAcompanhamentoProgramatico();
         SituacaoAcompanhamento situacao = c.vigente() ? programatico.getSituacao()
@@ -602,7 +622,8 @@ public class SaudeMentalService {
                 ultimaAvaliacao, false, null, List.of(), List.of(), List.of(),
                 pts != null ? pts.getVersao() : null, pts != null ? pts.getRevisarEm() : null, TerapeuticoLeitura.revisaoVencida(pts), 0,
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
-                c.getCasoAnterior() != null ? c.getCasoAnterior().getUuid() : null);
+                c.getCasoAnterior() != null ? c.getCasoAnterior().getUuid() : null,
+                risco != null && risco[0], risco != null && risco[1], List.of(), List.of(), List.of());
     }
 
     private static AcolhimentoSaudeMentalDto acolhimentoDto(AcolhimentoSaudeMental a, boolean liberado) {

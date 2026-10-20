@@ -61,6 +61,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("SAUDE_MENTAL.ACOLHER", new Def("Registrar acolhimento em saúde mental", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("SAUDE_MENTAL.ACOMPANHAR", new Def("Abrir e conduzir o caso em saúde mental: referência, avaliação e saída",
                 ACESSO_AO_DADO_DE_SAUDE));
+        // Crise em saúde mental (ADR-0123): registrar e conduzir o evento de crise, com ou sem caso.
+        PERMISSOES.put("SAUDE_MENTAL.CRISE", new Def("Registrar e conduzir o evento de crise em saúde mental", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("PACIENTE.CONSULTAR", new Def("Consultar cadastro de pacientes", OPERACAO));
         PERMISSOES.put("PACIENTE.CADASTRAR", new Def("Cadastrar e atualizar pacientes", OPERACAO));
         PERMISSOES.put("AGENDAMENTO.GERENCIAR", new Def("Agendar, confirmar e cancelar", OPERACAO));
@@ -126,7 +128,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
                         "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
-                        "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR")));
+                        "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE")));
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
                 "Regula a fila da Central de Regulação do Acesso no seu escopo (ADR-0087).",
                 List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR")));
@@ -139,14 +141,14 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         // Admissão, troca de leito e liberação depois da higienização (ADR-0098); a alta é do médico.
                         "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
-                        "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR")));
+                        "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE")));
         PAPEIS.put("COORDENADOR_DE_ENFERMAGEM", new PapelPadrao("Coordenador de enfermagem",
                 "O que o enfermeiro faz, mais retificar registro clínico de outro profissional.",
                 List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
                         "EVOLUCAO.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
                         "REGISTRO_CLINICO.RETIFICAR_DE_OUTROS", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR",
                         "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
-                        "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR")));
+                        "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE")));
         PAPEIS.put("TECNICO_DE_ENFERMAGEM", new PapelPadrao("Técnico de enfermagem",
                 "Procedimentos e medicação. Sem classificação de risco nem evolução (COFEN 661/2021).",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
@@ -165,11 +167,11 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("PSICOLOGO", new PapelPadrao("Psicólogo",
                 "Acolhimento e acompanhamento em saúde mental; lê o prontuário com vínculo.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
-                        "SAUDE_MENTAL.ACOMPANHAR")));
+                        "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE")));
         PAPEIS.put("ASSISTENTE_SOCIAL", new PapelPadrao("Assistente social",
                 "Acolhimento e acompanhamento psicossocial; lê o prontuário com vínculo.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
-                        "SAUDE_MENTAL.ACOMPANHAR")));
+                        "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE")));
         PAPEIS.put("FARMACEUTICO", new PapelPadrao("Farmacêutico",
                 "Estoque, dispensação e transferências; lê a prescrição.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "FARMACIA.CONSULTAR", "FARMACIA.GERENCIAR_ESTOQUE",
