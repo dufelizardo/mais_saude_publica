@@ -1,0 +1,5 @@
+*** Comments ***
+    Mais Saúde Pública API - Vigilância epidemiológica, fatia V1 (ADR-0124).
+*** Variables ***
+${AGRAVO_SCHEMA}    ${{{'required': ['uuid', 'codigo', 'nome', 'cids', 'compulsorio', 'periodicidade', 'prazoEncerramentoDias', 'criterios', 'sensivel', 'ativo', 'ficha'], 'types': {'uuid': str, 'codigo': str, 'nome': str, 'cids': list, 'compulsorio': bool, 'periodicidade': str, 'prazoEncerramentoDias': int, 'criterios': list, 'sensivel': bool, 'ativo': bool, 'ficha': list}, 'enums': {'periodicidade': ['IMEDIATA', 'SEMANAL']}}}}
+${NOTIFICACAO_SCHEMA}    ${{{'required': ['uuid', 'pacienteId', 'agravoId', 'agravoCodigo', 'unidadeId', 'dataNotificacao', 'origem', 'situacao', 'prazoEncerramento', 'encerramentoAtrasado'], 'types': {'uuid': str, 'pacienteId': str, 'agravoId': str, 'agravoCodigo': str, 'unidadeId': str, 'dataNotificacao': str, 'origem': str, 'situacao': str, 'prazoEncerramento': str, 'encerramentoAtrasado': bool}, 'enums': {'situacao': ['NOTIFICADA', 'EM_INVESTIGACAO', 'ENCERRADA']}}}}

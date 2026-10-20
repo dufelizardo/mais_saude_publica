@@ -148,6 +148,12 @@ export const routes: Routes = [
         data: { breadcrumb: 'Programas de Saúde', area: 'Assistência' },
       },
       // Saúde Mental (ADR-0120), carregada sob demanda.
+      // Vigilância epidemiológica (ADR-0124), carregada sob demanda.
+      {
+        path: 'vigilancia',
+        loadComponent: () => import('./features/vigilancia/vigilancia').then((m) => m.Vigilancia),
+        data: { breadcrumb: 'Vigilância epidemiológica', area: 'Vigilância' },
+      },
       {
         path: 'assistencia/saude-mental',
         loadComponent: () => import('./features/assistencia/saude-mental/saude-mental').then((m) => m.SaudeMental),

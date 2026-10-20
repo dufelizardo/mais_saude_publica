@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, catchError, of } from 'rxjs';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import { EquipeResumoDto, MembroEquipeDto, VinculoEquipeDto } from '../../../core/models/equipe';
@@ -83,7 +83,7 @@ type Aba = 'resumo' | 'risco' | 'pts' | 'intervencoes' | 'rede' | 'atencao' | 'a
  */
 @Component({
   selector: 'app-saude-mental',
-  imports: [ReactiveFormsModule, Drawer, AcessoProntuario],
+  imports: [ReactiveFormsModule, RouterLink, Drawer, AcessoProntuario],
   templateUrl: './saude-mental.html',
 })
 export class SaudeMental {
