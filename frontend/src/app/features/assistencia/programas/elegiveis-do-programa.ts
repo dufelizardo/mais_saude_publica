@@ -97,15 +97,28 @@ export class ElegiveisDoPrograma {
 
   private readonly programaId = computed(() => this.programa().resumo.uuid);
 
-  /** As equipes com área nas unidades que oferecem o programa. */
+  /** Escopo territorial (ADR-0129): as áreas que quem está logado alcança; nulo, sem restrição. */
+  private readonly areasDoEscopo = signal<Set<string> | null>(null);
+
+  /** As equipes com área nas unidades que oferecem o programa (com o escopo, só as de quem está logado). */
   protected readonly equipes = computed(() => {
     const unidades = new Set(this.programa().participacoes.map((p) => p.unidadeId));
-    return this.todas().filter((e) => unidades.has(e.unidadeId));
+    const escopo = this.areasDoEscopo();
+    return this.todas().filter((e) => unidades.has(e.unidadeId) && (!escopo || escopo.has(e.area.uuid)));
   });
 
   protected readonly equipeEscolhida = computed(() => this.equipes().find((e) => e.equipeId === this.equipeId()));
 
   constructor() {
+    this.territorio.meuEscopo().pipe(catchError(() => of(null))).subscribe((m) => {
+      if (!m?.restrito) return;
+      this.areasDoEscopo.set(new Set([...m.areas.map((a) => a.uuid), ...m.microareas.map((x) => x.areaId)]));
+      // Uma equipe só: já escolhida.
+      setTimeout(() => {
+        const lista = this.equipes();
+        if (lista.length === 1 && !this.equipeId()) this.escolherEquipe(lista[0].equipeId);
+      });
+    });
     this.territorio.arvore().pipe(catchError(() => of(null))).subscribe((a) => {
       const lista: EquipeComArea[] = [];
       for (const s of a?.segmentos ?? []) {

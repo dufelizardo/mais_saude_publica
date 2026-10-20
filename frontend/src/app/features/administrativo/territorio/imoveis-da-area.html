@@ -4,8 +4,8 @@
     <div style="display: flex; gap: var(--s-2); align-items: center;">
       @if (imoveis() !== null && !aberto()) {
         <select class="sel" aria-label="Filtrar imóveis por microárea" [value]="filtroMicroarea()" (change)="filtroMicroarea.set($any($event.target).value)">
-          <option value="">Todas as microáreas</option>
-          @for (m of area().microareas; track m.uuid) { <option [value]="m.uuid">Microárea {{ m.codigo }}</option> }
+          <option value="">{{ microareasDoEscopo() ? 'Minhas microáreas' : 'Todas as microáreas' }}</option>
+          @for (m of microareasPermitidas(); track m.uuid) { <option [value]="m.uuid">Microárea {{ m.codigo }}</option> }
         </select>
       }
       @if (podeCadastrar() && area().equipe && !aberto()) {
@@ -160,7 +160,7 @@
                 <label for="f-microareaId">Microárea</label>
                 <select id="f-microareaId" formControlName="microareaId" [attr.aria-invalid]="!!erro('microareaId')" aria-describedby="h-microareaId e-microareaId">
                   <option value="">Pelo ponto no mapa</option>
-                  @for (m of area().microareas; track m.uuid) { <option [value]="m.uuid">Microárea {{ m.codigo }}</option> }
+                  @for (m of microareasPermitidas(); track m.uuid) { <option [value]="m.uuid">Microárea {{ m.codigo }}</option> }
                 </select>
                 <p class="dw-hint" id="h-microareaId">Com o ponto marcado, ele precisa cair dentro da microárea desenhada.</p>
                 @if (erro('microareaId')) { <p class="dw-err" id="e-microareaId">{{ erro('microareaId') }}</p> }

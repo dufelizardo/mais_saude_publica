@@ -96,6 +96,10 @@ public class CadastroTerritorialService {
     @Autowired
     private AdscricaoService adscricaoService;
 
+    /** Escopo territorial (ADR-0129): o ACS na microárea, a equipe na área, com o interruptor ligado. */
+    @Autowired
+    private EscopoTerritorial escopo;
+
     // ── Leitura ────────────────────────────────────────────────────────────────────────────────────
 
     /** Imóveis da área (ou de uma microárea dela), com as contagens. */
@@ -104,8 +108,11 @@ public class CadastroTerritorialService {
         Area area = areaRepository.findById(areaId).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar uma área com o id " + areaId + " em nossos registros."));
         controleDeAcesso.exigirVisivel(unidadeDaArea(area), LER);
+        escopo.exigir(area);
+        java.util.Optional<EscopoTerritorial.Alcance> alcance = escopo.alcance();
         List<Imovel> imoveis = imovelRepository.findByMicroarea_Area_Uuid(areaId).stream()
                 .filter(i -> microareaId == null || i.getMicroarea().getUuid().equals(microareaId))
+                .filter(i -> alcance.map(a -> EscopoTerritorial.alcanca(a, i.getMicroarea())).orElse(true))
                 .sorted(Comparator.comparing((Imovel i) -> i.getMicroarea().getCodigo())
                         .thenComparing(i -> Objects.toString(i.getEndereco() != null ? i.getEndereco().getLogradouro() : "", ""), String.CASE_INSENSITIVE_ORDER)
                         .thenComparing(i -> Objects.toString(i.getEndereco() != null ? i.getEndereco().getNumeroLogradouro() : "", "")))
@@ -128,6 +135,7 @@ public class CadastroTerritorialService {
     public CadastroTerritorialDto.ImovelDetalhe imovel(UUID uuid) {
         Imovel i = buscarImovel(uuid);
         controleDeAcesso.exigirVisivel(unidadeDaArea(i.getMicroarea().getArea()), LER);
+        escopo.exigir(i.getMicroarea());
         ContextoAuditoria.registro(i.getUuid());
         return detalhe(i);
     }
@@ -140,6 +148,7 @@ public class CadastroTerritorialService {
         MembroNucleo atual = historico.stream().filter(MembroNucleo::vigente).findFirst().orElse(null);
         if (atual != null) {
             controleDeAcesso.exigirVisivel(unidadeDaArea(atual.getNucleo().getDomicilio().getImovel().getMicroarea().getArea()), LER);
+            escopo.exigir(atual.getNucleo().getDomicilio().getImovel().getMicroarea());
         } else {
             controleDeAcesso.exigirAlguma(LER);
         }
@@ -173,7 +182,7 @@ public class CadastroTerritorialService {
     @Transactional
     public CadastroTerritorialDto.ImovelDetalhe atualizarImovel(UUID uuid, ImovelRequestDto dto) {
         Imovel i = buscarImovel(uuid);
-        exigirCadastro(i.getMicroarea().getArea());
+        exigirCadastro(i.getMicroarea());
         UUID areaAntes = i.getMicroarea().getArea().getUuid();
         UUID microareaAntes = i.getMicroarea().getUuid();
         aplicar(i, dto);
@@ -194,7 +203,7 @@ public class CadastroTerritorialService {
     @Transactional
     public CadastroTerritorialDto.ImovelDetalhe criarDomicilio(DomicilioRequestDto dto) {
         Imovel i = buscarImovel(dto.getImovelId());
-        exigirCadastro(i.getMicroarea().getArea());
+        exigirCadastro(i.getMicroarea());
         if (i.getTipo() != TipoImovel.DOMICILIO) {
             throw new ResourceUnprocessableEntityException("O imóvel é " + i.getTipo() + "; domicílio só em imóvel de moradia.");
         }
@@ -212,7 +221,7 @@ public class CadastroTerritorialService {
     @Transactional
     public CadastroTerritorialDto.ImovelDetalhe atualizarDomicilio(UUID uuid, DomicilioRequestDto dto) {
         Domicilio d = buscarDomicilio(uuid);
-        exigirCadastro(d.getImovel().getMicroarea().getArea());
+        exigirCadastro(d.getImovel().getMicroarea());
         if (!dto.getImovelId().equals(d.getImovel().getUuid())) {
             throw new ResourceUnprocessableEntityException("O imóvel do domicílio não muda pela edição.");
         }
@@ -231,7 +240,7 @@ public class CadastroTerritorialService {
     @Transactional
     public CadastroTerritorialDto.ImovelDetalhe criarFamilia(FamiliaRequestDto dto) {
         Domicilio d = buscarDomicilio(dto.getDomicilioId());
-        exigirCadastro(d.getImovel().getMicroarea().getArea());
+        exigirCadastro(d.getImovel().getMicroarea());
         exigirMoradiaAtiva(d);
         LocalDate inicio = data(dto.getInicio(), "O início");
         Paciente responsavel = buscarPaciente(dto.getResponsavelId());
@@ -263,7 +272,7 @@ public class CadastroTerritorialService {
     @Transactional
     public CadastroTerritorialDto.ImovelDetalhe atualizarRenda(UUID familiaId, RendaFamiliaRequestDto dto) {
         NucleoFamiliar n = buscarFamiliaVigente(familiaId);
-        exigirCadastro(n.getDomicilio().getImovel().getMicroarea().getArea());
+        exigirCadastro(n.getDomicilio().getImovel().getMicroarea());
         n.setRendaFamiliar(dto.getRendaFamiliar());
         nucleoRepository.save(n);
         ContextoAuditoria.registro(n.getUuid());
@@ -273,7 +282,7 @@ public class CadastroTerritorialService {
     @Transactional
     public CadastroTerritorialDto.ImovelDetalhe incluirMembro(UUID familiaId, MembroFamiliaRequestDto dto) {
         NucleoFamiliar n = buscarFamiliaVigente(familiaId);
-        exigirCadastro(n.getDomicilio().getImovel().getMicroarea().getArea());
+        exigirCadastro(n.getDomicilio().getImovel().getMicroarea());
         if (dto.getParentesco() == Parentesco.RESPONSAVEL) {
             throw new ResourceBadRequestException("Para mudar o responsável, use a troca de responsável.");
         }
@@ -298,7 +307,7 @@ public class CadastroTerritorialService {
     public CadastroTerritorialDto.ImovelDetalhe registrarSaida(UUID membroId, SaidaMembroFamiliaRequestDto dto) {
         MembroNucleo m = buscarMembro(membroId);
         NucleoFamiliar n = m.getNucleo();
-        exigirCadastro(n.getDomicilio().getImovel().getMicroarea().getArea());
+        exigirCadastro(n.getDomicilio().getImovel().getMicroarea());
         if (!m.vigente()) {
             throw new ResourceUnprocessableEntityException("Esta pessoa já saiu da família.");
         }
@@ -330,7 +339,7 @@ public class CadastroTerritorialService {
     @Transactional
     public CadastroTerritorialDto.ImovelDetalhe trocarResponsavel(UUID familiaId, ResponsavelFamiliaRequestDto dto) {
         NucleoFamiliar n = buscarFamiliaVigente(familiaId);
-        exigirCadastro(n.getDomicilio().getImovel().getMicroarea().getArea());
+        exigirCadastro(n.getDomicilio().getImovel().getMicroarea());
         if (dto.getParentescoDoAnterior() == Parentesco.RESPONSAVEL) {
             throw new ResourceBadRequestException("Informe o parentesco do responsável anterior com o novo.");
         }
@@ -362,9 +371,9 @@ public class CadastroTerritorialService {
     @Transactional
     public CadastroTerritorialDto.ImovelDetalhe mudar(UUID familiaId, MudancaFamiliaRequestDto dto) {
         NucleoFamiliar origem = buscarFamiliaVigente(familiaId);
-        exigirCadastro(origem.getDomicilio().getImovel().getMicroarea().getArea());
+        exigirCadastro(origem.getDomicilio().getImovel().getMicroarea());
         Domicilio destino = buscarDomicilio(dto.getDomicilioId());
-        exigirCadastro(destino.getImovel().getMicroarea().getArea());
+        exigirCadastro(destino.getImovel().getMicroarea());
         exigirMoradiaAtiva(destino);
         if (destino.getUuid().equals(origem.getDomicilio().getUuid())) {
             throw new ResourceUnprocessableEntityException("A família já mora neste domicílio.");
@@ -401,7 +410,7 @@ public class CadastroTerritorialService {
     public CadastroTerritorialDto.ImovelDetalhe atualizarEnderecoDoPaciente(UUID membroId) {
         MembroNucleo m = buscarMembro(membroId);
         Imovel i = m.getNucleo().getDomicilio().getImovel();
-        exigirCadastro(i.getMicroarea().getArea());
+        exigirCadastro(i.getMicroarea());
         controleDeAcesso.exigirAlguma("PACIENTE.CADASTRAR");
         if (!m.vigente()) {
             throw new ResourceUnprocessableEntityException("Esta pessoa não mora mais aqui.");
@@ -448,7 +457,7 @@ public class CadastroTerritorialService {
         } else {
             throw new ResourceBadRequestException("Informe a microárea ou marque o ponto no mapa.");
         }
-        exigirCadastro(m.getArea());
+        exigirCadastro(m);
         i.setMicroarea(m);
         i.setTipo(dto.getTipo());
         i.setEndereco(new Endereco(dto.getEndereco()));
@@ -480,12 +489,17 @@ public class CadastroTerritorialService {
                 .orElse(a.getTerritorio().getSegmento().getUnidadeGestao());
     }
 
-    /** O cadastro é da equipe: sem equipe responsável pela área, 422. */
-    private void exigirCadastro(Area a) {
+    /**
+     * O cadastro é da equipe: sem equipe responsável pela área, 422. A permissão vale na unidade da equipe e, com o escopo
+     * territorial ligado, só na microárea alcançada (ADR-0129).
+     */
+    private void exigirCadastro(Microarea m) {
+        Area a = m.getArea();
         UnidadeDeSaude unidade = responsabilidadeRepository.findByArea_UuidAndFimIsNull(a.getUuid()).map(r -> r.getEquipe().getUnidade())
                 .orElseThrow(() -> new ResourceUnprocessableEntityException("A área " + a.getCodigo()
                         + " não tem equipe responsável; o cadastro domiciliar é feito pela equipe."));
         controleDeAcesso.exigir(CADASTRAR, unidade);
+        escopo.exigir(m);
     }
 
     private void exigirMoradiaAtiva(Domicilio d) {

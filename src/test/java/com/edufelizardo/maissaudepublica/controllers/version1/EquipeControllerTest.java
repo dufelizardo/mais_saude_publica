@@ -123,7 +123,7 @@ class EquipeControllerTest {
 
     private ResultActions criar(String nome, String tipo, String ine, String apoiadas) throws Exception {
         return mockMvc.perform(post(URL).contentType(MediaType.APPLICATION_JSON).content("""
-                {"unidadeId": "%s", "tipo": "%s", "nome": "%s", "ine": %s, "microareas": "14, 17, 18", "apoiadasIds": [%s]}
+                {"unidadeId": "%s", "tipo": "%s", "nome": "%s", "ine": %s, "apoiadasIds": [%s]}
                 """.formatted(ubs.getUuid(), tipo, nome, ine == null ? "null" : "\"" + ine + "\"", apoiadas)));
     }
 
@@ -134,7 +134,7 @@ class EquipeControllerTest {
 
     private ResultActions membro(UUID equipe, String matricula, String funcao) throws Exception {
         return mockMvc.perform(post(URL + equipe + "/membro").contentType(MediaType.APPLICATION_JSON).content("""
-                {"profissionalMatricula": "EQ-%s", "funcao": "%s", "microarea": "14"}""".formatted(matricula, funcao)));
+                {"profissionalMatricula": "EQ-%s", "funcao": "%s"}""".formatted(matricula, funcao)));
     }
 
     @Test

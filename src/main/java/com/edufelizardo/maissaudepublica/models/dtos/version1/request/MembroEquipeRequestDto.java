@@ -25,9 +25,6 @@ public class MembroEquipeRequestDto implements Serializable {
     @NotNull(message = "Informe a função na equipe.")
     private FuncaoEquipe funcao;
 
-    @Size(max = 20, message = "A microárea vai até 20 caracteres.")
-    private String microarea;
-
     /** Sem data, hoje. */
     private LocalDate inicio;
 }

@@ -13,4 +13,7 @@ public interface MembroEquipeRepository extends JpaRepository<MembroEquipe, UUID
     List<MembroEquipe> findByEquipe_UuidInAndFimIsNull(Collection<UUID> equipeIds);
 
     List<MembroEquipe> findByProfissional_UuidAndFimIsNull(UUID profissionalId);
+
+    /** As participações vigentes do profissional do usuário (o usuário se liga ao profissional pelo CPF). */
+    List<MembroEquipe> findByProfissional_CpfAndFimIsNull(String cpf);
 }

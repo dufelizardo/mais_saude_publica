@@ -1,10 +1,11 @@
 # Modelo do domínio Território e Adscrição
 
 **Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0108](../adr/0108-territorio-e-adscricao.md). **F1 a F3 implementadas** nas
+**Status:** desenho aprovado na [ADR-0108](../adr/0108-territorio-e-adscricao.md). **Implementado por inteiro** nas
 [ADR-0125](../adr/0125-territorio-fundacao.md), [ADR-0126](../adr/0126-territorio-mapa.md),
-[ADR-0127](../adr/0127-cadastro-territorial.md) e [ADR-0128](../adr/0128-adscricao-e-cobertura.md); a F4 (seção 11) vem
-com ADR própria.
+[ADR-0127](../adr/0127-cadastro-territorial.md), [ADR-0128](../adr/0128-adscricao-e-cobertura.md) e
+[ADR-0129](../adr/0129-escopo-territorial.md) (escopo territorial, atrás de interruptor). O texto livre das microáreas
+saiu na V22.
 
 Este documento é o detalhamento do domínio: conceitos, entidades, relações com os outros domínios, uso por tipo de
 unidade e de equipe, escopo de acesso e geolocalização. A ADR-0108 registra as decisões; aqui fica o porquê e o
@@ -25,7 +26,7 @@ nem na Enfermagem. Cada domínio sabe uma coisa diferente:
 
 Até a F1, o projeto guardava as microáreas como **texto livre**: `Equipe.microareas` ("14, 17, 18") e
 `MembroEquipe.microarea` (a microárea do ACS), da ADR-0103. A migração V19 (ADR-0125) os transformou em áreas,
-microáreas e atribuições; numa equipe com área, os dois campos são lidos do Território e saem numa migração seguinte.
+microáreas e atribuições; os dois campos foram lidos do Território até saírem na V22 (ADR-0129).
 
 ## 2. Conceitos
 
@@ -232,12 +233,13 @@ prontuário por vínculo (ADR-0076).
 | **F1** · backend do território ✅ ([ADR-0125](../adr/0125-territorio-fundacao.md)) | segmento, território, área e microárea com GeoJSON; responsabilidade equipe ↔ área; atribuição ACS ↔ microárea; coordenadas da unidade; migração dos textos `Equipe.microareas` e `MembroEquipe.microarea`; regras de microárea dentro da área e sem sobreposição | ADR-0103 |
 | **F2** · tela Território ✅ ([ADR-0126](../adr/0126-territorio-mapa.md)) | lista e detalhe com mapa Leaflet; destaque da área e das microáreas; desenho e edição de polígonos; pinos das unidades; mapa real em Equipamentos | F1 |
 | **F3** · cadastro territorial | **F3a** ✅ ([ADR-0127](../adr/0127-cadastro-territorial.md)): imóvel, domicílio e núcleo familiar com o paciente (sem geocodificação externa, por LGPD). **F3b** ✅ ([ADR-0128](../adr/0128-adscricao-e-cobertura.md)): adscrição à equipe (pelo domicílio e manual); cobertura em Equipes; elegíveis dos programas | F1, F2 |
-| **F4** · escopo territorial | ACS restrito à microárea e equipe à área, atrás de toggle | F3, ADR-0066 |
+| **F4** · escopo territorial ✅ ([ADR-0129](../adr/0129-escopo-territorial.md)) | ACS restrito à microárea e equipe à área, atrás de toggle; a adscrição vira vínculo do prontuário | F3, ADR-0066 |
 
 **Transição do texto livre:**
 - **F1:** os códigos de `Equipe.microareas` viram `Microarea` (sem geometria, a desenhar depois) numa área da equipe.
   `MembroEquipe.microarea` vira `AtribuicaoMicroarea`.
-- **Depois da migração:** os dois campos passam a ser leitura derivada e saem numa migração seguinte.
+- **Depois da migração:** os dois campos passaram a ser leitura derivada e saíram na V22 (ADR-0129), que antes
+  migrou o texto gravado depois da V19.
 
 **Fora do escopo agora:**
 - visita domiciliar (ficha do ACS);

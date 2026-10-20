@@ -166,15 +166,15 @@ class TerritorioControllerTest {
     }
 
     private UUID equipe(String nome, String microareas) throws Exception {
-        String r = enviar(post("/api/v1/equipe/"), "{\"unidadeId\": \"%s\", \"tipo\": \"ESF\", \"nome\": \"%s\", \"microareas\": %s}"
-                .formatted(ubs.getUuid(), nome, microareas == null ? "null" : "\"" + microareas + "\""), 201);
+        String r = enviar(post("/api/v1/equipe/"), "{\"unidadeId\": \"%s\", \"tipo\": \"ESF\", \"nome\": \"%s\"}"
+                .formatted(ubs.getUuid(), nome), 201);
         return UUID.fromString(JsonPath.read(r, "$.resumo.uuid"));
     }
 
     /** Inclui o membro e devolve a participação dele. */
     private UUID membro(UUID equipe, String matricula, String funcao, String microarea) throws Exception {
-        String r = enviar(post("/api/v1/equipe/" + equipe + "/membro"), "{\"profissionalMatricula\": \"TER-%s\", \"funcao\": \"%s\", \"microarea\": %s}"
-                .formatted(matricula, funcao, microarea == null ? "null" : "\"" + microarea + "\""), 200);
+        String r = enviar(post("/api/v1/equipe/" + equipe + "/membro"), "{\"profissionalMatricula\": \"TER-%s\", \"funcao\": \"%s\"}"
+                .formatted(matricula, funcao), 200);
         List<String> ids = JsonPath.read(r, "$.membros[?(@.matricula == 'TER-" + matricula + "')].uuid");
         return UUID.fromString(ids.get(0));
     }
@@ -296,15 +296,12 @@ class TerritorioControllerTest {
         assertThat((List<String>) JsonPath.read(r, "$.acsSemMicroarea[*].matricula")).containsExactly("TER-ACS1");
         enviar(post(URL + "microarea/" + m08 + "/atribuicao"), "{\"membroId\": \"%s\"}".formatted(acs1), 200);
 
-        // Equipes lê do Território e recusa a escrita do texto.
+        // Equipes lê as microáreas do Território.
         mockMvc.perform(get("/api/v1/equipe/" + sf)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.resumo.microareas").value("07, 08"))
                 .andExpect(jsonPath("$.resumo.microareasPeloTerritorio").value(true))
                 .andExpect(jsonPath("$.membros[?(@.matricula == 'TER-ACS2')].microarea").value(hasItem("07")));
         mockMvc.perform(get("/api/v1/territorio/equipe/" + sf)).andExpect(status().isOk()).andExpect(jsonPath("$.area.codigo").value("03"));
-        enviar(patch("/api/v1/equipe/" + sf), "{\"unidadeId\": \"%s\", \"tipo\": \"ESF\", \"nome\": \"%s\", \"microareas\": \"07, 09\"}".formatted(ubs.getUuid(), PREFIXO + "SF-03"), 422);
-        enviar(patch("/api/v1/equipe/" + sf), "{\"unidadeId\": \"%s\", \"tipo\": \"ESF\", \"nome\": \"%s\", \"microareas\": \"08,07\"}".formatted(ubs.getUuid(), PREFIXO + "SF-03"), 200);
-        enviar(post("/api/v1/equipe/" + sf + "/membro"), "{\"profissionalMatricula\": \"TER-ACS4\", \"funcao\": \"ACS\", \"microarea\": \"09\"}", 422);
 
         // Saída do ACS fecha a microárea; encerrar sem ACS: 422.
         enviar(post("/api/v1/equipe/membro/" + acs1 + "/saida"), "{\"motivo\": \"Exoneração\"}", 200);
@@ -322,39 +319,6 @@ class TerritorioControllerTest {
         assertThat((List<?>) JsonPath.read(r, "$.responsabilidades")).hasSize(2);
         assertThat((List<String>) JsonPath.read(r, "$.acsSemMicroarea[*].matricula")).containsExactly("TER-ACS3");
         mockMvc.perform(get("/api/v1/equipe/" + sf)).andExpect(jsonPath("$.resumo.microareasPeloTerritorio").value(false));
-    }
-
-    @Test
-    void migracaoDoTextoLivreViraMicroareasEAtribuicoes() throws Exception {
-        UUID sf = equipe(PREFIXO + "SF-09", "14, 17");
-        membro(sf, "ACS1", "ACS", "17");
-        membro(sf, "ACS2", "ACS", "17");
-        UUID acs3 = membro(sf, "ACS3", "ACS", "21");
-        enviar(post("/api/v1/equipe/membro/" + acs3 + "/saida"), "{\"motivo\": \"Transferência\"}", 200);
-
-        String sql = new String(new ClassPathResource("db/migration/V19__territorio.sql").getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-        String bloco = sql.substring(sql.indexOf("-- ── Migração do texto livre"));
-        new TransactionTemplate(transacoes).executeWithoutResult(tx -> {
-            try {
-                jdbc.execute(bloco);
-                assertThat(jdbc.queryForList("select m.codigo from tb_microarea m join tb_responsabilidade_territorial r on r.area_id = m.area_id "
-                        + "where r.equipe_id = ? and r.fim is null order by m.codigo", String.class, sf)).containsExactly("14", "17", "21");
-                assertThat(jdbc.queryForObject("select count(*) from tb_atribuicao_microarea a join tb_membro_equipe m on m.uuid = a.membro_id "
-                        + "where m.equipe_id = ? and a.fim is null", Integer.class, sf)).isEqualTo(1);
-                assertThat(jdbc.queryForObject("select motivo_fim from tb_atribuicao_microarea where membro_id = ?", String.class, acs3))
-                        .isEqualTo("Saída da equipe: Transferência");
-                // Equipes já lê do Território, na mesma transação.
-                mockMvc.perform(get("/api/v1/equipe/" + sf)).andExpect(status().isOk())
-                        .andExpect(jsonPath("$.resumo.microareas").value("14, 17, 21"))
-                        .andExpect(jsonPath("$.resumo.microareasPeloTerritorio").value(true))
-                        // Dois ACS vigentes com o mesmo código: fica um, o outro segue sem microárea.
-                        .andExpect(jsonPath("$.membros[?(@.funcao == 'ACS')].microarea").value(org.hamcrest.Matchers.containsInAnyOrder("17", null)));
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            } finally {
-                tx.setRollbackOnly();
-            }
-        });
     }
 
     @Test

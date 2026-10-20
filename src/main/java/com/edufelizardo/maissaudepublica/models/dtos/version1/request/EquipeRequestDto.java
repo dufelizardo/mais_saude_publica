@@ -37,9 +37,6 @@ public class EquipeRequestDto implements Serializable {
 
     private Boolean ativa;
 
-    @Size(max = 300, message = "As microáreas vão até 300 caracteres.")
-    private String microareas;
-
     private String coordenadorMatricula;
 
     private DayOfWeek reuniaoDia;

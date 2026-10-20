@@ -205,8 +205,6 @@
             <p class="cell-sub">Da área da equipe no <a routerLink="/administrativo/territorio" [queryParams]="{ equipe: d.resumo.uuid }">Território</a>.
               @if (cobertura(); as c) { {{ c.pessoasAdscritas }} pessoa(s) adscrita(s)@if (c.adscritasManual) { ({{ c.adscritasManual }} manual) } · {{ c.familias }} família(s) · {{ c.imoveis }} imóvel(is)@if (c.microareasSemCadastro) { · {{ c.microareasSemCadastro }} microárea(s) sem cadastro }. }
             </p>
-          } @else {
-            <p class="cell-sub">Microáreas em texto: o cadastro de famílias e a cobertura vêm quando a equipe tiver área no Território.</p>
           }
         }
 
@@ -292,15 +290,7 @@
                 @if (erroCampo('ine')) { <p class="dw-err" id="e-ine">{{ erroCampo('ine') }}</p> }
               </div>
             </div>
-            <div class="dw-field">
-              <label for="f-microareas">Microáreas<span class="opt">opcional</span></label>
-              @if (g.equipe?.resumo?.microareasPeloTerritorio) {
-                <input id="f-microareas" type="text" formControlName="microareas" readonly aria-describedby="h-microareas" />
-                <p class="dw-hint" id="h-microareas">Vêm da área da equipe no <a routerLink="/administrativo/territorio" [queryParams]="{ equipe: g.equipe?.resumo?.uuid }">Território</a>, onde se editam.</p>
-              } @else {
-                <input id="f-microareas" type="text" formControlName="microareas" placeholder="Ex.: 14, 17, 18" />
-              }
-            </div>
+            <p class="dw-hint">As microáreas são da área da equipe no <a routerLink="/administrativo/territorio" [queryParams]="g.equipe ? { equipe: g.equipe.resumo.uuid } : {}">Território</a>@if (g.equipe?.resumo?.microareas) { (hoje: {{ g.equipe?.resumo?.microareas }}) }, onde se editam, com o ACS de cada uma.</p>
             @if (g.equipe) {
               <div class="dw-field">
                 <label for="f-coordenadorMatricula">Coordenação<span class="opt">opcional</span></label>
@@ -383,12 +373,6 @@
                   @for (f of listaFuncoes; track f) { <option [value]="f">{{ funcoes[f] }}</option> }
                 </select>
               </div>
-              @if (!g.equipe?.resumo?.microareasPeloTerritorio) {
-                <div class="dw-field">
-                  <label for="f-microarea">Microárea<span class="opt">do ACS</span></label>
-                  <input id="f-microarea" type="text" maxlength="20" formControlName="microarea" placeholder="Ex.: 14" />
-                </div>
-              }
             </div>
             <div class="dw-field">
               <label for="f-inicio">Entrada<span class="opt">sem preencher, hoje</span></label>

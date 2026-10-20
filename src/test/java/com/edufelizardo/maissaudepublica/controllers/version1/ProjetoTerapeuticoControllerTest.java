@@ -126,7 +126,7 @@ class ProjetoTerapeuticoControllerTest {
     }
 
     private void membro(Profissional p, FuncaoEquipe funcao) {
-        membroRepository.save(new MembroEquipe(null, equipe, p, funcao, null, LocalDate.now().minusMonths(6), null, null, null));
+        membroRepository.save(new MembroEquipe(null, equipe, p, funcao, LocalDate.now().minusMonths(6), null, null, null));
     }
 
     private Paciente paciente(String nome, String cpf) {

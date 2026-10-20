@@ -91,7 +91,6 @@ export class Equipes {
     tipo: ['ESF' as TipoEquipe],
     nome: [''],
     ine: [''],
-    microareas: [''],
     coordenadorMatricula: [''],
     reuniaoDia: [''],
     reuniaoInicio: [''],
@@ -104,7 +103,6 @@ export class Equipes {
     equipeId: [''],
     profissionalMatricula: [''],
     funcao: ['MEDICO' as FuncaoEquipe],
-    microarea: [''],
     inicio: [''],
   });
   protected readonly saidaForm = this.fb.nonNullable.group({ motivo: [''], fim: [''] });
@@ -290,7 +288,6 @@ export class Equipes {
       tipo: e?.resumo.tipo ?? (this.tipoAba() || 'ESF'),
       nome: e?.resumo.nome ?? '',
       ine: e?.resumo.ine ?? '',
-      microareas: e?.resumo.microareas ?? '',
       coordenadorMatricula: e?.coordenadorMatricula ?? '',
       reuniaoDia: e?.reuniaoDia ?? '',
       reuniaoInicio: e?.reuniaoInicio?.slice(0, 5) ?? '',
@@ -328,7 +325,7 @@ export class Equipes {
   }
 
   protected abrirMembro(e: EquipeResponseDto | null, matricula = ''): void {
-    this.membroForm.reset({ equipeId: e?.resumo.uuid ?? '', profissionalMatricula: matricula, funcao: 'MEDICO', microarea: '', inicio: '' });
+    this.membroForm.reset({ equipeId: e?.resumo.uuid ?? '', profissionalMatricula: matricula, funcao: 'MEDICO', inicio: '' });
     this.abrir({ tipo: 'membro', equipe: e, matricula });
   }
 
@@ -373,7 +370,6 @@ export class Equipes {
       nome: v.nome.trim(),
       ine: v.ine.trim() || undefined,
       ativa: v.ativa,
-      microareas: v.microareas.trim() || undefined,
       coordenadorMatricula: v.coordenadorMatricula || undefined,
       reuniaoDia: v.reuniaoDia || undefined,
       reuniaoInicio: v.reuniaoInicio || undefined,
@@ -396,7 +392,6 @@ export class Equipes {
       this.equipeService.adicionarMembro(equipeId, {
         profissionalMatricula: v.profissionalMatricula,
         funcao: v.funcao,
-        microarea: v.microarea.trim() || undefined,
         inicio: v.inicio || undefined,
       }),
       'Membro incluído',

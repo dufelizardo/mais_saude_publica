@@ -157,3 +157,11 @@ export interface MicroareaRequestDto {
   populacaoReferencia?: number | null;
   geometria?: string | null;
 }
+
+/** O escopo territorial de quem está logado (ADR-0129). */
+export interface MeuEscopoTerritorialDto {
+  ativo: boolean;
+  restrito: boolean;
+  microareas: { uuid: string; codigo: string; areaId: string; areaCodigo: string }[];
+  areas: { uuid: string; codigo: string; areaId: string; areaCodigo: string }[];
+}

@@ -231,6 +231,16 @@ Territorio - Area - Status Code 404
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+Territorio - Meu Escopo - Status Code 200
+    [Documentation]    Without the territorial scope switch (test environment), nobody is restricted.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${response}=    GET Meu Escopo Territorial
+    Should Be Equal As Integers    ${response.status_code}    200
+    Should Be Equal    ${response.json()}[restrito]    ${False}
+    Should Be Equal    ${response.json()}[ativo]    ${False}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Territorio - By HTTP Status Code
     [Documentation]    Executes the territory scenario for the given HTTP status code.
     [Arguments]    ${meuHTTP}
@@ -246,5 +256,6 @@ Territorio - By HTTP Status Code
     ...    ELSE IF    '${meuHTTP}' == '400-troca'    Territorio - Troca Sem Motivo - Status Code 400
     ...    ELSE IF    '${meuHTTP}' == '200-coordenadas'    Territorio - Coordenadas - Status Code 200
     ...    ELSE IF    '${meuHTTP}' == '404'    Territorio - Area - Status Code 404
+    ...    ELSE IF    '${meuHTTP}' == '200-escopo'    Territorio - Meu Escopo - Status Code 200
     ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Territorio test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════

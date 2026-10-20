@@ -7,6 +7,9 @@ em todos os ambientes. Resolve a pendência que a [ADR-0054](./0054-modelo-de-id
 deixou aberta e que o documento `docs/pm/sistema_de_acesso.md` reservou "para a próxima etapa": o acesso a
 dado clínico ser só por papel e escopo, ou também por contexto.
 
+**Atualização (ADR-0129):** a adscrição do paciente à equipe de que o profissional é membro vigente passou a ser
+mais uma fonte de vínculo (a equipe responde pela sua população).
+
 ## Contexto
 
 A [ADR-0067](./0067-autorizacao-aplicada-nas-rotas-e-no-escopo.md) deixou o **prontuário aberto à rede
