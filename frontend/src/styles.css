@@ -1795,6 +1795,8 @@ button.shift--off { text-align: center; }
 .mapa__rotulo { background: transparent; border: 0; box-shadow: none; font-weight: 700; font-size: 0.72rem; color: var(--ink-900); text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
 .mapa__rotulo::before { display: none; }
 .unit-pin--destaque { outline: 3px solid var(--warn); outline-offset: 1px; }
+/* Imóvel do cadastro territorial (ADR-0127): menor e neutro, para não competir com as unidades. */
+.unit-pin.t-imovel { min-width: 18px; height: 18px; font-size: 0.5rem; background: var(--ink-700); }
 .mapa-barra { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; margin: var(--s-2) 0; }
 .mapa-legenda { display: flex; flex-wrap: wrap; gap: var(--s-3); font-size: 0.72rem; color: var(--ink-500); margin-top: var(--s-2); }
 .mapa-legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }

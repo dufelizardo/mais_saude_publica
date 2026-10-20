@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../../pom/ui/administrativo/territorio/territorio_ui_pom.resource
 Resource    ../../../territorio/territorio_flow.resource
+Resource    ../../../territorio/cadastro_territorial_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     O território, as equipes e os ACS de partida são criados pela API; a ação sob teste é feita pela tela.
@@ -208,5 +209,93 @@ UI Equipamentos - Marcar Localizacao
     ${lista}=    GET Unidades No Mapa
     ${salva}=    Evaluate    [u["latitude"] for u in $lista.json() if u["uuid"] == $unidadeId][0]
     Should Not Be Equal    ${salva}    ${None}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Territorio - Cadastrar Imovel E Domicilio
+    [Documentation]    Imóvel pela gaveta, na microárea, e o domicílio com as condições.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${area}    ${micro}=    Seed Area Com Equipe E Microarea
+    UI Mapa - Sem Fundo
+    UI Territorio - Abrir Area    ${area}
+    Clicar Botao    Novo imóvel
+    Escolher Opcao Da Gaveta    microareaId    ${micro}
+    Preencher Campo Da Gaveta    logradouro    Rua das Flores
+    Preencher Campo Da Gaveta    numero    45
+    Preencher Campo Da Gaveta    bairro    Jardim
+    Preencher Campo Da Gaveta    cep    13000-000
+    Preencher Campo Da Gaveta    cidade    Campinas
+    Preencher Campo Da Gaveta    estado    SP
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Imóvel cadastrado
+    Wait For Elements State    id=ficha-imovel    visible
+    Clicar Botao    Novo domicílio
+    Preencher Campo Da Gaveta    identificacao    Casa da frente
+    Escolher Opcao Da Gaveta    situacao    ALUGADO
+    Escolher Opcao Da Gaveta    agua    REDE_ENCANADA
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Domicílio cadastrado
+    Esperar Texto Aparecer    Casa da frente
+    ${lista}=    GET Imoveis Da Area    ${area}
+    Length Should Be    ${lista.json()}    1
+    Should Be Equal As Integers    ${lista.json()}[0][domicilios]    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Territorio - Cadastrar Familia
+    [Documentation]    Família com o responsável e uma pessoa incluída, pela tela.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${area}    ${micro}=    Seed Area Com Equipe E Microarea
+    ${domicilio}    ${imovel}=    Seed Domicilio    ${micro}
+    ${ana}    ${c1}    ${s1}    ${nomeAna}=    Seed A Paciente
+    ${bia}    ${c2}    ${s2}    ${nomeBia}=    Seed A Paciente
+    UI Mapa - Sem Fundo
+    UI Territorio - Abrir Area    ${area}
+    UI Territorio - Abrir Primeiro Imovel
+    Clicar Botao    Nova família
+    UI Territorio - Escolher Paciente    ${nomeAna}    ${ana}
+    Escolher Opcao Da Gaveta    renda    ATE_DOIS_SM
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Família cadastrada
+    Clicar Botao    Incluir pessoa
+    UI Territorio - Escolher Paciente    ${nomeBia}    ${bia}
+    Escolher Opcao Da Gaveta    parentesco    CONJUGE
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Pessoa incluída
+    ${daBia}=    GET Familia Do Paciente    ${bia}
+    Should Be Equal    ${daBia.json()}[familia][responsavelId]    ${ana}
+    Length Should Be    ${daBia.json()}[familia][membros]    2
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Territorio - Endereco E Saida
+    [Documentation]    Leva o endereço do imóvel ao cadastro e registra a saída com motivo.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${area}    ${micro}=    Seed Area Com Equipe E Microarea
+    ${domicilio}    ${imovel}=    Seed Domicilio    ${micro}
+    ${ana}    ${c1}    ${s1}    ${nomeAna}=    Seed A Paciente
+    ${payload}=    Create Dictionary    domicilioId=${domicilio}    responsavelId=${ana}
+    POST Familia    ${payload}
+    UI Mapa - Sem Fundo
+    UI Territorio - Abrir Area    ${area}
+    UI Territorio - Abrir Primeiro Imovel
+    Clicar Botao    Usar o endereço do imóvel no cadastro de ${nomeAna}
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Endereço atualizado
+    Clicar Botao    Saída de ${nomeAna}
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    motivo
+    Should Contain    ${erro}    motivo
+    Preencher Campo Da Gaveta    motivo    Mudou de cidade
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Saída registrada
+    Esperar Texto Aparecer    Nenhuma família morando aqui.
+    ${daAna}=    GET Familia Do Paciente    ${ana}
+    Should Be Equal    ${daAna.json()}[familia]    ${None}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

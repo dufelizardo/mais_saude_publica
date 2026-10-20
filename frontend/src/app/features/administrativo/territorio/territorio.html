@@ -185,6 +185,7 @@
             <span><i style="background: rgba(20, 184, 166, 0.4); border: 1px solid #0f766e;"></i>Microárea</span>
             <span><i style="background: rgba(245, 158, 11, 0.45); border: 1px solid #b45309;"></i>Sem ACS</span>
             <span><i class="unit-pin" style="min-width: 12px; height: 12px;"></i>Unidade</span>
+            <span><i class="unit-pin t-imovel" style="min-width: 12px; height: 12px;"></i>Imóvel</span>
           </div>
           @if (desenhando()) {
             @for (a of avisosDoDesenho(); track a) { <div class="box box--warn" style="margin-top: var(--s-2);"><strong>{{ a }}</strong></div> }
@@ -250,6 +251,9 @@
             <p class="cell-sub" style="margin-top: var(--s-3);">ACS da equipe sem microárea: {{ nomes(d.acsSemMicroarea) }}</p>
           }
         </div>
+
+        <app-imoveis-da-area [area]="d.area" [areas]="rotulosDasAreas()" [podeCadastrar]="pode('TERRITORIO.CADASTRAR')"
+          (imoveisCarregados)="imoveisDaArea.set($event)" (alterado)="carregar()" />
 
         <div class="info-block">
           <h3>Histórico</h3>

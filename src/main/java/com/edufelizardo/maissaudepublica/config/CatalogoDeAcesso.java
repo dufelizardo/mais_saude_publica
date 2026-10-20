@@ -104,6 +104,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("EQUIPE.GERENCIAR", new Def("Cadastrar equipes e registrar a entrada e a saída de membros", OPERACAO));
         // Território (ADR-0125): o recorte e as associações; ler é de quem está logado.
         PERMISSOES.put("TERRITORIO.GERENCIAR", new Def("Cadastrar segmentos, territórios, áreas e microáreas e atribuir a equipe e o ACS", OPERACAO));
+        // Cadastro territorial (ADR-0127): composição familiar e condições de moradia são dado pessoal; leitura auditada.
+        PERMISSOES.put("TERRITORIO.CADASTRAR", new Def("Cadastrar imóveis, domicílios e famílias do território", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("ESCALA.GERENCIAR", new Def("Montar a escala: turnos, vagas, designação, troca e cópia de semana", OPERACAO));
         // Fora de todos os papéis padrão (ADR-0071): quem administra o sistema não audita a si mesmo.
         PERMISSOES.put("AUDITORIA.CONSULTAR", new Def("Consultar a trilha de auditoria", ADMINISTRACAO_DO_SISTEMA));
@@ -148,7 +150,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         // Admissão, troca de leito e liberação depois da higienização (ADR-0098); a alta é do médico.
                         "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
-                        "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
+                        "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
+                        // Cadastro domiciliar e familiar (ADR-0127).
+                        "TERRITORIO.CADASTRAR")));
         PAPEIS.put("COORDENADOR_DE_ENFERMAGEM", new PapelPadrao("Coordenador de enfermagem",
                 "O que o enfermeiro faz, mais retificar registro clínico de outro profissional.",
                 List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
@@ -156,7 +160,11 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "REGISTRO_CLINICO.RETIFICAR_DE_OUTROS", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR",
                         "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
-                        "TERRITORIO.GERENCIAR")));
+                        "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR")));
+        // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
+        PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
+                "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",
+                List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "TERRITORIO.CADASTRAR")));
         PAPEIS.put("TECNICO_DE_ENFERMAGEM", new PapelPadrao("Técnico de enfermagem",
                 "Procedimentos e medicação. Sem classificação de risco nem evolução (COFEN 661/2021).",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",

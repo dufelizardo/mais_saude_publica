@@ -44,6 +44,9 @@ public class ArvoreTerritorialDto implements Serializable {
         /** Áreas e microáreas ainda sem desenho. */
         private int semGeometria;
         private int acimaDaReferencia;
+        private int imoveis;
+        private int familias;
+        private int pessoas;
     }
 
     @Getter
@@ -120,6 +123,10 @@ public class ArvoreTerritorialDto implements Serializable {
         /** O ACS vigente; nulo, microárea sem ACS. */
         private AcsRef acs;
         private List<String> avisos;
+        /** Cadastro territorial (ADR-0127): imóveis ativos, famílias e pessoas vigentes. */
+        private int imoveis;
+        private int familias;
+        private int pessoas;
     }
 
     @Getter

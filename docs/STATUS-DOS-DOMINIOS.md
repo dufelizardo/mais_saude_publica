@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-20 (F2)
+- **Atualizado em:** 2026-10-20 (F3a)
 - **Release em produção:** v1.6.0
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -47,7 +47,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
-| 21 | [Território e Adscrição](#21-território-e-adscrição) | 🟡 | F1 e F2 feitas; cadastro territorial e escopo (F3, F4) |
+| 21 | [Território e Adscrição](#21-território-e-adscrição) | 🟡 | F1, F2 e F3a feitas; adscrição e cobertura (F3b) e escopo (F4) |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | fatias P3 a P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 feita; surto, sanitária, ambiental e trabalhador (V2 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
@@ -70,7 +70,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 |---|---|---|
 | P4 | 22 Programas | ações programáticas ligadas ao atendimento; busca ativa; programa na Agenda |
 | P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
-| F3 | 21 Território | imóvel, domicílio, núcleo familiar e adscrição |
+| F3b | 21 Território | adscrição à equipe (calculada pelo domicílio, e manual), cobertura e elegíveis da P2 |
 | V2 | 23 Vigilância | contato, surto, medida de controle e o mapa dos casos (o mapa já existe, ADR-0126) |
 | SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
@@ -87,7 +87,7 @@ P1 ✅ ──► P3 ──► C2 (campanha de comunicação)
 P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2 (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
-F1 ✅ ──► F3 ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea · F4
+F1 ✅ ──► F3a ✅ ──► F3b ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea · F4
 
 V1 ✅ ──► V2 · SM3 (notificação de autoagressão ✅) · V5
 SB1 ──► SB2 ──► SB3 ──► SB4
@@ -428,11 +428,15 @@ C1 ──► C2 · C4 · C5
   sob demanda; a área, as microáreas (sem ACS em âmbar) e as unidades no mapa; desenho e edição de polígonos com o
   geoman, avisos de fora da área e sobreposição; importação de KML; visão Mapa e localização da unidade em
   Equipamentos.
+- [x] **F3a · Imóvel, domicílio e família** ([ADR-0127](./adr/0127-cadastro-territorial.md)): imóvel com o ponto
+  dentro da microárea, domicílio com as condições da ficha do e-SUS, família com responsável e histórico de moradia
+  (mudança), membros que são os pacientes, endereço do cadastro só por ação explícita; papel de agente comunitário de
+  saúde e permissão `TERRITORIO.CADASTRAR` com leitura auditada; imóveis no mapa e ficha do imóvel na tela.
 
 **Falta:**
 - [ ] Remover os campos de texto `Equipe.microareas` e `MembroEquipe.microarea` (migração seguinte).
-- [ ] **F3 · Cadastro territorial:** imóvel, domicílio, núcleo familiar e adscrição; famílias e cobertura em
-  Equipes.
+- [ ] **F3b · Adscrição e cobertura:** adscrição à equipe (calculada pelo domicílio e manual), cobertura por
+  microárea e equipe, famílias em Equipes, família e equipe de referência na ficha do paciente, elegíveis da P2.
 - [ ] **F4 · Escopo territorial de acesso:** o ACS vê a própria microárea e a equipe a própria área.
 
 ### 22. Programas, Ações e Linhas de Cuidado

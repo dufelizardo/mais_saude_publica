@@ -46,6 +46,10 @@ export interface MicroareaNoDto {
   populacaoReferencia?: number | null;
   acs?: AcsRefDto | null;
   avisos: string[];
+  /** Cadastro territorial (ADR-0127). */
+  imoveis: number;
+  familias: number;
+  pessoas: number;
 }
 
 export interface AreaNoDto {
@@ -87,6 +91,9 @@ export interface ArvoreTerritorialDto {
     microareasSemAcs: number;
     semGeometria: number;
     acimaDaReferencia: number;
+    imoveis: number;
+    familias: number;
+    pessoas: number;
   };
   segmentos: SegmentoDto[];
 }

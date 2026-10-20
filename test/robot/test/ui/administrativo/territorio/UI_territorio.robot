@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Administrativo - Territorio
-Metadata    Test Suite Description        Valida a tela Território (ADRs 0125 e 0126): cadastro, ACS, mapa e desenho; e o mapa de Equipamentos.
+Metadata    Test Suite Description        Valida a tela Território (ADRs 0125 a 0127): cadastro, ACS, mapa e desenho, imóveis e famílias; e o mapa de Equipamentos.
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiTerritorio    MaisSaudePublicaFrontend
@@ -79,5 +79,29 @@ CT-008 - Marcar a localização da unidade
     [Tags]    UI    UiTerritorio    UiMapa
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - EQUIPAMENTOS - LOCALIZACAO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-009 - Cadastrar imóvel e domicílio
+    [Documentation]    Imóvel na microárea e o domicílio com as condições.
+    [Tags]    UI    UiTerritorio    UiCadastroTerritorial
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - TERRITORIO - IMOVEL
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-010 - Cadastrar família e incluir pessoa
+    [Documentation]    Responsável, renda e uma pessoa incluída.
+    [Tags]    UI    UiTerritorio    UiCadastroTerritorial
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - TERRITORIO - FAMILIA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-011 - Endereço do imóvel e saída com motivo
+    [Documentation]    Ação explícita no endereço; sem motivo, a mensagem.
+    [Tags]    UI    UiTerritorio    UiCadastroTerritorial
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - TERRITORIO - ENDERECO E SAIDA
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
