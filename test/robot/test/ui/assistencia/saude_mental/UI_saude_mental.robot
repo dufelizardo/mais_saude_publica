@@ -1,12 +1,13 @@
 *** Settings ***
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_ui_scenario.resource
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_pts_ui_scenario.resource
+Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_rede_ui_scenario.resource
 Resource    ../../../../src/scenario/common/ui_sessao_scenario.resource
 Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Assistência - Saúde Mental
-Metadata    Test Suite Description        Valida a tela Saúde Mental: acolhimento, avaliação, referência e saída (ADR-0120); PTS, intervenções e rede de apoio (ADR-0121).
+Metadata    Test Suite Description        Valida a tela Saúde Mental: acolhimento, avaliação, referência e saída (ADR-0120); PTS, intervenções e rede de apoio (ADR-0121); rede de atenção (ADR-0122).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiSaudeMental    MaisSaudePublicaFrontend
@@ -80,5 +81,37 @@ CT-008 - Rede de apoio
     [Tags]    UI    UiSaudeMental
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - SAUDE MENTAL - REDE DE APOIO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-009 - Encaminhar pela Regulação
+    [Documentation]    Mensagem sem procedimento; a solicitação no caso.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - ENCAMINHAR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-010 - Compartilhar o cuidado
+    [Documentation]    Compartilhar e encerrar, com motivo.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - COMPARTILHAR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-011 - Propor a transferência
+    [Documentation]    Mensagem sem destino; a transferência aguarda o destino.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - TRANSFERIR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-012 - Aceitar a transferência
+    [Documentation]    O destino aceita pelo painel.
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - ACEITAR TRANSFERENCIA
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

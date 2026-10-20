@@ -130,6 +130,9 @@ public class SaudeMentalService {
     @Autowired
     private TerapeuticoLeitura terapeutico;
 
+    @Autowired
+    private RedeLeitura rede;
+
     // ── Escrita ────────────────────────────────────────────────────────────────────────────────────
 
     /**
@@ -168,7 +171,7 @@ public class SaudeMentalService {
                 if (dto.getEquipeId() == null || texto(dto.getTecnicoMatricula()) == null) {
                     throw new ResourceBadRequestException("Para acompanhar, informe a equipe e o técnico de referência.");
                 }
-                caso = abrirCaso(paciente, unidade, dto.getEquipeId(), dto.getTecnicoMatricula(), LocalDate.now());
+                caso = abrirCaso(paciente, unidade, dto.getEquipeId(), dto.getTecnicoMatricula(), LocalDate.now(), null);
             }
         }
         if (dto.getRiscoInicial() == RiscoInicialSaudeMental.ALTO) {
@@ -203,7 +206,7 @@ public class SaudeMentalService {
         if (inicio.isAfter(LocalDate.now())) {
             throw new ResourceBadRequestException("O início não pode ser no futuro.");
         }
-        AcompanhamentoSaudeMental caso = abrirCaso(paciente, unidade, dto.getEquipeId(), dto.getTecnicoMatricula(), inicio);
+        AcompanhamentoSaudeMental caso = abrirCaso(paciente, unidade, dto.getEquipeId(), dto.getTecnicoMatricula(), inicio, null);
         return detalhe(caso, null, true);
     }
 
@@ -244,6 +247,15 @@ public class SaudeMentalService {
     @Transactional
     public AcompanhamentoSaudeMentalDto encerrar(UUID casoId, EncerramentoAcompanhamentoRequestDto dto) {
         AcompanhamentoSaudeMental caso = casoParaEscrever(casoId);
+        if (rede.transferenciaPendente(caso.getUuid()) != null) {
+            throw new ResourceUnprocessableEntityException("O caso tem uma transferência do cuidado pendente; cancele-a antes de encerrar.");
+        }
+        encerrarCaso(caso, dto);
+        return detalhe(caso, null, true);
+    }
+
+    /** Encerra o caso, a referência e o acompanhamento do programa, sem conferir o acesso (quem chama já conferiu). */
+    void encerrarCaso(AcompanhamentoSaudeMental caso, EncerramentoAcompanhamentoRequestDto dto) {
         LocalDate fim = dto.getFim() != null ? dto.getFim() : LocalDate.now();
         if (fim.isBefore(caso.getInicio()) || fim.isAfter(LocalDate.now())) {
             throw new ResourceBadRequestException("A saída precisa ser entre o início (" + caso.getInicio() + ") e hoje.");
@@ -261,12 +273,11 @@ public class SaudeMentalService {
         AcompanhamentoProgramatico programatico = caso.getAcompanhamentoProgramatico();
         if (programatico.vigente()) {
             LocalDate fimPrograma = fim.isBefore(programatico.getInicio()) ? programatico.getInicio() : fim;
-            acompanhamentoService.encerrar(programatico.getUuid(),
+            acompanhamentoService.encerrarPelaSaudeMental(programatico.getUuid(),
                     new EncerramentoAcompanhamentoRequestDto(dto.getMotivoSaida(), dto.getObservacao(), fimPrograma));
         }
         ContextoAuditoria.registro(caso.getUuid());
         ContextoAuditoria.detalhe("Saída da saúde mental (" + dto.getMotivoSaida() + ").");
-        return detalhe(caso, null, true);
     }
 
     // ── Leitura ────────────────────────────────────────────────────────────────────────────────────
@@ -356,7 +367,8 @@ public class SaudeMentalService {
      * Abre o caso e a primeira referência. Reaproveita o acompanhamento vigente do programa Saúde Mental na mesma
      * unidade; sem ele, inscreve (a unidade precisa oferecer o programa, ADR-0119).
      */
-    private AcompanhamentoSaudeMental abrirCaso(Paciente paciente, UnidadeDeSaude unidade, UUID equipeId, String matricula, LocalDate inicio) {
+    AcompanhamentoSaudeMental abrirCaso(Paciente paciente, UnidadeDeSaude unidade, UUID equipeId, String matricula, LocalDate inicio,
+                                        AcompanhamentoSaudeMental casoAnterior) {
         controleDeAcesso.exigir(ACOMPANHAR, unidade);
         Equipe equipe = equipeDaUnidade(equipeId, unidade);
         Profissional tecnico = tecnicoDaEquipe(matricula, equipe);
@@ -375,7 +387,7 @@ public class SaudeMentalService {
             programatico = programaticoRepository.findById(inscrito.getUuid()).orElseThrow();
         }
         AcompanhamentoSaudeMental caso = casoRepository.save(new AcompanhamentoSaudeMental(null, paciente, unidade, programatico, inicio,
-                null, null, null, UsuarioAutenticado.cpf()));
+                null, null, null, UsuarioAutenticado.cpf(), casoAnterior));
         referenciaRepository.save(new ReferenciaSaudeMental(null, caso, equipe, tecnico, inicio, null, null, UsuarioAutenticado.cpf()));
         ContextoAuditoria.registro(caso.getUuid());
         return caso;
@@ -432,7 +444,10 @@ public class SaudeMentalService {
                 .anyMatch(a -> a.getAcompanhamento() != null && a.getAcompanhamento().getUuid().equals(caso.getUuid())
                         && cpf.equals(a.getRegistradoPorCpf()))
                 || avaliacaoRepository.findDoAcompanhamento(caso.getUuid()).stream().anyMatch(a -> cpf.equals(a.getRegistradoPorCpf()))
-                || terapeutico.autor(caso.getUuid(), cpf);
+                || terapeutico.autor(caso.getUuid(), cpf)
+                // A equipe parceira do cuidado compartilhado e a referência do caso aberto por transferência (ADR-0122).
+                || rede.parceiro(caso.getUuid(), cpf)
+                || rede.referenciaDoCasoSeguinte(caso.getUuid(), cpf);
         return autor || vinculoService.acessoJustificadoVigente(cpf, caso.getPaciente().getUuid());
     }
 
@@ -510,6 +525,16 @@ public class SaudeMentalService {
         return p;
     }
 
+    /** A referência vigente do caso (ADR-0122: matriciamento e transferência). */
+    ReferenciaSaudeMental referenciaVigente(AcompanhamentoSaudeMental caso) {
+        return vigentesPorCaso(List.of(caso.getUuid())).get(caso.getUuid());
+    }
+
+    /** O caso, sem conferir o acesso (quem chama confere). */
+    AcompanhamentoSaudeMental casoSemAcesso(UUID casoId) {
+        return buscarCaso(casoId);
+    }
+
     /** O caso com o conteúdo, depois de uma escrita (o casoParaEscrever já conferiu o acesso). */
     AcompanhamentoSaudeMentalDto detalheLiberado(AcompanhamentoSaudeMental caso) {
         return detalhe(caso, null, true);
@@ -554,6 +579,9 @@ public class SaudeMentalService {
             d.setIntervencoes(terapeutico.intervencoes(caso.getUuid()));
             d.setFaltasSeguidas(TerapeuticoLeitura.faltasSeguidas(d.getIntervencoes()));
             d.setRedeApoio(terapeutico.redeApoio(caso.getUuid()));
+            d.setEncaminhamentos(rede.encaminhamentos(caso.getUuid()));
+            d.setCompartilhamentos(rede.compartilhamentos(caso.getUuid()));
+            d.setTransferencias(rede.transferencias(caso.getUuid()));
         }
         return d;
     }
@@ -573,7 +601,8 @@ public class SaudeMentalService {
                 r != null ? r.getTecnico().getMatricula() : null, r != null ? r.getTecnico().getNome() : null,
                 ultimaAvaliacao, false, null, List.of(), List.of(), List.of(),
                 pts != null ? pts.getVersao() : null, pts != null ? pts.getRevisarEm() : null, TerapeuticoLeitura.revisaoVencida(pts), 0,
-                List.of(), List.of(), List.of());
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
+                c.getCasoAnterior() != null ? c.getCasoAnterior().getUuid() : null);
     }
 
     private static AcolhimentoSaudeMentalDto acolhimentoDto(AcolhimentoSaudeMental a, boolean liberado) {

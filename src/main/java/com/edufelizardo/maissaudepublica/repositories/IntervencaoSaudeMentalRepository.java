@@ -9,6 +9,6 @@ import java.util.UUID;
 
 public interface IntervencaoSaudeMentalRepository extends JpaRepository<IntervencaoSaudeMental, UUID> {
     @Query("select i from IntervencaoSaudeMental i join fetch i.tipo left join fetch i.profissional left join fetch i.compartilhadoCom "
-            + "left join fetch i.prevista where i.acompanhamento.uuid = ?1 order by i.realizadaEm desc")
+            + "left join fetch i.prevista left join fetch i.equipeMatriciada where i.acompanhamento.uuid = ?1 order by i.realizadaEm desc")
     List<IntervencaoSaudeMental> findDoAcompanhamento(UUID acompanhamentoId);
 }

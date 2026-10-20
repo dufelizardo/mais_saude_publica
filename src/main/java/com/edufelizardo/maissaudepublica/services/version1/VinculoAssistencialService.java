@@ -21,6 +21,7 @@ import com.edufelizardo.maissaudepublica.models.enuns.StatusInternacao;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusSolicitacaoRegulacao;
 import com.edufelizardo.maissaudepublica.repositories.AcessoJustificadoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.CompartilhamentoCuidadoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.InternacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.MembroEquipeRepository;
@@ -50,7 +51,8 @@ import java.util.UUID;
  *   ou a executante — referência e contrarreferência (ADR-0089);</li>
  *   <li>uma internação em curso, ou com alta há pouco: a equipe da unidade onde o paciente está internado e o médico
  *   responsável (ADR-0100);</li>
- *   <li>ser o técnico de referência, ou membro da equipe de referência, de um caso em saúde mental em aberto (ADR-0120);</li>
+ *   <li>ser o técnico de referência, ou membro da equipe de referência, de um caso em saúde mental em aberto (ADR-0120),
+ *   ou membro de uma equipe com quem o cuidado do caso é compartilhado (ADR-0122);</li>
  *   <li>ou um acesso justificado ainda válido, declarado por quem lê.</li>
  * </ol>
  * {@value #SEM_VINCULO} dispensa o vínculo (auditoria clínica, regulação) e não entra em papel padrão.
@@ -105,6 +107,9 @@ public class VinculoAssistencialService {
 
     @Autowired
     private MembroEquipeRepository membroEquipeRepository;
+
+    @Autowired
+    private CompartilhamentoCuidadoRepository compartilhamentoRepository;
 
     public boolean ativo() {
         return ligado && controleDeAcesso.ativo();
@@ -249,6 +254,13 @@ public class VinculoAssistencialService {
                     .anyMatch(m -> cpf.equals(m.getProfissional().getCpf()));
             if (membro) {
                 return Optional.of("Equipe de referência em saúde mental: " + r.getEquipe().getNome());
+            }
+        }
+        for (var c : compartilhamentoRepository.findVigentesDoPaciente(pacienteId)) {
+            boolean membro = membroEquipeRepository.findByEquipe_UuidInAndFimIsNull(List.of(c.getEquipe().getUuid())).stream()
+                    .anyMatch(m -> cpf.equals(m.getProfissional().getCpf()));
+            if (membro) {
+                return Optional.of("Cuidado compartilhado em saúde mental: " + c.getEquipe().getNome());
             }
         }
         return Optional.empty();

@@ -267,4 +267,51 @@ class SaudeMentalAutorizacaoControllerTest {
                 .andExpect(jsonPath("$.intervencoes.length()").value(0));
         mockMvc.perform(como(GESTOR, get("/api/v1/saude-mental/tipos-intervencao"))).andExpect(status().isForbidden());
     }
+
+    @Test
+    void cuidadoCompartilhadoDaOAcessoETransferenciaPedeOAcessoNoDestino() throws Exception {
+        UnidadeDeSaude ubsC = unidadeDeSaudeRepository.findAll().stream().filter(u -> (PREFIXO + "UBS C").equals(u.getNome())).findFirst().orElseThrow();
+        participacaoRepository.save(new ParticipacaoPrograma(null, programaRepository.findByCodigo("SAUDE_MENTAL").orElseThrow(), ubsC,
+                null, LocalDate.now().minusYears(1), null, null, null));
+        Equipe esf = new Equipe();
+        esf.setUnidade(ubsC);
+        esf.setTipo(TipoEquipe.ESF);
+        esf.setNome("eSF C");
+        esf.setAtiva(true);
+        esf = equipeRepository.save(esf);
+        membroRepository.save(new MembroEquipe(null, esf, profissional("MEDB", MED_B), FuncaoEquipe.MEDICO, null, LocalDate.now().minusMonths(6),
+                null, null, null));
+        String r = mockMvc.perform(como(PSI_REF, post("/api/v1/saude-mental/acompanhamento")).contentType(MediaType.APPLICATION_JSON)
+                .content(abertura())).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String caso = "/api/v1/saude-mental/acompanhamento/" + JsonPath.read(r, "$.uuid");
+
+        // Sem compartilhamento, o médico da eSF de outra unidade não tem vínculo.
+        mockMvc.perform(como(MED_B, get(caso))).andExpect(status().isForbidden());
+        String c = mockMvc.perform(como(PSI_REF, post(caso + "/compartilhamento")).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"equipeId\": \"%s\", \"objetivo\": \"Cuidado compartilhado com a eSF.\"}".formatted(esf.getUuid())))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(como(MED_B, get(caso))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.conteudoLiberado").value(true))
+                .andExpect(jsonPath("$.acesso.descricao").value("Cuidado compartilhado em saúde mental: eSF C"));
+        mockMvc.perform(como(PSI_REF, post(caso + "/compartilhamento/" + JsonPath.read(c, "$.compartilhamentos[0].uuid") + "/encerramento"))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"motivo\": \"Fim do compartilhamento.\"}")).andExpect(status().isOk());
+        mockMvc.perform(como(MED_B, get(caso))).andExpect(status().isForbidden());
+
+        // A transferência para a UBS C: quem não tem acesso lá não aceita; o médico de lá aceita.
+        String t = mockMvc.perform(como(PSI_REF, post(caso + "/transferencia")).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"unidadeDestinoId\": \"%s\", \"resumo\": \"Estável; segue na eSF.\"}".formatted(ubsC.getUuid())))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String aceite = "/api/v1/saude-mental/transferencia/" + JsonPath.read(t, "$.transferencias[0].uuid") + "/aceite";
+        String corpo = "{\"equipeId\": \"%s\", \"tecnicoMatricula\": \"%sMEDB\"}".formatted(esf.getUuid(), MATRICULA);
+        mockMvc.perform(como(PSI_REF, post(aceite)).contentType(MediaType.APPLICATION_JSON).content(corpo)).andExpect(status().isForbidden());
+        mockMvc.perform(como(MED_B, get("/api/v1/saude-mental/transferencias"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.recebidas.length()").value(1));
+        String novo = mockMvc.perform(como(MED_B, post(aceite)).contentType(MediaType.APPLICATION_JSON).content(corpo)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.unidadeNome").value(PREFIXO + "UBS C"))
+                .andReturn().getResponse().getContentAsString();
+        // O caso anterior fica legível para a referência do caso novo.
+        mockMvc.perform(como(MED_B, get(caso))).andExpect(status().isOk()).andExpect(jsonPath("$.conteudoLiberado").value(true))
+                .andExpect(jsonPath("$.situacao").value("ENCERRADO"));
+        mockMvc.perform(como(MED_B, get("/api/v1/saude-mental/acompanhamento/" + JsonPath.read(novo, "$.uuid")))).andExpect(status().isOk());
+    }
 }

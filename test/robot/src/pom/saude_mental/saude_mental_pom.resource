@@ -132,3 +132,72 @@ POST Encerrar Rede Apoio Saude Mental
     RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Encaminhamento Saude Mental
+    [Documentation]    Refers the case through the Regulation.
+    [Arguments]    ${caso}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/acompanhamento/${caso}/encaminhamento    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Compartilhamento Saude Mental
+    [Documentation]    Shares the care with another team.
+    [Arguments]    ${caso}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/acompanhamento/${caso}/compartilhamento    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Encerrar Compartilhamento Saude Mental
+    [Documentation]    Ends a care sharing.
+    [Arguments]    ${caso}    ${id}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/acompanhamento/${caso}/compartilhamento/${id}/encerramento    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Transferencia Saude Mental
+    [Documentation]    Proposes the care transfer.
+    [Arguments]    ${caso}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/acompanhamento/${caso}/transferencia    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Aceite Transferencia Saude Mental
+    [Documentation]    Accepts a care transfer.
+    [Arguments]    ${id}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/transferencia/${id}/aceite    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Recusa Transferencia Saude Mental
+    [Documentation]    Refuses a care transfer.
+    [Arguments]    ${id}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/saude-mental/transferencia/${id}/recusa    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+GET Transferencias Saude Mental
+    [Documentation]    Lists the pending care transfers.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    GET On Session    msp_session    ${BASE_URL}/saude-mental/transferencias    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

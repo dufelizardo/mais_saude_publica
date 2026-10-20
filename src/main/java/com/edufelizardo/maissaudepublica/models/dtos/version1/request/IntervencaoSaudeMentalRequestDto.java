@@ -38,4 +38,7 @@ public class IntervencaoSaudeMentalRequestDto implements Serializable {
 
     /** A intervenção prevista do PTS que esta cumpre; opcional. */
     private UUID previstaId;
+
+    /** No matriciamento (ADR-0122): a equipe com quem o caso foi discutido; obrigatória nesse tipo. */
+    private UUID equipeMatriciadaId;
 }
