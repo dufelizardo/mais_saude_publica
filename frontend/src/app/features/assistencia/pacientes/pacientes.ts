@@ -5,6 +5,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Modal } from '../../../shared/modal/modal';
+import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCartaoSus, formatCpf, formatTelefone } from '../../../shared/format-mask';
 import { PacienteResponseDto, Sexo } from '../../../core/models/paciente';
 import { ErrorResponseDto } from '../../../core/models/profissional';
@@ -18,7 +19,14 @@ import { AgendamentoResponseDto } from '../../../core/models/agendamento';
 import { AgendamentoService } from '../../../core/services/agendamento';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import { AuthService } from '../../../core/services/auth';
-import { AcompanhamentosDoPacienteDto, ProgramaResumoDto, SITUACOES_ACOMPANHAMENTO, MOTIVOS_SAIDA } from '../../../core/models/programa';
+import {
+  AcompanhamentoDto,
+  AcompanhamentosDoPacienteDto,
+  MOTIVOS_SAIDA,
+  MotivoSaidaAcompanhamento,
+  ProgramaResumoDto,
+  SITUACOES_ACOMPANHAMENTO,
+} from '../../../core/models/programa';
 import { ProgramaService } from '../../../core/services/programa';
 
 type AbaDetalhe = 'resumo' | 'historico' | 'programas' | 'vacinacao' | 'anexos';
@@ -35,7 +43,7 @@ interface TimelineItem {
 
 @Component({
   selector: 'app-pacientes',
-  imports: [ReactiveFormsModule, RouterLink, Modal, DatePipe, AcessoProntuario],
+  imports: [ReactiveFormsModule, RouterLink, Modal, Drawer, DatePipe, AcessoProntuario],
   templateUrl: './pacientes.html',
   styleUrl: './pacientes.css',
 })
@@ -59,6 +67,18 @@ export class Pacientes {
   protected readonly filtroPrograma = signal('');
   /** Ids dos pacientes do programa filtrado (no escopo de quem lê); `null` sem filtro. */
   private readonly noPrograma = signal<Set<string> | null>(null);
+  protected readonly listaMotivosSaida = Object.keys(MOTIVOS_SAIDA) as MotivoSaidaAcompanhamento[];
+  /** Gaveta de faltoso ou de saída na aba Programas (ADR-0119). */
+  protected readonly gavetaPrograma = signal<
+    { tipo: 'situacao'; acompanhamento: AcompanhamentoDto; nova: 'ATIVO' | 'FALTOSO' } | { tipo: 'saida'; acompanhamento: AcompanhamentoDto } | null
+  >(null);
+  protected readonly salvandoPrograma = signal(false);
+  protected readonly erroPrograma = signal<string | null>(null);
+  protected readonly errosPrograma = signal<Record<string, string>>({});
+  protected readonly avisoPrograma = signal<{ titulo: string; detalhe: string } | null>(null);
+  private avisoTimer: ReturnType<typeof setTimeout> | undefined;
+  protected readonly situacaoProgramaForm = this.fb.nonNullable.group({ motivo: [''] });
+  protected readonly saidaProgramaForm = this.fb.nonNullable.group({ motivoSaida: ['' as MotivoSaidaAcompanhamento | ''], observacao: [''], fim: [''] });
 
   protected readonly sexos: Sexo[] = ['MASCULINO', 'FEMININO', 'IGNORADO'];
   protected readonly modoVisualizacao = signal<ModoVisualizacao>('lista');
@@ -308,6 +328,77 @@ export class Pacientes {
     this.programaService.inscritos(programaId).subscribe({
       next: (r) => this.noPrograma.set(new Set(r.lista.map((a) => a.pacienteId))),
       error: () => this.noPrograma.set(new Set()),
+    });
+  }
+
+  // ── Faltoso e saída pela aba Programas (ADR-0119) ───────────────────────────────────────────
+
+  protected abrirSituacaoPrograma(acompanhamento: AcompanhamentoDto, nova: 'ATIVO' | 'FALTOSO'): void {
+    this.situacaoProgramaForm.reset({ motivo: '' });
+    this.abrirGavetaPrograma({ tipo: 'situacao', acompanhamento, nova });
+  }
+
+  protected abrirSaidaPrograma(acompanhamento: AcompanhamentoDto): void {
+    this.saidaProgramaForm.reset({ motivoSaida: '', observacao: '', fim: '' });
+    this.abrirGavetaPrograma({ tipo: 'saida', acompanhamento });
+  }
+
+  private abrirGavetaPrograma(g: NonNullable<ReturnType<typeof this.gavetaPrograma>>): void {
+    this.erroPrograma.set(null);
+    this.errosPrograma.set({});
+    this.gavetaPrograma.set(g);
+  }
+
+  protected fecharGavetaPrograma(): void {
+    this.gavetaPrograma.set(null);
+  }
+
+  protected erroCampoPrograma(campo: string): string {
+    return this.errosPrograma()[campo] ?? '';
+  }
+
+  protected salvarGavetaPrograma(): void {
+    const g = this.gavetaPrograma();
+    if (!g || this.salvandoPrograma()) return;
+    const erros: Record<string, string> = {};
+    const hoje = new Date();
+    const hojeIso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+    if (g.tipo === 'situacao') {
+      if (!this.situacaoProgramaForm.getRawValue().motivo.trim()) erros['motivoSituacaoPrograma'] = 'Informe o motivo.';
+    } else {
+      const v = this.saidaProgramaForm.getRawValue();
+      if (!v.motivoSaida) erros['motivoSaidaPrograma'] = 'Escolha o motivo.';
+      if (!v.observacao.trim()) erros['observacaoSaidaPrograma'] = 'Descreva a saída.';
+      if (v.fim && v.fim > hojeIso) erros['fimSaidaPrograma'] = 'A saída não pode ser no futuro.';
+    }
+    this.errosPrograma.set(erros);
+    const primeiro = Object.keys(erros)[0];
+    if (primeiro) {
+      setTimeout(() => document.getElementById('f-' + primeiro)?.focus());
+      return;
+    }
+    const a = g.acompanhamento;
+    const req = g.tipo === 'situacao'
+      ? this.programaService.mudarSituacao(a.uuid, g.nova, this.situacaoProgramaForm.getRawValue().motivo.trim())
+      : this.programaService.encerrarAcompanhamento(a.uuid, this.saidaProgramaForm.getRawValue().motivoSaida as MotivoSaidaAcompanhamento,
+        this.saidaProgramaForm.getRawValue().observacao.trim(), this.saidaProgramaForm.getRawValue().fim);
+    const titulo = g.tipo === 'saida' ? 'Saída registrada' : g.nova === 'FALTOSO' ? 'Marcado como faltoso' : 'Voltou a ativo';
+    this.salvandoPrograma.set(true);
+    this.erroPrograma.set(null);
+    req.subscribe({
+      next: () => {
+        this.salvandoPrograma.set(false);
+        this.gavetaPrograma.set(null);
+        this.avisoPrograma.set({ titulo, detalhe: `${a.pacienteNome} · ${a.programaNome}` });
+        clearTimeout(this.avisoTimer);
+        this.avisoTimer = setTimeout(() => this.avisoPrograma.set(null), 4200);
+        this.carregarProgramas(a.pacienteId);
+        this.programaService.resumoAcompanhamentos().subscribe({ next: (r) => this.emProgramas.set(r.pacientes), error: () => undefined });
+      },
+      error: (e: HttpErrorResponse) => {
+        this.salvandoPrograma.set(false);
+        this.erroPrograma.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar. Tente novamente.');
+      },
     });
   }
 
