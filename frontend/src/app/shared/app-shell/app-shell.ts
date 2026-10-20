@@ -39,13 +39,15 @@ const MENU: Record<string, string[]> = {
   '/assistencia/leitos': ['INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'LEITO.GERENCIAR'],
   // Catálogo de programas (ADR-0118): aberto a quem está logado.
   '/assistencia/programas': [],
+  // Saúde Mental (ADR-0120): só quem acolhe ou acompanha.
+  '/assistencia/saude-mental': ['SAUDE_MENTAL.ACOLHER', 'SAUDE_MENTAL.ACOMPANHAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],
   '/administracao/auditoria': ['AUDITORIA.CONSULTAR'],
 };
 
 /** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
 const GRUPOS: Record<string, string[]> = {
-  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas'],
+  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas', '/assistencia/saude-mental'],
   Administração: ['/administracao/usuarios', '/administracao/auditoria'],
 };
 

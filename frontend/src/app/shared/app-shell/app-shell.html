@@ -176,6 +176,13 @@
                 </a>
               }
 
+              @if (podeVer('/assistencia/saude-mental')) {
+                <a routerLink="/assistencia/saude-mental" routerLinkActive #rlaSaudeMental="routerLinkActive" [attr.aria-current]="rlaSaudeMental.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"></path><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"></path><path d="M12 5v13"></path></svg>
+                  <span class="nav-item__label">Saúde Mental</span>
+                </a>
+              }
+
               @if (podeVer('/assistencia/leitos')) {
                 <a routerLink="/assistencia/leitos" routerLinkActive #rlaLeitos="routerLinkActive" [attr.aria-current]="rlaLeitos.isActive ? 'page' : null" class="nav-item">
                   <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>

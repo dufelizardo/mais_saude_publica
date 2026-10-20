@@ -67,7 +67,7 @@ detalhe está em [`saude-mental/MODELO-SAUDE-MENTAL.md`](../saude-mental/MODELO-
     - indicadores só agregados.
 14. **Permissões previstas:** `SAUDE_MENTAL.ACOLHER`, `SAUDE_MENTAL.ACOMPANHAR` e `SAUDE_MENTAL.CRISE`.
 15. **Fatias:**
-    - **SM1 · Base:** acolhimento, avaliação, acompanhamento e referência.
+    - **SM1 · Base:** acolhimento, avaliação, acompanhamento e referência. Feita na [ADR-0120](./0120-saude-mental-base.md).
     - **SM2 · PTS** e intervenções.
     - **SM3 · Risco e crise,** com a modalidade da internação.
     - **SM4 · Rede.**

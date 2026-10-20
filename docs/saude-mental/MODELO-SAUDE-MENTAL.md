@@ -294,7 +294,7 @@ Território ──► população e adscrição    Programas ──► ações  
 
 | Fatia | Entrega | Depende de |
 |---|---|---|
-| **SM1** · base | acolhimento, avaliação, acompanhamento ligado ao programa, equipe e técnico de referência | Programas P2, Atendimento com especialidade (ADR-0111, SB1) |
+| **SM1** · base ✅ ([ADR-0120](../adr/0120-saude-mental-base.md)) | acolhimento, avaliação, acompanhamento ligado ao programa, equipe e técnico de referência | Programas P2 (o atendimento com especialidade da SB1 ficou opcional) |
 | **SM2** · PTS | objetivos, metas, intervenções previstas, rede de apoio, versões e revisão; registro de intervenções | SM1 |
 | **SM3** · risco e crise | avaliação de risco com histórico, evento de crise, pós-crise, sugestão de notificação; modalidade da internação e comunicação ao Ministério Público | SM1, Vigilância V1, regulação de urgência |
 | **SM4** · rede | referência e contrarreferência pela Regulação; cuidado compartilhado e matriciamento | SM1 |
