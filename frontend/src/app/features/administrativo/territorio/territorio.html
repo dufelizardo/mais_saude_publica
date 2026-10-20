@@ -1,0 +1,419 @@
+<header class="page-head">
+  <div>
+    <h1>Território</h1>
+    <p>Segmentos, territórios, áreas e microáreas: a equipe responde pela área e o ACS pela microárea, com histórico</p>
+  </div>
+  @if (podeEditar()) {
+    <div class="page-actions">
+      <button type="button" class="btn btn--ghost" (click)="abrirSegmento(null)">Novo segmento</button>
+      <button type="button" class="btn btn--ghost" (click)="abrirTerritorio(null)" [disabled]="!segmentos().length">Novo território</button>
+      <button type="button" class="btn" (click)="abrirArea(null)" [disabled]="!todosTerritorios().length">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Nova área
+      </button>
+    </div>
+  }
+</header>
+
+@if (indicadores(); as i) {
+  <section class="stats" aria-label="Resumo do território">
+    <div class="stat">
+      <span class="stat__icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg></span>
+      <div>
+        <div class="stat__lbl">Áreas</div>
+        <div class="stat__val mono">{{ i.areas }}</div>
+        <div class="stat__sub">{{ i.areasSemEquipe }} sem equipe responsável</div>
+      </div>
+    </div>
+    <div class="stat">
+      <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg></span>
+      <div>
+        <div class="stat__lbl">Microáreas</div>
+        <div class="stat__val mono">{{ i.microareas }}</div>
+        <div class="stat__sub">{{ i.acimaDaReferencia }} acima de {{ referencia }} pessoas</div>
+      </div>
+    </div>
+    <div class="stat">
+      <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21v-1a6 6 0 0 1 12 0v1"></path><line x1="18" y1="8" x2="23" y2="13"></line><line x1="23" y1="8" x2="18" y2="13"></line></svg></span>
+      <div>
+        <div class="stat__lbl">Microáreas sem ACS</div>
+        <div class="stat__val mono">{{ i.microareasSemAcs }}</div>
+        <div class="stat__sub">sem agente comunitário atribuído</div>
+      </div>
+    </div>
+    <div class="stat">
+      <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></span>
+      <div>
+        <div class="stat__lbl">Sem desenho</div>
+        <div class="stat__val mono">{{ i.semGeometria }}</div>
+        <div class="stat__sub">áreas e microáreas sem GeoJSON</div>
+      </div>
+    </div>
+  </section>
+}
+
+<section class="split">
+  <div class="card list-card">
+    <div class="list-head">
+      <div>
+        <h2>Segmentos e áreas</h2>
+        <div class="sub">segmento → território → área</div>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar no território</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Área, microárea, equipe ou ACS…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+      </div>
+    </div>
+    <div class="list-body">
+      @for (s of filtrados(); track s.uuid) {
+        <div role="group" [attr.aria-label]="'Segmento ' + s.nome">
+          <div class="unit-meta" style="display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) var(--s-4) var(--s-1);">
+            <strong class="mono">{{ s.codigo }}</strong> {{ s.nome }} · {{ tiposSegmento[s.tipo] }}@if (s.unidadeGestaoNome) { · {{ s.unidadeGestaoNome }} }
+            @if (podeEditar()) {
+              <button type="button" class="link-btn" style="margin-left: auto;" (click)="abrirSegmento(s)" [attr.aria-label]="'Editar segmento ' + s.nome">Editar</button>
+            }
+          </div>
+          @for (t of s.territorios; track t.uuid) {
+            <div class="unit-meta" style="display: flex; align-items: center; gap: var(--s-2); padding: var(--s-1) var(--s-4) var(--s-1) var(--s-6);">
+              {{ t.nome }} <span class="tag tag--info">{{ finalidades[t.finalidade] }}</span>@if (!t.ativo) { <span class="tag tag--alert">Inativo</span> }
+              @if (podeEditar()) {
+                <span style="margin-left: auto; display: inline-flex; gap: var(--s-2);">
+                  <button type="button" class="link-btn" (click)="abrirArea(null, t.uuid)" [disabled]="!t.ativo" [attr.aria-label]="'Nova área em ' + t.nome">+ Área</button>
+                  <button type="button" class="link-btn" (click)="abrirTerritorio(t)" [attr.aria-label]="'Editar território ' + t.nome">Editar</button>
+                </span>
+              }
+            </div>
+            <div role="listbox" [attr.aria-label]="'Áreas de ' + t.nome">
+              @for (a of t.areas; track a.uuid) {
+                <div class="unit-row" role="option" tabindex="0" [attr.aria-selected]="selecionadaId() === a.uuid" [attr.aria-label]="'Área ' + a.codigo"
+                  (click)="selecionar(a.uuid)" (keydown)="teclaNaLinha($event, a.uuid)">
+                  <span class="unit-pin" aria-hidden="true">{{ marca(a.codigo) }}</span>
+                  <div style="min-width: 0;">
+                    <div class="unit-name">{{ a.nome }}</div>
+                    <div class="unit-meta">{{ a.equipe ? a.equipe.nome + ' · ' + a.equipe.unidadeNome : 'Sem equipe responsável' }}</div>
+                  </div>
+                  <div class="unit-right">
+                    Microáreas<span class="v">{{ a.microareas.length }}</span>
+                    @if (semAcs(a)) { <span class="tag tag--warn">{{ semAcs(a) }} sem ACS</span> }
+                  </div>
+                </div>
+              } @empty {
+                <div class="cell-sub" style="padding: var(--s-2) var(--s-6);">Nenhuma área</div>
+              }
+            </div>
+          } @empty {
+            <div class="cell-sub" style="padding: var(--s-2) var(--s-6);">Nenhum território</div>
+          }
+        </div>
+      } @empty {
+        <div class="empty">
+          <strong>{{ carregando() ? 'Carregando o território…' : (busca() ? 'Nada com essa busca' : 'Nenhum segmento cadastrado') }}</strong>
+          @if (!carregando() && !busca()) { <span>Comece pelo segmento (um distrito sanitário, por exemplo), depois o território e as áreas.</span> }
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (detalhe(); as d) {
+    <aside class="card detail-card" aria-label="Detalhes da área">
+      <div class="detail-head">
+        <span class="detail-head__mark mono" aria-hidden="true">{{ d.area.codigo }}</span>
+        <div class="detail-head__info">
+          <h2>Área {{ d.area.codigo }} · {{ d.area.nome }}</h2>
+          <div class="detail-head__ids">
+            <span>{{ d.segmentoNome }}</span>
+            <span>{{ d.territorioNome }}</span>
+            @if (d.area.codigoCnes) { <span>CNES <strong class="mono">{{ d.area.codigoCnes }}</strong></span> }
+          </div>
+          <div class="detail-head__chips">
+            <span class="tag tag--info">{{ finalidades[d.finalidade] }}</span>
+            @if (!d.area.geometria) { <span class="tag tag--muted">Sem desenho</span> }
+          </div>
+        </div>
+        @if (podeEditar()) {
+          <div class="detail-head__actions">
+            <button type="button" class="btn btn--ghost btn--sm" (click)="abrirArea(d.area)">Editar área</button>
+          </div>
+        }
+      </div>
+
+      <div class="info-grid info-grid--1">
+        <div class="info-block">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Equipe responsável</h3>
+            @if (podeEditar()) {
+              <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEquipe(d.area)">{{ d.area.equipe ? 'Trocar equipe' : 'Atribuir equipe' }}</button>
+            }
+          </div>
+          @if (d.area.equipe; as e) {
+            <p>
+              <a [routerLink]="'/rh/equipes'" [queryParams]="{ equipe: e.uuid }"><strong>{{ e.nome }}</strong></a>
+              · {{ tiposEquipe[e.tipo].sigla }} · {{ e.unidadeNome }} <span class="cell-sub" style="display: inline;">desde {{ data(e.desde) }}</span>
+            </p>
+          } @else {
+            <div class="box box--warn"><strong>Área sem equipe responsável.</strong> Sem equipe, as microáreas não recebem ACS.</div>
+          }
+        </div>
+
+        <div class="info-block">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Microáreas</h3>
+            @if (podeEditar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirMicroarea(d.area, null)">Nova microárea</button> }
+          </div>
+          @if (d.area.microareas.length) {
+            <ul aria-label="Microáreas da área" style="list-style: none; margin: 0; padding: 0;">
+              @for (m of d.area.microareas; track m.uuid) {
+                <li style="display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-4); justify-content: space-between; padding: var(--s-3) 0; border-top: 1px solid var(--ink-100);">
+                  <div style="min-width: 0;">
+                    <span class="cell-main"><span class="mono">{{ m.codigo }}</span>@if (m.nome) { · {{ m.nome }} }</span>
+                    <span class="cell-sub">@if (m.populacaoReferencia != null) { {{ m.populacaoReferencia }} pessoas } @else { população não informada }</span>
+                    @for (av of m.avisos; track av) {
+                      @if (av !== 'Sem ACS') { <span [class]="acimaDaReferencia(m) && av.startsWith('População') ? 'tag tag--alert' : 'tag tag--muted'">{{ av }}</span> }
+                    }
+                  </div>
+                  <div style="text-align: right;">
+                    @if (m.acs; as acs) {
+                      <span class="cell-main">{{ acs.nome }}</span><span class="cell-sub">{{ acs.matricula }} · desde {{ data(acs.desde) }}</span>
+                    } @else {
+                      <span class="badge badge--warn"><span class="dot" aria-hidden="true"></span> Sem ACS</span>
+                    }
+                  </div>
+                  @if (podeEditar()) {
+                    <div class="row-actions" style="flex-basis: 100%; justify-content: flex-end; flex-wrap: wrap;">
+                      @if (d.area.equipe) {
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAcs(m)" [attr.aria-label]="(m.acs ? 'Trocar ACS da microárea ' : 'Atribuir ACS à microárea ') + m.codigo">{{ m.acs ? 'Trocar ACS' : 'Atribuir ACS' }}</button>
+                      }
+                      @if (m.acs) {
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEncerrar(m)" [attr.aria-label]="'Deixar a microárea ' + m.codigo + ' sem ACS'">Sem ACS</button>
+                      }
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="abrirMicroarea(d.area, m)" [attr.aria-label]="'Editar microárea ' + m.codigo">Editar</button>
+                    </div>
+                  }
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="cell-sub">Nenhuma microárea nesta área.</p>
+          }
+          @if (d.acsSemMicroarea.length) {
+            <p class="cell-sub" style="margin-top: var(--s-3);">ACS da equipe sem microárea: {{ nomes(d.acsSemMicroarea) }}</p>
+          }
+        </div>
+
+        <div class="info-block">
+          <h3>Mapa</h3>
+          <div class="empty-state">
+            <div class="empty-state__title">Em breve: mapa</div>
+            <div class="empty-state__desc">O desenho das áreas e microáreas no mapa, com os pinos das unidades, chega na próxima fatia. Por enquanto, a geometria entra como GeoJSON.</div>
+          </div>
+        </div>
+
+        <div class="info-block">
+          <h3>Histórico</h3>
+          <ul class="tl" aria-label="Histórico da área">
+            @for (r of d.responsabilidades; track r.uuid) {
+              <li class="tl-row">
+                <strong>{{ r.equipeNome }}</strong> responsável · {{ data(r.inicio) }} a {{ r.fim ? data(r.fim) : 'hoje' }}
+                @if (r.motivoFim) { <span class="cell-sub">{{ r.motivoFim }}</span> }
+              </li>
+            }
+            @for (x of d.atribuicoes; track x.uuid) {
+              <li class="tl-row">
+                Microárea <strong class="mono">{{ x.microareaCodigo }}</strong> · {{ x.nome }} · {{ data(x.inicio) }} a {{ x.fim ? data(x.fim) : 'hoje' }}
+                @if (x.motivoFim) { <span class="cell-sub">{{ x.motivoFim }}</span> }
+              </li>
+            }
+            @if (!d.responsabilidades.length && !d.atribuicoes.length) { <li class="cell-sub">Sem registros.</li> }
+          </ul>
+        </div>
+      </div>
+    </aside>
+  }
+</section>
+
+<!-- ── Gaveta ───────────────────────────────────────────────────────────────────────────────── -->
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="tituloGaveta(g)" (fechar)="fecharGaveta()">
+    <form class="dw-form" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+      <div class="dw-body">
+        @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+
+        @switch (g.tipo) {
+          @case ('segmento') {
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-codigo">Código <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-codigo" type="text" class="mono" maxlength="30" formControlName="codigo" autocomplete="off" [attr.aria-invalid]="!!erro('codigo')" aria-describedby="e-codigo" />
+                @if (erro('codigo')) { <p class="dw-err" id="e-codigo">{{ erro('codigo') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-tipo">Tipo</label>
+                <select id="f-tipo" formControlName="tipo">
+                  @for (t of listaTipos; track t) { <option [value]="t">{{ tiposSegmento[t] }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nome" type="text" maxlength="120" formControlName="nome" autocomplete="off" [attr.aria-invalid]="!!erro('nome')" aria-describedby="e-nome" />
+              @if (erro('nome')) { <p class="dw-err" id="e-nome">{{ erro('nome') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-unidadeGestaoId">Unidade de gestão<span class="opt">opcional</span></label>
+              <select id="f-unidadeGestaoId" formControlName="unidadeGestaoId" aria-describedby="h-unidadeGestaoId">
+                <option value="">Rede inteira</option>
+                @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+              </select>
+              <p class="dw-hint" id="h-unidadeGestaoId">Quem cadastra precisa de acesso nessa unidade; sem ela, na rede inteira.</p>
+            </div>
+          }
+          @case ('territorio') {
+            <div class="dw-field">
+              <label for="f-segmentoId">Segmento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-segmentoId" formControlName="segmentoId" [attr.disabled]="g.item ? true : null" [attr.aria-invalid]="!!erro('segmentoId')" aria-describedby="e-segmentoId">
+                @for (s of segmentos(); track s.uuid) { <option [value]="s.uuid">{{ s.codigo }} · {{ s.nome }}</option> }
+              </select>
+              @if (erro('segmentoId')) { <p class="dw-err" id="e-segmentoId">{{ erro('segmentoId') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nome" type="text" maxlength="120" formControlName="nome" autocomplete="off" [attr.aria-invalid]="!!erro('nome')" aria-describedby="e-nome" />
+              @if (erro('nome')) { <p class="dw-err" id="e-nome">{{ erro('nome') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-finalidade">Finalidade</label>
+              <select id="f-finalidade" formControlName="finalidade" aria-describedby="h-finalidade">
+                @for (f of listaFinalidades; track f) { <option [value]="f">{{ finalidades[f] }}</option> }
+              </select>
+              <p class="dw-hint" id="h-finalidade">O recorte da atenção primária não é o da vigilância nem o da referência de um serviço.</p>
+            </div>
+            <div class="dw-field">
+              <label class="switch" for="f-ativo">
+                <span><b style="font-weight: 500;">Ativo</b><span class="cell-sub" id="h-ativo">Inativo, não recebe área nova</span></span>
+                <input type="checkbox" role="switch" id="f-ativo" formControlName="ativo" aria-describedby="h-ativo" />
+              </label>
+            </div>
+          }
+          @case ('area') {
+            <div class="dw-field">
+              <label for="f-territorioId">Território <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-territorioId" formControlName="territorioId" [attr.disabled]="g.item ? true : null" [attr.aria-invalid]="!!erro('territorioId')" aria-describedby="e-territorioId">
+                @for (t of todosTerritorios(); track t.uuid) { <option [value]="t.uuid">{{ t.nome }} · {{ finalidades[t.finalidade] }}</option> }
+              </select>
+              @if (erro('territorioId')) { <p class="dw-err" id="e-territorioId">{{ erro('territorioId') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-codigo">Código <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-codigo" type="text" class="mono" maxlength="20" formControlName="codigo" autocomplete="off" [attr.aria-invalid]="!!erro('codigo')" aria-describedby="e-codigo" />
+                @if (erro('codigo')) { <p class="dw-err" id="e-codigo">{{ erro('codigo') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-codigoCnes">Código CNES<span class="opt">opcional</span></label>
+                <input id="f-codigoCnes" type="text" class="mono" maxlength="10" inputmode="numeric" formControlName="codigoCnes" autocomplete="off" [attr.aria-invalid]="!!erro('codigoCnes')" aria-describedby="e-codigoCnes" />
+                @if (erro('codigoCnes')) { <p class="dw-err" id="e-codigoCnes">{{ erro('codigoCnes') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-nome">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nome" type="text" maxlength="120" formControlName="nome" autocomplete="off" [attr.aria-invalid]="!!erro('nome')" aria-describedby="e-nome" />
+              @if (erro('nome')) { <p class="dw-err" id="e-nome">{{ erro('nome') }}</p> }
+            </div>
+          }
+          @case ('microarea') {
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-codigo">Código <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-codigo" type="text" class="mono" maxlength="20" formControlName="codigo" autocomplete="off" [attr.aria-invalid]="!!erro('codigo')" aria-describedby="e-codigo" />
+                @if (erro('codigo')) { <p class="dw-err" id="e-codigo">{{ erro('codigo') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-populacao">População de referência<span class="opt">opcional</span></label>
+                <input id="f-populacao" type="text" class="mono" inputmode="numeric" formControlName="populacao" autocomplete="off" [attr.aria-invalid]="!!erro('populacao')" aria-describedby="h-populacao e-populacao" />
+                <p class="dw-hint" id="h-populacao">Referência do CNES: até {{ referencia }} pessoas; acima disso, aviso.</p>
+                @if (erro('populacao')) { <p class="dw-err" id="e-populacao">{{ erro('populacao') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-nome">Nome<span class="opt">opcional</span></label>
+              <input id="f-nome" type="text" maxlength="120" formControlName="nome" autocomplete="off" />
+            </div>
+          }
+          @case ('equipe') {
+            <div class="dw-field">
+              <label for="f-equipeId">Equipe <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-equipeId" formControlName="equipeId" [attr.aria-invalid]="!!erro('equipeId')" aria-describedby="h-equipeId e-equipeId">
+                <option value="">Escolha…</option>
+                @for (e of equipesParaArea(g.area); track e.uuid) { <option [value]="e.uuid">{{ e.nome }} · {{ tiposEquipe[e.tipo].sigla }} · {{ e.unidadeNome }}</option> }
+              </select>
+              <p class="dw-hint" id="h-equipeId">Equipes ativas sem outra área. Uma equipe responde por uma área.</p>
+              @if (erro('equipeId')) { <p class="dw-err" id="e-equipeId">{{ erro('equipeId') }}</p> }
+            </div>
+            @if (g.area.equipe) {
+              <div class="box box--warn"><div>Hoje a área é da <strong>{{ g.area.equipe.nome }}</strong>. Ela e os ACS dela deixam a área na data de início.</div></div>
+            }
+          }
+          @case ('acs') {
+            <div class="dw-field">
+              <label for="f-membroId">ACS <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-membroId" formControlName="membroId" [attr.aria-invalid]="!!erro('membroId')" aria-describedby="h-membroId e-membroId">
+                <option value="">Escolha…</option>
+                @for (a of detalhe()?.acsSemMicroarea ?? []; track a.membroId) { <option [value]="a.membroId">{{ a.nome }} · {{ a.matricula }}</option> }
+              </select>
+              <p class="dw-hint" id="h-membroId">Os ACS da equipe responsável que ainda não têm microárea. Para incluir um ACS, use Equipes.</p>
+              @if (erro('membroId')) { <p class="dw-err" id="e-membroId">{{ erro('membroId') }}</p> }
+            </div>
+            @if (g.microarea.acs) {
+              <div class="box box--warn"><div>Hoje a microárea é de <strong>{{ g.microarea.acs.nome }}</strong>, que sai na data de início.</div></div>
+            }
+          }
+          @case ('encerrar') {
+            <p>A microárea <strong class="mono">{{ g.microarea.codigo }}</strong> fica sem ACS. {{ g.microarea.acs?.nome }} continua na equipe.</p>
+          }
+        }
+
+        @if (g.tipo === 'segmento' || g.tipo === 'area' || g.tipo === 'microarea') {
+          <div class="dw-field">
+            <label for="f-geometria">Geometria (GeoJSON)<span class="opt">opcional</span></label>
+            <textarea id="f-geometria" rows="5" class="mono" formControlName="geometria" [attr.aria-invalid]="!!erro('geometria')" aria-describedby="h-geometria e-geometria"
+              placeholder='{"type": "Polygon", "coordinates": [[[-47.06, -22.90], …]]}'></textarea>
+            <p class="dw-hint" id="h-geometria">Polygon ou MultiPolygon em WGS84 (longitude, latitude), ou uma Feature com um deles.@if (g.tipo === 'microarea') { A microárea precisa ficar dentro da área e não pode se sobrepor às outras. }</p>
+            @if (erro('geometria')) { <p class="dw-err" id="e-geometria">{{ erro('geometria') }}</p> }
+            <label class="btn btn--ghost btn--sm" for="f-arquivo" style="margin-top: var(--s-2); align-self: flex-start;">Importar arquivo .geojson</label>
+            <input id="f-arquivo" type="file" accept=".geojson,.json,application/geo+json,application/json" class="sr-only" (change)="importarArquivo($event)" />
+          </div>
+        }
+
+        @if (g.tipo === 'equipe' || g.tipo === 'acs' || g.tipo === 'encerrar') {
+          <div class="dw-row">
+            <div class="dw-field">
+              <label for="f-data">{{ g.tipo === 'encerrar' ? 'Fim' : 'Início' }}<span class="opt">sem valor, hoje</span></label>
+              <input id="f-data" type="date" formControlName="data" />
+            </div>
+          </div>
+          @if (g.tipo === 'encerrar' || (g.tipo === 'equipe' && g.area.equipe) || (g.tipo === 'acs' && g.microarea.acs)) {
+            <div class="dw-field">
+              <label for="f-motivo">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-motivo" rows="2" maxlength="400" formControlName="motivo" [attr.aria-invalid]="!!erro('motivo')" aria-describedby="e-motivo"></textarea>
+              @if (erro('motivo')) { <p class="dw-err" id="e-motivo">{{ erro('motivo') }}</p> }
+            </div>
+          }
+        }
+      </div>
+      <footer class="dw-foot">
+        <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Salvar' }}</button>
+      </footer>
+    </form>
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}

@@ -1,8 +1,8 @@
 # Modelo do domínio Território e Adscrição
 
 **Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0108](../adr/0108-territorio-e-adscricao.md). **Nada implementado ainda.** A
-implementação vem nas fatias F1 a F4 (seção 10), cada uma com ADR própria.
+**Status:** desenho aprovado na [ADR-0108](../adr/0108-territorio-e-adscricao.md). **F1 implementada** na
+[ADR-0125](../adr/0125-territorio-fundacao.md); as fatias F2 a F4 (seção 11) vêm cada uma com ADR própria.
 
 Este documento é o detalhamento do domínio: conceitos, entidades, relações com os outros domínios, uso por tipo de
 unidade e de equipe, escopo de acesso e geolocalização. A ADR-0108 registra as decisões; aqui fica o porquê e o
@@ -21,8 +21,9 @@ nem na Enfermagem. Cada domínio sabe uma coisa diferente:
 | **Território** | qual espaço a equipe cobre (área, microárea, imóveis) |
 | **Adscrição** | quais famílias e cidadãos estão sob responsabilidade de qual equipe, desde quando |
 
-Hoje o projeto guarda as microáreas como **texto livre**: `Equipe.microareas` ("14, 17, 18") e
-`MembroEquipe.microarea` (a microárea do ACS), da ADR-0103. É provisório; a seção 11 diz como sai.
+Até a F1, o projeto guardava as microáreas como **texto livre**: `Equipe.microareas` ("14, 17, 18") e
+`MembroEquipe.microarea` (a microárea do ACS), da ADR-0103. A migração V19 (ADR-0125) os transformou em áreas,
+microáreas e atribuições; numa equipe com área, os dois campos são lidos do Território e saem numa migração seguinte.
 
 ## 2. Conceitos
 
@@ -226,7 +227,7 @@ prontuário por vínculo (ADR-0076).
 
 | Fatia | Entrega | Depende de |
 |---|---|---|
-| **F1** · backend do território | segmento, território, área e microárea com GeoJSON; responsabilidade equipe ↔ área; atribuição ACS ↔ microárea; coordenadas da unidade; migração dos textos `Equipe.microareas` e `MembroEquipe.microarea`; regras de microárea dentro da área e sem sobreposição | ADR-0103 |
+| **F1** · backend do território ✅ ([ADR-0125](../adr/0125-territorio-fundacao.md)) | segmento, território, área e microárea com GeoJSON; responsabilidade equipe ↔ área; atribuição ACS ↔ microárea; coordenadas da unidade; migração dos textos `Equipe.microareas` e `MembroEquipe.microarea`; regras de microárea dentro da área e sem sobreposição | ADR-0103 |
 | **F2** · tela Território | lista e detalhe com mapa Leaflet; destaque da área e das microáreas; desenho e edição de polígonos; pinos das unidades; mapa real em Equipamentos | F1 |
 | **F3** · cadastro territorial | imóvel, domicílio e núcleo familiar com o paciente; adscrição à equipe; geocodificação opcional do endereço; famílias, pacientes e cobertura em Equipes | F1, F2 |
 | **F4** · escopo territorial | ACS restrito à microárea e equipe à área, atrás de toggle | F3, ADR-0066 |

@@ -37,4 +37,6 @@ public class EquipeResumoDto implements Serializable {
     /** Nomes dos membros vigentes, para os avatares. */
     private List<String> nomesMembros;
     private int equipesApoiadas;
+    /** As microáreas vêm do Território (ADR-0125): a equipe tem área vigente, e elas se editam por lá. */
+    private boolean microareasPeloTerritorio;
 }
