@@ -111,6 +111,8 @@ class VigilanciaControllerTest {
     static void limparDados(JdbcTemplate jdbc, String prefixo, String codigo) {
         String unidades = "(select uuid from tb_unidade_de_saude where nome like '" + prefixo + "%')";
         String notificacoes = "(select uuid from tb_notificacao where unidade_id in " + unidades + ")";
+        // Contatos (ADR-0130): os do caso índice e os que viraram caso.
+        jdbc.update("delete from tb_contato_epidemiologico where notificacao_id in " + notificacoes + " or notificacao_gerada_id in " + notificacoes);
         jdbc.update("delete from tb_classificacao_caso where notificacao_id in " + notificacoes);
         jdbc.update("delete from tb_investigacao_exame where investigacao_id in (select uuid from tb_investigacao_epidemiologica where notificacao_id in "
                 + notificacoes + ")");

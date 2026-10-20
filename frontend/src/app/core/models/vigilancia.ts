@@ -6,6 +6,61 @@ export type OrigemNotificacao = 'ATENDIMENTO' | 'INTERNACAO' | 'EXAME' | 'SAUDE_
 export type SituacaoNotificacao = 'NOTIFICADA' | 'EM_INVESTIGACAO' | 'ENCERRADA';
 export type ClassificacaoCaso = 'SUSPEITO' | 'PROVAVEL' | 'CONFIRMADO' | 'DESCARTADO' | 'INCONCLUSIVO';
 export type EvolucaoCaso = 'CURA' | 'OBITO_PELO_AGRAVO' | 'OBITO_POR_OUTRA_CAUSA' | 'IGNORADA';
+export type OrigemLocalCaso = 'DOMICILIO' | 'MARCADO';
+export type TipoExposicaoContato = 'DOMICILIAR' | 'SEXUAL' | 'TRABALHO' | 'ESCOLA' | 'SERVICO_SAUDE' | 'COMUNITARIO' | 'OUTRO';
+export type SituacaoContato = 'EM_ACOMPANHAMENTO' | 'LIBERADO' | 'SINTOMATICO' | 'VIROU_CASO' | 'PERDA_DE_SEGUIMENTO';
+
+/** Contatos e local do caso (ADR-0130). */
+export const TIPOS_EXPOSICAO: Record<TipoExposicaoContato, string> = {
+  DOMICILIAR: 'Domiciliar', SEXUAL: 'Sexual', TRABALHO: 'Trabalho', ESCOLA: 'Escola ou creche', SERVICO_SAUDE: 'Serviço de saúde',
+  COMUNITARIO: 'Comunitário', OUTRO: 'Outro',
+};
+export const SITUACOES_CONTATO: Record<SituacaoContato, { rotulo: string; classe: string }> = {
+  EM_ACOMPANHAMENTO: { rotulo: 'Em acompanhamento', classe: 'info' },
+  LIBERADO: { rotulo: 'Liberado', classe: 'ok' },
+  SINTOMATICO: { rotulo: 'Sintomático', classe: 'warn' },
+  VIROU_CASO: { rotulo: 'Virou caso', classe: 'alert' },
+  PERDA_DE_SEGUIMENTO: { rotulo: 'Perda de seguimento', classe: 'muted' },
+};
+
+export interface ContatoDto {
+  uuid: string;
+  pacienteId?: string | null;
+  nome?: string | null;
+  telefone?: string | null;
+  endereco?: string | null;
+  tipoExposicao: TipoExposicaoContato;
+  dataExposicao?: string | null;
+  fimMonitoramento?: string | null;
+  monitoramentoVencido: boolean;
+  situacao: SituacaoContato;
+  observacao?: string | null;
+  notificacaoGeradaId?: string | null;
+}
+
+export interface ContatoRequestDto {
+  pacienteId?: string | null;
+  nome?: string | null;
+  telefone?: string | null;
+  endereco?: string | null;
+  tipoExposicao: TipoExposicaoContato;
+  dataExposicao?: string | null;
+  situacao?: SituacaoContato | null;
+  observacao?: string | null;
+}
+
+/** Mapa dos casos (ADR-0130). */
+export interface MapaVigilanciaDto {
+  de: string;
+  ate: string;
+  total: number;
+  semLocal: number;
+  pontosVisiveis: boolean;
+  microareas: { microareaId: string; codigo: string; areaCodigo: string; geometria?: string | null; casos: number }[];
+  pontos: { notificacaoId: string; latitude: number; longitude: number; agravoCodigo: string; situacao: SituacaoNotificacao; classificacao?: ClassificacaoCaso | null }[];
+  curva: { ano: number; semana: number; inicio: string; casos: number }[];
+}
+
 export type TipoCampoFicha = 'SIM_NAO' | 'TEXTO' | 'NUMERO' | 'DATA' | 'OPCAO' | 'MULTIPLA';
 
 export const PERIODICIDADES_NOTIFICACAO: Record<PeriodicidadeNotificacao, string> = { IMEDIATA: 'Imediata (até 24 horas)', SEMANAL: 'Semanal' };
@@ -57,6 +112,7 @@ export interface AgravoDto {
   ativo: boolean;
   fichaVersao?: number | null;
   ficha: CampoFichaDto[];
+  periodoMonitoramentoContatoDias?: number | null;
 }
 
 export interface NotificacaoDto {
@@ -91,6 +147,12 @@ export interface NotificacaoDto {
     medidas?: string | null; examesIds: string[] } | null;
   classificacoes: { classificacao: ClassificacaoCaso; criterio?: CriterioClassificacao | null; justificativa?: string | null; classificadaEm: string;
     responsavelNome?: string | null }[];
+  latitude?: number | null;
+  longitude?: number | null;
+  origemLocal?: OrigemLocalCaso | null;
+  microareaCodigo?: string | null;
+  areaCodigo?: string | null;
+  contatos: ContatoDto[];
 }
 
 export interface NotificacoesDto {
@@ -98,6 +160,7 @@ export interface NotificacoesDto {
   emInvestigacao: number;
   encerramentoAtrasado: number;
   lista: NotificacaoDto[];
+  contatosVencidos: number;
 }
 
 export interface SugestaoNotificacaoDto {
@@ -150,6 +213,9 @@ export interface NotificacaoRequestDto {
   criseId?: string | null;
   localProvavel?: string | null;
   respostas?: Record<string, unknown>;
+  latitude?: number | null;
+  longitude?: number | null;
+  contatoId?: string | null;
 }
 
 export interface AgravoRequestDto {
@@ -162,5 +228,6 @@ export interface AgravoRequestDto {
   prazoEncerramentoDias: number;
   criterios: CriterioClassificacao[];
   sensivel: boolean;
+  periodoMonitoramentoContatoDias?: number | null;
   ativo: boolean;
 }

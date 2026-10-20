@@ -7,6 +7,8 @@ import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorR
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AgravoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ClassificacaoCasoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ContatoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.LocalCasoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EncerramentoNotificacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.FichaAgravoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.InvestigacaoRequestDto;
@@ -14,11 +16,13 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Notificaca
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.NotificacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AgravoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.BoletimVigilanciaDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.MapaVigilanciaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NotificacaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NotificacaoNegativaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NotificacoesDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SemanasEpidemiologicasDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SugestaoNotificacaoDto;
+import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoCasoEpidemiologico;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoNotificacao;
 import com.edufelizardo.maissaudepublica.services.version1.VigilanciaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,6 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -115,6 +120,44 @@ public class VigilanciaController {
     @ApiErrorResponsesBusca
     public ResponseEntity<NotificacaoDto> notificacao(@PathVariable UUID uuid) {
         return ResponseEntity.ok(service.notificacao(uuid));
+    }
+
+    @RequerPermissao({"VIGILANCIA.INVESTIGAR"})
+    @PostMapping(value = "notificacao/{uuid}/local", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Marca o local do caso", description = "O ponto no mapa (local provável de infecção) e a microárea desenhada que o "
+            + "contém (ADR-0130). Encerrada: 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<NotificacaoDto> local(@PathVariable UUID uuid, @Valid @RequestBody LocalCasoRequestDto dto) {
+        return ResponseEntity.ok(service.marcarLocal(uuid, dto));
+    }
+
+    @RequerPermissao({"VIGILANCIA.INVESTIGAR"})
+    @PostMapping(value = "notificacao/{uuid}/contato", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra um contato do caso", description = "O paciente, ou o nome (obrigatório sem cadastro, 400), telefone e "
+            + "endereço; o monitoramento vai até a exposição mais o período do agravo. Agravo sensível: só a vigilância e quem notificou (403).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<NotificacaoDto> contato(@PathVariable UUID uuid, @Valid @RequestBody ContatoRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.adicionarContato(uuid, dto));
+    }
+
+    @RequerPermissao({"VIGILANCIA.INVESTIGAR"})
+    @PatchMapping(value = "contato/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Atualiza o contato", description = "Dados, acompanhamento e o cadastro. Virar caso só notificando o contato (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<NotificacaoDto> atualizarContato(@PathVariable UUID uuid, @Valid @RequestBody ContatoRequestDto dto) {
+        return ResponseEntity.ok(service.atualizarContato(uuid, dto));
+    }
+
+    @RequerPermissao({"VIGILANCIA.NOTIFICAR", "VIGILANCIA.INVESTIGAR"})
+    @GetMapping(value = "mapa", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Mapa dos casos", description = "Casos por microárea, pontos (só para a investigação, nunca de agravo sensível) e a "
+            + "curva por semana epidemiológica. Período padrão: as últimas 12 semanas (ADR-0130).", tags = TAG)
+    @ApiErrorResponsesListagem
+    public ResponseEntity<MapaVigilanciaDto> mapa(@RequestParam(required = false) UUID agravoId, @RequestParam(required = false) UUID unidadeId,
+                                                  @RequestParam(required = false) LocalDate de,
+                                                  @RequestParam(required = false) LocalDate ate,
+                                                  @RequestParam(required = false) ClassificacaoCasoEpidemiologico classificacao) {
+        return ResponseEntity.ok(service.mapa(agravoId, unidadeId, de, ate, classificacao));
     }
 
     @RequerPermissao({"VIGILANCIA.INVESTIGAR"})

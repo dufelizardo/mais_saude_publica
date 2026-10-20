@@ -110,6 +110,12 @@ A classificação vem com o critério (laboratorial ou clínico-epidemiológico)
 Pessoa exposta a um caso. **Pode ainda não ter cadastro** (nome, telefone, endereço) e vira `Paciente` quando é
 atendida.
 
+**Implementado na V2a ([ADR-0130](../adr/0130-vigilancia-contatos-local-e-mapa.md)):** tipo de exposição, data da
+exposição, fim do monitoramento pelo período do agravo (sarampo 21 dias, coqueluche 14, meningite 10) e situação. O
+contato que adoece vira caso só pela notificação, que fica ligada ao caso índice. O local do caso vem do domicílio da
+família ou é marcado no mapa, e o mapa da vigilância mostra os casos por microárea, os pontos (só para quem investiga,
+nunca de agravo sensível) e a curva por semana epidemiológica.
+
 ### 3.4 Surto
 
 **Surto não é simplesmente "vários casos".** É um evento epidemiológico que relaciona casos:
@@ -312,7 +318,8 @@ Assim o modelo dos sistemas externos não contamina o domínio interno.
 | Fatia | Entrega | Depende de |
 |---|---|---|
 | **V1** · fundação ✅ ([ADR-0124](../adr/0124-vigilancia-epidemiologica-fundacao.md)) | agravo (catálogo e ficha como dado), notificação e notificação negativa, investigação, classificação; sugestão de notificação a partir de atendimento, internação e exame | Paciente, Atendimento; Território opcional |
-| **V2** · epidemiologia avançada | contato, surto, medida de controle, mapa e linha do tempo dos casos | V1; Território F1 e F2 para o mapa |
+| **V2a** · contatos, local e mapa ✅ ([ADR-0130](../adr/0130-vigilancia-contatos-local-e-mapa.md)) | contato e monitoramento, contato que vira caso, local do caso, mapa e curva | V1; Território F1 a F3 |
+| **V2b** · surto e medidas | surto, medida de controle e linha do tempo dos casos | V2a |
 | **V3** · sanitária | estabelecimento regulado, inspeção, irregularidade, medida, licença | Documentos (autos) |
 | **V4** · ambiental e zoonoses | evento e risco ambiental, monitoramento, vistoria, foco, animal, ação de controle | Território F3 (imóvel) |
 | **V5** · trabalhador e integrações | evento do trabalho, risco ocupacional, investigação; adaptadores (SINAN primeiro) | V1; Integrações (#20) |

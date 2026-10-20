@@ -11,6 +11,8 @@ export interface PoligonoMapa {
   /** Nome acessível e dica (ex.: "Microárea 07, ACS Carlos"). */
   descricao: string;
   tipo: 'area' | 'microarea' | 'sem-acs' | 'vizinha';
+  /** Cor de preenchimento própria (ex.: casos por microárea no mapa da vigilância, ADR-0130). */
+  cor?: string;
 }
 
 /** Um pino (unidade de saúde). */
@@ -150,7 +152,10 @@ export class Mapa implements OnDestroy {
       if (p.id === editando) continue;
       const geo = ler(p.geometria);
       if (!geo) continue;
-      const camada = L.geoJSON(geo as GeoJSON.GeoJsonObject, { style: estilo(p.tipo, p.id === selecionado), pmIgnore: true } as Leaflet.GeoJSONOptions);
+      const base = estilo(p.tipo, p.id === selecionado);
+      const camada = L.geoJSON(geo as GeoJSON.GeoJsonObject, {
+        style: p.cor ? { ...base, color: p.cor, fillColor: p.cor, fillOpacity: 0.55 } : base, pmIgnore: true,
+      } as Leaflet.GeoJSONOptions);
       camada.eachLayer((l) => {
         if (p.rotulo) l.bindTooltip(p.rotulo, { permanent: true, direction: 'center', className: 'mapa__rotulo' });
         else l.bindTooltip(p.descricao);

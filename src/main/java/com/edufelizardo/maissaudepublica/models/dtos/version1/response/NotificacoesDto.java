@@ -21,4 +21,6 @@ public class NotificacoesDto implements Serializable {
     private long emInvestigacao;
     private long encerramentoAtrasado;
     private List<NotificacaoDto> lista;
+    /** Contatos em acompanhamento com o monitoramento vencido, nas notificações visíveis (ADR-0130). */
+    private long contatosVencidos;
 }

@@ -12,6 +12,8 @@ import {
   NotificacoesDto,
   SemanasEpidemiologicasDto,
   SugestaoNotificacaoDto,
+  ContatoRequestDto,
+  MapaVigilanciaDto,
 } from '../models/vigilancia';
 
 /** Vigilância epidemiológica, fatia V1 (ADR-0124). */
@@ -85,5 +87,25 @@ export class VigilanciaService {
     let params = new HttpParams();
     if (unidadeId) params = params.set('unidadeId', unidadeId);
     return this.http.get<BoletimVigilanciaDto>(`${this.api}/boletim`, { params });
+  }
+
+  // ── Contatos, local e mapa (ADR-0130) ─────────────────────────────────────────────────────────
+
+  marcarLocal(uuid: string, latitude: number, longitude: number): Observable<NotificacaoDto> {
+    return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/local`, { latitude, longitude });
+  }
+
+  adicionarContato(uuid: string, dto: ContatoRequestDto): Observable<NotificacaoDto> {
+    return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/contato`, dto);
+  }
+
+  atualizarContato(uuid: string, dto: ContatoRequestDto): Observable<NotificacaoDto> {
+    return this.http.patch<NotificacaoDto>(`${this.api}/contato/${uuid}`, dto);
+  }
+
+  mapa(filtro: { agravoId?: string; unidadeId?: string; de?: string; ate?: string; classificacao?: string } = {}): Observable<MapaVigilanciaDto> {
+    let params = new HttpParams();
+    for (const [k, v] of Object.entries(filtro)) if (v) params = params.set(k, v);
+    return this.http.get<MapaVigilanciaDto>(`${this.api}/mapa`, { params });
   }
 }

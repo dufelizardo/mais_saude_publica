@@ -50,6 +50,11 @@ public class AgravoRequestDto implements Serializable {
 
     private Boolean sensivel;
 
+    /** Dias de monitoramento do contato a partir da exposição (ADR-0130); sem valor, o agravo não define. */
+    @Min(value = 1, message = "O monitoramento do contato é de 1 dia ou mais.")
+    @Max(value = 365, message = "O monitoramento do contato vai até 365 dias.")
+    private Integer periodoMonitoramentoContatoDias;
+
     /** Sem valor, ativo. */
     private Boolean ativo;
 }

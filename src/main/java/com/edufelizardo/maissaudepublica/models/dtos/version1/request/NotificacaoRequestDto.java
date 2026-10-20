@@ -56,4 +56,16 @@ public class NotificacaoRequestDto implements Serializable {
 
     /** As respostas da ficha específica, pela chave do campo. */
     private Map<String, Object> respostas;
+
+    /** Local do caso marcado no mapa (ADR-0130); sem ele, o domicílio do paciente, se houver. */
+    @DecimalMin(value = "-90", message = "A latitude fica entre -90 e 90.")
+    @DecimalMax(value = "90", message = "A latitude fica entre -90 e 90.")
+    private Double latitude;
+
+    @DecimalMin(value = "-180", message = "A longitude fica entre -180 e 180.")
+    @DecimalMax(value = "180", message = "A longitude fica entre -180 e 180.")
+    private Double longitude;
+
+    /** O contato que virou caso (ADR-0130): a notificação fica ligada a ele. */
+    private UUID contatoId;
 }

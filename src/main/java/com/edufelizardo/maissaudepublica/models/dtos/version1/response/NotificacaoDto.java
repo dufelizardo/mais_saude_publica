@@ -3,7 +3,10 @@ package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoCasoEpidemiologico;
 import com.edufelizardo.maissaudepublica.models.enuns.CriterioClassificacao;
 import com.edufelizardo.maissaudepublica.models.enuns.EvolucaoCaso;
+import com.edufelizardo.maissaudepublica.models.enuns.OrigemLocalCaso;
 import com.edufelizardo.maissaudepublica.models.enuns.OrigemNotificacao;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoContato;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoExposicaoContato;
 import com.edufelizardo.maissaudepublica.models.enuns.PeriodicidadeNotificacao;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoNotificacao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CampoFichaDto;
@@ -59,6 +62,37 @@ public class NotificacaoDto implements Serializable {
     private String aviso;
     private Investigacao investigacao;
     private List<Classificacao> classificacoes;
+    /** Local do caso (ADR-0130). */
+    private Double latitude;
+    private Double longitude;
+    private OrigemLocalCaso origemLocal;
+    private String microareaCodigo;
+    private String areaCodigo;
+    private List<Contato> contatos;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class Contato implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private UUID uuid;
+        private UUID pacienteId;
+        private String nome;
+        private String telefone;
+        private String endereco;
+        private TipoExposicaoContato tipoExposicao;
+        private LocalDate dataExposicao;
+        private LocalDate fimMonitoramento;
+        private boolean monitoramentoVencido;
+        private SituacaoContato situacao;
+        private String observacao;
+        private UUID notificacaoGeradaId;
+    }
 
     @Getter
     @Setter

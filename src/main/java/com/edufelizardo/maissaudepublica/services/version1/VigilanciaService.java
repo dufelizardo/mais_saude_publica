@@ -10,10 +10,12 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityE
 import com.edufelizardo.maissaudepublica.models.Agravo;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.ClassificacaoCaso;
+import com.edufelizardo.maissaudepublica.models.ContatoEpidemiologico;
 import com.edufelizardo.maissaudepublica.models.EventoCrise;
 import com.edufelizardo.maissaudepublica.models.FichaAgravo;
 import com.edufelizardo.maissaudepublica.models.Internacao;
 import com.edufelizardo.maissaudepublica.models.InvestigacaoEpidemiologica;
+import com.edufelizardo.maissaudepublica.models.Microarea;
 import com.edufelizardo.maissaudepublica.models.Notificacao;
 import com.edufelizardo.maissaudepublica.models.NotificacaoNegativa;
 import com.edufelizardo.maissaudepublica.models.Paciente;
@@ -23,29 +25,38 @@ import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AgravoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CampoFichaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ClassificacaoCasoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ContatoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EncerramentoNotificacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.FichaAgravoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.InvestigacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.LocalCasoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.NotificacaoNegativaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.NotificacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AgravoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.BoletimVigilanciaDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.MapaVigilanciaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NotificacaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NotificacaoNegativaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NotificacoesDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SemanasEpidemiologicasDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SugestaoNotificacaoDto;
 import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoCasoEpidemiologico;
+import com.edufelizardo.maissaudepublica.models.enuns.FinalidadeTerritorio;
+import com.edufelizardo.maissaudepublica.models.enuns.OrigemLocalCaso;
 import com.edufelizardo.maissaudepublica.models.enuns.OrigemNotificacao;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoContato;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoNotificacao;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoCampoFicha;
 import com.edufelizardo.maissaudepublica.repositories.AgravoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.ClassificacaoCasoRepository;
+import com.edufelizardo.maissaudepublica.repositories.ContatoEpidemiologicoRepository;
 import com.edufelizardo.maissaudepublica.repositories.EventoCriseRepository;
 import com.edufelizardo.maissaudepublica.repositories.FichaAgravoRepository;
 import com.edufelizardo.maissaudepublica.repositories.InternacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.InvestigacaoEpidemiologicaRepository;
+import com.edufelizardo.maissaudepublica.repositories.MembroNucleoRepository;
+import com.edufelizardo.maissaudepublica.repositories.MicroareaRepository;
 import com.edufelizardo.maissaudepublica.repositories.NotificacaoNegativaRepository;
 import com.edufelizardo.maissaudepublica.repositories.NotificacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
@@ -54,6 +65,7 @@ import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,6 +106,16 @@ public class VigilanciaService {
     static final Duration JANELA_SUGESTAO = Duration.ofDays(30);
 
     private static final ObjectMapper JSON = new ObjectMapper();
+
+    /** Contatos e local do caso (ADR-0130). */
+    @Autowired
+    private ContatoEpidemiologicoRepository contatoRepository;
+
+    @Autowired
+    private MembroNucleoRepository membroNucleoRepository;
+
+    @Autowired
+    private MicroareaRepository microareaRepository;
     private static final Set<ClassificacaoCasoEpidemiologico> FINAIS = Set.of(ClassificacaoCasoEpidemiologico.CONFIRMADO,
             ClassificacaoCasoEpidemiologico.DESCARTADO, ClassificacaoCasoEpidemiologico.INCONCLUSIVO);
 
@@ -245,6 +267,18 @@ public class VigilanciaService {
         EventoCrise crise = referencia(dto.getCriseId(), criseRepository::findById, EventoCrise::getPaciente, paciente, "crise");
         n.setCrise(crise);
         n.setLocalProvavel(texto(dto.getLocalProvavel()));
+        definirLocal(n, dto.getLatitude(), dto.getLongitude());
+        ContatoEpidemiologico contato = null;
+        if (dto.getContatoId() != null) {
+            contato = contatoRepository.findById(dto.getContatoId()).orElseThrow(() -> new ResourceNotFoundException(
+                    "Não foi possível encontrar o contato " + dto.getContatoId() + " em nossos registros."));
+            if (contato.getNotificacaoGerada() != null) {
+                throw new ResourceConflictException("O contato já virou caso, com a notificação própria.");
+            }
+            if (contato.getPaciente() != null && !contato.getPaciente().getUuid().equals(paciente.getUuid())) {
+                throw new ResourceUnprocessableEntityException("O contato é de outro paciente.");
+            }
+        }
         Optional<FichaAgravo> ficha = fichaRepository.findFirstByAgravo_UuidOrderByVersaoDesc(agravo.getUuid());
         Map<String, Object> respostas = dto.getRespostas() != null ? dto.getRespostas() : Map.of();
         if (ficha.isPresent()) {
@@ -262,6 +296,14 @@ public class VigilanciaService {
                 .anyMatch(x -> x.getAgravo().getUuid().equals(agravo.getUuid()) && x.getSituacao() != SituacaoNotificacao.ENCERRADA)
                 ? "O paciente já tem outra notificação de " + agravo.getNome() + " em aberto; confira se não é o mesmo caso." : null;
         n = notificacaoRepository.save(n);
+        // O contato que adoeceu: a notificação dele fica ligada ao caso índice (ADR-0130).
+        if (contato != null) {
+            contato.setPaciente(paciente);
+            contato.setNotificacaoGerada(n);
+            contato.setSituacao(SituacaoContato.VIROU_CASO);
+            contato.setAtualizadoEm(Instant.now());
+            contatoRepository.save(contato);
+        }
         // A crise da SM3 fica notificada: a pendência some (ADR-0123).
         if (crise != null && crise.getNotificadaEm() == null) {
             crise.setNotificadaEm(data);
@@ -274,6 +316,112 @@ public class VigilanciaService {
         NotificacaoDto d = detalhe(n, true);
         d.setAviso(aviso);
         return d;
+    }
+
+    // ── Local do caso e contatos (ADR-0130) ──────────────────────────────────────────────────────
+
+    /** Marca no mapa o local do caso (o provável de infecção, na investigação). */
+    @Transactional
+    public NotificacaoDto marcarLocal(UUID notificacaoId, LocalCasoRequestDto dto) {
+        Notificacao n = paraInvestigar(notificacaoId);
+        definirLocal(n, dto.getLatitude(), dto.getLongitude());
+        notificacaoRepository.save(n);
+        ContextoAuditoria.detalhe("Local do caso marcado.");
+        return detalhe(n, true);
+    }
+
+    /** Contato do caso: o paciente, ou nome (obrigatório sem cadastro), telefone e endereço. */
+    @Transactional
+    public NotificacaoDto adicionarContato(UUID notificacaoId, ContatoRequestDto dto) {
+        Notificacao n = buscarNotificacao(notificacaoId);
+        exigirContatos(n);
+        ContatoEpidemiologico c = new ContatoEpidemiologico();
+        c.setNotificacao(n);
+        c.setSituacao(SituacaoContato.EM_ACOMPANHAMENTO);
+        c.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        aplicar(c, dto);
+        contatoRepository.save(c);
+        ContextoAuditoria.detalhe("Contato registrado.");
+        return detalhe(n, true);
+    }
+
+    /** Atualiza o contato: dados, acompanhamento e o cadastro, quando ele é atendido. Quem virou caso não volta atrás. */
+    @Transactional
+    public NotificacaoDto atualizarContato(UUID contatoId, ContatoRequestDto dto) {
+        ContatoEpidemiologico c = contatoRepository.findById(contatoId).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar o contato " + contatoId + " em nossos registros."));
+        exigirContatos(c.getNotificacao());
+        if (c.getSituacao() == SituacaoContato.VIROU_CASO && dto.getSituacao() != null && dto.getSituacao() != SituacaoContato.VIROU_CASO) {
+            throw new ResourceUnprocessableEntityException("O contato virou caso e tem notificação própria.");
+        }
+        if (dto.getSituacao() == SituacaoContato.VIROU_CASO && c.getNotificacaoGerada() == null) {
+            throw new ResourceUnprocessableEntityException("Para virar caso, notifique o contato: a notificação dele fica ligada aqui.");
+        }
+        aplicar(c, dto);
+        if (dto.getSituacao() != null) {
+            c.setSituacao(dto.getSituacao());
+        }
+        contatoRepository.save(c);
+        ContextoAuditoria.detalhe("Contato atualizado.");
+        return detalhe(c.getNotificacao(), true);
+    }
+
+    /**
+     * Mapa dos casos no período (primeiros sintomas, ou a notificação): contagem por microárea, pontos (só para a
+     * investigação, e nunca de agravo sensível) e a curva por semana epidemiológica. Agravo sensível só conta para quem
+     * investiga.
+     */
+    @Transactional(readOnly = true)
+    public MapaVigilanciaDto mapa(UUID agravoId, UUID unidadeId, LocalDate de, LocalDate ate, ClassificacaoCasoEpidemiologico classificacao) {
+        controleDeAcesso.exigirAlguma(NOTIFICAR, INVESTIGAR);
+        LocalDate fim = ate != null ? ate : LocalDate.now();
+        LocalDate inicio = de != null ? de : fim.minusWeeks(12);
+        if (inicio.isAfter(fim)) {
+            throw new ResourceBadRequestException("O início do período precisa ser antes do fim.");
+        }
+        boolean investiga = !controleDeAcesso.ativo() || autorizacaoService.tem(UsuarioAutenticado.cpf(), INVESTIGAR);
+        List<Notificacao> casos = controleDeAcesso.filtrar(notificacaoRepository.findTodas().stream(), n -> Stream.of(n.getUnidade()), NOTIFICAR, INVESTIGAR)
+                .filter(n -> agravoId == null || n.getAgravo().getUuid().equals(agravoId))
+                .filter(n -> unidadeId == null || n.getUnidade().getUuid().equals(unidadeId))
+                .filter(n -> !n.getAgravo().isSensivel() || (investiga && podeVerConteudo(n)))
+                .filter(n -> {
+                    LocalDate d = n.getDataPrimeirosSintomas() != null ? n.getDataPrimeirosSintomas() : n.getDataNotificacao();
+                    return !d.isBefore(inicio) && !d.isAfter(fim);
+                })
+                .toList();
+        Map<UUID, ClassificacaoCasoEpidemiologico> atual = new HashMap<>();
+        for (Notificacao n : casos) {
+            List<ClassificacaoCaso> h = classificacaoRepository.findDaNotificacao(n.getUuid());
+            atual.put(n.getUuid(), n.getClassificacaoFinal() != null ? n.getClassificacaoFinal() : h.isEmpty() ? null : h.get(0).getClassificacao());
+        }
+        List<Notificacao> filtrados = casos.stream().filter(n -> classificacao == null || classificacao == atual.get(n.getUuid())).toList();
+        Map<Microarea, Long> porMicroarea = filtrados.stream().filter(n -> n.getMicroarea() != null)
+                .collect(Collectors.groupingBy(Notificacao::getMicroarea, Collectors.counting()));
+        List<MapaVigilanciaDto.Microarea> microareas = porMicroarea.entrySet().stream()
+                .map(e -> new MapaVigilanciaDto.Microarea(e.getKey().getUuid(), e.getKey().getCodigo(), e.getKey().getArea().getCodigo(),
+                        e.getKey().getGeometria(), e.getValue().intValue()))
+                .sorted(Comparator.comparing(MapaVigilanciaDto.Microarea::getCasos).reversed()).toList();
+        List<MapaVigilanciaDto.Ponto> pontos = !investiga ? List.of() : filtrados.stream()
+                .filter(n -> !n.getAgravo().isSensivel() && n.getLatitude() != null && n.getLongitude() != null)
+                .map(n -> new MapaVigilanciaDto.Ponto(n.getUuid(), n.getLatitude(), n.getLongitude(), n.getAgravo().getCodigo(), n.getSituacao(),
+                        atual.get(n.getUuid())))
+                .toList();
+        Map<SemanaEpidemiologica, Long> porSemana = filtrados.stream().collect(Collectors.groupingBy(
+                n -> SemanaEpidemiologica.de(n.getDataPrimeirosSintomas() != null ? n.getDataPrimeirosSintomas() : n.getDataNotificacao()),
+                Collectors.counting()));
+        List<MapaVigilanciaDto.Semana> curva = new java.util.ArrayList<>();
+        SemanaEpidemiologica s = SemanaEpidemiologica.de(inicio);
+        SemanaEpidemiologica ultima = SemanaEpidemiologica.de(fim);
+        for (int guarda = 0; guarda < 120; guarda++) {
+            curva.add(new MapaVigilanciaDto.Semana(s.ano(), s.semana(), s.inicio(), porSemana.getOrDefault(s, 0L).intValue()));
+            if (s.equals(ultima)) {
+                break;
+            }
+            s = new SemanaEpidemiologica(s.ano(), s.semana() + 1).valida() ? new SemanaEpidemiologica(s.ano(), s.semana() + 1)
+                    : new SemanaEpidemiologica(s.ano() + 1, 1);
+        }
+        int semLocal = (int) filtrados.stream().filter(n -> n.getMicroarea() == null && n.getLatitude() == null).count();
+        return new MapaVigilanciaDto(inicio, fim, filtrados.size(), semLocal, investiga, microareas, pontos, curva);
     }
 
     /** Abre ou atualiza a investigação; a notificação passa a em investigação. */
@@ -376,9 +524,13 @@ public class VigilanciaService {
                 .sorted(Comparator.comparing((NotificacaoDto d) -> !d.isEncerramentoAtrasado())
                         .thenComparing(NotificacaoDto::getDataNotificacao, Comparator.reverseOrder()))
                 .toList();
+        Set<UUID> ids = visiveis.stream().map(Notificacao::getUuid).collect(Collectors.toSet());
+        long contatosVencidos = contatoRepository.findBySituacao(SituacaoContato.EM_ACOMPANHAMENTO).stream()
+                .filter(c -> ids.contains(c.getNotificacao().getUuid()) && c.getFimMonitoramento() != null && c.getFimMonitoramento().isBefore(hoje))
+                .count();
         return new NotificacoesDto(todos.stream().filter(d -> d.getSituacao() != SituacaoNotificacao.ENCERRADA).count(),
                 todos.stream().filter(d -> d.getSituacao() == SituacaoNotificacao.EM_INVESTIGACAO).count(),
-                todos.stream().filter(NotificacaoDto::isEncerramentoAtrasado).count(), lista);
+                todos.stream().filter(NotificacaoDto::isEncerramentoAtrasado).count(), lista, contatosVencidos);
     }
 
     @Transactional(readOnly = true)
@@ -539,6 +691,84 @@ public class VigilanciaService {
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
 
+    /**
+     * Local do caso (ADR-0130): marcado (o ponto, e a microárea desenhada que o contém) ou, sem ponto, o domicílio onde o
+     * paciente mora no cadastro territorial (F3). É fotografia da data: se ele mudar, o caso fica onde aconteceu.
+     */
+    private void definirLocal(Notificacao n, Double latitude, Double longitude) {
+        if ((latitude == null) != (longitude == null)) {
+            throw new ResourceBadRequestException("Informe a latitude e a longitude juntas, ou nenhuma das duas.");
+        }
+        if (latitude != null) {
+            n.setLatitude(latitude);
+            n.setLongitude(longitude);
+            n.setMicroarea(microareaDoPonto(latitude, longitude));
+            n.setOrigemLocal(OrigemLocalCaso.MARCADO);
+            return;
+        }
+        if (n.getOrigemLocal() != null) {
+            return;
+        }
+        membroNucleoRepository.findByPaciente_UuidAndFimIsNull(n.getPaciente().getUuid()).ifPresent(m -> {
+            var imovel = m.getNucleo().getDomicilio().getImovel();
+            n.setLatitude(imovel.getLatitude());
+            n.setLongitude(imovel.getLongitude());
+            n.setMicroarea(imovel.getMicroarea());
+            n.setOrigemLocal(OrigemLocalCaso.DOMICILIO);
+        });
+    }
+
+    /** A microárea desenhada que contém o ponto: de território de vigilância primeiro, depois de atenção primária. */
+    private Microarea microareaDoPonto(double latitude, double longitude) {
+        return microareaRepository.findAllByOrderByCodigoAsc().stream()
+                .filter(m -> m.getGeometria() != null && m.getArea().getTerritorio().isAtivo())
+                .sorted(Comparator.comparing((Microarea m) -> m.getArea().getTerritorio().getFinalidade() != FinalidadeTerritorio.VIGILANCIA))
+                .filter(m -> {
+                    Geometry g = GeometriaTerritorial.jts(m.getGeometria());
+                    return g != null && GeometriaTerritorial.contem(g, latitude, longitude);
+                })
+                .findFirst().orElse(null);
+    }
+
+    /** Contatos são da investigação, na unidade da notificação; os de agravo sensível herdam o sigilo dela. */
+    private void exigirContatos(Notificacao n) {
+        controleDeAcesso.exigir(INVESTIGAR, n.getUnidade());
+        ContextoAuditoria.paciente(n.getPaciente().getUuid());
+        ContextoAuditoria.registro(n.getUuid());
+        if (!podeVerConteudo(n)) {
+            throw new ResourceForbiddenException("Notificação de agravo sensível: só a vigilância e quem notificou veem os contatos.");
+        }
+    }
+
+    private void aplicar(ContatoEpidemiologico c, ContatoRequestDto dto) {
+        if (dto.getPacienteId() != null) {
+            Paciente p = pacienteRepository.findById(dto.getPacienteId()).orElseThrow(() -> new ResourceNotFoundException(
+                    "Não foi possível encontrar um paciente com o id " + dto.getPacienteId() + " em nossos registros."));
+            if (p.getUuid().equals(c.getNotificacao().getPaciente().getUuid())) {
+                throw new ResourceUnprocessableEntityException("O caso não é contato de si mesmo.");
+            }
+            c.setPaciente(p);
+        }
+        String nome = texto(dto.getNome());
+        if (c.getPaciente() == null && nome == null) {
+            throw new ResourceBadRequestException("Sem cadastro, informe o nome do contato.");
+        }
+        c.setNome(c.getPaciente() != null ? null : nome);
+        c.setTelefone(texto(dto.getTelefone()));
+        c.setEndereco(texto(dto.getEndereco()));
+        c.setTipoExposicao(dto.getTipoExposicao());
+        LocalDate hoje = LocalDate.now();
+        if (dto.getDataExposicao() != null && dto.getDataExposicao().isAfter(hoje)) {
+            throw new ResourceBadRequestException("A exposição não pode ser no futuro.");
+        }
+        c.setDataExposicao(dto.getDataExposicao());
+        Integer dias = c.getNotificacao().getAgravo().getPeriodoMonitoramentoContatoDias();
+        LocalDate base = dto.getDataExposicao() != null ? dto.getDataExposicao() : c.getNotificacao().getDataNotificacao();
+        c.setFimMonitoramento(dias == null ? null : base.plusDays(dias));
+        c.setObservacao(texto(dto.getObservacao()));
+        c.setAtualizadoEm(Instant.now());
+    }
+
     /** Agravo sensível: quem investiga na unidade da notificação ou quem notificou; com a autorização desligada, todos. */
     private boolean podeVerConteudo(Notificacao n) {
         if (!n.getAgravo().isSensivel() || !controleDeAcesso.ativo()) {
@@ -655,6 +885,7 @@ public class VigilanciaService {
         a.setPrazoEncerramentoDias(dto.getPrazoEncerramentoDias());
         a.setCriterios(new HashSet<>(dto.getCriterios()));
         a.setSensivel(Boolean.TRUE.equals(dto.getSensivel()));
+        a.setPeriodoMonitoramentoContatoDias(dto.getPeriodoMonitoramentoContatoDias());
         a.setAtivo(!Boolean.FALSE.equals(dto.getAtivo()));
     }
 
@@ -662,7 +893,7 @@ public class VigilanciaService {
         Optional<FichaAgravo> f = fichaRepository.findFirstByAgravo_UuidOrderByVersaoDesc(a.getUuid());
         return new AgravoDto(a.getUuid(), a.getCodigo(), a.getNome(), a.getDescricao(), a.getCids().stream().sorted().toList(), a.isCompulsorio(),
                 a.getPeriodicidade(), a.getPrazoEncerramentoDias(), a.getCriterios().stream().sorted().toList(), a.isSensivel(), a.isAtivo(),
-                f.map(FichaAgravo::getVersao).orElse(null), f.map(this::campos).orElse(List.of()));
+                f.map(FichaAgravo::getVersao).orElse(null), f.map(this::campos).orElse(List.of()), a.getPeriodoMonitoramentoContatoDias());
     }
 
     private List<CampoFichaDto> campos(FichaAgravo f) {
@@ -690,7 +921,9 @@ public class VigilanciaService {
                 n.getCrise() != null ? n.getCrise().getUuid() : null, null, null, n.getFichaVersao(), List.of(), n.getSituacao(),
                 n.getPrazoEncerramento(), n.getSituacao() != SituacaoNotificacao.ENCERRADA && n.getPrazoEncerramento().isBefore(hoje),
                 historico.isEmpty() ? null : historico.get(0).getClassificacao(), n.getClassificacaoFinal(), n.getEvolucao(), n.getEncerradaEm(),
-                null, null, List.of());
+                null, null, List.of(), n.getLatitude(), n.getLongitude(), n.getOrigemLocal(),
+                n.getMicroarea() != null ? n.getMicroarea().getCodigo() : null, n.getMicroarea() != null ? n.getMicroarea().getArea().getCodigo() : null,
+                List.of());
     }
 
     private NotificacaoDto detalhe(Notificacao n, boolean completo) {
@@ -710,6 +943,12 @@ public class VigilanciaService {
         investigacaoRepository.findByNotificacao_Uuid(n.getUuid()).ifPresent(i -> d.setInvestigacao(new NotificacaoDto.Investigacao(
                 i.getInvestigador() != null ? i.getInvestigador().getNome() : null, i.getIniciadaEm(), i.getExposicao(), i.getLocalProvavelInfeccao(),
                 i.getMedidas(), i.getExamesIds().stream().sorted().toList())));
+        LocalDate hoje = LocalDate.now();
+        d.setContatos(contatoRepository.findByNotificacao_UuidOrderByAtualizadoEmDesc(n.getUuid()).stream().map(c -> new NotificacaoDto.Contato(
+                c.getUuid(), c.getPaciente() != null ? c.getPaciente().getUuid() : null, c.getPaciente() != null ? c.getPaciente().getNome() : c.getNome(),
+                c.getTelefone(), c.getEndereco(), c.getTipoExposicao(), c.getDataExposicao(), c.getFimMonitoramento(),
+                c.getSituacao() == SituacaoContato.EM_ACOMPANHAMENTO && c.getFimMonitoramento() != null && c.getFimMonitoramento().isBefore(hoje),
+                c.getSituacao(), c.getObservacao(), c.getNotificacaoGerada() != null ? c.getNotificacaoGerada().getUuid() : null)).toList());
         d.setClassificacoes(classificacaoRepository.findDaNotificacao(n.getUuid()).stream().map(c -> new NotificacaoDto.Classificacao(
                 c.getClassificacao(), c.getCriterio(), c.getJustificativa(), c.getClassificadaEm(),
                 c.getResponsavel() != null ? c.getResponsavel().getNome() : null)).toList());

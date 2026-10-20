@@ -49,7 +49,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | fatias P3 a P6 |
-| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 feita; surto, sanitária, ambiental e trabalhador (V2 a V5) |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2a feitas; surto (V2b), sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
@@ -70,7 +70,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 |---|---|---|
 | P4 | 22 Programas | ações programáticas ligadas ao atendimento; busca ativa; programa na Agenda |
 | P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
-| V2 | 23 Vigilância | contato, surto, medida de controle e o mapa dos casos (o mapa já existe, ADR-0126) |
+| V2b | 23 Vigilância | surto, medidas de controle e linha do tempo (contatos, local e mapa já feitos na V2a, ADR-0130) |
 | SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
@@ -85,10 +85,11 @@ P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 · P6
 P1 ✅ ──► P3 ──► C2 (campanha de comunicação)
 P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 
-F1 ✅ ──► F2 ✅ ──► V2 (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
+F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
 F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
-V1 ✅ ──► V2 · SM3 (notificação de autoagressão ✅) · V5
+V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
+V2a ✅ ──► V2b (surto e medidas)
 SB1 ──► SB2 ──► SB3 ──► SB4
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
@@ -479,11 +480,15 @@ C1 ──► C2 · C4 · C5
   investigação, classificação com histórico e encerramento com prazo; notificação negativa por semana epidemiológica;
   sugestões de notificação a partir de internação, pedido de exame e crise em saúde mental (que fica notificada);
   agravos sensíveis restritos à vigilância; boletim só com agregados; tela Vigilância epidemiológica.
+- [x] **V2a · Contatos, local e mapa** ([ADR-0130](./adr/0130-vigilancia-contatos-local-e-mapa.md)): contato do caso
+  (com ou sem cadastro), período de monitoramento por agravo e contatos vencidos; o contato que adoece vira caso pela
+  notificação, ligada ao caso índice; local do caso pelo domicílio da família ou marcado no mapa, com a microárea; mapa
+  dos casos por microárea, pontos só para quem investiga e nunca de agravo sensível, curva por semana epidemiológica.
 
 **Falta:**
 - [ ] Sugestão de notificação por exame positivo (o catálogo de exames não liga exame a agravo).
-- [ ] **V2 · Epidemiologia avançada:** contato, surto, medida de controle, mapa e linha do tempo dos casos
-  (o mapa já existe: fatia F2 do Território, ADR-0126).
+- [ ] **V2b · Surto e medidas:** surto (agravo, território, período, casos relacionados), medidas de controle e a
+  linha do tempo dos casos (ADR-0131, a fazer).
 - [ ] **V3 · Sanitária:** estabelecimento regulado, inspeção, irregularidade, medida, licença (os autos dependem
   do domínio Documentos).
 - [ ] **V4 · Ambiental e Zoonoses:** evento e risco ambiental, monitoramento, vistoria, foco, animal, ação de
