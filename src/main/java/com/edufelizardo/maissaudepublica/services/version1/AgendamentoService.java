@@ -3,6 +3,7 @@ package com.edufelizardo.maissaudepublica.services.version1;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.Agendamento;
+import com.edufelizardo.maissaudepublica.models.BlocoAgenda;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Programa;
@@ -56,6 +57,9 @@ public class AgendamentoService {
 
     @Autowired
     private AcaoProgramaticaService acaoProgramaticaService;
+
+    @Autowired
+    private EspecialidadeService especialidadeService;
 
     public AgendamentoResponseDto criar(AgendamentoRequestDto dto) {
         Paciente paciente = buscarPacientePorId(dto.getPacienteId());
@@ -129,6 +133,11 @@ public class AgendamentoService {
     /** Com unidade, a marcação precisa caber na agenda: vaga livre, ou encaixe. Cancelada não ocupa vaga. */
     private void aplicarAgenda(Agendamento agendamento, AgendamentoRequestDto dto, UUID proprio) {
         boolean encaixe = Boolean.TRUE.equals(dto.getEncaixe());
+        if (dto.getEspecialidadeId() != null) {
+            agendamento.setEspecialidade(especialidadeService.ativa(dto.getEspecialidadeId()));
+        } else if (proprio == null) {
+            agendamento.setEspecialidade(null);
+        }
         agendamento.setEncaixe(encaixe);
         if (dto.getUnidadeId() == null) {
             agendamento.setUnidade(null);
@@ -139,6 +148,11 @@ public class AgendamentoService {
         agendamento.setUnidade(unidade);
         if (dto.getStatus() != StatusAgendamento.CANCELADO) {
             agendaService.exigirMarcacaoPossivel(agendamento.getProfissional(), unidade, dto.getDataHora(), encaixe, proprio);
+        }
+        // Sem especialidade informada, a do bloco que oferece a vaga (ADR-0134).
+        if (dto.getEspecialidadeId() == null && !encaixe) {
+            agendaService.blocoDaVaga(agendamento.getProfissional(), unidade, dto.getDataHora())
+                    .map(BlocoAgenda::getEspecialidade).ifPresent(agendamento::setEspecialidade);
         }
     }
 

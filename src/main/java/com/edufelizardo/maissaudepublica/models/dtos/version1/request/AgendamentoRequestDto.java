@@ -52,4 +52,7 @@ public class AgendamentoRequestDto implements Serializable {
 
     /** A ação programática que esta marcação cumpre (consulta programada), do mesmo paciente e programa. */
     private UUID acaoProgramaticaId;
+
+    /** A especialidade (ADR-0134); sem ela, a do bloco da vaga, se houver. */
+    private UUID especialidadeId;
 }

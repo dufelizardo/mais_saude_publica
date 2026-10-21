@@ -1,8 +1,8 @@
 # Modelo do domínio Saúde Bucal
 
-**Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0111](../adr/0111-saude-bucal.md). **Nada implementado ainda.** A implementação
-vem nas fatias SB1 a SB5 (seção 14), cada uma com ADR própria.
+**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1 implementada)
+**Status:** desenho aprovado na [ADR-0111](../adr/0111-saude-bucal.md). **A SB1 (especialidade e avaliação
+odontológica) está implementada** na [ADR-0134](../adr/0134-saude-bucal-base.md); SB2 a SB5 vêm depois (seção 14).
 
 Saúde Bucal é um **domínio assistencial especializado**, e não um sistema odontológico isolado. Este documento
 mostra o que ele traz de próprio, o que reaproveita dos domínios que já existem, o odontograma com histórico, o plano
@@ -254,7 +254,7 @@ saude-bucal/
 
 | Fatia | Entrega | Depende de |
 |---|---|---|
-| **SB1** · base | especialidade no atendimento e na Agenda; avaliação odontológica | Atendimento, Equipe eSB |
+| **SB1** · base ✅ ([ADR-0134](../adr/0134-saude-bucal-base.md)) | especialidade no atendimento e na Agenda; avaliação odontológica | Atendimento, Equipe eSB |
 | **SB2** · odontograma | catálogo de condições, registros com histórico, projeção por data, tela do odontograma | SB1 |
 | **SB3** · tratamento | catálogo geral de procedimentos, complemento odontológico, plano de tratamento, evolução | SB2 |
 | **SB4** · regulação e prótese | especialidades no catálogo da Regulação, CEO como executante, tratamento protético | SB3, Regulação |

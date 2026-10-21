@@ -17,6 +17,8 @@ export interface BlocoAgendaRequestDto {
   tipo: TipoAgendamento;
   vigenteDesde?: string;
   vigenteAte?: string;
+  /** A especialidade do bloco (ADR-0134). */
+  especialidadeId?: string | null;
 }
 
 export interface BlocoAgendaResponseDto {
@@ -33,6 +35,8 @@ export interface BlocoAgendaResponseDto {
   vigenteDesde: string;
   vigenteAte?: string | null;
   vagasPorDia: number;
+  especialidadeId?: string | null;
+  especialidadeNome?: string | null;
 }
 
 export interface BloqueioAgendaRequestDto {
@@ -67,6 +71,9 @@ export interface ItemAgendaDto {
   pacienteNome?: string | null;
   status?: StatusAgendamento | null;
   descricao?: string | null;
+  /** A especialidade da vaga ou da marcação (ADR-0134). */
+  especialidadeId?: string | null;
+  especialidadeNome?: string | null;
 }
 
 export interface DiaAgendaDto {

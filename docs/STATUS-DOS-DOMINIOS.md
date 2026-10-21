@@ -51,7 +51,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
-| 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
+| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 feita; SB2 a SB5 |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 10 ✅ · 9 🟡 · 3 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 10 ✅ · 10 🟡 · 2 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,7 +68,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
+| SB2 | 25 Saúde Bucal | odontograma com histórico (notação FDI), projeção por data |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 
@@ -87,7 +87,7 @@ F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulner
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
-SB1 ──► SB2 ──► SB3 ──► SB4
+SB1 ✅ ──► SB2 ──► SB3 ──► SB4
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
@@ -177,7 +177,7 @@ C1 ──► C2 · C4 · C5
 - A partir do atendimento: pedir exames (ADR-0094), encaminhar à Regulação (ADR-0088) e internar (ADR-0099).
 
 **Falta:**
-- [ ] Especialidade no atendimento (domínio 25, SB1; serve a todas as especialidades).
+- [x] Especialidade no atendimento, do catálogo, herdada da marcação (ADR-0134; serve a todas as especialidades).
 - [ ] Local de realização do atendimento (domicílio, via pública, local do evento, unidade móvel), item 29, MO3.
 - [ ] Atividades coletivas: vacinação aberta, coleta com vários pacientes, reunião, capacitação. O grupo e a visita
   do programa já são ações programáticas (domínio 22, P4, ADR-0132); falta o registro do atendimento coletivo.
@@ -221,7 +221,7 @@ C1 ──► C2 · C4 · C5
 
 **Falta:**
 - [ ] Visão Mês e exportação.
-- [ ] Filtro de especialidade (a especialidade vem pelo domínio 25, SB1).
+- [x] Filtro de especialidade e especialidade do bloco, herdada pela marcação (ADR-0134).
 - [ ] Sala.
 - [x] Programas na marcação, como HiperDia e pré-natal, e a marcação ligada à consulta programada (ADR-0132).
 - [ ] Atividades coletivas na grade da agenda (as ações coletivas existem nos Programas, ADR-0132).
@@ -516,11 +516,17 @@ C1 ──► C2 · C4 · C5
 
 ### 25. Saúde Bucal
 
-**Estado:** 📐. Desenhado na [ADR-0111](./adr/0111-saude-bucal.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0111](./adr/0111-saude-bucal.md); detalhe em
 [`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md). A equipe eSB já existe (ADR-0103).
 
+**Temos:**
+- [x] **SB1 · Base** ([ADR-0134](./adr/0134-saude-bucal-base.md)): catálogo de especialidades (com a marca de
+  odontológica), especialidade no atendimento, no bloco da agenda e na marcação, filtro da Agenda; avaliação
+  odontológica no atendimento de odontologia (queixa, anamnese, exame, diagnóstico, risco em saúde bucal,
+  necessidade de tratamento, plano inicial), com retificação e no prontuário; permissão `ODONTOLOGIA.REGISTRAR` e os
+  papéis Cirurgião-dentista e Técnico em saúde bucal.
+
 **Falta:**
-- [ ] **SB1 · Base:** especialidade no atendimento e na Agenda; avaliação odontológica.
 - [ ] **SB2 · Odontograma:** catálogo de condições, registros com histórico (notação FDI), projeção por data, tela.
 - [ ] **SB3 · Tratamento:** catálogo geral de procedimentos, complemento odontológico (dente e faces), plano de
   tratamento e evolução.

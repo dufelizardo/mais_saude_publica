@@ -67,6 +67,11 @@ public class BlocoAgenda implements Serializable {
     /** Último dia em que o bloco vale; nulo enquanto não for encerrado. */
     private LocalDate vigenteAte;
 
+    /** A especialidade (ADR-0134): o bloco é dela (a odontologia de terça de manhã), e a marcação herda. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "especialidade_id", referencedColumnName = "uuid")
+    private Especialidade especialidade;
+
     public BlocoAgenda(Profissional profissional, UnidadeDeSaude unidade, DayOfWeek diaSemana, LocalTime horaInicio,
                        LocalTime horaFim, int duracaoMinutos, TipoAgendamento tipo, LocalDate vigenteDesde, LocalDate vigenteAte) {
         this.profissional = profissional;

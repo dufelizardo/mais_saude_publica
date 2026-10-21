@@ -78,3 +78,5 @@ Resource    ../../schema/vigilancia/vigilancia_surto_schema.resource
 Resource    ../../schema/territorio/territorio_schema.resource
 Resource    ../../schema/territorio/cadastro_territorial_schema.resource
 Resource    ../../schema/territorio/adscricao_schema.resource
+# SAÚDE BUCAL (ADR-0134)
+Resource    ../../schema/saude_bucal/saude_bucal_schema.resource

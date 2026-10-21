@@ -31,4 +31,7 @@ export interface AgendamentoResponseDto {
   encaixe?: boolean;
   programaId?: string | null;
   programaNome?: string | null;
+  /** A especialidade (ADR-0134). */
+  especialidadeId?: string | null;
+  especialidadeNome?: string | null;
 }

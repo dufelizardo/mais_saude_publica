@@ -225,6 +225,9 @@
 }
 
 <!-- ── Gavetas ──────────────────────────────────────────────────────────────────────────────── -->
+<!-- Catálogo de especialidades (ADR-0134). -->
+<app-catalogo-especialidades [podeGerenciar]="pode('ORGANIZACAO.GERENCIAR')" />
+
 @if (gaveta(); as g) {
   <app-drawer [titulo]="g.tipo === 'setor' ? (g.setor ? 'Editar setor' : 'Novo setor') : g.tipo === 'responsabilidade' ? 'Atribuir responsabilidade' : g.tipo === 'responsaveis' ? 'Responsáveis · ' + g.setor.nome : 'Encerrar responsabilidade'" (fechar)="fecharGaveta()">
     @switch (g.tipo) {

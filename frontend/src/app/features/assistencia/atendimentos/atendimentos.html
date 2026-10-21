@@ -630,6 +630,34 @@
                     <ng-container *ngTemplateOutlet="recConsulta; context: { $implicit: c, atId: a.uuid }"></ng-container>
                   } @empty { <p class="cell-sub">Nenhum registro.</p> }
                 </section>
+                @if (a.especialidadeOdontologica) {
+                  <section class="dsec" aria-label="Avaliação odontológica">
+                    <div class="dsec__h">
+                      <h3>Avaliação odontológica <span class="cnt">{{ avaliacoesOdontologicasVigentes(registros()).length }}</span></h3>
+                      @if (pode('ODONTOLOGIA.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAvaliacaoOdontologica(a.uuid)">+ Avaliação odontológica</button> }
+                    </div>
+                    @for (o of avaliacoesOdontologicasVigentes(registros()); track o.uuid) {
+                      <article class="rec">
+                        <div class="rec__head">
+                          <div>
+                            <span [class]="'tag tag--' + riscosBucais[o.risco].classe">{{ riscosBucais[o.risco].rotulo }}</span> <span class="cell-main" style="display: inline;">{{ necessidades[o.necessidadeTratamento] }}</span>
+                            <span class="cell-sub">{{ formatarDataHora(o.dataHora) }} · {{ o.profissionalNome }}</span>
+                          </div>
+                          @if (pode('ODONTOLOGIA.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAvaliacaoOdontologica(a.uuid, o)" [attr.aria-label]="'Retificar avaliação odontológica'">Retificar</button> }
+                        </div>
+                        <dl class="kv">
+                          @if (o.queixaPrincipal) { <div><dt>Queixa principal</dt><dd>{{ o.queixaPrincipal }}</dd></div> }
+                          @if (o.anamnese) { <div><dt>Anamnese</dt><dd>{{ o.anamnese }}</dd></div> }
+                          @if (o.exameClinico) { <div><dt>Exame clínico</dt><dd>{{ o.exameClinico }}</dd></div> }
+                          @if (o.diagnostico) { <div><dt>Diagnóstico</dt><dd>{{ o.diagnostico }}</dd></div> }
+                          @if (o.planoInicial) { <div><dt>Plano inicial</dt><dd>{{ o.planoInicial }}</dd></div> }
+                          @if (o.observacoes) { <div><dt>Observações</dt><dd>{{ o.observacoes }}</dd></div> }
+                        </dl>
+                        <ng-container *ngTemplateOutlet="recRetificacao; context: { $implicit: o }"></ng-container>
+                      </article>
+                    } @empty { <p class="cell-sub">Nenhum registro.</p> }
+                  </section>
+                }
                 <section class="dsec">
                   <div class="dsec__h">
                     <h3>Medicação <span class="cnt">{{ administracoesVigentes(registros()).length }}</span></h3>
@@ -889,6 +917,15 @@
                 @for (t of atTipos; track t.valor) { <label><input type="radio" formControlName="tipo" [value]="t.valor" />{{ t.rotulo }}</label> }
               </div>
             </fieldset>
+            <div class="dw-field">
+              <label for="f-especialidade">Especialidade<span class="opt">opcional · sem ela, a da marcação</span></label>
+              <select id="f-especialidade" formControlName="especialidadeId">
+                <option value="">Nenhuma</option>
+                @for (e of especialidades(); track e.uuid) {
+                  @if (e.ativa || e.uuid === atForm.controls.especialidadeId.value) { <option [value]="e.uuid">{{ e.nome }}</option> }
+                }
+              </select>
+            </div>
             <fieldset class="dw-field">
               <legend>Status <span class="req" aria-hidden="true">*</span></legend>
               <div class="radios">
@@ -954,6 +991,59 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.original ? 'Salvar retificação' : 'Salvar triagem') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('odonto') {
+        <form class="dw-form" [formGroup]="odontoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <ng-container *ngTemplateOutlet="cabecalhoRegistro; context: { atId: g.atId, original: g.original }"></ng-container>
+            @if (g.original) {
+              <div class="dw-field">
+                <label for="f-motivoRetificacao">Motivo da retificação <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <textarea id="f-motivoRetificacao" formControlName="motivoRetificacao" [attr.aria-invalid]="!!erro('motivoRetificacao')" aria-describedby="e-motivoRetificacao" placeholder="O que está sendo corrigido e por quê"></textarea>
+                @if (erro('motivoRetificacao')) { <p class="dw-err" id="e-motivoRetificacao">{{ erro('motivoRetificacao') }}</p> }
+              </div>
+            }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-dataHora">Data e hora <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataHora" type="datetime-local" formControlName="dataHora" [attr.aria-invalid]="!!erro('dataHora')" aria-describedby="e-dataHora" />
+                @if (erro('dataHora')) { <p class="dw-err" id="e-dataHora">{{ erro('dataHora') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-profissionalMatricula">Matrícula do cirurgião-dentista <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-profissionalMatricula" type="text" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />
+                @if (erro('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erro('profissionalMatricula') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field"><label for="f-queixaOdonto">Queixa principal<span class="opt">opcional</span></label><textarea id="f-queixaOdonto" formControlName="queixaPrincipal"></textarea></div>
+            <div class="dw-field"><label for="f-anamnese">Anamnese<span class="opt">opcional</span></label><textarea id="f-anamnese" formControlName="anamnese"></textarea></div>
+            <div class="dw-field"><label for="f-exameClinico">Exame clínico e achados<span class="opt">opcional</span></label><textarea id="f-exameClinico" formControlName="exameClinico"></textarea></div>
+            <div class="dw-field"><label for="f-diagnosticoOdonto">Diagnóstico e condições bucais<span class="opt">opcional</span></label><textarea id="f-diagnosticoOdonto" formControlName="diagnostico"></textarea></div>
+            <fieldset class="dw-field">
+              <legend>Risco em saúde bucal <span class="req" aria-hidden="true">*</span></legend>
+              <div class="radios" role="radiogroup" aria-describedby="e-risco">
+                @for (r of listaRiscosBucais; track r) { <label><input type="radio" formControlName="risco" [value]="r" [id]="$first ? 'f-risco' : null" />{{ riscosBucais[r].rotulo }}</label> }
+              </div>
+              @if (erro('risco')) { <p class="dw-err" id="e-risco">{{ erro('risco') }}</p> }
+            </fieldset>
+            <div class="dw-field">
+              <label for="f-necessidadeTratamento">Necessidade de tratamento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-necessidadeTratamento" formControlName="necessidadeTratamento" [attr.aria-invalid]="!!erro('necessidadeTratamento')" aria-describedby="e-necessidadeTratamento">
+                <option value="">Escolha…</option>
+                @for (n of listaNecessidades; track n) { <option [value]="n">{{ necessidades[n] }}</option> }
+              </select>
+              @if (erro('necessidadeTratamento')) { <p class="dw-err" id="e-necessidadeTratamento">{{ erro('necessidadeTratamento') }}</p> }
+            </div>
+            <div class="dw-field"><label for="f-planoInicial">Plano inicial<span class="opt">opcional</span></label><textarea id="f-planoInicial" formControlName="planoInicial"></textarea></div>
+            <div class="dw-field"><label for="f-observacoesOdonto">Observações<span class="opt">opcional</span></label><textarea id="f-observacoesOdonto" formControlName="observacoes"></textarea></div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.original ? 'Salvar retificação' : 'Salvar avaliação') }}</button>
           </footer>
         </form>
       }

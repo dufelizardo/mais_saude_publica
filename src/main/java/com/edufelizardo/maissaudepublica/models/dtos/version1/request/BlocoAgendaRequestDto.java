@@ -50,4 +50,7 @@ public class BlocoAgendaRequestDto implements Serializable {
     private LocalDate vigenteDesde;
 
     private LocalDate vigenteAte;
+
+    /** A especialidade do bloco (ADR-0134), opcional. */
+    private UUID especialidadeId;
 }

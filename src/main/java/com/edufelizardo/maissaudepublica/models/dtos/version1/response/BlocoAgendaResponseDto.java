@@ -37,11 +37,15 @@ public class BlocoAgendaResponseDto implements Serializable {
     private LocalDate vigenteAte;
     /** Quantas vagas o bloco oferece por dia. */
     private int vagasPorDia;
+    /** A especialidade do bloco (ADR-0134). */
+    private UUID especialidadeId;
+    private String especialidadeNome;
 
     public static BlocoAgendaResponseDto fromBloco(BlocoAgenda b) {
         int vagas = (int) (Duration.between(b.getHoraInicio(), b.getHoraFim()).toMinutes() / b.getDuracaoMinutos());
         return new BlocoAgendaResponseDto(b.getUuid(), b.getProfissional().getMatricula(), b.getProfissional().getNome(),
                 b.getUnidade().getUuid(), b.getUnidade().getNome(), b.getDiaSemana(), b.getHoraInicio(), b.getHoraFim(),
-                b.getDuracaoMinutos(), b.getTipo(), b.getVigenteDesde(), b.getVigenteAte(), vagas);
+                b.getDuracaoMinutos(), b.getTipo(), b.getVigenteDesde(), b.getVigenteAte(), vagas,
+                b.getEspecialidade() != null ? b.getEspecialidade().getUuid() : null, b.getEspecialidade() != null ? b.getEspecialidade().getNome() : null);
     }
 }
