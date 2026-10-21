@@ -186,13 +186,13 @@ export const CORES_CATEGORIA = ['pg__icon--blue', 'pg__icon--ok', 'pg__icon--pin
 // ── Ações programáticas (ADR-0132) ─────────────────────────────────────────────────────────────
 
 export type TipoAcaoProgramatica = 'CONSULTA_PROGRAMADA' | 'AFERICAO' | 'EXAME' | 'VACINA' | 'VISITA_DOMICILIAR' | 'BUSCA_ATIVA' | 'GRUPO'
-  | 'ORIENTACAO' | 'OUTRA';
+  | 'ORIENTACAO' | 'MOBILIZACAO' | 'OUTRA';
 export type SituacaoAcaoProgramatica = 'PENDENTE' | 'REALIZADA' | 'NAO_REALIZADA' | 'CANCELADA';
 export type ResultadoBuscaAtiva = 'ENCONTRADO_AGENDADO' | 'ENCONTRADO_RECUSOU' | 'NAO_ENCONTRADO' | 'MUDOU_DE_ENDERECO';
 
 export const TIPOS_ACAO: Record<TipoAcaoProgramatica, string> = {
   CONSULTA_PROGRAMADA: 'Consulta programada', AFERICAO: 'Aferição', EXAME: 'Exame', VACINA: 'Vacina', VISITA_DOMICILIAR: 'Visita domiciliar',
-  BUSCA_ATIVA: 'Busca ativa', GRUPO: 'Grupo ou atividade coletiva', ORIENTACAO: 'Orientação', OUTRA: 'Outra',
+  BUSCA_ATIVA: 'Busca ativa', GRUPO: 'Grupo ou atividade coletiva', ORIENTACAO: 'Orientação', MOBILIZACAO: 'Mobilização', OUTRA: 'Outra',
 };
 /** Só existem para uma pessoa (pedem o acompanhamento). */
 export const ACOES_SO_INDIVIDUAIS: TipoAcaoProgramatica[] = ['CONSULTA_PROGRAMADA', 'BUSCA_ATIVA', 'VISITA_DOMICILIAR'];
@@ -241,6 +241,12 @@ export interface AcaoProgramaticaDto {
   observacao?: string | null;
   participantes: { pacienteId: string; nome: string }[];
   criadaEm: string;
+  /** Ação da campanha (ADR-0133). */
+  campanhaId?: string | null;
+  campanhaNome?: string | null;
+  localCampanhaId?: string | null;
+  localNome?: string | null;
+  quantidadeAtendida?: number | null;
 }
 
 export interface AcoesProgramaticasDto {
@@ -254,7 +260,10 @@ export interface AcoesProgramaticasDto {
 }
 
 export interface AcaoProgramaticaRequestDto {
-  programaId: string;
+  /** Do programa, ou da campanha (ADR-0133): um dos dois. */
+  programaId?: string | null;
+  campanhaId?: string | null;
+  localCampanhaId?: string | null;
   tipo: TipoAcaoProgramatica;
   acompanhamentoId?: string | null;
   unidadeId?: string | null;
@@ -272,4 +281,105 @@ export interface RealizacaoAcaoRequestDto {
   resultadoBusca?: ResultadoBuscaAtiva | null;
   participantesIds?: string[] | null;
   observacao?: string | null;
+  quantidadeAtendida?: number | null;
+}
+
+// ── Campanhas (ADR-0133) ───────────────────────────────────────────────────────────────────────
+
+export type TipoCampanha = 'VACINACAO' | 'RASTREAMENTO' | 'CONSCIENTIZACAO' | 'MUTIRAO' | 'OUTRA';
+export type SituacaoCampanha = 'PLANEJADA' | 'EM_ANDAMENTO' | 'ENCERRADA' | 'CANCELADA';
+
+export const TIPOS_CAMPANHA: Record<TipoCampanha, string> = {
+  VACINACAO: 'Vacinação', RASTREAMENTO: 'Rastreamento ou prevenção', CONSCIENTIZACAO: 'Conscientização', MUTIRAO: 'Mutirão', OUTRA: 'Outra',
+};
+export const SITUACOES_CAMPANHA: Record<SituacaoCampanha, { rotulo: string; classe: string }> = {
+  PLANEJADA: { rotulo: 'Planejada', classe: 'info' },
+  EM_ANDAMENTO: { rotulo: 'Em andamento', classe: 'ok' },
+  ENCERRADA: { rotulo: 'Encerrada', classe: 'muted' },
+  CANCELADA: { rotulo: 'Cancelada', classe: 'alert' },
+};
+
+export interface LocalCampanhaDto {
+  uuid: string;
+  temporario: boolean;
+  unidadeId: string;
+  unidadeNome: string;
+  nome: string;
+  endereco?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  funcionamento?: string | null;
+  inicio?: string | null;
+  fim?: string | null;
+}
+
+export interface CampanhaDto {
+  uuid: string;
+  nome: string;
+  descricao?: string | null;
+  tipo: TipoCampanha;
+  programaId?: string | null;
+  programaNome?: string | null;
+  inicio: string;
+  fim: string;
+  situacao: SituacaoCampanha;
+  publico: string;
+  idadeMinima?: number | null;
+  idadeMaxima?: number | null;
+  sexo?: SexoPublico | null;
+  gestante: boolean;
+  condicoes: string[];
+  publicoDescricao?: string | null;
+  metaDescricao?: string | null;
+  metaQuantidade?: number | null;
+  realizado: number;
+  publicada: boolean;
+  canceladaEm?: string | null;
+  motivoCancelamento?: string | null;
+  acoesPendentes: number;
+  acoesRealizadas: number;
+  locais: LocalCampanhaDto[];
+}
+
+export interface CampanhaRequestDto {
+  nome: string;
+  descricao?: string | null;
+  tipo: TipoCampanha;
+  programaId?: string | null;
+  inicio: string;
+  fim: string;
+  idadeMinima?: number | null;
+  idadeMaxima?: number | null;
+  sexo?: SexoPublico | null;
+  gestante?: boolean;
+  condicoes?: string[];
+  publicoDescricao?: string | null;
+  metaDescricao?: string | null;
+  metaQuantidade?: number | null;
+}
+
+export interface LocalCampanhaRequestDto {
+  unidadeId: string;
+  temporario?: boolean;
+  nome?: string | null;
+  endereco?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  funcionamento?: string | null;
+  inicio?: string | null;
+  fim?: string | null;
+}
+
+export interface CampanhaPublicaDto {
+  nome: string;
+  tipo: TipoCampanha;
+  descricao?: string | null;
+  publico: string;
+  inicio: string;
+  fim: string;
+  situacao: SituacaoCampanha;
+  meta?: string | null;
+  metaQuantidade?: number | null;
+  realizado: number;
+  locais: { nome: string; endereco?: string | null; funcionamento?: string | null; latitude?: number | null; longitude?: number | null }[];
 }

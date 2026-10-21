@@ -1,9 +1,11 @@
 # Modelo do domínio Programas, Ações e Linhas de Cuidado
 
-**Data:** 2026-10-07 (criado) · 2026-10-17 (P1 implementada) · 2026-10-18 (P2 implementada)
+**Data:** 2026-10-07 (criado) · 2026-10-17 (P1 implementada) · 2026-10-18 (P2 implementada) · 2026-10-21 (P4 e P3 implementadas)
 **Status:** desenho aprovado na [ADR-0109](../adr/0109-programas-acoes-e-linhas-de-cuidado.md). **A P1 (catálogo)
-e a P2 (acompanhamento) estão implementadas** nas ADRs [0118](../adr/0118-programas-catalogo.md) e
-[0119](../adr/0119-programas-acompanhamento.md); P3 a P6 vêm depois (seção 12).
+a P2 (acompanhamento), a P3 (campanhas) e a P4 (ações programáticas) estão implementadas** nas ADRs
+[0118](../adr/0118-programas-catalogo.md), [0119](../adr/0119-programas-acompanhamento.md),
+[0133](../adr/0133-programas-campanhas.md) e [0132](../adr/0132-programas-acoes-programaticas.md); P5 e P6 vêm depois
+(seção 12).
 
 Este documento detalha o domínio: os conceitos e por que ficam separados, as entidades, o acompanhamento do cidadão,
 o dado sensível, como o protótipo `Programas.html` se encaixa nas fatias e onde o domínio liga com o que já existe.
@@ -243,7 +245,7 @@ Editável pelo município. Inclui os programas do protótipo e os nacionais comu
 |---|---|---|
 | **P1** · catálogo | categoria, programa, público-alvo, participação e carga inicial; tela em cartões pelo protótipo, com os indicadores "Em breve" | — |
 | **P2** · acompanhamento | inscrever, mudar a situação e encerrar; aba Programas e filtro em Pacientes; inscritos e faltosos no programa; programas na seção da equipe | P1, ADR-0076 |
-| **P3** · campanhas | cadastro com período, público, meta e locais; tela e consulta pública na landing page | P1 |
+| **P3** · campanhas ✅ ([ADR-0133](../adr/0133-programas-campanhas.md)) | cadastro com período, público, meta e locais; tela e consulta pública na landing page | P1 |
 | **P4** · ações programáticas ✅ ([ADR-0132](../adr/0132-programas-acoes-programaticas.md)) | ação prevista ligada ao registro assistencial; ações pendentes e busca ativa; programa na marcação da Agenda | P2 |
 | **P5** · linhas de cuidado | percurso com etapas, serviços e unidades de referência | Atendimento, Regulação e Prontuário maduros |
 | **P6** · metas e indicadores | cobertura, controle, pré-natal adequado, faltosos; alimenta o #19 Indicadores e BI | P2, P4 |

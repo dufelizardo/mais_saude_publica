@@ -21,8 +21,13 @@ public class AcaoProgramaticaRequestDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "Informe o programa.")
+    /** Do programa, ou da campanha (ADR-0133): um dos dois. */
     private UUID programaId;
+
+    private UUID campanhaId;
+
+    /** Ação da campanha: o local da campanha onde acontece. */
+    private UUID localCampanhaId;
 
     @NotNull(message = "Informe o tipo da ação.")
     private TipoAcaoProgramatica tipo;

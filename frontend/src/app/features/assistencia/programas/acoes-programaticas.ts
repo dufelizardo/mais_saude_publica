@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { catchError, of } from 'rxjs';
@@ -9,6 +9,7 @@ import {
   AcaoProgramaticaDto,
   AcoesProgramaticasDto,
   AcompanhamentoDto,
+  CampanhaDto,
   ProgramaResumoDto,
   RESULTADOS_BUSCA,
   ResultadoBuscaAtiva,
@@ -33,22 +34,24 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
   imports: [ReactiveFormsModule, Drawer],
   template: `
     <div class="filters" style="margin-bottom: var(--s-3); flex-wrap: wrap;">
-      @if (!programaFixo()) {
+      @if (!programaFixo() && !campanhaFixa()) {
         <select class="sel" aria-label="Programa das ações" [value]="programaId()" (change)="programaId.set($any($event.target).value)">
           <option value="">Todos os programas</option>
           @for (p of programas(); track p.uuid) { <option [value]="p.uuid">{{ p.nome }}</option> }
         </select>
       }
-      <div class="seg" role="group" aria-label="Período das ações">
-        <button type="button" [attr.aria-pressed]="periodo() === 'semana'" (click)="periodo.set('semana')">Esta semana</button>
-        <button type="button" [attr.aria-pressed]="periodo() === 'quatro'" (click)="periodo.set('quatro')">4 semanas</button>
-        <button type="button" [attr.aria-pressed]="periodo() === 'mes'" (click)="periodo.set('mes')">Este mês</button>
-      </div>
+      @if (!campanhaFixa()) {
+        <div class="seg" role="group" aria-label="Período das ações">
+          <button type="button" [attr.aria-pressed]="periodo() === 'semana'" (click)="periodo.set('semana')">Esta semana</button>
+          <button type="button" [attr.aria-pressed]="periodo() === 'quatro'" (click)="periodo.set('quatro')">4 semanas</button>
+          <button type="button" [attr.aria-pressed]="periodo() === 'mes'" (click)="periodo.set('mes')">Este mês</button>
+        </div>
+      }
       <select class="sel" aria-label="Situação das ações" [value]="situacao()" (change)="situacao.set($any($event.target).value)">
         <option value="">Todas as situações</option>
         @for (s of listaSituacoes; track s) { <option [value]="s">{{ situacoes[s].rotulo }}</option> }
       </select>
-      @if (podeAcompanhar()) { <button type="button" class="btn btn--sm" (click)="abrirNova()" style="margin-left: auto;">Prever ação</button> }
+      @if (podeAcompanhar() && podePrever()) { <button type="button" class="btn btn--sm" (click)="abrirNova()" style="margin-left: auto;">Prever ação</button> }
     </div>
     @if (dados(); as d) {
       <p class="cell-sub" aria-label="Resumo das ações">{{ d.pendentes }} {{ d.pendentes === 1 ? 'pendente' : 'pendentes' }} no período · {{ d.vencidas }}
@@ -61,8 +64,8 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
               @for (a of d.lista; track a.uuid) {
                 <tr>
                   <td class="mono">{{ data(a.dataPrevista) }}</td>
-                  <td><span class="cell-main">{{ tipos[a.tipo] }}</span><span class="cell-sub">{{ a.programaNome }}@if (a.descricao) { · {{ a.descricao }} }@if (a.agendamentoDataHora) { · agendada {{ dataHora(a.agendamentoDataHora) }} }</span></td>
-                  <td>@if (a.coletiva) { <span class="cell-main">{{ a.participantes.length }} participante(s)</span><span class="cell-sub">{{ a.local ?? a.unidadeNome }}</span> } @else { <span class="cell-main">{{ a.pacienteNome }}</span><span class="cell-sub">{{ a.unidadeNome }}</span> }</td>
+                  <td><span class="cell-main">{{ tipos[a.tipo] }}</span><span class="cell-sub">{{ a.campanhaNome ?? a.programaNome }}@if (a.descricao) { · {{ a.descricao }} }@if (a.agendamentoDataHora) { · agendada {{ dataHora(a.agendamentoDataHora) }} }</span></td>
+                  <td>@if (a.campanhaId) { <span class="cell-main">{{ a.localNome ?? a.unidadeNome }}</span>@if (a.quantidadeAtendida != null) { <span class="cell-sub">{{ a.quantidadeAtendida }} atendido(s)</span> } } @else if (a.coletiva) { <span class="cell-main">{{ a.participantes.length }} participante(s)</span><span class="cell-sub">{{ a.local ?? a.unidadeNome }}</span> } @else { <span class="cell-main">{{ a.pacienteNome }}</span><span class="cell-sub">{{ a.unidadeNome }}</span> }</td>
                   <td>{{ a.responsavelNome ?? '—' }}</td>
                   <td>
                     <span [class]="'tag tag--' + situacoes[a.situacao].classe">{{ situacoes[a.situacao].rotulo }}</span>
@@ -105,6 +108,23 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
             @if (erro()) { <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div> }
             @switch (g.tipo) {
               @case ('nova') {
+                @if (campanhaFixa(); as cf) {
+                  <div class="dw-row">
+                    <div class="dw-field">
+                      <label for="f-acao-tipo-campanha">Ação</label>
+                      <select id="f-acao-tipo-campanha" formControlName="tipo">
+                        @for (t of tiposDaCampanha; track t) { <option [value]="t">{{ tipos[t] }}</option> }
+                      </select>
+                    </div>
+                    <div class="dw-field">
+                      <label for="f-acao-local-campanha">Local</label>
+                      <select id="f-acao-local-campanha" formControlName="localCampanhaId">
+                        <option value="">Escolha…</option>
+                        @for (l of cf.locais; track l.uuid) { <option [value]="l.uuid">{{ l.nome }}</option> }
+                      </select>
+                    </div>
+                  </div>
+                } @else {
                 <div class="dw-row">
                   @if (!programaFixo()) {
                     <div class="dw-field">
@@ -162,6 +182,7 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
                     } @else { <p class="cell-sub">Escolha o programa para ver os acompanhados.</p> }
                   </fieldset>
                 }
+                }
                 <div class="dw-row">
                   <div class="dw-field">
                     <label for="f-acao-data">Data prevista</label>
@@ -199,6 +220,12 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
                   </div>
                 }
                 @if (g.acao.coletiva) {
+                  <div class="dw-field">
+                    <label for="f-acao-quantidade">Pessoas atendidas<span class="opt">opcional</span></label>
+                    <input id="f-acao-quantidade" type="number" min="0" formControlName="quantidadeAtendida" />
+                  </div>
+                }
+                @if (g.acao.coletiva && !g.acao.campanhaId) {
                   <fieldset class="dw-field">
                     <legend>Quem participou</legend>
                     <div class="radios" aria-label="Quem participou" style="flex-direction: column; align-items: flex-start;">
@@ -241,12 +268,17 @@ export class AcoesProgramaticas {
   readonly unidadeId = input('');
   /** No detalhe do programa: só as ações dele. */
   readonly programaFixo = input<string | null>(null);
+  /** No detalhe da campanha (ADR-0133): as ações dela, no período dela, nos locais dela. */
+  readonly campanhaFixa = input<CampanhaDto | null>(null);
+  /** Avisa quem mostra a campanha (o andamento da meta muda com a realização). */
+  readonly alterada = output<void>();
   readonly podeAcompanhar = input(false);
   /** Muda para recarregar (ex.: uma busca ativa gerada na lista de inscritos). */
   readonly versao = input(0);
 
   protected readonly tipos = TIPOS_ACAO;
   protected readonly listaTipos = Object.keys(TIPOS_ACAO) as TipoAcaoProgramatica[];
+  protected readonly tiposDaCampanha = this.listaTipos.filter((t) => !ACOES_SO_INDIVIDUAIS.includes(t));
   protected readonly situacoes = SITUACOES_ACAO;
   protected readonly listaSituacoes = Object.keys(SITUACOES_ACAO) as (keyof typeof SITUACOES_ACAO)[];
   protected readonly resultados = RESULTADOS_BUSCA;
@@ -265,19 +297,23 @@ export class AcoesProgramaticas {
   protected readonly form = this.fb.nonNullable.group({
     programaId: '', tipo: 'CONSULTA_PROGRAMADA', alcance: 'individual', acompanhamentoId: '', unidadeId: '', local: '', dataPrevista: '',
     responsavelMatricula: '', descricao: '', realizadaEm: '', ligarAtendimento: true, resultadoBusca: '', observacao: '', motivo: '',
+    localCampanhaId: '', quantidadeAtendida: '',
   });
   private readonly tipoEscolhido = signal<TipoAcaoProgramatica>('CONSULTA_PROGRAMADA');
 
   protected readonly programasAtivos = computed(() => this.programas().filter((p) => p.situacao === 'ATIVO'));
   protected readonly soIndividual = computed(() => ACOES_SO_INDIVIDUAIS.includes(this.tipoEscolhido()));
+  /** A campanha cancelada ou encerrada não recebe ação. */
+  protected readonly podePrever = computed(() => {
+    const c = this.campanhaFixa();
+    return !c || c.situacao === 'PLANEJADA' || c.situacao === 'EM_ANDAMENTO';
+  });
 
   constructor() {
     this.form.controls.tipo.valueChanges.subscribe((t) => this.tipoEscolhido.set(t as TipoAcaoProgramatica));
     effect(() => {
       this.versao();
-      const [de, ate] = intervalo(this.periodo());
-      const filtro = { programaId: this.programaFixo() || this.programaId() || undefined, unidadeId: this.unidadeId() || undefined, de, ate,
-        situacao: this.situacao() || undefined };
+      const filtro = this.filtro();
       untracked(() => this.carregar(filtro));
     });
   }
@@ -290,10 +326,16 @@ export class AcoesProgramaticas {
     })).subscribe((d) => this.dados.set(d));
   }
 
-  private recarregar(): void {
+  private filtro(): Parameters<ProgramaService['acoes']>[0] {
+    const c = this.campanhaFixa();
+    if (c) return { campanhaId: c.uuid, de: c.inicio, ate: c.fim, situacao: this.situacao() || undefined };
     const [de, ate] = intervalo(this.periodo());
-    this.carregar({ programaId: this.programaFixo() || this.programaId() || undefined, unidadeId: this.unidadeId() || undefined, de, ate,
-      situacao: this.situacao() || undefined });
+    return { programaId: this.programaFixo() || this.programaId() || undefined, unidadeId: this.unidadeId() || undefined, de, ate,
+      situacao: this.situacao() || undefined };
+  }
+
+  private recarregar(): void {
+    this.carregar(this.filtro());
   }
 
   protected data(iso?: string | null): string {
@@ -323,18 +365,22 @@ export class AcoesProgramaticas {
 
   protected abrirNova(): void {
     const programa = this.programaFixo() || this.programaId();
-    this.form.reset({ programaId: programa, tipo: 'CONSULTA_PROGRAMADA', alcance: 'individual', acompanhamentoId: '', unidadeId: this.unidadeId(), local: '',
-      dataPrevista: hoje(), responsavelMatricula: '', descricao: '', realizadaEm: '', ligarAtendimento: true, resultadoBusca: '', observacao: '', motivo: '' });
-    this.tipoEscolhido.set('CONSULTA_PROGRAMADA');
+    const c = this.campanhaFixa();
+    const tipo = c ? (c.tipo === 'VACINACAO' ? 'VACINA' : 'MOBILIZACAO') : 'CONSULTA_PROGRAMADA';
+    const data = c && hoje() < c.inicio ? c.inicio : hoje();
+    this.form.reset({ programaId: programa, tipo, alcance: c ? 'coletiva' : 'individual', acompanhamentoId: '', unidadeId: this.unidadeId(), local: '',
+      dataPrevista: data, responsavelMatricula: '', descricao: '', realizadaEm: '', ligarAtendimento: true, resultadoBusca: '', observacao: '', motivo: '',
+      localCampanhaId: c?.locais.length === 1 ? c.locais[0].uuid : '', quantidadeAtendida: '' });
+    this.tipoEscolhido.set(tipo as TipoAcaoProgramatica);
     this.erro.set(null);
-    this.carregarAcompanhados(programa);
+    if (!c) this.carregarAcompanhados(programa);
     this.gaveta.set({ tipo: 'nova' });
   }
 
   protected abrirRealizar(a: AcaoProgramaticaDto): void {
-    this.form.patchValue({ realizadaEm: hoje(), ligarAtendimento: true, resultadoBusca: '', observacao: '' });
+    this.form.patchValue({ realizadaEm: hoje(), ligarAtendimento: true, resultadoBusca: '', observacao: '', quantidadeAtendida: '' });
     this.erro.set(null);
-    if (a.coletiva) {
+    if (a.coletiva && a.programaId && !a.campanhaId) {
       this.carregarAcompanhados(a.programaId);
       this.participantes.set(a.participantes.map((p) => p.pacienteId));
     }
@@ -356,7 +402,16 @@ export class AcoesProgramaticas {
     const g = this.gaveta();
     if (!g) return;
     const v = this.form.getRawValue();
-    if (g.tipo === 'nova') {
+    if (g.tipo === 'nova' && this.campanhaFixa()) {
+      if (!v.localCampanhaId || !v.dataPrevista) {
+        this.erro.set('Escolha o local e a data.');
+        return;
+      }
+      this.enviar(this.service.preverAcao({
+        campanhaId: this.campanhaFixa()!.uuid, localCampanhaId: v.localCampanhaId, tipo: v.tipo as TipoAcaoProgramatica, dataPrevista: v.dataPrevista,
+        responsavelMatricula: v.responsavelMatricula.trim() || null, descricao: v.descricao.trim() || null,
+      }));
+    } else if (g.tipo === 'nova') {
       const individual = v.alcance === 'individual' || this.soIndividual();
       if (!v.programaId || !v.dataPrevista || (individual && !v.acompanhamentoId) || (!individual && !v.unidadeId)) {
         this.erro.set(individual ? 'Escolha o programa, o paciente e a data.' : 'Escolha o programa, a unidade e a data.');
@@ -374,8 +429,9 @@ export class AcoesProgramaticas {
       }
       this.enviar(this.service.realizarAcao(g.acao.uuid, {
         realizadaEm: v.realizadaEm || null, atendimentoId: v.ligarAtendimento ? g.acao.atendimentoSugeridoId ?? null : null,
-        resultadoBusca: (v.resultadoBusca || null) as ResultadoBuscaAtiva | null, participantesIds: g.acao.coletiva ? this.participantes() : null,
-        observacao: v.observacao.trim() || null,
+        resultadoBusca: (v.resultadoBusca || null) as ResultadoBuscaAtiva | null,
+        participantesIds: g.acao.coletiva && !g.acao.campanhaId ? this.participantes() : null, observacao: v.observacao.trim() || null,
+        quantidadeAtendida: g.acao.coletiva && String(v.quantidadeAtendida ?? '') !== '' ? Number(v.quantidadeAtendida) : null,
       }));
     } else {
       if (!v.motivo.trim()) {
@@ -393,6 +449,7 @@ export class AcoesProgramaticas {
         this.salvando.set(false);
         this.gaveta.set(null);
         this.recarregar();
+        this.alterada.emit();
       },
       error: (e: HttpErrorResponse) => {
         this.salvando.set(false);

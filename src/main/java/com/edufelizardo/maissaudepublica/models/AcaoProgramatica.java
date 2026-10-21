@@ -39,9 +39,22 @@ public class AcaoProgramatica implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID uuid;
 
+    /** Do programa, ou da campanha (ADR-0133): um dos dois. */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "programa_id", referencedColumnName = "uuid", nullable = false, updatable = false)
+    @JoinColumn(name = "programa_id", referencedColumnName = "uuid", updatable = false)
     private Programa programa;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campanha_id", referencedColumnName = "uuid", updatable = false)
+    private Campanha campanha;
+
+    /** Ação da campanha: o local onde acontece. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "local_campanha_id", referencedColumnName = "uuid", updatable = false)
+    private LocalCampanha localCampanha;
+
+    /** Coletiva realizada: quantas pessoas foram atendidas (o andamento da meta da campanha). */
+    private Integer quantidadeAtendida;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, updatable = false)

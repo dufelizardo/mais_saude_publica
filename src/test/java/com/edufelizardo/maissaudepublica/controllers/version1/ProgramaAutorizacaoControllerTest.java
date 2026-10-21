@@ -70,10 +70,12 @@ class ProgramaAutorizacaoControllerTest {
     @Autowired
     private CategoriaProgramaRepository categoriaRepository;
 
+    private UnidadeDeSaude ubs;
+
     @BeforeEach
     void seed() {
         limpar();
-        UnidadeDeSaude ubs = new UnidadeDeSaude();
+        ubs = new UnidadeDeSaude();
         ubs.setNome(PREFIXO + "UBS");
         ubs.setTipo(TipoUnidadeDeSaude.UBS);
         ubs.setAtivo(true);
@@ -85,6 +87,8 @@ class ProgramaAutorizacaoControllerTest {
     @AfterEach
     void limpar() {
         jdbc.update("delete from tb_programa where codigo = 'TESTE_PG_AUT'");
+        jdbc.update("delete from tb_local_campanha where campanha_id in (select uuid from tb_campanha where nome like ?)", PREFIXO + "%");
+        jdbc.update("delete from tb_campanha where nome like ?", PREFIXO + "%");
         for (String cpf : CPFS) {
             atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
             usuarioRepository.findByCpf(cpf).ifPresent(usuarioRepository::delete);
@@ -120,5 +124,24 @@ class ProgramaAutorizacaoControllerTest {
                 .andExpect(status().isForbidden());
         mockMvc.perform(como(GESTOR, post("/api/v1/programa/")).contentType(MediaType.APPLICATION_JSON).content(corpo))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void campanhaCadastradaPorQuemGerenciaConsultadaPorQuemAcompanhaEPublicaSemLogin() throws Exception {
+        String corpo = "{\"nome\": \"%sCampanha\", \"tipo\": \"VACINACAO\", \"inicio\": \"%s\", \"fim\": \"%s\"}"
+                .formatted(PREFIXO, java.time.LocalDate.now(), java.time.LocalDate.now().plusDays(10));
+        mockMvc.perform(get("/api/v1/publico/campanha")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/campanhas")).andExpect(status().isUnauthorized());
+        mockMvc.perform(como(ENFERMEIRO, post("/api/v1/campanha")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isForbidden());
+        String r = mockMvc.perform(como(GESTOR, post("/api/v1/campanha")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String id = com.jayway.jsonpath.JsonPath.read(r, "$.uuid");
+        mockMvc.perform(como(ENFERMEIRO, get("/api/v1/campanhas"))).andExpect(status().isOk());
+        mockMvc.perform(como(ENFERMEIRO, post("/api/v1/campanha/" + id + "/publicacao")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"publicada\": true}")).andExpect(status().isForbidden());
+        // O local é incluído por quem gerencia programas na unidade.
+        mockMvc.perform(como(GESTOR, post("/api/v1/campanha/" + id + "/local")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"unidadeId\": \"%s\"}".formatted(ubs.getUuid()))).andExpect(status().isCreated());
     }
 }

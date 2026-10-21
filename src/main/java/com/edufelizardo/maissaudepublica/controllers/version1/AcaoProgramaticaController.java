@@ -44,18 +44,20 @@ public class AcaoProgramaticaController {
             + "confirmar e vencidas primeiro. Indicadores: pendentes, vencidas, realizadas no mês e prontas para confirmar. Leitura auditada.",
             tags = TAG)
     @ApiErrorResponsesListagem
-    public ResponseEntity<AcoesProgramaticasDto> acoes(@RequestParam(required = false) UUID programaId, @RequestParam(required = false) UUID unidadeId,
+    public ResponseEntity<AcoesProgramaticasDto> acoes(@RequestParam(required = false) UUID programaId, @RequestParam(required = false) UUID campanhaId,
+                                                       @RequestParam(required = false) UUID unidadeId,
                                                        @RequestParam(required = false) UUID equipeId,
                                                        @RequestParam(required = false) String responsavelMatricula,
                                                        @RequestParam(required = false) LocalDate de, @RequestParam(required = false) LocalDate ate,
                                                        @RequestParam(required = false) SituacaoAcaoProgramatica situacao) {
-        return ResponseEntity.ok(service.acoes(programaId, unidadeId, equipeId, responsavelMatricula, de, ate, situacao));
+        return ResponseEntity.ok(service.acoes(programaId, campanhaId, unidadeId, equipeId, responsavelMatricula, de, ate, situacao));
     }
 
     @RequerPermissao({"PROGRAMA.ACOMPANHAR"})
     @PostMapping(value = "acao-programatica", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Prevê uma ação programática", description = "Individual pelo acompanhamento vigente; coletiva pela unidade, com "
-            + "participantes acompanhados no programa (422). Consulta programada, visita e busca ativa são individuais (400).", tags = TAG)
+    @Operation(summary = "Prevê uma ação programática", description = "Do programa ou da campanha, um dos dois (400). Individual pelo "
+            + "acompanhamento vigente; coletiva pela unidade, com participantes acompanhados no programa (422); da campanha, num local dela e no "
+            + "período (422). Consulta programada, visita e busca ativa são individuais (400).", tags = TAG)
     @ApiErrorResponsesMutacao
     public ResponseEntity<AcaoProgramaticaDto> prever(@Valid @RequestBody AcaoProgramaticaRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.prever(dto));
