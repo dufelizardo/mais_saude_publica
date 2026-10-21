@@ -657,6 +657,14 @@
                       </article>
                     } @empty { <p class="cell-sub">Nenhum registro.</p> }
                   </section>
+                  <section class="dsec" aria-label="Odontograma do paciente">
+                    <div class="dsec__h"><h3>Odontograma</h3></div>
+                    @if (!avaliacaoOdontologicaVigente(registros())) {
+                      <p class="cell-sub">Registre a avaliação odontológica para marcar o odontograma; o histórico do paciente aparece abaixo.</p>
+                    }
+                    <app-odontograma [pacienteId]="a.pacienteUuid" [avaliacaoId]="avaliacaoOdontologicaVigente(registros())"
+                      [podeRegistrar]="pode('ODONTOLOGIA.REGISTRAR')" />
+                  </section>
                 }
                 <section class="dsec">
                   <div class="dsec__h">

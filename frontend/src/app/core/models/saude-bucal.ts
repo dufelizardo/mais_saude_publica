@@ -67,3 +67,56 @@ export interface AvaliacaoOdontologicaRequestDto {
   observacoes?: string | null;
   motivoRetificacao?: string | null;
 }
+
+// ── Odontograma (ADR-0135) ─────────────────────────────────────────────────────────────────────
+
+export type AlcanceCondicaoOdontologica = 'FACE' | 'DENTE' | 'AMBOS';
+export type FaceDente = 'MESIAL' | 'DISTAL' | 'OCLUSAL' | 'INCISAL' | 'VESTIBULAR' | 'LINGUAL_PALATINA';
+
+export const FACES_DENTE: Record<FaceDente, string> = {
+  MESIAL: 'Mesial', DISTAL: 'Distal', OCLUSAL: 'Oclusal', INCISAL: 'Incisal', VESTIBULAR: 'Vestibular', LINGUAL_PALATINA: 'Lingual ou palatina',
+};
+
+export interface CondicaoOdontologicaDto {
+  uuid: string;
+  codigo: string;
+  nome: string;
+  alcance: AlcanceCondicaoOdontologica;
+  cor: string;
+  sigla: string;
+  ativa: boolean;
+}
+
+export interface RegistroOdontogramaDto {
+  uuid: string;
+  dente: number;
+  face?: FaceDente | null;
+  condicaoId: string;
+  condicaoCodigo: string;
+  condicaoNome: string;
+  cor: string;
+  sigla: string;
+  data: string;
+  avaliacaoId?: string | null;
+  atendimentoId?: string | null;
+  profissionalNome?: string | null;
+  observacao?: string | null;
+  anulado: boolean;
+  anuladoEm?: string | null;
+  motivoAnulacao?: string | null;
+  registradoEm: string;
+}
+
+export interface OdontogramaDto {
+  pacienteId: string;
+  data: string;
+  dentes: { dente: number; condicaoDente?: RegistroOdontogramaDto | null; faces: { face: FaceDente; registro: RegistroOdontogramaDto }[] }[];
+  registros: number;
+}
+
+export interface MarcacaoOdontogramaDto {
+  dente: number;
+  face?: FaceDente | null;
+  condicaoId: string;
+  observacao?: string | null;
+}

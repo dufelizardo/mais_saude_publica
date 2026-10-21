@@ -180,7 +180,7 @@ real":
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (sem a notificação no sistema, V1, e sem o SAMU, regulação
   de urgência); faltam SM5 e SM6
   (intersetorialidade e indicadores).
-- **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134; faltam SB2 (odontograma) a SB5 (coletiva).
+- **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134, ~~SB2 (odontograma)~~ — ADR-0135; faltam SB3 (tratamento) a SB5 (coletiva).
 - **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias ~~V1 (fundação)~~ — ADR-0124,
   ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131; faltam V3 (sanitária) a V5
   (trabalhador e integrações).

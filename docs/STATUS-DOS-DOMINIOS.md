@@ -51,7 +51,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
-| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 feita; SB2 a SB5 |
+| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 e SB2 feitas; SB3 a SB5 |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
@@ -68,7 +68,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| SB2 | 25 Saúde Bucal | odontograma com histórico (notação FDI), projeção por data |
+| SB3 | 25 Saúde Bucal | catálogo geral de procedimentos, complemento odontológico, plano de tratamento |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 
@@ -87,7 +87,7 @@ F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulner
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
-SB1 ✅ ──► SB2 ──► SB3 ──► SB4
+SB1 ✅ ──► SB2 ✅ ──► SB3 ──► SB4
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
@@ -525,9 +525,12 @@ C1 ──► C2 · C4 · C5
   odontológica no atendimento de odontologia (queixa, anamnese, exame, diagnóstico, risco em saúde bucal,
   necessidade de tratamento, plano inicial), com retificação e no prontuário; permissão `ODONTOLOGIA.REGISTRAR` e os
   papéis Cirurgião-dentista e Técnico em saúde bucal.
+- [x] **SB2 · Odontograma** ([ADR-0135](./adr/0135-saude-bucal-odontograma.md)): catálogo de condições (cor, sigla e
+  alcance), registros por dente FDI e face feitos na avaliação, validação da face pelo dente e do alcance pela
+  condição, anulação com motivo, projeção por data (o dente inteiro por cima das faces anteriores) e histórico do
+  dente; seção Odontograma no atendimento de odontologia.
 
 **Falta:**
-- [ ] **SB2 · Odontograma:** catálogo de condições, registros com histórico (notação FDI), projeção por data, tela.
 - [ ] **SB3 · Tratamento:** catálogo geral de procedimentos, complemento odontológico (dente e faces), plano de
   tratamento e evolução.
 - [ ] **SB4 · Regulação e prótese:** especialidades odontológicas no catálogo da Regulação, CEO como executante,

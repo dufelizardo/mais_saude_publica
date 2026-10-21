@@ -52,6 +52,7 @@ import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-pront
 import { ExamesPaciente } from '../../../shared/exames-paciente/exames-paciente';
 import { InternacoesPaciente } from '../../../shared/internacoes-paciente/internacoes-paciente';
 import { InternacaoResponseDto } from '../../../core/models/internacao';
+import { Odontograma } from './odontograma';
 import { ExameProntuarioDto } from '../../../core/models/laboratorio';
 import { SetorService } from '../../../core/services/setor';
 import { TriagemService } from '../../../core/services/triagem';
@@ -132,7 +133,7 @@ const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
  */
 @Component({
   selector: 'app-atendimentos',
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente],
+  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente, Odontograma],
   templateUrl: './atendimentos.html',
   styleUrl: './atendimentos.css',
 })
@@ -545,6 +546,11 @@ export class Atendimentos {
 
   protected avaliacoesOdontologicasVigentes(r: ProntuarioAtendimentoDto | null): AvaliacaoOdontologicaDto[] {
     return (r?.avaliacoesOdontologicas ?? []).filter((a) => !a.retificado).sort((a, b) => a.dataHora.localeCompare(b.dataHora));
+  }
+
+  /** A avaliação vigente mais recente do atendimento: onde o odontograma é marcado (ADR-0135). */
+  protected avaliacaoOdontologicaVigente(r: ProntuarioAtendimentoDto | null): string | null {
+    return this.avaliacoesOdontologicasVigentes(r).at(-1)?.uuid ?? null;
   }
 
   protected abrirAvaliacaoOdontologica(atId: string, original: AvaliacaoOdontologicaDto | null = null): void {
