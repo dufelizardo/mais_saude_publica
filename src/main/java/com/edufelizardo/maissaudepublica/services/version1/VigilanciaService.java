@@ -21,6 +21,7 @@ import com.edufelizardo.maissaudepublica.models.NotificacaoNegativa;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.PedidoExame;
 import com.edufelizardo.maissaudepublica.models.Profissional;
+import com.edufelizardo.maissaudepublica.models.Surto;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AgravoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CampoFichaDto;
@@ -34,6 +35,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Notificaca
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.NotificacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AgravoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.BoletimVigilanciaDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EventoLinhaDoTempoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.MapaVigilanciaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NotificacaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NotificacaoNegativaDto;
@@ -55,6 +57,7 @@ import com.edufelizardo.maissaudepublica.repositories.EventoCriseRepository;
 import com.edufelizardo.maissaudepublica.repositories.FichaAgravoRepository;
 import com.edufelizardo.maissaudepublica.repositories.InternacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.InvestigacaoEpidemiologicaRepository;
+import com.edufelizardo.maissaudepublica.repositories.MedidaControleRepository;
 import com.edufelizardo.maissaudepublica.repositories.MembroNucleoRepository;
 import com.edufelizardo.maissaudepublica.repositories.MicroareaRepository;
 import com.edufelizardo.maissaudepublica.repositories.NotificacaoNegativaRepository;
@@ -116,6 +119,13 @@ public class VigilanciaService {
 
     @Autowired
     private MicroareaRepository microareaRepository;
+
+    /** Surto e medidas do caso (ADR-0131). */
+    @Autowired
+    private MedidaControleRepository medidaRepository;
+
+    @Autowired
+    private SurtoService surtoService;
     private static final Set<ClassificacaoCasoEpidemiologico> FINAIS = Set.of(ClassificacaoCasoEpidemiologico.CONFIRMADO,
             ClassificacaoCasoEpidemiologico.DESCARTADO, ClassificacaoCasoEpidemiologico.INCONCLUSIVO);
 
@@ -372,10 +382,12 @@ public class VigilanciaService {
      * investiga.
      */
     @Transactional(readOnly = true)
-    public MapaVigilanciaDto mapa(UUID agravoId, UUID unidadeId, LocalDate de, LocalDate ate, ClassificacaoCasoEpidemiologico classificacao) {
+    public MapaVigilanciaDto mapa(UUID agravoId, UUID unidadeId, LocalDate de, LocalDate ate, ClassificacaoCasoEpidemiologico classificacao,
+                                  UUID surtoId) {
         controleDeAcesso.exigirAlguma(NOTIFICAR, INVESTIGAR);
-        LocalDate fim = ate != null ? ate : LocalDate.now();
-        LocalDate inicio = de != null ? de : fim.minusWeeks(12);
+        Surto surto = surtoId == null ? null : surtoService.paraLer(surtoId);
+        LocalDate fim = ate != null ? ate : surto != null && surto.getFim() != null ? surto.getFim() : LocalDate.now();
+        LocalDate inicio = de != null ? de : surto != null ? surto.getInicio() : fim.minusWeeks(12);
         if (inicio.isAfter(fim)) {
             throw new ResourceBadRequestException("O início do período precisa ser antes do fim.");
         }
@@ -383,10 +395,11 @@ public class VigilanciaService {
         List<Notificacao> casos = controleDeAcesso.filtrar(notificacaoRepository.findTodas().stream(), n -> Stream.of(n.getUnidade()), NOTIFICAR, INVESTIGAR)
                 .filter(n -> agravoId == null || n.getAgravo().getUuid().equals(agravoId))
                 .filter(n -> unidadeId == null || n.getUnidade().getUuid().equals(unidadeId))
+                .filter(n -> surto == null || (n.getSurto() != null && n.getSurto().getUuid().equals(surto.getUuid())))
                 .filter(n -> !n.getAgravo().isSensivel() || (investiga && podeVerConteudo(n)))
                 .filter(n -> {
                     LocalDate d = n.getDataPrimeirosSintomas() != null ? n.getDataPrimeirosSintomas() : n.getDataNotificacao();
-                    return !d.isBefore(inicio) && !d.isAfter(fim);
+                    return surto != null || (!d.isBefore(inicio) && !d.isAfter(fim));
                 })
                 .toList();
         Map<UUID, ClassificacaoCasoEpidemiologico> atual = new HashMap<>();
@@ -397,19 +410,34 @@ public class VigilanciaService {
         List<Notificacao> filtrados = casos.stream().filter(n -> classificacao == null || classificacao == atual.get(n.getUuid())).toList();
         Map<Microarea, Long> porMicroarea = filtrados.stream().filter(n -> n.getMicroarea() != null)
                 .collect(Collectors.groupingBy(Notificacao::getMicroarea, Collectors.counting()));
+        Set<UUID> doSurto = surto == null ? Set.of() : surto.getMicroareas().stream().map(Microarea::getUuid).collect(Collectors.toSet());
+        if (surto != null) {
+            surto.getMicroareas().forEach(m -> porMicroarea.putIfAbsent(m, 0L));
+        }
         List<MapaVigilanciaDto.Microarea> microareas = porMicroarea.entrySet().stream()
                 .map(e -> new MapaVigilanciaDto.Microarea(e.getKey().getUuid(), e.getKey().getCodigo(), e.getKey().getArea().getCodigo(),
-                        e.getKey().getGeometria(), e.getValue().intValue()))
+                        e.getKey().getGeometria(), e.getValue().intValue(), doSurto.contains(e.getKey().getUuid()),
+                        !investiga ? List.<UUID>of() : filtrados.stream().filter(n -> n.getMicroarea() != null && n.getMicroarea().getUuid().equals(e.getKey().getUuid()))
+                                .map(Notificacao::getUuid).toList()))
                 .sorted(Comparator.comparing(MapaVigilanciaDto.Microarea::getCasos).reversed()).toList();
         List<MapaVigilanciaDto.Ponto> pontos = !investiga ? List.of() : filtrados.stream()
                 .filter(n -> !n.getAgravo().isSensivel() && n.getLatitude() != null && n.getLongitude() != null)
                 .map(n -> new MapaVigilanciaDto.Ponto(n.getUuid(), n.getLatitude(), n.getLongitude(), n.getAgravo().getCodigo(), n.getSituacao(),
                         atual.get(n.getUuid())))
                 .toList();
-        Map<SemanaEpidemiologica, Long> porSemana = filtrados.stream().collect(Collectors.groupingBy(
-                n -> SemanaEpidemiologica.de(n.getDataPrimeirosSintomas() != null ? n.getDataPrimeirosSintomas() : n.getDataNotificacao()),
-                Collectors.counting()));
-        List<MapaVigilanciaDto.Semana> curva = new java.util.ArrayList<>();
+        List<LocalDate> datas = filtrados.stream()
+                .map(n -> n.getDataPrimeirosSintomas() != null ? n.getDataPrimeirosSintomas() : n.getDataNotificacao()).toList();
+        LocalDate primeira = Stream.concat(Stream.of(inicio), datas.stream()).min(Comparator.naturalOrder()).orElse(inicio);
+        LocalDate ultimaData = Stream.concat(Stream.of(fim), datas.stream()).max(Comparator.naturalOrder()).orElse(fim);
+        List<MapaVigilanciaDto.Semana> curva = curva(datas, primeira, ultimaData);
+        int semLocal = (int) filtrados.stream().filter(n -> n.getMicroarea() == null && n.getLatitude() == null).count();
+        return new MapaVigilanciaDto(inicio, fim, filtrados.size(), semLocal, investiga, microareas, pontos, curva);
+    }
+
+    /** A curva por semana epidemiológica, de início a fim (no máximo 120 semanas), com a contagem das datas. */
+    static List<MapaVigilanciaDto.Semana> curva(Collection<LocalDate> datas, LocalDate inicio, LocalDate fim) {
+        Map<SemanaEpidemiologica, Long> porSemana = datas.stream().collect(Collectors.groupingBy(SemanaEpidemiologica::de, Collectors.counting()));
+        List<MapaVigilanciaDto.Semana> curva = new ArrayList<>();
         SemanaEpidemiologica s = SemanaEpidemiologica.de(inicio);
         SemanaEpidemiologica ultima = SemanaEpidemiologica.de(fim);
         for (int guarda = 0; guarda < 120; guarda++) {
@@ -420,8 +448,7 @@ public class VigilanciaService {
             s = new SemanaEpidemiologica(s.ano(), s.semana() + 1).valida() ? new SemanaEpidemiologica(s.ano(), s.semana() + 1)
                     : new SemanaEpidemiologica(s.ano() + 1, 1);
         }
-        int semLocal = (int) filtrados.stream().filter(n -> n.getMicroarea() == null && n.getLatitude() == null).count();
-        return new MapaVigilanciaDto(inicio, fim, filtrados.size(), semLocal, investiga, microareas, pontos, curva);
+        return curva;
     }
 
     /** Abre ou atualiza a investigação; a notificação passa a em investigação. */
@@ -923,6 +950,7 @@ public class VigilanciaService {
                 historico.isEmpty() ? null : historico.get(0).getClassificacao(), n.getClassificacaoFinal(), n.getEvolucao(), n.getEncerradaEm(),
                 null, null, List.of(), n.getLatitude(), n.getLongitude(), n.getOrigemLocal(),
                 n.getMicroarea() != null ? n.getMicroarea().getCodigo() : null, n.getMicroarea() != null ? n.getMicroarea().getArea().getCodigo() : null,
+                List.of(), n.getSurto() != null ? n.getSurto().getUuid() : null, n.getSurto() != null ? n.getSurto().getNome() : null, List.of(),
                 List.of());
     }
 
@@ -952,7 +980,41 @@ public class VigilanciaService {
         d.setClassificacoes(classificacaoRepository.findDaNotificacao(n.getUuid()).stream().map(c -> new NotificacaoDto.Classificacao(
                 c.getClassificacao(), c.getCriterio(), c.getJustificativa(), c.getClassificadaEm(),
                 c.getResponsavel() != null ? c.getResponsavel().getNome() : null)).toList());
+        var medidas = medidaRepository.findByNotificacao_UuidOrderByCriadaEmAsc(n.getUuid());
+        d.setMedidas(medidas.stream().map(m -> surtoService.medidaDto(m, hoje)).toList());
+        d.setLinhaDoTempo(linhaDoTempo(n, d, medidas));
         return d;
+    }
+
+    /** A linha do tempo do caso (ADR-0131), montada dos registros: notificação, investigação, classificações, surto, medidas e encerramento. */
+    private List<EventoLinhaDoTempoDto> linhaDoTempo(Notificacao n, NotificacaoDto d, List<com.edufelizardo.maissaudepublica.models.MedidaControle> medidas) {
+        List<EventoLinhaDoTempoDto> eventos = new ArrayList<>();
+        eventos.add(new EventoLinhaDoTempoDto(n.getRegistradaEm(), "Notificação", n.getAgravo().getNome() + " · " + n.getUnidade().getNome(),
+                d.getProfissionalNome()));
+        if (d.getInvestigacao() != null) {
+            eventos.add(new EventoLinhaDoTempoDto(d.getInvestigacao().getIniciadaEm(), "Investigação iniciada", null, d.getInvestigacao().getInvestigadorNome()));
+        }
+        for (NotificacaoDto.Classificacao c : d.getClassificacoes()) {
+            eventos.add(new EventoLinhaDoTempoDto(c.getClassificadaEm(), "Classificação", c.getClassificacao().name(), c.getResponsavelNome()));
+        }
+        if (n.getSurto() != null && n.getSurtoIncluidaEm() != null) {
+            eventos.add(new EventoLinhaDoTempoDto(n.getSurtoIncluidaEm(), "Incluído no surto", n.getSurto().getNome(), null));
+        }
+        for (var m : medidas) {
+            String responsavel = m.getResponsavel() != null ? m.getResponsavel().getNome() : null;
+            eventos.add(new EventoLinhaDoTempoDto(m.getCriadaEm(), "Medida", SurtoService.rotulo(m), responsavel));
+            if (m.getConcluidaEm() != null) {
+                eventos.add(new EventoLinhaDoTempoDto(m.getConcluidaEm(), "Medida " + SurtoService.rotulo(m.getSituacao()).toLowerCase(Locale.ROOT),
+                        SurtoService.rotulo(m), responsavel));
+            }
+        }
+        if (n.getEncerradaEm() != null) {
+            eventos.add(new EventoLinhaDoTempoDto(n.getEncerradaEm(), "Encerramento",
+                    (n.getClassificacaoFinal() != null ? n.getClassificacaoFinal().name() : "") + (n.getEvolucao() != null ? " · " + n.getEvolucao().name() : ""),
+                    null));
+        }
+        eventos.sort(Comparator.comparing(EventoLinhaDoTempoDto::getEm, Comparator.nullsFirst(Comparator.naturalOrder())));
+        return eventos;
     }
 
     private NotificacaoNegativaDto negativaDto(NotificacaoNegativa n) {

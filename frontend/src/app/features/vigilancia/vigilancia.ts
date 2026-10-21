@@ -26,6 +26,7 @@ import {
   SITUACOES_NOTIFICACAO,
   SemanasEpidemiologicasDto,
   SugestaoNotificacaoDto,
+  SurtosDto,
   TIPOS_CAMPO,
   TipoCampoFicha,
 } from '../../core/models/vigilancia';
@@ -36,9 +37,12 @@ import { VigilanciaService } from '../../core/services/vigilancia';
 import { Drawer } from '../../shared/drawer/drawer';
 import { ContatosDaNotificacao } from './contatos-da-notificacao';
 import { LocalDoCaso } from './local-do-caso';
+import { LinhaDoTempo } from './linha-do-tempo';
 import { MapaVigilancia } from './mapa-vigilancia';
+import { MedidasDeControle } from './medidas-de-controle';
+import { NovoSurto, Surtos } from './surtos';
 
-type Aba = 'notificacoes' | 'mapa' | 'sugestoes' | 'semanas' | 'agravos';
+type Aba = 'notificacoes' | 'mapa' | 'surtos' | 'sugestoes' | 'semanas' | 'agravos';
 type Gaveta =
   | { tipo: 'notificar'; prefixo: Partial<{ pacienteId: string; pacienteNome: string; unidadeId: string; agravoId: string; origem: OrigemNotificacao;
       internacaoId: string; pedidoExameId: string; criseId: string; contatoId: string; contatoDe: string }> }
@@ -61,7 +65,7 @@ interface CampoEdicao {
  */
 @Component({
   selector: 'app-vigilancia',
-  imports: [ReactiveFormsModule, Drawer, MapaVigilancia, ContatosDaNotificacao, LocalDoCaso],
+  imports: [ReactiveFormsModule, Drawer, MapaVigilancia, ContatosDaNotificacao, LocalDoCaso, Surtos, MedidasDeControle, LinhaDoTempo],
   templateUrl: './vigilancia.html',
 })
 export class Vigilancia {
@@ -98,6 +102,11 @@ export class Vigilancia {
   protected readonly sugestoes = signal<SugestaoNotificacaoDto[]>([]);
   protected readonly semanas = signal<SemanasEpidemiologicasDto | null>(null);
   protected readonly boletim = signal<BoletimVigilanciaDto | null>(null);
+  /** Surtos (ADR-0131): a lista, a abertura vinda do mapa e o surto mostrado no mapa. */
+  protected readonly surtos = signal<SurtosDto | null>(null);
+  protected readonly novoSurto = signal<NovoSurto | null>(null);
+  protected readonly surtoNoMapa = signal<{ id: string; seq: number } | null>(null);
+  private seqMapa = 0;
   protected readonly detalhe = signal<NotificacaoDto | null>(null);
   protected readonly pacientes = signal<PacienteResponseDto[]>([]);
   protected readonly buscaPaciente = signal('');
@@ -180,6 +189,9 @@ export class Vigilancia {
       this.service.semanas(unidadeId).pipe(catchError(() => of(null))).subscribe((s) => this.semanas.set(s));
     }
     this.service.boletim(unidadeId).pipe(catchError(() => of(null))).subscribe((b) => this.boletim.set(b));
+    if (this.podeNotificar() || this.podeInvestigar()) {
+      this.service.surtos({ unidadeId }).pipe(catchError(() => of(null))).subscribe((s) => this.surtos.set(s));
+    }
   }
 
   protected filtrar(campo: 'unidade' | 'agravo' | 'situacao', valor: string): void {
@@ -440,6 +452,22 @@ export class Vigilancia {
   protected notificacaoAtualizada(d: NotificacaoDto): void {
     this.detalhe.set(d);
     this.carregar();
+  }
+
+  /** A medida do caso mudou (ADR-0131): a notificação volta com as medidas e a linha do tempo. */
+  protected recarregarDetalhe(id: string): void {
+    this.service.notificacao(id).subscribe({ next: (n) => this.detalhe.set(n), error: (e: HttpErrorResponse) => this.falhou(e) });
+    this.carregar();
+  }
+
+  protected abrirSurtoDoMapa(n: NovoSurto): void {
+    this.novoSurto.set(n);
+    this.aba.set('surtos');
+  }
+
+  protected verSurtoNoMapa(id: string): void {
+    this.surtoNoMapa.set({ id, seq: ++this.seqMapa });
+    this.aba.set('mapa');
   }
 
   protected declararNegativa(unidadeId: string, ano?: number, semana?: number): void {

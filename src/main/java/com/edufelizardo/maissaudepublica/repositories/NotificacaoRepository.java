@@ -15,5 +15,7 @@ public interface NotificacaoRepository extends JpaRepository<Notificacao, UUID> 
 
     List<Notificacao> findByPaciente_Uuid(UUID pacienteId);
 
+    List<Notificacao> findBySurto_Uuid(UUID surtoId);
+
     boolean existsByUnidade_UuidAndDataNotificacaoBetween(UUID unidadeId, LocalDate inicio, LocalDate fim);
 }

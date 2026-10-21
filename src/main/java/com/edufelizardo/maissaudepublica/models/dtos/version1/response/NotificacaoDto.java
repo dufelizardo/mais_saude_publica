@@ -69,6 +69,11 @@ public class NotificacaoDto implements Serializable {
     private String microareaCodigo;
     private String areaCodigo;
     private List<Contato> contatos;
+    /** Surto, medidas e linha do tempo do caso (ADR-0131). */
+    private UUID surtoId;
+    private String surtoNome;
+    private List<MedidaControleDto> medidas;
+    private List<EventoLinhaDoTempoDto> linhaDoTempo;
 
     @Getter
     @Setter

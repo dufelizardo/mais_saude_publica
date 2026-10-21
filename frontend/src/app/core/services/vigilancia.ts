@@ -14,6 +14,12 @@ import {
   SugestaoNotificacaoDto,
   ContatoRequestDto,
   MapaVigilanciaDto,
+  MedidaControleDto,
+  MedidaControleRequestDto,
+  SituacaoSurto,
+  SurtoDto,
+  SurtoRequestDto,
+  SurtosDto,
 } from '../models/vigilancia';
 
 /** Vigilância epidemiológica, fatia V1 (ADR-0124). */
@@ -103,9 +109,53 @@ export class VigilanciaService {
     return this.http.patch<NotificacaoDto>(`${this.api}/contato/${uuid}`, dto);
   }
 
-  mapa(filtro: { agravoId?: string; unidadeId?: string; de?: string; ate?: string; classificacao?: string } = {}): Observable<MapaVigilanciaDto> {
+  mapa(filtro: { agravoId?: string; unidadeId?: string; de?: string; ate?: string; classificacao?: string; surtoId?: string } = {}): Observable<MapaVigilanciaDto> {
     let params = new HttpParams();
     for (const [k, v] of Object.entries(filtro)) if (v) params = params.set(k, v);
     return this.http.get<MapaVigilanciaDto>(`${this.api}/mapa`, { params });
+  }
+
+  // ── Surto e medidas de controle (ADR-0131) ─────────────────────────────────────────────────────
+
+  surtos(filtro: { unidadeId?: string; agravoId?: string; situacao?: string } = {}): Observable<SurtosDto> {
+    let params = new HttpParams();
+    for (const [k, v] of Object.entries(filtro)) if (v) params = params.set(k, v);
+    return this.http.get<SurtosDto>(`${this.api}/surtos`, { params });
+  }
+
+  surto(uuid: string): Observable<SurtoDto> {
+    return this.http.get<SurtoDto>(`${this.api}/surto/${uuid}`);
+  }
+
+  abrirSurto(dto: SurtoRequestDto): Observable<SurtoDto> {
+    return this.http.post<SurtoDto>(`${this.api}/surto`, dto);
+  }
+
+  atualizarSurto(uuid: string, dto: SurtoRequestDto): Observable<SurtoDto> {
+    return this.http.put<SurtoDto>(`${this.api}/surto/${uuid}`, dto);
+  }
+
+  mudarSituacaoSurto(uuid: string, situacao: SituacaoSurto, conclusao?: string | null): Observable<SurtoDto> {
+    return this.http.post<SurtoDto>(`${this.api}/surto/${uuid}/situacao`, { situacao, conclusao });
+  }
+
+  incluirCasos(uuid: string, notificacoesIds: string[]): Observable<SurtoDto> {
+    return this.http.post<SurtoDto>(`${this.api}/surto/${uuid}/casos`, { notificacoesIds });
+  }
+
+  retirarCaso(uuid: string, notificacaoId: string): Observable<SurtoDto> {
+    return this.http.delete<SurtoDto>(`${this.api}/surto/${uuid}/casos/${notificacaoId}`);
+  }
+
+  medidaDoSurto(uuid: string, dto: MedidaControleRequestDto): Observable<MedidaControleDto> {
+    return this.http.post<MedidaControleDto>(`${this.api}/surto/${uuid}/medida`, dto);
+  }
+
+  medidaDoCaso(uuid: string, dto: MedidaControleRequestDto): Observable<MedidaControleDto> {
+    return this.http.post<MedidaControleDto>(`${this.api}/notificacao/${uuid}/medida`, dto);
+  }
+
+  atualizarMedida(uuid: string, dto: MedidaControleRequestDto): Observable<MedidaControleDto> {
+    return this.http.patch<MedidaControleDto>(`${this.api}/medida/${uuid}`, dto);
   }
 }

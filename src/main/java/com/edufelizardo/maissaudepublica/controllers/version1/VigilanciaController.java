@@ -151,13 +151,15 @@ public class VigilanciaController {
     @RequerPermissao({"VIGILANCIA.NOTIFICAR", "VIGILANCIA.INVESTIGAR"})
     @GetMapping(value = "mapa", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Mapa dos casos", description = "Casos por microárea, pontos (só para a investigação, nunca de agravo sensível) e a "
-            + "curva por semana epidemiológica. Período padrão: as últimas 12 semanas (ADR-0130).", tags = TAG)
+            + "curva por semana epidemiológica. Período padrão: as últimas 12 semanas (ADR-0130); com o surto, os casos dele e as "
+            + "microáreas declaradas em destaque (ADR-0131).", tags = TAG)
     @ApiErrorResponsesListagem
     public ResponseEntity<MapaVigilanciaDto> mapa(@RequestParam(required = false) UUID agravoId, @RequestParam(required = false) UUID unidadeId,
                                                   @RequestParam(required = false) LocalDate de,
                                                   @RequestParam(required = false) LocalDate ate,
-                                                  @RequestParam(required = false) ClassificacaoCasoEpidemiologico classificacao) {
-        return ResponseEntity.ok(service.mapa(agravoId, unidadeId, de, ate, classificacao));
+                                                  @RequestParam(required = false) ClassificacaoCasoEpidemiologico classificacao,
+                                                  @RequestParam(required = false) UUID surtoId) {
+        return ResponseEntity.ok(service.mapa(agravoId, unidadeId, de, ate, classificacao, surtoId));
     }
 
     @RequerPermissao({"VIGILANCIA.INVESTIGAR"})

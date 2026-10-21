@@ -109,6 +109,7 @@ class VigilanciaControllerTest {
 
     /** Apaga o que os testes de vigilância criaram, pelas unidades e pelos agravos do prefixo. */
     static void limparDados(JdbcTemplate jdbc, String prefixo, String codigo) {
+        limparSurtos(jdbc, prefixo, codigo);
         String unidades = "(select uuid from tb_unidade_de_saude where nome like '" + prefixo + "%')";
         String notificacoes = "(select uuid from tb_notificacao where unidade_id in " + unidades + ")";
         // Contatos (ADR-0130): os do caso índice e os que viraram caso.
@@ -133,6 +134,18 @@ class VigilanciaControllerTest {
         jdbc.update("delete from tb_paciente where nome like '" + prefixo + "%'");
         jdbc.update("delete from tb_profissional where nome like '" + prefixo + "%'");
         jdbc.update("delete from tb_unidade_de_saude where nome like '" + prefixo + "%'");
+    }
+
+    /** Surtos e medidas (ADR-0131) das unidades e dos agravos do teste; antes do território (as microáreas do surto). */
+    static void limparSurtos(JdbcTemplate jdbc, String prefixo, String codigo) {
+        String unidades = "(select uuid from tb_unidade_de_saude where nome like '" + prefixo + "%')";
+        String surtos = "(select uuid from tb_surto where unidade_id in " + unidades + " or agravo_id in (select uuid from tb_agravo where codigo like '"
+                + codigo + "%'))";
+        jdbc.update("delete from tb_medida_controle where surto_id in " + surtos + " or notificacao_id in (select uuid from tb_notificacao where unidade_id in "
+                + unidades + ")");
+        jdbc.update("update tb_notificacao set surto_id = null where surto_id in " + surtos);
+        jdbc.update("delete from tb_surto_microarea where surto_id in " + surtos);
+        jdbc.update("delete from tb_surto where uuid in " + surtos);
     }
 
     private UnidadeDeSaude unidade(String nome) {
