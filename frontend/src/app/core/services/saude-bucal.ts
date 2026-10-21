@@ -3,9 +3,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, shareReplay } from 'rxjs';
 import {
   AvaliacaoOdontologicaDto,
+  CondicaoOdontologicaDto,
   AvaliacaoOdontologicaRequestDto,
   EspecialidadeDto,
   EspecialidadeRequestDto,
+  MarcacaoOdontogramaDto,
+  OdontogramaDto,
+  RegistroOdontogramaDto,
 } from '../models/saude-bucal';
 
 /** Catálogo de especialidades e avaliação odontológica (ADR-0134). */
@@ -37,5 +41,27 @@ export class SaudeBucalService {
 
   retificar(uuid: string, dto: AvaliacaoOdontologicaRequestDto): Observable<AvaliacaoOdontologicaDto> {
     return this.http.post<AvaliacaoOdontologicaDto>(`${this.api}/avaliacao-odontologica/${uuid}/retificacao`, dto);
+  }
+
+  // ── Odontograma (ADR-0135) ─────────────────────────────────────────────────────────────────────
+
+  condicoes(): Observable<CondicaoOdontologicaDto[]> {
+    return this.http.get<CondicaoOdontologicaDto[]>(`${this.api}/condicoes-odontologicas`);
+  }
+
+  marcar(avaliacaoId: string, marcacoes: MarcacaoOdontogramaDto[], data?: string | null): Observable<OdontogramaDto> {
+    return this.http.post<OdontogramaDto>(`${this.api}/avaliacao-odontologica/${avaliacaoId}/odontograma`, { data: data ?? null, marcacoes });
+  }
+
+  anular(registroId: string, motivo: string): Observable<RegistroOdontogramaDto> {
+    return this.http.post<RegistroOdontogramaDto>(`${this.api}/registro-odontograma/${registroId}/anulacao`, { motivo });
+  }
+
+  odontograma(pacienteId: string, data?: string | null): Observable<OdontogramaDto> {
+    return this.http.get<OdontogramaDto>(`${this.api}/paciente/${pacienteId}/odontograma`, { params: data ? { data } : {} });
+  }
+
+  historicoDoDente(pacienteId: string, dente: number): Observable<RegistroOdontogramaDto[]> {
+    return this.http.get<RegistroOdontogramaDto[]>(`${this.api}/paciente/${pacienteId}/odontograma/dente/${dente}`);
   }
 }

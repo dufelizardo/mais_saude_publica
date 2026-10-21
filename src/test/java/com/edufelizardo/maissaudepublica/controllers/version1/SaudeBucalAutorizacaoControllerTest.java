@@ -101,6 +101,8 @@ class SaudeBucalAutorizacaoControllerTest {
     @AfterEach
     void limpar() {
         String atendimentos = "(select uuid from tb_atendimento where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%'))";
+        jdbc.update("delete from tb_registro_odontograma where avaliacao_id in (select uuid from tb_avaliacao_odontologica where atendimento_id in "
+                + atendimentos + ")");
         jdbc.update("delete from tb_avaliacao_odontologica where atendimento_id in " + atendimentos);
         jdbc.update("delete from tb_atendimento where uuid in " + atendimentos);
         for (String cpf : CPFS) {
@@ -136,8 +138,17 @@ class SaudeBucalAutorizacaoControllerTest {
                 .andExpect(status().isForbidden());
         mockMvc.perform(como(ENF, post("/api/v1/avaliacao-odontologica")).contentType(MediaType.APPLICATION_JSON).content(corpo))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(como(DENTISTA, post("/api/v1/avaliacao-odontologica")).contentType(MediaType.APPLICATION_JSON).content(corpo))
-                .andExpect(status().isCreated());
+        String r = mockMvc.perform(como(DENTISTA, post("/api/v1/avaliacao-odontologica")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+
+        // O odontograma (ADR-0135) também é do dentista.
+        String avaliacao = com.jayway.jsonpath.JsonPath.read(r, "$.uuid");
+        String carie = jdbc.queryForObject("select cast(uuid as varchar) from tb_condicao_odontologica where codigo = 'CARIE'", String.class);
+        String marcacao = "{\"marcacoes\": [{\"dente\": 36, \"face\": \"OCLUSAL\", \"condicaoId\": \"%s\"}]}".formatted(carie);
+        mockMvc.perform(como(TSB, post("/api/v1/avaliacao-odontologica/" + avaliacao + "/odontograma")).contentType(MediaType.APPLICATION_JSON)
+                .content(marcacao)).andExpect(status().isForbidden());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/avaliacao-odontologica/" + avaliacao + "/odontograma")).contentType(MediaType.APPLICATION_JSON)
+                .content(marcacao)).andExpect(status().isCreated());
     }
 
     @Test

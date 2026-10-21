@@ -1,8 +1,9 @@
 # Modelo do domínio Saúde Bucal
 
-**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1 implementada)
+**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1 e SB2 implementadas)
 **Status:** desenho aprovado na [ADR-0111](../adr/0111-saude-bucal.md). **A SB1 (especialidade e avaliação
-odontológica) está implementada** na [ADR-0134](../adr/0134-saude-bucal-base.md); SB2 a SB5 vêm depois (seção 14).
+odontológica) e a SB2 (odontograma) estão implementadas** nas ADRs [0134](../adr/0134-saude-bucal-base.md) e
+[0135](../adr/0135-saude-bucal-odontograma.md); SB3 a SB5 vêm depois (seção 14).
 
 Saúde Bucal é um **domínio assistencial especializado**, e não um sistema odontológico isolado. Este documento
 mostra o que ele traz de próprio, o que reaproveita dos domínios que já existem, o odontograma com histórico, o plano
@@ -124,6 +125,10 @@ Com isso o sistema responde:
 - **qual procedimento mudou a condição?** O registro de 16/03 aponta para o procedimento.
 
 O desenho começa simples, sem odontograma extremamente detalhado. Mais faces ou condições entram pelo catálogo.
+
+**Implementado na SB2 ([ADR-0135](../adr/0135-saude-bucal-odontograma.md)):** as marcações vêm da avaliação
+odontológica vigente; a oclusal só nos posteriores e a incisal só nos anteriores; o registro do dente inteiro vale por
+cima das faces registradas antes; a marcação errada é anulada com motivo e fica no histórico.
 
 ## 7. Procedimentos: catálogo geral compartilhado
 
@@ -255,7 +260,7 @@ saude-bucal/
 | Fatia | Entrega | Depende de |
 |---|---|---|
 | **SB1** · base ✅ ([ADR-0134](../adr/0134-saude-bucal-base.md)) | especialidade no atendimento e na Agenda; avaliação odontológica | Atendimento, Equipe eSB |
-| **SB2** · odontograma | catálogo de condições, registros com histórico, projeção por data, tela do odontograma | SB1 |
+| **SB2** · odontograma ✅ ([ADR-0135](../adr/0135-saude-bucal-odontograma.md)) | catálogo de condições, registros com histórico, projeção por data, tela do odontograma | SB1 |
 | **SB3** · tratamento | catálogo geral de procedimentos, complemento odontológico, plano de tratamento, evolução | SB2 |
 | **SB4** · regulação e prótese | especialidades no catálogo da Regulação, CEO como executante, tratamento protético | SB3, Regulação |
 | **SB5** · saúde bucal coletiva | detalhe odontológico das ações coletivas | Programas P4, Território |
