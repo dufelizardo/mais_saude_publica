@@ -29,4 +29,6 @@ public class ProntuarioAtendimentoDto implements Serializable {
     private List<ProntuarioConsultaDto> consultas;
     /** Checagens de medicamento do atendimento (ADR-0064), todas as versões marcadas. */
     private List<AdministracaoMedicamentoResponseDto> administracoes;
+    /** Avaliações odontológicas do atendimento (ADR-0134), com as retificadas. */
+    private List<AvaliacaoOdontologicaDto> avaliacoesOdontologicas;
 }

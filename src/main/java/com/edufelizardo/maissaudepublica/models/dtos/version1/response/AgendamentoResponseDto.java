@@ -35,6 +35,9 @@ public class AgendamentoResponseDto implements Serializable {
     /** O programa da marcação (ADR-0132). */
     private UUID programaId;
     private String programaNome;
+    /** A especialidade (ADR-0134). */
+    private UUID especialidadeId;
+    private String especialidadeNome;
 
     public static AgendamentoResponseDto fromAgendamento(Agendamento agendamento) {
         return new AgendamentoResponseDto(
@@ -51,7 +54,9 @@ public class AgendamentoResponseDto implements Serializable {
                 agendamento.getUnidade() != null ? agendamento.getUnidade().getNome() : null,
                 agendamento.isEncaixe(),
                 agendamento.getPrograma() != null ? agendamento.getPrograma().getUuid() : null,
-                agendamento.getPrograma() != null ? agendamento.getPrograma().getNome() : null
+                agendamento.getPrograma() != null ? agendamento.getPrograma().getNome() : null,
+                agendamento.getEspecialidade() != null ? agendamento.getEspecialidade().getUuid() : null,
+                agendamento.getEspecialidade() != null ? agendamento.getEspecialidade().getNome() : null
         );
     }
 }

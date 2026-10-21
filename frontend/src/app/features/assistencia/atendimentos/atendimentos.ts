@@ -24,8 +24,16 @@ import { LoteResponseDto } from '../../../core/models/lote';
 import { MedicamentoResponseDto } from '../../../core/models/medicamento';
 import { PacienteResponseDto } from '../../../core/models/paciente';
 import { ProcedimentoResponseDto, StatusProcedimento } from '../../../core/models/procedimento';
-import { ErrorResponseDto, SuccessResponseDto } from '../../../core/models/profissional';
+import { ErrorResponseDto } from '../../../core/models/profissional';
 import { ProntuarioAtendimentoDto, ProntuarioResponseDto } from '../../../core/models/prontuario';
+import {
+  AvaliacaoOdontologicaDto,
+  EspecialidadeDto,
+  NECESSIDADES_TRATAMENTO,
+  NecessidadeTratamentoOdontologico,
+  RISCOS_SAUDE_BUCAL,
+  RiscoSaudeBucal,
+} from '../../../core/models/saude-bucal';
 import { SetorResponseDto } from '../../../core/models/setor';
 import { ClassificacaoRisco, TriagemResponseDto } from '../../../core/models/triagem';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
@@ -39,6 +47,7 @@ import { MedicamentoService } from '../../../core/services/medicamento';
 import { PacienteService } from '../../../core/services/paciente';
 import { ProcedimentoService } from '../../../core/services/procedimento';
 import { ProntuarioService, semVinculo } from '../../../core/services/prontuario';
+import { SaudeBucalService } from '../../../core/services/saude-bucal';
 import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-prontuario';
 import { ExamesPaciente } from '../../../shared/exames-paciente/exames-paciente';
 import { InternacoesPaciente } from '../../../shared/internacoes-paciente/internacoes-paciente';
@@ -65,7 +74,8 @@ type Gaveta =
   | { tipo: 'proc'; atId: string; consultaId: string; original: ProcedimentoResponseDto | null }
   | { tipo: 'proc-status'; atId: string; proc: ProcedimentoResponseDto }
   | { tipo: 'evo'; atId: string; original: EvolucaoEnfermagemResponseDto | null }
-  | { tipo: 'adm'; atId: string; original: AdministracaoMedicamentoResponseDto | null; voltar: boolean };
+  | { tipo: 'adm'; atId: string; original: AdministracaoMedicamentoResponseDto | null; voltar: boolean }
+  | { tipo: 'odonto'; atId: string; original: AvaliacaoOdontologicaDto | null };
 
 const RISCO: Record<ClassificacaoRisco, string> = {
   AZUL: 'Azul · não urgente',
@@ -140,6 +150,18 @@ export class Atendimentos {
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
   private readonly setorService = inject(SetorService);
   private readonly prontuarioService = inject(ProntuarioService);
+  private readonly saudeBucalService = inject(SaudeBucalService);
+
+  /** Especialidades (ADR-0134) e a avaliação odontológica do atendimento de odontologia. */
+  protected readonly especialidades = signal<EspecialidadeDto[]>([]);
+  protected readonly riscosBucais = RISCOS_SAUDE_BUCAL;
+  protected readonly listaRiscosBucais = Object.keys(RISCOS_SAUDE_BUCAL) as RiscoSaudeBucal[];
+  protected readonly necessidades = NECESSIDADES_TRATAMENTO;
+  protected readonly listaNecessidades = Object.keys(NECESSIDADES_TRATAMENTO) as NecessidadeTratamentoOdontologico[];
+  protected readonly odontoForm = this.fb.nonNullable.group({
+    dataHora: [''], profissionalMatricula: [''], queixaPrincipal: [''], anamnese: [''], exameClinico: [''], diagnostico: [''],
+    risco: [''], necessidadeTratamento: [''], planoInicial: [''], observacoes: [''], motivoRetificacao: [''],
+  });
   private readonly triagemService = inject(TriagemService);
   private readonly consultaService = inject(ConsultaService);
   private readonly procedimentoService = inject(ProcedimentoService);
@@ -264,6 +286,7 @@ export class Atendimentos {
     profissionalMatricula: [''],
     tipo: ['CONSULTA' as TipoAtendimento],
     status: ['EM_ANDAMENTO' as StatusAtendimento],
+    especialidadeId: [''],
   });
 
   protected readonly triForm = this.fb.nonNullable.group({
@@ -397,6 +420,7 @@ export class Atendimentos {
     this.unidadeSaudeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
     this.setorService.listar().pipe(catchError(() => of([]))).subscribe((s) => this.setores.set(s));
     this.medicamentoService.listar().pipe(catchError(() => of([]))).subscribe((m) => this.medicamentos.set(m));
+    this.saudeBucalService.especialidades().pipe(catchError(() => of([]))).subscribe((e) => this.especialidades.set(e));
 
     // Links de outras telas (e das rotas antigas): ?aba=ag|pront e ?pacienteId=
     const params = this.route.snapshot.queryParamMap;
@@ -517,6 +541,60 @@ export class Atendimentos {
 
   protected triagensVigentes(r: ProntuarioAtendimentoDto | null): TriagemResponseDto[] {
     return (r?.triagens ?? []).filter((t) => !t.retificado).sort((a, b) => a.dataHora.localeCompare(b.dataHora));
+  }
+
+  protected avaliacoesOdontologicasVigentes(r: ProntuarioAtendimentoDto | null): AvaliacaoOdontologicaDto[] {
+    return (r?.avaliacoesOdontologicas ?? []).filter((a) => !a.retificado).sort((a, b) => a.dataHora.localeCompare(b.dataHora));
+  }
+
+  protected abrirAvaliacaoOdontologica(atId: string, original: AvaliacaoOdontologicaDto | null = null): void {
+    this.odontoForm.reset({
+      dataHora: original?.dataHora?.slice(0, 16) ?? agoraLocal(),
+      profissionalMatricula: original?.profissionalMatricula ?? this.matriculaPadrao(),
+      queixaPrincipal: original?.queixaPrincipal ?? '',
+      anamnese: original?.anamnese ?? '',
+      exameClinico: original?.exameClinico ?? '',
+      diagnostico: original?.diagnostico ?? '',
+      risco: original?.risco ?? '',
+      necessidadeTratamento: original?.necessidadeTratamento ?? '',
+      planoInicial: original?.planoInicial ?? '',
+      observacoes: original?.observacoes ?? '',
+      motivoRetificacao: '',
+    });
+    this.abrir({ tipo: 'odonto', atId, original });
+  }
+
+  private salvarAvaliacaoOdontologica(atId: string, original: AvaliacaoOdontologicaDto | null): void {
+    const v = this.odontoForm.getRawValue();
+    const erros = this.exigir(v, {
+      dataHora: 'Informe data e hora.',
+      profissionalMatricula: 'Informe a matrícula do cirurgião-dentista.',
+      risco: 'Classifique o risco em saúde bucal.',
+      necessidadeTratamento: 'Informe a necessidade de tratamento.',
+    });
+    this.exigirMotivo(original, v.motivoRetificacao, erros);
+    if (!this.validar(erros)) return;
+    const dto = {
+      atendimentoId: atId,
+      profissionalMatricula: v.profissionalMatricula.trim(),
+      dataHora: v.dataHora,
+      queixaPrincipal: v.queixaPrincipal.trim() || null,
+      anamnese: v.anamnese.trim() || null,
+      exameClinico: v.exameClinico.trim() || null,
+      diagnostico: v.diagnostico.trim() || null,
+      risco: v.risco as RiscoSaudeBucal,
+      necessidadeTratamento: v.necessidadeTratamento as NecessidadeTratamentoOdontologico,
+      planoInicial: v.planoInicial.trim() || null,
+      observacoes: v.observacoes.trim() || null,
+    };
+    this.salvarRegistro(
+      atId,
+      original
+        ? this.saudeBucalService.retificar(original.uuid, { ...dto, motivoRetificacao: v.motivoRetificacao.trim() })
+        : this.saudeBucalService.avaliar(dto),
+      original ? 'Avaliação odontológica retificada' : 'Avaliação odontológica registrada',
+      this.riscosBucais[dto.risco].rotulo,
+    );
   }
 
   protected consultasVigentes(r: ProntuarioAtendimentoDto | null) {
@@ -677,6 +755,8 @@ export class Atendimentos {
         return g.original ? 'Retificar evolução' : 'Nova evolução de enfermagem';
       case 'adm':
         return g.original ? 'Retificar checagem' : 'Checagem de medicação';
+      case 'odonto':
+        return g.original ? 'Retificar avaliação odontológica' : 'Avaliação odontológica';
     }
   }
 
@@ -744,6 +824,7 @@ export class Atendimentos {
       profissionalMatricula: ag?.profissionalMatricula ?? this.matriculaPadrao(),
       tipo: 'CONSULTA',
       status: 'EM_ANDAMENTO',
+      especialidadeId: ag?.especialidadeId ?? '',
     });
     this.abrir({ tipo: 'at', at: null, voltar: false });
   }
@@ -759,6 +840,7 @@ export class Atendimentos {
       profissionalMatricula: at.profissionalMatricula,
       tipo: at.tipo,
       status: at.status,
+      especialidadeId: at.especialidadeId ?? '',
     });
     this.abrir({ tipo: 'at', at, voltar: true });
   }
@@ -929,6 +1011,8 @@ export class Atendimentos {
         return this.salvarEvolucao(g.atId, g.original);
       case 'adm':
         return this.salvarAdministracao(g.atId, g.original, g.voltar);
+      case 'odonto':
+        return this.salvarAvaliacaoOdontologica(g.atId, g.original);
       default:
         return;
     }
@@ -1021,6 +1105,7 @@ export class Atendimentos {
       tipo: v.tipo,
       status: v.status,
       dataHora: v.dataHora,
+      especialidadeId: v.especialidadeId || null,
     };
     const paciente = this.pacientes().find((p) => p.uuid === v.pacienteId);
     if (at) {
@@ -1226,11 +1311,11 @@ export class Atendimentos {
   }
 
   /** Registro clínico salvo → recarrega as listas (o resumo muda) e volta para o atendimento. */
-  private salvarRegistro(atId: string, req: Observable<SuccessResponseDto>, titulo: string, detalhe: string): void {
+  private salvarRegistro(atId: string, req: Observable<unknown>, titulo: string, detalhe: string): void {
     this.enviar(req, titulo, detalhe, () => this.abrirAtendimento(atId));
   }
 
-  private enviar(req: Observable<SuccessResponseDto>, titulo: string, detalhe: string, depois?: () => void): void {
+  private enviar(req: Observable<unknown>, titulo: string, detalhe: string, depois?: () => void): void {
     this.submitting.set(true);
     req.subscribe({
       next: () => {

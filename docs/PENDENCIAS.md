@@ -115,7 +115,7 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   e valores de referência por sexo e idade.
 
 ### Agenda (diferenças com o protótipo `Agenda.html`, ADR-0092)
-- Visão Mês, exportação e filtro de especialidade ("Em breve").
+- Visão Mês e exportação ("Em breve"). ~~Filtro de especialidade~~ — feito pela ADR-0134 (SB1).
 - Atividades coletivas (grupo, vacinação aberta, coleta com N pacientes, reunião, capacitação, visita do
   ACS) e sala: dependem de domínios que não existem. ~~Programas nas marcações (HiperDia, pré-natal)~~ — feito pela
   ADR-0132 (P4); o grupo e a visita do programa já são ações programáticas.
@@ -158,7 +158,7 @@ real":
   - ~~#12 Leitos e internação~~ — ADRs 0098 a 0100;
   - #16 Transporte sanitário;
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
-    coletivas, programas, especialidade e equipe;
+    coletivas e equipe (programas pela ADR-0132; especialidade pela ADR-0134);
   - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);
   - na Enfermagem, `Cuidado` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
@@ -180,7 +180,7 @@ real":
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (sem a notificação no sistema, V1, e sem o SAMU, regulação
   de urgência); faltam SM5 e SM6
   (intersetorialidade e indicadores).
-- **#25 Saúde Bucal** — desenhado na ADR-0111; fatias SB1 (base) a SB5 (coletiva).
+- **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134; faltam SB2 (odontograma) a SB5 (coletiva).
 - **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias ~~V1 (fundação)~~ — ADR-0124,
   ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131; faltam V3 (sanitária) a V5
   (trabalhador e integrações).

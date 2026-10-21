@@ -12,6 +12,8 @@ export interface AtendimentoRequestDto {
   tipo: TipoAtendimento;
   status: StatusAtendimento;
   dataHora: string;
+  /** A especialidade (ADR-0134); sem ela, a da marcação. */
+  especialidadeId?: string | null;
 }
 
 export interface AtendimentoResponseDto {
@@ -37,4 +39,7 @@ export interface AtendimentoResponseDto {
   totalProcedimentos?: number;
   totalEvolucoes?: number;
   totalAdministracoes?: number;
+  especialidadeId?: string | null;
+  especialidadeNome?: string | null;
+  especialidadeOdontologica?: boolean;
 }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import com.edufelizardo.maissaudepublica.models.Procedimento;
+import com.edufelizardo.maissaudepublica.models.AvaliacaoOdontologica;
 import com.edufelizardo.maissaudepublica.models.EvolucaoEnfermagem;
 import com.edufelizardo.maissaudepublica.models.Triagem;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
@@ -24,6 +25,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.Prontuari
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcessoProntuarioDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TriagemResponseDto;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.AvaliacaoOdontologicaRepository;
 import com.edufelizardo.maissaudepublica.repositories.ConsultaRepository;
 import com.edufelizardo.maissaudepublica.repositories.EvolucaoEnfermagemRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
@@ -65,6 +67,9 @@ public class ProntuarioService {
 
     @Autowired
     private TriagemRepository triagemRepository;
+
+    @Autowired
+    private AvaliacaoOdontologicaRepository avaliacaoOdontologicaRepository;
 
     @Autowired
     private EvolucaoEnfermagemRepository evolucaoEnfermagemRepository;
@@ -173,6 +178,10 @@ public class ProntuarioService {
         dto.setTriagens(triagens);
         dto.setEvolucoes(evolucoes);
         dto.setConsultas(consultas);
+        List<AvaliacaoOdontologica> avaliacoesDoAtendimento = avaliacaoOdontologicaRepository.findByAtendimento_UuidOrderByRegistradoEmAsc(atendimento.getUuid());
+        Map<UUID, UUID> sucessorAvaliacao = sucessores(avaliacoesDoAtendimento, AvaliacaoOdontologica::getUuid, AvaliacaoOdontologica::getRetificacaoDe);
+        dto.setAvaliacoesOdontologicas(avaliacoesDoAtendimento.stream()
+                .map(a -> AvaliacaoOdontologicaService.dto(a, sucessorAvaliacao.get(a.getUuid()))).collect(Collectors.toList()));
         return dto;
     }
 

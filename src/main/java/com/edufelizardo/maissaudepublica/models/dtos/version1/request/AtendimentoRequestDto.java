@@ -52,4 +52,7 @@ public class AtendimentoRequestDto implements Serializable {
 
     @NotNull
     private LocalDateTime dataHora;
+
+    /** A especialidade (ADR-0134); sem ela, a da marcação, se houver. */
+    private UUID especialidadeId;
 }
