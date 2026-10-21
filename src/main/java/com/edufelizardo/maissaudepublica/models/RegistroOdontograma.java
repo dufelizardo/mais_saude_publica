@@ -51,10 +51,14 @@ public class RegistroOdontograma implements Serializable {
     @Column(nullable = false, updatable = false)
     private LocalDate data;
 
-    /** A origem: a avaliação odontológica (o procedimento entra na SB3). */
+    /** A origem: a avaliação odontológica, ou o procedimento realizado (ADR-0136). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "avaliacao_id", referencedColumnName = "uuid", updatable = false)
     private AvaliacaoOdontologica avaliacao;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "procedimento_id", referencedColumnName = "uuid", updatable = false)
+    private Procedimento procedimento;
 
     @Column(length = 500, updatable = false)
     private String observacao;

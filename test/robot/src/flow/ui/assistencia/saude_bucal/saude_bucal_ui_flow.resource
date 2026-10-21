@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../../pom/common/mais_saude_publica_ui_common.resource
 Resource    ../../../saude_bucal/odontograma_flow.resource
+Resource    ../../../saude_bucal/procedimento_odontologico_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A base é criada pela API; a ação sob teste é feita pela tela.
@@ -61,5 +62,45 @@ UI Saude Bucal - Marcar Odontograma
     Wait For Elements State    css=[aria-label="Marcações a salvar"]    detached
     Click    css=[aria-label="Odontograma"] >> role=button[name="Dente 36"]
     Wait For Elements State    css=[aria-label="Histórico do dente"] >> text=Cárie · Oclusal    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Saude Bucal - Restauracao Pelo Procedimento
+    [Documentation]    No atendimento de odontologia: registrar a restauração em resina na oclusal do 36 e ver o odontograma mudar (ADR-0136).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${atendimento}    ${paciente}    ${matricula}=    Seed Atendimento Odontologico
+    Ir Para Rota Do Frontend    /assistencia/atendimentos?aba=pront&pacienteId=${paciente}
+    Click    css=.pront-tl >> role=button[name="Abrir"] >> nth=0
+    Wait For Elements State    css=[aria-label="Procedimentos odontológicos"]    visible
+    Clicar Botao    + Procedimento odontológico
+    Select Options By    id=f-catalogoId    label    Restauração em resina composta (só dentista)
+    Fill Text    id=f-profissionalMatricula    ${matricula}
+    Enviar Gaveta
+    Wait For Elements State    css=app-drawer >> text=Informe o dente (FDI).    visible
+    Fill Text    id=f-dente    36
+    Click    css=app-drawer label:has-text("Oclusal")
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Procedimentos odontológicos"] >> text=Dente 36 · Oclusal    visible
+    Wait For Elements State    css=polygon[aria-label="Dente 36, face Oclusal: Restaurado"]    attached
+    Click    css=[aria-label="Odontograma"] >> role=button[name="Dente 36"]
+    Wait For Elements State    css=[aria-label="Histórico do dente"] >> text=Restauração em resina composta    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Saude Bucal - Catalogo De Procedimentos
+    [Documentation]    Na tela de Setores: incluir um procedimento odontológico no catálogo e desativá-lo (ADR-0136).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    5    [UPPER]
+    Ir Para Rota Do Frontend    /administrativo/setores
+    Wait For Elements State    css=[aria-label="Catálogo de procedimentos"]    visible
+    Fill Text    id=f-proc-codigo    UI_${sufixo}
+    Fill Text    id=f-proc-nome    Procedimento UI ${sufixo}
+    Select Options By    id=f-proc-especialidade    label    Odontologia
+    Select Options By    id=f-proc-alcance    label    Dente inteiro
+    Select Options By    id=f-proc-condicao    label    Ausente
+    Clicar Botao    Incluir procedimento
+    Wait For Elements State    css=[aria-label="Catálogo de procedimentos"] li:has-text("Procedimento UI ${sufixo}") >> text=grava Ausente    visible
+    Clicar Botao    Desativar: Procedimento UI ${sufixo}
+    Wait For Elements State    css=[aria-label="Catálogo de procedimentos"] li:has-text("Procedimento UI ${sufixo}") >> text=Inativo    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

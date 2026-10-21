@@ -7,8 +7,11 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceConflictException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.AvaliacaoOdontologica;
+import com.edufelizardo.maissaudepublica.models.ComplementoOdontologico;
 import com.edufelizardo.maissaudepublica.models.CondicaoOdontologica;
+import com.edufelizardo.maissaudepublica.models.Procedimento;
 import com.edufelizardo.maissaudepublica.models.RegistroOdontograma;
+import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CondicaoOdontologicaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MarcacoesOdontogramaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CondicaoOdontologicaDto;
@@ -16,6 +19,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.Odontogra
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.RegistroOdontogramaDto;
 import com.edufelizardo.maissaudepublica.models.enuns.AlcanceCondicaoOdontologica;
 import com.edufelizardo.maissaudepublica.models.enuns.FaceDente;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusProcedimento;
 import com.edufelizardo.maissaudepublica.repositories.AvaliacaoOdontologicaRepository;
 import com.edufelizardo.maissaudepublica.repositories.CondicaoOdontologicaRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
@@ -145,15 +149,23 @@ public class OdontogramaService {
         return projecao(a.getAtendimento().getPaciente().getUuid(), LocalDate.now());
     }
 
-    /** Anula a marcação errada, com motivo (400); ela fica no histórico e sai da projeção. Já anulada: 422. */
+    /**
+     * Anula a marcação errada, com motivo (400); ela fica no histórico e sai da projeção. Já anulada: 422. O registro
+     * gravado por um procedimento (ADR-0136) não se anula aqui: corrige-se retificando o procedimento (422).
+     */
     @Transactional
     public RegistroOdontogramaDto anular(UUID registroId, String motivo) {
         RegistroOdontograma r = registroRepository.findById(registroId).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar o registro do odontograma " + registroId + " em nossos registros."));
-        controleDeAcesso.exigir(REGISTRAR, r.getAvaliacao().getAtendimento().getUnidade());
+        UnidadeDeSaude unidade = r.getAvaliacao() != null ? r.getAvaliacao().getAtendimento().getUnidade() : r.getProcedimento().getAtendimento().getUnidade();
+        controleDeAcesso.exigir(REGISTRAR, unidade);
         ContextoAuditoria.paciente(r.getPaciente().getUuid());
         ContextoAuditoria.registro(r.getUuid());
-        controleDeAcesso.exigirAutoriaOuSupervisao(r.getRegistradoPorCpf(), r.getAvaliacao().getAtendimento().getUnidade());
+        controleDeAcesso.exigirAutoriaOuSupervisao(r.getRegistradoPorCpf(), unidade);
+        if (r.getProcedimento() != null) {
+            throw new ResourceUnprocessableEntityException("Este registro vem do procedimento " + r.getProcedimento().getTipo()
+                    + ": para corrigir, retifique o procedimento.");
+        }
         if (r.getAnuladoEm() != null) {
             throw new ResourceUnprocessableEntityException("Este registro já foi anulado.");
         }
@@ -166,6 +178,47 @@ public class OdontogramaService {
         registroRepository.save(r);
         ContextoAuditoria.detalhe("Anulado: " + r.getMotivoAnulacao());
         return dto(r);
+    }
+
+    // ── Registros do procedimento (ADR-0136) ───────────────────────────────────────────────────────
+
+    /**
+     * O procedimento realizado grava a condição do item do catálogo: um registro por face, ou um do dente inteiro, na
+     * data da realização e com o procedimento como origem. Agendado, cancelado ou sem condição: nada.
+     */
+    @Transactional
+    public void gravarDoProcedimento(Procedimento p, ComplementoOdontologico complemento) {
+        if (complemento == null || p.getStatus() != StatusProcedimento.REALIZADO || p.getCatalogo() == null
+                || p.getCatalogo().getCondicaoResultante() == null) {
+            return;
+        }
+        List<FaceDente> faces = complemento.getFaces().isEmpty() ? java.util.Collections.singletonList(null)
+                : complemento.getFaces().stream().sorted().toList();
+        Instant agora = Instant.now();
+        for (FaceDente face : faces) {
+            RegistroOdontograma r = new RegistroOdontograma();
+            r.setPaciente(p.getAtendimento().getPaciente());
+            r.setDente(complemento.getDente());
+            r.setFace(face);
+            r.setCondicao(p.getCatalogo().getCondicaoResultante());
+            r.setData(p.getDataRealizacao().toLocalDate());
+            r.setProcedimento(p);
+            r.setRegistradoEm(agora);
+            r.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+            registroRepository.save(r);
+        }
+    }
+
+    /** Anula os registros que o procedimento gravou (na retificação dele); ficam no histórico. */
+    @Transactional
+    public void anularDoProcedimento(Procedimento p, String motivo) {
+        Instant agora = Instant.now();
+        for (RegistroOdontograma r : registroRepository.findByProcedimento_UuidAndAnuladoEmIsNull(p.getUuid())) {
+            r.setAnuladoEm(agora);
+            r.setMotivoAnulacao(motivo.length() > 500 ? motivo.substring(0, 500) : motivo);
+            r.setAnuladoPorCpf(UsuarioAutenticado.cpf());
+            registroRepository.save(r);
+        }
     }
 
     // ── Leitura ────────────────────────────────────────────────────────────────────────────────────
@@ -262,9 +315,11 @@ public class OdontogramaService {
     static RegistroOdontogramaDto dto(RegistroOdontograma r) {
         CondicaoOdontologica c = r.getCondicao();
         AvaliacaoOdontologica a = r.getAvaliacao();
+        Procedimento p = r.getProcedimento();
+        UUID atendimento = a != null ? a.getAtendimento().getUuid() : p != null ? p.getAtendimento().getUuid() : null;
+        String profissional = a != null ? a.getProfissional().getNome() : p != null ? p.getProfissional().getNome() : null;
         return new RegistroOdontogramaDto(r.getUuid(), r.getDente(), r.getFace(), c.getUuid(), c.getCodigo(), c.getNome(), c.getCor(), c.getSigla(),
-                r.getData(), a != null ? a.getUuid() : null, a != null ? a.getAtendimento().getUuid() : null,
-                a != null ? a.getProfissional().getNome() : null, r.getObservacao(), r.getAnuladoEm() != null, r.getAnuladoEm(), r.getMotivoAnulacao(),
-                r.getRegistradoEm());
+                r.getData(), a != null ? a.getUuid() : null, atendimento, profissional, r.getObservacao(), r.getAnuladoEm() != null, r.getAnuladoEm(),
+                r.getMotivoAnulacao(), r.getRegistradoEm(), p != null ? p.getUuid() : null, p != null ? p.getTipo() : null);
     }
 }

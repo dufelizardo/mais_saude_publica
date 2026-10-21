@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.request;
 
+import com.edufelizardo.maissaudepublica.models.enuns.FaceDente;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusProcedimento;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,6 +11,7 @@ import lombok.Setter;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -19,8 +21,13 @@ public class ProcedimentoRequestDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @NotNull
+    /** A consulta do procedimento; sem ela, o atendimento (ADR-0136). Uma das duas é obrigatória. */
     private UUID consultaId;
+
+    private UUID atendimentoId;
+
+    /** O item do catálogo geral (ADR-0136); sem ele, o tipo em texto livre. */
+    private UUID procedimentoCatalogoId;
 
     /**
      * FK direta ao {@link com.edufelizardo.maissaudepublica.models.Profissional} pela matrícula
@@ -29,7 +36,7 @@ public class ProcedimentoRequestDto implements Serializable {
     @NotBlank
     private String profissionalMatricula;
 
-    @NotBlank
+    /** Obrigatório sem o item do catálogo; com ele, vale o nome do catálogo. */
     private String tipo;
 
     private String descricao;
@@ -39,4 +46,10 @@ public class ProcedimentoRequestDto implements Serializable {
 
     @NotNull
     private StatusProcedimento status;
+
+    /** Complemento odontológico (ADR-0136): o dente (FDI), quando o item do catálogo pede. */
+    private Integer dente;
+
+    /** As faces, quando o item do catálogo pede. */
+    private List<FaceDente> faces;
 }

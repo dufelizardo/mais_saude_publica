@@ -1,0 +1,5 @@
+*** Comments ***
+    Mais Saúde Pública API - Saúde Bucal, fatia SB3a: catálogo geral de procedimentos e procedimento odontológico (ADR-0136).
+*** Variables ***
+${PROCEDIMENTO_CATALOGO_SCHEMA}    ${{{'required': ['uuid', 'codigo', 'nome', 'odontologico', 'alcance', 'exigeDentista', 'ativo'], 'types': {'uuid': str, 'codigo': str, 'nome': str, 'especialidadeId': str, 'especialidadeNome': str, 'odontologico': bool, 'sigtap': str, 'alcance': str, 'condicaoResultanteId': str, 'condicaoResultanteNome': str, 'exigeDentista': bool, 'ativo': bool}, 'enums': {'alcance': ['NENHUM', 'DENTE', 'FACE']}}}}
+${PROCEDIMENTO_ODONTOLOGICO_SCHEMA}    ${{{'required': ['uuid', 'atendimentoUuid', 'tipo', 'status', 'procedimentoCatalogoId', 'odontologico', 'dente', 'faces'], 'types': {'uuid': str, 'atendimentoUuid': str, 'consultaUuid': str, 'tipo': str, 'status': str, 'procedimentoCatalogoId': str, 'procedimentoCatalogoCodigo': str, 'sigtap': str, 'odontologico': bool, 'dente': int, 'faces': list}, 'enums': {'status': ['AGENDADO', 'REALIZADO', 'CANCELADO']}}}}

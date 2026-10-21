@@ -88,9 +88,9 @@ const ARCADAS: Record<Denticao, number[][]> = {
               <li class="mo-row" [style.opacity]="r.anulado ? 0.6 : 1">
                 <span>
                   <span class="cell-main">{{ r.condicaoNome }}{{ r.face ? ' · ' + faces[r.face] : ' · dente inteiro' }}@if (r.anulado) { <span class="tag tag--muted">Anulado</span> }</span>
-                  <span class="cell-sub">{{ dataBr(r.data) }}@if (r.profissionalNome) { · {{ r.profissionalNome }} }@if (r.motivoAnulacao) { · {{ r.motivoAnulacao }} }</span>
+                  <span class="cell-sub">{{ dataBr(r.data) }}@if (r.procedimentoNome) { · {{ r.procedimentoNome }} }@if (r.profissionalNome) { · {{ r.profissionalNome }} }@if (r.motivoAnulacao) { · {{ r.motivoAnulacao }} }</span>
                 </span>
-                @if (podeRegistrar() && !r.anulado) {
+                @if (podeRegistrar() && !r.anulado && !r.procedimentoId) {
                   @if (anulando() === r.uuid) {
                     <span class="row-actions">
                       <input type="text" maxlength="500" placeholder="Motivo" aria-label="Motivo da anulação" [value]="motivo()" (input)="motivo.set($any($event.target).value)" />
@@ -127,6 +127,8 @@ export class Odontograma {
   /** A avaliação odontológica vigente do atendimento, onde as marcações são registradas; sem ela, só leitura. */
   readonly avaliacaoId = input<string | null>(null);
   readonly podeRegistrar = input(false);
+  /** Muda quando os registros do atendimento são recarregados (o procedimento realizado grava aqui, ADR-0136). */
+  readonly recarregar = input<unknown>(null);
   readonly alterado = output<void>();
 
   protected readonly faces = FACES_DENTE;
@@ -157,7 +159,12 @@ export class Odontograma {
     effect(() => {
       const paciente = this.pacienteId();
       const data = this.data();
-      untracked(() => this.carregar(paciente, data));
+      this.recarregar();
+      untracked(() => {
+        this.carregar(paciente, data);
+        const s = this.selecao();
+        if (s) this.selecionar(s.dente, s.face);
+      });
     });
   }
 

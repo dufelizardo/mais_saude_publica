@@ -37,4 +37,7 @@ public class RegistroOdontogramaDto implements Serializable {
     private Instant anuladoEm;
     private String motivoAnulacao;
     private Instant registradoEm;
+    /** Origem procedimento (ADR-0136): qual procedimento mudou a condição. */
+    private UUID procedimentoId;
+    private String procedimentoNome;
 }

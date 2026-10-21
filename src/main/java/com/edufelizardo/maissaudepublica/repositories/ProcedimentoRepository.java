@@ -17,6 +17,9 @@ public interface ProcedimentoRepository extends JpaRepository<Procedimento, UUID
      */
     List<Procedimento> findByConsultaUuid(UUID consultaUuid);
 
+    /** Os procedimentos feitos direto no atendimento, sem consulta (ADR-0136). */
+    List<Procedimento> findByAtendimento_UuidAndConsultaIsNullOrderByRegistradoEmAsc(UUID atendimentoUuid);
+
     /** Existe uma versão que corrige este registro? (ADR-0062) */
     boolean existsByRetificacaoDe_Uuid(UUID uuid);
 
@@ -30,7 +33,7 @@ public interface ProcedimentoRepository extends JpaRepository<Procedimento, UUID
     List<Object[]> findParesDeRetificacao();
 
     /** Quantos registros vigentes (não retificados) cada atendimento tem. */
-    @Query("select p.consulta.atendimento.uuid, count(p) from Procedimento p "
-            + "where not exists (select r from Procedimento r where r.retificacaoDe = p) group by p.consulta.atendimento.uuid")
+    @Query("select p.atendimento.uuid, count(p) from Procedimento p "
+            + "where not exists (select r from Procedimento r where r.retificacaoDe = p) group by p.atendimento.uuid")
     List<Object[]> contarVigentesPorAtendimento();
 }

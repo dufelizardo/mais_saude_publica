@@ -33,6 +33,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -42,7 +43,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Saúde Bucal com login e autorização ligados (ADR-0134): a avaliação odontológica é do cirurgião-dentista; o técnico em
  * saúde bucal e o enfermeiro não a registram; o catálogo de especialidades é lido por qualquer logado e mantido por
- * quem cuida da organização.
+ * quem cuida da organização. O técnico registra os procedimentos que a Lei 11.889/2008 permite (flúor, selante), mas não
+ * os que exigem o dentista (exodontia), nem mantém o catálogo de procedimentos (ADR-0136).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -101,8 +103,14 @@ class SaudeBucalAutorizacaoControllerTest {
     @AfterEach
     void limpar() {
         String atendimentos = "(select uuid from tb_atendimento where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%'))";
+        String procedimentos = "(select uuid from tb_procedimento where atendimento_id in " + atendimentos + ")";
         jdbc.update("delete from tb_registro_odontograma where avaliacao_id in (select uuid from tb_avaliacao_odontologica where atendimento_id in "
                 + atendimentos + ")");
+        jdbc.update("delete from tb_registro_odontograma where procedimento_id in " + procedimentos);
+        jdbc.update("delete from tb_complemento_odontologico_face where complemento_id in (select uuid from tb_complemento_odontologico "
+                + "where procedimento_id in " + procedimentos + ")");
+        jdbc.update("delete from tb_complemento_odontologico where procedimento_id in " + procedimentos);
+        jdbc.update("delete from tb_procedimento where atendimento_id in " + atendimentos);
         jdbc.update("delete from tb_avaliacao_odontologica where atendimento_id in " + atendimentos);
         jdbc.update("delete from tb_atendimento where uuid in " + atendimentos);
         for (String cpf : CPFS) {
@@ -149,6 +157,32 @@ class SaudeBucalAutorizacaoControllerTest {
                 .content(marcacao)).andExpect(status().isForbidden());
         mockMvc.perform(como(DENTISTA, post("/api/v1/avaliacao-odontologica/" + avaliacao + "/odontograma")).contentType(MediaType.APPLICATION_JSON)
                 .content(marcacao)).andExpect(status().isCreated());
+    }
+
+    private String procedimento(String codigo, String extra) {
+        String item = jdbc.queryForObject("select cast(uuid as varchar) from tb_procedimento_catalogo where codigo = ?", String.class, codigo);
+        return ("{\"atendimentoId\": \"%s\", \"procedimentoCatalogoId\": \"%s\", \"profissionalMatricula\": \"SBAUT-DENTISTA\", "
+                + "\"dataRealizacao\": \"%s\", \"status\": \"REALIZADO\"%s}")
+                .formatted(atendimento.getUuid(), item, LocalDateTime.now().minusHours(1).truncatedTo(ChronoUnit.SECONDS), extra);
+    }
+
+    @Test
+    void procedimentoQueExigeDentistaNaoEDoTecnico() throws Exception {
+        mockMvc.perform(como(TSB, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("APLICACAO_FLUOR", ""))).andExpect(status().isCreated());
+        mockMvc.perform(como(TSB, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("SELANTE", ", \"dente\": 36, \"faces\": [\"OCLUSAL\"]"))).andExpect(status().isCreated());
+        mockMvc.perform(como(TSB, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("EXODONTIA", ", \"dente\": 48"))).andExpect(status().isForbidden());
+        mockMvc.perform(como(ENF, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("EXODONTIA", ", \"dente\": 48"))).andExpect(status().isForbidden());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("EXODONTIA", ", \"dente\": 48"))).andExpect(status().isCreated());
+
+        // O catálogo de procedimentos é lido por qualquer logado e mantido por quem cuida da organização.
+        mockMvc.perform(como(TSB, get("/api/v1/procedimentos-catalogo"))).andExpect(status().isOk());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/procedimento-catalogo")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"codigo\": \"TSTSBAUT\", \"nome\": \"Teste\"}")).andExpect(status().isForbidden());
     }
 
     @Test

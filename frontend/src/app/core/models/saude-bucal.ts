@@ -105,6 +105,9 @@ export interface RegistroOdontogramaDto {
   anuladoEm?: string | null;
   motivoAnulacao?: string | null;
   registradoEm: string;
+  /** Origem procedimento (ADR-0136): qual procedimento mudou a condição. */
+  procedimentoId?: string | null;
+  procedimentoNome?: string | null;
 }
 
 export interface OdontogramaDto {
