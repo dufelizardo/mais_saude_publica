@@ -55,12 +55,19 @@
   @if (podeAcompanhar()) {
     <button type="button" role="tab" [attr.aria-selected]="visao() === 'acoes'" (click)="visao.set('acoes')">Ações programáticas</button>
   }
+  @if (podeGerenciar() || podeAcompanhar()) {
+    <button type="button" role="tab" [attr.aria-selected]="visao() === 'campanhas'" (click)="visao.set('campanhas')">Campanhas</button>
+  }
 </div>
 
 @if (visao() === 'acoes') {
   <section class="card" style="padding: var(--s-5);" aria-label="Ações programáticas">
     <app-acoes-programaticas [programas]="programas()" [unidades]="unidades()" [unidadeId]="unidadeFiltro()" [podeAcompanhar]="podeAcompanhar()"
       [versao]="versaoAcoes()" />
+  </section>
+} @else if (visao() === 'campanhas') {
+  <section class="card" style="padding: var(--s-5);" aria-label="Campanhas de saúde">
+    <app-campanhas [programas]="programas()" [unidades]="unidades()" [podeGerenciar]="podeGerenciar()" [podeAcompanhar]="podeAcompanhar()" />
   </section>
 } @else {
 <div class="toolbar" role="region" aria-label="Filtros dos programas">

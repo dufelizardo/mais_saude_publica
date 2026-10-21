@@ -8,8 +8,12 @@ import {
   AcoesProgramaticasDto,
   AcompanhamentoDto,
   AcompanhamentosDoPacienteDto,
+  CampanhaDto,
+  CampanhaPublicaDto,
+  CampanhaRequestDto,
   CategoriaProgramaDto,
   InscritosProgramaDto,
+  LocalCampanhaRequestDto,
   MotivoSaidaAcompanhamento,
   ProgramaDto,
   ProgramaPublicoDto,
@@ -105,8 +109,8 @@ export class ProgramaService {
 
   // ── Ações programáticas (ADR-0132) ─────────────────────────────────────────────────────────────
 
-  acoes(filtro: { programaId?: string; unidadeId?: string; equipeId?: string; responsavelMatricula?: string; de?: string; ate?: string;
-    situacao?: string } = {}): Observable<AcoesProgramaticasDto> {
+  acoes(filtro: { programaId?: string; campanhaId?: string; unidadeId?: string; equipeId?: string; responsavelMatricula?: string; de?: string;
+    ate?: string; situacao?: string } = {}): Observable<AcoesProgramaticasDto> {
     let params = new HttpParams();
     for (const [k, v] of Object.entries(filtro)) if (v) params = params.set(k, v);
     return this.http.get<AcoesProgramaticasDto>(`${this.api}/acoes-programaticas`, { params });
@@ -131,6 +135,46 @@ export class ProgramaService {
 
   acoesDoPaciente(pacienteId: string): Observable<AcaoProgramaticaDto[]> {
     return this.http.get<AcaoProgramaticaDto[]>(`${this.api}/paciente/${pacienteId}/acoes-programaticas`);
+  }
+
+  // ── Campanhas (ADR-0133) ───────────────────────────────────────────────────────────────────────
+
+  campanhas(filtro: { situacao?: string; programaId?: string } = {}): Observable<CampanhaDto[]> {
+    let params = new HttpParams();
+    for (const [k, v] of Object.entries(filtro)) if (v) params = params.set(k, v);
+    return this.http.get<CampanhaDto[]>(`${this.api}/campanhas`, { params });
+  }
+
+  campanha(uuid: string): Observable<CampanhaDto> {
+    return this.http.get<CampanhaDto>(`${this.api}/campanha/${uuid}`);
+  }
+
+  criarCampanha(dto: CampanhaRequestDto): Observable<CampanhaDto> {
+    return this.http.post<CampanhaDto>(`${this.api}/campanha`, dto);
+  }
+
+  atualizarCampanha(uuid: string, dto: CampanhaRequestDto): Observable<CampanhaDto> {
+    return this.http.put<CampanhaDto>(`${this.api}/campanha/${uuid}`, dto);
+  }
+
+  publicarCampanha(uuid: string, publicada: boolean): Observable<CampanhaDto> {
+    return this.http.post<CampanhaDto>(`${this.api}/campanha/${uuid}/publicacao`, { publicada });
+  }
+
+  cancelarCampanha(uuid: string, motivo: string): Observable<CampanhaDto> {
+    return this.http.post<CampanhaDto>(`${this.api}/campanha/${uuid}/cancelamento`, { motivo });
+  }
+
+  incluirLocalCampanha(uuid: string, dto: LocalCampanhaRequestDto): Observable<CampanhaDto> {
+    return this.http.post<CampanhaDto>(`${this.api}/campanha/${uuid}/local`, dto);
+  }
+
+  removerLocalCampanha(localId: string): Observable<CampanhaDto> {
+    return this.http.delete<CampanhaDto>(`${this.api}/campanha-local/${localId}`);
+  }
+
+  campanhasPublicas(): Observable<CampanhaPublicaDto[]> {
+    return this.http.get<CampanhaPublicaDto[]>(`${this.api}/publico/campanha`);
   }
 
   publico(): Observable<ProgramaPublicoDto[]> {

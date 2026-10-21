@@ -10,7 +10,9 @@ import com.edufelizardo.maissaudepublica.models.AcaoProgramatica;
 import com.edufelizardo.maissaudepublica.models.AcompanhamentoProgramatico;
 import com.edufelizardo.maissaudepublica.models.Agendamento;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
+import com.edufelizardo.maissaudepublica.models.Campanha;
 import com.edufelizardo.maissaudepublica.models.Equipe;
+import com.edufelizardo.maissaudepublica.models.LocalCampanha;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Programa;
@@ -23,6 +25,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcaoProgr
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcoesProgramaticasDto;
 import com.edufelizardo.maissaudepublica.models.enuns.ResultadoBuscaAtiva;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoAcaoProgramatica;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoCampanha;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoPrograma;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoAcaoProgramatica;
@@ -31,7 +34,9 @@ import com.edufelizardo.maissaudepublica.repositories.AcompanhamentoProgramatico
 import com.edufelizardo.maissaudepublica.repositories.AdscricaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtribuicaoMicroareaRepository;
+import com.edufelizardo.maissaudepublica.repositories.CampanhaRepository;
 import com.edufelizardo.maissaudepublica.repositories.EquipeRepository;
+import com.edufelizardo.maissaudepublica.repositories.LocalCampanhaRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProgramaRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
@@ -95,6 +100,12 @@ public class AcaoProgramaticaService {
     private AcompanhamentoService acompanhamentoService;
 
     @Autowired
+    private CampanhaRepository campanhaRepository;
+
+    @Autowired
+    private LocalCampanhaRepository localCampanhaRepository;
+
+    @Autowired
     private VinculoAssistencialService vinculoService;
 
     @Autowired
@@ -102,9 +113,18 @@ public class AcaoProgramaticaService {
 
     // ── Escrita ────────────────────────────────────────────────────────────────────────────────────
 
-    /** Prevê a ação: individual pelo acompanhamento vigente; coletiva pela unidade, com participantes acompanhados no programa. */
+    /**
+     * Prevê a ação: individual pelo acompanhamento vigente; coletiva pela unidade, com participantes acompanhados no programa;
+     * ou da campanha, num local dela (ADR-0133).
+     */
     @Transactional
     public AcaoProgramaticaDto prever(AcaoProgramaticaRequestDto dto) {
+        if ((dto.getProgramaId() == null) == (dto.getCampanhaId() == null)) {
+            throw new ResourceBadRequestException("A ação é do programa ou da campanha: informe um dos dois.");
+        }
+        if (dto.getCampanhaId() != null) {
+            return preverDaCampanha(dto);
+        }
         Programa programa = programaRepository.findById(dto.getProgramaId()).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar o programa " + dto.getProgramaId() + " em nossos registros."));
         if (programa.getSituacao() != SituacaoPrograma.ATIVO) {
@@ -153,6 +173,49 @@ public class AcaoProgramaticaService {
         ContextoAuditoria.registro(a.getUuid());
         ContextoAuditoria.detalhe("Ação " + a.getTipo() + " do programa " + programa.getCodigo() + (a.getPaciente() == null ? " (coletiva)." : "."));
         return dto(a, LocalDate.now());
+    }
+
+    /** Ação da campanha: coletiva, num local dela, no período, com a campanha não cancelada nem encerrada (ADR-0133). */
+    private AcaoProgramaticaDto preverDaCampanha(AcaoProgramaticaRequestDto dto) {
+        Campanha campanha = campanhaRepository.findById(dto.getCampanhaId()).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar a campanha " + dto.getCampanhaId() + " em nossos registros."));
+        LocalDate hoje = LocalDate.now();
+        SituacaoCampanha situacao = campanha.situacao(hoje);
+        if (situacao == SituacaoCampanha.CANCELADA || situacao == SituacaoCampanha.ENCERRADA) {
+            throw new ResourceUnprocessableEntityException("A campanha " + campanha.getNome() + " está " + situacao.name().toLowerCase() + ".");
+        }
+        if (dto.getAcompanhamentoId() != null || SO_INDIVIDUAIS.contains(dto.getTipo())) {
+            throw new ResourceBadRequestException("A ação da campanha é coletiva: vacinação, exame, aferição, grupo, orientação, mobilização ou outra.");
+        }
+        if (dto.getLocalCampanhaId() == null) {
+            throw new ResourceBadRequestException("Informe o local da campanha onde a ação acontece.");
+        }
+        LocalCampanha local = localCampanhaRepository.findById(dto.getLocalCampanhaId()).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar o local " + dto.getLocalCampanhaId() + " em nossos registros."));
+        if (!local.getCampanha().getUuid().equals(campanha.getUuid())) {
+            throw new ResourceUnprocessableEntityException("O local é de outra campanha.");
+        }
+        if (dto.getDataPrevista().isBefore(campanha.getInicio()) || dto.getDataPrevista().isAfter(campanha.getFim())) {
+            throw new ResourceUnprocessableEntityException("A data precisa estar no período da campanha (" + campanha.getInicio() + " a "
+                    + campanha.getFim() + ").");
+        }
+        controleDeAcesso.exigir(ACOMPANHAR, local.getUnidade());
+        AcaoProgramatica a = new AcaoProgramatica();
+        a.setCampanha(campanha);
+        a.setLocalCampanha(local);
+        a.setTipo(dto.getTipo());
+        a.setUnidade(local.getUnidade());
+        a.setLocal(local.isTemporario() ? local.getNome() : local.getUnidade().getNome());
+        a.setDescricao(texto(dto.getDescricao()));
+        a.setResponsavel(acompanhamentoService.profissionalResponsavel(dto.getResponsavelMatricula(), local.getUnidade()));
+        a.setDataPrevista(dto.getDataPrevista());
+        a.setSituacao(SituacaoAcaoProgramatica.PENDENTE);
+        a.setCriadaEm(Instant.now());
+        a.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        a = acaoRepository.save(a);
+        ContextoAuditoria.registro(a.getUuid());
+        ContextoAuditoria.detalhe("Ação " + a.getTipo() + " da campanha " + campanha.getNome() + ".");
+        return dto(a, hoje);
     }
 
     /**
@@ -219,9 +282,13 @@ public class AcaoProgramaticaService {
             }
             a.setAtendimento(at);
         }
-        if (a.getPaciente() == null && dto.getParticipantesIds() != null) {
+        if (a.getPaciente() == null && a.getPrograma() != null && dto.getParticipantesIds() != null) {
             a.setParticipantes(participantes(a.getPrograma(), dto.getParticipantesIds()));
         }
+        if (dto.getQuantidadeAtendida() != null && a.getPaciente() != null) {
+            throw new ResourceBadRequestException("A quantidade atendida é da ação coletiva.");
+        }
+        a.setQuantidadeAtendida(dto.getQuantidadeAtendida());
         a.setRealizadaEm(dia);
         a.setResultadoBusca(dto.getResultadoBusca());
         a.setObservacao(texto(dto.getObservacao()));
@@ -273,8 +340,8 @@ public class AcaoProgramaticaService {
      * também entram, porque continuam pendentes. Programa sensível só para quem acompanha na unidade.
      */
     @Transactional(readOnly = true)
-    public AcoesProgramaticasDto acoes(UUID programaId, UUID unidadeId, UUID equipeId, String responsavelMatricula, LocalDate de, LocalDate ate,
-                                       SituacaoAcaoProgramatica situacao) {
+    public AcoesProgramaticasDto acoes(UUID programaId, UUID campanhaId, UUID unidadeId, UUID equipeId, String responsavelMatricula, LocalDate de,
+                                       LocalDate ate, SituacaoAcaoProgramatica situacao) {
         LocalDate hoje = LocalDate.now();
         LocalDate inicio = de != null ? de : hoje.minusDays(hoje.getDayOfWeek().getValue() - 1L);
         LocalDate fim = ate != null ? ate : inicio.plusDays(6);
@@ -284,7 +351,8 @@ public class AcaoProgramaticaService {
         String responsavel = texto(responsavelMatricula);
         List<AcaoProgramatica> escopo = controleDeAcesso.filtrar(acaoRepository.findTodas().stream(), a -> Stream.of(a.getUnidade()), ACOMPANHAR)
                 .filter(this::podeVer)
-                .filter(a -> programaId == null || a.getPrograma().getUuid().equals(programaId))
+                .filter(a -> programaId == null || (a.getPrograma() != null && a.getPrograma().getUuid().equals(programaId)))
+                .filter(a -> campanhaId == null || (a.getCampanha() != null && a.getCampanha().getUuid().equals(campanhaId)))
                 .filter(a -> unidadeId == null || a.getUnidade().getUuid().equals(unidadeId))
                 .filter(a -> equipeId == null || (a.getEquipe() != null && a.getEquipe().getUuid().equals(equipeId)))
                 .filter(a -> responsavel == null || (a.getResponsavel() != null && responsavel.equals(a.getResponsavel().getMatricula())))
@@ -334,9 +402,9 @@ public class AcaoProgramaticaService {
         return a;
     }
 
-    /** Programa sensível: a mesma regra do acompanhamento (quem acompanha na unidade). */
+    /** Programa sensível: a mesma regra do acompanhamento (quem acompanha na unidade). A ação da campanha não é sigilosa. */
     private boolean podeVer(AcaoProgramatica a) {
-        return acompanhamentoService.podeVer(a.getPrograma(), a.getUnidade());
+        return a.getPrograma() == null || acompanhamentoService.podeVer(a.getPrograma(), a.getUnidade());
     }
 
     private Set<Paciente> participantes(Programa programa, List<UUID> ids) {
@@ -388,8 +456,9 @@ public class AcaoProgramaticaService {
                 .filter(at -> at.getStatus() == StatusAtendimento.CONCLUIDO).findFirst().orElse(null);
         String sugestao = a.getResultadoBusca() == ResultadoBuscaAtiva.MUDOU_DE_ENDERECO && a.getAcompanhamento() != null && a.getAcompanhamento().vigente()
                 ? "Mudou de endereço: avalie encerrar o acompanhamento (transferência)." : null;
-        return new AcaoProgramaticaDto(a.getUuid(), a.getPrograma().getUuid(), a.getPrograma().getCodigo(), a.getPrograma().getNome(),
-                a.getPrograma().isSensivel(), a.getTipo(), a.getPaciente() == null,
+        Programa p = a.getPrograma();
+        return new AcaoProgramaticaDto(a.getUuid(), p != null ? p.getUuid() : null, p != null ? p.getCodigo() : null,
+                p != null ? p.getNome() : a.getCampanha().getNome(), p != null && p.isSensivel(), a.getTipo(), a.getPaciente() == null,
                 a.getAcompanhamento() != null ? a.getAcompanhamento().getUuid() : null,
                 a.getPaciente() != null ? a.getPaciente().getUuid() : null, a.getPaciente() != null ? a.getPaciente().getNome() : null,
                 a.getUnidade().getUuid(), a.getUnidade().getNome(), a.getEquipe() != null ? a.getEquipe().getUuid() : null,
@@ -400,8 +469,9 @@ public class AcaoProgramaticaService {
                 a.getAgendamento() != null ? a.getAgendamento().getDataHora() : null, sugerido != null, sugerido != null ? sugerido.getUuid() : null,
                 a.getMotivo(), a.getResultadoBusca(), sugestao, a.getObservacao(),
                 a.getParticipantes().stream().sorted(Comparator.comparing(Paciente::getNome, String.CASE_INSENSITIVE_ORDER))
-                        .map(p -> new AcaoProgramaticaDto.Participante(p.getUuid(), p.getNome())).toList(),
-                a.getCriadaEm());
+                        .map(x -> new AcaoProgramaticaDto.Participante(x.getUuid(), x.getNome())).toList(),
+                a.getCriadaEm(), a.getCampanha() != null ? a.getCampanha().getUuid() : null, a.getCampanha() != null ? a.getCampanha().getNome() : null,
+                a.getLocalCampanha() != null ? a.getLocalCampanha().getUuid() : null, a.getLocal(), a.getQuantidadeAtendida());
     }
 
     private static String texto(String s) {

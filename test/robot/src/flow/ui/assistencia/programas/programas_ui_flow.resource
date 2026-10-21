@@ -4,6 +4,7 @@ Resource    ../../../../pom/ui/assistencia/programas/programas_ui_pom.resource
 Resource    ../../../programas/programa/programa_flow.resource
 Resource    ../../../programas/acompanhamento/acompanhamento_flow.resource
 Resource    ../../../programas/acao/acao_programatica_flow.resource
+Resource    ../../../programas/campanha/campanha_flow.resource
 Resource    ../../../../pom/ui/assistencia/pacientes/pacientes_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -269,5 +270,65 @@ UI Programas - Aba Acoes Nao Realizada
     Fill Text    id=f-acao-motivo    Vacina em falta na unidade
     Click    css=app-drawer footer >> role=button[name="Salvar"]
     Wait For Elements State    css=[aria-label="Ações programáticas"] .tag >> text=Não realizada    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Cadastrar Campanha E Local
+    [Documentation]    Aba Campanhas: cadastrar a campanha, incluir o local e publicar.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [UPPER]
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${fim}=    Evaluate    (datetime.date.today() + datetime.timedelta(days=20)).isoformat()    modules=datetime
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    UI Programas - Abrir
+    Clicar Aba    Campanhas
+    Clicar Botao    Nova campanha
+    Fill Text    id=f-campanha-nome    Campanha UI ${sufixo}
+    Fill Text    id=f-campanha-inicio    ${hoje}
+    Fill Text    id=f-campanha-fim    ${fim}
+    Fill Text    id=f-campanha-idade-min    60
+    Fill Text    id=f-campanha-meta-qtd    200
+    Clicar Botao    Salvar campanha
+    Wait For Elements State    css=app-drawer .tag >> text=Em andamento    visible
+    Select Options By    id=f-local-unidade    value    ${unidade}
+    Clicar Botao    Incluir local
+    Wait For Elements State    css=[aria-label="Locais da campanha"] li    visible
+    Clicar Botao    Publicar na consulta pública
+    Wait For Elements State    css=app-drawer .tag >> text=Publicada    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Campanha Na Landing
+    [Documentation]    A landing page mostra a campanha publicada, com o público e o local, sem login.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${campanha}    ${nome}    ${local}    ${unidade}=    Seed Campanha Com Local
+    ${payload}=    Create Dictionary    publicada=${True}
+    ${r}=    POST Publicacao Campanha    ${campanha}    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    200
+    Ir Para Rota Do Frontend    /
+    Scroll To Element    id=campanhas
+    Wait For Elements State    css=#campanhas article[aria-label="${nome}"]    visible
+    ${texto}=    Get Text    css=#campanhas article[aria-label="${nome}"]
+    Should Contain    ${texto}    60 anos ou mais
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Acao Da Campanha
+    [Documentation]    Na gaveta da campanha: prever a vacinação no local e confirmar com as pessoas atendidas.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${campanha}    ${nome}    ${local}    ${unidade}=    Seed Campanha Com Local
+    UI Programas - Abrir
+    Clicar Aba    Campanhas
+    Clicar Botao    Abrir campanha: ${nome}
+    Wait For Elements State    css=[aria-label="Locais da campanha"] li    visible
+    Click    css=app-drawer >> role=button[name="Prever ação"]
+    Click    css=app-drawer >> nth=1 >> css=footer >> role=button[name="Prever ação"]
+    Wait For Elements State    css=[aria-label="Ações programáticas"] >> text=Vacina    visible
+    ${detalhe}=    GET Campanha    ${campanha}
+    ${nomeLocal}=    Set Variable    ${detalhe.json()}[locais][0][nome]
+    Clicar Botao    Confirmar: Vacina ${nomeLocal}
+    Fill Text    id=f-acao-quantidade    30
+    Click    css=app-drawer >> nth=1 >> css=footer >> role=button[name="Confirmar"]
+    Wait For Elements State    css=[aria-label="Andamento da meta"] >> text=30 de 100    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -48,7 +48,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
-| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1, P2 e P4 feitas; P3, P5 e P6 |
+| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
@@ -68,7 +68,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
 | SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
@@ -80,7 +79,7 @@ MO1 ✅ ──► SB4 (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6
-P1 ✅ ──► P3 ──► C2 (campanha de comunicação)
+P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
@@ -464,10 +463,14 @@ C1 ──► C2 · C4 · C5
   atendimento que a cumpriu, não realizada e cancelada com motivo; busca ativa dos faltosos e atrasados com o ACS da
   microárea e o resultado; programa na marcação da Agenda, "Agendar" a consulta programada e a ação pronta para
   confirmar quando o atendimento é concluído; aba Ações programáticas e as ações na aba Programas do paciente.
+- [x] **P3 · Campanhas** ([ADR-0133](./adr/0133-programas-campanhas.md)): campanha cadastrável com tipo, programa
+  opcional, período (situação pelas datas), público como dado ou em palavras, meta com quantidade, publicação e
+  cancelamento; locais da rede ou temporários sob a unidade responsável; ações da campanha (coletivas, no local, com as
+  pessoas atendidas) dando o andamento da meta; aba Campanhas e a consulta pública na landing page
+  (`/api/v1/publico/campanha`).
 
 **Falta:**
 - [x] Lista de elegíveis pelo público-alvo entre os adscritos da equipe (ADR-0128); faltam os critérios clínicos (gestação, condição).
-- [ ] **P3 · Campanhas:** cadastro, tela e consulta pública na landing page (a seção de programas já existe).
 - [ ] **P5 · Linhas de cuidado.**
 - [ ] **P6 · Metas e indicadores programáticos.**
 

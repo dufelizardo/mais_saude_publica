@@ -10,5 +10,6 @@ public enum TipoAcaoProgramatica {
     BUSCA_ATIVA,
     GRUPO,
     ORIENTACAO,
+    MOBILIZACAO,
     OUTRA
 }

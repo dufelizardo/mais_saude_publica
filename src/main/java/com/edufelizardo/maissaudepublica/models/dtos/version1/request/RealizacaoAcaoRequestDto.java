@@ -33,4 +33,8 @@ public class RealizacaoAcaoRequestDto implements Serializable {
 
     @Size(max = 1000, message = "A observação vai até 1000 caracteres.")
     private String observacao;
+
+    /** Coletiva: quantas pessoas foram atendidas (ADR-0133). */
+    @Min(value = 0, message = "A quantidade atendida não pode ser negativa.")
+    private Integer quantidadeAtendida;
 }

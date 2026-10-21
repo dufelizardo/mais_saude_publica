@@ -285,19 +285,7 @@ public class ProgramaService {
         if (dto.getSexo() == Sexo.IGNORADO) {
             throw new ResourceBadRequestException("O público-alvo é de um sexo (MASCULINO ou FEMININO) ou de qualquer um (vazio).");
         }
-        List<String> condicoes = new ArrayList<>();
-        for (String c : dto.getCondicoes() == null ? List.<String>of() : dto.getCondicoes()) {
-            String codigo = c == null ? "" : c.trim().toUpperCase(Locale.ROOT);
-            if (codigo.isEmpty()) {
-                continue;
-            }
-            if (!CONDICAO.matcher(codigo).matches()) {
-                throw new ResourceBadRequestException("Código de condição inválido: " + c + " (use CID-10 ou CIAP-2, ex.: I10, E11, T90).");
-            }
-            if (!condicoes.contains(codigo)) {
-                condicoes.add(codigo);
-            }
-        }
+        List<String> condicoes = condicoes(dto.getCondicoes());
         String matricula = dto.getCoordenadorMatricula() == null || dto.getCoordenadorMatricula().isBlank() ? null : dto.getCoordenadorMatricula().trim();
         Profissional coordenador = null;
         if (matricula != null) {
@@ -353,13 +341,33 @@ public class ProgramaService {
                 publico(p, true), unidades, contagens[0], contagens[1], contagens[2]);
     }
 
+    /** Códigos CID-10 ou CIAP-2 normalizados e sem repetição (o público do programa e o da campanha, ADR-0133). */
+    static List<String> condicoes(List<String> entrada) {
+        List<String> condicoes = new ArrayList<>();
+        for (String c : entrada == null ? List.<String>of() : entrada) {
+            String codigo = c == null ? "" : c.trim().toUpperCase(Locale.ROOT);
+            if (codigo.isEmpty()) {
+                continue;
+            }
+            if (!CONDICAO.matcher(codigo).matches()) {
+                throw new ResourceBadRequestException("Código de condição inválido: " + c + " (use CID-10 ou CIAP-2, ex.: I10, E11, T90).");
+            }
+            if (!condicoes.contains(codigo)) {
+                condicoes.add(codigo);
+            }
+        }
+        return condicoes;
+    }
+
     /** "Gestantes", "60 anos ou mais", "mulheres de 25 a 64 anos"; com condições, só na tela interna. */
     static String publico(Programa p, boolean comCondicoes) {
+        return publico(p.getIdadeMinima(), p.getIdadeMaxima(), p.getPublicoSexo(), p.isGestante(), p.getCondicoes(), comCondicoes);
+    }
+
+    /** O público em texto, a partir dos campos (programa e campanha). */
+    static String publico(Integer min, Integer max, Sexo sexo, boolean gestante, List<String> condicoesDoPublico, boolean comCondicoes) {
         List<String> partes = new ArrayList<>();
-        String quem = p.isGestante() ? "gestantes" : p.getPublicoSexo() == Sexo.FEMININO ? "mulheres"
-                : p.getPublicoSexo() == Sexo.MASCULINO ? "homens" : null;
-        Integer min = p.getIdadeMinima();
-        Integer max = p.getIdadeMaxima();
+        String quem = gestante ? "gestantes" : sexo == Sexo.FEMININO ? "mulheres" : sexo == Sexo.MASCULINO ? "homens" : null;
         String idade = min != null && max != null ? "de " + min + " a " + max + " anos"
                 : min != null ? min + " anos ou mais" : max != null ? "até " + max + " anos" : null;
         if (quem != null && idade != null) {
@@ -369,8 +377,8 @@ public class ProgramaService {
         } else if (idade != null) {
             partes.add(idade);
         }
-        if (comCondicoes && !p.getCondicoes().isEmpty()) {
-            partes.add("condições " + String.join(", ", p.getCondicoes()));
+        if (comCondicoes && !condicoesDoPublico.isEmpty()) {
+            partes.add("condições " + String.join(", ", condicoesDoPublico));
         }
         if (partes.isEmpty()) {
             return "toda a população";

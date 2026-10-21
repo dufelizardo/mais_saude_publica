@@ -60,6 +60,12 @@ public class AcaoProgramaticaDto implements Serializable {
     private String observacao;
     private List<Participante> participantes;
     private Instant criadaEm;
+    /** Ação da campanha (ADR-0133). */
+    private UUID campanhaId;
+    private String campanhaNome;
+    private UUID localCampanhaId;
+    private String localNome;
+    private Integer quantidadeAtendida;
 
     @Getter
     @Setter
