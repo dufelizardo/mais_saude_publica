@@ -110,6 +110,11 @@ E o sistema responde perguntas como:
 
 Até a adscrição existir, o acompanhamento já guarda a unidade e a equipe responsáveis.
 
+**Ações programáticas (P4, [ADR-0132](../adr/0132-programas-acoes-programaticas.md)):** o faltoso e o atrasado viram
+busca ativa, com o ACS da microárea de adscrição como responsável sugerido e o resultado registrado ("mudou de
+endereço" sugere encerrar o acompanhamento). A consulta programada é agendada pela Agenda, com o programa na marcação,
+e fica pronta para confirmar quando o atendimento é concluído.
+
 ## 4. Campanha
 
 Separada de programa, porque tem **início e fim**, público, objetivo, metas, locais e ações:
@@ -239,7 +244,7 @@ Editável pelo município. Inclui os programas do protótipo e os nacionais comu
 | **P1** · catálogo | categoria, programa, público-alvo, participação e carga inicial; tela em cartões pelo protótipo, com os indicadores "Em breve" | — |
 | **P2** · acompanhamento | inscrever, mudar a situação e encerrar; aba Programas e filtro em Pacientes; inscritos e faltosos no programa; programas na seção da equipe | P1, ADR-0076 |
 | **P3** · campanhas | cadastro com período, público, meta e locais; tela e consulta pública na landing page | P1 |
-| **P4** · ações programáticas | ação prevista ligada ao registro assistencial; ações pendentes e busca ativa; programa na marcação da Agenda | P2 |
+| **P4** · ações programáticas ✅ ([ADR-0132](../adr/0132-programas-acoes-programaticas.md)) | ação prevista ligada ao registro assistencial; ações pendentes e busca ativa; programa na marcação da Agenda | P2 |
 | **P5** · linhas de cuidado | percurso com etapas, serviços e unidades de referência | Atendimento, Regulação e Prontuário maduros |
 | **P6** · metas e indicadores | cobertura, controle, pré-natal adequado, faltosos; alimenta o #19 Indicadores e BI | P2, P4 |
 

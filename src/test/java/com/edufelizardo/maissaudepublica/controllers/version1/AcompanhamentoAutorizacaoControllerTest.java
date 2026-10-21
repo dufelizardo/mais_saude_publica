@@ -20,6 +20,7 @@ import com.edufelizardo.maissaudepublica.repositories.ProgramaRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
 import com.edufelizardo.maissaudepublica.services.version1.JwtService;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -120,6 +121,7 @@ class AcompanhamentoAutorizacaoControllerTest {
 
     @AfterEach
     void limpar() {
+        jdbc.update("delete from tb_acao_programatica where programa_id in (select uuid from tb_programa where codigo like ?)", CODIGO + "%");
         jdbc.update("delete from tb_evento_acompanhamento where acompanhamento_id in (select a.uuid from tb_acompanhamento_programatico a "
                 + "join tb_programa p on p.uuid = a.programa_id where p.codigo like ?)", CODIGO + "%");
         jdbc.update("delete from tb_acompanhamento_programatico where programa_id in (select uuid from tb_programa where codigo like ?)", CODIGO + "%");
@@ -204,5 +206,25 @@ class AcompanhamentoAutorizacaoControllerTest {
                 .andExpect(jsonPath("$.vigentes.length()").value(1))
                 .andExpect(jsonPath("$.vigentes[0].programaCodigo").value(CODIGO + "HD"))
                 .andExpect(jsonPath("$.restritos").value(1));
+    }
+
+    @Test
+    void acoesProgramaticasDaUnidadeESensivelSoParaQuemAcompanha() throws Exception {
+        String acompanhamento = JsonPath.read(mockMvc.perform(como(ENF_A, post("/api/v1/programa/" + mental.getUuid() + "/acompanhamento"))
+                .contentType(MediaType.APPLICATION_JSON).content(inscricao())).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(),
+                "$.uuid");
+        String acao = "{\"programaId\": \"%s\", \"tipo\": \"ORIENTACAO\", \"acompanhamentoId\": \"%s\", \"dataPrevista\": \"%s\"}"
+                .formatted(mental.getUuid(), acompanhamento, java.time.LocalDate.now());
+        mockMvc.perform(como(GESTOR_A, post("/api/v1/acao-programatica")).contentType(MediaType.APPLICATION_JSON).content(acao)).andExpect(status().isForbidden());
+        mockMvc.perform(como(ENF_B, post("/api/v1/acao-programatica")).contentType(MediaType.APPLICATION_JSON).content(acao)).andExpect(status().isForbidden());
+        mockMvc.perform(como(ENF_A, post("/api/v1/acao-programatica")).contentType(MediaType.APPLICATION_JSON).content(acao)).andExpect(status().isCreated());
+        mockMvc.perform(como(ENF_B, post("/api/v1/acompanhamento/" + acompanhamento + "/busca-ativa")).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        // A ação do programa sensível só aparece para quem acompanha na unidade.
+        mockMvc.perform(como(ENF_A, get("/api/v1/acoes-programaticas?programaId=" + mental.getUuid()))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.lista.length()").value(1));
+        mockMvc.perform(como(ENF_B, get("/api/v1/acoes-programaticas?programaId=" + mental.getUuid()))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.lista.length()").value(0));
+        mockMvc.perform(como(GESTOR_A, get("/api/v1/acoes-programaticas"))).andExpect(status().isForbidden());
     }
 }

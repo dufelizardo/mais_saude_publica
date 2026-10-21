@@ -69,6 +69,7 @@ Resource    ../../schema/equipes/equipes_schema.resource
 Resource    ../../schema/escalas/escalas_schema.resource
 # PROGRAMAS (ADR-0118)
 Resource    ../../schema/programas/programas_schema.resource
+Resource    ../../schema/programas/acao_programatica_schema.resource
 Resource    ../../schema/saude_mental/saude_mental_schema.resource
 Resource    ../../schema/vigilancia/vigilancia_schema.resource
 Resource    ../../schema/vigilancia/vigilancia_contatos_schema.resource

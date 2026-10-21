@@ -182,3 +182,94 @@ export const MOTIVOS_SAIDA: Record<MotivoSaidaAcompanhamento, string> = {
 
 /** Cor do ícone do cartão pela posição da categoria (o protótipo usa uma cor por eixo). */
 export const CORES_CATEGORIA = ['pg__icon--blue', 'pg__icon--ok', 'pg__icon--pink', 'pg__icon--purple', 'pg__icon--warn'];
+
+// ── Ações programáticas (ADR-0132) ─────────────────────────────────────────────────────────────
+
+export type TipoAcaoProgramatica = 'CONSULTA_PROGRAMADA' | 'AFERICAO' | 'EXAME' | 'VACINA' | 'VISITA_DOMICILIAR' | 'BUSCA_ATIVA' | 'GRUPO'
+  | 'ORIENTACAO' | 'OUTRA';
+export type SituacaoAcaoProgramatica = 'PENDENTE' | 'REALIZADA' | 'NAO_REALIZADA' | 'CANCELADA';
+export type ResultadoBuscaAtiva = 'ENCONTRADO_AGENDADO' | 'ENCONTRADO_RECUSOU' | 'NAO_ENCONTRADO' | 'MUDOU_DE_ENDERECO';
+
+export const TIPOS_ACAO: Record<TipoAcaoProgramatica, string> = {
+  CONSULTA_PROGRAMADA: 'Consulta programada', AFERICAO: 'Aferição', EXAME: 'Exame', VACINA: 'Vacina', VISITA_DOMICILIAR: 'Visita domiciliar',
+  BUSCA_ATIVA: 'Busca ativa', GRUPO: 'Grupo ou atividade coletiva', ORIENTACAO: 'Orientação', OUTRA: 'Outra',
+};
+/** Só existem para uma pessoa (pedem o acompanhamento). */
+export const ACOES_SO_INDIVIDUAIS: TipoAcaoProgramatica[] = ['CONSULTA_PROGRAMADA', 'BUSCA_ATIVA', 'VISITA_DOMICILIAR'];
+export const SITUACOES_ACAO: Record<SituacaoAcaoProgramatica, { rotulo: string; classe: string }> = {
+  PENDENTE: { rotulo: 'Pendente', classe: 'info' },
+  REALIZADA: { rotulo: 'Realizada', classe: 'ok' },
+  NAO_REALIZADA: { rotulo: 'Não realizada', classe: 'warn' },
+  CANCELADA: { rotulo: 'Cancelada', classe: 'muted' },
+};
+export const RESULTADOS_BUSCA: Record<ResultadoBuscaAtiva, string> = {
+  ENCONTRADO_AGENDADO: 'Encontrado e agendado', ENCONTRADO_RECUSOU: 'Encontrado, recusou', NAO_ENCONTRADO: 'Não encontrado',
+  MUDOU_DE_ENDERECO: 'Mudou de endereço',
+};
+
+export interface AcaoProgramaticaDto {
+  uuid: string;
+  programaId: string;
+  programaCodigo: string;
+  programaNome: string;
+  sensivel: boolean;
+  tipo: TipoAcaoProgramatica;
+  coletiva: boolean;
+  acompanhamentoId?: string | null;
+  pacienteId?: string | null;
+  pacienteNome?: string | null;
+  unidadeId: string;
+  unidadeNome: string;
+  equipeId?: string | null;
+  equipeNome?: string | null;
+  local?: string | null;
+  descricao?: string | null;
+  responsavelMatricula?: string | null;
+  responsavelNome?: string | null;
+  dataPrevista: string;
+  situacao: SituacaoAcaoProgramatica;
+  vencida: boolean;
+  realizadaEm?: string | null;
+  atendimentoId?: string | null;
+  agendamentoId?: string | null;
+  agendamentoDataHora?: string | null;
+  prontaParaConfirmar: boolean;
+  atendimentoSugeridoId?: string | null;
+  motivo?: string | null;
+  resultadoBusca?: ResultadoBuscaAtiva | null;
+  sugestao?: string | null;
+  observacao?: string | null;
+  participantes: { pacienteId: string; nome: string }[];
+  criadaEm: string;
+}
+
+export interface AcoesProgramaticasDto {
+  de: string;
+  ate: string;
+  pendentes: number;
+  vencidas: number;
+  realizadasNoMes: number;
+  prontasParaConfirmar: number;
+  lista: AcaoProgramaticaDto[];
+}
+
+export interface AcaoProgramaticaRequestDto {
+  programaId: string;
+  tipo: TipoAcaoProgramatica;
+  acompanhamentoId?: string | null;
+  unidadeId?: string | null;
+  equipeId?: string | null;
+  local?: string | null;
+  participantesIds?: string[];
+  descricao?: string | null;
+  responsavelMatricula?: string | null;
+  dataPrevista: string;
+}
+
+export interface RealizacaoAcaoRequestDto {
+  realizadaEm?: string | null;
+  atendimentoId?: string | null;
+  resultadoBusca?: ResultadoBuscaAtiva | null;
+  participantesIds?: string[] | null;
+  observacao?: string | null;
+}

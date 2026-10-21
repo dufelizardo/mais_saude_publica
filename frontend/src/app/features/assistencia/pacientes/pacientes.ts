@@ -21,12 +21,15 @@ import { AgendamentoService } from '../../../core/services/agendamento';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import { AuthService } from '../../../core/services/auth';
 import {
+  AcaoProgramaticaDto,
   AcompanhamentoDto,
   AcompanhamentosDoPacienteDto,
   MOTIVOS_SAIDA,
   MotivoSaidaAcompanhamento,
   ProgramaResumoDto,
+  SITUACOES_ACAO,
   SITUACOES_ACOMPANHAMENTO,
+  TIPOS_ACAO,
 } from '../../../core/models/programa';
 import { ProgramaService } from '../../../core/services/programa';
 
@@ -58,6 +61,10 @@ export class Pacientes {
 
   // ── Programas de saúde do paciente (ADR-0119) ──────────────────────────────────────────────
   protected readonly situacoesAcompanhamento = SITUACOES_ACOMPANHAMENTO;
+  /** Ações programáticas do paciente (ADR-0132). */
+  protected readonly tiposAcao = TIPOS_ACAO;
+  protected readonly situacoesAcao = SITUACOES_ACAO;
+  protected readonly acoesDoPaciente = signal<AcaoProgramaticaDto[]>([]);
   protected readonly motivosSaida = MOTIVOS_SAIDA;
   /** `undefined` carregando, `null` sem acesso ou bloqueado (ver programasBloqueio). */
   protected readonly programasDoPaciente = signal<AcompanhamentosDoPacienteDto | null | undefined>(undefined);
@@ -307,9 +314,17 @@ export class Pacientes {
       return;
     }
     this.programasDoPaciente.set(undefined);
+    this.acoesDoPaciente.set([]);
     this.programaService.doPaciente(pacienteId).subscribe({
       next: (r) => {
-        if (this.selecionado()?.uuid === pacienteId) this.programasDoPaciente.set(r);
+        if (this.selecionado()?.uuid !== pacienteId) return;
+        this.programasDoPaciente.set(r);
+        this.programaService.acoesDoPaciente(pacienteId).subscribe({
+          next: (a) => {
+            if (this.selecionado()?.uuid === pacienteId) this.acoesDoPaciente.set(a);
+          },
+          error: () => this.acoesDoPaciente.set([]),
+        });
       },
       error: (e) => {
         if (this.selecionado()?.uuid !== pacienteId) return;

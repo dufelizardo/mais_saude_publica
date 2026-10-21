@@ -3,6 +3,7 @@ Library     String
 Resource    ../../../../pom/ui/assistencia/programas/programas_ui_pom.resource
 Resource    ../../../programas/programa/programa_flow.resource
 Resource    ../../../programas/acompanhamento/acompanhamento_flow.resource
+Resource    ../../../programas/acao/acao_programatica_flow.resource
 Resource    ../../../../pom/ui/assistencia/pacientes/pacientes_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -203,5 +204,70 @@ UI Programas - Faltoso Pela Aba Do Paciente
     Should Contain    ${aviso}    Marcado como faltoso
     ${depois}=    GET Inscritos Do Programa    ${programa}
     Should Be Equal As Integers    ${depois.json()}[faltosos]    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Busca Ativa Do Faltoso
+    [Documentation]    Na lista de acompanhados: gerar a busca ativa do faltoso e confirmá-la com o resultado.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${acompanhamento}    ${programa}    ${paciente}    ${unidade}=    Seed Acompanhamento
+    ${faltoso}=    Create Dictionary    situacao=FALTOSO    motivo=Não veio às consultas
+    ${s}=    POST Situacao Acompanhamento    ${acompanhamento}    ${faltoso}
+    Should Be Equal As Integers    ${s.status_code}    200
+    ${detalhe}=    GET Programa    ${programa}
+    ${nome}=    Set Variable    ${detalhe.json()}[resumo][nome]
+    ${inscritos}=    GET Inscritos Do Programa    ${programa}
+    ${nomePaciente}=    Set Variable    ${inscritos.json()}[lista][0][pacienteNome]
+    UI Programas - Abrir Programa    ${programa}
+    Wait Until Keyword Succeeds    10s    500ms    UI Programas - Detalhe Deve Ser    ${nome}
+    Clicar Botao    Gerar busca ativa: ${nomePaciente}
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Busca ativa gerada
+    Clicar Botao    Confirmar: Busca ativa ${nomePaciente}
+    Select Options By    id=f-acao-resultado    value    ENCONTRADO_AGENDADO
+    Click    css=app-drawer footer >> role=button[name="Confirmar"]
+    Wait For Elements State    css=[aria-label="Ações programáticas"] .tag >> text=Realizada    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Prever Acao Do Programa
+    [Documentation]    No detalhe do programa: prever a aferição de um acompanhado.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${acompanhamento}    ${programa}    ${paciente}    ${unidade}=    Seed Acompanhamento
+    ${detalhe}=    GET Programa    ${programa}
+    ${nome}=    Set Variable    ${detalhe.json()}[resumo][nome]
+    ${inscritos}=    GET Inscritos Do Programa    ${programa}
+    ${nomePaciente}=    Set Variable    ${inscritos.json()}[lista][0][pacienteNome]
+    UI Programas - Abrir Programa    ${programa}
+    Wait Until Keyword Succeeds    10s    500ms    UI Programas - Detalhe Deve Ser    ${nome}
+    Clicar Botao    Prever ação
+    Select Options By    id=f-acao-tipo    value    AFERICAO
+    Wait For Elements State    css=#f-acao-acompanhamento >> option[value="${acompanhamento}"]    attached
+    Select Options By    id=f-acao-acompanhamento    value    ${acompanhamento}
+    Click    css=app-drawer footer >> role=button[name="Prever ação"]
+    Wait For Elements State    css=[aria-label="Ações programáticas"] >> text=Aferição    visible
+    Wait For Elements State    css=[aria-label="Ações programáticas"] >> text=${nomePaciente}    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Aba Acoes Nao Realizada
+    [Documentation]    Na aba Ações programáticas: a ação da semana e o registro de não realizada, com o motivo.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${acompanhamento}    ${programa}    ${paciente}    ${unidade}=    Seed Acompanhamento
+    ${detalhe}=    GET Programa    ${programa}
+    ${nome}=    Set Variable    ${detalhe.json()}[resumo][nome]
+    ${inscritos}=    GET Inscritos Do Programa    ${programa}
+    ${nomePaciente}=    Set Variable    ${inscritos.json()}[lista][0][pacienteNome]
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${payload}=    Create Dictionary    programaId=${programa}    tipo=VACINA    acompanhamentoId=${acompanhamento}    dataPrevista=${hoje}
+    ${a}=    POST Acao Programatica    ${payload}
+    Should Be Equal As Integers    ${a.status_code}    201
+    UI Programas - Abrir
+    Clicar Aba    Ações programáticas
+    Select Options By    css=[aria-label="Programa das ações"]    value    ${programa}
+    Clicar Botao    Não realizada: Vacina ${nomePaciente}
+    Fill Text    id=f-acao-motivo    Vacina em falta na unidade
+    Click    css=app-drawer footer >> role=button[name="Salvar"]
+    Wait For Elements State    css=[aria-label="Ações programáticas"] .tag >> text=Não realizada    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
