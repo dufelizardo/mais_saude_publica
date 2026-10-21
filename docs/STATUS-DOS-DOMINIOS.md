@@ -51,7 +51,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
-| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 e SB2 feitas; SB3 a SB5 |
+| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1, SB2 e SB3a feitas; SB3b a SB5 |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
@@ -68,7 +68,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| SB3 | 25 Saúde Bucal | catálogo geral de procedimentos, complemento odontológico, plano de tratamento |
+| SB3b | 25 Saúde Bucal | plano de tratamento (itens previstos, executados, tratamento concluído) |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 
@@ -87,7 +87,7 @@ F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulner
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
-SB1 ✅ ──► SB2 ✅ ──► SB3 ──► SB4
+SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ──► SB4
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
@@ -174,6 +174,7 @@ C1 ──► C2 · C4 · C5
 
 **Temos:**
 - Tela Atendimentos (ADR-0063), com consulta, procedimento, triagem, evolução e administração de medicamento.
+- Procedimento do catálogo geral, também direto no atendimento, sem consulta (ADR-0136).
 - A partir do atendimento: pedir exames (ADR-0094), encaminhar à Regulação (ADR-0088) e internar (ADR-0099).
 
 **Falta:**
@@ -529,10 +530,15 @@ C1 ──► C2 · C4 · C5
   alcance), registros por dente FDI e face feitos na avaliação, validação da face pelo dente e do alcance pela
   condição, anulação com motivo, projeção por data (o dente inteiro por cima das faces anteriores) e histórico do
   dente; seção Odontograma no atendimento de odontologia.
+- [x] **SB3a · Procedimento odontológico** ([ADR-0136](./adr/0136-saude-bucal-procedimento-odontologico.md)):
+  catálogo geral de procedimentos (todas as especialidades, SIGTAP opcional, alcance, condição resultante e exigência
+  de dentista), procedimento direto no atendimento (a consulta ficou opcional), complemento odontológico (dente e
+  faces) e o procedimento realizado gravando o odontograma, anulado na retificação; o técnico em saúde bucal registra
+  o que a lei permite; catálogo na tela Setores.
 
 **Falta:**
-- [ ] **SB3 · Tratamento:** catálogo geral de procedimentos, complemento odontológico (dente e faces), plano de
-  tratamento e evolução.
+- [ ] **SB3b · Plano de tratamento:** itens com procedimento previsto, dente e situação, executados pelos
+  procedimentos; tratamento concluído; permissão `ODONTOLOGIA.PLANEJAR`.
 - [ ] **SB4 · Regulação e prótese:** especialidades odontológicas no catálogo da Regulação, CEO como executante,
   tratamento protético.
 - [ ] **SB5 · Saúde bucal coletiva:** detalhe odontológico das ações coletivas (depende de Programas P4 e do
@@ -642,8 +648,9 @@ C1 ──► C2 · C4 · C5
 ## 3. Pendências transversais
 
 **Catálogos de procedimento:**
+- [x] Catálogo geral de procedimentos, com SIGTAP opcional (ADR-0136).
 - [ ] Unificar os catálogos de Regulação (`ProcedimentoRegulado`), Laboratório (`ExameLaboratorial`) e o catálogo
-  geral de procedimentos que vem com a ADR-0111.
+  geral de procedimentos (ADR-0136).
 
 **Domínio "Documentos"** (⬜): anexos e documentos formais reaproveitáveis por qualquer domínio, com versão,
 aprovação e assinatura.

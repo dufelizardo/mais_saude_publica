@@ -10,4 +10,7 @@ import java.util.UUID;
 public interface RegistroOdontogramaRepository extends JpaRepository<RegistroOdontograma, UUID> {
     @Query("select r from RegistroOdontograma r join fetch r.condicao where r.paciente.uuid = ?1 order by r.data asc, r.registradoEm asc")
     List<RegistroOdontograma> findDoPaciente(UUID pacienteId);
+
+    /** Os registros vigentes que o procedimento gravou (ADR-0136). */
+    List<RegistroOdontograma> findByProcedimento_UuidAndAnuladoEmIsNull(UUID procedimentoId);
 }

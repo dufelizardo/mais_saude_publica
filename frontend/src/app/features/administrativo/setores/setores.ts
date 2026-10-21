@@ -16,6 +16,7 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { dataBr, hojeIso, proximaAba } from '../../../shared/formato';
 import { CatalogoEspecialidades } from './catalogo-especialidades';
+import { CatalogoProcedimentos } from './catalogo-procedimentos';
 
 type Aba = 'setores' | 'responsabilidades';
 type Gaveta =
@@ -38,7 +39,7 @@ const TIPOS: { valor: TipoSetor; rotulo: string; classe: string }[] = [
  */
 @Component({
   selector: 'app-setores',
-  imports: [ReactiveFormsModule, Drawer, CatalogoEspecialidades],
+  imports: [ReactiveFormsModule, Drawer, CatalogoEspecialidades, CatalogoProcedimentos],
   templateUrl: './setores.html',
   styleUrl: './setores.css',
 })

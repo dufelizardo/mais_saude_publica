@@ -23,12 +23,14 @@ import { EvolucaoEnfermagemResponseDto } from '../../../core/models/evolucao-enf
 import { LoteResponseDto } from '../../../core/models/lote';
 import { MedicamentoResponseDto } from '../../../core/models/medicamento';
 import { PacienteResponseDto } from '../../../core/models/paciente';
-import { ProcedimentoResponseDto, StatusProcedimento } from '../../../core/models/procedimento';
+import { ProcedimentoCatalogoDto, ProcedimentoResponseDto, StatusProcedimento } from '../../../core/models/procedimento';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { ProntuarioAtendimentoDto, ProntuarioResponseDto } from '../../../core/models/prontuario';
 import {
   AvaliacaoOdontologicaDto,
   EspecialidadeDto,
+  FACES_DENTE,
+  FaceDente,
   NECESSIDADES_TRATAMENTO,
   NecessidadeTratamentoOdontologico,
   RISCOS_SAUDE_BUCAL,
@@ -72,7 +74,7 @@ type Gaveta =
   | { tipo: 'at-view'; atId: string }
   | { tipo: 'tri'; atId: string; original: TriagemResponseDto | null }
   | { tipo: 'cons'; atId: string; original: ConsultaResponseDto | null }
-  | { tipo: 'proc'; atId: string; consultaId: string; original: ProcedimentoResponseDto | null }
+  | { tipo: 'proc'; atId: string; consultaId: string | null; original: ProcedimentoResponseDto | null }
   | { tipo: 'proc-status'; atId: string; proc: ProcedimentoResponseDto }
   | { tipo: 'evo'; atId: string; original: EvolucaoEnfermagemResponseDto | null }
   | { tipo: 'adm'; atId: string; original: AdministracaoMedicamentoResponseDto | null; voltar: boolean }
@@ -315,7 +317,16 @@ export class Atendimentos {
     motivoRetificacao: [''],
   });
 
+  /** Catálogo geral de procedimentos (ADR-0136); a gaveta mostra os da especialidade do atendimento e os gerais. */
+  protected readonly catalogoProcedimentos = signal<ProcedimentoCatalogoDto[]>([]);
+  protected readonly facesDente = FACES_DENTE;
+  protected readonly facesLista = Object.keys(FACES_DENTE) as FaceDente[];
+  /** Faces do complemento odontológico na gaveta de procedimento. */
+  protected readonly procFaces = signal<FaceDente[]>([]);
+
   protected readonly procForm = this.fb.nonNullable.group({
+    catalogoId: [''],
+    dente: [''],
     tipo: [''],
     dataRealizacao: [''],
     profissionalMatricula: [''],
@@ -417,6 +428,7 @@ export class Atendimentos {
       this.podeAuditar.set(!a.restrito || a.permissoes.has('AUDITORIA.CONSULTAR'));
     });
     this.carregarTudo();
+    this.procedimentoService.catalogo().pipe(catchError(() => of([]))).subscribe((c) => this.catalogoProcedimentos.set(c));
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
     this.unidadeSaudeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
     this.setorService.listar().pipe(catchError(() => of([]))).subscribe((s) => this.setores.set(s));
@@ -654,7 +666,40 @@ export class Atendimentos {
   }
 
   protected totalProcedimentos(r: ProntuarioAtendimentoDto | null): number {
-    return this.consultasVigentes(r).reduce((acc, c) => acc + this.procedimentosVigentes(c.procedimentos).length, 0);
+    return this.consultasVigentes(r).reduce((acc, c) => acc + this.procedimentosVigentes(c.procedimentos).length, 0)
+      + this.procedimentosDoAtendimento(r).length;
+  }
+
+  protected statusDoProcedimento(p: ProcedimentoResponseDto): { classe: string; rotulo: string } {
+    return PROC_STATUS[p.status];
+  }
+
+  /** Os procedimentos vigentes feitos direto no atendimento, sem consulta (ADR-0136). */
+  protected procedimentosDoAtendimento(r: ProntuarioAtendimentoDto | null): ProcedimentoResponseDto[] {
+    return this.procedimentosVigentes(r?.procedimentos ?? []);
+  }
+
+  /** Itens ativos do catálogo para o atendimento: os da especialidade dele e os de uso geral. */
+  protected catalogoDoAtendimento(atId: string): ProcedimentoCatalogoDto[] {
+    const especialidade = this.atendimento(atId)?.especialidadeId ?? null;
+    return this.catalogoProcedimentos().filter((c) => c.ativo && (!c.especialidadeId || c.especialidadeId === especialidade));
+  }
+
+  /** O item do catálogo escolhido na gaveta de procedimento. */
+  protected procItem(): ProcedimentoCatalogoDto | null {
+    const id = this.procForm.controls.catalogoId.value;
+    return this.catalogoProcedimentos().find((c) => c.uuid === id) ?? null;
+  }
+
+  protected alternarFace(f: FaceDente): void {
+    this.procFaces.update((l) => (l.includes(f) ? l.filter((x) => x !== f) : [...l, f]));
+  }
+
+  /** "Dente 36 · Oclusal, Distal" para o procedimento odontológico. */
+  protected complemento(p: ProcedimentoResponseDto): string {
+    if (!p.dente) return '';
+    const faces = (p.faces ?? []).map((f) => FACES_DENTE[f]).join(', ');
+    return 'Dente ' + p.dente + (faces ? ' · ' + faces : '');
   }
 
   // ── Apresentação ───────────────────────────────────────────────────────────────────────────────
@@ -915,9 +960,12 @@ export class Atendimentos {
     this.abrir({ tipo: 'cons', atId, original });
   }
 
-  protected abrirProcedimento(atId: string, consultaId: string, original: ProcedimentoResponseDto | null = null): void {
+  protected abrirProcedimento(atId: string, consultaId: string | null, original: ProcedimentoResponseDto | null = null): void {
+    this.procFaces.set(original?.faces ?? []);
     this.procForm.reset({
-      tipo: original?.tipo ?? '',
+      catalogoId: original?.procedimentoCatalogoId ?? '',
+      dente: original?.dente ? String(original.dente) : '',
+      tipo: original?.procedimentoCatalogoId ? '' : (original?.tipo ?? ''),
       dataRealizacao: original?.dataRealizacao?.slice(0, 16) ?? agoraLocal(),
       profissionalMatricula: original?.profissionalMatricula ?? this.matriculaPadrao(),
       status: original?.status ?? 'REALIZADO',
@@ -1194,19 +1242,28 @@ export class Atendimentos {
     );
   }
 
-  private salvarProcedimento(atId: string, consultaId: string, original: ProcedimentoResponseDto | null): void {
+  private salvarProcedimento(atId: string, consultaId: string | null, original: ProcedimentoResponseDto | null): void {
     const v = this.procForm.getRawValue();
+    const item = this.procItem();
     const erros = this.exigir(v, {
-      tipo: 'Informe o tipo de procedimento.',
       dataRealizacao: 'Informe a data.',
       profissionalMatricula: 'Informe a matrícula.',
     });
+    if (!item && !v.tipo.trim()) erros['tipo'] = 'Escolha o procedimento do catálogo ou informe o tipo.';
+    const alcance = item?.alcance ?? 'NENHUM';
+    const dente = alcance === 'NENHUM' ? null : Number(v.dente.trim());
+    if (alcance !== 'NENHUM' && !v.dente.trim()) erros['dente'] = 'Informe o dente (FDI).';
+    if (alcance === 'FACE' && !this.procFaces().length) erros['faces'] = 'Marque a face (ou as faces).';
     this.exigirMotivo(original, v.motivoRetificacao, erros);
     if (!this.validar(erros)) return;
     const dto = {
       consultaId,
+      atendimentoId: consultaId ? null : atId,
+      procedimentoCatalogoId: item?.uuid ?? null,
+      dente,
+      faces: alcance === 'FACE' ? this.facesLista.filter((f) => this.procFaces().includes(f)) : [],
       profissionalMatricula: v.profissionalMatricula.trim(),
-      tipo: v.tipo.trim(),
+      tipo: item ? item.nome : v.tipo.trim(),
       descricao: v.descricao.trim() || undefined,
       dataRealizacao: v.dataRealizacao,
       status: v.status,

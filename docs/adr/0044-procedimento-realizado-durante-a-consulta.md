@@ -10,6 +10,10 @@ agregação do Prontuário — [PR #213](https://github.com/dufelizardo/mais_sau
 > O desfecho de um procedimento agendado (realizado ou cancelado) passou a ser um evento próprio,
 > `POST /api/v1/procedimento/{id}/status`.
 
+> **Estendida pela [ADR-0136](./0136-saude-bucal-procedimento-odontologico.md):** o procedimento fica no atendimento,
+> e a consulta passou a ser opcional (o técnico em saúde bucal registra sem consulta). O tipo pode vir do catálogo
+> geral de procedimentos, e o odontológico leva o dente e as faces.
+
 ## Contexto
 
 Com `Paciente` (ADR-0040), `Atendimento` (ADR-0041), `Agendamento` (ADR-0042) e `Consulta`

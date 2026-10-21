@@ -22,6 +22,8 @@ export interface ProntuarioAtendimentoDto {
   administracoes?: AdministracaoMedicamentoResponseDto[];
   /** Avaliações odontológicas do atendimento (ADR-0134). */
   avaliacoesOdontologicas?: AvaliacaoOdontologicaDto[];
+  /** Procedimentos direto no atendimento, sem consulta (ADR-0136). */
+  procedimentos?: ProcedimentoResponseDto[];
 }
 
 /** Em que se baseou a abertura do prontuário (ADR-0076). */
