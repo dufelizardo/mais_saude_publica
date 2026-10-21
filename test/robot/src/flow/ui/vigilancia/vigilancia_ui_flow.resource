@@ -2,6 +2,7 @@
 Resource    ../../../pom/ui/vigilancia/vigilancia_ui_pom.resource
 Resource    ../../vigilancia/vigilancia_flow.resource
 Resource    ../../vigilancia/vigilancia_contatos_flow.resource
+Resource    ../../vigilancia/vigilancia_surto_flow.resource
 Resource    ../../../pom/ui/administrativo/territorio/territorio_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -155,5 +156,82 @@ UI Vigilancia - Local E Mapa
     Clicar Aba    Mapa
     Wait For Elements State    css=[aria-label="Resumo do mapa"]    visible
     Wait For Elements State    css=[aria-label="Casos por semana epidemiológica"]    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Abrir Surto
+    [Documentation]    Aba Surtos: abrir o surto escolhendo os casos do agravo na lista.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}    ${c1}    ${c2}=    Seed Dois Casos De Sarampo
+    ${n1}=    GET Notificacao    ${c1}
+    ${n2}=    GET Notificacao    ${c2}
+    ${sarampo}=    Id Do Agravo    SARAMPO
+    ${sufixo}=    Generate Random String    5    [UPPER]
+    UI Vigilancia - Abrir
+    Click    css=[role="tab"]:has-text("Surtos")
+    Clicar Botao    Abrir surto
+    Select Options By    id=f-surto-agravo    value    ${sarampo}
+    Select Options By    id=f-surto-unidade    value    ${unidade}
+    Fill Text    id=f-surto-nome    Sarampo Robot ${sufixo}
+    Check Checkbox    css=[aria-label="Casos do agravo"] label:has-text("${n1.json()}[pacienteNome]") >> input
+    Check Checkbox    css=[aria-label="Casos do agravo"] label:has-text("${n2.json()}[pacienteNome]") >> input
+    Click    css=app-drawer footer >> role=button[name="Abrir surto"]
+    Wait For Elements State    css=[aria-label="Casos do surto"] >> text=${n1.json()}[pacienteNome]    visible
+    Wait For Elements State    css=[aria-label="Casos do surto"] >> text=${n2.json()}[pacienteNome]    visible
+    Wait For Elements State    css=app-drawer .tag >> text=Suspeito    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Ciclo Do Surto
+    [Documentation]    Na gaveta do surto: investigar, confirmar, registrar e concluir a medida e encerrar com a conclusão.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}    ${c1}    ${c2}=    Seed Dois Casos De Sarampo
+    ${sufixo}=    Generate Random String    5    [UPPER]
+    ${sarampo}=    Id Do Agravo    SARAMPO
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${ids}=    Create List    ${c1}
+    ${payload}=    Create Dictionary    agravoId=${sarampo}    unidadeId=${unidade}    nome=Surto Robot ${sufixo}    tipo=COMUNITARIO    inicio=${hoje}    notificacoesIds=${ids}
+    ${s}=    POST Surto    ${payload}
+    Should Be Equal As Integers    ${s.status_code}    201
+    UI Vigilancia - Abrir
+    Click    css=[role="tab"]:has-text("Surtos")
+    Clicar Botao    Abrir surto: Surto Robot ${sufixo}
+    Clicar Botao    Investigar
+    Wait For Elements State    css=app-drawer .tag >> text=Em investigação    visible
+    Clicar Botao    Confirmar
+    Wait For Elements State    css=app-drawer .tag >> text=Confirmado    visible
+    Clicar Botao    Registrar medida
+    Fill Text    id=f-medida-descricao    Vacinar os contatos
+    Clicar Botao    Salvar medida
+    Wait For Elements State    css=[aria-label="Medidas de controle"] >> text=Vacinar os contatos    visible
+    Clicar Botao    Concluir Bloqueio vacinal
+    Fill Text    css=[aria-label="Resultado de Bloqueio vacinal"]    120 doses
+    Click    css=[aria-label="Medidas de controle"] >> role=button[name="Concluir"]
+    Wait For Elements State    css=[aria-label="Medidas de controle"] .tag >> text=Concluída    visible
+    Clicar Botao    Encerrar…
+    Fill Text    id=f-surto-conclusao    Transmissão interrompida.
+    Clicar Botao    Encerrar o surto
+    Wait For Elements State    css=app-drawer .tag >> text=Encerrado    visible
+    Wait For Elements State    css=[aria-label="Linha do tempo do surto"] >> text=Situação    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Medida Do Caso
+    [Documentation]    Na gaveta da notificação: registrar a medida de controle do caso e vê-la na linha do tempo.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nomePaciente}=    Seed A Paciente
+    ${sarampo}=    Id Do Agravo    SARAMPO
+    ${payload}=    Create Dictionary    pacienteId=${paciente}    agravoId=${sarampo}    unidadeId=${unidade}    origem=ATENDIMENTO
+    ${n}=    POST Notificacao    ${payload}
+    Should Be Equal As Integers    ${n.status_code}    201
+    UI Vigilancia - Abrir
+    Clicar Botao    Abrir notificação: ${nomePaciente} Sarampo
+    Clicar Botao    Registrar medida
+    Select Options By    id=f-medida-tipo    value    ISOLAMENTO
+    Fill Text    id=f-medida-descricao    Isolamento domiciliar
+    Clicar Botao    Salvar medida
+    Wait For Elements State    css=[aria-label="Medidas de controle"] >> text=Isolamento domiciliar    visible
+    Wait For Elements State    css=[aria-label="Linha do tempo do caso"] >> text=Medida    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

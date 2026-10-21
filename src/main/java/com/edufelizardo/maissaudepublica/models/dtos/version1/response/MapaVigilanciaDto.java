@@ -49,6 +49,10 @@ public class MapaVigilanciaDto implements Serializable {
         private String areaCodigo;
         private String geometria;
         private int casos;
+        /** Microárea declarada no surto filtrado (ADR-0131). */
+        private boolean doSurto;
+        /** As notificações da microárea, só para quem investiga (abrir o surto com elas, ADR-0131). */
+        private List<UUID> notificacoesIds;
     }
 
     @Getter

@@ -119,4 +119,11 @@ public class Notificacao implements Serializable {
 
     @Column(updatable = false)
     private String registradoPorCpf;
+
+    /** O surto do caso (ADR-0131): um por vez. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "surto_id", referencedColumnName = "uuid")
+    private Surto surto;
+
+    private Instant surtoIncluidaEm;
 }

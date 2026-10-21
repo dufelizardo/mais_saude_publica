@@ -49,6 +49,123 @@ export interface ContatoRequestDto {
   observacao?: string | null;
 }
 
+/** Surto e medidas de controle (ADR-0131). */
+export type TipoSurto = 'COMUNITARIO' | 'INSTITUCIONAL';
+export type TipoInstituicaoSurto = 'ESCOLA' | 'CRECHE' | 'SERVICO_SAUDE' | 'ILPI' | 'PRISIONAL' | 'ALOJAMENTO' | 'EMPRESA' | 'OUTRO';
+export type SituacaoSurto = 'SUSPEITO' | 'EM_INVESTIGACAO' | 'CONFIRMADO' | 'DESCARTADO' | 'ENCERRADO';
+export type TipoMedidaControle = 'BLOQUEIO_VACINAL' | 'ISOLAMENTO' | 'QUIMIOPROFILAXIA' | 'CONTROLE_VETORIAL' | 'BUSCA_ATIVA' | 'EDUCACAO_EM_SAUDE'
+  | 'INTERDICAO' | 'OUTRA';
+export type SituacaoMedidaControle = 'PLANEJADA' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'CANCELADA';
+
+export const SITUACOES_SURTO: Record<SituacaoSurto, { rotulo: string; classe: string }> = {
+  SUSPEITO: { rotulo: 'Suspeito', classe: 'warn' },
+  EM_INVESTIGACAO: { rotulo: 'Em investigação', classe: 'purple' },
+  CONFIRMADO: { rotulo: 'Confirmado', classe: 'alert' },
+  DESCARTADO: { rotulo: 'Descartado', classe: 'muted' },
+  ENCERRADO: { rotulo: 'Encerrado', classe: 'ok' },
+};
+export const TIPOS_INSTITUICAO: Record<TipoInstituicaoSurto, string> = {
+  ESCOLA: 'Escola', CRECHE: 'Creche', SERVICO_SAUDE: 'Serviço de saúde', ILPI: 'Instituição de longa permanência (ILPI)',
+  PRISIONAL: 'Unidade prisional', ALOJAMENTO: 'Alojamento ou abrigo', EMPRESA: 'Empresa', OUTRO: 'Outro',
+};
+export const TIPOS_MEDIDA: Record<TipoMedidaControle, string> = {
+  BLOQUEIO_VACINAL: 'Bloqueio vacinal', ISOLAMENTO: 'Isolamento', QUIMIOPROFILAXIA: 'Quimioprofilaxia', CONTROLE_VETORIAL: 'Controle vetorial',
+  BUSCA_ATIVA: 'Busca ativa', EDUCACAO_EM_SAUDE: 'Educação em saúde', INTERDICAO: 'Interdição ou recolhimento', OUTRA: 'Outra',
+};
+export const SITUACOES_MEDIDA: Record<SituacaoMedidaControle, { rotulo: string; classe: string }> = {
+  PLANEJADA: { rotulo: 'Planejada', classe: 'info' },
+  EM_ANDAMENTO: { rotulo: 'Em andamento', classe: 'purple' },
+  CONCLUIDA: { rotulo: 'Concluída', classe: 'ok' },
+  CANCELADA: { rotulo: 'Cancelada', classe: 'muted' },
+};
+
+export interface MedidaControleDto {
+  uuid: string;
+  surtoId?: string | null;
+  notificacaoId?: string | null;
+  tipo: TipoMedidaControle;
+  descricao: string;
+  responsavelNome?: string | null;
+  prazo?: string | null;
+  vencida: boolean;
+  situacao: SituacaoMedidaControle;
+  resultado?: string | null;
+  criadaEm: string;
+  concluidaEm?: string | null;
+}
+
+export interface MedidaControleRequestDto {
+  tipo: TipoMedidaControle;
+  descricao: string;
+  responsavelMatricula?: string | null;
+  prazo?: string | null;
+  situacao?: SituacaoMedidaControle | null;
+  resultado?: string | null;
+}
+
+export interface EventoLinhaDoTempoDto {
+  em: string;
+  titulo: string;
+  detalhe?: string | null;
+  autor?: string | null;
+}
+
+export interface SurtoDto {
+  uuid: string;
+  agravoId: string;
+  agravoCodigo: string;
+  agravoNome: string;
+  sensivel: boolean;
+  unidadeId: string;
+  unidadeNome: string;
+  nome: string;
+  tipo: TipoSurto;
+  tipoInstituicao?: TipoInstituicaoSurto | null;
+  nomeInstituicao?: string | null;
+  enderecoInstituicao?: string | null;
+  definicaoCaso?: string | null;
+  inicio: string;
+  fim?: string | null;
+  situacao: SituacaoSurto;
+  conclusao?: string | null;
+  encerradoEm?: string | null;
+  abertoEm: string;
+  casos: number;
+  confirmados: number;
+  obitos: number;
+  medidasAbertas: number;
+  medidasVencidas: number;
+  microareas: { microareaId: string; codigo: string; areaCodigo: string; geometria?: string | null; casos: number }[];
+  listaCasos: { notificacaoId: string; pacienteNome: string; unidadeNome: string; dataPrimeirosSintomas?: string | null; dataNotificacao: string;
+    situacao: SituacaoNotificacao; classificacao?: ClassificacaoCaso | null; evolucao?: string | null; microareaCodigo?: string | null;
+    incluidoEm?: string | null }[];
+  medidas: MedidaControleDto[];
+  curva: { ano: number; semana: number; inicio: string; casos: number }[];
+  linhaDoTempo: EventoLinhaDoTempoDto[];
+}
+
+export interface SurtosDto {
+  abertos: number;
+  confirmados: number;
+  medidasVencidas: number;
+  lista: SurtoDto[];
+}
+
+export interface SurtoRequestDto {
+  agravoId: string;
+  unidadeId: string;
+  nome: string;
+  tipo: TipoSurto;
+  tipoInstituicao?: TipoInstituicaoSurto | null;
+  nomeInstituicao?: string | null;
+  enderecoInstituicao?: string | null;
+  microareasIds?: string[];
+  definicaoCaso?: string | null;
+  inicio: string;
+  fim?: string | null;
+  notificacoesIds?: string[];
+}
+
 /** Mapa dos casos (ADR-0130). */
 export interface MapaVigilanciaDto {
   de: string;
@@ -56,7 +173,8 @@ export interface MapaVigilanciaDto {
   total: number;
   semLocal: number;
   pontosVisiveis: boolean;
-  microareas: { microareaId: string; codigo: string; areaCodigo: string; geometria?: string | null; casos: number }[];
+  microareas: { microareaId: string; codigo: string; areaCodigo: string; geometria?: string | null; casos: number; doSurto?: boolean;
+    notificacoesIds?: string[] }[];
   pontos: { notificacaoId: string; latitude: number; longitude: number; agravoCodigo: string; situacao: SituacaoNotificacao; classificacao?: ClassificacaoCaso | null }[];
   curva: { ano: number; semana: number; inicio: string; casos: number }[];
 }
@@ -153,6 +271,10 @@ export interface NotificacaoDto {
   microareaCodigo?: string | null;
   areaCodigo?: string | null;
   contatos: ContatoDto[];
+  surtoId?: string | null;
+  surtoNome?: string | null;
+  medidas?: MedidaControleDto[];
+  linhaDoTempo?: EventoLinhaDoTempoDto[];
 }
 
 export interface NotificacoesDto {

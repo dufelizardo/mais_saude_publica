@@ -21,11 +21,11 @@
   </div>
   <div class="stat">
     <span class="stat__icon stat__icon--purple" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></span>
-    <div><div class="stat__lbl">Em investigação</div><div class="stat__val mono">{{ notificacoes()?.emInvestigacao ?? 0 }}</div><div class="stat__sub">com investigação aberta</div></div>
+    <div><div class="stat__lbl">Em investigação</div><div class="stat__val mono">{{ notificacoes()?.emInvestigacao ?? 0 }}</div><div class="stat__sub">com investigação aberta@if (surtos()?.abertos) { · {{ surtos()!.abertos }} {{ surtos()!.abertos === 1 ? 'surto aberto' : 'surtos abertos' }} }</div></div>
   </div>
   <div class="stat">
     <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
-    <div><div class="stat__lbl">Encerramento atrasado</div><div class="stat__val mono">{{ notificacoes()?.encerramentoAtrasado ?? 0 }}</div><div class="stat__sub">prazo do agravo vencido@if (notificacoes()?.contatosVencidos) { · {{ notificacoes()!.contatosVencidos }} {{ notificacoes()!.contatosVencidos === 1 ? 'contato' : 'contatos' }} com monitoramento vencido }</div></div>
+    <div><div class="stat__lbl">Encerramento atrasado</div><div class="stat__val mono">{{ notificacoes()?.encerramentoAtrasado ?? 0 }}</div><div class="stat__sub">prazo do agravo vencido@if (notificacoes()?.contatosVencidos) { · {{ notificacoes()!.contatosVencidos }} {{ notificacoes()!.contatosVencidos === 1 ? 'contato' : 'contatos' }} com monitoramento vencido }@if (surtos()?.medidasVencidas) { · {{ surtos()!.medidasVencidas }} {{ surtos()!.medidasVencidas === 1 ? 'medida' : 'medidas' }} com prazo vencido }</div></div>
   </div>
   <div class="stat">
     <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
@@ -67,6 +67,7 @@
     <button type="button" role="tab" [attr.aria-selected]="aba() === 'notificacoes'" (click)="aba.set('notificacoes')">Notificações</button>
     @if (podeNotificar() || podeInvestigar()) {
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'mapa'" (click)="aba.set('mapa')">Mapa</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'surtos'" (click)="aba.set('surtos')">Surtos <span class="cnt">{{ surtos()?.abertos ?? 0 }}</span></button>
     }
     @if (podeNotificar()) {
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'sugestoes'" (click)="aba.set('sugestoes')">Sugestões <span class="cnt">{{ sugestoes().length }}</span></button>
@@ -150,7 +151,13 @@
         }
       }
       @case ('mapa') {
-        <app-mapa-vigilancia [agravos]="agravos()" [unidadeId]="unidadeFiltro()" (abrir)="abrirNotificacao($event)" />
+        <app-mapa-vigilancia [agravos]="agravos()" [unidadeId]="unidadeFiltro()" [surtos]="surtos()?.lista ?? []" [surtoInicial]="surtoNoMapa()"
+          [podeInvestigar]="podeInvestigar()" (abrir)="abrirNotificacao($event)" (abrirSurto)="abrirSurtoDoMapa($event)" />
+      }
+      @case ('surtos') {
+        <app-surtos [surtos]="surtos()" [agravos]="agravos()" [unidades]="unidades()" [notificacoes]="notificacoes()?.lista ?? []"
+          [unidadePadrao]="unidadeFiltro()" [podeInvestigar]="podeInvestigar()" [novo]="novoSurto()" (abrirNotificacao)="abrirNotificacao($event)"
+          (verNoMapa)="verSurtoNoMapa($event)" (alterado)="carregar()" />
       }
       @case ('agravos') {
         <ul class="eq-prof" aria-label="Catálogo de agravos">
@@ -284,6 +291,7 @@
                 <div><dt>Unidade</dt><dd>{{ n.unidadeNome }}@if (n.profissionalNome) { · {{ n.profissionalNome }} }</dd></div>
                 <div><dt>Notificação</dt><dd>{{ data(n.dataNotificacao) }} · {{ origens[n.origem] }}@if (n.dataPrimeirosSintomas) { · sintomas em {{ data(n.dataPrimeirosSintomas) }} }</dd></div>
                 <div><dt>Situação</dt><dd>{{ situacoes[n.situacao].rotulo }} · encerrar até {{ data(n.prazoEncerramento) }}@if (n.encerramentoAtrasado) { (atrasado) }</dd></div>
+                @if (n.surtoNome) { <div><dt>Surto</dt><dd><span class="tag tag--purple">{{ n.surtoNome }}</span></dd></div> }
               </dl>
               @if (n.ficha.length) {
                 <h4 class="mo-grupo">Ficha (versão {{ n.fichaVersao }})</h4>
@@ -305,6 +313,13 @@
                 <app-contatos-da-notificacao [notificacao]="n" [podeInvestigar]="podeInvestigar() && n.situacao !== 'ENCERRADA'"
                   (atualizada)="notificacaoAtualizada($event)" (notificar)="notificarContato(n, $event)" />
               }
+              @if (n.medidas?.length || podeInvestigar()) {
+                <h4 class="mo-grupo">Medidas de controle</h4>
+                <app-medidas-de-controle [medidas]="n.medidas ?? []" [notificacaoId]="n.uuid" [podeEditar]="podeInvestigar() && n.situacao !== 'ENCERRADA'"
+                  (alterada)="recarregarDetalhe(n.uuid)" />
+              }
+              <h4 class="mo-grupo">Linha do tempo</h4>
+              <app-linha-do-tempo [eventos]="n.linhaDoTempo ?? []" rotulo="Linha do tempo do caso" />
               @if (n.situacao === 'ENCERRADA') {
                 <div class="box box--info"><div>Encerrada em {{ dataHora(n.encerradaEm) }}: {{ n.classificacaoFinal ? classificacoes[n.classificacaoFinal].rotulo : '' }} · {{ n.evolucao ? evolucoes[n.evolucao] : '' }}.</div></div>
               } @else if (podeInvestigar()) {

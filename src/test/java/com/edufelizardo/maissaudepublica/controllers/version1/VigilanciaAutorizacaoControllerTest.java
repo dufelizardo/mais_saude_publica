@@ -172,4 +172,29 @@ class VigilanciaAutorizacaoControllerTest {
         mockMvc.perform(como(ENF, post(contato)).contentType(MediaType.APPLICATION_JSON).content(dados)).andExpect(status().isForbidden());
         mockMvc.perform(como(VIG, post(contato)).contentType(MediaType.APPLICATION_JSON).content(dados)).andExpect(status().isCreated());
     }
+
+    @Test
+    void surtoAbertoPelaVigilanciaEConsultadoPorQuemNotifica() throws Exception {
+        String sarampo = agravoRepository.findByCodigo("SARAMPO").orElseThrow().getUuid().toString();
+        String corpo = "{\"agravoId\": \"%s\", \"unidadeId\": \"%s\", \"nome\": \"Surto\", \"tipo\": \"COMUNITARIO\", \"inicio\": \"%s\"}"
+                .formatted(sarampo, ubs.getUuid(), java.time.LocalDate.now());
+        mockMvc.perform(como(ENF, post("/api/v1/vigilancia/surto")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isForbidden());
+        String r = mockMvc.perform(como(VIG, post("/api/v1/vigilancia/surto")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(como(ENF, get("/api/v1/vigilancia/surto/" + JsonPath.read(r, "$.uuid")))).andExpect(status().isOk());
+        mockMvc.perform(como(ENF, get("/api/v1/vigilancia/surtos"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.lista[?(@.nome == 'Surto')]").isNotEmpty());
+        mockMvc.perform(como(GESTOR, get("/api/v1/vigilancia/surtos"))).andExpect(status().isForbidden());
+
+        // Agravo sensível: o surto fica só com a vigilância.
+        String violencia = agravoRepository.findByCodigo("VIOLENCIA_INTERPESSOAL_AUTOPROVOCADA").orElseThrow().getUuid().toString();
+        String sensivel = "{\"agravoId\": \"%s\", \"unidadeId\": \"%s\", \"nome\": \"Sigiloso\", \"tipo\": \"COMUNITARIO\", \"inicio\": \"%s\"}"
+                .formatted(violencia, ubs.getUuid(), java.time.LocalDate.now());
+        r = mockMvc.perform(como(VIG, post("/api/v1/vigilancia/surto")).contentType(MediaType.APPLICATION_JSON).content(sensivel))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(como(ENF, get("/api/v1/vigilancia/surto/" + JsonPath.read(r, "$.uuid")))).andExpect(status().isForbidden());
+        mockMvc.perform(como(ENF, get("/api/v1/vigilancia/surtos"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.lista[?(@.nome == 'Sigiloso')]").isEmpty());
+    }
 }

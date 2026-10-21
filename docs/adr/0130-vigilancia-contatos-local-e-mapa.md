@@ -3,7 +3,7 @@
 ## Status
 
 Aceita e implementada (primeira parte da fatia V2 da [ADR-0110](./0110-vigilancia-em-saude.md); a V2b, surto e
-medidas de controle, fica para a ADR-0131, a fazer).
+medidas de controle, está na [ADR-0131](./0131-vigilancia-surto-e-medidas.md)).
 
 ## Contexto
 
