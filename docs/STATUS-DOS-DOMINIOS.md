@@ -48,7 +48,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
-| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | fatias P3 a P6 |
+| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1, P2 e P4 feitas; P3, P5 e P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
@@ -68,7 +68,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| P4 | 22 Programas | ações programáticas ligadas ao atendimento; busca ativa; programa na Agenda |
 | P3 | 22 Programas | campanhas com período, público, meta e locais; consulta pública |
 | SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
@@ -80,9 +79,9 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 MO1 ✅ ──► SB4 (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
-P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 · P6
+P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6
 P1 ✅ ──► P3 ──► C2 (campanha de comunicação)
-P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
+P4 ✅ ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
 F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
@@ -181,8 +180,8 @@ C1 ──► C2 · C4 · C5
 **Falta:**
 - [ ] Especialidade no atendimento (domínio 25, SB1; serve a todas as especialidades).
 - [ ] Local de realização do atendimento (domicílio, via pública, local do evento, unidade móvel), item 29, MO3.
-- [ ] Atividades coletivas: grupo, vacinação aberta, coleta com vários pacientes, reunião, capacitação, visita do
-  ACS. Dependem das ações programáticas (domínio 22, P4) e do Território (domínio 21).
+- [ ] Atividades coletivas: vacinação aberta, coleta com vários pacientes, reunião, capacitação. O grupo e a visita
+  do programa já são ações programáticas (domínio 22, P4, ADR-0132); falta o registro do atendimento coletivo.
 
 ### 5. Paciente / Cidadão
 
@@ -225,8 +224,8 @@ C1 ──► C2 · C4 · C5
 - [ ] Visão Mês e exportação.
 - [ ] Filtro de especialidade (a especialidade vem pelo domínio 25, SB1).
 - [ ] Sala.
-- [ ] Programas na marcação, como HiperDia e pré-natal (domínio 22, P4).
-- [ ] Atividades coletivas (domínio 22, P4).
+- [x] Programas na marcação, como HiperDia e pré-natal, e a marcação ligada à consulta programada (ADR-0132).
+- [ ] Atividades coletivas na grade da agenda (as ações coletivas existem nos Programas, ADR-0132).
 - [ ] Vaga liberada por falta oferecida à fila da Regulação ou a encaixe.
 - [ ] Meta de ocupação configurável por unidade (fixa em 85%); indicadores de encaixe e falta "de hoje".
 - [ ] Mini-mês com as marcações do mês, almoço como bloco, contador no menu, atualização ao vivo.
@@ -460,11 +459,15 @@ C1 ──► C2 · C4 · C5
   pela periodicidade; programas do paciente com vínculo assistencial e auditoria de leitura; programa sensível
   restrito; inscritos no escopo; aba Programas, indicador e filtro em Pacientes; programas na equipe; permissão
   `PROGRAMA.ACOMPANHAR`.
+- [x] **P4 · Ações programáticas** ([ADR-0132](./adr/0132-programas-acoes-programaticas.md)): ação individual (pelo
+  acompanhamento) ou coletiva (com os participantes), responsável, data prevista, vencida; realização com o
+  atendimento que a cumpriu, não realizada e cancelada com motivo; busca ativa dos faltosos e atrasados com o ACS da
+  microárea e o resultado; programa na marcação da Agenda, "Agendar" a consulta programada e a ação pronta para
+  confirmar quando o atendimento é concluído; aba Ações programáticas e as ações na aba Programas do paciente.
 
 **Falta:**
 - [x] Lista de elegíveis pelo público-alvo entre os adscritos da equipe (ADR-0128); faltam os critérios clínicos (gestação, condição).
 - [ ] **P3 · Campanhas:** cadastro, tela e consulta pública na landing page (a seção de programas já existe).
-- [ ] **P4 · Ações programáticas:** ações pendentes, busca ativa, programa na marcação da Agenda.
 - [ ] **P5 · Linhas de cuidado.**
 - [ ] **P6 · Metas e indicadores programáticos.**
 

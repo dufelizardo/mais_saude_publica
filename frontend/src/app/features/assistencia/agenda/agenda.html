@@ -285,6 +285,16 @@
               </label>
             </div>
             <div class="dw-field">
+              <label for="f-programaMarcacao">Programa<span class="opt">opcional · o paciente precisa ser acompanhado nele</span></label>
+              <select id="f-programaMarcacao" formControlName="programaId">
+                <option value="">Sem programa</option>
+                @for (p of programas(); track p.uuid) { <option [value]="p.uuid">{{ p.nome }}</option> }
+              </select>
+              @if (acaoProgramatica() && marcarForm.controls.pacienteId.value === acaoProgramatica()!.pacienteId) {
+                <p class="dw-hint">Esta marcação cumpre a ação programática (consulta programada) do paciente.</p>
+              }
+            </div>
+            <div class="dw-field">
               <label for="f-observacao">Observação<span class="opt">opcional</span></label>
               <input id="f-observacao" type="text" formControlName="observacao" maxlength="255" />
             </div>

@@ -14,6 +14,8 @@ public interface AtendimentoRepository extends JpaRepository<Atendimento, UUID> 
      */
     List<Atendimento> findByPacienteUuid(UUID pacienteUuid);
 
+    List<Atendimento> findByAgendamento_Uuid(UUID agendamentoId);
+
     /**
      * Último atendimento realizado (em andamento ou concluído) de cada paciente em cada unidade: [paciente, unidade,
      * dataHora]. O acompanhamento programático usa para apontar quem está atrasado (ADR-0119).

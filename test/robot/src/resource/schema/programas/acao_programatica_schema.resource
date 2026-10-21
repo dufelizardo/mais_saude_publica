@@ -1,0 +1,5 @@
+*** Comments ***
+    Mais Saúde Pública API - Programas de saúde, fatia P4: ações programáticas (ADR-0132).
+*** Variables ***
+${ACAO_PROGRAMATICA_SCHEMA}    ${{{'required': ['uuid', 'programaId', 'programaNome', 'tipo', 'coletiva', 'unidadeId', 'dataPrevista', 'situacao', 'vencida', 'prontaParaConfirmar', 'participantes', 'criadaEm'], 'types': {'uuid': str, 'programaId': str, 'programaNome': str, 'tipo': str, 'coletiva': bool, 'unidadeId': str, 'dataPrevista': str, 'situacao': str, 'vencida': bool, 'prontaParaConfirmar': bool, 'participantes': list, 'criadaEm': str}, 'enums': {'tipo': ['CONSULTA_PROGRAMADA', 'AFERICAO', 'EXAME', 'VACINA', 'VISITA_DOMICILIAR', 'BUSCA_ATIVA', 'GRUPO', 'ORIENTACAO', 'OUTRA'], 'situacao': ['PENDENTE', 'REALIZADA', 'NAO_REALIZADA', 'CANCELADA']}}}}
+${ACOES_PROGRAMATICAS_SCHEMA}    ${{{'required': ['de', 'ate', 'pendentes', 'vencidas', 'realizadasNoMes', 'prontasParaConfirmar', 'lista'], 'types': {'de': str, 'ate': str, 'pendentes': int, 'vencidas': int, 'realizadasNoMes': int, 'prontasParaConfirmar': int, 'lista': list}}}}

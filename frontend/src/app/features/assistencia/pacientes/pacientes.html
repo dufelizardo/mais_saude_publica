@@ -423,6 +423,23 @@
             }
           </ul>
         }
+        @if (acoesDoPaciente().length) {
+          <h4 class="mo-grupo">Ações programáticas</h4>
+          <ul class="eq-prof" aria-label="Ações programáticas do paciente">
+            @for (a of acoesDoPaciente(); track a.uuid) {
+              <li class="mo-row">
+                <span>
+                  <span class="cell-main">{{ tiposAcao[a.tipo] }} · {{ a.programaNome }}</span>
+                  <span class="cell-sub">prevista {{ dataCurta(a.dataPrevista) }}@if (a.realizadaEm) { · realizada {{ dataCurta(a.realizadaEm) }} }@if (a.responsavelNome) { · {{ a.responsavelNome }} }@if (a.motivo) { · {{ a.motivo }} }</span>
+                </span>
+                <span>
+                  <span [class]="'tag tag--' + situacoesAcao[a.situacao].classe">{{ situacoesAcao[a.situacao].rotulo }}</span>
+                  @if (a.vencida) { <span class="tag tag--warn">Vencida</span> }
+                </span>
+              </li>
+            }
+          </ul>
+        }
         @if (pode('PROGRAMA.ACOMPANHAR')) {
           <a routerLink="/assistencia/programas" class="btn btn--ghost btn--block" style="margin-top: var(--s-3);">Inscrever em um programa</a>
         }

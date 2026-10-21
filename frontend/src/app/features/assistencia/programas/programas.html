@@ -50,6 +50,19 @@
   </div>
 </section>
 
+<div class="tabs" role="tablist" aria-label="Programas ou ações" style="margin-bottom: var(--s-4);">
+  <button type="button" role="tab" [attr.aria-selected]="visao() === 'programas'" (click)="visao.set('programas')">Programas</button>
+  @if (podeAcompanhar()) {
+    <button type="button" role="tab" [attr.aria-selected]="visao() === 'acoes'" (click)="visao.set('acoes')">Ações programáticas</button>
+  }
+</div>
+
+@if (visao() === 'acoes') {
+  <section class="card" style="padding: var(--s-5);" aria-label="Ações programáticas">
+    <app-acoes-programaticas [programas]="programas()" [unidades]="unidades()" [unidadeId]="unidadeFiltro()" [podeAcompanhar]="podeAcompanhar()"
+      [versao]="versaoAcoes()" />
+  </section>
+} @else {
 <div class="toolbar" role="region" aria-label="Filtros dos programas">
   <label class="search search--icon">
     <span class="sr-only">Buscar programa</span>
@@ -230,6 +243,9 @@
                         } @else {
                           <button type="button" class="btn btn--ghost btn--sm" (click)="abrirSituacao(a, 'FALTOSO')" [attr.aria-label]="'Marcar faltoso: ' + a.pacienteNome">Marcar faltoso</button>
                         }
+                        @if (a.situacao === 'FALTOSO' || a.atrasado) {
+                          <button type="button" class="btn btn--ghost btn--sm" (click)="gerarBuscaAtiva(a)" [attr.aria-label]="'Gerar busca ativa: ' + a.pacienteNome">Busca ativa</button>
+                        }
                         <button type="button" class="btn btn--ghost btn--sm" (click)="abrirSaida(a)" [attr.aria-label]="'Registrar saída: ' + a.pacienteNome">Saída</button>
                       </div>
                     </td>
@@ -243,8 +259,15 @@
       <!-- Elegíveis entre os adscritos (ADR-0128). -->
       <app-elegiveis-do-programa [programa]="d" [podeInscrever]="d.resumo.situacao === 'ATIVO'" [versao]="versaoElegiveis()"
         (inscreverPaciente)="inscreverElegivel(d, $event)" />
+      <!-- Ações programáticas do programa (ADR-0132). -->
+      <div class="info-block" style="margin: 0 var(--s-5) var(--s-5);">
+        <h3>Ações programáticas</h3>
+        <app-acoes-programaticas [programas]="programas()" [unidades]="unidades()" [unidadeId]="unidadeFiltro()" [programaFixo]="d.resumo.uuid"
+          [podeAcompanhar]="podeAcompanhar()" [versao]="versaoAcoes()" />
+      </div>
     }
   </section>
+}
 }
 
 <!-- ── Gavetas ──────────────────────────────────────────────────────────────────────────────────── -->

@@ -34,6 +34,7 @@ import { ProfissionalService } from '../../../core/services/profissional';
 import { ProgramaService } from '../../../core/services/programa';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { AcoesProgramaticas } from './acoes-programaticas';
 import { ElegiveisDoPrograma } from './elegiveis-do-programa';
 
 type Gaveta =
@@ -53,7 +54,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-programas',
-  imports: [ReactiveFormsModule, Drawer, ElegiveisDoPrograma],
+  imports: [ReactiveFormsModule, Drawer, ElegiveisDoPrograma, AcoesProgramaticas],
   templateUrl: './programas.html',
 })
 export class Programas {
@@ -89,6 +90,9 @@ export class Programas {
   protected readonly categoriaFiltro = signal('');
   protected readonly unidadeFiltro = signal('');
   protected readonly selecionadoId = signal<string | null>(null);
+  /** Os programas (catálogo) ou as ações programáticas do escopo (ADR-0132). */
+  protected readonly visao = signal<'programas' | 'acoes'>('programas');
+  protected readonly versaoAcoes = signal(0);
   protected readonly detalhe = signal<ProgramaDto | null>(null);
   protected readonly mostrarEncerradas = signal(false);
   /** Inscritos do programa no escopo (ADR-0119): `undefined` carregando, `null` sem acesso. */
@@ -560,6 +564,18 @@ export class Programas {
         this.submitting.set(false);
         this.erroApi.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar. Tente novamente.');
       },
+    });
+  }
+
+  /** Busca ativa do faltoso ou atrasado (ADR-0132): o responsável sugerido é o ACS da microárea. */
+  protected gerarBuscaAtiva(a: AcompanhamentoDto): void {
+    this.service.buscaAtiva(a.uuid).subscribe({
+      next: (acao) => {
+        this.mostrarToast('Busca ativa gerada', `${a.pacienteNome}${acao.responsavelNome ? ' · ' + acao.responsavelNome : ''}`);
+        this.versaoAcoes.update((v) => v + 1);
+      },
+      error: (e: HttpErrorResponse) => this.mostrarToast('Não foi possível gerar a busca ativa',
+        (e.error as ErrorResponseDto | undefined)?.message ?? 'Tente novamente.'),
     });
   }
 

@@ -11,6 +11,9 @@ export interface AgendamentoRequestDto {
   /** Com unidade, a marcação segue a agenda do profissional ali: vaga livre ou encaixe (ADR-0091). */
   unidadeId?: string;
   encaixe?: boolean;
+  /** O programa da marcação e a ação programática que ela cumpre (ADR-0132). */
+  programaId?: string | null;
+  acaoProgramaticaId?: string | null;
 }
 
 export interface AgendamentoResponseDto {
@@ -26,4 +29,6 @@ export interface AgendamentoResponseDto {
   unidadeUuid?: string | null;
   unidadeNome?: string | null;
   encaixe?: boolean;
+  programaId?: string | null;
+  programaNome?: string | null;
 }

@@ -3,6 +3,9 @@ import { ElegiveisDto } from '../models/adscricao';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  AcaoProgramaticaDto,
+  AcaoProgramaticaRequestDto,
+  AcoesProgramaticasDto,
   AcompanhamentoDto,
   AcompanhamentosDoPacienteDto,
   CategoriaProgramaDto,
@@ -12,6 +15,7 @@ import {
   ProgramaPublicoDto,
   ProgramaRequestDto,
   ProgramaResumoDto,
+  RealizacaoAcaoRequestDto,
   ResumoAcompanhamentosDto,
   SituacaoAcompanhamento,
 } from '../models/programa';
@@ -97,6 +101,36 @@ export class ProgramaService {
 
   resumoAcompanhamentos(): Observable<ResumoAcompanhamentosDto> {
     return this.http.get<ResumoAcompanhamentosDto>(`${this.api}/acompanhamento/resumo`);
+  }
+
+  // ── Ações programáticas (ADR-0132) ─────────────────────────────────────────────────────────────
+
+  acoes(filtro: { programaId?: string; unidadeId?: string; equipeId?: string; responsavelMatricula?: string; de?: string; ate?: string;
+    situacao?: string } = {}): Observable<AcoesProgramaticasDto> {
+    let params = new HttpParams();
+    for (const [k, v] of Object.entries(filtro)) if (v) params = params.set(k, v);
+    return this.http.get<AcoesProgramaticasDto>(`${this.api}/acoes-programaticas`, { params });
+  }
+
+  preverAcao(dto: AcaoProgramaticaRequestDto): Observable<AcaoProgramaticaDto> {
+    return this.http.post<AcaoProgramaticaDto>(`${this.api}/acao-programatica`, dto);
+  }
+
+  buscaAtiva(acompanhamentoId: string, dto: { responsavelMatricula?: string | null; dataPrevista?: string | null; descricao?: string | null } = {}):
+    Observable<AcaoProgramaticaDto> {
+    return this.http.post<AcaoProgramaticaDto>(`${this.api}/acompanhamento/${acompanhamentoId}/busca-ativa`, dto);
+  }
+
+  realizarAcao(uuid: string, dto: RealizacaoAcaoRequestDto): Observable<AcaoProgramaticaDto> {
+    return this.http.post<AcaoProgramaticaDto>(`${this.api}/acao-programatica/${uuid}/realizacao`, dto);
+  }
+
+  mudarSituacaoAcao(uuid: string, situacao: 'NAO_REALIZADA' | 'CANCELADA', motivo: string): Observable<AcaoProgramaticaDto> {
+    return this.http.post<AcaoProgramaticaDto>(`${this.api}/acao-programatica/${uuid}/situacao`, { situacao, motivo });
+  }
+
+  acoesDoPaciente(pacienteId: string): Observable<AcaoProgramaticaDto[]> {
+    return this.http.get<AcaoProgramaticaDto[]>(`${this.api}/paciente/${pacienteId}/acoes-programaticas`);
   }
 
   publico(): Observable<ProgramaPublicoDto[]> {

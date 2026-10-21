@@ -46,4 +46,10 @@ public class AgendamentoRequestDto implements Serializable {
 
     /** Marcação fora das vagas da agenda. */
     private Boolean encaixe;
+
+    /** O programa da marcação (ADR-0132); o paciente precisa ser acompanhado nele. */
+    private UUID programaId;
+
+    /** A ação programática que esta marcação cumpre (consulta programada), do mesmo paciente e programa. */
+    private UUID acaoProgramaticaId;
 }

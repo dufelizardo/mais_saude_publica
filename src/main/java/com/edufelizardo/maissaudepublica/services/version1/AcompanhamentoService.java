@@ -315,14 +315,20 @@ public class AcompanhamentoService {
 
     /** Programa sensível: só quem acompanha na unidade responsável (com a autorização ligada). */
     private boolean podeVer(AcompanhamentoProgramatico a) {
-        if (!a.getPrograma().isSensivel() || !controleDeAcesso.ativo()) {
+        return podeVer(a.getPrograma(), a.getUnidade());
+    }
+
+    /** A mesma regra para o que é do programa na unidade (as ações programáticas, ADR-0132). */
+    boolean podeVer(Programa programa, UnidadeDeSaude unidade) {
+        if (!programa.isSensivel() || !controleDeAcesso.ativo()) {
             return true;
         }
         String cpf = UsuarioAutenticado.cpf();
-        return cpf != null && autorizacaoService.tem(cpf, ACOMPANHAR, a.getUnidade().getUuid());
+        return cpf != null && autorizacaoService.tem(cpf, ACOMPANHAR, unidade.getUuid());
     }
 
-    private Profissional profissionalResponsavel(String matricula, UnidadeDeSaude unidade) {
+    /** O responsável, com lotação vigente na unidade; sem matrícula, nenhum. */
+    Profissional profissionalResponsavel(String matricula, UnidadeDeSaude unidade) {
         if (matricula == null || matricula.isBlank()) {
             return null;
         }
