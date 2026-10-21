@@ -25,7 +25,7 @@
   </div>
   <div class="stat">
     <span class="stat__icon stat__icon--warn" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
-    <div><div class="stat__lbl">Encerramento atrasado</div><div class="stat__val mono">{{ notificacoes()?.encerramentoAtrasado ?? 0 }}</div><div class="stat__sub">prazo do agravo vencido</div></div>
+    <div><div class="stat__lbl">Encerramento atrasado</div><div class="stat__val mono">{{ notificacoes()?.encerramentoAtrasado ?? 0 }}</div><div class="stat__sub">prazo do agravo vencido@if (notificacoes()?.contatosVencidos) { · {{ notificacoes()!.contatosVencidos }} {{ notificacoes()!.contatosVencidos === 1 ? 'contato' : 'contatos' }} com monitoramento vencido }</div></div>
   </div>
   <div class="stat">
     <span class="stat__icon stat__icon--ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
@@ -65,6 +65,9 @@
 <section class="card" style="margin-bottom: var(--s-4);">
   <div class="tabs" role="tablist" aria-label="Seções da vigilância">
     <button type="button" role="tab" [attr.aria-selected]="aba() === 'notificacoes'" (click)="aba.set('notificacoes')">Notificações</button>
+    @if (podeNotificar() || podeInvestigar()) {
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'mapa'" (click)="aba.set('mapa')">Mapa</button>
+    }
     @if (podeNotificar()) {
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'sugestoes'" (click)="aba.set('sugestoes')">Sugestões <span class="cnt">{{ sugestoes().length }}</span></button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'semanas'" (click)="aba.set('semanas')">Notificação negativa</button>
@@ -146,13 +149,16 @@
           </ul>
         }
       }
+      @case ('mapa') {
+        <app-mapa-vigilancia [agravos]="agravos()" [unidadeId]="unidadeFiltro()" (abrir)="abrirNotificacao($event)" />
+      }
       @case ('agravos') {
         <ul class="eq-prof" aria-label="Catálogo de agravos">
           @for (a of agravos(); track a.uuid) {
             <li class="mo-row">
               <span>
                 <span class="cell-main">{{ a.nome }}@if (a.sensivel) { <span class="tag tag--purple">Sensível</span> }@if (!a.ativo) { <span class="tag tag--muted">Inativo</span> } <span class="tag tag--info">{{ periodicidades[a.periodicidade] }}</span></span>
-                <span class="cell-sub mono">{{ a.codigo }}@if (a.cids.length) { · {{ a.cids.slice(0, 6).join(', ') }}@if (a.cids.length > 6) { … } } · encerrar em {{ a.prazoEncerramentoDias }} dias · ficha {{ a.fichaVersao ? 'v' + a.fichaVersao : '—' }}</span>
+                <span class="cell-sub mono">{{ a.codigo }}@if (a.cids.length) { · {{ a.cids.slice(0, 6).join(', ') }}@if (a.cids.length > 6) { … } } · encerrar em {{ a.prazoEncerramentoDias }} dias@if (a.periodoMonitoramentoContatoDias) { · contatos por {{ a.periodoMonitoramentoContatoDias }} dias } · ficha {{ a.fichaVersao ? 'v' + a.fichaVersao : '—' }}</span>
               </span>
               @if (podeGerenciar()) {
                 <span class="row-actions">
@@ -175,6 +181,9 @@
         <form class="dw-form" [formGroup]="notificarForm" (ngSubmit)="salvar()" novalidate>
           <div class="dw-body">
             @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (g.prefixo.contatoDe) {
+              <div class="box box--info"><div>Contato de {{ g.prefixo.contatoDe }}: a notificação fica ligada ao caso índice.@if (!g.prefixo.pacienteId) { Cadastre o paciente antes, se ainda não tem cadastro. }</div></div>
+            }
             <div class="dw-field">
               <label for="f-buscaPaciente">Paciente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
               <input id="f-buscaPaciente" type="search" autocomplete="off" placeholder="Nome, CPF ou cartão SUS" [value]="buscaPaciente()"
@@ -291,6 +300,11 @@
                   }
                 </ul>
               }
+              <app-local-do-caso [notificacao]="n" [podeInvestigar]="podeInvestigar()" (atualizada)="notificacaoAtualizada($event)" />
+              @if (n.contatos.length || podeInvestigar()) {
+                <app-contatos-da-notificacao [notificacao]="n" [podeInvestigar]="podeInvestigar() && n.situacao !== 'ENCERRADA'"
+                  (atualizada)="notificacaoAtualizada($event)" (notificar)="notificarContato(n, $event)" />
+              }
               @if (n.situacao === 'ENCERRADA') {
                 <div class="box box--info"><div>Encerrada em {{ dataHora(n.encerradaEm) }}: {{ n.classificacaoFinal ? classificacoes[n.classificacaoFinal].rotulo : '' }} · {{ n.evolucao ? evolucoes[n.evolucao] : '' }}.</div></div>
               } @else if (podeInvestigar()) {
@@ -376,6 +390,11 @@
                 <input id="f-prazoEncerramento" type="number" min="1" max="730" formControlName="prazoEncerramentoDias" [attr.aria-invalid]="!!erroCampo('prazoEncerramento')" aria-describedby="e-prazoEncerramento" />
                 @if (erroCampo('prazoEncerramento')) { <p class="dw-err" id="e-prazoEncerramento">{{ erroCampo('prazoEncerramento') }}</p> }
               </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-periodoMonitoramento">Monitorar contatos por (dias)<span class="opt">em branco, sem prazo</span></label>
+              <input id="f-periodoMonitoramento" type="number" min="1" max="365" formControlName="periodoMonitoramentoContatoDias" [attr.aria-invalid]="!!erroCampo('periodoMonitoramento')" aria-describedby="e-periodoMonitoramento" />
+              @if (erroCampo('periodoMonitoramento')) { <p class="dw-err" id="e-periodoMonitoramento">{{ erroCampo('periodoMonitoramento') }}</p> }
             </div>
             <fieldset class="dw-field">
               <legend>Critérios de classificação aceitos</legend>

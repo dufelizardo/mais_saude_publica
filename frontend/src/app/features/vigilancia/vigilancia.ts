@@ -10,6 +10,7 @@ import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import {
   AgravoDto,
   BoletimVigilanciaDto,
+  ContatoDto,
   CLASSIFICACOES,
   CRITERIOS,
   CampoFichaDto,
@@ -33,11 +34,14 @@ import { PacienteService } from '../../core/services/paciente';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 import { VigilanciaService } from '../../core/services/vigilancia';
 import { Drawer } from '../../shared/drawer/drawer';
+import { ContatosDaNotificacao } from './contatos-da-notificacao';
+import { LocalDoCaso } from './local-do-caso';
+import { MapaVigilancia } from './mapa-vigilancia';
 
-type Aba = 'notificacoes' | 'sugestoes' | 'semanas' | 'agravos';
+type Aba = 'notificacoes' | 'mapa' | 'sugestoes' | 'semanas' | 'agravos';
 type Gaveta =
   | { tipo: 'notificar'; prefixo: Partial<{ pacienteId: string; pacienteNome: string; unidadeId: string; agravoId: string; origem: OrigemNotificacao;
-      internacaoId: string; pedidoExameId: string; criseId: string }> }
+      internacaoId: string; pedidoExameId: string; criseId: string; contatoId: string; contatoDe: string }> }
   | { tipo: 'notificacao'; id: string }
   | { tipo: 'agravo'; agravo: AgravoDto | null }
   | { tipo: 'ficha'; agravo: AgravoDto };
@@ -57,7 +61,7 @@ interface CampoEdicao {
  */
 @Component({
   selector: 'app-vigilancia',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, Drawer, MapaVigilancia, ContatosDaNotificacao, LocalDoCaso],
   templateUrl: './vigilancia.html',
 })
 export class Vigilancia {
@@ -109,14 +113,14 @@ export class Vigilancia {
 
   protected readonly notificarForm = this.fb.nonNullable.group({
     pacienteId: [''], unidadeId: [''], agravoId: [''], origem: ['ATENDIMENTO' as OrigemNotificacao], dataPrimeirosSintomas: [''],
-    dataNotificacao: [''], localProvavel: [''], internacaoId: [''], pedidoExameId: [''], criseId: [''],
+    dataNotificacao: [''], localProvavel: [''], internacaoId: [''], pedidoExameId: [''], criseId: [''], contatoId: [''],
   });
   protected readonly investigacaoForm = this.fb.nonNullable.group({ exposicao: [''], localProvavelInfeccao: [''], medidas: [''] });
   protected readonly classificacaoForm = this.fb.nonNullable.group({ classificacao: [''], criterio: [''], justificativa: [''] });
   protected readonly encerramentoForm = this.fb.nonNullable.group({ evolucao: [''] });
   protected readonly agravoForm = this.fb.nonNullable.group({
     codigo: [''], nome: [''], descricao: [''], cids: [''], compulsorio: [true], periodicidade: ['SEMANAL' as PeriodicidadeNotificacao],
-    prazoEncerramentoDias: ['60'], sensivel: [false], ativo: [true],
+    prazoEncerramentoDias: ['60'], periodoMonitoramentoContatoDias: [''], sensivel: [false], ativo: [true],
   });
   protected readonly criteriosEscolhidos = signal<Set<CriterioClassificacao>>(new Set());
   protected readonly negativaForm = this.fb.nonNullable.group({ unidadeId: [''] });
@@ -255,6 +259,7 @@ export class Vigilancia {
       pacienteId: prefixo.pacienteId ?? '', unidadeId: prefixo.unidadeId ?? this.unidadeFiltro(), agravoId: prefixo.agravoId ?? '',
       origem: prefixo.origem ?? 'ATENDIMENTO', dataPrimeirosSintomas: '', dataNotificacao: '', localProvavel: '',
       internacaoId: prefixo.internacaoId ?? '', pedidoExameId: prefixo.pedidoExameId ?? '', criseId: prefixo.criseId ?? '',
+      contatoId: prefixo.contatoId ?? '',
     });
     this.agravoEscolhido.set(prefixo.agravoId ?? '');
     this.respostas.set({});
@@ -298,6 +303,14 @@ export class Vigilancia {
     });
   }
 
+  /** O contato que adoeceu (ADR-0130): a notificação dele já vem com o paciente, a unidade e o agravo do caso índice. */
+  protected notificarContato(n: NotificacaoDto, c: ContatoDto): void {
+    this.abrirNotificar({
+      pacienteId: c.pacienteId ?? '', pacienteNome: c.nome ?? '', unidadeId: n.unidadeId, agravoId: n.agravoId,
+      origem: 'BUSCA_ATIVA', contatoId: c.uuid, contatoDe: n.pacienteNome,
+    });
+  }
+
   /** Os critérios aceitos pelo agravo da notificação aberta. */
   protected criteriosDo(n: NotificacaoDto): CriterioClassificacao[] {
     return this.agravos().find((a) => a.uuid === n.agravoId)?.criterios ?? this.listaCriterios;
@@ -307,7 +320,9 @@ export class Vigilancia {
     this.agravoForm.reset({
       codigo: agravo?.codigo ?? '', nome: agravo?.nome ?? '', descricao: agravo?.descricao ?? '', cids: (agravo?.cids ?? []).join(', '),
       compulsorio: agravo?.compulsorio ?? true, periodicidade: agravo?.periodicidade ?? 'SEMANAL',
-      prazoEncerramentoDias: String(agravo?.prazoEncerramentoDias ?? 60), sensivel: agravo?.sensivel ?? false, ativo: agravo?.ativo ?? true,
+      prazoEncerramentoDias: String(agravo?.prazoEncerramentoDias ?? 60),
+      periodoMonitoramentoContatoDias: agravo?.periodoMonitoramentoContatoDias ? String(agravo.periodoMonitoramentoContatoDias) : '',
+      sensivel: agravo?.sensivel ?? false, ativo: agravo?.ativo ?? true,
     });
     this.criteriosEscolhidos.set(new Set(agravo?.criterios ?? ['CLINICO']));
     this.abrir({ tipo: 'agravo', agravo });
@@ -382,7 +397,8 @@ export class Vigilancia {
     this.enviar(this.service.notificar({
       pacienteId: v.pacienteId, unidadeId: v.unidadeId, agravoId: v.agravoId, origem: v.origem,
       dataPrimeirosSintomas: v.dataPrimeirosSintomas || null, dataNotificacao: v.dataNotificacao || null, localProvavel: v.localProvavel.trim() || null,
-      internacaoId: v.internacaoId || null, pedidoExameId: v.pedidoExameId || null, criseId: v.criseId || null, respostas,
+      internacaoId: v.internacaoId || null, pedidoExameId: v.pedidoExameId || null, criseId: v.criseId || null, contatoId: v.contatoId || null,
+      respostas,
     }), (n) => {
       this.mostrarToast('Notificação registrada', n.aviso ?? `${n.pacienteNome} · ${n.agravoNome}`);
       this.abrirNotificacao(n.uuid);
@@ -421,6 +437,11 @@ export class Vigilancia {
     });
   }
 
+  protected notificacaoAtualizada(d: NotificacaoDto): void {
+    this.detalhe.set(d);
+    this.carregar();
+  }
+
   protected declararNegativa(unidadeId: string, ano?: number, semana?: number): void {
     this.enviar(this.service.declararNegativa(unidadeId, ano, semana), (n) => this.mostrarToast('Notificação negativa registrada',
       `${n.unidadeNome} · semana ${n.semana}/${n.ano}`));
@@ -433,12 +454,17 @@ export class Vigilancia {
     if (!v.nome.trim()) erros['nomeAgravo'] = 'Informe o nome.';
     const prazo = Number(v.prazoEncerramentoDias);
     if (!Number.isInteger(prazo) || prazo < 1 || prazo > 730) erros['prazoEncerramento'] = 'De 1 a 730 dias.';
+    const monitoramento = v.periodoMonitoramentoContatoDias === '' ? null : Number(v.periodoMonitoramentoContatoDias);
+    if (monitoramento != null && (!Number.isInteger(monitoramento) || monitoramento < 1 || monitoramento > 365)) {
+      erros['periodoMonitoramento'] = 'De 1 a 365 dias, ou em branco.';
+    }
     if (!this.criteriosEscolhidos().size) erros['criterios'] = 'Escolha pelo menos um critério.';
     if (!this.validar(erros)) return;
     const dto = {
       codigo: v.codigo.trim(), nome: v.nome.trim(), descricao: v.descricao.trim() || null,
       cids: v.cids.split(/[\s,;]+/).map((c) => c.trim().toUpperCase()).filter((c) => c), compulsorio: v.compulsorio, periodicidade: v.periodicidade,
-      prazoEncerramentoDias: prazo, criterios: [...this.criteriosEscolhidos()], sensivel: v.sensivel, ativo: v.ativo,
+      prazoEncerramentoDias: prazo, periodoMonitoramentoContatoDias: monitoramento, criterios: [...this.criteriosEscolhidos()], sensivel: v.sensivel,
+      ativo: v.ativo,
     };
     this.enviar(agravo ? this.service.atualizarAgravo(agravo.uuid, dto) : this.service.criarAgravo(dto), (a) => {
       this.mostrarToast(agravo ? 'Agravo atualizado' : 'Agravo cadastrado', a.nome);

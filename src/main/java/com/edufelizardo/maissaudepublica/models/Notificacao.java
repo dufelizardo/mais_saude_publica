@@ -2,6 +2,7 @@ package com.edufelizardo.maissaudepublica.models;
 
 import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoCasoEpidemiologico;
 import com.edufelizardo.maissaudepublica.models.enuns.EvolucaoCaso;
+import com.edufelizardo.maissaudepublica.models.enuns.OrigemLocalCaso;
 import com.edufelizardo.maissaudepublica.models.enuns.OrigemNotificacao;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoNotificacao;
 import jakarta.persistence.*;
@@ -78,6 +79,18 @@ public class Notificacao implements Serializable {
 
     @Column(length = 500, updatable = false)
     private String localProvavel;
+
+    /** Local do caso (ADR-0130): fotografia na data, pelo domicílio do paciente ou marcado no mapa. */
+    private Double latitude;
+
+    private Double longitude;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "microarea_id", referencedColumnName = "uuid")
+    private Microarea microarea;
+
+    @Enumerated(EnumType.STRING)
+    private OrigemLocalCaso origemLocal;
 
     /** As respostas da ficha, em JSON. */
     @Column(columnDefinition = "text", updatable = false)

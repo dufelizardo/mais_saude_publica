@@ -34,4 +34,5 @@ public class AgravoDto implements Serializable {
     private boolean ativo;
     private Integer fichaVersao;
     private List<CampoFichaDto> ficha;
+    private Integer periodoMonitoramentoContatoDias;
 }

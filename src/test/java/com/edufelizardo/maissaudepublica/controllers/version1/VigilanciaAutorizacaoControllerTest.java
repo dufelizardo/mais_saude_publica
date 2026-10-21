@@ -153,4 +153,23 @@ class VigilanciaAutorizacaoControllerTest {
                 .content("{\"codigo\": \"TESTE_VA_X\", \"nome\": \"x\", \"periodicidade\": \"SEMANAL\", \"prazoEncerramentoDias\": 30, \"criterios\": [\"CLINICO\"]}"))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void mapaSemPontosParaQuemSoNotificaEContatosDaVigilancia() throws Exception {
+        mockMvc.perform(como(ENF, get("/api/v1/vigilancia/mapa"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.pontosVisiveis").value(false));
+        mockMvc.perform(como(VIG, get("/api/v1/vigilancia/mapa"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.pontosVisiveis").value(true));
+        mockMvc.perform(como(GESTOR, get("/api/v1/vigilancia/mapa"))).andExpect(status().isForbidden());
+
+        String sarampo = agravoRepository.findByCodigo("SARAMPO").orElseThrow().getUuid().toString();
+        String corpo = "{\"pacienteId\": \"%s\", \"agravoId\": \"%s\", \"unidadeId\": \"%s\", \"origem\": \"ATENDIMENTO\"}"
+                .formatted(paciente.getUuid(), sarampo, ubs.getUuid());
+        String r = mockMvc.perform(como(ENF, post("/api/v1/vigilancia/notificacao")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String contato = "/api/v1/vigilancia/notificacao/" + JsonPath.read(r, "$.uuid") + "/contato";
+        String dados = "{\"nome\": \"Vizinho\", \"tipoExposicao\": \"COMUNITARIO\"}";
+        mockMvc.perform(como(ENF, post(contato)).contentType(MediaType.APPLICATION_JSON).content(dados)).andExpect(status().isForbidden());
+        mockMvc.perform(como(VIG, post(contato)).contentType(MediaType.APPLICATION_JSON).content(dados)).andExpect(status().isCreated());
+    }
 }

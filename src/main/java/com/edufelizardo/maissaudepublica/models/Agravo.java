@@ -57,6 +57,9 @@ public class Agravo implements Serializable {
     @Column(nullable = false)
     private int prazoEncerramentoDias;
 
+    /** Dias de monitoramento de um contato a partir da exposição (ADR-0130); nulo, o agravo não define. */
+    private Integer periodoMonitoramentoContatoDias;
+
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "TB_AGRAVO_CRITERIO", joinColumns = @JoinColumn(name = "agravo_id"))
     @Enumerated(EnumType.STRING)
