@@ -106,6 +106,10 @@ class SaudeBucalAutorizacaoControllerTest {
         String atendimentos = "(select uuid from tb_atendimento where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%'))";
         String procedimentos = "(select uuid from tb_procedimento where atendimento_id in " + atendimentos + ")";
         String planos = "(select uuid from tb_plano_tratamento where atendimento_id in " + atendimentos + ")";
+        String proteses = "(select uuid from tb_tratamento_protetico where atendimento_id in " + atendimentos + ")";
+        jdbc.update("delete from tb_registro_odontograma where tratamento_protetico_id in " + proteses);
+        jdbc.update("delete from tb_etapa_tratamento_protetico where tratamento_id in " + proteses);
+        jdbc.update("delete from tb_tratamento_protetico where atendimento_id in " + atendimentos);
         jdbc.update("delete from tb_item_plano_tratamento_face where item_id in (select uuid from tb_item_plano_tratamento where plano_id in " + planos + ")");
         jdbc.update("delete from tb_item_plano_tratamento where plano_id in " + planos);
         jdbc.update("delete from tb_plano_tratamento where atendimento_id in " + atendimentos);
@@ -208,6 +212,16 @@ class SaudeBucalAutorizacaoControllerTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         org.assertj.core.api.Assertions.assertThat((java.util.List<String>) com.jayway.jsonpath.JsonPath.read(planos, "$[0].itens[*].situacao"))
                 .containsExactly("CONCLUIDO");
+    }
+
+    @Test
+    void tratamentoProteticoSoDoDentista() throws Exception {
+        String corpo = "{\"atendimentoId\": \"%s\", \"profissionalMatricula\": \"SBAUT-DENTISTA\", \"tipo\": \"TOTAL\", \"arcada\": \"SUPERIOR\"}"
+                .formatted(atendimento.getUuid());
+        mockMvc.perform(como(TSB, post("/api/v1/tratamento-protetico")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/tratamento-protetico")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isCreated());
     }
 
     @Test

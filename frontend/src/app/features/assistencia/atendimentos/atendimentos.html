@@ -678,6 +678,11 @@
                       [podePlanejar]="pode('ODONTOLOGIA.PLANEJAR')" [podeExecutar]="pode('PROCEDIMENTO.REGISTRAR')" [catalogo]="catalogoOdontologico()"
                       [matriculaPadrao]="matriculaPadrao()" [recarregar]="registros()" (executar)="executarItemPlano(a.uuid, $event)" />
                   </section>
+                  <section class="dsec" aria-label="Prótese">
+                    <div class="dsec__h"><h3>Prótese</h3></div>
+                    <app-tratamento-protetico [pacienteId]="a.pacienteUuid" [atendimentoId]="a.uuid" [podePlanejar]="pode('ODONTOLOGIA.PLANEJAR')"
+                      [matriculaPadrao]="matriculaPadrao()" [recarregar]="registros()" />
+                  </section>
                   <section class="dsec" aria-label="Odontograma do paciente">
                     <div class="dsec__h"><h3>Odontograma</h3></div>
                     @if (!avaliacaoOdontologicaVigente(registros())) {

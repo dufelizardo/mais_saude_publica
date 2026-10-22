@@ -7,6 +7,9 @@ import {
   AvaliacaoOdontologicaRequestDto,
   EspecialidadeDto,
   EspecialidadeRequestDto,
+  EtapaProteticaRequestDto,
+  TratamentoProteticoDto,
+  TratamentoProteticoRequestDto,
   ItemPlanoTratamentoRequestDto,
   MarcacaoOdontogramaDto,
   PlanoTratamentoDto,
@@ -93,5 +96,27 @@ export class SaudeBucalService {
 
   abandonarPlano(planoId: string, motivo: string): Observable<PlanoTratamentoDto> {
     return this.http.post<PlanoTratamentoDto>(`${this.api}/plano-tratamento/${planoId}/abandono`, { motivo });
+  }
+
+  // ── Tratamento protético (ADR-0139) ────────────────────────────────────────────────────────────
+
+  proteses(pacienteId: string): Observable<TratamentoProteticoDto[]> {
+    return this.http.get<TratamentoProteticoDto[]>(`${this.api}/paciente/${pacienteId}/tratamentos-proteticos`);
+  }
+
+  abrirProtese(dto: TratamentoProteticoRequestDto): Observable<TratamentoProteticoDto> {
+    return this.http.post<TratamentoProteticoDto>(`${this.api}/tratamento-protetico`, dto);
+  }
+
+  etapaProtese(id: string, dto: EtapaProteticaRequestDto): Observable<TratamentoProteticoDto> {
+    return this.http.post<TratamentoProteticoDto>(`${this.api}/tratamento-protetico/${id}/etapa`, dto);
+  }
+
+  concluirProtese(id: string): Observable<TratamentoProteticoDto> {
+    return this.http.post<TratamentoProteticoDto>(`${this.api}/tratamento-protetico/${id}/conclusao`, null);
+  }
+
+  cancelarProtese(id: string, motivo: string): Observable<TratamentoProteticoDto> {
+    return this.http.post<TratamentoProteticoDto>(`${this.api}/tratamento-protetico/${id}/cancelamento`, { motivo });
   }
 }

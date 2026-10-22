@@ -60,6 +60,11 @@ public class RegistroOdontograma implements Serializable {
     @JoinColumn(name = "procedimento_id", referencedColumnName = "uuid", updatable = false)
     private Procedimento procedimento;
 
+    /** Ou a prótese unitária entregue (ADR-0139). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tratamento_protetico_id", referencedColumnName = "uuid", updatable = false)
+    private TratamentoProtetico tratamentoProtetico;
+
     @Column(length = 500, updatable = false)
     private String observacao;
 

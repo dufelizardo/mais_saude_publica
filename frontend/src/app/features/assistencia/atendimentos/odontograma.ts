@@ -88,7 +88,7 @@ const ARCADAS: Record<Denticao, number[][]> = {
               <li class="mo-row" [style.opacity]="r.anulado ? 0.6 : 1">
                 <span>
                   <span class="cell-main">{{ r.condicaoNome }}{{ r.face ? ' · ' + faces[r.face] : ' · dente inteiro' }}@if (r.anulado) { <span class="tag tag--muted">Anulado</span> }</span>
-                  <span class="cell-sub">{{ dataBr(r.data) }}@if (r.procedimentoNome) { · {{ r.procedimentoNome }} }@if (r.profissionalNome) { · {{ r.profissionalNome }} }@if (r.motivoAnulacao) { · {{ r.motivoAnulacao }} }</span>
+                  <span class="cell-sub">{{ dataBr(r.data) }}@if (r.procedimentoNome) { · {{ r.procedimentoNome }} }@if (r.tratamentoProteticoId) { · Prótese entregue }@if (r.profissionalNome) { · {{ r.profissionalNome }} }@if (r.motivoAnulacao) { · {{ r.motivoAnulacao }} }</span>
                 </span>
                 @if (podeRegistrar() && !r.anulado && !r.procedimentoId) {
                   @if (anulando() === r.uuid) {
