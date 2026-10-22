@@ -59,7 +59,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0041](./0041-atendimento-registra-entrada-do-paciente-na-rede.md) | Atendimento registra a entrada do paciente na rede | Aceita |
 | [0042](./0042-agendamento-independente-do-atendimento.md) | Agendamento, independente do Atendimento | Aceita |
 | [0043](./0043-consulta-registrada-durante-o-atendimento.md) | Consulta registrada durante o Atendimento | Aceita |
-| [0044](./0044-procedimento-realizado-durante-a-consulta.md) | Procedimento realizado durante a Consulta | Aceita |
+| [0044](./0044-procedimento-realizado-durante-a-consulta.md) | Procedimento realizado durante a Consulta | Aceita (estendida pela ADR-0136: também direto no atendimento) |
 | [0045](./0045-prontuario-agregacao-de-leitura.md) | Prontuário como agregação de leitura no backend | Aceita |
 | [0046](./0046-telas-de-frontend-da-onda-assistencia.md) | Telas de frontend da onda Assistência | Aceita |
 | [0047](./0047-triagem-primeira-entidade-da-enfermagem.md) | Triagem: primeira entidade do domínio Enfermagem | Aceita |
@@ -123,15 +123,38 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0105](./0105-escalas-backend.md) | Escalas: backend | Aceita e implementada (parte 3 de 4) |
 | [0106](./0106-escalas-tela.md) | Escalas: tela | Aceita e implementada (parte 4 de 4) |
 | [0107](./0107-escalas-intervalo-e-modelos-de-jornada.md) | Escalas: intervalo no turno e modelos de jornada | Aceita e implementada |
-| [0108](./0108-territorio-e-adscricao.md) | Território e Adscrição: domínio próprio | Aceita (desenho; implementação nas fatias F1 a F4) |
-| [0109](./0109-programas-acoes-e-linhas-de-cuidado.md) | Programas, Ações e Linhas de Cuidado: domínio próprio | Aceita (desenho; implementação nas fatias P1 a P6) |
-| [0110](./0110-vigilancia-em-saude.md) | Vigilância em Saúde: domínio próprio (e Imunização reservada como #24) | Aceita (desenho; implementação nas fatias V1 a V5) |
-| [0111](./0111-saude-bucal.md) | Saúde Bucal: domínio assistencial especializado | Aceita (desenho; implementação nas fatias SB1 a SB5) |
-| [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; implementação nas fatias SM1 a SM6) |
+| [0108](./0108-territorio-e-adscricao.md) | Território e Adscrição: domínio próprio | Aceita e implementada (F1 a F4 nas ADRs 0125 a 0129) |
+| [0109](./0109-programas-acoes-e-linhas-de-cuidado.md) | Programas, Ações e Linhas de Cuidado: domínio próprio | Aceita (desenho; P1 a P4 nas ADRs 0118, 0119, 0133 e 0132; P5 e P6 a fazer) |
+| [0110](./0110-vigilancia-em-saude.md) | Vigilância em Saúde: domínio próprio (e Imunização reservada como #24) | Aceita (desenho; V1 na ADR-0124, V2 nas ADRs 0130 e 0131, V3 a V5 a fazer) |
+| [0111](./0111-saude-bucal.md) | Saúde Bucal: domínio assistencial especializado | Aceita (desenho; SB1 a SB4 nas ADRs 0134 a 0139, SB5 a fazer) |
+| [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; SM1 a SM4 nas ADRs 0120 a 0123; SM5 e SM6 a fazer) |
 | [0113](./0113-emergencias-e-desastres.md) | Gestão de Emergências e Desastres: coordenação extraordinária | Aceita (desenho; implementação nas fatias E1 a E6) |
 | [0114](./0114-comunicacao-e-educacao-em-saude.md) | Comunicação e Educação em Saúde: domínio futuro | Aceita (desenho; implementação nas fatias C1 a C6) |
-| [0115](./0115-modelo-operacional-dos-equipamentos.md) | Modelo Operacional dos Equipamentos e reconciliação do mapa (#29 a #31) | Aceita (desenho; implementação nas fatias MO1 a MO4) |
+| [0115](./0115-modelo-operacional-dos-equipamentos.md) | Modelo Operacional dos Equipamentos e reconciliação do mapa (#29 a #31) | Aceita (desenho; MO1 na ADR-0117, MO2 a MO4 a fazer) |
 | [0116](./0116-marco-mapa-de-dominios-fechado.md) | Marco: mapa de domínios fechado e regra para novos domínios | Aceita |
+| [0117](./0117-modelo-operacional-perfis-e-capacidades.md) | Modelo operacional: perfis e capacidades da unidade (MO1) | Aceita e implementada |
+| [0118](./0118-programas-catalogo.md) | Programas de saúde: catálogo (P1) | Aceita e implementada |
+| [0119](./0119-programas-acompanhamento.md) | Programas de saúde: acompanhamento programático (P2) | Aceita e implementada |
+| [0120](./0120-saude-mental-base.md) | Saúde Mental: base (SM1) | Aceita e implementada |
+| [0121](./0121-saude-mental-pts-intervencoes.md) | Saúde Mental: PTS, intervenções e rede de apoio (SM2) | Aceita e implementada |
+| [0122](./0122-saude-mental-rede.md) | Saúde Mental: rede de atenção (SM4) | Aceita e implementada |
+| [0123](./0123-saude-mental-risco-crise.md) | Saúde Mental: risco com histórico, crise e internação psiquiátrica (SM3) | Aceita e implementada |
+| [0124](./0124-vigilancia-epidemiologica-fundacao.md) | Vigilância epidemiológica: fundação (V1) | Aceita e implementada |
+| [0125](./0125-territorio-fundacao.md) | Território: fundação (F1) | Aceita e implementada |
+| [0126](./0126-territorio-mapa.md) | Território: mapa (F2) | Aceita e implementada |
+| [0127](./0127-cadastro-territorial.md) | Território: imóvel, domicílio e família (F3a) | Aceita e implementada |
+| [0128](./0128-adscricao-e-cobertura.md) | Território: adscrição e cobertura (F3b) | Aceita e implementada |
+| [0129](./0129-escopo-territorial.md) | Território: escopo territorial de acesso (F4) | Aceita e implementada (atrás de toggle, desligado) |
+| [0130](./0130-vigilancia-contatos-local-e-mapa.md) | Vigilância: contatos, local do caso e mapa (V2a) | Aceita e implementada |
+| [0131](./0131-vigilancia-surto-e-medidas.md) | Vigilância: surto e medidas de controle (V2b) | Aceita e implementada |
+| [0132](./0132-programas-acoes-programaticas.md) | Programas: ações programáticas (P4) | Aceita e implementada |
+| [0133](./0133-programas-campanhas.md) | Programas: campanhas (P3) | Aceita e implementada |
+| [0134](./0134-saude-bucal-base.md) | Saúde Bucal: especialidade no atendimento e avaliação odontológica (SB1) | Aceita e implementada |
+| [0135](./0135-saude-bucal-odontograma.md) | Saúde Bucal: odontograma com histórico (SB2) | Aceita e implementada |
+| [0136](./0136-saude-bucal-procedimento-odontologico.md) | Saúde Bucal: catálogo de procedimentos e procedimento odontológico (SB3a) | Aceita e implementada |
+| [0137](./0137-saude-bucal-plano-de-tratamento.md) | Saúde Bucal: plano de tratamento (SB3b) | Aceita e implementada |
+| [0138](./0138-saude-bucal-encaminhamento-pela-regulacao.md) | Saúde Bucal: encaminhamento odontológico pela Regulação (SB4a) | Aceita e implementada |
+| [0139](./0139-saude-bucal-tratamento-protetico.md) | Saúde Bucal: tratamento protético (SB4b) | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

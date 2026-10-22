@@ -61,12 +61,33 @@ public class InternacaoController {
     @RequerPermissao({"INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA", "LEITO.GERENCIAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista internações", description = "Das unidades do escopo, da mais recente à mais antiga, com filtros de unidade, "
-            + "situação e paciente. Sem motivo, sumário e movimentos.", tags = "Internação")
+            + "situação e paciente, e comunicacaoMpPendente (ADR-0123). Sem motivo, sumário e movimentos.", tags = "Internação")
     @ApiErrorResponsesListagem
     public ResponseEntity<List<InternacaoResponseDto>> listar(@RequestParam(required = false) UUID unidadeId,
                                                               @RequestParam(required = false) StatusInternacao status,
-                                                              @RequestParam(required = false) UUID pacienteId) {
-        return ResponseEntity.ok(service.listar(unidadeId, status, pacienteId));
+                                                              @RequestParam(required = false) UUID pacienteId,
+                                                              @RequestParam(required = false, defaultValue = "false") boolean comunicacaoMpPendente) {
+        return ResponseEntity.ok(service.listar(unidadeId, status, pacienteId, comunicacaoMpPendente));
+    }
+
+    @RequerPermissao({"INTERNACAO.GERENCIAR"})
+    @PostMapping(value = "{uuid}/modalidade", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Modalidade da internação psiquiátrica", description = "Voluntária, involuntária ou compulsória (Lei 10.216/2001, art. 6º; "
+            + "ADR-0123). Na compulsória, a ordem judicial é obrigatória (400).", tags = "Internação")
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<InternacaoResponseDto> modalidade(@PathVariable UUID uuid,
+                                                           @Valid @RequestBody com.edufelizardo.maissaudepublica.models.dtos.version1.request.ModalidadeInternacaoRequestDto dto) {
+        return ResponseEntity.ok(service.definirModalidade(uuid, dto));
+    }
+
+    @RequerPermissao({"INTERNACAO.GERENCIAR"})
+    @PostMapping(value = "{uuid}/comunicacao-mp", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Comunicação ao Ministério Público", description = "Da internação involuntária, em até 72 horas da admissão e da alta "
+            + "(Lei 10.216/2001, art. 8º; ADR-0123). Outra modalidade, alta antes da alta ou repetida: 422.", tags = "Internação")
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<InternacaoResponseDto> comunicacaoMp(@PathVariable UUID uuid,
+                                                              @Valid @RequestBody com.edufelizardo.maissaudepublica.models.dtos.version1.request.ComunicacaoMpRequestDto dto) {
+        return ResponseEntity.ok(service.comunicarMp(uuid, dto));
     }
 
     @RequerPermissao({"INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA", "LEITO.GERENCIAR"})

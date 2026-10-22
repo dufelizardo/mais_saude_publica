@@ -2,6 +2,9 @@ package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.exceptions.ResourceConflictException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
+import com.edufelizardo.maissaudepublica.models.CapacidadeAssistencial;
+import com.edufelizardo.maissaudepublica.repositories.CapacidadeAssistencialRepository;
 import com.edufelizardo.maissaudepublica.models.ProcedimentoRegulado;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProcedimentoReguladoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProcedimentoReguladoResponseDto;
@@ -20,12 +23,16 @@ public class ProcedimentoReguladoService {
     @Autowired
     private ProcedimentoReguladoRepository repository;
 
+    @Autowired
+    private CapacidadeAssistencialRepository capacidadeRepository;
+
     @Transactional
     public ProcedimentoReguladoResponseDto criar(ProcedimentoReguladoRequestDto dto) {
         String nome = dto.getNome().trim();
         exigirNomeLivre(nome, null);
-        ProcedimentoRegulado salvo = repository.save(new ProcedimentoRegulado(nome, dto.getTipo(),
-                dto.getAtivo() == null || dto.getAtivo()));
+        ProcedimentoRegulado novo = new ProcedimentoRegulado(nome, dto.getTipo(), dto.getAtivo() == null || dto.getAtivo());
+        novo.setCapacidadeExigida(capacidade(dto.getCapacidadeExigidaId()));
+        ProcedimentoRegulado salvo = repository.save(novo);
         return ProcedimentoReguladoResponseDto.fromProcedimento(salvo);
     }
 
@@ -36,6 +43,7 @@ public class ProcedimentoReguladoService {
         exigirNomeLivre(nome, uuid);
         procedimento.setNome(nome);
         procedimento.setTipo(dto.getTipo());
+        procedimento.setCapacidadeExigida(capacidade(dto.getCapacidadeExigidaId()));
         if (dto.getAtivo() != null) {
             procedimento.setAtivo(dto.getAtivo());
         }
@@ -54,6 +62,19 @@ public class ProcedimentoReguladoService {
     @Transactional(readOnly = true)
     public ProcedimentoReguladoResponseDto buscarPorId(UUID uuid) {
         return ProcedimentoReguladoResponseDto.fromProcedimento(buscar(uuid));
+    }
+
+    /** A capacidade exigida da executante (ADR-0138): existente (404) e ativa (422). Nula, nenhuma. */
+    private CapacidadeAssistencial capacidade(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        CapacidadeAssistencial c = capacidadeRepository.findById(uuid).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar a capacidade assistencial " + uuid + " em nossos registros."));
+        if (!c.isAtivo()) {
+            throw new ResourceUnprocessableEntityException("A capacidade " + c.getNome() + " está inativa.");
+        }
+        return c;
     }
 
     ProcedimentoRegulado buscar(UUID uuid) {

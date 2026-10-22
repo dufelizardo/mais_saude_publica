@@ -1,7 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { ProcedimentoRequestDto, ProcedimentoResponseDto, StatusProcedimentoRequestDto } from '../models/procedimento';
+import {
+  ProcedimentoCatalogoDto,
+  ProcedimentoCatalogoRequestDto,
+  ProcedimentoRequestDto,
+  ProcedimentoResponseDto,
+  StatusProcedimentoRequestDto,
+} from '../models/procedimento';
 import { SuccessResponseDto } from '../models/profissional';
 
 @Injectable({ providedIn: 'root' })
@@ -29,5 +35,18 @@ export class ProcedimentoService {
   /** Registro clínico não é editado: a retificação grava uma nova versão ligada à anterior (ADR-0062). */
   retificar(uuid: string, dto: ProcedimentoRequestDto & { motivoRetificacao: string }): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.baseUrl}/${uuid}/retificacao`, dto);
+  }
+
+  /** Catálogo geral de procedimentos (ADR-0136), ativos e inativos, por nome. */
+  catalogo(): Observable<ProcedimentoCatalogoDto[]> {
+    return this.http.get<ProcedimentoCatalogoDto[]>('/api/v1/procedimentos-catalogo');
+  }
+
+  criarItemCatalogo(dto: ProcedimentoCatalogoRequestDto): Observable<ProcedimentoCatalogoDto> {
+    return this.http.post<ProcedimentoCatalogoDto>('/api/v1/procedimento-catalogo', dto);
+  }
+
+  atualizarItemCatalogo(uuid: string, dto: ProcedimentoCatalogoRequestDto): Observable<ProcedimentoCatalogoDto> {
+    return this.http.put<ProcedimentoCatalogoDto>(`/api/v1/procedimento-catalogo/${uuid}`, dto);
   }
 }

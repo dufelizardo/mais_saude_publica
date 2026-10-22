@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../../pom/ui/rh/equipes/equipes_ui_pom.resource
 Resource    ../../../equipes/equipe/equipe_flow.resource
+Resource    ../../../territorio/territorio_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Equipes, unidades e lotações de apoio são criadas pela API; a ação sob teste é feita pela tela.
@@ -20,6 +21,12 @@ UI Equipes - Selecionar Equipe No Cartao
     [Documentation]    Clica no cartão da equipe e vê o detalhe com as microáreas.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${uuid}    ${nome}    ${unidadeId}=    Seed Uma Equipe
+    # As microáreas são do Território (ADR-0129): a área da equipe com a microárea 14.
+    ${area}=    Seed Area Territorial
+    Seed Microarea    ${area}    14
+    ${resp}=    Create Dictionary    equipeId=${uuid}
+    ${r}=    POST Responsabilidade Territorial    ${area}    ${resp}
+    Should Be Equal As Integers    ${r.status_code}    200
     UI Equipes - Abrir Na Unidade    ${unidadeId}
     UI Equipes - Clicar No Cartao    ${nome}
     Wait Until Keyword Succeeds    10s    500ms    UI Equipes - Detalhe Deve Ser    ${nome}
@@ -38,7 +45,6 @@ UI Equipes - Cadastrar Equipe
     Escolher Opcao Da Gaveta    unidadeId    ${unidadeId}
     Escolher Opcao Da Gaveta    tipo    ESF
     Preencher Campo Da Gaveta    nome    ${nome}
-    Preencher Campo Da Gaveta    microareas    21, 22
     Enviar Gaveta
     ${aviso}=    Ler Aviso De Status
     Should Contain    ${aviso}    Equipe cadastrada
@@ -83,7 +89,7 @@ UI Equipes - Registrar Saida
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${uuid}    ${nome}    ${unidadeId}=    Seed Uma Equipe
     ${matricula}=    Seed Um Profissional Lotado    ${unidadeId}
-    ${payload}=    Create Dictionary    profissionalMatricula=${matricula}    funcao=ACS    microarea=14
+    ${payload}=    Create Dictionary    profissionalMatricula=${matricula}    funcao=ACS
     ${incluido}=    POST Membro Equipe    ${uuid}    ${payload}
     Should Be Equal As Integers    ${incluido.status_code}    200
     UI Equipes - Abrir Equipe    ${uuid}

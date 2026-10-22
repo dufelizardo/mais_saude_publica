@@ -1,13 +1,17 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import java.time.Instant;
+import com.edufelizardo.maissaudepublica.models.ComplementoOdontologico;
 import com.edufelizardo.maissaudepublica.models.Procedimento;
+import com.edufelizardo.maissaudepublica.models.ProcedimentoCatalogo;
+import com.edufelizardo.maissaudepublica.models.enuns.FaceDente;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusProcedimento;
 import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -45,15 +49,30 @@ public class ProcedimentoResponseDto implements Serializable {
     private String profissionalStatusNome;
     private String justificativaStatus;
 
+    // Catálogo e complemento odontológico (ADR-0136)
+    private UUID atendimentoUuid;
+    private UUID procedimentoCatalogoId;
+    private String procedimentoCatalogoCodigo;
+    private String sigtap;
+    private boolean odontologico;
+    private Integer dente;
+    private List<FaceDente> faces;
+
     public static ProcedimentoResponseDto fromProcedimento(Procedimento procedimento) {
         return fromProcedimento(procedimento, null);
     }
 
     /** {@code retificadoPor}: id da versão que corrige este registro, ou nulo se ele é o vigente (ADR-0062). */
     public static ProcedimentoResponseDto fromProcedimento(Procedimento procedimento, UUID retificadoPor) {
+        return fromProcedimento(procedimento, retificadoPor, null);
+    }
+
+    /** Com o complemento odontológico (ADR-0136), quando houver. */
+    public static ProcedimentoResponseDto fromProcedimento(Procedimento procedimento, UUID retificadoPor, ComplementoOdontologico complemento) {
+        ProcedimentoCatalogo catalogo = procedimento.getCatalogo();
         return new ProcedimentoResponseDto(
                 procedimento.getUuid(),
-                procedimento.getConsulta().getUuid(),
+                procedimento.getConsulta() != null ? procedimento.getConsulta().getUuid() : null,
                 procedimento.getProfissional().getMatricula(),
                 procedimento.getProfissional().getNome(),
                 procedimento.getTipo(),
@@ -70,7 +89,14 @@ public class ProcedimentoResponseDto implements Serializable {
                 procedimento.getStatusAlteradoEm(),
                 procedimento.getProfissionalStatus() != null ? procedimento.getProfissionalStatus().getMatricula() : null,
                 procedimento.getProfissionalStatus() != null ? procedimento.getProfissionalStatus().getNome() : null,
-                procedimento.getJustificativaStatus()
+                procedimento.getJustificativaStatus(),
+                procedimento.getAtendimento().getUuid(),
+                catalogo != null ? catalogo.getUuid() : null,
+                catalogo != null ? catalogo.getCodigo() : null,
+                catalogo != null ? catalogo.getSigtap() : null,
+                catalogo != null && catalogo.odontologico(),
+                complemento != null ? complemento.getDente() : null,
+                complemento != null ? complemento.getFaces().stream().sorted().toList() : List.of()
         );
     }
 }

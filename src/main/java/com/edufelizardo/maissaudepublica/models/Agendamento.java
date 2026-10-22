@@ -64,6 +64,16 @@ public class Agendamento implements Serializable {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean encaixe;
 
+    /** A especialidade (ADR-0134): a informada, ou a do bloco da vaga. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "especialidade_id", referencedColumnName = "uuid")
+    private Especialidade especialidade;
+
+    /** O programa da marcação (HiperDia, pré-natal), ADR-0132: o paciente precisa ser acompanhado nele. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "programa_id", referencedColumnName = "uuid")
+    private Programa programa;
+
     public Agendamento(Paciente paciente, Profissional profissional, LocalDateTime dataHora,
                         StatusAgendamento status, TipoAgendamento tipo, String observacao) {
         this.paciente = paciente;

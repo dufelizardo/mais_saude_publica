@@ -1,0 +1,4 @@
+*** Comments ***
+    Mais Saúde Pública API - Saúde Bucal, fatia SB4b: tratamento protético (ADR-0139).
+*** Variables ***
+${TRATAMENTO_PROTETICO_SCHEMA}    ${{{'required': ['uuid', 'pacienteId', 'atendimentoId', 'tipo', 'arcada', 'etapaAtual', 'situacao', 'abertoEm', 'proximasEtapas', 'etapas'], 'types': {'uuid': str, 'pacienteId': str, 'atendimentoId': str, 'planoId': str, 'unidadeNome': str, 'profissionalMatricula': str, 'profissionalNome': str, 'tipo': str, 'arcada': str, 'dente': int, 'laboratorioUnidadeId': str, 'laboratorioNome': str, 'laboratorioContratado': bool, 'etapaAtual': str, 'situacao': str, 'dataEntrega': str, 'abertoEm': str, 'proximasEtapas': list, 'etapas': list}, 'enums': {'tipo': ['TOTAL', 'PARCIAL_REMOVIVEL', 'UNITARIA'], 'arcada': ['SUPERIOR', 'INFERIOR'], 'situacao': ['EM_ANDAMENTO', 'CONCLUIDO', 'CANCELADO']}}}}

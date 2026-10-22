@@ -87,7 +87,13 @@
       @for (u of unidades(); track u.uuid) { <option [value]="u.uuid" [selected]="u.uuid === unidadeId()">{{ u.nome }}</option> }
     </select>
   </label>
-  <button type="button" class="pill" disabled title="Em breve">Especialidade</button>
+  <label class="pill pill--select">
+    <span class="sr-only">Especialidade</span>
+    <select [value]="filtroEspecialidade()" (change)="filtroEspecialidade.set($any($event.target).value)" aria-label="Especialidade">
+      <option value="">Especialidade</option>
+      @for (e of especialidades(); track e.uuid) { <option [value]="e.uuid">{{ e.nome }}</option> }
+    </select>
+  </label>
   <label class="pill pill--select">
     <span class="sr-only">Tipo de marcação</span>
     <select [value]="filtroTipo()" (change)="filtroTipo.set($any($event.target).value)">
@@ -285,6 +291,16 @@
               </label>
             </div>
             <div class="dw-field">
+              <label for="f-programaMarcacao">Programa<span class="opt">opcional · o paciente precisa ser acompanhado nele</span></label>
+              <select id="f-programaMarcacao" formControlName="programaId">
+                <option value="">Sem programa</option>
+                @for (p of programas(); track p.uuid) { <option [value]="p.uuid">{{ p.nome }}</option> }
+              </select>
+              @if (acaoProgramatica() && marcarForm.controls.pacienteId.value === acaoProgramatica()!.pacienteId) {
+                <p class="dw-hint">Esta marcação cumpre a ação programática (consulta programada) do paciente.</p>
+              }
+            </div>
+            <div class="dw-field">
               <label for="f-observacao">Observação<span class="opt">opcional</span></label>
               <input id="f-observacao" type="text" formControlName="observacao" maxlength="255" />
             </div>
@@ -334,6 +350,13 @@
                 <label for="f-tipoBloco">Tipo de atendimento</label>
                 <select id="f-tipoBloco" formControlName="tipo">
                   @for (t of listaTipos; track t) { <option [value]="t">{{ tipos[t] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-especialidadeBloco">Especialidade<span class="opt">opcional</span></label>
+                <select id="f-especialidadeBloco" formControlName="especialidadeId">
+                  <option value="">Nenhuma</option>
+                  @for (e of especialidades(); track e.uuid) { <option [value]="e.uuid">{{ e.nome }}</option> }
                 </select>
               </div>
             </div>

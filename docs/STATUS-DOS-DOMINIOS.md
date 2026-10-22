@@ -4,8 +4,8 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-07
-- **Release em produção:** v1.6.0
+- **Atualizado em:** 2026-10-22 (release 1.7.0)
+- **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
 - **Fontes:**
@@ -47,19 +47,19 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
-| 21 | [Território e Adscrição](#21-território-e-adscrição) | 📐 | fatias F1 a F4 |
-| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 📐 | fatias P1 a P6 |
-| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 📐 | fatias V1 a V5 |
+| 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
+| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
-| 25 | [Saúde Bucal](#25-saúde-bucal) | 📐 | fatias SB1 a SB5 |
-| 26 | [Saúde Mental](#26-saúde-mental) | 📐 | fatias SM1 a SM6 |
+| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 a SB4 feitas; falta SB5 |
+| 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
-| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 📐 | fatias MO1 a MO4 |
+| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 9 ✅ · 5 🟡 · 8 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 10 ✅ · 10 🟡 · 2 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,29 +68,27 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| MO1 | 29 Modelo Operacional | perfis e capacidades da unidade |
-| P1 | 22 Programas | catálogo de programas, tela em cartões |
-| F1 | 21 Território | backend do território (área, microárea, GeoJSON) |
-| V1 | 23 Vigilância | agravos, notificação, investigação |
-| SB1 | 25 Saúde Bucal | especialidade no atendimento, avaliação odontológica |
+| SB5 | 25 Saúde Bucal | saúde bucal coletiva: detalhe odontológico das ações coletivas (Programas P4) |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
+| SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
-MO1 ──► SB4 (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
+MO1 ✅ ──► SB4a ✅ (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
-P1 ──► P2 ──► SM1 (acompanhamento em saúde mental) · P4 · P6
-P1 ──► P3 ──► C2 (campanha de comunicação)
-P4 ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
+P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6
+P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
+P4 ✅ ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
 
-F1 ──► F2 ──► V2 (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real
-F1 ──► F3 ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea · F4
+F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
+F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
-V1 ──► V2 · SM3 (notificação de autoagressão) · V5
-SB1 ──► SB2 ──► SB3 ──► SB4
-SM1 ──► SM2 · SM3 · SM4 · SM6
+V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
+V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
+SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5
+SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
 ```
@@ -118,20 +116,20 @@ C1 ──► C2 · C4 · C5
 - Tela Equipamentos de Saúde, com lista, ficha, horário estruturado em turnos e situação operacional (em obra,
   inoperante, manutenção) (ADRs 0101, 0102).
 - Equipes da unidade na ficha (ADR-0104).
+- Visão Mapa da rede e localização da unidade marcada no mapa (ADR-0126).
 
 **Falta:**
-- [ ] Mapa e coordenadas reais das unidades: vêm pelas fatias F1 e F2 do Território (ADR-0108).
 - [ ] Sincronização com o CNES (depende de Integrações, domínio 20).
 - [ ] Consultórios e capacidade.
 - [ ] Vagas semanais da unidade.
 - [ ] Acessibilidade.
 - [ ] Exportação.
 - [ ] Inspeção sanitária.
-- [ ] Modalidades de CAPS (I, II, III, i, AD, AD III) e componentes da RAPS como capacidades da unidade (domínio 26, SM5;
-  depende do catálogo de capacidades, item 29, MO1).
-- [ ] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1); serviços (MO2); coordenadas e
-  pontos operacionais (MO3).
-- [ ] Tipo de unidade do CEO (Centro de Especialidades Odontológicas), pelo critério da ADR-0053 (domínio 25, SB4).
+- [ ] Componentes da RAPS e serviços do CAPS (domínio 26, SM5). As modalidades de CAPS (I, II, III, i, AD, AD III) já
+  são capacidades no catálogo da MO1 ([ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
+- [x] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1, [ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
+- [ ] Serviços (MO2); coordenadas e pontos operacionais (MO3).
+- [x] Tipo de unidade do CEO: sem tipo próprio; é a unidade de especialidades com as capacidades odontológicas (ADR-0138).
 
 ### 2. RH
 
@@ -176,13 +174,14 @@ C1 ──► C2 · C4 · C5
 
 **Temos:**
 - Tela Atendimentos (ADR-0063), com consulta, procedimento, triagem, evolução e administração de medicamento.
+- Procedimento do catálogo geral, também direto no atendimento, sem consulta (ADR-0136).
 - A partir do atendimento: pedir exames (ADR-0094), encaminhar à Regulação (ADR-0088) e internar (ADR-0099).
 
 **Falta:**
-- [ ] Especialidade no atendimento (domínio 25, SB1; serve a todas as especialidades).
+- [x] Especialidade no atendimento, do catálogo, herdada da marcação (ADR-0134; serve a todas as especialidades).
 - [ ] Local de realização do atendimento (domicílio, via pública, local do evento, unidade móvel), item 29, MO3.
-- [ ] Atividades coletivas: grupo, vacinação aberta, coleta com vários pacientes, reunião, capacitação, visita do
-  ACS. Dependem das ações programáticas (domínio 22, P4) e do Território (domínio 21).
+- [ ] Atividades coletivas: vacinação aberta, coleta com vários pacientes, reunião, capacitação. O grupo e a visita
+  do programa já são ações programáticas (domínio 22, P4, ADR-0132); falta o registro do atendimento coletivo.
 
 ### 5. Paciente / Cidadão
 
@@ -223,10 +222,10 @@ C1 ──► C2 · C4 · C5
 
 **Falta:**
 - [ ] Visão Mês e exportação.
-- [ ] Filtro de especialidade (a especialidade vem pelo domínio 25, SB1).
+- [x] Filtro de especialidade e especialidade do bloco, herdada pela marcação (ADR-0134).
 - [ ] Sala.
-- [ ] Programas na marcação, como HiperDia e pré-natal (domínio 22, P4).
-- [ ] Atividades coletivas (domínio 22, P4).
+- [x] Programas na marcação, como HiperDia e pré-natal, e a marcação ligada à consulta programada (ADR-0132).
+- [ ] Atividades coletivas na grade da agenda (as ações coletivas existem nos Programas, ADR-0132).
 - [ ] Vaga liberada por falta oferecida à fila da Regulação ou a encaixe.
 - [ ] Meta de ocupação configurável por unidade (fixa em 85%); indicadores de encaixe e falta "de hoje".
 - [ ] Mini-mês com as marcações do mês, almoço como bloco, contador no menu, atualização ao vivo.
@@ -415,41 +414,90 @@ C1 ──► C2 · C4 · C5
 
 ### 21. Território e Adscrição
 
-**Estado:** 📐. Desenhado na [ADR-0108](./adr/0108-territorio-e-adscricao.md); detalhe em
+**Estado:** ✅. Desenhado na [ADR-0108](./adr/0108-territorio-e-adscricao.md); detalhe em
 [`territorio/MODELO-TERRITORIO.md`](./territorio/MODELO-TERRITORIO.md).
 
+**Temos:**
+- [x] **F1 · Fundação** ([ADR-0125](./adr/0125-territorio-fundacao.md)): segmento, território com finalidade, área e
+  microárea com GeoJSON validado (JTS, sem PostGIS); microárea dentro da área e sem sobreposição; equipe da área e ACS
+  da microárea como histórico; coordenadas da unidade; as microáreas em texto de Equipes migradas, com o Território
+  como fonte; tela Território (árvore, detalhe e gavetas).
+- [x] **F2 · Mapa** ([ADR-0126](./adr/0126-territorio-mapa.md)): Leaflet com OpenStreetMap (URL configurável) carregado
+  sob demanda; a área, as microáreas (sem ACS em âmbar) e as unidades no mapa; desenho e edição de polígonos com o
+  geoman, avisos de fora da área e sobreposição; importação de KML; visão Mapa e localização da unidade em
+  Equipamentos.
+- [x] **F3a · Imóvel, domicílio e família** ([ADR-0127](./adr/0127-cadastro-territorial.md)): imóvel com o ponto
+  dentro da microárea, domicílio com as condições da ficha do e-SUS, família com responsável e histórico de moradia
+  (mudança), membros que são os pacientes, endereço do cadastro só por ação explícita; papel de agente comunitário de
+  saúde e permissão `TERRITORIO.CADASTRAR` com leitura auditada; imóveis no mapa e ficha do imóvel na tela.
+
+- [x] **F3b · Adscrição e cobertura** ([ADR-0128](./adr/0128-adscricao-e-cobertura.md)): adscrição à equipe calculada
+  pelo domicílio (entrada, mudança, saída, troca de equipe da área) e manual com motivo, que a calculada não troca;
+  cobertura por equipe e microárea; equipe de referência na ficha do paciente; pessoas por microárea em Equipes;
+  elegíveis dos programas (idade e sexo) com inscrição pela lista.
+- [x] **F4 · Escopo territorial** ([ADR-0129](./adr/0129-escopo-territorial.md)): atrás de interruptor, o ACS na sua
+  microárea e a equipe na sua área (cadastro, adscrição manual, elegíveis); quem gere sem restrição; a adscrição à
+  equipe vira vínculo para o prontuário (ADR-0076); `meu-escopo` e a tela aberta no alcance; o texto livre das
+  microáreas saiu (V22), com o que sobrava migrado para o Território.
+
 **Falta:**
-- [ ] **F1 · Backend:** segmento, território, área e microárea com GeoJSON; responsabilidade equipe ↔ área e
-  atribuição ACS ↔ microárea; coordenadas da unidade; migração das microáreas que hoje são texto em Equipe.
-- [ ] **F2 · Tela Território:** mapa Leaflet com a área e as microáreas destacadas; mapa real em Equipamentos.
-- [ ] **F3 · Cadastro territorial:** imóvel, domicílio, núcleo familiar e adscrição; famílias e cobertura em
-  Equipes.
-- [ ] **F4 · Escopo territorial de acesso:** o ACS vê a própria microárea e a equipe a própria área.
+- [ ] Ligar o escopo territorial (`app.security.escopo-territorial.enabled`) quando a rede tiver equipes, áreas e ACS
+  cadastrados (ADR-0129).
+- [ ] Restringir a busca de pacientes por território (ficou fora: o ACS precisa achar quem ainda não está no cadastro).
 
 ### 22. Programas, Ações e Linhas de Cuidado
 
-**Estado:** 📐. Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md); detalhe em
 [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md).
 
+**Temos:**
+- [x] **P1 · Catálogo** ([ADR-0118](./adr/0118-programas-catalogo.md)): categorias e programas cadastráveis (carga de 4 categorias e 13
+  programas), público-alvo como dado (idade, sexo, gestante, CID-10/CIAP-2), coordenação, marca de sensível,
+  unidades e equipes participantes como histórico, permissão `PROGRAMA.GERENCIAR`; tela Programas de Saúde pelo
+  protótipo e consulta pública na landing page (`/api/v1/publico/programa`, sem login).
+- [x] **P2 · Acompanhamento** ([ADR-0119](./adr/0119-programas-acompanhamento.md)): inscrever, faltoso, saída e reinscrição como histórico; atrasado
+  pela periodicidade; programas do paciente com vínculo assistencial e auditoria de leitura; programa sensível
+  restrito; inscritos no escopo; aba Programas, indicador e filtro em Pacientes; programas na equipe; permissão
+  `PROGRAMA.ACOMPANHAR`.
+- [x] **P4 · Ações programáticas** ([ADR-0132](./adr/0132-programas-acoes-programaticas.md)): ação individual (pelo
+  acompanhamento) ou coletiva (com os participantes), responsável, data prevista, vencida; realização com o
+  atendimento que a cumpriu, não realizada e cancelada com motivo; busca ativa dos faltosos e atrasados com o ACS da
+  microárea e o resultado; programa na marcação da Agenda, "Agendar" a consulta programada e a ação pronta para
+  confirmar quando o atendimento é concluído; aba Ações programáticas e as ações na aba Programas do paciente.
+- [x] **P3 · Campanhas** ([ADR-0133](./adr/0133-programas-campanhas.md)): campanha cadastrável com tipo, programa
+  opcional, período (situação pelas datas), público como dado ou em palavras, meta com quantidade, publicação e
+  cancelamento; locais da rede ou temporários sob a unidade responsável; ações da campanha (coletivas, no local, com as
+  pessoas atendidas) dando o andamento da meta; aba Campanhas e a consulta pública na landing page
+  (`/api/v1/publico/campanha`).
+
 **Falta:**
-- [ ] **P1 · Catálogo:** programas e categorias cadastráveis, público-alvo e carga inicial; tela em cartões do
-  protótipo.
-- [ ] **P2 · Acompanhamento:** inscrever e encerrar; aba Programas e filtro em Pacientes; programas na equipe.
-- [ ] **P3 · Campanhas:** cadastro, tela e consulta pública na landing page.
-- [ ] **P4 · Ações programáticas:** ações pendentes, busca ativa, programa na marcação da Agenda.
+- [x] Lista de elegíveis pelo público-alvo entre os adscritos da equipe (ADR-0128); faltam os critérios clínicos (gestação, condição).
 - [ ] **P5 · Linhas de cuidado.**
 - [ ] **P6 · Metas e indicadores programáticos.**
 
 ### 23. Vigilância em Saúde
 
-**Estado:** 📐. Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md); detalhe em
 [`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md).
 
+**Temos:**
+- [x] **V1 · Fundação** ([ADR-0124](./adr/0124-vigilancia-epidemiologica-fundacao.md)): catálogo de 22 agravos da
+  Lista Nacional com a ficha específica como dado e versionada; notificação com as respostas validadas pela ficha,
+  investigação, classificação com histórico e encerramento com prazo; notificação negativa por semana epidemiológica;
+  sugestões de notificação a partir de internação, pedido de exame e crise em saúde mental (que fica notificada);
+  agravos sensíveis restritos à vigilância; boletim só com agregados; tela Vigilância epidemiológica.
+- [x] **V2a · Contatos, local e mapa** ([ADR-0130](./adr/0130-vigilancia-contatos-local-e-mapa.md)): contato do caso
+  (com ou sem cadastro), período de monitoramento por agravo e contatos vencidos; o contato que adoece vira caso pela
+  notificação, ligada ao caso índice; local do caso pelo domicílio da família ou marcado no mapa, com a microárea; mapa
+  dos casos por microárea, pontos só para quem investiga e nunca de agravo sensível, curva por semana epidemiológica.
+- [x] **V2b · Surto e medidas** ([ADR-0131](./adr/0131-vigilancia-surto-e-medidas.md)): surto comunitário ou
+  institucional com as microáreas, a definição de caso e o ciclo até o encerramento (com a conclusão e sem medida
+  aberta); um surto por caso, do mesmo agravo; medidas de controle do surto ou do caso, com responsável, prazo e
+  resultado, e as vencidas nos indicadores; linha do tempo do caso e do surto (esta, pela trilha de auditoria); mapa
+  filtrado pelo surto e "Abrir surto" pela microárea.
+
 **Falta:**
-- [ ] **V1 · Fundação:** agravo com a ficha específica como dado, notificação e notificação negativa,
-  investigação e classificação; sugestão de notificação a partir de atendimento, internação e exame.
-- [ ] **V2 · Epidemiologia avançada:** contato, surto, medida de controle, mapa e linha do tempo dos casos
-  (o mapa depende das fatias F1 e F2 do Território).
+- [ ] Sugestão de notificação por exame positivo (o catálogo de exames não liga exame a agravo).
 - [ ] **V3 · Sanitária:** estabelecimento regulado, inspeção, irregularidade, medida, licença (os autos dependem
   do domínio Documentos).
 - [ ] **V4 · Ambiental e Zoonoses:** evento e risco ambiental, monitoramento, vistoria, foco, animal, ação de
@@ -469,33 +517,70 @@ C1 ──► C2 · C4 · C5
 
 ### 25. Saúde Bucal
 
-**Estado:** 📐. Desenhado na [ADR-0111](./adr/0111-saude-bucal.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0111](./adr/0111-saude-bucal.md); detalhe em
 [`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md). A equipe eSB já existe (ADR-0103).
 
+**Temos:**
+- [x] **SB1 · Base** ([ADR-0134](./adr/0134-saude-bucal-base.md)): catálogo de especialidades (com a marca de
+  odontológica), especialidade no atendimento, no bloco da agenda e na marcação, filtro da Agenda; avaliação
+  odontológica no atendimento de odontologia (queixa, anamnese, exame, diagnóstico, risco em saúde bucal,
+  necessidade de tratamento, plano inicial), com retificação e no prontuário; permissão `ODONTOLOGIA.REGISTRAR` e os
+  papéis Cirurgião-dentista e Técnico em saúde bucal.
+- [x] **SB2 · Odontograma** ([ADR-0135](./adr/0135-saude-bucal-odontograma.md)): catálogo de condições (cor, sigla e
+  alcance), registros por dente FDI e face feitos na avaliação, validação da face pelo dente e do alcance pela
+  condição, anulação com motivo, projeção por data (o dente inteiro por cima das faces anteriores) e histórico do
+  dente; seção Odontograma no atendimento de odontologia.
+- [x] **SB3a · Procedimento odontológico** ([ADR-0136](./adr/0136-saude-bucal-procedimento-odontologico.md)):
+  catálogo geral de procedimentos (todas as especialidades, SIGTAP opcional, alcance, condição resultante e exigência
+  de dentista), procedimento direto no atendimento (a consulta ficou opcional), complemento odontológico (dente e
+  faces) e o procedimento realizado gravando o odontograma, anulado na retificação; o técnico em saúde bucal registra
+  o que a lei permite; catálogo na tela Setores.
+- [x] **SB3b · Plano de tratamento** ([ADR-0137](./adr/0137-saude-bucal-plano-de-tratamento.md)): um plano aberto por
+  paciente, com diagnóstico, objetivo e prioridade (da avaliação); itens do catálogo com dente e faces, executados
+  pelos procedimentos (realizado conclui, agendado põe em andamento, cancelado devolve a planejado); em andamento,
+  encaminhado (com a solicitação de regulação) e cancelado pelo dentista; tratamento concluído com data e abandono
+  com motivo; permissão `ODONTOLOGIA.PLANEJAR`; seção Plano de tratamento no atendimento de odontologia.
+
 **Falta:**
-- [ ] **SB1 · Base:** especialidade no atendimento e na Agenda; avaliação odontológica.
-- [ ] **SB2 · Odontograma:** catálogo de condições, registros com histórico (notação FDI), projeção por data, tela.
-- [ ] **SB3 · Tratamento:** catálogo geral de procedimentos, complemento odontológico (dente e faces), plano de
-  tratamento e evolução.
-- [ ] **SB4 · Regulação e prótese:** especialidades odontológicas no catálogo da Regulação, CEO como executante,
-  tratamento protético.
+- [x] **SB4a · Encaminhamento pela Regulação** ([ADR-0138](./adr/0138-saude-bucal-encaminhamento-pela-regulacao.md)):
+  o CEO como unidade com as capacidades odontológicas (sem tipo próprio); o item regulado exige a capacidade da
+  executante (vale para toda a Regulação); as especialidades odontológicas no catálogo; a solicitação a partir do item
+  do plano, que fica encaminhado e volta a planejado na negativa, cancelamento ou falta; a contrarreferência no plano.
+- [x] **SB4b · Tratamento protético** ([ADR-0139](./adr/0139-saude-bucal-tratamento-protetico.md)): total e parcial
+  pela arcada, unitária pelo dente; etapas na ordem do ciclo (prova e laboratório se alternam), com data e
+  profissional; laboratório da rede (capacidade nova LRPD) ou contratado; a entrega grava a unitária no odontograma;
+  conclusão depois da entrega e cancelamento com motivo; seção Prótese no atendimento de odontologia.
 - [ ] **SB5 · Saúde bucal coletiva:** detalhe odontológico das ações coletivas (depende de Programas P4 e do
   Território).
 
 ### 26. Saúde Mental
 
-**Estado:** 📐. Desenhado na [ADR-0112](./adr/0112-saude-mental.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0112](./adr/0112-saude-mental.md); detalhe em
 [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md).
 
+**Temos:**
+- [x] **SM1 · Base** ([ADR-0120](./adr/0120-saude-mental-base.md)): acolhimento (risco percebido e desfecho), caso
+  ligado ao acompanhamento do programa Saúde Mental (reaproveitado ou inscrito; a saída fecha o programa), equipe e
+  técnico de referência como histórico, avaliação com CID-10 opcional; sigilo pela equipe de referência (que conta
+  como vínculo assistencial), conteúdo só para a referência, os autores e o acesso justificado; permissões
+  `SAUDE_MENTAL.ACOLHER` e `SAUDE_MENTAL.ACOMPANHAR`, papéis Psicólogo e Assistente social; tela Saúde Mental e
+  atalho na aba Programas de Pacientes. Não depende da SB1: o atendimento é opcional.
+- [x] **SM2 · PTS** ([ADR-0121](./adr/0121-saude-mental-pts-intervencoes.md)): PTS versionado (a revisão não
+  sobrescreve; revisão concorrente recusada), com objetivos, situação, intervenções previstas, pactuação e "revisar
+  em"; intervenções realizadas com tipo de catálogo, compartilhamento e faltas seguidas; rede de apoio como histórico;
+  indicadores "Sem PTS" e "PTS a revisar". Grupo ligado à atividade coletiva fica para a P4.
+- [x] **SM4 · Rede** ([ADR-0122](./adr/0122-saude-mental-rede.md)): encaminhamento pela Regulação (criar ou vincular;
+  contrarreferência da Regulação no caso); cuidado compartilhado com outra equipe, que ganha vínculo e o conteúdo
+  enquanto vigente; matriciamento como intervenção com a equipe matriciada e o apoio da ADR-0103; transferência do
+  cuidado em duas etapas (proposta, aceite pelo destino com caso novo ligado ao anterior, recusa, cancelamento).
+- [x] **SM3 · Risco e crise** ([ADR-0123](./adr/0123-saude-mental-risco-crise.md)): risco com histórico e vigente por
+  tipo, medidas e reavaliação com prazo, indicadores; evento de crise com ou sem caso, etapas, pós-crise e desfecho,
+  notificação de violência autoprovocada sugerida e registrada como feita; na Internação, a modalidade (Lei
+  10.216/2001) e a comunicação da involuntária ao Ministério Público em 72 horas, com a pendência à vista.
+
 **Falta:**
-- [ ] **SM1 · Base:** acolhimento, avaliação, acompanhamento ligado ao programa Saúde Mental (Programas P2), equipe
-  e técnico de referência.
-- [ ] **SM2 · PTS:** objetivos, metas, intervenções previstas, rede de apoio, versões e revisão; registro de
-  intervenções.
-- [ ] **SM3 · Risco e crise:** avaliação de risco com histórico, evento de crise, pós-crise, sugestão de notificação
-  (Vigilância V1); modalidade da internação e comunicação ao Ministério Público (depende da regulação de urgência
-  para acionar o SAMU).
-- [ ] **SM4 · Rede:** referência e contrarreferência pela Regulação; cuidado compartilhado e matriciamento.
+- [ ] **SM3 · o que ficou:** a notificação de violência autoprovocada no sistema (depende da Vigilância V1) e o
+  acionamento do SAMU (depende da regulação de urgência).
 - [ ] **SM5 · CAPS e RAPS:** modalidades de CAPS e componentes da RAPS como capacidades da unidade (ADR-0053).
 - [ ] **SM6 · Intersetorialidade e indicadores:** instituições externas e encaminhamento intersetorial (pelo item 31),
   indicadores.
@@ -534,13 +619,17 @@ C1 ──► C2 · C4 · C5
 
 ### 29. Modelo Operacional dos Equipamentos
 
-**Estado:** 📐 (camada transversal, não domínio de negócio). Desenhado na
+**Estado:** 🟡 (camada transversal, não domínio de negócio). Desenhado na
 [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md), que aceita e completa a ADR-0053; matriz e detalhe em
 [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md).
 
+**Temos:**
+- [x] **MO1 · Perfis e capacidades** ([ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)): catálogos editáveis de perfil operacional (10) e de
+  capacidade assistencial (46, 4 transversais), associação à unidade como histórico, coerência entre capacidade e
+  perfil, perfis na rede, aba Capacidades e filtro por perfil em Equipamentos, tela Modelo operacional. Destrava SB4,
+  SM5 e E3.
+
 **Falta:**
-- [ ] **MO1 · Perfis e capacidades:** catálogos de perfil operacional e de capacidade assistencial, associação à
-  unidade, aba "Capacidades" em Equipamentos (pré-requisito de SB4, SM5 e E3).
 - [ ] **MO2 · Serviços:** serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina), ligados a
   setores.
 - [ ] **MO3 · Ponto operacional:** local de realização no Atendimento; base, localização e rota da unidade móvel.
@@ -568,8 +657,9 @@ C1 ──► C2 · C4 · C5
 ## 3. Pendências transversais
 
 **Catálogos de procedimento:**
+- [x] Catálogo geral de procedimentos, com SIGTAP opcional (ADR-0136).
 - [ ] Unificar os catálogos de Regulação (`ProcedimentoRegulado`), Laboratório (`ExameLaboratorial`) e o catálogo
-  geral de procedimentos que vem com a ADR-0111.
+  geral de procedimentos (ADR-0136).
 
 **Domínio "Documentos"** (⬜): anexos e documentos formais reaproveitáveis por qualquer domínio, com versão,
 aprovação e assinatura.

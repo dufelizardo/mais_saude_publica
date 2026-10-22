@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import com.edufelizardo.maissaudepublica.models.Procedimento;
+import com.edufelizardo.maissaudepublica.models.AvaliacaoOdontologica;
 import com.edufelizardo.maissaudepublica.models.EvolucaoEnfermagem;
 import com.edufelizardo.maissaudepublica.models.Triagem;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
@@ -24,6 +25,9 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.Prontuari
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcessoProntuarioDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TriagemResponseDto;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.AvaliacaoOdontologicaRepository;
+import com.edufelizardo.maissaudepublica.repositories.ComplementoOdontologicoRepository;
+import com.edufelizardo.maissaudepublica.models.ComplementoOdontologico;
 import com.edufelizardo.maissaudepublica.repositories.ConsultaRepository;
 import com.edufelizardo.maissaudepublica.repositories.EvolucaoEnfermagemRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
@@ -65,6 +69,12 @@ public class ProntuarioService {
 
     @Autowired
     private TriagemRepository triagemRepository;
+
+    @Autowired
+    private AvaliacaoOdontologicaRepository avaliacaoOdontologicaRepository;
+
+    @Autowired
+    private ComplementoOdontologicoRepository complementoOdontologicoRepository;
 
     @Autowired
     private EvolucaoEnfermagemRepository evolucaoEnfermagemRepository;
@@ -173,15 +183,33 @@ public class ProntuarioService {
         dto.setTriagens(triagens);
         dto.setEvolucoes(evolucoes);
         dto.setConsultas(consultas);
+        List<AvaliacaoOdontologica> avaliacoesDoAtendimento = avaliacaoOdontologicaRepository.findByAtendimento_UuidOrderByRegistradoEmAsc(atendimento.getUuid());
+        Map<UUID, UUID> sucessorAvaliacao = sucessores(avaliacoesDoAtendimento, AvaliacaoOdontologica::getUuid, AvaliacaoOdontologica::getRetificacaoDe);
+        dto.setAvaliacoesOdontologicas(avaliacoesDoAtendimento.stream()
+                .map(a -> AvaliacaoOdontologicaService.dto(a, sucessorAvaliacao.get(a.getUuid()))).collect(Collectors.toList()));
+        // Procedimentos direto no atendimento, sem consulta (ADR-0136).
+        List<Procedimento> procedimentosDoAtendimento =
+                procedimentoRepository.findByAtendimento_UuidAndConsultaIsNullOrderByRegistradoEmAsc(atendimento.getUuid());
+        dto.setProcedimentos(procedimentos(procedimentosDoAtendimento));
         return dto;
     }
 
-    private ProntuarioConsultaDto montarConsulta(Consulta consulta, UUID sucessor, List<Procedimento> procedimentosDaConsulta) {
-        Map<UUID, UUID> sucessorProcedimento = sucessores(procedimentosDaConsulta, Procedimento::getUuid,
-                Procedimento::getRetificacaoDe);
-        List<ProcedimentoResponseDto> procedimentos = procedimentosDaConsulta.stream()
-                .map(p -> ProcedimentoResponseDto.fromProcedimento(p, sucessorProcedimento.get(p.getUuid())))
+    /** Os procedimentos com as versões marcadas (ADR-0062) e o complemento odontológico (ADR-0136). */
+    private List<ProcedimentoResponseDto> procedimentos(List<Procedimento> lista) {
+        if (lista.isEmpty()) {
+            return List.of();
+        }
+        Map<UUID, UUID> sucessor = sucessores(lista, Procedimento::getUuid, Procedimento::getRetificacaoDe);
+        Map<UUID, ComplementoOdontologico> complementos = complementoOdontologicoRepository
+                .findByProcedimento_UuidIn(lista.stream().map(Procedimento::getUuid).toList()).stream()
+                .collect(Collectors.toMap(c -> c.getProcedimento().getUuid(), Function.identity()));
+        return lista.stream()
+                .map(p -> ProcedimentoResponseDto.fromProcedimento(p, sucessor.get(p.getUuid()), complementos.get(p.getUuid())))
                 .collect(Collectors.toList());
+    }
+
+    private ProntuarioConsultaDto montarConsulta(Consulta consulta, UUID sucessor, List<Procedimento> procedimentosDaConsulta) {
+        List<ProcedimentoResponseDto> procedimentos = procedimentos(procedimentosDaConsulta);
 
         ProntuarioConsultaDto dto = new ProntuarioConsultaDto();
         dto.setConsulta(ConsultaResponseDto.fromConsulta(consulta, sucessor));

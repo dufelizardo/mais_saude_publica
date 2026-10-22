@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.models;
 
 import com.edufelizardo.maissaudepublica.models.enuns.CaraterInternacao;
+import com.edufelizardo.maissaudepublica.models.enuns.ModalidadeInternacao;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusInternacao;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoAlta;
 import jakarta.persistence.*;
@@ -88,4 +89,12 @@ public class Internacao implements Serializable {
 
     @Column(updatable = false)
     private String registradoPorCpf;
+
+    /** Internação psiquiátrica (ADR-0123): voluntária, involuntária ou compulsória (Lei 10.216/2001, art. 6º). */
+    @Enumerated(EnumType.STRING)
+    private ModalidadeInternacao modalidade;
+
+    /** Na compulsória: o número do processo ou da ordem judicial. */
+    @Column(length = 60)
+    private String ordemJudicial;
 }

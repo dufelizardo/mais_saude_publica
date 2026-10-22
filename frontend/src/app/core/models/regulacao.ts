@@ -31,6 +31,8 @@ export interface ProcedimentoReguladoRequestDto {
   nome: string;
   tipo: TipoProcedimentoRegulado;
   ativo?: boolean;
+  /** A capacidade que a executante precisa ter (ADR-0138). */
+  capacidadeExigidaId?: string | null;
 }
 
 export interface ProcedimentoReguladoResponseDto {
@@ -38,6 +40,8 @@ export interface ProcedimentoReguladoResponseDto {
   nome: string;
   tipo: TipoProcedimentoRegulado;
   ativo: boolean;
+  capacidadeExigidaId?: string | null;
+  capacidadeExigidaNome?: string | null;
 }
 
 export interface SolicitacaoRegulacaoRequestDto {
@@ -48,6 +52,8 @@ export interface SolicitacaoRegulacaoRequestDto {
   cid: string;
   justificativa: string;
   prioridade: PrioridadeRegulacao;
+  /** O item do plano de tratamento odontológico encaminhado (ADR-0138). */
+  itemPlanoTratamentoId?: string | null;
 }
 
 export interface ComplementoRegulacaoRequestDto {

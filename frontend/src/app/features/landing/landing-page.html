@@ -461,85 +461,97 @@
   </section>
 
   <!-- ========= Campaigns / News ========= -->
+  <section id="programas" class="block" aria-labelledby="prg-title">
+    <div class="container">
+      <header class="block-head">
+        <span class="eyebrow">Programas de saúde</span>
+        <h2 id="prg-title" style="margin-top: var(--s-4);">Cuidado organizado para cada fase da vida</h2>
+        <p style="margin-top: var(--s-4); color: var(--ink-500); font-size: 1.0625rem;">Os programas da rede municipal, para quem são e onde procurar. Para participar, procure a sua unidade de saúde.</p>
+      </header>
+      @if (programas() === undefined) {
+        <p style="color: var(--ink-500);">Carregando os programas…</p>
+      } @else if (programas() === null) {
+        <p style="color: var(--ink-500);">Não foi possível carregar os programas agora. Tente mais tarde.</p>
+      } @else {
+        @for (g of programasPorCategoria(); track g.categoria) {
+          <h3 class="prg-cat">{{ g.categoria }}</h3>
+          <div class="services prg-grid">
+            @for (p of g.programas; track p.nome) {
+              <article class="svc-card prg-card" [attr.aria-label]="p.nome">
+                <div class="svc-card__title">{{ p.nome }}</div>
+                @if (p.descricao) { <div class="svc-card__desc">{{ p.descricao }}</div> }
+                <div class="prg-card__publico"><strong>Para:</strong> {{ p.publico }}</div>
+                <div class="prg-card__onde">
+                  @if (p.unidades.length) {
+                    <strong>Onde:</strong> {{ p.unidades.slice(0, 3).join(', ') }}@if (p.unidades.length > 3) { e mais {{ p.unidades.length - 3 }} }
+                  } @else {
+                    Procure a unidade de saúde mais próxima.
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        } @empty {
+          <p style="color: var(--ink-500);">Nenhum programa publicado no momento.</p>
+        }
+      }
+    </div>
+  </section>
+
   <section id="campanhas" class="block" aria-labelledby="cmp-title">
     <div class="container">
       <header class="block-head" style="display:flex; justify-content:space-between; align-items:end; max-width:none; gap:var(--s-6); flex-wrap:wrap;">
         <div style="max-width: 640px;">
-          <span class="eyebrow">Campanhas &amp; notícias</span>
+          <span class="eyebrow">Campanhas</span>
           <h2 id="cmp-title" style="margin-top: var(--s-4);">Campanhas em destaque</h2>
           <p style="margin-top: var(--s-4); color: var(--ink-500); font-size: 1.0625rem;">Acompanhe as ações de prevenção, imunização e cuidado em curso na rede municipal.</p>
         </div>
-        <a href="#todas" class="btn btn--ghost">Ver todas as campanhas</a>
       </header>
 
-      <div class="campaigns">
-        <article>
-          <a href="#" class="news news--feature">
-            <div class="news__media">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path><path d="m9 11 4 4"></path><path d="m5 19-3 3"></path><path d="m14 4 6 6"></path></svg>
-              <span class="ph-tag">imagem da campanha · 16:9</span>
-            </div>
-            <div class="news__body">
-              <span class="news__chip">Vacinação</span>
-              <h3 class="news__title">Campanha de Vacinação contra a Gripe 2026 começa em todas as unidades.</h3>
-              <p style="color:var(--ink-500); font-size: var(--fs-sm);">Crianças, idosos, gestantes e profissionais de saúde são prioridade. Veja onde se vacinar.</p>
-              <div class="news__meta"><span>22 de maio de 2026</span><span aria-hidden="true">·</span><span>Leitura: 3 min</span></div>
-            </div>
-          </a>
-        </article>
-        <article>
-          <a href="#" class="news">
-            <div class="news__media">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12c4 2 14 2 18 0"></path><path d="M12 3c2.5 3 2.5 15 0 18"></path><path d="M12 3c-2.5 3-2.5 15 0 18"></path></svg>
-              <span class="ph-tag">campanha · 4:3</span>
-            </div>
-            <div class="news__body">
-              <span class="news__chip">Dengue</span>
-              <h3 class="news__title">10 minutos contra a Dengue: ação nos bairros começa nesta semana.</h3>
-              <div class="news__meta"><span>20 mai 2026</span></div>
-            </div>
-          </a>
-        </article>
-        <article>
-          <a href="#" class="news">
-            <div class="news__media">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
-              <span class="ph-tag">campanha · 4:3</span>
-            </div>
-            <div class="news__body">
-              <span class="news__chip">Saúde da Mulher</span>
-              <h3 class="news__title">Outubro Rosa 2026: agendamento de mamografia já disponível.</h3>
-              <div class="news__meta"><span>18 mai 2026</span></div>
-            </div>
-          </a>
-        </article>
-        <article>
-          <a href="#" class="news">
-            <div class="news__media">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a4 4 0 0 0-4 4v3a4 4 0 0 0 4 4 4 4 0 0 0 4-4V6a4 4 0 0 0-4-4z"></path><path d="M5 13a7 7 0 0 0 14 0"></path><path d="M12 20v2"></path></svg>
-              <span class="ph-tag">campanha · 4:3</span>
-            </div>
-            <div class="news__body">
-              <span class="news__chip">Saúde Mental</span>
-              <h3 class="news__title">Janeiro Branco: rede de acolhimento amplia atendimento em 12 unidades.</h3>
-              <div class="news__meta"><span>15 mai 2026</span></div>
-            </div>
-          </a>
-        </article>
-        <article>
-          <a href="#" class="news">
-            <div class="news__media">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><path d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"></path><circle cx="12" cy="12" r="1"></circle></svg>
-              <span class="ph-tag">campanha · 4:3</span>
-            </div>
-            <div class="news__body">
-              <span class="news__chip">COVID-19</span>
-              <h3 class="news__title">Dose de reforço: confira o calendário 2026 por faixa etária.</h3>
-              <div class="news__meta"><span>12 mai 2026</span></div>
-            </div>
-          </a>
-        </article>
-      </div>
+      @if (campanhas() === undefined) {
+        <p style="color: var(--ink-500);">Carregando as campanhas…</p>
+      } @else if (campanhas() === null) {
+        <p style="color: var(--ink-500);">Não foi possível carregar as campanhas agora. Tente mais tarde.</p>
+      } @else if (!campanhas()!.length) {
+        <p style="color: var(--ink-500);">Nenhuma campanha em andamento no momento.</p>
+      } @else {
+        <div class="campaigns" aria-label="Campanhas de saúde">
+          @for (c of campanhasVisiveis(); track c.nome; let primeira = $first) {
+            <article [attr.aria-label]="c.nome">
+              <div [class]="primeira ? 'news news--feature' : 'news'">
+                <div class="news__media" aria-hidden="true">
+                  @switch (c.tipo) {
+                    @case ('VACINACAO') { <svg [attr.width]="primeira ? 48 : 40" [attr.height]="primeira ? 48 : 40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path><path d="m9 11 4 4"></path><path d="m5 19-3 3"></path><path d="m14 4 6 6"></path></svg> }
+                    @case ('CONSCIENTIZACAO') { <svg [attr.width]="primeira ? 48 : 40" [attr.height]="primeira ? 48 : 40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 0-4 4v3a4 4 0 0 0 4 4 4 4 0 0 0 4-4V6a4 4 0 0 0-4-4z"></path><path d="M5 13a7 7 0 0 0 14 0"></path><path d="M12 20v2"></path></svg> }
+                    @case ('MUTIRAO') { <svg [attr.width]="primeira ? 48 : 40" [attr.height]="primeira ? 48 : 40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"></path><circle cx="12" cy="12" r="1"></circle></svg> }
+                    @default { <svg [attr.width]="primeira ? 48 : 40" [attr.height]="primeira ? 48 : 40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg> }
+                  }
+                </div>
+                <div class="news__body">
+                  <span class="news__chip">{{ tiposCampanha[c.tipo] }}@if (c.situacao === 'PLANEJADA') { · em breve }</span>
+                  <h3 class="news__title">{{ c.nome }}</h3>
+                  @if (primeira && c.descricao) { <p style="color:var(--ink-500); font-size: var(--fs-sm);">{{ c.descricao }}</p> }
+                  <p style="color:var(--ink-500); font-size: var(--fs-sm);">Para: {{ c.publico }}</p>
+                  @if (c.locais.length) {
+                    <p style="color:var(--ink-500); font-size: var(--fs-sm);">Onde: {{ ondeTem(c) }}</p>
+                  }
+                  @if (c.metaQuantidade) {
+                    <p style="color:var(--ink-500); font-size: var(--fs-sm);">{{ c.realizado }} de {{ c.metaQuantidade }} pessoas atendidas@if (c.meta) { · meta: {{ c.meta }} }</p>
+                  } @else if (c.meta) {
+                    <p style="color:var(--ink-500); font-size: var(--fs-sm);">Meta: {{ c.meta }}</p>
+                  }
+                  <div class="news__meta"><span>{{ dataLonga(c.inicio) }} a {{ dataLonga(c.fim) }}</span></div>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+        @if (campanhas()!.length > 5) {
+          <button type="button" class="btn btn--ghost" style="margin-top: var(--s-6);" (click)="todasCampanhas.set(!todasCampanhas())">
+            {{ todasCampanhas() ? 'Ver menos' : 'Ver todas as ' + campanhas()!.length + ' campanhas' }}
+          </button>
+        }
+      }
 
       <!-- CTA Strip -->
       <div class="cta-strip" style="margin-top: var(--s-12);">

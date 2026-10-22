@@ -83,6 +83,9 @@ public class AgendaService {
     private ControleDeAcesso controleDeAcesso;
 
     @Autowired
+    private EspecialidadeService especialidadeService;
+
+    @Autowired
     private FuncionamentoUnidade funcionamentoUnidade;
 
     // ── Blocos ─────────────────────────────────────────────────────────────────────────────────────
@@ -111,6 +114,7 @@ public class AgendaService {
         }
         BlocoAgenda novo = new BlocoAgenda(profissional, unidade, dto.getDiaSemana(), dto.getHoraInicio(), dto.getHoraFim(),
                 dto.getDuracaoMinutos(), dto.getTipo(), desde, dto.getVigenteAte());
+        novo.setEspecialidade(especialidadeService.ativa(dto.getEspecialidadeId()));
         // O profissional não está em dois lugares ao mesmo tempo: nenhum outro bloco dele, em qualquer unidade,
         // no mesmo dia da semana, com horário e vigência que se cruzem.
         blocoRepository.findByProfissional_UuidOrderByDiaSemanaAscHoraInicioAsc(profissional.getUuid()).stream()
@@ -216,12 +220,12 @@ public class AgendaService {
             Optional<Afastamento> afastamento = m.afastamentoEm(dia);
             if (afastamento.isPresent()) {
                 itens.add(new ItemAgendaDto("AFASTAMENTO", dia.atStartOfDay(), dia.plusDays(1).atStartOfDay(), null, null, null,
-                        null, null, afastamento.get().getTipo().name()));
+                        null, null, afastamento.get().getTipo().name(), null, null));
             }
             for (BloqueioAgenda b : m.bloqueios) {
                 if (b.cobre(profissional.getUuid(), unidade.getUuid(), dia.atStartOfDay(), dia.plusDays(1).atStartOfDay())) {
                     itens.add(new ItemAgendaDto("BLOQUEIO", max(b.getInicio(), dia.atStartOfDay()), min(b.getFim(), dia.plusDays(1).atStartOfDay()),
-                            null, null, null, null, null, b.getMotivo().name() + (b.getDescricao() != null ? ": " + b.getDescricao() : "")));
+                            null, null, null, null, null, b.getMotivo().name() + (b.getDescricao() != null ? ": " + b.getDescricao() : ""), null, null));
                 }
             }
             List<Agendamento> doDia = m.agendamentosEm(dia);
@@ -234,7 +238,7 @@ public class AgendaService {
                     itens.add(item(marcado.get(), "MARCACAO", v.fim));
                 } else if (!v.bloqueada) {
                     ofertadas++;
-                    itens.add(new ItemAgendaDto("VAGA", v.inicio, v.fim, v.bloco.getTipo(), null, null, null, null, null));
+                    itens.add(new ItemAgendaDto("VAGA", v.inicio, v.fim, v.bloco.getTipo(), null, null, null, null, null, especialidadeId(v.bloco), especialidadeNome(v.bloco)));
                 }
             }
             // Marcação fora das vagas (encaixe, ou anterior à agenda) também aparece.
@@ -274,7 +278,7 @@ public class AgendaService {
                     .map(Agendamento::getDataHora).collect(Collectors.toSet());
             for (Vaga v : m.vagasEm(dia)) {
                 if (!v.bloqueada && !ocupadas.contains(v.inicio) && v.inicio.isAfter(agora)) {
-                    livres.add(new ItemAgendaDto("VAGA", v.inicio, v.fim, v.bloco.getTipo(), null, null, null, null, null));
+                    livres.add(new ItemAgendaDto("VAGA", v.inicio, v.fim, v.bloco.getTipo(), null, null, null, null, null, especialidadeId(v.bloco), especialidadeNome(v.bloco)));
                 }
             }
         }
@@ -406,7 +410,26 @@ public class AgendaService {
 
     private static ItemAgendaDto item(Agendamento a, String tipo, LocalDateTime fim) {
         return new ItemAgendaDto(tipo, a.getDataHora(), fim, a.getTipo(), a.getUuid(), a.getPaciente().getUuid(),
-                a.getPaciente().getNome(), a.getStatus(), a.getObservacao());
+                a.getPaciente().getNome(), a.getStatus(), a.getObservacao(),
+                a.getEspecialidade() != null ? a.getEspecialidade().getUuid() : null, a.getEspecialidade() != null ? a.getEspecialidade().getNome() : null);
+    }
+
+    private static UUID especialidadeId(BlocoAgenda b) {
+        return b.getEspecialidade() != null ? b.getEspecialidade().getUuid() : null;
+    }
+
+    private static String especialidadeNome(BlocoAgenda b) {
+        return b.getEspecialidade() != null ? b.getEspecialidade().getNome() : null;
+    }
+
+    /** O bloco vigente que oferece a vaga deste horário, para a marcação herdar a especialidade (ADR-0134). */
+    java.util.Optional<BlocoAgenda> blocoDaVaga(Profissional profissional, UnidadeDeSaude unidade, LocalDateTime dataHora) {
+        LocalTime hora = dataHora.toLocalTime();
+        return blocoRepository.findByProfissional_UuidOrderByDiaSemanaAscHoraInicioAsc(profissional.getUuid()).stream()
+                .filter(b -> b.getUnidade().getUuid().equals(unidade.getUuid()) && b.valeEm(dataHora.toLocalDate()))
+                .filter(b -> !hora.isBefore(b.getHoraInicio()) && hora.isBefore(b.getHoraFim())
+                        && Duration.between(b.getHoraInicio(), hora).toMinutes() % b.getDuracaoMinutos() == 0)
+                .findFirst();
     }
 
     private static boolean vigenciasSeCruzam(BlocoAgenda a, BlocoAgenda b) {

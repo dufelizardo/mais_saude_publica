@@ -27,4 +27,7 @@ public class ProcedimentoReguladoRequestDto implements Serializable {
     private TipoProcedimentoRegulado tipo;
 
     private Boolean ativo;
+
+    /** A capacidade que a executante precisa ter (ADR-0138); nula, qualquer uma. */
+    private java.util.UUID capacidadeExigidaId;
 }

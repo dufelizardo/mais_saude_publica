@@ -22,11 +22,22 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "leaflet.css",
+                "input": "node_modules/leaflet/dist",
+                "output": "leaflet"
+              },
+              {
+                "glob": "leaflet-geoman.css",
+                "input": "node_modules/@geoman-io/leaflet-geoman-free/dist",
+                "output": "leaflet"
               }
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "allowedCommonJsDependencies": ["leaflet", "@geoman-io/leaflet-geoman-free"]
           },
           "configurations": {
             "production": {

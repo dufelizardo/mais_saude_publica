@@ -40,6 +40,14 @@ public class ProcedimentoRegulado implements Serializable {
 
     private boolean ativo;
 
+    /**
+     * A capacidade assistencial (Modelo Operacional, ADR-0115) que a unidade executante precisa ter (ADR-0138): a
+     * endodontia pede um CEO com endodontia. Nula: qualquer executante.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "capacidade_exigida_id", referencedColumnName = "uuid")
+    private CapacidadeAssistencial capacidadeExigida;
+
     public ProcedimentoRegulado(String nome, TipoProcedimentoRegulado tipo, boolean ativo) {
         this.nome = nome;
         this.tipo = tipo;
