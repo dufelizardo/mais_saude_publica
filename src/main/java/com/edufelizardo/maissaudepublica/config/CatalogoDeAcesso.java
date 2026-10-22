@@ -70,6 +70,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("VIGILANCIA.GERENCIAR", new Def("Manter o catálogo de agravos e as fichas específicas", OPERACAO));
         // Saúde Bucal (ADR-0134): a avaliação e o diagnóstico são do cirurgião-dentista (Lei 5.081/1966).
         PERMISSOES.put("ODONTOLOGIA.REGISTRAR", new Def("Registrar a avaliação odontológica (cirurgião-dentista)", ACESSO_AO_DADO_DE_SAUDE));
+        // Plano de tratamento odontológico (ADR-0137): abrir, conduzir e concluir é do cirurgião-dentista.
+        PERMISSOES.put("ODONTOLOGIA.PLANEJAR", new Def("Abrir, conduzir e concluir o plano de tratamento odontológico (cirurgião-dentista)",
+                ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("PACIENTE.CONSULTAR", new Def("Consultar cadastro de pacientes", OPERACAO));
         PERMISSOES.put("PACIENTE.CADASTRAR", new Def("Cadastrar e atualizar pacientes", OPERACAO));
         PERMISSOES.put("AGENDAMENTO.GERENCIAR", new Def("Agendar, confirmar e cancelar", OPERACAO));
@@ -198,7 +201,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("CIRURGIAO_DENTISTA", new PapelPadrao("Cirurgião-dentista",
                 "Avaliação, diagnóstico e procedimentos odontológicos (Lei 5.081/1966); lê o prontuário com vínculo.",
                 List.of("PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
-                        "ODONTOLOGIA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
+                        "ODONTOLOGIA.REGISTRAR", "ODONTOLOGIA.PLANEJAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
                         "PROGRAMA.ACOMPANHAR", "VIGILANCIA.NOTIFICAR")));
         PAPEIS.put("TECNICO_SAUDE_BUCAL", new PapelPadrao("Técnico em saúde bucal",
                 "Procedimentos permitidos, sob supervisão do dentista (Lei 11.889/2008). Sem avaliação nem diagnóstico.",

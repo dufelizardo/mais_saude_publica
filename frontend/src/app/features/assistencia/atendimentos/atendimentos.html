@@ -672,6 +672,12 @@
                       <ng-container *ngTemplateOutlet="recProcedimento; context: { $implicit: p, atId: a.uuid, consultaId: null }"></ng-container>
                     } @empty { <p class="cell-sub">Nenhum procedimento. O realizado com dente ou face grava o odontograma.</p> }
                   </section>
+                  <section class="dsec" aria-label="Plano de tratamento">
+                    <div class="dsec__h"><h3>Plano de tratamento</h3></div>
+                    <app-plano-tratamento [pacienteId]="a.pacienteUuid" [atendimentoId]="a.uuid" [avaliacaoId]="avaliacaoOdontologicaVigente(registros())"
+                      [podePlanejar]="pode('ODONTOLOGIA.PLANEJAR')" [podeExecutar]="pode('PROCEDIMENTO.REGISTRAR')" [catalogo]="catalogoOdontologico()"
+                      [matriculaPadrao]="matriculaPadrao()" [recarregar]="registros()" (executar)="executarItemPlano(a.uuid, $event)" />
+                  </section>
                   <section class="dsec" aria-label="Odontograma do paciente">
                     <div class="dsec__h"><h3>Odontograma</h3></div>
                     @if (!avaliacaoOdontologicaVigente(registros())) {
@@ -1131,6 +1137,11 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
               <div>{{ g.consultaId ? 'Procedimento da consulta.' : 'Procedimento do atendimento, sem consulta: o técnico em saúde bucal também registra os que a lei permite.' }}</div>
             </div>
+            @if (procItemPlano(); as ip) {
+              <div class="box box--info" aria-label="Item do plano executado">
+                <div>Executa o item {{ ip.ordem }} do plano de tratamento: {{ ip.procedimentoNome }}. Realizado, o item fica concluído; agendado, em andamento.</div>
+              </div>
+            }
             @if (g.original) {
               <div class="dw-field">
                 <label for="f-motivoRetificacao">Motivo da retificação <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>

@@ -75,6 +75,9 @@ public class ProcedimentoService {
     @Autowired
     private OdontogramaService odontogramaService;
 
+    @Autowired
+    private PlanoTratamentoService planoTratamentoService;
+
     @Transactional
     public ProcedimentoResponseDto criar(ProcedimentoRequestDto dto) {
         Consulta consulta = dto.getConsultaId() != null ? buscarConsultaPorId(dto.getConsultaId()) : null;
@@ -97,6 +100,9 @@ public class ProcedimentoService {
         procedimento = procedimentoRepository.save(procedimento);
         ComplementoOdontologico complemento = salvarComplemento(procedimento, dto.getDente(), faces);
         odontogramaService.gravarDoProcedimento(procedimento, complemento);
+        if (dto.getItemPlanoId() != null) {
+            planoTratamentoService.executar(dto.getItemPlanoId(), procedimento, complemento);
+        }
         ContextoAuditoria.registro(procedimento.getUuid());
         return ProcedimentoResponseDto.fromProcedimento(procedimento, null, complemento);
     }
@@ -142,6 +148,7 @@ public class ProcedimentoService {
         ComplementoOdontologico complemento = salvarComplemento(procedimento, dto.getDente(), faces);
         odontogramaService.anularDoProcedimento(original, "Procedimento retificado: " + procedimento.getMotivoRetificacao());
         odontogramaService.gravarDoProcedimento(procedimento, complemento);
+        planoTratamentoService.aoRetificar(original, procedimento, complemento);
         ContextoAuditoria.registro(procedimento.getUuid());
         return ProcedimentoResponseDto.fromProcedimento(procedimento, null, complemento);
     }
@@ -196,6 +203,7 @@ public class ProcedimentoService {
         procedimento = procedimentoRepository.save(procedimento);
         ComplementoOdontologico complemento = complementoRepository.findByProcedimento_Uuid(uuid).orElse(null);
         odontogramaService.gravarDoProcedimento(procedimento, complemento);
+        planoTratamentoService.aoMudarStatus(procedimento);
         return ProcedimentoResponseDto.fromProcedimento(procedimento, null, complemento);
     }
 
@@ -261,9 +269,9 @@ public class ProcedimentoService {
     /**
      * O complemento odontológico segue o item do catálogo: nada (sem dente nem face), o dente inteiro ou o dente com as
      * faces, com as regras do odontograma (FDI, 400; face do dente, 422). O procedimento odontológico só entra em
-     * atendimento de especialidade odontológica (422).
+     * atendimento de especialidade odontológica (422). Vale também para o item do plano de tratamento (ADR-0137).
      */
-    private static Set<FaceDente> validarComplemento(ProcedimentoCatalogo item, Atendimento atendimento, Integer dente, List<FaceDente> lista) {
+    static Set<FaceDente> validarComplemento(ProcedimentoCatalogo item, Atendimento atendimento, Integer dente, List<FaceDente> lista) {
         Set<FaceDente> faces = lista == null ? new LinkedHashSet<>() : new LinkedHashSet<>(lista.stream().filter(Objects::nonNull).toList());
         if (item != null && item.odontologico() && (atendimento.getEspecialidade() == null || !atendimento.getEspecialidade().isOdontologica())) {
             throw new ResourceUnprocessableEntityException("O procedimento " + item.getNome()

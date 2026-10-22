@@ -1,10 +1,11 @@
 # Modelo do domínio Saúde Bucal
 
-**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1, SB2 e SB3a implementadas)
+**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1 a SB3 implementadas)
 **Status:** desenho aprovado na [ADR-0111](../adr/0111-saude-bucal.md). **A SB1 (especialidade e avaliação
-odontológica), a SB2 (odontograma) e a SB3a (catálogo de procedimentos e procedimento odontológico) estão
-implementadas** nas ADRs [0134](../adr/0134-saude-bucal-base.md), [0135](../adr/0135-saude-bucal-odontograma.md) e
-[0136](../adr/0136-saude-bucal-procedimento-odontologico.md); SB3b (plano de tratamento) a SB5 vêm depois (seção 14).
+odontológica), a SB2 (odontograma) e a SB3 (catálogo de procedimentos, procedimento odontológico e plano de
+tratamento) estão implementadas** nas ADRs [0134](../adr/0134-saude-bucal-base.md),
+[0135](../adr/0135-saude-bucal-odontograma.md), [0136](../adr/0136-saude-bucal-procedimento-odontologico.md) e
+[0137](../adr/0137-saude-bucal-plano-de-tratamento.md); SB4 e SB5 vêm depois (seção 14).
 
 Saúde Bucal é um **domínio assistencial especializado**, e não um sistema odontológico isolado. Este documento
 mostra o que ele traz de próprio, o que reaproveita dos domínios que já existem, o odontograma com histórico, o plano
@@ -178,6 +179,10 @@ Cada item tem o procedimento previsto, o dente e a situação (planejado, em and
 cancelado), e aponta para o procedimento que o executou. A conclusão do plano é o **tratamento concluído**, base de
 indicador da APS.
 
+**Implementado na SB3b ([ADR-0137](../adr/0137-saude-bucal-plano-de-tratamento.md)):** um plano aberto por paciente;
+o item fica concluído só pelo procedimento realizado que corresponde a ele (mesmo item do catálogo, dente e faces);
+o encaminhado e o cancelado não impedem a conclusão, que pede ao menos um item concluído; o abandono pede motivo.
+
 ## 9. Encaminhamento e CEO
 
 Não há fluxo odontológico próprio. O encaminhamento usa a **Regulação** (ADRs 0087 a 0089):
@@ -268,7 +273,7 @@ saude-bucal/
 |---|---|---|
 | **SB1** · base ✅ ([ADR-0134](../adr/0134-saude-bucal-base.md)) | especialidade no atendimento e na Agenda; avaliação odontológica | Atendimento, Equipe eSB |
 | **SB2** · odontograma ✅ ([ADR-0135](../adr/0135-saude-bucal-odontograma.md)) | catálogo de condições, registros com histórico, projeção por data, tela do odontograma | SB1 |
-| **SB3** · tratamento (SB3a ✅ [ADR-0136](../adr/0136-saude-bucal-procedimento-odontologico.md); SB3b a fazer) | catálogo geral de procedimentos, complemento odontológico, plano de tratamento, evolução | SB2 |
+| **SB3** · tratamento ✅ (SB3a [ADR-0136](../adr/0136-saude-bucal-procedimento-odontologico.md); SB3b [ADR-0137](../adr/0137-saude-bucal-plano-de-tratamento.md)) | catálogo geral de procedimentos, complemento odontológico, plano de tratamento, evolução | SB2 |
 | **SB4** · regulação e prótese | especialidades no catálogo da Regulação, CEO como executante, tratamento protético | SB3, Regulação |
 | **SB5** · saúde bucal coletiva | detalhe odontológico das ações coletivas | Programas P4, Território |
 

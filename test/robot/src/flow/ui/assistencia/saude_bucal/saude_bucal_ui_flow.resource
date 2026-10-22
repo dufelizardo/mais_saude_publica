@@ -3,6 +3,7 @@ Library     String
 Resource    ../../../../pom/common/mais_saude_publica_ui_common.resource
 Resource    ../../../saude_bucal/odontograma_flow.resource
 Resource    ../../../saude_bucal/procedimento_odontologico_flow.resource
+Resource    ../../../saude_bucal/plano_tratamento_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A base é criada pela API; a ação sob teste é feita pela tela.
@@ -102,5 +103,39 @@ UI Saude Bucal - Catalogo De Procedimentos
     Wait For Elements State    css=[aria-label="Catálogo de procedimentos"] li:has-text("Procedimento UI ${sufixo}") >> text=grava Ausente    visible
     Clicar Botao    Desativar: Procedimento UI ${sufixo}
     Wait For Elements State    css=[aria-label="Catálogo de procedimentos"] li:has-text("Procedimento UI ${sufixo}") >> text=Inativo    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Saude Bucal - Plano De Tratamento
+    [Documentation]    No atendimento de odontologia com a avaliação: abrir o plano, incluir a restauração do 36 e o flúor, executar a restauração pela gaveta, cancelar o flúor e concluir o tratamento (ADR-0137).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${atendimento}    ${paciente}    ${matricula}=    Seed Atendimento Odontologico
+    ${avaliacao}=    Payload Da Avaliacao    ${atendimento}    ${matricula}
+    POST Avaliacao Odontologica    ${avaliacao}
+    Ir Para Rota Do Frontend    /assistencia/atendimentos?aba=pront&pacienteId=${paciente}
+    Click    css=.pront-tl >> role=button[name="Abrir"] >> nth=0
+    Wait For Elements State    css=[aria-label="Plano de tratamento"] >> text=Sem plano de tratamento aberto.    visible
+    Fill Text    id=f-plano-matricula    ${matricula}
+    Clicar Botao    Abrir plano de tratamento
+    Wait For Elements State    css=[aria-label="Plano aberto"]    visible
+    Select Options By    id=f-plano-item    label    Restauração em resina composta
+    Fill Text    id=f-plano-dente    36
+    Click    css=[aria-label="Novo item do plano"] label:has-text("Oclusal")
+    Clicar Botao    Incluir item
+    Wait For Elements State    css=[aria-label="Itens do plano"] >> text=Dente 36 · Oclusal    visible
+    Select Options By    id=f-plano-item    label    Aplicação tópica de flúor (individual)
+    Clicar Botao    Incluir item
+    Wait For Elements State    css=[aria-label="Itens do plano"] >> text=2. Aplicação tópica de flúor (individual)    visible
+    Clicar Botao    Executar: Restauração em resina composta
+    Wait For Elements State    css=app-drawer [aria-label="Item do plano executado"]    visible
+    Fill Text    id=f-profissionalMatricula    ${matricula}
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Itens do plano"] li:has-text("Restauração em resina composta") >> text=Concluído    visible
+    Clicar Botao    Cancelar: Aplicação tópica de flúor (individual)
+    Fill Text    css=[aria-label="Confirmar ação do plano"] input    Recusou
+    Clicar Botao    Confirmar
+    Wait For Elements State    css=[aria-label="Itens do plano"] li:has-text("flúor") >> text=Cancelado    visible
+    Clicar Botao    Concluir tratamento
+    Wait For Elements State    css=[aria-label="Plano de tratamento"] >> text=Planos anteriores (1)    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

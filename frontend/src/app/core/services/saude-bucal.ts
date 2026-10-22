@@ -7,7 +7,11 @@ import {
   AvaliacaoOdontologicaRequestDto,
   EspecialidadeDto,
   EspecialidadeRequestDto,
+  ItemPlanoTratamentoRequestDto,
   MarcacaoOdontogramaDto,
+  PlanoTratamentoDto,
+  PlanoTratamentoRequestDto,
+  SituacaoItemPlanoTratamento,
   OdontogramaDto,
   RegistroOdontogramaDto,
 } from '../models/saude-bucal';
@@ -63,5 +67,31 @@ export class SaudeBucalService {
 
   historicoDoDente(pacienteId: string, dente: number): Observable<RegistroOdontogramaDto[]> {
     return this.http.get<RegistroOdontogramaDto[]>(`${this.api}/paciente/${pacienteId}/odontograma/dente/${dente}`);
+  }
+
+  // ── Plano de tratamento (ADR-0137) ─────────────────────────────────────────────────────────────
+
+  planos(pacienteId: string): Observable<PlanoTratamentoDto[]> {
+    return this.http.get<PlanoTratamentoDto[]>(`${this.api}/paciente/${pacienteId}/planos-tratamento`);
+  }
+
+  abrirPlano(dto: PlanoTratamentoRequestDto): Observable<PlanoTratamentoDto> {
+    return this.http.post<PlanoTratamentoDto>(`${this.api}/plano-tratamento`, dto);
+  }
+
+  incluirItemPlano(planoId: string, dto: ItemPlanoTratamentoRequestDto): Observable<PlanoTratamentoDto> {
+    return this.http.post<PlanoTratamentoDto>(`${this.api}/plano-tratamento/${planoId}/item`, dto);
+  }
+
+  situacaoItemPlano(itemId: string, situacao: SituacaoItemPlanoTratamento, motivo?: string | null): Observable<PlanoTratamentoDto> {
+    return this.http.post<PlanoTratamentoDto>(`${this.api}/item-plano-tratamento/${itemId}/situacao`, { situacao, motivo: motivo ?? null });
+  }
+
+  concluirPlano(planoId: string): Observable<PlanoTratamentoDto> {
+    return this.http.post<PlanoTratamentoDto>(`${this.api}/plano-tratamento/${planoId}/conclusao`, null);
+  }
+
+  abandonarPlano(planoId: string, motivo: string): Observable<PlanoTratamentoDto> {
+    return this.http.post<PlanoTratamentoDto>(`${this.api}/plano-tratamento/${planoId}/abandono`, { motivo });
   }
 }

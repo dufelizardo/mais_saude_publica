@@ -44,7 +44,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Saúde Bucal com login e autorização ligados (ADR-0134): a avaliação odontológica é do cirurgião-dentista; o técnico em
  * saúde bucal e o enfermeiro não a registram; o catálogo de especialidades é lido por qualquer logado e mantido por
  * quem cuida da organização. O técnico registra os procedimentos que a Lei 11.889/2008 permite (flúor, selante), mas não
- * os que exigem o dentista (exodontia), nem mantém o catálogo de procedimentos (ADR-0136).
+ * os que exigem o dentista (exodontia), nem mantém o catálogo de procedimentos (ADR-0136). O plano de tratamento é
+ * do dentista; o técnico executa o item pelo procedimento (ADR-0137).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -104,6 +105,10 @@ class SaudeBucalAutorizacaoControllerTest {
     void limpar() {
         String atendimentos = "(select uuid from tb_atendimento where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%'))";
         String procedimentos = "(select uuid from tb_procedimento where atendimento_id in " + atendimentos + ")";
+        String planos = "(select uuid from tb_plano_tratamento where atendimento_id in " + atendimentos + ")";
+        jdbc.update("delete from tb_item_plano_tratamento_face where item_id in (select uuid from tb_item_plano_tratamento where plano_id in " + planos + ")");
+        jdbc.update("delete from tb_item_plano_tratamento where plano_id in " + planos);
+        jdbc.update("delete from tb_plano_tratamento where atendimento_id in " + atendimentos);
         jdbc.update("delete from tb_registro_odontograma where avaliacao_id in (select uuid from tb_avaliacao_odontologica where atendimento_id in "
                 + atendimentos + ")");
         jdbc.update("delete from tb_registro_odontograma where procedimento_id in " + procedimentos);
@@ -183,6 +188,26 @@ class SaudeBucalAutorizacaoControllerTest {
         mockMvc.perform(como(TSB, get("/api/v1/procedimentos-catalogo"))).andExpect(status().isOk());
         mockMvc.perform(como(DENTISTA, post("/api/v1/procedimento-catalogo")).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"codigo\": \"TSTSBAUT\", \"nome\": \"Teste\"}")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void planoDeTratamentoDoDentistaExecutadoPeloTecnico() throws Exception {
+        String fluor = jdbc.queryForObject("select cast(uuid as varchar) from tb_procedimento_catalogo where codigo = 'APLICACAO_FLUOR'", String.class);
+        String plano = ("{\"atendimentoId\": \"%s\", \"profissionalMatricula\": \"SBAUT-DENTISTA\", \"prioridade\": \"ELETIVA\", "
+                + "\"itens\": [{\"procedimentoCatalogoId\": \"%s\"}]}").formatted(atendimento.getUuid(), fluor);
+        mockMvc.perform(como(TSB, post("/api/v1/plano-tratamento")).contentType(MediaType.APPLICATION_JSON).content(plano))
+                .andExpect(status().isForbidden());
+        String r = mockMvc.perform(como(DENTISTA, post("/api/v1/plano-tratamento")).contentType(MediaType.APPLICATION_JSON).content(plano))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String item = com.jayway.jsonpath.JsonPath.read(r, "$.itens[0].uuid");
+        mockMvc.perform(como(TSB, post("/api/v1/item-plano-tratamento/" + item + "/situacao")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"situacao\": \"EM_ANDAMENTO\"}")).andExpect(status().isForbidden());
+        mockMvc.perform(como(TSB, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("APLICACAO_FLUOR", ", \"itemPlanoId\": \"" + item + "\""))).andExpect(status().isCreated());
+        String planos = mockMvc.perform(como(DENTISTA, get("/api/v1/paciente/" + atendimento.getPaciente().getUuid() + "/planos-tratamento")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        org.assertj.core.api.Assertions.assertThat((java.util.List<String>) com.jayway.jsonpath.JsonPath.read(planos, "$[0].itens[*].situacao"))
+                .containsExactly("CONCLUIDO");
     }
 
     @Test

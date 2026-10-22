@@ -51,6 +51,8 @@ export interface ProcedimentoRequestDto {
   /** Complemento odontológico, quando o item pede. */
   dente?: number | null;
   faces?: FaceDente[];
+  /** O item do plano de tratamento que o procedimento executa (ADR-0137). */
+  itemPlanoId?: string | null;
   descricao?: string;
   dataRealizacao: string;
   status: StatusProcedimento;
