@@ -20,4 +20,8 @@ public interface AcompanhamentoProgramaticoRepository extends JpaRepository<Acom
     List<AcompanhamentoProgramatico> findVigentes();
 
     boolean existsByPaciente_UuidAndPrograma_UuidAndFimIsNull(UUID pacienteId, UUID programaId);
+
+    /** Todos os acompanhamentos do programa, também os encerrados, para apurar numa data passada (ADR-0141). */
+    @Query("select a from AcompanhamentoProgramatico a join fetch a.paciente join fetch a.unidade where a.programa.uuid = ?1")
+    List<AcompanhamentoProgramatico> findTodosDoPrograma(UUID programaId);
 }
