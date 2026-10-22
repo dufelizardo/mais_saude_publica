@@ -6,8 +6,8 @@ Aceita. **Desenho**; cada fatia tem ADR própria. Implementadas: SB1 (base) na [
 SB2 (odontograma) na [ADR-0135](./0135-saude-bucal-odontograma.md), SB3 (procedimento odontológico e plano de
 tratamento) nas ADRs [0136](./0136-saude-bucal-procedimento-odontologico.md) e
 [0137](./0137-saude-bucal-plano-de-tratamento.md) e SB4 (encaminhamento pela Regulação e prótese) nas ADRs
-[0138](./0138-saude-bucal-encaminhamento-pela-regulacao.md) e [0139](./0139-saude-bucal-tratamento-protetico.md); a SB5
-vem depois. O detalhe está em [`saude-bucal/MODELO-SAUDE-BUCAL.md`](../saude-bucal/MODELO-SAUDE-BUCAL.md).
+[0138](./0138-saude-bucal-encaminhamento-pela-regulacao.md) e [0139](./0139-saude-bucal-tratamento-protetico.md) e SB5
+(saúde bucal coletiva) na [ADR-0140](./0140-saude-bucal-coletiva.md): o domínio está completo. O detalhe está em [`saude-bucal/MODELO-SAUDE-BUCAL.md`](../saude-bucal/MODELO-SAUDE-BUCAL.md).
 
 ## Contexto
 

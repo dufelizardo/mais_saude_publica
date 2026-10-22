@@ -1,12 +1,13 @@
 # Modelo do domínio Saúde Bucal
 
-**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1 a SB3 implementadas) · 2026-10-22 (SB4 implementada)
+**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1 a SB3 implementadas) · 2026-10-22 (SB4 e SB5 implementadas)
 **Status:** desenho aprovado na [ADR-0111](../adr/0111-saude-bucal.md). **A SB1 (especialidade e avaliação
 odontológica), a SB2 (odontograma) e a SB3 (catálogo de procedimentos, procedimento odontológico e plano de
 tratamento) estão implementadas** nas ADRs [0134](../adr/0134-saude-bucal-base.md),
 [0135](../adr/0135-saude-bucal-odontograma.md), [0136](../adr/0136-saude-bucal-procedimento-odontologico.md) e
 [0137](../adr/0137-saude-bucal-plano-de-tratamento.md); a SB4 (encaminhamento pela Regulação e prótese) nas
-[0138](../adr/0138-saude-bucal-encaminhamento-pela-regulacao.md) e [0139](../adr/0139-saude-bucal-tratamento-protetico.md); a SB5 vem depois (seção 14).
+[0138](../adr/0138-saude-bucal-encaminhamento-pela-regulacao.md) e [0139](../adr/0139-saude-bucal-tratamento-protetico.md); e a SB5 (saúde bucal
+coletiva) na [0140](../adr/0140-saude-bucal-coletiva.md). **O domínio está completo** (seção 14).
 
 Saúde Bucal é um **domínio assistencial especializado**, e não um sistema odontológico isolado. Este documento
 mostra o que ele traz de próprio, o que reaproveita dos domínios que já existem, o odontograma com histórico, o plano
@@ -238,6 +239,10 @@ Equipe eSB → Ação coletiva → Território / instituição → população a
 
 Programas não ficam dentro de Saúde Bucal.
 
+**Implementado na SB5 ([ADR-0140](../adr/0140-saude-bucal-coletiva.md)):** o detalhe vale para a ação coletiva dos
+programas Saúde Bucal e Saúde na Escola (PSE, que entrou no catálogo); a avaliação de risco por participante pede a
+lista nominal e é do dentista; quem precisa de tratamento e não tem plano aberto vai para a lista a convocar.
+
 ## 12. Quem faz o quê
 
 | Função | Pode | Base |
@@ -283,7 +288,7 @@ saude-bucal/
 | **SB2** · odontograma ✅ ([ADR-0135](../adr/0135-saude-bucal-odontograma.md)) | catálogo de condições, registros com histórico, projeção por data, tela do odontograma | SB1 |
 | **SB3** · tratamento ✅ (SB3a [ADR-0136](../adr/0136-saude-bucal-procedimento-odontologico.md); SB3b [ADR-0137](../adr/0137-saude-bucal-plano-de-tratamento.md)) | catálogo geral de procedimentos, complemento odontológico, plano de tratamento, evolução | SB2 |
 | **SB4** · regulação e prótese ✅ (SB4a [ADR-0138](../adr/0138-saude-bucal-encaminhamento-pela-regulacao.md); SB4b [ADR-0139](../adr/0139-saude-bucal-tratamento-protetico.md)) | especialidades no catálogo da Regulação, CEO como executante, tratamento protético | SB3, Regulação |
-| **SB5** · saúde bucal coletiva | detalhe odontológico das ações coletivas | Programas P4, Território |
+| **SB5** · saúde bucal coletiva ✅ ([ADR-0140](../adr/0140-saude-bucal-coletiva.md)) | detalhe odontológico das ações coletivas | Programas P4, Território |
 
 ## 15. Dependências
 

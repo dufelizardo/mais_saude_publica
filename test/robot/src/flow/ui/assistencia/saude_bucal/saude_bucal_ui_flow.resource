@@ -6,6 +6,8 @@ Resource    ../../../saude_bucal/procedimento_odontologico_flow.resource
 Resource    ../../../saude_bucal/plano_tratamento_flow.resource
 Resource    ../../../saude_bucal/regulacao_odontologica_flow.resource
 Resource    ../../../saude_bucal/tratamento_protetico_flow.resource
+Resource    ../../../saude_bucal/saude_bucal_coletiva_flow.resource
+Resource    ../../../../pom/ui/assistencia/programas/programas_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A base é criada pela API; a ação sob teste é feita pela tela.
@@ -191,5 +193,27 @@ UI Saude Bucal - Protese Da Abertura A Conclusao
     Wait For Elements State    css=[aria-label="Prótese: Prótese unitária (coroa)"] >> text=entregue em    visible
     Clicar Botao    Concluir prótese
     Wait For Elements State    css=[aria-label="Prótese: Prótese unitária (coroa)"] .tag >> text=Concluído    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Saude Bucal - Escovacao Na Escola
+    [Documentation]    Na aba Ações programáticas: preencher a saúde bucal da ação do PSE (escovação e flúor na escola) (ADR-0140).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [UPPER]
+    ${local}=    Set Variable    Escola UI ${sufixo}
+    ${acao}    ${paciente}    ${unidade}    ${nome}=    Seed Acao Bucal Coletiva    SAUDE_NA_ESCOLA    ${True}    ${local}
+    ${lista}=    GET Programas
+    ${ids}=    Evaluate    [p["uuid"] for p in $lista.json() if p["codigo"] == "SAUDE_NA_ESCOLA"]
+    UI Programas - Abrir
+    Clicar Aba    Ações programáticas
+    Select Options By    css=[aria-label="Programa das ações"]    value    ${ids}[0]
+    Click    css=[aria-label="Ações programáticas"] tr:has-text("${local}") button:has-text("Saúde bucal")
+    Wait For Elements State    css=app-drawer >> text=Escovação supervisionada    visible
+    Click    css=app-drawer label:has-text("Escovação supervisionada")
+    Click    css=app-drawer label:has-text("Aplicação tópica de flúor")
+    Fill Text    id=f-sb-instituicao    Escola Municipal Rui Barbosa
+    Fill Text    id=f-sb-kits    30
+    Clicar Botao    Salvar saúde bucal
+    Wait For Elements State    css=app-drawer >> text=Saúde bucal da ação salva.    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

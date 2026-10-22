@@ -220,7 +220,7 @@ Editável pelo município. Inclui os programas do protótipo e os nacionais comu
 
 | Categoria | Programas |
 |---|---|
-| Atenção Básica | Saúde da Família, Saúde Bucal, Imunização, Planejamento Reprodutivo |
+| Atenção Básica | Saúde da Família, Saúde Bucal, Imunização, Planejamento Reprodutivo, Saúde na Escola (PSE, ADR-0140) |
 | Crônicos | HiperDia (hipertensão e diabetes), Tuberculose, Hanseníase, Tabagismo |
 | Ciclos de vida | Pré-natal, Saúde da Mulher, Saúde da Criança, Saúde do Idoso |
 | Saúde Mental | Saúde Mental (CAPS e acolhimento); o acompanhamento é aberto pelo domínio Saúde Mental, que guarda o detalhe clínico ([ADR-0112](../adr/0112-saude-mental.md)) |

@@ -267,3 +267,56 @@ export interface EtapaProteticaRequestDto {
   laboratorioUnidadeId?: string | null;
   laboratorioExterno?: string | null;
 }
+
+// ── Saúde bucal coletiva (ADR-0140) ───────────────────────────────────────────────────────────────
+
+export type AtividadeSaudeBucalColetiva = 'ESCOVACAO_SUPERVISIONADA' | 'APLICACAO_TOPICA_FLUOR' | 'EDUCACAO_EM_SAUDE' | 'AVALIACAO_COLETIVA' | 'LEVANTAMENTO_EPIDEMIOLOGICO';
+export type LocalSaudeBucalColetiva = 'ESCOLA' | 'CRECHE' | 'UBS' | 'COMUNIDADE' | 'EMPRESA' | 'INSTITUICAO_LONGA_PERMANENCIA' | 'OUTRO';
+
+export const ATIVIDADES_SAUDE_BUCAL: Record<AtividadeSaudeBucalColetiva, string> = {
+  ESCOVACAO_SUPERVISIONADA: 'Escovação supervisionada',
+  APLICACAO_TOPICA_FLUOR: 'Aplicação tópica de flúor',
+  EDUCACAO_EM_SAUDE: 'Educação em saúde bucal',
+  AVALIACAO_COLETIVA: 'Avaliação coletiva de risco',
+  LEVANTAMENTO_EPIDEMIOLOGICO: 'Levantamento epidemiológico',
+};
+
+export const LOCAIS_SAUDE_BUCAL: Record<LocalSaudeBucalColetiva, string> = {
+  ESCOLA: 'Escola', CRECHE: 'Creche', UBS: 'UBS', COMUNIDADE: 'Comunidade', EMPRESA: 'Empresa',
+  INSTITUICAO_LONGA_PERMANENCIA: 'Instituição de longa permanência', OUTRO: 'Outro',
+};
+
+/** Os programas em que a ação coletiva ganha o detalhe de saúde bucal. */
+export const PROGRAMAS_SAUDE_BUCAL = ['SAUDE_BUCAL', 'SAUDE_NA_ESCOLA'];
+
+export interface AcaoSaudeBucalDto {
+  acaoId: string;
+  preenchido: boolean;
+  atividades: AtividadeSaudeBucalColetiva[];
+  localTipo?: LocalSaudeBucalColetiva | null;
+  instituicao?: string | null;
+  publicoAlvo?: string | null;
+  kitsDistribuidos?: number | null;
+  atualizadoEm?: string | null;
+  avaliacoes: { pacienteId: string; pacienteNome: string; risco: RiscoSaudeBucal; necessidadeTratamento: NecessidadeTratamentoOdontologico; observacao?: string | null; registradoEm: string }[];
+}
+
+export interface AcaoSaudeBucalRequestDto {
+  atividades: AtividadeSaudeBucalColetiva[];
+  localTipo: LocalSaudeBucalColetiva;
+  instituicao?: string | null;
+  publicoAlvo?: string | null;
+  kitsDistribuidos?: number | null;
+}
+
+export interface ConvocacaoSaudeBucalDto {
+  pacienteId: string;
+  pacienteNome: string;
+  risco: RiscoSaudeBucal;
+  necessidadeTratamento: NecessidadeTratamentoOdontologico;
+  acaoId: string;
+  programaNome: string;
+  local?: string | null;
+  realizadaEm?: string | null;
+  avaliadoEm: string;
+}
