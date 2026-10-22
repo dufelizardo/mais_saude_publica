@@ -17,7 +17,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | ADR | Título | Status |
 |---|---|---|
 | [0001](./0001-restaurar-e-refatorar-em-vez-de-reescrever.md) | Restaurar e refatorar o código apagado, em vez de reescrever do zero | Aceita |
-| [0002](./0002-modelar-hierarquia-como-entidade-unica-autorreferenciada.md) | Modelar a hierarquia de 4 níveis como entidade única autorreferenciada | Aceita |
+| [0002](./0002-modelar-hierarquia-como-entidade-unica-autorreferenciada.md) | Modelar a hierarquia de 4 níveis como entidade única autorreferenciada | Aceita e implementada |
 | [0003](./0003-adocao-clean-architecture.md) | Adoção de Clean Architecture | Proposto |
 | [0004](./0004-adocao-padroes-projeto.md) | Adoção de padrões de projeto (Factory, Builder, Strategy, Repository) | Proposto |
 | [0005](./0005-separacao-dominio-jpa.md) | Separação entre entidades de domínio e entidades JPA | Proposto |
@@ -25,53 +25,53 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0007](./0007-deploy-docker.md) | Estratégia de deploy com Docker e CI/CD | Proposto |
 | [0008](./0008-frontend-angular.md) | Escolha de front-end: Angular + TypeScript | Aceita (parcialmente implementada; testes substituídos pela 0077) |
 | [0009](./0009-renomear-hierarquia-para-esferas-de-gestao-do-sus.md) | Renomear a hierarquia genérica (Zero/Um/Dois/Três) para as esferas de gestão do SUS (Federal/Estadual/Municipal/Regional) + criar o nível Unidade de Saúde | Aceita (parcialmente implementada) |
-| [0010](./0010-fluxo-de-branches-e-pipeline-de-promocao.md) | Fluxo de branches (developer → qaa → homologacao → main) com pipeline de gate no GitHub Actions + troca de MySQL para PostgreSQL | Aceita |
+| [0010](./0010-fluxo-de-branches-e-pipeline-de-promocao.md) | Fluxo de branches (developer → qaa → homologacao → main) com pipeline de gate no GitHub Actions + troca de MySQL para PostgreSQL | Aceita e implementada |
 | [0011](./0011-fase-2-melhorias-de-pipeline-e-branching.md) | Backlog de melhorias de branching/pipeline (Fase 2): PAT dedicado, feature/fix/hotfix, aprovações obrigatórias, testes de performance | Proposta |
-| [0012](./0012-infraestrutura-local-k3s-homelab.md) | Infraestrutura local (home-lab K3s + ArgoCD) para os 4 ambientes, resolvendo a pendência de URL persistente em QA/Homologação | Proposta |
-| [0013](./0013-implementar-5-nivel-unidade-de-saude-e-supervisao-regional.md) | Implementar o 5º nível (Unidade de Saúde) e o vínculo de supervisão regional | Aceita |
-| [0014](./0014-modulo-profissional-rh-com-vinculo-fraco-por-reconciliacao.md) | Módulo Profissional/RH com vínculo fraco resolvido por reconciliação | Aceita |
-| [0015](./0015-pinar-imagens-por-sha-para-sincronizacao-automatica-do-argocd.md) | Pinar imagens por SHA para sincronização automática do ArgoCD (sem SSH/restart manual) | Aceita |
-| [0016](./0016-deploy-do-frontend-angular-no-ambiente-dev.md) | Deploy do front-end Angular no ambiente dev, em host separado | Aceita (escopo: dev) |
-| [0017](./0017-numero-de-matricula-automatico-e-cpf-nao-unico.md) | Número de matrícula automático e CPF deixa de ser único em Profissional | Aceita |
-| [0018](./0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) | App shell de navegação e decisões de frontend da fatia 1 do módulo de RH | Aceita |
-| [0019](./0019-vincular-cargo-e-lotacao-no-cadastro-de-profissional.md) | Vincular cargo e lotação (e portanto salário) no cadastro de profissional | Aceita |
-| [0020](./0020-tela-central-do-profissional.md) | Tela central do Profissional (fatia 2) | Aceita |
-| [0021](./0021-fluxo-de-transferencia-na-aba-lotacao.md) | Fluxo de transferência de lotação embutido no perfil, sem tela própria (fatia 3) | Aceita |
-| [0022](./0022-composicao-remuneratoria-endpoint-calculado.md) | Endpoint calculado de composição remuneratória (fatia 4) | Aceita |
-| [0023](./0023-afastamentos-e-licencas-no-perfil.md) | Afastamentos e Licenças no perfil (fatia 5) | Aceita |
-| [0024](./0024-ponto-com-filtro-de-periodo.md) | Ponto com filtro de período (fatia 6a) | Aceita |
-| [0025](./0025-folha-de-pagamento-por-competencia.md) | Folha de pagamento por competência (fatia 6b, fecha a fatia 6) | Aceita |
-| [0026](./0026-historico-funcional-consolidado.md) | Histórico funcional consolidado (fatia 7) | Aceita |
-| [0027](./0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md) | Fatia 8: Treinamento, Avaliação, SST, Recrutamento | Aceita |
-| [0028](./0028-fatia-9-beneficios.md) | Fatia 9: Benefícios (+ endpoint `encerrar` de AdesaoBeneficio) | Aceita |
-| [0029](./0029-listagem-e-edicao-de-contato-do-profissional.md) | Listagem de profissionais e edição de contato | Aceita |
-| [0030](./0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) | Setor Administrativo e relação com Unidade de Saúde | Aceita |
-| [0031](./0031-perfil-administrativo-por-tipo-de-unidade.md) | Perfil Administrativo por tipo de unidade | Aceita |
-| [0032](./0032-catalogo-de-capacidades-administrativas.md) | Catálogo de capacidades administrativas | Aceita |
-| [0033](./0033-processos-administrativos-por-capacidade.md) | Processos administrativos por capacidade | Aceita |
-| [0034](./0034-integracao-administrativo-rh-sem-duplicar-profissional.md) | Integração Administrativo ↔ RH sem duplicar Profissional | Aceita |
-| [0035](./0035-responsabilidade-administrativa-separada-da-lotacao.md) | Responsabilidade administrativa separada da lotação | Aceita |
-| [0036](./0036-necessidade-de-pessoal-encaminhada-ao-rh.md) | Necessidade de pessoal encaminhada ao RH | Aceita |
+| [0012](./0012-infraestrutura-local-k3s-homelab.md) | Infraestrutura local (home-lab K3s + ArgoCD) para os 4 ambientes, resolvendo a pendência de URL persistente em QA/Homologação | Aceita e implementada (2026-09-10) |
+| [0013](./0013-implementar-5-nivel-unidade-de-saude-e-supervisao-regional.md) | Implementar o 5º nível (Unidade de Saúde) e o vínculo de supervisão regional | Aceita e implementada |
+| [0014](./0014-modulo-profissional-rh-com-vinculo-fraco-por-reconciliacao.md) | Módulo Profissional/RH com vínculo fraco resolvido por reconciliação | Aceita e implementada |
+| [0015](./0015-pinar-imagens-por-sha-para-sincronizacao-automatica-do-argocd.md) | Pinar imagens por SHA para sincronização automática do ArgoCD (sem SSH/restart manual) | Aceita e implementada |
+| [0016](./0016-deploy-do-frontend-angular-no-ambiente-dev.md) | Deploy do front-end Angular no ambiente dev, em host separado | Aceita e implementada (dev, qaa, homologacao e prod) |
+| [0017](./0017-numero-de-matricula-automatico-e-cpf-nao-unico.md) | Número de matrícula automático e CPF deixa de ser único em Profissional | Aceita e implementada |
+| [0018](./0018-app-shell-e-decisoes-de-frontend-do-modulo-rh.md) | App shell de navegação e decisões de frontend da fatia 1 do módulo de RH | Aceita e implementada |
+| [0019](./0019-vincular-cargo-e-lotacao-no-cadastro-de-profissional.md) | Vincular cargo e lotação (e portanto salário) no cadastro de profissional | Aceita e implementada |
+| [0020](./0020-tela-central-do-profissional.md) | Tela central do Profissional (fatia 2) | Aceita e implementada |
+| [0021](./0021-fluxo-de-transferencia-na-aba-lotacao.md) | Fluxo de transferência de lotação embutido no perfil, sem tela própria (fatia 3) | Aceita e implementada |
+| [0022](./0022-composicao-remuneratoria-endpoint-calculado.md) | Endpoint calculado de composição remuneratória (fatia 4) | Aceita e implementada |
+| [0023](./0023-afastamentos-e-licencas-no-perfil.md) | Afastamentos e Licenças no perfil (fatia 5) | Aceita e implementada |
+| [0024](./0024-ponto-com-filtro-de-periodo.md) | Ponto com filtro de período (fatia 6a) | Aceita e implementada |
+| [0025](./0025-folha-de-pagamento-por-competencia.md) | Folha de pagamento por competência (fatia 6b, fecha a fatia 6) | Aceita e implementada |
+| [0026](./0026-historico-funcional-consolidado.md) | Histórico funcional consolidado (fatia 7) | Aceita e implementada |
+| [0027](./0027-fatia-8-treinamento-avaliacao-sst-recrutamento.md) | Fatia 8: Treinamento, Avaliação, SST, Recrutamento | Aceita e implementada |
+| [0028](./0028-fatia-9-beneficios.md) | Fatia 9: Benefícios (+ endpoint `encerrar` de AdesaoBeneficio) | Aceita e implementada |
+| [0029](./0029-listagem-e-edicao-de-contato-do-profissional.md) | Listagem de profissionais e edição de contato | Aceita e implementada |
+| [0030](./0030-setor-administrativo-e-relacao-com-unidade-de-saude.md) | Setor Administrativo e relação com Unidade de Saúde | Aceita e implementada |
+| [0031](./0031-perfil-administrativo-por-tipo-de-unidade.md) | Perfil Administrativo por tipo de unidade | Aceita e implementada |
+| [0032](./0032-catalogo-de-capacidades-administrativas.md) | Catálogo de capacidades administrativas | Aceita e implementada |
+| [0033](./0033-processos-administrativos-por-capacidade.md) | Processos administrativos por capacidade | Aceita e implementada |
+| [0034](./0034-integracao-administrativo-rh-sem-duplicar-profissional.md) | Integração Administrativo ↔ RH sem duplicar Profissional | Aceita e implementada |
+| [0035](./0035-responsabilidade-administrativa-separada-da-lotacao.md) | Responsabilidade administrativa separada da lotação | Aceita e implementada |
+| [0036](./0036-necessidade-de-pessoal-encaminhada-ao-rh.md) | Necessidade de pessoal encaminhada ao RH | Aceita e implementada |
 | [0037](./0037-criterio-para-especializacao-administrativa.md) | Critério para especialização administrativa | Proposta |
-| [0038](./0038-app-shell-dinamico-e-telas-de-frontend-do-setor-administrativo.md) | App shell dinâmico e decisões de frontend do Setor Administrativo | Aceita |
+| [0038](./0038-app-shell-dinamico-e-telas-de-frontend-do-setor-administrativo.md) | App shell dinâmico e decisões de frontend do Setor Administrativo | Aceita e implementada |
 | [0039](./0039-mapa-de-dominios-e-prioridades-de-arquitetura.md) | Mapa de domínios do Mais Saúde Pública e prioridades de arquitetura | Aceita |
-| [0040](./0040-paciente-primeira-entidade-da-assistencia.md) | Paciente: primeira entidade da onda Assistência | Aceita |
-| [0041](./0041-atendimento-registra-entrada-do-paciente-na-rede.md) | Atendimento registra a entrada do paciente na rede | Aceita |
-| [0042](./0042-agendamento-independente-do-atendimento.md) | Agendamento, independente do Atendimento | Aceita |
-| [0043](./0043-consulta-registrada-durante-o-atendimento.md) | Consulta registrada durante o Atendimento | Aceita |
+| [0040](./0040-paciente-primeira-entidade-da-assistencia.md) | Paciente: primeira entidade da onda Assistência | Aceita e implementada |
+| [0041](./0041-atendimento-registra-entrada-do-paciente-na-rede.md) | Atendimento registra a entrada do paciente na rede | Aceita e implementada |
+| [0042](./0042-agendamento-independente-do-atendimento.md) | Agendamento, independente do Atendimento | Aceita e implementada |
+| [0043](./0043-consulta-registrada-durante-o-atendimento.md) | Consulta registrada durante o Atendimento | Aceita e implementada |
 | [0044](./0044-procedimento-realizado-durante-a-consulta.md) | Procedimento realizado durante a Consulta | Aceita (estendida pela ADR-0136: também direto no atendimento) |
-| [0045](./0045-prontuario-agregacao-de-leitura.md) | Prontuário como agregação de leitura no backend | Aceita |
-| [0046](./0046-telas-de-frontend-da-onda-assistencia.md) | Telas de frontend da onda Assistência | Aceita |
-| [0047](./0047-triagem-primeira-entidade-da-enfermagem.md) | Triagem: primeira entidade do domínio Enfermagem | Aceita |
-| [0048](./0048-evolucao-de-enfermagem-segunda-entidade-da-enfermagem.md) | Evolução de Enfermagem: segunda entidade do domínio Enfermagem | Aceita |
-| [0049](./0049-medicamento-primeira-entidade-da-farmacia.md) | Medicamento: primeira entidade do domínio Farmácia | Aceita |
-| [0050](./0050-lote-segunda-entidade-da-farmacia.md) | Lote: segunda entidade do domínio Farmácia | Aceita |
-| [0051](./0051-dispensacao-terceira-entidade-da-farmacia.md) | Dispensação: terceira entidade do domínio Farmácia | Aceita |
-| [0052](./0052-tela-de-pacientes-lista-mais-painel-de-detalhe.md) | Tela de Pacientes: lista + painel de detalhe, com estados "Em breve" | Aceita |
+| [0045](./0045-prontuario-agregacao-de-leitura.md) | Prontuário como agregação de leitura no backend | Aceita e implementada |
+| [0046](./0046-telas-de-frontend-da-onda-assistencia.md) | Telas de frontend da onda Assistência | Aceita e implementada |
+| [0047](./0047-triagem-primeira-entidade-da-enfermagem.md) | Triagem: primeira entidade do domínio Enfermagem | Aceita e implementada |
+| [0048](./0048-evolucao-de-enfermagem-segunda-entidade-da-enfermagem.md) | Evolução de Enfermagem: segunda entidade do domínio Enfermagem | Aceita e implementada |
+| [0049](./0049-medicamento-primeira-entidade-da-farmacia.md) | Medicamento: primeira entidade do domínio Farmácia | Aceita e implementada |
+| [0050](./0050-lote-segunda-entidade-da-farmacia.md) | Lote: segunda entidade do domínio Farmácia | Aceita e implementada |
+| [0051](./0051-dispensacao-terceira-entidade-da-farmacia.md) | Dispensação: terceira entidade do domínio Farmácia | Aceita e implementada |
+| [0052](./0052-tela-de-pacientes-lista-mais-painel-de-detalhe.md) | Tela de Pacientes: lista + painel de detalhe, com estados "Em breve" | Aceita e implementada |
 | [0053](./0053-criterio-de-governanca-para-equipamentos-de-saude.md) | Critério de governança para equipamentos de saúde (evitar lista plana em `TipoUnidadeDeSaude`) | Aceita (complementada pela 0115) |
 | [0054](./0054-modelo-de-identidade-autorizacao-e-auditoria.md) | Modelo de Identidade, Autorização e Auditoria (substitui a ADR-0006) | Proposta |
 | [0055](./0055-primeira-implementacao-de-login-usuario-jwt-e-toggle-por-ambiente.md) | Primeira implementação de login: `Usuario`, JWT e toggle por ambiente | Aceita e implementada (backend + frontend) |
-| [0056](./0056-versao-da-release-vem-do-pom-e-release-automatica.md) | Versão da release vem do `pom.xml`, e a release no GitHub passa a ser automática | Aceita |
+| [0056](./0056-versao-da-release-vem-do-pom-e-release-automatica.md) | Versão da release vem do `pom.xml`, e a release no GitHub passa a ser automática | Aceita e implementada |
 | [0057](./0057-livro-de-movimentacao-do-estoque-da-farmacia.md) | Livro de movimentação do estoque da Farmácia (auditoria de lotes) | Aceita e implementada |
 | [0058](./0058-tela-da-farmacia-abas-gaveta-lateral-e-livro-de-estoque.md) | Tela da Farmácia: abas, gaveta lateral e livro de estoque | Aceita e implementada |
 | [0059](./0059-transferencia-de-estoque-entre-unidades.md) | Transferência de estoque da Farmácia entre unidades | Revista pela 0061 |
