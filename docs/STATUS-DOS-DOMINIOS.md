@@ -71,6 +71,12 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | SB5 | 25 Saúde Bucal | saúde bucal coletiva: detalhe odontológico das ações coletivas (Programas P4) |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
+| P5 | 22 Programas | linhas de cuidado |
+| P6 | 22 Programas | metas e indicadores programáticos (inclui o tratamento odontológico concluído) |
+| V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
+| E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
+| MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
+| MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 

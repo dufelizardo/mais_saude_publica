@@ -1,8 +1,11 @@
 # Modelo do domínio Saúde Mental
 
-**Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0112](../adr/0112-saude-mental.md). **Nada implementado ainda.** A
-implementação vem nas fatias SM1 a SM6 (seção 16), cada uma com ADR própria.
+**Data:** 2026-10-07 (criado) · 2026-10-19 e 2026-10-20 (SM1 a SM4 implementadas)
+**Status:** desenho aprovado na [ADR-0112](../adr/0112-saude-mental.md). **A SM1 (base), a SM2 (PTS e
+intervenções), a SM3 (risco e crise) e a SM4 (rede) estão implementadas** nas ADRs
+[0120](../adr/0120-saude-mental-base.md), [0121](../adr/0121-saude-mental-pts-intervencoes.md),
+[0123](../adr/0123-saude-mental-risco-crise.md) e [0122](../adr/0122-saude-mental-rede.md); SM5 e SM6 vêm depois
+(seção 16).
 
 O foco do domínio é a **atenção psicossocial**, e não um "prontuário de psicologia". O núcleo é
 **PTS + acompanhamento longitudinal + crise + rede**. É isso que diferencia Saúde Mental de criar uma especialidade
