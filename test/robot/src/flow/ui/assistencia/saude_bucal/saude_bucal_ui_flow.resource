@@ -5,6 +5,7 @@ Resource    ../../../saude_bucal/odontograma_flow.resource
 Resource    ../../../saude_bucal/procedimento_odontologico_flow.resource
 Resource    ../../../saude_bucal/plano_tratamento_flow.resource
 Resource    ../../../saude_bucal/regulacao_odontologica_flow.resource
+Resource    ../../../saude_bucal/tratamento_protetico_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A base é criada pela API; a ação sob teste é feita pela tela.
@@ -166,5 +167,29 @@ Item Do Plano Encaminhado
     ${planos}=    GET Planos Do Paciente    ${paciente}
     Should Be Equal    ${planos.json()}[0][itens][0][situacao]    ENCAMINHADO
     Should Be Equal    ${planos.json()}[0][itens][0][regulacaoProcedimentoNome]    Endodontia (CEO)
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Saude Bucal - Protese Da Abertura A Conclusao
+    [Documentation]    No atendimento de odontologia: abrir a coroa do 46, moldar, enviar ao laboratório contratado, entregar e concluir (ADR-0139).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${atendimento}    ${paciente}    ${matricula}=    Seed Atendimento Odontologico
+    Ir Para Rota Do Frontend    /assistencia/atendimentos?aba=pront&pacienteId=${paciente}
+    Click    css=.pront-tl >> role=button[name="Abrir"] >> nth=0
+    Wait For Elements State    css=[aria-label="Prótese"] >> text=Nenhuma prótese.    visible
+    Select Options By    id=f-protese-tipo    label    Prótese unitária (coroa)
+    Fill Text    id=f-protese-dente    46
+    Fill Text    id=f-protese-matricula    ${matricula}
+    Clicar Botao    Abrir tratamento protético
+    Wait For Elements State    css=[aria-label="Prótese: Prótese unitária (coroa)"]    visible
+    Clicar Botao    Registrar Moldagem: Prótese unitária (coroa)
+    Wait For Elements State    css=[aria-label="Etapas da prótese"] >> text=Moldagem    visible
+    Fill Text    css=[aria-label="Próxima etapa"] input[id^="f-protese-ext-"]    Laboratório Sorriso
+    Clicar Botao    Registrar Laboratório: Prótese unitária (coroa)
+    Wait For Elements State    css=[aria-label="Prótese: Prótese unitária (coroa)"] >> text=contratado: Laboratório Sorriso    visible
+    Clicar Botao    Registrar Entrega: Prótese unitária (coroa)
+    Wait For Elements State    css=[aria-label="Prótese: Prótese unitária (coroa)"] >> text=entregue em    visible
+    Clicar Botao    Concluir prótese
+    Wait For Elements State    css=[aria-label="Prótese: Prótese unitária (coroa)"] .tag >> text=Concluído    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

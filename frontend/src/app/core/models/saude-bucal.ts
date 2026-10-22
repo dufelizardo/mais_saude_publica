@@ -108,6 +108,8 @@ export interface RegistroOdontogramaDto {
   /** Origem procedimento (ADR-0136): qual procedimento mudou a condição. */
   procedimentoId?: string | null;
   procedimentoNome?: string | null;
+  /** Origem prótese entregue (ADR-0139). */
+  tratamentoProteticoId?: string | null;
 }
 
 export interface OdontogramaDto {
@@ -201,4 +203,67 @@ export interface PlanoTratamentoRequestDto {
   objetivo?: string | null;
   prioridade?: NecessidadeTratamentoOdontologico | null;
   itens?: ItemPlanoTratamentoRequestDto[];
+}
+
+// ── Tratamento protético (ADR-0139) ───────────────────────────────────────────────────────────────
+
+export type TipoProtese = 'TOTAL' | 'PARCIAL_REMOVIVEL' | 'UNITARIA';
+export type ArcadaDentaria = 'SUPERIOR' | 'INFERIOR';
+export type EtapaProtetica = 'PLANEJAMENTO' | 'MOLDAGEM' | 'PROVA' | 'LABORATORIO' | 'ENTREGA' | 'ACOMPANHAMENTO';
+export type SituacaoTratamentoProtetico = 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO';
+
+export const TIPOS_PROTESE: Record<TipoProtese, string> = { TOTAL: 'Prótese total', PARCIAL_REMOVIVEL: 'Prótese parcial removível', UNITARIA: 'Prótese unitária (coroa)' };
+export const ARCADAS: Record<ArcadaDentaria, string> = { SUPERIOR: 'Superior', INFERIOR: 'Inferior' };
+export const ETAPAS_PROTETICAS: Record<EtapaProtetica, string> = {
+  PLANEJAMENTO: 'Planejamento', MOLDAGEM: 'Moldagem', PROVA: 'Prova', LABORATORIO: 'Laboratório', ENTREGA: 'Entrega', ACOMPANHAMENTO: 'Acompanhamento',
+};
+export const SITUACOES_PROTESE: Record<SituacaoTratamentoProtetico, { rotulo: string; classe: string }> = {
+  EM_ANDAMENTO: { rotulo: 'Em andamento', classe: 'info' },
+  CONCLUIDO: { rotulo: 'Concluído', classe: 'ok' },
+  CANCELADO: { rotulo: 'Cancelado', classe: 'muted' },
+};
+
+export interface TratamentoProteticoDto {
+  uuid: string;
+  pacienteId: string;
+  atendimentoId: string;
+  planoId?: string | null;
+  unidadeNome: string;
+  profissionalMatricula: string;
+  profissionalNome: string;
+  tipo: TipoProtese;
+  arcada: ArcadaDentaria;
+  dente?: number | null;
+  laboratorioUnidadeId?: string | null;
+  laboratorioNome?: string | null;
+  laboratorioContratado: boolean;
+  etapaAtual: EtapaProtetica;
+  situacao: SituacaoTratamentoProtetico;
+  dataEntrega?: string | null;
+  observacao?: string | null;
+  abertoEm: string;
+  encerradoEm?: string | null;
+  motivoCancelamento?: string | null;
+  proximasEtapas: EtapaProtetica[];
+  etapas: { uuid: string; etapa: EtapaProtetica; data: string; profissionalNome: string; observacao?: string | null; registradoEm: string }[];
+}
+
+export interface TratamentoProteticoRequestDto {
+  atendimentoId: string;
+  profissionalMatricula: string;
+  tipo: TipoProtese;
+  arcada?: ArcadaDentaria | null;
+  dente?: number | null;
+  laboratorioUnidadeId?: string | null;
+  laboratorioExterno?: string | null;
+  observacao?: string | null;
+}
+
+export interface EtapaProteticaRequestDto {
+  etapa: EtapaProtetica;
+  data?: string | null;
+  profissionalMatricula: string;
+  observacao?: string | null;
+  laboratorioUnidadeId?: string | null;
+  laboratorioExterno?: string | null;
 }

@@ -40,4 +40,6 @@ public class RegistroOdontogramaDto implements Serializable {
     /** Origem procedimento (ADR-0136): qual procedimento mudou a condição. */
     private UUID procedimentoId;
     private String procedimentoNome;
+    /** Origem prótese entregue (ADR-0139). */
+    private UUID tratamentoProteticoId;
 }

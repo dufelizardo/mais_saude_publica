@@ -57,6 +57,7 @@ import { InternacoesPaciente } from '../../../shared/internacoes-paciente/intern
 import { InternacaoResponseDto } from '../../../core/models/internacao';
 import { Odontograma } from './odontograma';
 import { PlanoTratamento } from './plano-tratamento';
+import { TratamentoProteticoSecao } from './tratamento-protetico';
 import { ExameProntuarioDto } from '../../../core/models/laboratorio';
 import { SetorService } from '../../../core/services/setor';
 import { TriagemService } from '../../../core/services/triagem';
@@ -137,7 +138,7 @@ const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
  */
 @Component({
   selector: 'app-atendimentos',
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente, Odontograma, PlanoTratamento],
+  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente, Odontograma, PlanoTratamento, TratamentoProteticoSecao],
   templateUrl: './atendimentos.html',
   styleUrl: './atendimentos.css',
 })

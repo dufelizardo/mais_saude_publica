@@ -11,6 +11,7 @@ import com.edufelizardo.maissaudepublica.models.ComplementoOdontologico;
 import com.edufelizardo.maissaudepublica.models.CondicaoOdontologica;
 import com.edufelizardo.maissaudepublica.models.Procedimento;
 import com.edufelizardo.maissaudepublica.models.RegistroOdontograma;
+import com.edufelizardo.maissaudepublica.models.TratamentoProtetico;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CondicaoOdontologicaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MarcacoesOdontogramaRequestDto;
@@ -157,7 +158,8 @@ public class OdontogramaService {
     public RegistroOdontogramaDto anular(UUID registroId, String motivo) {
         RegistroOdontograma r = registroRepository.findById(registroId).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar o registro do odontograma " + registroId + " em nossos registros."));
-        UnidadeDeSaude unidade = r.getAvaliacao() != null ? r.getAvaliacao().getAtendimento().getUnidade() : r.getProcedimento().getAtendimento().getUnidade();
+        UnidadeDeSaude unidade = r.getAvaliacao() != null ? r.getAvaliacao().getAtendimento().getUnidade()
+                : r.getProcedimento() != null ? r.getProcedimento().getAtendimento().getUnidade() : r.getTratamentoProtetico().getUnidade();
         controleDeAcesso.exigir(REGISTRAR, unidade);
         ContextoAuditoria.paciente(r.getPaciente().getUuid());
         ContextoAuditoria.registro(r.getUuid());
@@ -207,6 +209,26 @@ public class OdontogramaService {
             r.setRegistradoPorCpf(UsuarioAutenticado.cpf());
             registroRepository.save(r);
         }
+    }
+
+    /** A prótese unitária entregue (ADR-0139): o dente passa a "Prótese", com o tratamento protético como origem. */
+    @Transactional
+    public void gravarDaProtese(TratamentoProtetico t, LocalDate data) {
+        CondicaoOdontologica protese = condicaoRepository.findAllByOrderByNomeAsc().stream().filter(c -> c.getCodigo().equals("PROTESE"))
+                .findFirst().orElse(null);
+        if (protese == null || t.getDente() == null) {
+            return;
+        }
+        RegistroOdontograma r = new RegistroOdontograma();
+        r.setPaciente(t.getPaciente());
+        r.setDente(t.getDente());
+        r.setCondicao(protese);
+        r.setData(data);
+        r.setTratamentoProtetico(t);
+        r.setObservacao("Prótese unitária entregue.");
+        r.setRegistradoEm(Instant.now());
+        r.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        registroRepository.save(r);
     }
 
     /** Anula os registros que o procedimento gravou (na retificação dele); ficam no histórico. */
@@ -316,10 +338,13 @@ public class OdontogramaService {
         CondicaoOdontologica c = r.getCondicao();
         AvaliacaoOdontologica a = r.getAvaliacao();
         Procedimento p = r.getProcedimento();
-        UUID atendimento = a != null ? a.getAtendimento().getUuid() : p != null ? p.getAtendimento().getUuid() : null;
-        String profissional = a != null ? a.getProfissional().getNome() : p != null ? p.getProfissional().getNome() : null;
+        TratamentoProtetico t = r.getTratamentoProtetico();
+        UUID atendimento = a != null ? a.getAtendimento().getUuid() : p != null ? p.getAtendimento().getUuid() : t != null ? t.getAtendimento().getUuid() : null;
+        String profissional = a != null ? a.getProfissional().getNome() : p != null ? p.getProfissional().getNome()
+                : t != null ? t.getProfissional().getNome() : null;
         return new RegistroOdontogramaDto(r.getUuid(), r.getDente(), r.getFace(), c.getUuid(), c.getCodigo(), c.getNome(), c.getCor(), c.getSigla(),
                 r.getData(), a != null ? a.getUuid() : null, atendimento, profissional, r.getObservacao(), r.getAnuladoEm() != null, r.getAnuladoEm(),
-                r.getMotivoAnulacao(), r.getRegistradoEm(), p != null ? p.getUuid() : null, p != null ? p.getTipo() : null);
+                r.getMotivoAnulacao(), r.getRegistradoEm(), p != null ? p.getUuid() : null, p != null ? p.getTipo() : null,
+                t != null ? t.getUuid() : null);
     }
 }
