@@ -3,7 +3,7 @@
 ## Status
 
 Aceita e implementada (primeira parte da fatia SB4 da [ADR-0111](./0111-saude-bucal.md); usa a Regulação das ADRs
-0087 a 0089, o Modelo Operacional da [ADR-0115](./0115-modelo-operacional.md) e o plano de tratamento da
+0087 a 0089, o Modelo Operacional da [ADR-0115](./0115-modelo-operacional-dos-equipamentos.md) e o plano de tratamento da
 [ADR-0137](./0137-saude-bucal-plano-de-tratamento.md)). O tratamento protético fica para a SB4b.
 
 ## Contexto

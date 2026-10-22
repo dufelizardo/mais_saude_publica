@@ -4,7 +4,7 @@
 
 Aceita e implementada (segunda parte da fatia SB4 da [ADR-0111](./0111-saude-bucal.md); usa o odontograma da
 [ADR-0135](./0135-saude-bucal-odontograma.md), o plano da [ADR-0137](./0137-saude-bucal-plano-de-tratamento.md) e o
-Modelo Operacional da [ADR-0115](./0115-modelo-operacional.md)). Fecha a SB4.
+Modelo Operacional da [ADR-0115](./0115-modelo-operacional-dos-equipamentos.md)). Fecha a SB4.
 
 ## Contexto
 
