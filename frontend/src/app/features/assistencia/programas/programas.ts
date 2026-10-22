@@ -38,6 +38,7 @@ import { AcoesProgramaticas } from './acoes-programaticas';
 import { Campanhas } from './campanhas';
 import { SaudeBucalAConvocar } from './saude-bucal-a-convocar';
 import { ElegiveisDoPrograma } from './elegiveis-do-programa';
+import { IndicadoresDoPrograma, baixarArquivo } from './indicadores-do-programa';
 
 type Gaveta =
   | { tipo: 'programa'; item: ProgramaDto | null }
@@ -56,7 +57,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-programas',
-  imports: [ReactiveFormsModule, Drawer, ElegiveisDoPrograma, AcoesProgramaticas, Campanhas, SaudeBucalAConvocar],
+  imports: [ReactiveFormsModule, Drawer, ElegiveisDoPrograma, AcoesProgramaticas, Campanhas, SaudeBucalAConvocar, IndicadoresDoPrograma],
   templateUrl: './programas.html',
 })
 export class Programas {
@@ -247,6 +248,23 @@ export class Programas {
 
   protected verPacientes(): void {
     document.getElementById('inscritos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  protected irParaIndicadores(e: Event): void {
+    e.preventDefault();
+    document.getElementById('indicadores')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /** O relatório do programa aberto (ADR-0141): os indicadores do mês, na rede, em CSV. */
+  protected exportarRelatorio(): void {
+    const d = this.detalhe();
+    if (!d) {
+      return;
+    }
+    this.service.indicadoresCsv(d.resumo.uuid).subscribe({
+      next: (r) => baixarArquivo(r.body, r.headers.get('Content-Disposition'), 'indicadores-programa.csv'),
+      error: () => this.mostrarToast('Não foi possível exportar', 'Os indicadores deste programa não puderam ser gerados.'),
+    });
   }
 
   // ── Apresentação ───────────────────────────────────────────────────────────────────────────

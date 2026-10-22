@@ -4,7 +4,7 @@
     <p>{{ indicadores().ativos }} programa(s) ativo(s) · {{ indicadores().inscritos }} acompanhamento(s) · {{ indicadores().categorias }} categoria(s)</p>
   </div>
   <div class="page-actions">
-    <button type="button" class="btn btn--ghost" disabled title="Em breve: depende dos indicadores (P6)">Exportar relatório</button>
+    <button type="button" class="btn btn--ghost" (click)="exportarRelatorio()" [disabled]="!detalhe()" [title]="detalhe() ? 'Indicadores do programa no mês, em CSV' : 'Escolha um programa'">Exportar relatório</button>
     @if (podeGerenciar()) {
       <button type="button" class="btn btn--ghost" (click)="abrirCategorias()">Categorias</button>
       <button type="button" class="btn" (click)="abrirPrograma()">
@@ -165,7 +165,7 @@
       <div class="kpi"><div class="kpi__val mono">{{ d.resumo.inscritos }}</div><div class="kpi__lbl">Pacientes inscritos</div></div>
       <div class="kpi"><div class="kpi__val mono" [class.kpi__val--alert]="d.resumo.faltosos > 0">{{ d.resumo.faltosos }}</div><div class="kpi__lbl">Faltosos</div></div>
       <div class="kpi"><div class="kpi__val mono" [class.kpi__val--warn]="d.resumo.atrasados > 0">{{ d.resumo.atrasados }}</div><div class="kpi__lbl">Atrasados · sem atendimento no período</div></div>
-      <div class="kpi"><div class="kpi__val kpi__val--soon">Em breve</div><div class="kpi__lbl">Controle clínico (PA, HbA1c…)</div></div>
+      <div class="kpi"><div class="kpi__val"><a class="link-btn" href="#indicadores" (click)="irParaIndicadores($event)">Ver indicadores</a></div><div class="kpi__lbl">Metas, controle clínico e evolução</div></div>
     </div>
 
     <div class="info-grid info-grid--1">
@@ -213,9 +213,10 @@
           }
         }
       </div>
-      <div class="info-block">
+      <div class="info-block" id="indicadores">
         <h3>Indicadores do programa</h3>
-        <p class="cell-sub">"Atrasado" é sugestão: o paciente está sem atendimento na unidade responsável há mais tempo que a periodicidade ({{ periodicidades[d.resumo.periodicidade].toLowerCase() }}). Cobertura, controle clínico e evolução de 12 meses vêm com os indicadores (P6).</p>
+        <p class="cell-sub">Só números, calculados do que o sistema registra. "Atrasado" é sugestão: o paciente está sem atendimento na unidade responsável há mais tempo que a periodicidade ({{ periodicidades[d.resumo.periodicidade].toLowerCase() }}).</p>
+        <app-indicadores-do-programa [programaId]="d.resumo.uuid" [participacoes]="d.participacoes" [podeGerenciar]="podeGerenciar()" />
       </div>
     </div>
 

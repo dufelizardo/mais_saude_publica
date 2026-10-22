@@ -24,4 +24,10 @@ public interface AtendimentoRepository extends JpaRepository<Atendimento, UUID> 
             + "where a.status <> com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento.AGENDADO "
             + "and a.paciente.uuid in ?1 group by a.paciente.uuid, a.unidade.uuid")
     List<Object[]> findUltimosRealizados(Collection<UUID> pacienteIds);
+
+    /** Paciente, unidade e data de cada atendimento realizado dos pacientes no intervalo (indicadores, ADR-0141). */
+    @Query("select a.paciente.uuid, a.unidade.uuid, a.dataHora from Atendimento a "
+            + "where a.status <> com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento.AGENDADO "
+            + "and a.paciente.uuid in ?1 and a.dataHora >= ?2 and a.dataHora < ?3")
+    List<Object[]> findRealizadosNoIntervalo(Collection<UUID> pacienteIds, java.time.LocalDateTime de, java.time.LocalDateTime ate);
 }

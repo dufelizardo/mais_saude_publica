@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-22 (release 1.7.0)
+- **Atualizado em:** 2026-10-22 (P6, depois da release 1.7.0)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -48,7 +48,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
-| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
+| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
@@ -71,7 +71,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 | P5 | 22 Programas | linhas de cuidado |
-| P6 | 22 Programas | metas e indicadores programáticos (inclui o tratamento odontológico concluído) |
 | V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
 | E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
@@ -83,7 +82,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 MO1 ✅ ──► SB4a ✅ (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
-P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6
+P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI1 (indicadores da rede)
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
@@ -389,7 +388,8 @@ C1 ──► C2 · C4 · C5
 **Falta:**
 - [ ] Sala de Situação (protótipo `Painel.html`).
 - [ ] Relatórios (protótipo `Relatorios.html`).
-- [ ] Indicadores consolidados da rede, que vão receber também os indicadores programáticos (domínio 22, P6).
+- [ ] Indicadores consolidados da rede, que vão receber também os indicadores programáticos (domínio 22, P6, já
+  calculados pela [ADR-0141](./adr/0141-programas-metas-e-indicadores.md)).
 - [ ] Coordenações & Gerência (protótipo `Coordenacoes.html`).
 
 ### 20. Integrações / Identidade / Segurança / Governo
@@ -474,11 +474,15 @@ C1 ──► C2 · C4 · C5
   cancelamento; locais da rede ou temporários sob a unidade responsável; ações da campanha (coletivas, no local, com as
   pessoas atendidas) dando o andamento da meta; aba Campanhas e a consulta pública na landing page
   (`/api/v1/publico/campanha`).
+- [x] **P6 · Metas e indicadores** ([ADR-0141](./adr/0141-programas-metas-e-indicadores.md)): indicadores
+  calculados dos registros, no período e na rede ou na unidade (acompanhados em dia, cobertura, ações realizadas, PA
+  controlada, exame no alvo, pré-natal com 6 consultas, tratamento odontológico concluído, próteses entregues e
+  escovação supervisionada); metas por indicador e unidade com a situação (atingida, em risco, abaixo); evolução de
+  12 meses; relatório em CSV; só números, e o programa sensível só para quem acompanha.
 
 **Falta:**
 - [x] Lista de elegíveis pelo público-alvo entre os adscritos da equipe (ADR-0128); faltam os critérios clínicos (gestação, condição).
 - [ ] **P5 · Linhas de cuidado.**
-- [ ] **P6 · Metas e indicadores programáticos.**
 
 ### 23. Vigilância em Saúde
 
