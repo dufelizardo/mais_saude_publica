@@ -52,4 +52,7 @@ public class ProcedimentoRequestDto implements Serializable {
 
     /** As faces, quando o item do catálogo pede. */
     private List<FaceDente> faces;
+
+    /** O item do plano de tratamento que este procedimento executa (ADR-0137), opcional. */
+    private UUID itemPlanoId;
 }

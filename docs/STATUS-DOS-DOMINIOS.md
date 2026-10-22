@@ -51,7 +51,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
-| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1, SB2 e SB3a feitas; SB3b a SB5 |
+| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 a SB3 feitas; SB4 e SB5 |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
@@ -68,7 +68,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| SB3b | 25 Saúde Bucal | plano de tratamento (itens previstos, executados, tratamento concluído) |
+| SB4 | 25 Saúde Bucal | especialidades odontológicas na Regulação, CEO como executante, tratamento protético |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 
@@ -87,7 +87,7 @@ F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulner
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
-SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ──► SB4
+SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
@@ -535,10 +535,13 @@ C1 ──► C2 · C4 · C5
   de dentista), procedimento direto no atendimento (a consulta ficou opcional), complemento odontológico (dente e
   faces) e o procedimento realizado gravando o odontograma, anulado na retificação; o técnico em saúde bucal registra
   o que a lei permite; catálogo na tela Setores.
+- [x] **SB3b · Plano de tratamento** ([ADR-0137](./adr/0137-saude-bucal-plano-de-tratamento.md)): um plano aberto por
+  paciente, com diagnóstico, objetivo e prioridade (da avaliação); itens do catálogo com dente e faces, executados
+  pelos procedimentos (realizado conclui, agendado põe em andamento, cancelado devolve a planejado); em andamento,
+  encaminhado (com a solicitação de regulação) e cancelado pelo dentista; tratamento concluído com data e abandono
+  com motivo; permissão `ODONTOLOGIA.PLANEJAR`; seção Plano de tratamento no atendimento de odontologia.
 
 **Falta:**
-- [ ] **SB3b · Plano de tratamento:** itens com procedimento previsto, dente e situação, executados pelos
-  procedimentos; tratamento concluído; permissão `ODONTOLOGIA.PLANEJAR`.
 - [ ] **SB4 · Regulação e prótese:** especialidades odontológicas no catálogo da Regulação, CEO como executante,
   tratamento protético.
 - [ ] **SB5 · Saúde bucal coletiva:** detalhe odontológico das ações coletivas (depende de Programas P4 e do

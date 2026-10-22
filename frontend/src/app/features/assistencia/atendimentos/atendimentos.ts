@@ -30,6 +30,7 @@ import {
   AvaliacaoOdontologicaDto,
   EspecialidadeDto,
   FACES_DENTE,
+  ItemPlanoTratamentoDto,
   FaceDente,
   NECESSIDADES_TRATAMENTO,
   NecessidadeTratamentoOdontologico,
@@ -55,6 +56,7 @@ import { ExamesPaciente } from '../../../shared/exames-paciente/exames-paciente'
 import { InternacoesPaciente } from '../../../shared/internacoes-paciente/internacoes-paciente';
 import { InternacaoResponseDto } from '../../../core/models/internacao';
 import { Odontograma } from './odontograma';
+import { PlanoTratamento } from './plano-tratamento';
 import { ExameProntuarioDto } from '../../../core/models/laboratorio';
 import { SetorService } from '../../../core/services/setor';
 import { TriagemService } from '../../../core/services/triagem';
@@ -135,7 +137,7 @@ const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
  */
 @Component({
   selector: 'app-atendimentos',
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente, Odontograma],
+  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente, Odontograma, PlanoTratamento],
   templateUrl: './atendimentos.html',
   styleUrl: './atendimentos.css',
 })
@@ -323,6 +325,8 @@ export class Atendimentos {
   protected readonly facesLista = Object.keys(FACES_DENTE) as FaceDente[];
   /** Faces do complemento odontológico na gaveta de procedimento. */
   protected readonly procFaces = signal<FaceDente[]>([]);
+  /** O item do plano de tratamento que a gaveta de procedimento executa (ADR-0137). */
+  protected readonly procItemPlano = signal<ItemPlanoTratamentoDto | null>(null);
 
   protected readonly procForm = this.fb.nonNullable.group({
     catalogoId: [''],
@@ -960,7 +964,21 @@ export class Atendimentos {
     this.abrir({ tipo: 'cons', atId, original });
   }
 
+  /** Executar o item do plano (ADR-0137): a gaveta do procedimento já vem com o item do catálogo, o dente e as faces. */
+  protected executarItemPlano(atId: string, item: ItemPlanoTratamentoDto): void {
+    this.abrirProcedimento(atId, null);
+    this.procItemPlano.set(item);
+    this.procFaces.set(item.faces);
+    this.procForm.patchValue({ catalogoId: item.procedimentoCatalogoId, dente: item.dente ? String(item.dente) : '' });
+  }
+
+  /** Itens odontológicos ativos do catálogo, para o plano de tratamento. */
+  protected catalogoOdontologico(): ProcedimentoCatalogoDto[] {
+    return this.catalogoProcedimentos().filter((c) => c.ativo && c.odontologico);
+  }
+
   protected abrirProcedimento(atId: string, consultaId: string | null, original: ProcedimentoResponseDto | null = null): void {
+    this.procItemPlano.set(null);
     this.procFaces.set(original?.faces ?? []);
     this.procForm.reset({
       catalogoId: original?.procedimentoCatalogoId ?? '',
@@ -1259,6 +1277,7 @@ export class Atendimentos {
     const dto = {
       consultaId,
       atendimentoId: consultaId ? null : atId,
+      itemPlanoId: original ? null : this.procItemPlano()?.uuid ?? null,
       procedimentoCatalogoId: item?.uuid ?? null,
       dente,
       faces: alcance === 'FACE' ? this.facesLista.filter((f) => this.procFaces().includes(f)) : [],

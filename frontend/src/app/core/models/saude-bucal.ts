@@ -123,3 +123,77 @@ export interface MarcacaoOdontogramaDto {
   condicaoId: string;
   observacao?: string | null;
 }
+
+// ── Plano de tratamento (ADR-0137) ────────────────────────────────────────────────────────────────
+
+export type SituacaoPlanoTratamento = 'ABERTO' | 'CONCLUIDO' | 'ABANDONADO';
+export type SituacaoItemPlanoTratamento = 'PLANEJADO' | 'EM_ANDAMENTO' | 'CONCLUIDO' | 'ENCAMINHADO' | 'CANCELADO';
+
+export const SITUACOES_PLANO: Record<SituacaoPlanoTratamento, { rotulo: string; classe: string }> = {
+  ABERTO: { rotulo: 'Em tratamento', classe: 'info' },
+  CONCLUIDO: { rotulo: 'Tratamento concluído', classe: 'ok' },
+  ABANDONADO: { rotulo: 'Abandonado', classe: 'muted' },
+};
+
+export const SITUACOES_ITEM_PLANO: Record<SituacaoItemPlanoTratamento, { rotulo: string; classe: string }> = {
+  PLANEJADO: { rotulo: 'Planejado', classe: 'muted' },
+  EM_ANDAMENTO: { rotulo: 'Em andamento', classe: 'warn' },
+  CONCLUIDO: { rotulo: 'Concluído', classe: 'ok' },
+  ENCAMINHADO: { rotulo: 'Encaminhado', classe: 'info' },
+  CANCELADO: { rotulo: 'Cancelado', classe: 'muted' },
+};
+
+export interface ItemPlanoTratamentoDto {
+  uuid: string;
+  ordem: number;
+  procedimentoCatalogoId: string;
+  procedimentoNome: string;
+  sigtap?: string | null;
+  alcance: 'NENHUM' | 'DENTE' | 'FACE';
+  exigeDentista: boolean;
+  dente?: number | null;
+  faces: FaceDente[];
+  observacao?: string | null;
+  situacao: SituacaoItemPlanoTratamento;
+  procedimentoId?: string | null;
+  procedimentoStatus?: 'AGENDADO' | 'REALIZADO' | 'CANCELADO' | null;
+  solicitacaoRegulacaoId?: string | null;
+  motivoSituacao?: string | null;
+  situacaoAlteradaEm?: string | null;
+}
+
+export interface PlanoTratamentoDto {
+  uuid: string;
+  pacienteId: string;
+  atendimentoId: string;
+  avaliacaoId?: string | null;
+  unidadeNome: string;
+  profissionalMatricula: string;
+  profissionalNome: string;
+  diagnostico?: string | null;
+  objetivo?: string | null;
+  prioridade: NecessidadeTratamentoOdontologico;
+  situacao: SituacaoPlanoTratamento;
+  abertoEm: string;
+  encerradoEm?: string | null;
+  motivoEncerramento?: string | null;
+  itens: ItemPlanoTratamentoDto[];
+}
+
+export interface ItemPlanoTratamentoRequestDto {
+  procedimentoCatalogoId: string;
+  dente?: number | null;
+  faces?: FaceDente[];
+  ordem?: number | null;
+  observacao?: string | null;
+}
+
+export interface PlanoTratamentoRequestDto {
+  atendimentoId: string;
+  avaliacaoId?: string | null;
+  profissionalMatricula: string;
+  diagnostico?: string | null;
+  objetivo?: string | null;
+  prioridade?: NecessidadeTratamentoOdontologico | null;
+  itens?: ItemPlanoTratamentoRequestDto[];
+}

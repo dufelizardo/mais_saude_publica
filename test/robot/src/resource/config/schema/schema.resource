@@ -82,3 +82,4 @@ Resource    ../../schema/territorio/adscricao_schema.resource
 Resource    ../../schema/saude_bucal/saude_bucal_schema.resource
 Resource    ../../schema/saude_bucal/odontograma_schema.resource
 Resource    ../../schema/saude_bucal/procedimento_odontologico_schema.resource
+Resource    ../../schema/saude_bucal/plano_tratamento_schema.resource
