@@ -51,7 +51,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
-| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 a SB4 feitas; falta SB5 |
+| 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 10 ✅ · 10 🟡 · 2 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 11 ✅ · 9 🟡 · 2 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,7 +68,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| SB5 | 25 Saúde Bucal | saúde bucal coletiva: detalhe odontológico das ações coletivas (Programas P4) |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 | P5 | 22 Programas | linhas de cuidado |
@@ -86,14 +85,14 @@ MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
-P4 ✅ ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
+P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
 F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
-SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5
+SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
@@ -523,8 +522,9 @@ C1 ──► C2 · C4 · C5
 
 ### 25. Saúde Bucal
 
-**Estado:** 🟡. Desenhado na [ADR-0111](./adr/0111-saude-bucal.md); detalhe em
-[`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md). A equipe eSB já existe (ADR-0103).
+**Estado:** ✅. Desenhado na [ADR-0111](./adr/0111-saude-bucal.md) e implementado nas fatias SB1 a SB5 (ADRs 0134 a
+0140); detalhe em [`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md). A equipe eSB já existe
+(ADR-0103).
 
 **Temos:**
 - [x] **SB1 · Base** ([ADR-0134](./adr/0134-saude-bucal-base.md)): catálogo de especialidades (com a marca de
@@ -546,8 +546,6 @@ C1 ──► C2 · C4 · C5
   pelos procedimentos (realizado conclui, agendado põe em andamento, cancelado devolve a planejado); em andamento,
   encaminhado (com a solicitação de regulação) e cancelado pelo dentista; tratamento concluído com data e abandono
   com motivo; permissão `ODONTOLOGIA.PLANEJAR`; seção Plano de tratamento no atendimento de odontologia.
-
-**Falta:**
 - [x] **SB4a · Encaminhamento pela Regulação** ([ADR-0138](./adr/0138-saude-bucal-encaminhamento-pela-regulacao.md)):
   o CEO como unidade com as capacidades odontológicas (sem tipo próprio); o item regulado exige a capacidade da
   executante (vale para toda a Regulação); as especialidades odontológicas no catálogo; a solicitação a partir do item
@@ -556,8 +554,14 @@ C1 ──► C2 · C4 · C5
   pela arcada, unitária pelo dente; etapas na ordem do ciclo (prova e laboratório se alternam), com data e
   profissional; laboratório da rede (capacidade nova LRPD) ou contratado; a entrega grava a unitária no odontograma;
   conclusão depois da entrega e cancelamento com motivo; seção Prótese no atendimento de odontologia.
-- [ ] **SB5 · Saúde bucal coletiva:** detalhe odontológico das ações coletivas (depende de Programas P4 e do
-  Território).
+- [x] **SB5 · Saúde bucal coletiva** ([ADR-0140](./adr/0140-saude-bucal-coletiva.md)): detalhe odontológico da ação
+  coletiva dos programas Saúde Bucal e PSE (atividades, local, público, kits); avaliação de risco por participante na
+  ação realizada com lista nominal; lista a convocar (necessidade de tratamento sem plano aberto); o PSE no catálogo de
+  Programas.
+
+**Falta:**
+- [ ] Índice CPO-D do levantamento epidemiológico e indicadores odontológicos (tratamento concluído, primeira consulta
+  programática), pela P6 e pelo BI.
 
 ### 26. Saúde Mental
 

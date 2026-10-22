@@ -85,3 +85,4 @@ Resource    ../../schema/saude_bucal/procedimento_odontologico_schema.resource
 Resource    ../../schema/saude_bucal/plano_tratamento_schema.resource
 Resource    ../../schema/saude_bucal/regulacao_odontologica_schema.resource
 Resource    ../../schema/saude_bucal/tratamento_protetico_schema.resource
+Resource    ../../schema/saude_bucal/saude_bucal_coletiva_schema.resource
