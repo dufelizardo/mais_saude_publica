@@ -91,6 +91,20 @@
               </a>
             }
 
+            @if (podeVer('/administrativo/territorio')) {
+              <a routerLink="/administrativo/territorio" routerLinkActive #rlaTerritorio="routerLinkActive" [attr.aria-current]="rlaTerritorio.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"></polygon><line x1="9" y1="3" x2="9" y2="18"></line><line x1="15" y1="6" x2="15" y2="21"></line></svg>
+                <span class="nav-item__label">Território</span>
+              </a>
+            }
+
+            @if (podeVer('/administrativo/modelo-operacional')) {
+              <a routerLink="/administrativo/modelo-operacional" routerLinkActive #rlaModeloOperacional="routerLinkActive" [attr.aria-current]="rlaModeloOperacional.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path></svg>
+                <span class="nav-item__label">Modelo operacional</span>
+              </a>
+            }
+
             @if (podeVer('/administrativo/modelo')) {
               <a routerLink="/administrativo/modelo" routerLinkActive #rlaModelo="routerLinkActive" [attr.aria-current]="rlaModelo.isActive ? 'page' : null" class="nav-item">
                 <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
@@ -162,10 +176,43 @@
                 </a>
               }
 
+              @if (podeVer('/assistencia/programas')) {
+                <a routerLink="/assistencia/programas" routerLinkActive #rlaProgramas="routerLinkActive" [attr.aria-current]="rlaProgramas.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"></path></svg>
+                  <span class="nav-item__label">Programas de Saúde</span>
+                </a>
+              }
+
+              @if (podeVer('/assistencia/saude-mental')) {
+                <a routerLink="/assistencia/saude-mental" routerLinkActive #rlaSaudeMental="routerLinkActive" [attr.aria-current]="rlaSaudeMental.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"></path><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"></path><path d="M12 5v13"></path></svg>
+                  <span class="nav-item__label">Saúde Mental</span>
+                </a>
+              }
+
               @if (podeVer('/assistencia/leitos')) {
                 <a routerLink="/assistencia/leitos" routerLinkActive #rlaLeitos="routerLinkActive" [attr.aria-current]="rlaLeitos.isActive ? 'page' : null" class="nav-item">
                   <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
                   <span class="nav-item__label">Leitos</span>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (grupoVisivel('Vigilância')) {
+        <div class="nav-group">
+          <button type="button" class="nav-group__label" (click)="toggleGrupo('Vigilância')" [attr.aria-expanded]="estaExpandido('Vigilância')">
+            <span>Vigilância</span>
+            <svg class="nav-group__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          @if (estaExpandido('Vigilância')) {
+            <div class="nav-group__items">
+              @if (podeVer('/vigilancia')) {
+                <a routerLink="/vigilancia" routerLinkActive #rlaVigilancia="routerLinkActive" [attr.aria-current]="rlaVigilancia.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                  <span class="nav-item__label">Vigilância epidemiológica</span>
                 </a>
               }
             </div>

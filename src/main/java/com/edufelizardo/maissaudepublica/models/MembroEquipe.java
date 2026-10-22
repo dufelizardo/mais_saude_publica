@@ -44,10 +44,6 @@ public class MembroEquipe implements Serializable {
     @Column(nullable = false, updatable = false)
     private FuncaoEquipe funcao;
 
-    /** Microárea do agente comunitário. */
-    @Column(length = 20, updatable = false)
-    private String microarea;
-
     @Column(nullable = false, updatable = false)
     private LocalDate inicio;
 

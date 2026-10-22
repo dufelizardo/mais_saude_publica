@@ -2,7 +2,9 @@
 
 ## Status
 
-Aceita. **Desenho, sem implementação.** A implementação vem nas fatias P1 a P6, cada uma com ADR própria. O detalhe
+Aceita. **Desenho**; cada fatia tem ADR própria. A P1 (catálogo) foi implementada na
+[ADR-0118](./0118-programas-catalogo.md) e a P2 (acompanhamento) na
+[ADR-0119](./0119-programas-acompanhamento.md); P3 a P6 vêm depois. O detalhe
 está em [`programas/MODELO-PROGRAMAS.md`](../programas/MODELO-PROGRAMAS.md).
 
 ## Contexto

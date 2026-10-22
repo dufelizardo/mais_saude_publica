@@ -6,6 +6,7 @@ import { ExameProntuarioDto } from './laboratorio';
 import { InternacaoResponseDto } from './internacao';
 import { ProcedimentoResponseDto } from './procedimento';
 import { TriagemResponseDto } from './triagem';
+import { AvaliacaoOdontologicaDto } from './saude-bucal';
 
 export interface ProntuarioConsultaDto {
   consulta: ConsultaResponseDto;
@@ -19,6 +20,10 @@ export interface ProntuarioAtendimentoDto {
   consultas: ProntuarioConsultaDto[];
   /** Checagens de medicamento (ADR-0064); ausente em respostas anteriores. */
   administracoes?: AdministracaoMedicamentoResponseDto[];
+  /** Avaliações odontológicas do atendimento (ADR-0134). */
+  avaliacoesOdontologicas?: AvaliacaoOdontologicaDto[];
+  /** Procedimentos direto no atendimento, sem consulta (ADR-0136). */
+  procedimentos?: ProcedimentoResponseDto[];
 }
 
 /** Em que se baseou a abertura do prontuário (ADR-0076). */

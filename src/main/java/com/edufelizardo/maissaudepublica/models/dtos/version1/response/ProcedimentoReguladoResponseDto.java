@@ -22,8 +22,13 @@ public class ProcedimentoReguladoResponseDto implements Serializable {
     private String nome;
     private TipoProcedimentoRegulado tipo;
     private boolean ativo;
+    /** A capacidade que a executante precisa ter (ADR-0138). */
+    private UUID capacidadeExigidaId;
+    private String capacidadeExigidaNome;
 
     public static ProcedimentoReguladoResponseDto fromProcedimento(ProcedimentoRegulado p) {
-        return new ProcedimentoReguladoResponseDto(p.getUuid(), p.getNome(), p.getTipo(), p.isAtivo());
+        return new ProcedimentoReguladoResponseDto(p.getUuid(), p.getNome(), p.getTipo(), p.isAtivo(),
+                p.getCapacidadeExigida() != null ? p.getCapacidadeExigida().getUuid() : null,
+                p.getCapacidadeExigida() != null ? p.getCapacidadeExigida().getNome() : null);
     }
 }

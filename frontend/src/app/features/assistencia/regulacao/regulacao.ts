@@ -24,6 +24,8 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { AgendaService } from '../../../core/services/agenda';
 import { ItemAgendaDto } from '../../../core/models/agenda';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { CapacidadeAssistencialDto } from '../../../core/models/modelo-operacional';
+import { ModeloOperacionalService } from '../../../core/services/modelo-operacional';
 import { formatCpf } from '../../../shared/format-mask';
 
 type Aba = 'fila' | 'solicitacoes' | 'procedimentos';
@@ -96,6 +98,11 @@ export class Regulacao {
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
   private readonly regulacaoService = inject(RegulacaoService);
+  private readonly modeloOperacionalService = inject(ModeloOperacionalService);
+  /** Capacidades ativas do Modelo Operacional, para o item regulado exigir da executante (ADR-0138). */
+  protected readonly capacidades = signal<CapacidadeAssistencialDto[]>([]);
+  /** O item do plano de tratamento que a nova solicitação encaminha (ADR-0138). */
+  protected readonly itemPlano = signal<{ id: string; nome: string } | null>(null);
   private readonly pacienteService = inject(PacienteService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
   private readonly agendaService = inject(AgendaService);
@@ -193,6 +200,7 @@ export class Regulacao {
     nome: [''],
     tipo: ['CONSULTA_ESPECIALIZADA' as TipoProcedimentoRegulado],
     ativo: [true],
+    capacidadeExigidaId: [''],
   });
 
   // ── Dados derivados ────────────────────────────────────────────────────────────────────────────
@@ -244,11 +252,14 @@ export class Regulacao {
     this.carregarTudo();
     this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
     this.unidadeSaudeService.listar().pipe(catchError(() => of([]))).subscribe((u) => this.unidades.set(u));
+    this.modeloOperacionalService.capacidades().pipe(catchError(() => of([]))).subscribe((c) => this.capacidades.set(c.filter((x) => x.ativo)));
 
     // "Encaminhar" no atendimento abre a nova solicitação já com o paciente e a unidade (ADR-0088).
     const q = this.route.snapshot.queryParamMap;
     if (q.get('acao') === 'nova') {
       this.abrirNova(q.get('pacienteId') ?? '', q.get('unidadeId') ?? '');
+      const item = q.get('itemPlanoId');
+      if (item) this.itemPlano.set({ id: item, nome: q.get('itemPlanoNome') ?? 'item do plano de tratamento' });
     }
   }
 
@@ -372,6 +383,7 @@ export class Regulacao {
   }
 
   protected abrirNova(pacienteId = '', unidadeId = ''): void {
+    this.itemPlano.set(null);
     this.novaForm.reset({
       buscaPaciente: '',
       pacienteId,
@@ -473,7 +485,8 @@ export class Regulacao {
   }
 
   protected abrirProcedimento(p: ProcedimentoReguladoResponseDto | null = null): void {
-    this.procedimentoForm.reset({ nome: p?.nome ?? '', tipo: p?.tipo ?? 'CONSULTA_ESPECIALIZADA', ativo: p?.ativo ?? true });
+    this.procedimentoForm.reset({ nome: p?.nome ?? '', tipo: p?.tipo ?? 'CONSULTA_ESPECIALIZADA', ativo: p?.ativo ?? true,
+      capacidadeExigidaId: p?.capacidadeExigidaId ?? '' });
     this.abrir({ tipo: 'procedimento', p });
   }
 
@@ -546,6 +559,7 @@ export class Regulacao {
         cid: v.cid.trim(),
         justificativa: v.justificativa.trim(),
         prioridade: v.prioridade,
+        itemPlanoTratamentoId: this.itemPlano()?.id ?? null,
       }),
       'Solicitação registrada',
       `${procedimento?.nome ?? 'Procedimento'} · ${PRIORIDADES[v.prioridade].rotulo}`,
@@ -670,7 +684,7 @@ export class Regulacao {
   private salvarProcedimento(p: ProcedimentoReguladoResponseDto | null): void {
     const v = this.procedimentoForm.getRawValue();
     if (!this.validar(v.nome.trim() ? {} : { nome: 'Informe o nome do procedimento.' })) return;
-    const dto = { nome: v.nome.trim(), tipo: v.tipo, ativo: v.ativo };
+    const dto = { nome: v.nome.trim(), tipo: v.tipo, ativo: v.ativo, capacidadeExigidaId: v.capacidadeExigidaId || null };
     this.enviar(
       p ? this.regulacaoService.atualizarProcedimento(p.uuid, dto) : this.regulacaoService.criarProcedimento(dto),
       p ? 'Procedimento atualizado' : 'Procedimento cadastrado',

@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import {
@@ -23,9 +23,31 @@ import { RedeUnidadesService } from '../../../core/services/rede-unidades';
 import { EquipeService } from '../../../core/services/equipe';
 import { EquipeResumoDto, TIPOS_EQUIPE } from '../../../core/models/equipe';
 import { Drawer } from '../../../shared/drawer/drawer';
+import {
+  CapacidadeAssistencialDto,
+  CapacidadeDaUnidadeDto,
+  GRUPO_TRANSVERSAL,
+  ModeloOperacionalUnidadeDto,
+  PerfilOperacionalDto,
+} from '../../../core/models/modelo-operacional';
+import { ModeloOperacionalService } from '../../../core/services/modelo-operacional';
+import { UnidadeNoMapaDto } from '../../../core/models/territorio';
+import { TerritorioService } from '../../../core/services/territorio';
+import { Mapa, PinoMapa } from '../../../shared/mapa/mapa';
 
-type AbaFicha = 'dados' | 'operacional' | 'equipes' | 'vinculacoes' | 'historico';
-type Gaveta = { tipo: 'unidade'; ficha: FichaUnidadeDto | null } | { tipo: 'horario'; ficha: FichaUnidadeDto } | { tipo: 'situacao'; ficha: FichaUnidadeDto };
+type AbaFicha = 'dados' | 'operacional' | 'capacidades' | 'equipes' | 'vinculacoes' | 'historico';
+type Gaveta =
+  | { tipo: 'unidade'; ficha: FichaUnidadeDto | null }
+  | { tipo: 'horario'; ficha: FichaUnidadeDto }
+  | { tipo: 'situacao'; ficha: FichaUnidadeDto }
+  | { tipo: 'perfil'; modelo: ModeloOperacionalUnidadeDto }
+  | { tipo: 'capacidade'; modelo: ModeloOperacionalUnidadeDto }
+  | { tipo: 'encerrar'; modelo: ModeloOperacionalUnidadeDto; alvo: 'perfil' | 'capacidade'; associacaoId: string; nome: string };
+
+interface GrupoDeCapacidades {
+  nome: string;
+  capacidades: CapacidadeDaUnidadeDto[];
+}
 
 interface DiaEditavel {
   dia: DiaSemana;
@@ -43,11 +65,12 @@ const ESPECIALIZADAS: TipoUnidadeDeSaude[] = ['HOSPITAL', 'UPA', 'CAPS', 'CENTRO
 /**
  * Equipamentos de Saúde (ADR-0102), pelo protótipo `Equipamentos.html`: indicadores, filtros, a lista de unidades e o
  * painel da unidade selecionada (dados gerais, operacional, equipes, vinculações e histórico), com as gavetas de
- * cadastro, horário e situação. O backend é a ADR-0101.
+ * cadastro, horário e situação. O backend é a ADR-0101. A aba Capacidades mostra o modelo operacional da unidade
+ * (perfis e capacidades, ADR-0117). A visão Mapa e a localização da unidade são da ADR-0126.
  */
 @Component({
   selector: 'app-equipamentos',
-  imports: [ReactiveFormsModule, RouterLink, Drawer],
+  imports: [ReactiveFormsModule, RouterLink, Drawer, Mapa],
   templateUrl: './equipamentos.html',
 })
 export class Equipamentos {
@@ -57,6 +80,8 @@ export class Equipamentos {
   private readonly authService = inject(AuthService);
   private readonly redeService = inject(RedeUnidadesService);
   private readonly equipeService = inject(EquipeService);
+  private readonly modeloService = inject(ModeloOperacionalService);
+  private readonly territorioService = inject(TerritorioService);
 
   protected readonly tipos = TIPOS_UNIDADE;
   protected readonly tiposDeAtendimento = UNIDADES_DE_ATENDIMENTO;
@@ -77,11 +102,17 @@ export class Equipamentos {
   /** Equipes da unidade (ADR-0104): `undefined` carregando, `null` sem acesso ou erro. */
   protected readonly equipesDaUnidade = signal<EquipeResumoDto[] | null | undefined>(undefined);
   protected readonly tiposEquipe = TIPOS_EQUIPE;
+  /** Modelo operacional da unidade (ADR-0117): `undefined` carregando, `null` erro. */
+  protected readonly modelo = signal<ModeloOperacionalUnidadeDto | null | undefined>(undefined);
+  protected readonly catalogoPerfis = signal<PerfilOperacionalDto[]>([]);
+  protected readonly catalogoCapacidades = signal<CapacidadeAssistencialDto[]>([]);
+  protected readonly mostrarEncerradas = signal(false);
 
   protected readonly busca = signal('');
   protected readonly regionalFiltro = signal('');
   protected readonly tipoFiltro = signal<TipoUnidadeDeSaude | '' | 'GESTAO'>('');
   protected readonly situacaoFiltro = signal<SituacaoOperacional | ''>('');
+  protected readonly perfilFiltro = signal('');
 
   protected readonly gaveta = signal<Gaveta | null>(null);
   protected readonly submitting = signal(false);
@@ -89,6 +120,16 @@ export class Equipamentos {
   protected readonly erros = signal<Record<string, string>>({});
   protected readonly toast = signal<{ titulo: string; detalhe: string } | null>(null);
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
+
+  /** Visão da rede (ADR-0126): lista ou mapa com os pinos; o mapa usa os filtros da lista. */
+  protected readonly visao = signal<'lista' | 'mapa'>('lista');
+  protected readonly reenquadrar = signal(0);
+  protected readonly coordenadas = signal<UnidadeNoMapaDto[]>([]);
+  /** Marcando a localização da unidade na ficha: o ponto escolhido (ainda não salvo). */
+  protected readonly marcando = signal(false);
+  protected readonly pontoMarcado = signal<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
+  protected readonly erroLocalizacao = signal<string | null>(null);
+  protected readonly salvandoLocalizacao = signal(false);
 
   protected readonly horarioEdit = signal<DiaEditavel[]>([]);
   protected readonly funciona24hEdit = signal(false);
@@ -110,6 +151,9 @@ export class Equipamentos {
     cidade: [''],
     estado: [''],
   });
+  protected readonly perfilForm = this.fb.nonNullable.group({ perfilId: [''], inicio: [''] });
+  protected readonly capacidadeForm = this.fb.nonNullable.group({ capacidadeId: [''], inicio: [''], observacao: [''] });
+  protected readonly encerrarForm = this.fb.nonNullable.group({ motivo: [''], fim: [''] });
   protected readonly situacaoForm = this.fb.nonNullable.group({
     situacao: ['EM_OPERACAO' as SituacaoOperacional],
     motivo: [''],
@@ -129,6 +173,7 @@ export class Equipamentos {
       .filter((u) => (tipo === 'GESTAO' ? NIVEIS_DE_GESTAO.includes(u.tipo) : tipo ? u.tipo === tipo : !NIVEIS_DE_GESTAO.includes(u.tipo)))
       .filter((u) => !this.regionalFiltro() || u.supervisaoRegionalId === this.regionalFiltro())
       .filter((u) => !this.situacaoFiltro() || u.situacaoOperacional === this.situacaoFiltro())
+      .filter((u) => !this.perfilFiltro() || (u.perfis ?? []).includes(this.perfilFiltro()))
       .filter((u) => !q || u.nome.toLowerCase().includes(q) || (u.cnes ?? '').includes(q.replace(/\D/g, '') || '§'));
   });
 
@@ -161,7 +206,11 @@ export class Equipamentos {
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.selecionadaId.set(this.route.snapshot.queryParamMap.get('unidade'));
+    this.modeloService.perfis().subscribe({ next: (p) => this.catalogoPerfis.set(p), error: () => this.catalogoPerfis.set([]) });
+    this.modeloService.capacidades().subscribe({ next: (c) => this.catalogoCapacidades.set(c), error: () => this.catalogoCapacidades.set([]) });
     this.carregar();
+    this.carregarCoordenadas();
+    if (this.route.snapshot.queryParamMap.get('visao') === 'mapa') this.visao.set('mapa');
   }
 
   protected pode(...permissoes: string[]): boolean {
@@ -189,7 +238,83 @@ export class Equipamentos {
     });
   }
 
+  // ── Mapa (ADR-0126) ────────────────────────────────────────────────────────────────────────────
+
+  private carregarCoordenadas(): void {
+    this.territorioService.unidades().pipe(catchError(() => of([]))).subscribe((u) => this.coordenadas.set(u));
+  }
+
+  private coordenadaDe(uuid: string): UnidadeNoMapaDto | undefined {
+    return this.coordenadas().find((c) => c.uuid === uuid && c.latitude != null && c.longitude != null);
+  }
+
+  /** As unidades da lista filtrada que têm coordenadas, com a cor do tipo e da situação. */
+  protected readonly pinosDaRede = computed<PinoMapa[]>(() => {
+    const selecionada = this.selecionadaId();
+    return this.filtradas().flatMap((u) => {
+      const c = this.coordenadaDe(u.uuid);
+      return c ? [{ id: u.uuid, lat: c.latitude!, lng: c.longitude!, sigla: this.tipos[u.tipo].sigla, classe: this.marcador(u), descricao: u.nome, destaque: u.uuid === selecionada }] : [];
+    });
+  });
+
+  protected readonly semCoordenadas = computed(() => this.filtradas().filter((u) => !this.coordenadaDe(u.uuid)).length);
+
+  protected mudarVisao(v: 'lista' | 'mapa'): void {
+    this.visao.set(v);
+    if (v === 'mapa') this.reenquadrar.update((n) => n + 1);
+  }
+
+  /** O pino da unidade na ficha: o ponto sendo marcado, ou o salvo. */
+  protected pinoDaFicha(f: FichaUnidadeDto): PinoMapa[] {
+    const marcado = this.pontoMarcado();
+    const salvo = this.coordenadaDe(f.resumo.uuid);
+    const lat = this.marcando() ? marcado.lat : salvo?.latitude;
+    const lng = this.marcando() ? marcado.lng : salvo?.longitude;
+    if (lat == null || lng == null) return [];
+    return [{ id: f.resumo.uuid, lat, lng, sigla: this.tipos[f.resumo.tipo].sigla, classe: `unit-pin ${this.tipos[f.resumo.tipo].familia}`, descricao: f.resumo.nome }];
+  }
+
+  protected localizacao(f: FichaUnidadeDto): UnidadeNoMapaDto | undefined {
+    return this.coordenadaDe(f.resumo.uuid);
+  }
+
+  protected marcarNoMapa(f: FichaUnidadeDto): void {
+    const c = this.coordenadaDe(f.resumo.uuid);
+    this.pontoMarcado.set({ lat: c?.latitude ?? null, lng: c?.longitude ?? null });
+    this.erroLocalizacao.set(null);
+    this.marcando.set(true);
+  }
+
+  protected mudarPonto(campo: 'lat' | 'lng', valor: string): void {
+    const n = valor.trim() === '' ? null : Number(valor.replace(',', '.'));
+    this.pontoMarcado.update((p) => ({ ...p, [campo]: n != null && Number.isFinite(n) ? n : null }));
+  }
+
+  protected salvarLocalizacao(f: FichaUnidadeDto): void {
+    const p = this.pontoMarcado();
+    if ((p.lat == null) !== (p.lng == null)) {
+      this.erroLocalizacao.set('Informe a latitude e a longitude juntas, ou nenhuma das duas.');
+      return;
+    }
+    this.salvandoLocalizacao.set(true);
+    this.territorioService.coordenadas(f.resumo.uuid, p.lat, p.lng).subscribe({
+      next: () => {
+        this.salvandoLocalizacao.set(false);
+        this.marcando.set(false);
+        this.toast.set({ titulo: 'Localização salva', detalhe: f.resumo.nome });
+        clearTimeout(this.toastTimer);
+        this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+        this.carregarCoordenadas();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.salvandoLocalizacao.set(false);
+        this.erroLocalizacao.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar a localização.');
+      },
+    });
+  }
+
   protected selecionar(uuid: string, atualizarUrl = true): void {
+    this.marcando.set(false);
     this.selecionadaId.set(uuid);
     this.carregandoFicha.set(true);
     if (atualizarUrl) this.router.navigate([], { queryParams: { unidade: uuid }, queryParamsHandling: 'merge', replaceUrl: true });
@@ -197,6 +322,11 @@ export class Equipamentos {
     this.equipeService.listar(uuid).subscribe({
       next: (r) => this.equipesDaUnidade.set(r.lista),
       error: () => this.equipesDaUnidade.set(null),
+    });
+    this.modelo.set(undefined);
+    this.modeloService.daUnidade(uuid).subscribe({
+      next: (m) => this.modelo.set(m),
+      error: () => this.modelo.set(null),
     });
     this.redeService.ficha(uuid).subscribe({
       next: (f) => {
@@ -285,6 +415,101 @@ export class Equipamentos {
     return DIAS_SEMANA[(new Date().getDay() + 6) % 7].id === dia;
   }
 
+  // ── Modelo operacional (ADR-0117) ──────────────────────────────────────────────────────────
+
+  /** Perfis do catálogo ativos e ainda não vigentes na unidade. */
+  protected perfisDisponiveis(m: ModeloOperacionalUnidadeDto): PerfilOperacionalDto[] {
+    const vigentes = new Set(m.perfis.map((p) => p.perfilId));
+    return this.catalogoPerfis().filter((p) => p.ativo && !vigentes.has(p.uuid));
+  }
+
+  /** Capacidades ativas, não vigentes, transversais ou de um perfil que a unidade tem — agrupadas para o seletor. */
+  protected capacidadesDisponiveis(m: ModeloOperacionalUnidadeDto): { nome: string; itens: CapacidadeAssistencialDto[] }[] {
+    const perfis = new Set(m.perfis.map((p) => p.perfilId));
+    const vigentes = new Set(m.capacidades.map((c) => c.capacidadeId));
+    const livres = this.catalogoCapacidades().filter((c) => c.ativo && !vigentes.has(c.uuid) && (!c.perfilId || perfis.has(c.perfilId)));
+    const grupos = m.perfis.map((p) => ({ nome: p.nome, itens: livres.filter((c) => c.perfilId === p.perfilId) }));
+    grupos.push({ nome: GRUPO_TRANSVERSAL, itens: livres.filter((c) => !c.perfilId) });
+    return grupos.filter((g) => g.itens.length);
+  }
+
+  /** Capacidades vigentes por perfil, na ordem dos perfis da unidade, e as transversais por último. */
+  protected gruposDeCapacidades(m: ModeloOperacionalUnidadeDto): GrupoDeCapacidades[] {
+    const grupos: GrupoDeCapacidades[] = m.perfis.map((p) => ({ nome: p.nome, capacidades: m.capacidades.filter((c) => c.perfilId === p.perfilId) }));
+    grupos.push({ nome: GRUPO_TRANSVERSAL, capacidades: m.capacidades.filter((c) => !c.perfilId) });
+    return grupos;
+  }
+
+  protected abrirPerfil(m: ModeloOperacionalUnidadeDto): void {
+    this.perfilForm.reset({ perfilId: '', inicio: '' });
+    this.abrir({ tipo: 'perfil', modelo: m });
+  }
+
+  protected abrirCapacidade(m: ModeloOperacionalUnidadeDto): void {
+    this.capacidadeForm.reset({ capacidadeId: '', inicio: '', observacao: '' });
+    this.abrir({ tipo: 'capacidade', modelo: m });
+  }
+
+  protected abrirEncerrar(m: ModeloOperacionalUnidadeDto, alvo: 'perfil' | 'capacidade', associacaoId: string, nome: string): void {
+    this.encerrarForm.reset({ motivo: '', fim: '' });
+    this.abrir({ tipo: 'encerrar', modelo: m, alvo, associacaoId, nome });
+  }
+
+  private hojeIso(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  private salvarPerfil(m: ModeloOperacionalUnidadeDto): void {
+    const v = this.perfilForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.perfilId) erros['perfilId'] = 'Escolha o perfil.';
+    if (v.inicio && v.inicio > this.hojeIso()) erros['inicioPerfil'] = 'O início não pode ser no futuro.';
+    if (!this.validar(erros)) return;
+    const nome = this.catalogoPerfis().find((p) => p.uuid === v.perfilId)?.nome ?? '';
+    this.enviarModelo(this.modeloService.incluirPerfil(m.unidadeId, v.perfilId, v.inicio), 'Perfil incluído', `${m.unidadeNome} · ${nome}`);
+  }
+
+  private salvarCapacidade(m: ModeloOperacionalUnidadeDto): void {
+    const v = this.capacidadeForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.capacidadeId) erros['capacidadeId'] = 'Escolha a capacidade.';
+    if (v.inicio && v.inicio > this.hojeIso()) erros['inicioCapacidade'] = 'O início não pode ser no futuro.';
+    if (!this.validar(erros)) return;
+    const nome = this.catalogoCapacidades().find((c) => c.uuid === v.capacidadeId)?.nome ?? '';
+    this.enviarModelo(this.modeloService.incluirCapacidade(m.unidadeId, v.capacidadeId, v.inicio, v.observacao.trim()),
+      'Capacidade incluída', `${m.unidadeNome} · ${nome}`);
+  }
+
+  private salvarEncerramento(g: Extract<Gaveta, { tipo: 'encerrar' }>): void {
+    const v = this.encerrarForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.motivo.trim()) erros['motivoFim'] = 'Informe o motivo.';
+    if (v.fim && v.fim > this.hojeIso()) erros['fim'] = 'O fim não pode ser no futuro.';
+    if (!this.validar(erros)) return;
+    this.enviarModelo(this.modeloService.encerrar(g.modelo.unidadeId, g.alvo, g.associacaoId, v.motivo.trim(), v.fim),
+      g.alvo === 'perfil' ? 'Perfil encerrado' : 'Capacidade encerrada', `${g.modelo.unidadeNome} · ${g.nome}`);
+  }
+
+  private enviarModelo(req: Observable<ModeloOperacionalUnidadeDto>, titulo: string, detalhe: string): void {
+    this.submitting.set(true);
+    req.subscribe({
+      next: (m) => {
+        this.submitting.set(false);
+        this.fecharGaveta();
+        this.mostrarToast(titulo, detalhe);
+        this.modelo.set(m);
+        // Mantém o filtro por perfil da lista em dia sem recarregar a rede inteira.
+        const perfis = m.perfis.map((p) => p.codigo).sort();
+        this.rede.update((r) => (r ? { ...r, rede: r.rede.map((u) => (u.uuid === m.unidadeId ? { ...u, perfis } : u)) } : r));
+      },
+      error: (error: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.erroApi.set((error.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar. Tente novamente.');
+      },
+    });
+  }
+
   protected erroCampo(campo: string): string {
     return this.erros()[campo] ?? '';
   }
@@ -294,6 +519,9 @@ export class Equipamentos {
   protected tituloGaveta(g: Gaveta): string {
     if (g.tipo === 'unidade') return g.ficha ? 'Editar unidade' : 'Nova unidade';
     if (g.tipo === 'horario') return 'Horário de funcionamento';
+    if (g.tipo === 'perfil') return 'Incluir perfil operacional';
+    if (g.tipo === 'capacidade') return 'Incluir capacidade';
+    if (g.tipo === 'encerrar') return g.alvo === 'perfil' ? 'Encerrar perfil' : 'Encerrar capacidade';
     return 'Situação operacional';
   }
 
@@ -370,6 +598,9 @@ export class Equipamentos {
     this.erroApi.set(null);
     if (g.tipo === 'unidade') this.salvarUnidade(g.ficha);
     else if (g.tipo === 'horario') this.salvarHorario(g.ficha);
+    else if (g.tipo === 'perfil') this.salvarPerfil(g.modelo);
+    else if (g.tipo === 'capacidade') this.salvarCapacidade(g.modelo);
+    else if (g.tipo === 'encerrar') this.salvarEncerramento(g);
     else this.salvarSituacao(g.ficha);
   }
 

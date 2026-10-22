@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AcessoDaInterface } from '../../../core/models/auth';
+import { MODALIDADES_INTERNACAO, ModalidadeInternacao } from '../../../core/models/internacao';
 import {
   CaraterInternacao,
   EVENTOS_LEITO,
@@ -120,6 +121,14 @@ export class Leitos {
   protected readonly trocaForm = this.fb.nonNullable.group({ leitoId: [''], motivo: [''], profissionalMatricula: [''] });
   protected readonly altaForm = this.fb.nonNullable.group({ tipoAlta: ['MELHORADO' as TipoAlta], sumario: [''], medicoMatricula: [''], altaEm: [''] });
   protected readonly bloqueioForm = this.fb.nonNullable.group({ motivo: [''] });
+  /** Internação psiquiátrica (ADR-0123): modalidade e comunicação ao Ministério Público, no detalhe. */
+  protected readonly modalidades = MODALIDADES_INTERNACAO;
+  protected readonly listaModalidades = Object.keys(MODALIDADES_INTERNACAO) as ModalidadeInternacao[];
+  protected readonly modalidadeForm = this.fb.nonNullable.group({ modalidade: ['' as ModalidadeInternacao | ''], ordemJudicial: [''] });
+  protected readonly mpForm = this.fb.nonNullable.group({ protocolo: [''], observacao: [''] });
+  protected readonly erroPsiq = signal<string | null>(null);
+  protected readonly salvandoPsiq = signal(false);
+  protected readonly pendentesMp = signal<InternacaoResponseDto[]>([]);
   protected readonly leitoForm = this.fb.nonNullable.group({
     unidadeId: [''],
     setorId: [''],
@@ -200,6 +209,7 @@ export class Leitos {
       this.internacoes.set(internacoes);
       this.carregando.set(false);
       this.carregarIndicadores();
+      this.carregarPendentesMp();
     });
   }
 
@@ -210,6 +220,7 @@ export class Leitos {
   protected filtrarUnidade(id: string): void {
     this.unidadeFiltro.set(id);
     this.carregarIndicadores();
+    this.carregarPendentesMp();
   }
 
   protected selecionarAba(aba: Aba, focar = false): void {
@@ -342,9 +353,52 @@ export class Leitos {
     this.erroDetalhe.set(null);
     this.abrir({ tipo: 'internacao', internacaoId });
     this.internacaoService.buscar(internacaoId).subscribe({
-      next: (d) => this.detalhe.set(d),
+      next: (d) => {
+        this.detalhe.set(d);
+        this.erroPsiq.set(null);
+        this.modalidadeForm.reset({ modalidade: d.modalidade ?? '', ordemJudicial: d.ordemJudicial ?? '' });
+        this.mpForm.reset({ protocolo: '', observacao: '' });
+      },
       error: (e: HttpErrorResponse) =>
         this.erroDetalhe.set(e.status === 403 ? 'Esta internação é de uma unidade fora do seu acesso.' : 'Não foi possível abrir a internação.'),
+    });
+  }
+
+  /** Involuntárias com comunicação ao Ministério Público pendente, no escopo (ADR-0123). */
+  protected carregarPendentesMp(): void {
+    this.internacaoService.listar({ unidadeId: this.unidadeFiltro() || undefined, comunicacaoMpPendente: true })
+      .pipe(catchError(() => of([]))).subscribe((l) => this.pendentesMp.set(l));
+  }
+
+  protected salvarModalidade(d: InternacaoResponseDto): void {
+    const v = this.modalidadeForm.getRawValue();
+    if (!v.modalidade) { this.erroPsiq.set('Escolha a modalidade.'); return; }
+    if (v.modalidade === 'COMPULSORIA' && !v.ordemJudicial.trim()) { this.erroPsiq.set('Na compulsória, informe o número da ordem judicial.'); return; }
+    this.enviarPsiq(this.internacaoService.definirModalidade(d.uuid, v.modalidade, v.ordemJudicial.trim()), 'Modalidade registrada');
+  }
+
+  protected registrarComunicacaoMp(d: InternacaoResponseDto): void {
+    const v = this.mpForm.getRawValue();
+    if (!d.comunicacaoMpPendente) return;
+    this.enviarPsiq(this.internacaoService.comunicarMp(d.uuid, { momento: d.comunicacaoMpPendente, protocolo: v.protocolo.trim() || null,
+      observacao: v.observacao.trim() || null }), 'Comunicação ao Ministério Público registrada');
+  }
+
+  private enviarPsiq(req: Observable<InternacaoResponseDto>, titulo: string): void {
+    this.salvandoPsiq.set(true);
+    this.erroPsiq.set(null);
+    req.subscribe({
+      next: (d) => {
+        this.salvandoPsiq.set(false);
+        this.detalhe.set(d);
+        this.mpForm.reset({ protocolo: '', observacao: '' });
+        this.mostrarToast(titulo, d.pacienteNome);
+        this.carregarPendentesMp();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.salvandoPsiq.set(false);
+        this.erroPsiq.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar.');
+      },
     });
   }
 

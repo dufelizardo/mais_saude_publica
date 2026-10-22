@@ -491,28 +491,34 @@
         }
       </div>
       @for (p of procedimentosVigentes(c.procedimentos); track p.uuid) {
-        <div class="proc">
-          <div>
-            <span class="cell-main" style="font-weight: 500;">{{ p.tipo }}</span>
-            <span class="cell-sub">{{ formatarDataHora(p.dataRealizacao) }} · {{ p.profissionalNome }}@if (p.descricao) { · {{ p.descricao }} }</span>
-            @if (p.justificativaStatus) { <span class="cell-sub">Cancelado: {{ p.justificativaStatus }}</span> }
-            <ng-container *ngTemplateOutlet="recRetificacao; context: { $implicit: p }"></ng-container>
-          </div>
-          <div class="dw-actions" style="align-items: center;">
-            <span [class]="'badge badge--' + procStatus[p.status].classe"><span class="dot" aria-hidden="true"></span>{{ procStatus[p.status].rotulo }}</span>
-            @if (atId && p.status === 'AGENDADO') {
-              @if (pode('PROCEDIMENTO.REGISTRAR')) { <button type="button" class="btn btn--sm" (click)="abrirDesfecho(atId, p)">Registrar desfecho</button> }
-            }
-            @if (atId) {
-              @if (pode('PROCEDIMENTO.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirProcedimento(atId, c.consulta.uuid, p)">Retificar</button> }
-            }
-          </div>
-        </div>
+        <ng-container *ngTemplateOutlet="recProcedimento; context: { $implicit: p, atId: atId, consultaId: c.consulta.uuid }"></ng-container>
       } @empty {
         <p class="cell-sub">Nenhum procedimento.</p>
       }
     </div>
   </article>
+</ng-template>
+
+<!-- Um procedimento, da consulta ou direto no atendimento (ADR-0136), com o complemento odontológico. -->
+<ng-template #recProcedimento let-p let-atId="atId" let-consultaId="consultaId">
+  <div class="proc">
+    <div>
+      <span class="cell-main" style="font-weight: 500;">{{ p.tipo }}@if (p.sigtap) { <span class="cell-sub mono" style="display: inline;"> · SIGTAP {{ p.sigtap }}</span> }</span>
+      @if (p.dente) { <span class="cell-sub">{{ complemento(p) }}</span> }
+      <span class="cell-sub">{{ formatarDataHora(p.dataRealizacao) }} · {{ p.profissionalNome }}@if (p.descricao) { · {{ p.descricao }} }</span>
+      @if (p.justificativaStatus) { <span class="cell-sub">Cancelado: {{ p.justificativaStatus }}</span> }
+      <ng-container *ngTemplateOutlet="recRetificacao; context: { $implicit: p }"></ng-container>
+    </div>
+    <div class="dw-actions" style="align-items: center;">
+      <span [class]="'badge badge--' + statusDoProcedimento(p).classe"><span class="dot" aria-hidden="true"></span>{{ statusDoProcedimento(p).rotulo }}</span>
+      @if (atId && p.status === 'AGENDADO') {
+        @if (pode('PROCEDIMENTO.REGISTRAR')) { <button type="button" class="btn btn--sm" (click)="abrirDesfecho(atId, p)">Registrar desfecho</button> }
+      }
+      @if (atId) {
+        @if (pode('PROCEDIMENTO.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirProcedimento(atId, consultaId, p)">Retificar</button> }
+      }
+    </div>
+  </div>
 </ng-template>
 
 <ng-template #recAdministracao let-m let-atId="atId" let-voltar="voltar">
@@ -630,6 +636,69 @@
                     <ng-container *ngTemplateOutlet="recConsulta; context: { $implicit: c, atId: a.uuid }"></ng-container>
                   } @empty { <p class="cell-sub">Nenhum registro.</p> }
                 </section>
+                @if (a.especialidadeOdontologica) {
+                  <section class="dsec" aria-label="Avaliação odontológica">
+                    <div class="dsec__h">
+                      <h3>Avaliação odontológica <span class="cnt">{{ avaliacoesOdontologicasVigentes(registros()).length }}</span></h3>
+                      @if (pode('ODONTOLOGIA.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAvaliacaoOdontologica(a.uuid)">+ Avaliação odontológica</button> }
+                    </div>
+                    @for (o of avaliacoesOdontologicasVigentes(registros()); track o.uuid) {
+                      <article class="rec">
+                        <div class="rec__head">
+                          <div>
+                            <span [class]="'tag tag--' + riscosBucais[o.risco].classe">{{ riscosBucais[o.risco].rotulo }}</span> <span class="cell-main" style="display: inline;">{{ necessidades[o.necessidadeTratamento] }}</span>
+                            <span class="cell-sub">{{ formatarDataHora(o.dataHora) }} · {{ o.profissionalNome }}</span>
+                          </div>
+                          @if (pode('ODONTOLOGIA.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAvaliacaoOdontologica(a.uuid, o)" [attr.aria-label]="'Retificar avaliação odontológica'">Retificar</button> }
+                        </div>
+                        <dl class="kv">
+                          @if (o.queixaPrincipal) { <div><dt>Queixa principal</dt><dd>{{ o.queixaPrincipal }}</dd></div> }
+                          @if (o.anamnese) { <div><dt>Anamnese</dt><dd>{{ o.anamnese }}</dd></div> }
+                          @if (o.exameClinico) { <div><dt>Exame clínico</dt><dd>{{ o.exameClinico }}</dd></div> }
+                          @if (o.diagnostico) { <div><dt>Diagnóstico</dt><dd>{{ o.diagnostico }}</dd></div> }
+                          @if (o.planoInicial) { <div><dt>Plano inicial</dt><dd>{{ o.planoInicial }}</dd></div> }
+                          @if (o.observacoes) { <div><dt>Observações</dt><dd>{{ o.observacoes }}</dd></div> }
+                        </dl>
+                        <ng-container *ngTemplateOutlet="recRetificacao; context: { $implicit: o }"></ng-container>
+                      </article>
+                    } @empty { <p class="cell-sub">Nenhum registro.</p> }
+                  </section>
+                  <section class="dsec" aria-label="Procedimentos odontológicos">
+                    <div class="dsec__h">
+                      <h3>Procedimentos odontológicos <span class="cnt">{{ procedimentosDoAtendimento(registros()).length }}</span></h3>
+                      @if (pode('PROCEDIMENTO.REGISTRAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirProcedimento(a.uuid, null)">+ Procedimento odontológico</button> }
+                    </div>
+                    @for (p of procedimentosDoAtendimento(registros()); track p.uuid) {
+                      <ng-container *ngTemplateOutlet="recProcedimento; context: { $implicit: p, atId: a.uuid, consultaId: null }"></ng-container>
+                    } @empty { <p class="cell-sub">Nenhum procedimento. O realizado com dente ou face grava o odontograma.</p> }
+                  </section>
+                  <section class="dsec" aria-label="Plano de tratamento">
+                    <div class="dsec__h"><h3>Plano de tratamento</h3></div>
+                    <app-plano-tratamento [pacienteId]="a.pacienteUuid" [atendimentoId]="a.uuid" [unidadeId]="a.unidadeUuid" [avaliacaoId]="avaliacaoOdontologicaVigente(registros())"
+                      [podePlanejar]="pode('ODONTOLOGIA.PLANEJAR')" [podeExecutar]="pode('PROCEDIMENTO.REGISTRAR')" [catalogo]="catalogoOdontologico()"
+                      [matriculaPadrao]="matriculaPadrao()" [recarregar]="registros()" (executar)="executarItemPlano(a.uuid, $event)" />
+                  </section>
+                  <section class="dsec" aria-label="Prótese">
+                    <div class="dsec__h"><h3>Prótese</h3></div>
+                    <app-tratamento-protetico [pacienteId]="a.pacienteUuid" [atendimentoId]="a.uuid" [podePlanejar]="pode('ODONTOLOGIA.PLANEJAR')"
+                      [matriculaPadrao]="matriculaPadrao()" [recarregar]="registros()" />
+                  </section>
+                  <section class="dsec" aria-label="Odontograma do paciente">
+                    <div class="dsec__h"><h3>Odontograma</h3></div>
+                    @if (!avaliacaoOdontologicaVigente(registros())) {
+                      <p class="cell-sub">Registre a avaliação odontológica para marcar o odontograma; o histórico do paciente aparece abaixo.</p>
+                    }
+                    <app-odontograma [pacienteId]="a.pacienteUuid" [avaliacaoId]="avaliacaoOdontologicaVigente(registros())"
+                      [podeRegistrar]="pode('ODONTOLOGIA.REGISTRAR')" [recarregar]="registros()" />
+                  </section>
+                } @else if (procedimentosDoAtendimento(registros()).length) {
+                  <section class="dsec" aria-label="Procedimentos do atendimento">
+                    <div class="dsec__h"><h3>Procedimentos do atendimento <span class="cnt">{{ procedimentosDoAtendimento(registros()).length }}</span></h3></div>
+                    @for (p of procedimentosDoAtendimento(registros()); track p.uuid) {
+                      <ng-container *ngTemplateOutlet="recProcedimento; context: { $implicit: p, atId: a.uuid, consultaId: null }"></ng-container>
+                    }
+                  </section>
+                }
                 <section class="dsec">
                   <div class="dsec__h">
                     <h3>Medicação <span class="cnt">{{ administracoesVigentes(registros()).length }}</span></h3>
@@ -889,6 +958,15 @@
                 @for (t of atTipos; track t.valor) { <label><input type="radio" formControlName="tipo" [value]="t.valor" />{{ t.rotulo }}</label> }
               </div>
             </fieldset>
+            <div class="dw-field">
+              <label for="f-especialidade">Especialidade<span class="opt">opcional · sem ela, a da marcação</span></label>
+              <select id="f-especialidade" formControlName="especialidadeId">
+                <option value="">Nenhuma</option>
+                @for (e of especialidades(); track e.uuid) {
+                  @if (e.ativa || e.uuid === atForm.controls.especialidadeId.value) { <option [value]="e.uuid">{{ e.nome }}</option> }
+                }
+              </select>
+            </div>
             <fieldset class="dw-field">
               <legend>Status <span class="req" aria-hidden="true">*</span></legend>
               <div class="radios">
@@ -958,6 +1036,59 @@
         </form>
       }
 
+      @case ('odonto') {
+        <form class="dw-form" [formGroup]="odontoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <ng-container *ngTemplateOutlet="cabecalhoRegistro; context: { atId: g.atId, original: g.original }"></ng-container>
+            @if (g.original) {
+              <div class="dw-field">
+                <label for="f-motivoRetificacao">Motivo da retificação <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <textarea id="f-motivoRetificacao" formControlName="motivoRetificacao" [attr.aria-invalid]="!!erro('motivoRetificacao')" aria-describedby="e-motivoRetificacao" placeholder="O que está sendo corrigido e por quê"></textarea>
+                @if (erro('motivoRetificacao')) { <p class="dw-err" id="e-motivoRetificacao">{{ erro('motivoRetificacao') }}</p> }
+              </div>
+            }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-dataHora">Data e hora <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-dataHora" type="datetime-local" formControlName="dataHora" [attr.aria-invalid]="!!erro('dataHora')" aria-describedby="e-dataHora" />
+                @if (erro('dataHora')) { <p class="dw-err" id="e-dataHora">{{ erro('dataHora') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-profissionalMatricula">Matrícula do cirurgião-dentista <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-profissionalMatricula" type="text" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('profissionalMatricula')" aria-describedby="e-profissionalMatricula" />
+                @if (erro('profissionalMatricula')) { <p class="dw-err" id="e-profissionalMatricula">{{ erro('profissionalMatricula') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field"><label for="f-queixaOdonto">Queixa principal<span class="opt">opcional</span></label><textarea id="f-queixaOdonto" formControlName="queixaPrincipal"></textarea></div>
+            <div class="dw-field"><label for="f-anamnese">Anamnese<span class="opt">opcional</span></label><textarea id="f-anamnese" formControlName="anamnese"></textarea></div>
+            <div class="dw-field"><label for="f-exameClinico">Exame clínico e achados<span class="opt">opcional</span></label><textarea id="f-exameClinico" formControlName="exameClinico"></textarea></div>
+            <div class="dw-field"><label for="f-diagnosticoOdonto">Diagnóstico e condições bucais<span class="opt">opcional</span></label><textarea id="f-diagnosticoOdonto" formControlName="diagnostico"></textarea></div>
+            <fieldset class="dw-field">
+              <legend>Risco em saúde bucal <span class="req" aria-hidden="true">*</span></legend>
+              <div class="radios" role="radiogroup" aria-describedby="e-risco">
+                @for (r of listaRiscosBucais; track r) { <label><input type="radio" formControlName="risco" [value]="r" [id]="$first ? 'f-risco' : null" />{{ riscosBucais[r].rotulo }}</label> }
+              </div>
+              @if (erro('risco')) { <p class="dw-err" id="e-risco">{{ erro('risco') }}</p> }
+            </fieldset>
+            <div class="dw-field">
+              <label for="f-necessidadeTratamento">Necessidade de tratamento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-necessidadeTratamento" formControlName="necessidadeTratamento" [attr.aria-invalid]="!!erro('necessidadeTratamento')" aria-describedby="e-necessidadeTratamento">
+                <option value="">Escolha…</option>
+                @for (n of listaNecessidades; track n) { <option [value]="n">{{ necessidades[n] }}</option> }
+              </select>
+              @if (erro('necessidadeTratamento')) { <p class="dw-err" id="e-necessidadeTratamento">{{ erro('necessidadeTratamento') }}</p> }
+            </div>
+            <div class="dw-field"><label for="f-planoInicial">Plano inicial<span class="opt">opcional</span></label><textarea id="f-planoInicial" formControlName="planoInicial"></textarea></div>
+            <div class="dw-field"><label for="f-observacoesOdonto">Observações<span class="opt">opcional</span></label><textarea id="f-observacoesOdonto" formControlName="observacoes"></textarea></div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.original ? 'Salvar retificação' : 'Salvar avaliação') }}</button>
+          </footer>
+        </form>
+      }
+
       @case ('cons') {
         <form class="dw-form" [formGroup]="consForm" (ngSubmit)="salvar()" novalidate>
           <div class="dw-body">
@@ -1009,8 +1140,13 @@
             <ng-container *ngTemplateOutlet="cabecalhoRegistro; context: { atId: g.atId, original: g.original }"></ng-container>
             <div class="box box--info">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <div>O procedimento fica dentro de uma consulta, não direto no atendimento.</div>
+              <div>{{ g.consultaId ? 'Procedimento da consulta.' : 'Procedimento do atendimento, sem consulta: o técnico em saúde bucal também registra os que a lei permite.' }}</div>
             </div>
+            @if (procItemPlano(); as ip) {
+              <div class="box box--info" aria-label="Item do plano executado">
+                <div>Executa o item {{ ip.ordem }} do plano de tratamento: {{ ip.procedimentoNome }}. Realizado, o item fica concluído; agendado, em andamento.</div>
+              </div>
+            }
             @if (g.original) {
               <div class="dw-field">
                 <label for="f-motivoRetificacao">Motivo da retificação <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
@@ -1019,10 +1155,41 @@
               </div>
             }
             <div class="dw-field">
-              <label for="f-tipo">Tipo de procedimento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
-              <input id="f-tipo" type="text" formControlName="tipo" autocomplete="off" placeholder="Ex.: Curativo, Glicemia capilar" [attr.aria-invalid]="!!erro('tipo')" aria-describedby="e-tipo" />
-              @if (erro('tipo')) { <p class="dw-err" id="e-tipo">{{ erro('tipo') }}</p> }
+              <label for="f-catalogoId">Procedimento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-catalogoId" formControlName="catalogoId" aria-describedby="h-catalogoId">
+                <option value="">Outro (texto livre)</option>
+                @for (c of catalogoDoAtendimento(g.atId); track c.uuid) { <option [value]="c.uuid">{{ c.nome }}{{ c.exigeDentista ? ' (só dentista)' : '' }}</option> }
+              </select>
+              <p class="dw-hint" id="h-catalogoId">Do catálogo geral de procedimentos: os da especialidade do atendimento e os de uso geral.</p>
             </div>
+            @if (procItem(); as item) {
+              @if (item.alcance !== 'NENHUM') {
+                <div class="dw-field">
+                  <label for="f-dente">Dente (FDI) <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <input id="f-dente" type="text" inputmode="numeric" maxlength="2" autocomplete="off" formControlName="dente" placeholder="Ex.: 36" [attr.aria-invalid]="!!erro('dente')" aria-describedby="h-dente e-dente" />
+                  <p class="dw-hint" id="h-dente">Permanentes 11 a 48; decíduos 51 a 85.</p>
+                  @if (erro('dente')) { <p class="dw-err" id="e-dente">{{ erro('dente') }}</p> }
+                </div>
+                @if (item.alcance === 'FACE') {
+                  <fieldset class="dw-field">
+                    <legend>Faces <span class="req" aria-hidden="true">*</span></legend>
+                    <div class="radios" aria-describedby="e-faces">
+                      @for (f of facesLista; track f) { <label><input type="checkbox" [checked]="procFaces().includes(f)" (change)="alternarFace(f)" />{{ facesDente[f] }}</label> }
+                    </div>
+                    @if (erro('faces')) { <p class="dw-err" id="e-faces">{{ erro('faces') }}</p> }
+                  </fieldset>
+                }
+              }
+              @if (item.condicaoResultanteNome) {
+                <p class="dw-hint">Realizado, grava "{{ item.condicaoResultanteNome }}" no odontograma.</p>
+              }
+            } @else {
+              <div class="dw-field">
+                <label for="f-tipo">Tipo de procedimento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-tipo" type="text" formControlName="tipo" autocomplete="off" placeholder="Ex.: Curativo, Glicemia capilar" [attr.aria-invalid]="!!erro('tipo')" aria-describedby="e-tipo" />
+                @if (erro('tipo')) { <p class="dw-err" id="e-tipo">{{ erro('tipo') }}</p> }
+              </div>
+            }
             <div class="dw-row">
               <div class="dw-field">
                 <label for="f-dataRealizacao">Data <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>

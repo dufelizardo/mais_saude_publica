@@ -1,5 +1,12 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
+import com.edufelizardo.maissaudepublica.models.ComunicacaoMinisterioPublico;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ComunicacaoMpRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ModalidadeInternacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ComunicacaoMpDto;
+import com.edufelizardo.maissaudepublica.models.enuns.ModalidadeInternacao;
+import com.edufelizardo.maissaudepublica.models.enuns.MomentoComunicacaoMp;
+import com.edufelizardo.maissaudepublica.repositories.ComunicacaoMinisterioPublicoRepository;
 import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
@@ -67,6 +74,9 @@ public class InternacaoService {
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
+    private ComunicacaoMinisterioPublicoRepository comunicacaoMpRepository;
 
     @Transactional
     public InternacaoResponseDto internar(InternacaoRequestDto dto) {
@@ -170,12 +180,25 @@ public class InternacaoService {
     /** Internações das unidades do escopo, da mais recente à mais antiga; sem motivo, sumário e eventos. */
     @Transactional(readOnly = true)
     public List<InternacaoResponseDto> listar(UUID unidadeId, StatusInternacao status, UUID pacienteId) {
+        return listar(unidadeId, status, pacienteId, false);
+    }
+
+    /** Com {@code comunicacaoMpPendente}, só as involuntárias com comunicação ao Ministério Público pendente (ADR-0123). */
+    @Transactional(readOnly = true)
+    public List<InternacaoResponseDto> listar(UUID unidadeId, StatusInternacao status, UUID pacienteId, boolean comunicacaoMpPendente) {
         List<Internacao> todas = pacienteId != null ? internacaoRepository.findByPaciente_UuidOrderByAdmitidaEmDesc(pacienteId)
                 : internacaoRepository.findAllByOrderByAdmitidaEmDesc();
-        return controleDeAcesso.filtrar(todas.stream(), i -> Stream.of(i.getUnidade()), LeitoService.VER)
+        List<Internacao> visiveis = controleDeAcesso.filtrar(todas.stream(), i -> Stream.of(i.getUnidade()), LeitoService.VER)
                 .filter(i -> unidadeId == null || i.getUnidade().getUuid().equals(unidadeId))
                 .filter(i -> status == null || i.getStatus() == status)
-                .map(i -> InternacaoResponseDto.fromInternacao(i, List.of(), false))
+                .toList();
+        List<UUID> involuntarias = visiveis.stream().filter(i -> i.getModalidade() == ModalidadeInternacao.INVOLUNTARIA).map(Internacao::getUuid).toList();
+        java.util.Map<UUID, List<ComunicacaoMinisterioPublico>> comunicacoes = involuntarias.isEmpty() ? java.util.Map.of()
+                : comunicacaoMpRepository.findDasInternacoes(involuntarias).stream()
+                .collect(java.util.stream.Collectors.groupingBy(c -> c.getInternacao().getUuid()));
+        return visiveis.stream()
+                .map(i -> comMp(InternacaoResponseDto.fromInternacao(i, List.of(), false), i, comunicacoes.getOrDefault(i.getUuid(), List.of())))
+                .filter(d -> !comunicacaoMpPendente || d.getComunicacaoMpPendente() != null)
                 .toList();
     }
 
@@ -189,12 +212,89 @@ public class InternacaoService {
         return detalhe(i);
     }
 
+    // ── Internação psiquiátrica (ADR-0123) ─────────────────────────────────────────────────────────
+
+    /** Prazo da comunicação ao Ministério Público: 72 horas da admissão e da alta (Lei 10.216/2001, art. 8º). */
+    static final java.time.Duration PRAZO_MP = java.time.Duration.ofHours(72);
+
+    /** Informa ou corrige a modalidade. Na compulsória, a ordem judicial é obrigatória. */
+    @Transactional
+    public InternacaoResponseDto definirModalidade(UUID uuid, ModalidadeInternacaoRequestDto dto) {
+        Internacao i = travar(uuid);
+        controleDeAcesso.exigir(GERENCIAR, i.getUnidade());
+        String ordem = dto.getOrdemJudicial() == null || dto.getOrdemJudicial().isBlank() ? null : dto.getOrdemJudicial().trim();
+        if (dto.getModalidade() == ModalidadeInternacao.COMPULSORIA && ordem == null) {
+            throw new ResourceBadRequestException("Na internação compulsória, informe o número do processo ou da ordem judicial.");
+        }
+        i.setModalidade(dto.getModalidade());
+        i.setOrdemJudicial(dto.getModalidade() == ModalidadeInternacao.COMPULSORIA ? ordem : null);
+        internacaoRepository.save(i);
+        ContextoAuditoria.detalhe("Modalidade: " + dto.getModalidade() + ".");
+        return detalhe(i);
+    }
+
+    /** Registra a comunicação da involuntária ao Ministério Público, na admissão ou na alta. */
+    @Transactional
+    public InternacaoResponseDto comunicarMp(UUID uuid, ComunicacaoMpRequestDto dto) {
+        Internacao i = travar(uuid);
+        controleDeAcesso.exigir(GERENCIAR, i.getUnidade());
+        if (i.getModalidade() != ModalidadeInternacao.INVOLUNTARIA) {
+            throw new ResourceUnprocessableEntityException("Só a internação involuntária é comunicada ao Ministério Público.");
+        }
+        if (dto.getMomento() == MomentoComunicacaoMp.ALTA && i.getAltaEm() == null) {
+            throw new ResourceUnprocessableEntityException("A comunicação da alta vem depois da alta.");
+        }
+        if (comunicacaoMpRepository.existsByInternacao_UuidAndMomento(i.getUuid(), dto.getMomento())) {
+            throw new ResourceUnprocessableEntityException("A comunicação da " + (dto.getMomento() == MomentoComunicacaoMp.ALTA ? "alta" : "admissão")
+                    + " já foi registrada.");
+        }
+        Instant em = dto.getComunicadaEm() != null ? dto.getComunicadaEm() : Instant.now();
+        Instant inicio = dto.getMomento() == MomentoComunicacaoMp.ALTA ? i.getAltaEm() : i.getAdmitidaEm();
+        if (em.isBefore(inicio) || em.isAfter(Instant.now().plusSeconds(60))) {
+            throw new ResourceBadRequestException("A comunicação precisa ser entre a " + (dto.getMomento() == MomentoComunicacaoMp.ALTA ? "alta" : "admissão")
+                    + " e agora.");
+        }
+        ComunicacaoMinisterioPublico c = new ComunicacaoMinisterioPublico();
+        c.setInternacao(i);
+        c.setMomento(dto.getMomento());
+        c.setComunicadaEm(em);
+        String matricula = dto.getResponsavelMatricula() == null || dto.getResponsavelMatricula().isBlank() ? null : dto.getResponsavelMatricula().trim();
+        c.setResponsavel(matricula != null ? buscarProfissional(matricula)
+                : (UsuarioAutenticado.cpf() == null ? null : profissionalRepository.findByCpfAndAtivoTrue(UsuarioAutenticado.cpf()).orElse(null)));
+        c.setProtocolo(dto.getProtocolo() == null || dto.getProtocolo().isBlank() ? null : dto.getProtocolo().trim());
+        c.setObservacao(dto.getObservacao() == null || dto.getObservacao().isBlank() ? null : dto.getObservacao().trim());
+        c.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        comunicacaoMpRepository.save(c);
+        ContextoAuditoria.detalhe("Comunicação ao Ministério Público: " + dto.getMomento() + ".");
+        return detalhe(i);
+    }
+
+    /** Acrescenta ao DTO as comunicações ao MP, a pendente e o prazo (só na involuntária). */
+    private InternacaoResponseDto comMp(InternacaoResponseDto d, Internacao i, List<ComunicacaoMinisterioPublico> comunicacoes) {
+        d.setComunicacoesMp(comunicacoes.stream().map(c -> new ComunicacaoMpDto(c.getUuid(), c.getMomento(), c.getComunicadaEm(),
+                c.getResponsavel() != null ? c.getResponsavel().getNome() : null, c.getProtocolo(), c.getObservacao())).toList());
+        if (i.getModalidade() != ModalidadeInternacao.INVOLUNTARIA) {
+            return d;
+        }
+        boolean admissao = comunicacoes.stream().anyMatch(c -> c.getMomento() == MomentoComunicacaoMp.ADMISSAO);
+        boolean alta = comunicacoes.stream().anyMatch(c -> c.getMomento() == MomentoComunicacaoMp.ALTA);
+        MomentoComunicacaoMp pendente = !admissao ? MomentoComunicacaoMp.ADMISSAO : (i.getAltaEm() != null && !alta ? MomentoComunicacaoMp.ALTA : null);
+        if (pendente != null) {
+            Instant prazo = (pendente == MomentoComunicacaoMp.ALTA ? i.getAltaEm() : i.getAdmitidaEm()).plus(PRAZO_MP);
+            d.setComunicacaoMpPendente(pendente);
+            d.setPrazoComunicacaoMp(prazo);
+            d.setComunicacaoMpVencida(Instant.now().isAfter(prazo));
+        }
+        return d;
+    }
+
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
 
     private InternacaoResponseDto detalhe(Internacao i) {
         ContextoAuditoria.paciente(i.getPaciente().getUuid());
         ContextoAuditoria.registro(i.getUuid());
-        return InternacaoResponseDto.fromInternacao(i, eventoRepository.findByInternacao_UuidOrderByOcorridoEmAsc(i.getUuid()), true);
+        return comMp(InternacaoResponseDto.fromInternacao(i, eventoRepository.findByInternacao_UuidOrderByOcorridoEmAsc(i.getUuid()), true), i,
+                comunicacaoMpRepository.findDasInternacoes(List.of(i.getUuid())));
     }
 
     private Internacao travar(UUID uuid) {

@@ -1,3 +1,5 @@
+import { ProgramaResumoDto } from '../../../core/models/programa';
+import { ProgramaService } from '../../../core/services/programa';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -23,6 +25,8 @@ import { EquipeService } from '../../../core/services/equipe';
 import { ProfissionalService } from '../../../core/services/profissional';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { CoberturaDto } from '../../../core/models/adscricao';
+import { TerritorioService } from '../../../core/services/territorio';
 
 type Gaveta =
   | { tipo: 'equipe'; equipe: EquipeResponseDto | null }
@@ -32,7 +36,7 @@ type Gaveta =
 /**
  * Equipes (ADR-0104), pelo protótipo `Equipes.html`: indicadores, abas por tipo com contagem, a grade de cartões de equipe
  * e o detalhe da equipe escolhida (membros, microáreas, reunião, apoio), com as gavetas de equipe, membro e saída. O
- * território, os programas e os indicadores assistenciais ficam "Em breve". O backend é a ADR-0103.
+ * território e os indicadores assistenciais ficam "Em breve"; os programas vinculados vêm da ADR-0119. O backend é a ADR-0103.
  */
 @Component({
   selector: 'app-equipes',
@@ -47,6 +51,7 @@ export class Equipes {
   private readonly equipeService = inject(EquipeService);
   private readonly profissionalService = inject(ProfissionalService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
+  private readonly programaService = inject(ProgramaService);
 
   protected readonly tipos = TIPOS_EQUIPE;
   protected readonly listaTipos = Object.keys(TIPOS_EQUIPE) as TipoEquipe[];
@@ -63,6 +68,11 @@ export class Equipes {
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly selecionadaId = signal<string | null>(null);
   protected readonly detalhe = signal<EquipeResponseDto | null>(null);
+  /** Cobertura da equipe pelo cadastro territorial (ADR-0128): só números. */
+  protected readonly cobertura = signal<CoberturaDto | null>(null);
+  private readonly territorioService = inject(TerritorioService);
+  /** Programas de saúde em que a equipe participa, com os inscritos dela (ADR-0119). */
+  protected readonly programasDaEquipe = signal<ProgramaResumoDto[] | null>(null);
 
   protected readonly tipoAba = signal<TipoEquipe | ''>('');
   protected readonly busca = signal('');
@@ -81,7 +91,6 @@ export class Equipes {
     tipo: ['ESF' as TipoEquipe],
     nome: [''],
     ine: [''],
-    microareas: [''],
     coordenadorMatricula: [''],
     reuniaoDia: [''],
     reuniaoInicio: [''],
@@ -94,7 +103,6 @@ export class Equipes {
     equipeId: [''],
     profissionalMatricula: [''],
     funcao: ['MEDICO' as FuncaoEquipe],
-    microarea: [''],
     inicio: [''],
   });
   protected readonly saidaForm = this.fb.nonNullable.group({ motivo: [''], fim: [''] });
@@ -179,6 +187,12 @@ export class Equipes {
     this.selecionadaId.set(uuid);
     if (atualizarUrl) this.router.navigate([], { queryParams: { equipe: uuid }, queryParamsHandling: 'merge', replaceUrl: true });
     this.equipeService.buscar(uuid).subscribe({ next: (d) => this.detalhe.set(d), error: () => this.detalhe.set(null) });
+    this.cobertura.set(null);
+    this.territorioService.cobertura(uuid).pipe(catchError(() => of(null))).subscribe((c) => {
+      if (this.selecionadaId() === uuid) this.cobertura.set(c);
+    });
+    this.programasDaEquipe.set(null);
+    this.programaService.listar({ equipeId: uuid }).subscribe({ next: (ps) => this.programasDaEquipe.set(ps), error: () => this.programasDaEquipe.set([]) });
   }
 
   protected teclaNoCartao(event: KeyboardEvent, uuid: string): void {
@@ -208,6 +222,11 @@ export class Equipes {
 
   protected faltando(e: EquipeResumoDto): string {
     return e.faltando.map((f) => f.split(' ou ').map((x) => this.funcoes[x as FuncaoEquipe] ?? x).join(' ou ')).join(', ');
+  }
+
+  /** Pessoas cadastradas na microárea, pela cobertura (ADR-0128). */
+  protected pessoasNaMicroarea(codigo: string): number | null {
+    return this.cobertura()?.microareas.find((m) => m.codigo === codigo)?.pessoas ?? null;
   }
 
   protected microareas(e: EquipeResponseDto): { codigo: string; acs: MembroEquipeDto[] }[] {
@@ -269,7 +288,6 @@ export class Equipes {
       tipo: e?.resumo.tipo ?? (this.tipoAba() || 'ESF'),
       nome: e?.resumo.nome ?? '',
       ine: e?.resumo.ine ?? '',
-      microareas: e?.resumo.microareas ?? '',
       coordenadorMatricula: e?.coordenadorMatricula ?? '',
       reuniaoDia: e?.reuniaoDia ?? '',
       reuniaoInicio: e?.reuniaoInicio?.slice(0, 5) ?? '',
@@ -307,7 +325,7 @@ export class Equipes {
   }
 
   protected abrirMembro(e: EquipeResponseDto | null, matricula = ''): void {
-    this.membroForm.reset({ equipeId: e?.resumo.uuid ?? '', profissionalMatricula: matricula, funcao: 'MEDICO', microarea: '', inicio: '' });
+    this.membroForm.reset({ equipeId: e?.resumo.uuid ?? '', profissionalMatricula: matricula, funcao: 'MEDICO', inicio: '' });
     this.abrir({ tipo: 'membro', equipe: e, matricula });
   }
 
@@ -352,7 +370,6 @@ export class Equipes {
       nome: v.nome.trim(),
       ine: v.ine.trim() || undefined,
       ativa: v.ativa,
-      microareas: v.microareas.trim() || undefined,
       coordenadorMatricula: v.coordenadorMatricula || undefined,
       reuniaoDia: v.reuniaoDia || undefined,
       reuniaoInicio: v.reuniaoInicio || undefined,
@@ -375,7 +392,6 @@ export class Equipes {
       this.equipeService.adicionarMembro(equipeId, {
         profissionalMatricula: v.profissionalMatricula,
         funcao: v.funcao,
-        microarea: v.microarea.trim() || undefined,
         inicio: v.inicio || undefined,
       }),
       'Membro incluído',

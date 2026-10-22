@@ -24,9 +24,9 @@ correspondente está na ADR indicada.
 | Assistência (Paciente, Atendimento, Agenda, Prontuário) | [`assistencia/ESCOPO-ASSISTENCIA.md`](./assistencia/ESCOPO-ASSISTENCIA.md) | 0040 a 0046, 0063, 0091, 0092 | funcionando |
 | Enfermagem | [`enfermagem/ESCOPO-ENFERMAGEM.md`](./enfermagem/ESCOPO-ENFERMAGEM.md) | 0047, 0048, 0064 | funcionando |
 | Farmácia | [`farmacia/ESCOPO-FARMACIA.md`](./farmacia/ESCOPO-FARMACIA.md) | 0049 a 0051, 0057 a 0061 | funcionando |
-| Modelo Operacional dos Equipamentos | [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md) | [0115](./adr/0115-modelo-operacional-dos-equipamentos.md) | desenhado |
+| Modelo Operacional dos Equipamentos | [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md) | [0115](./adr/0115-modelo-operacional-dos-equipamentos.md), [0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md) | em parte (MO1 funcionando) |
 | Território e Adscrição | [`territorio/MODELO-TERRITORIO.md`](./territorio/MODELO-TERRITORIO.md) | [0108](./adr/0108-territorio-e-adscricao.md) | desenhado |
-| Programas, Ações e Linhas de Cuidado | [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md) | [0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md) | desenhado |
+| Programas, Ações e Linhas de Cuidado | [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md) | [0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), [0118](./adr/0118-programas-catalogo.md), [0119](./adr/0119-programas-acompanhamento.md) | em parte (P1 e P2 funcionando) |
 | Vigilância em Saúde | [`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md) | [0110](./adr/0110-vigilancia-em-saude.md) | desenhado |
 | Saúde Bucal | [`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md) | [0111](./adr/0111-saude-bucal.md) | desenhado |
 | Saúde Mental | [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md) | [0112](./adr/0112-saude-mental.md) | desenhado |

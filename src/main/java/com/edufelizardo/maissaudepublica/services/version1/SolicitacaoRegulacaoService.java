@@ -101,6 +101,12 @@ public class SolicitacaoRegulacaoService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.UnidadeCapacidadeAssistencialRepository unidadeCapacidadeRepository;
+
+    @Autowired
+    private PlanoTratamentoService planoTratamentoService;
+
     // ── Solicitante ────────────────────────────────────────────────────────────────────────────────
 
     @Transactional
@@ -130,6 +136,9 @@ public class SolicitacaoRegulacaoService {
                 profissional, normalizarCid(dto.getCid()), dto.getJustificativa().trim(), dto.getPrioridade(),
                 Instant.now(), UsuarioAutenticado.cpf()));
         registrar(solicitacao, TipoEventoRegulacao.SOLICITACAO, null, profissional);
+        if (dto.getItemPlanoTratamentoId() != null) {
+            planoTratamentoService.encaminharPelaRegulacao(dto.getItemPlanoTratamentoId(), solicitacao);
+        }
         return detalhe(solicitacao);
     }
 
@@ -161,6 +170,7 @@ public class SolicitacaoRegulacaoService {
         }
         solicitacao.setStatus(StatusSolicitacaoRegulacao.CANCELADA);
         registrar(solicitacao, TipoEventoRegulacao.CANCELAMENTO, dto.getMotivo().trim(), profissional);
+        planoTratamentoService.aoEncerrarSolicitacao(solicitacao, "Regulação cancelada: " + dto.getMotivo().trim());
         return detalhe(solicitacao);
     }
 
@@ -187,6 +197,12 @@ public class SolicitacaoRegulacaoService {
         UnidadeDeSaude executante = buscarUnidade(dto.getUnidadeExecutanteId());
         if (!executante.isAtivo()) {
             throw new ResourceUnprocessableEntityException("A unidade " + executante.getNome() + " está inativa.");
+        }
+        // A executante precisa ter a capacidade que o item exige (ADR-0138): o CEO com endodontia, para a endodontia.
+        var exigida = solicitacao.getProcedimento().getCapacidadeExigida();
+        if (exigida != null && !unidadeCapacidadeRepository.existsByUnidade_UuidAndCapacidade_UuidAndFimIsNull(executante.getUuid(), exigida.getUuid())) {
+            throw new ResourceUnprocessableEntityException("A unidade " + executante.getNome() + " não tem a capacidade " + exigida.getNome()
+                    + ", que " + solicitacao.getProcedimento().getNome() + " exige (Modelo Operacional).");
         }
         if (dto.getDataHoraPrevista().isBefore(LocalDateTime.now().withSecond(0).withNano(0))) {
             throw new ResourceUnprocessableEntityException("A data e a hora da vaga não podem estar no passado.");
@@ -220,6 +236,7 @@ public class SolicitacaoRegulacaoService {
         Profissional regulador = buscarRegulador(dto.getProfissionalMatricula(), solicitacao);
         solicitacao.setStatus(StatusSolicitacaoRegulacao.NEGADA);
         registrar(solicitacao, TipoEventoRegulacao.NEGATIVA, dto.getMotivo().trim(), regulador);
+        planoTratamentoService.aoEncerrarSolicitacao(solicitacao, "Regulação negada: " + dto.getMotivo().trim());
         return detalhe(solicitacao);
     }
 
@@ -284,6 +301,7 @@ public class SolicitacaoRegulacaoService {
         solicitacao.setConcluidoEm(Instant.now());
         solicitacao.setStatus(StatusSolicitacaoRegulacao.FALTOU);
         registrar(solicitacao, TipoEventoRegulacao.FALTA, dto.getMotivo().trim(), profissional);
+        planoTratamentoService.aoEncerrarSolicitacao(solicitacao, "Paciente faltou na regulação: " + dto.getMotivo().trim());
         return detalhe(solicitacao);
     }
 

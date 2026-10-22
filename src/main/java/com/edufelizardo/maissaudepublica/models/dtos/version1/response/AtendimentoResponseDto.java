@@ -47,6 +47,10 @@ public class AtendimentoResponseDto implements Serializable {
     private Long totalProcedimentos;
     private Long totalEvolucoes;
     private Long totalAdministracoes;
+    /** A especialidade do atendimento (ADR-0134). */
+    private UUID especialidadeId;
+    private String especialidadeNome;
+    private boolean especialidadeOdontologica;
 
     public static AtendimentoResponseDto fromAtendimento(Atendimento atendimento) {
         UUID setorUuid = null;
@@ -75,7 +79,10 @@ public class AtendimentoResponseDto implements Serializable {
                 atendimento.getDataHora(),
                 atendimento.getPaciente().getCpf(),
                 atendimento.getPaciente().getDataNascimento(),
-                null, null, null, null, null, null
+                null, null, null, null, null, null,
+                atendimento.getEspecialidade() != null ? atendimento.getEspecialidade().getUuid() : null,
+                atendimento.getEspecialidade() != null ? atendimento.getEspecialidade().getNome() : null,
+                atendimento.getEspecialidade() != null && atendimento.getEspecialidade().isOdontologica()
         );
     }
 }

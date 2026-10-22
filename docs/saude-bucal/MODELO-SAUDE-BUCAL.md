@@ -1,8 +1,12 @@
 # Modelo do domínio Saúde Bucal
 
-**Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0111](../adr/0111-saude-bucal.md). **Nada implementado ainda.** A implementação
-vem nas fatias SB1 a SB5 (seção 14), cada uma com ADR própria.
+**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1 a SB3 implementadas) · 2026-10-22 (SB4 implementada)
+**Status:** desenho aprovado na [ADR-0111](../adr/0111-saude-bucal.md). **A SB1 (especialidade e avaliação
+odontológica), a SB2 (odontograma) e a SB3 (catálogo de procedimentos, procedimento odontológico e plano de
+tratamento) estão implementadas** nas ADRs [0134](../adr/0134-saude-bucal-base.md),
+[0135](../adr/0135-saude-bucal-odontograma.md), [0136](../adr/0136-saude-bucal-procedimento-odontologico.md) e
+[0137](../adr/0137-saude-bucal-plano-de-tratamento.md); a SB4 (encaminhamento pela Regulação e prótese) nas
+[0138](../adr/0138-saude-bucal-encaminhamento-pela-regulacao.md) e [0139](../adr/0139-saude-bucal-tratamento-protetico.md); a SB5 vem depois (seção 14).
 
 Saúde Bucal é um **domínio assistencial especializado**, e não um sistema odontológico isolado. Este documento
 mostra o que ele traz de próprio, o que reaproveita dos domínios que já existem, o odontograma com histórico, o plano
@@ -125,6 +129,10 @@ Com isso o sistema responde:
 
 O desenho começa simples, sem odontograma extremamente detalhado. Mais faces ou condições entram pelo catálogo.
 
+**Implementado na SB2 ([ADR-0135](../adr/0135-saude-bucal-odontograma.md)):** as marcações vêm da avaliação
+odontológica vigente; a oclusal só nos posteriores e a incisal só nos anteriores; o registro do dente inteiro vale por
+cima das faces registradas antes; a marcação errada é anulada com motivo e fica no histórico.
+
 ## 7. Procedimentos: catálogo geral compartilhado
 
 Hoje o `Procedimento` é um registro **realizado** na consulta, com tipo em texto livre. Não há catálogo geral, só
@@ -147,6 +155,12 @@ Atendimento odontológico
 
 **Unificar os catálogos** de Regulação, Laboratório e o geral fica registrado como pendência, fora desta ADR.
 
+**Implementado na SB3a ([ADR-0136](../adr/0136-saude-bucal-procedimento-odontologico.md)):** o procedimento passou a
+ficar no atendimento, com a consulta opcional, para o técnico em saúde bucal registrar sem consulta. O item do
+catálogo diz o que o complemento pede (nada, o dente ou o dente e as faces), a condição que grava no odontograma
+quando realizado e se é só do dentista. A retificação do procedimento anula os registros dele no odontograma e grava
+os novos.
+
 ## 8. Plano de tratamento
 
 O tratamento odontológico acontece em várias consultas, então não basta "atendimento → procedimentos":
@@ -166,6 +180,10 @@ Cada item tem o procedimento previsto, o dente e a situação (planejado, em and
 cancelado), e aponta para o procedimento que o executou. A conclusão do plano é o **tratamento concluído**, base de
 indicador da APS.
 
+**Implementado na SB3b ([ADR-0137](../adr/0137-saude-bucal-plano-de-tratamento.md)):** um plano aberto por paciente;
+o item fica concluído só pelo procedimento realizado que corresponde a ele (mesmo item do catálogo, dente e faces);
+o encaminhado e o cancelado não impedem a conclusão, que pede ao menos um item concluído; o abandono pede motivo.
+
 ## 9. Encaminhamento e CEO
 
 Não há fluxo odontológico próprio. O encaminhamento usa a **Regulação** (ADRs 0087 a 0089):
@@ -173,8 +191,10 @@ Não há fluxo odontológico próprio. O encaminhamento usa a **Regulação** (A
   pacientes com necessidades especiais entram como itens do **catálogo da Regulação**.
 - **Executante:** o **CEO** (Centro de Especialidades Odontológicas, no Mapa de Equipamentos).
 - **Plano:** o item fica "encaminhado", e a contrarreferência volta para ele.
-- **Tipo do CEO:** segue o critério da ADR-0053 (tipo próprio ou `CENTRO_ESPECIALIDADES` com especialização). A
-  decisão é na fatia SB4.
+- **Tipo do CEO:** segue o critério da ADR-0053 (tipo próprio ou `CENTRO_ESPECIALIDADES` com especialização).
+  **Decidido na SB4a ([ADR-0138](../adr/0138-saude-bucal-encaminhamento-pela-regulacao.md)):** sem tipo próprio; o CEO
+  é a unidade de especialidades com as capacidades odontológicas do Modelo Operacional, e o item regulado exige a
+  capacidade da executante.
 
 ```text
 Saúde Bucal (item do plano) → Regulação → CEO / serviço de referência → contrarreferência
@@ -196,6 +216,11 @@ Avaliação → Indicação → Planejamento → Moldagem e etapas → Produçã
 - observações.
 
 O detalhe do laboratório (etapas de produção, custos) fica para depois.
+
+**Implementado na SB4b ([ADR-0139](../adr/0139-saude-bucal-tratamento-protetico.md)):** as etapas seguem a ordem do
+ciclo, com a prova e o laboratório podendo se alternar; o laboratório é a unidade com a capacidade LRPD do Modelo
+Operacional ou o contratado; a entrega da unitária grava "Prótese" no odontograma; a prótese não impede concluir o
+plano da APS.
 
 ## 11. Ações coletivas
 
@@ -254,10 +279,10 @@ saude-bucal/
 
 | Fatia | Entrega | Depende de |
 |---|---|---|
-| **SB1** · base | especialidade no atendimento e na Agenda; avaliação odontológica | Atendimento, Equipe eSB |
-| **SB2** · odontograma | catálogo de condições, registros com histórico, projeção por data, tela do odontograma | SB1 |
-| **SB3** · tratamento | catálogo geral de procedimentos, complemento odontológico, plano de tratamento, evolução | SB2 |
-| **SB4** · regulação e prótese | especialidades no catálogo da Regulação, CEO como executante, tratamento protético | SB3, Regulação |
+| **SB1** · base ✅ ([ADR-0134](../adr/0134-saude-bucal-base.md)) | especialidade no atendimento e na Agenda; avaliação odontológica | Atendimento, Equipe eSB |
+| **SB2** · odontograma ✅ ([ADR-0135](../adr/0135-saude-bucal-odontograma.md)) | catálogo de condições, registros com histórico, projeção por data, tela do odontograma | SB1 |
+| **SB3** · tratamento ✅ (SB3a [ADR-0136](../adr/0136-saude-bucal-procedimento-odontologico.md); SB3b [ADR-0137](../adr/0137-saude-bucal-plano-de-tratamento.md)) | catálogo geral de procedimentos, complemento odontológico, plano de tratamento, evolução | SB2 |
+| **SB4** · regulação e prótese ✅ (SB4a [ADR-0138](../adr/0138-saude-bucal-encaminhamento-pela-regulacao.md); SB4b [ADR-0139](../adr/0139-saude-bucal-tratamento-protetico.md)) | especialidades no catálogo da Regulação, CEO como executante, tratamento protético | SB3, Regulação |
 | **SB5** · saúde bucal coletiva | detalhe odontológico das ações coletivas | Programas P4, Território |
 
 ## 15. Dependências

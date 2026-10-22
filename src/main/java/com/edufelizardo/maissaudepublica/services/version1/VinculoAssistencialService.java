@@ -20,10 +20,14 @@ import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusInternacao;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusSolicitacaoRegulacao;
 import com.edufelizardo.maissaudepublica.repositories.AcessoJustificadoRepository;
+import com.edufelizardo.maissaudepublica.repositories.AdscricaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.CompartilhamentoCuidadoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.InternacaoRepository;
+import com.edufelizardo.maissaudepublica.repositories.MembroEquipeRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
+import com.edufelizardo.maissaudepublica.repositories.ReferenciaSaudeMentalRepository;
 import com.edufelizardo.maissaudepublica.repositories.SolicitacaoRegulacaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +52,9 @@ import java.util.UUID;
  *   ou a executante — referência e contrarreferência (ADR-0089);</li>
  *   <li>uma internação em curso, ou com alta há pouco: a equipe da unidade onde o paciente está internado e o médico
  *   responsável (ADR-0100);</li>
+ *   <li>ser o técnico de referência, ou membro da equipe de referência, de um caso em saúde mental em aberto (ADR-0120),
+ *   ou membro de uma equipe com quem o cuidado do caso é compartilhado (ADR-0122);</li>
+ *   <li>ser membro vigente da equipe a que o paciente está adscrito (ADR-0129);</li>
  *   <li>ou um acesso justificado ainda válido, declarado por quem lê.</li>
  * </ol>
  * {@value #SEM_VINCULO} dispensa o vínculo (auditoria clínica, regulação) e não entra em papel padrão.
@@ -73,6 +80,10 @@ public class VinculoAssistencialService {
     @Value("${app.security.prontuario-por-vinculo.justificativa-minimo:20}")
     private int minimoJustificativa;
 
+    /** A adscrição à equipe conta como vínculo (ADR-0129). */
+    @Autowired
+    private AdscricaoRepository adscricaoRepository;
+
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
@@ -96,6 +107,15 @@ public class VinculoAssistencialService {
 
     @Autowired
     private InternacaoRepository internacaoRepository;
+
+    @Autowired
+    private ReferenciaSaudeMentalRepository referenciaSaudeMentalRepository;
+
+    @Autowired
+    private MembroEquipeRepository membroEquipeRepository;
+
+    @Autowired
+    private CompartilhamentoCuidadoRepository compartilhamentoRepository;
 
     public boolean ativo() {
         return ligado && controleDeAcesso.ativo();
@@ -129,6 +149,13 @@ public class VinculoAssistencialService {
         throw new VinculoAssistencialAusenteException("Você não tem vínculo assistencial com este paciente: nenhum "
                 + "atendimento recente na sua unidade, nem atendimento ou agendamento seu com ele. Para abrir o "
                 + "prontuário, registre um acesso justificado.");
+    }
+
+    /** Há acesso justificado ainda válido deste usuário para o paciente (vale mesmo com o vínculo desligado). */
+    @Transactional(readOnly = true)
+    public boolean acessoJustificadoVigente(String cpf, UUID pacienteId) {
+        return cpf != null && acessoJustificadoRepository
+                .findFirstByUsuarioCpfAndPaciente_UuidAndExpiraEmAfterOrderByExpiraEmDesc(cpf, pacienteId, Instant.now()).isPresent();
     }
 
     /** Registra o acesso justificado, válido por algumas horas, só para este paciente e este usuário. */
@@ -221,6 +248,35 @@ public class VinculoAssistencialService {
             }
             if (i.getMedicoResponsavel() != null && cpf.equals(i.getMedicoResponsavel().getCpf())) {
                 return Optional.of("Médico responsável pela internação " + i.getUuid());
+            }
+        }
+
+        // 6. Equipe de referência de um caso em saúde mental em aberto (ADR-0120): o CAPS acompanha sem atendimento recente.
+        for (var r : referenciaSaudeMentalRepository.findVigentesDoPaciente(pacienteId)) {
+            if (cpf.equals(r.getTecnico().getCpf())) {
+                return Optional.of("Técnico de referência em saúde mental");
+            }
+            boolean membro = membroEquipeRepository.findByEquipe_UuidInAndFimIsNull(List.of(r.getEquipe().getUuid())).stream()
+                    .anyMatch(m -> cpf.equals(m.getProfissional().getCpf()));
+            if (membro) {
+                return Optional.of("Equipe de referência em saúde mental: " + r.getEquipe().getNome());
+            }
+        }
+        for (var c : compartilhamentoRepository.findVigentesDoPaciente(pacienteId)) {
+            boolean membro = membroEquipeRepository.findByEquipe_UuidInAndFimIsNull(List.of(c.getEquipe().getUuid())).stream()
+                    .anyMatch(m -> cpf.equals(m.getProfissional().getCpf()));
+            if (membro) {
+                return Optional.of("Cuidado compartilhado em saúde mental: " + c.getEquipe().getNome());
+            }
+        }
+
+        // 7. Paciente adscrito à equipe de que quem lê é membro vigente (ADR-0129): a eSF responde pela sua população.
+        var adscricao = adscricaoRepository.findByPaciente_UuidAndFimIsNull(pacienteId);
+        if (adscricao.isPresent()) {
+            boolean membro = membroEquipeRepository.findByEquipe_UuidInAndFimIsNull(List.of(adscricao.get().getEquipe().getUuid())).stream()
+                    .anyMatch(m -> cpf.equals(m.getProfissional().getCpf()));
+            if (membro) {
+                return Optional.of("Paciente adscrito à equipe " + adscricao.get().getEquipe().getNome());
             }
         }
         return Optional.empty();

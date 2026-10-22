@@ -16,6 +16,7 @@ import com.edufelizardo.maissaudepublica.repositories.TriagemRepository;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.Agendamento;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
+import com.edufelizardo.maissaudepublica.models.Especialidade;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.Setor;
@@ -49,6 +50,9 @@ public class AtendimentoService {
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
+    private EspecialidadeService especialidadeService;
 
     @Autowired
     private PacienteRepository pacienteRepository;
@@ -97,6 +101,7 @@ public class AtendimentoService {
 
         Atendimento atendimento = new Atendimento(paciente, profissional, unidade, setor, agendamento,
                 dto.getTipo(), dto.getStatus(), dto.getDataHora());
+        atendimento.setEspecialidade(especialidade(dto, agendamento, null));
         atendimento = atendimentoRepository.save(atendimento);
         ContextoAuditoria.registro(atendimento.getUuid());
         return AtendimentoResponseDto.fromAtendimento(atendimento);
@@ -135,9 +140,24 @@ public class AtendimentoService {
         atendimento.setTipo(dto.getTipo());
         atendimento.setStatus(dto.getStatus());
         atendimento.setDataHora(dto.getDataHora());
+        atendimento.setEspecialidade(especialidade(dto, agendamento, atendimento.getEspecialidade()));
         atendimento = atendimentoRepository.save(atendimento);
         ContextoAuditoria.registro(atendimento.getUuid());
         return AtendimentoResponseDto.fromAtendimento(atendimento);
+    }
+
+    /**
+     * A especialidade do atendimento (ADR-0134): a informada (ativa), ou a da marcação de onde ele nasce. A que já estava
+     * continua valendo mesmo se a especialidade foi desativada depois.
+     */
+    private Especialidade especialidade(AtendimentoRequestDto dto, Agendamento agendamento, Especialidade atual) {
+        if (dto.getEspecialidadeId() == null) {
+            return agendamento != null && agendamento.getEspecialidade() != null ? agendamento.getEspecialidade() : null;
+        }
+        if (atual != null && atual.getUuid().equals(dto.getEspecialidadeId())) {
+            return atual;
+        }
+        return especialidadeService.ativa(dto.getEspecialidadeId());
     }
 
     /** Com o resumo clínico de cada atendimento, calculado em consultas agrupadas (ADR-0062). */

@@ -10,6 +10,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import com.edufelizardo.maissaudepublica.models.enuns.ModalidadeInternacao;
+import com.edufelizardo.maissaudepublica.models.enuns.MomentoComunicacaoMp;
 import lombok.*;
 
 import java.io.Serial;
@@ -49,6 +51,14 @@ public class InternacaoResponseDto implements Serializable {
     private String altaPorNome;
     private long diasPermanencia;
     private List<EventoLeitoDto> eventos;
+    /** Internação psiquiátrica (ADR-0123). */
+    private ModalidadeInternacao modalidade;
+    private String ordemJudicial;
+    private List<ComunicacaoMpDto> comunicacoesMp;
+    /** Na involuntária: a comunicação que falta (ADMISSAO ou ALTA), o prazo de 72 horas e se venceu. */
+    private MomentoComunicacaoMp comunicacaoMpPendente;
+    private Instant prazoComunicacaoMp;
+    private boolean comunicacaoMpVencida;
 
 
     /** {@code completo} falso nas listagens: sem motivo, sumário e eventos. */
@@ -61,6 +71,7 @@ public class InternacaoResponseDto implements Serializable {
                 completo ? i.getMotivo() : null, i.getCarater(), i.getAdmitidaEm(), i.getPrevisaoAlta(), i.getStatus(), i.getAltaEm(),
                 i.getTipoAlta(), completo ? i.getSumarioAlta() : null, i.getAltaPor() != null ? i.getAltaPor().getNome() : null,
                 Duration.between(i.getAdmitidaEm(), fim).toDays(),
-                completo ? eventos.stream().map(EventoLeitoDto::fromEvento).toList() : null);
+                completo ? eventos.stream().map(EventoLeitoDto::fromEvento).toList() : null,
+                i.getModalidade(), i.getOrdemJudicial(), List.of(), null, null, false);
     }
 }

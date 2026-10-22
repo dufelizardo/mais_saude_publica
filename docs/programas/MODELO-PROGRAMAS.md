@@ -1,8 +1,11 @@
 # Modelo do domínio Programas, Ações e Linhas de Cuidado
 
-**Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0109](../adr/0109-programas-acoes-e-linhas-de-cuidado.md). **Nada implementado
-ainda.** A implementação vem nas fatias P1 a P6 (seção 12), cada uma com ADR própria.
+**Data:** 2026-10-07 (criado) · 2026-10-17 (P1 implementada) · 2026-10-18 (P2 implementada) · 2026-10-21 (P4 e P3 implementadas)
+**Status:** desenho aprovado na [ADR-0109](../adr/0109-programas-acoes-e-linhas-de-cuidado.md). **A P1 (catálogo)
+a P2 (acompanhamento), a P3 (campanhas) e a P4 (ações programáticas) estão implementadas** nas ADRs
+[0118](../adr/0118-programas-catalogo.md), [0119](../adr/0119-programas-acompanhamento.md),
+[0133](../adr/0133-programas-campanhas.md) e [0132](../adr/0132-programas-acoes-programaticas.md); P5 e P6 vêm depois
+(seção 12).
 
 Este documento detalha o domínio: os conceitos e por que ficam separados, as entidades, o acompanhamento do cidadão,
 o dado sensível, como o protótipo `Programas.html` se encaixa nas fatias e onde o domínio liga com o que já existe.
@@ -63,7 +66,8 @@ E não `Programa = Serviço`.
 
 O público-alvo é **dado do programa** (faixa etária, sexo, condição como gestante, condição clínica por CID ou CIAP),
 não regra codificada. Ele **sugere elegíveis**, como gestantes fora do pré-natal ou idosos sem acompanhamento, e
-**não inscreve sozinho**: a inscrição é ato de profissional.
+**não inscreve sozinho**: a inscrição é ato de profissional. Os elegíveis saem da adscrição da equipe (ADR-0128), por
+idade e sexo; gestação e condição clínica ainda não são avaliadas.
 
 ## 3. Acompanhamento programático
 
@@ -107,6 +111,11 @@ E o sistema responde perguntas como:
 - quantos diabéticos da eSF 03 estão sem acompanhamento há mais de 6 meses?
 
 Até a adscrição existir, o acompanhamento já guarda a unidade e a equipe responsáveis.
+
+**Ações programáticas (P4, [ADR-0132](../adr/0132-programas-acoes-programaticas.md)):** o faltoso e o atrasado viram
+busca ativa, com o ACS da microárea de adscrição como responsável sugerido e o resultado registrado ("mudou de
+endereço" sugere encerrar o acompanhamento). A consulta programada é agendada pela Agenda, com o programa na marcação,
+e fica pronta para confirmar quando o atendimento é concluído.
 
 ## 4. Campanha
 
@@ -236,8 +245,8 @@ Editável pelo município. Inclui os programas do protótipo e os nacionais comu
 |---|---|---|
 | **P1** · catálogo | categoria, programa, público-alvo, participação e carga inicial; tela em cartões pelo protótipo, com os indicadores "Em breve" | — |
 | **P2** · acompanhamento | inscrever, mudar a situação e encerrar; aba Programas e filtro em Pacientes; inscritos e faltosos no programa; programas na seção da equipe | P1, ADR-0076 |
-| **P3** · campanhas | cadastro com período, público, meta e locais; tela e consulta pública na landing page | P1 |
-| **P4** · ações programáticas | ação prevista ligada ao registro assistencial; ações pendentes e busca ativa; programa na marcação da Agenda | P2 |
+| **P3** · campanhas ✅ ([ADR-0133](../adr/0133-programas-campanhas.md)) | cadastro com período, público, meta e locais; tela e consulta pública na landing page | P1 |
+| **P4** · ações programáticas ✅ ([ADR-0132](../adr/0132-programas-acoes-programaticas.md)) | ação prevista ligada ao registro assistencial; ações pendentes e busca ativa; programa na marcação da Agenda | P2 |
 | **P5** · linhas de cuidado | percurso com etapas, serviços e unidades de referência | Atendimento, Regulação e Prontuário maduros |
 | **P6** · metas e indicadores | cobertura, controle, pré-natal adequado, faltosos; alimenta o #19 Indicadores e BI | P2, P4 |
 

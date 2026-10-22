@@ -1,0 +1,234 @@
+package com.edufelizardo.maissaudepublica.controllers.version1;
+
+import com.edufelizardo.maissaudepublica.models.Atendimento;
+import com.edufelizardo.maissaudepublica.models.AtribuicaoAcesso;
+import com.edufelizardo.maissaudepublica.models.Paciente;
+import com.edufelizardo.maissaudepublica.models.Profissional;
+import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.models.Usuario;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoAtendimento;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
+import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.AtribuicaoAcessoRepository;
+import com.edufelizardo.maissaudepublica.repositories.EspecialidadeRepository;
+import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
+import com.edufelizardo.maissaudepublica.repositories.PapelRepository;
+import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
+import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
+import com.edufelizardo.maissaudepublica.repositories.UsuarioRepository;
+import com.edufelizardo.maissaudepublica.services.version1.JwtService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * Saúde Bucal com login e autorização ligados (ADR-0134): a avaliação odontológica é do cirurgião-dentista; o técnico em
+ * saúde bucal e o enfermeiro não a registram; o catálogo de especialidades é lido por qualquer logado e mantido por
+ * quem cuida da organização. O técnico registra os procedimentos que a Lei 11.889/2008 permite (flúor, selante), mas não
+ * os que exigem o dentista (exodontia), nem mantém o catálogo de procedimentos (ADR-0136). O plano de tratamento é
+ * do dentista; o técnico executa o item pelo procedimento (ADR-0137).
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@TestPropertySource(properties = {"app.security.enabled=true", "app.security.authorization.enabled=true"})
+class SaudeBucalAutorizacaoControllerTest {
+
+    private static final String PREFIXO = "SbAut Teste ";
+    private static final String DENTISTA = "94801867360";
+    private static final String TSB = "94801867361";
+    private static final String ENF = "94801867362";
+    private static final List<String> CPFS = List.of(DENTISTA, TSB, ENF);
+
+    @Autowired private MockMvc mockMvc;
+    @Autowired private JdbcTemplate jdbc;
+    @Autowired private JwtService jwtService;
+    @Autowired private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
+    @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private AtribuicaoAcessoRepository atribuicaoRepository;
+    @Autowired private PapelRepository papelRepository;
+    @Autowired private PacienteRepository pacienteRepository;
+    @Autowired private ProfissionalRepository profissionalRepository;
+    @Autowired private AtendimentoRepository atendimentoRepository;
+    @Autowired private EspecialidadeRepository especialidadeRepository;
+
+    private UnidadeDeSaude ubs;
+    private Atendimento atendimento;
+
+    @BeforeEach
+    void seed() {
+        limpar();
+        ubs = new UnidadeDeSaude();
+        ubs.setNome(PREFIXO + "UBS");
+        ubs.setTipo(TipoUnidadeDeSaude.UBS);
+        ubs.setAtivo(true);
+        ubs = unidadeDeSaudeRepository.save(ubs);
+        atribuir(DENTISTA, "CIRURGIAO_DENTISTA");
+        atribuir(TSB, "TECNICO_SAUDE_BUCAL");
+        atribuir(ENF, "ENFERMEIRO");
+        Paciente p = new Paciente();
+        p.setNome(PREFIXO + "Paciente");
+        p.setCpf("90066600001");
+        p.setAtivo(true);
+        p = pacienteRepository.save(p);
+        Profissional d = new Profissional();
+        d.setMatricula("SBAUT-DENTISTA");
+        d.setCpf(DENTISTA);
+        d.setNome(PREFIXO + "Dentista");
+        d.setAtivo(true);
+        d = profissionalRepository.save(d);
+        atendimento = new Atendimento(p, d, ubs, null, null, TipoAtendimento.CONSULTA, StatusAtendimento.EM_ANDAMENTO, LocalDateTime.now());
+        atendimento.setEspecialidade(especialidadeRepository.findAll().stream().filter(e -> e.getCodigo().equals("ODONTOLOGIA")).findFirst().orElseThrow());
+        atendimento = atendimentoRepository.save(atendimento);
+    }
+
+    @AfterEach
+    void limpar() {
+        String atendimentos = "(select uuid from tb_atendimento where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%'))";
+        String procedimentos = "(select uuid from tb_procedimento where atendimento_id in " + atendimentos + ")";
+        String planos = "(select uuid from tb_plano_tratamento where atendimento_id in " + atendimentos + ")";
+        String proteses = "(select uuid from tb_tratamento_protetico where atendimento_id in " + atendimentos + ")";
+        jdbc.update("delete from tb_registro_odontograma where tratamento_protetico_id in " + proteses);
+        jdbc.update("delete from tb_etapa_tratamento_protetico where tratamento_id in " + proteses);
+        jdbc.update("delete from tb_tratamento_protetico where atendimento_id in " + atendimentos);
+        jdbc.update("delete from tb_item_plano_tratamento_face where item_id in (select uuid from tb_item_plano_tratamento where plano_id in " + planos + ")");
+        jdbc.update("delete from tb_item_plano_tratamento where plano_id in " + planos);
+        jdbc.update("delete from tb_plano_tratamento where atendimento_id in " + atendimentos);
+        jdbc.update("delete from tb_registro_odontograma where avaliacao_id in (select uuid from tb_avaliacao_odontologica where atendimento_id in "
+                + atendimentos + ")");
+        jdbc.update("delete from tb_registro_odontograma where procedimento_id in " + procedimentos);
+        jdbc.update("delete from tb_complemento_odontologico_face where complemento_id in (select uuid from tb_complemento_odontologico "
+                + "where procedimento_id in " + procedimentos + ")");
+        jdbc.update("delete from tb_complemento_odontologico where procedimento_id in " + procedimentos);
+        jdbc.update("delete from tb_procedimento where atendimento_id in " + atendimentos);
+        jdbc.update("delete from tb_avaliacao_odontologica where atendimento_id in " + atendimentos);
+        jdbc.update("delete from tb_atendimento where uuid in " + atendimentos);
+        for (String cpf : CPFS) {
+            atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
+            usuarioRepository.findByCpf(cpf).ifPresent(usuarioRepository::delete);
+            jdbc.update("delete from tb_evento_auditoria where usuario_cpf = ?", cpf);
+        }
+        jdbc.update("delete from tb_especialidade where codigo = 'TSTSBAUT'");
+        jdbc.update("delete from tb_paciente where nome like '" + PREFIXO + "%'");
+        jdbc.update("delete from tb_profissional where matricula = 'SBAUT-DENTISTA'");
+        jdbc.update("delete from tb_unidade_de_saude where nome like '" + PREFIXO + "%'");
+    }
+
+    private void atribuir(String cpf, String papel) {
+        Usuario usuario = usuarioRepository.save(new Usuario(cpf, PREFIXO + cpf, "hash-irrelevante"));
+        AtribuicaoAcesso a = new AtribuicaoAcesso();
+        a.setUsuario(usuario);
+        a.setPapel(papelRepository.findByCodigo(papel).orElseThrow());
+        a.setUnidade(ubs);
+        a.setConcedidoEm(Instant.now());
+        atribuicaoRepository.save(a);
+    }
+
+    private MockHttpServletRequestBuilder como(String cpf, MockHttpServletRequestBuilder r) {
+        return r.header("Authorization", "Bearer " + jwtService.gerarToken(cpf, PREFIXO + cpf, false));
+    }
+
+    @Test
+    void avaliacaoOdontologicaSoDoCirurgiaoDentista() throws Exception {
+        String corpo = "{\"atendimentoId\": \"%s\", \"profissionalMatricula\": \"SBAUT-DENTISTA\", \"risco\": \"BAIXO\", \"necessidadeTratamento\": \"ELETIVA\"}"
+                .formatted(atendimento.getUuid());
+        mockMvc.perform(como(TSB, post("/api/v1/avaliacao-odontologica")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(ENF, post("/api/v1/avaliacao-odontologica")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isForbidden());
+        String r = mockMvc.perform(como(DENTISTA, post("/api/v1/avaliacao-odontologica")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+
+        // O odontograma (ADR-0135) também é do dentista.
+        String avaliacao = com.jayway.jsonpath.JsonPath.read(r, "$.uuid");
+        String carie = jdbc.queryForObject("select cast(uuid as varchar) from tb_condicao_odontologica where codigo = 'CARIE'", String.class);
+        String marcacao = "{\"marcacoes\": [{\"dente\": 36, \"face\": \"OCLUSAL\", \"condicaoId\": \"%s\"}]}".formatted(carie);
+        mockMvc.perform(como(TSB, post("/api/v1/avaliacao-odontologica/" + avaliacao + "/odontograma")).contentType(MediaType.APPLICATION_JSON)
+                .content(marcacao)).andExpect(status().isForbidden());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/avaliacao-odontologica/" + avaliacao + "/odontograma")).contentType(MediaType.APPLICATION_JSON)
+                .content(marcacao)).andExpect(status().isCreated());
+    }
+
+    private String procedimento(String codigo, String extra) {
+        String item = jdbc.queryForObject("select cast(uuid as varchar) from tb_procedimento_catalogo where codigo = ?", String.class, codigo);
+        return ("{\"atendimentoId\": \"%s\", \"procedimentoCatalogoId\": \"%s\", \"profissionalMatricula\": \"SBAUT-DENTISTA\", "
+                + "\"dataRealizacao\": \"%s\", \"status\": \"REALIZADO\"%s}")
+                .formatted(atendimento.getUuid(), item, LocalDateTime.now().minusHours(1).truncatedTo(ChronoUnit.SECONDS), extra);
+    }
+
+    @Test
+    void procedimentoQueExigeDentistaNaoEDoTecnico() throws Exception {
+        mockMvc.perform(como(TSB, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("APLICACAO_FLUOR", ""))).andExpect(status().isCreated());
+        mockMvc.perform(como(TSB, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("SELANTE", ", \"dente\": 36, \"faces\": [\"OCLUSAL\"]"))).andExpect(status().isCreated());
+        mockMvc.perform(como(TSB, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("EXODONTIA", ", \"dente\": 48"))).andExpect(status().isForbidden());
+        mockMvc.perform(como(ENF, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("EXODONTIA", ", \"dente\": 48"))).andExpect(status().isForbidden());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("EXODONTIA", ", \"dente\": 48"))).andExpect(status().isCreated());
+
+        // O catálogo de procedimentos é lido por qualquer logado e mantido por quem cuida da organização.
+        mockMvc.perform(como(TSB, get("/api/v1/procedimentos-catalogo"))).andExpect(status().isOk());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/procedimento-catalogo")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"codigo\": \"TSTSBAUT\", \"nome\": \"Teste\"}")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void planoDeTratamentoDoDentistaExecutadoPeloTecnico() throws Exception {
+        String fluor = jdbc.queryForObject("select cast(uuid as varchar) from tb_procedimento_catalogo where codigo = 'APLICACAO_FLUOR'", String.class);
+        String plano = ("{\"atendimentoId\": \"%s\", \"profissionalMatricula\": \"SBAUT-DENTISTA\", \"prioridade\": \"ELETIVA\", "
+                + "\"itens\": [{\"procedimentoCatalogoId\": \"%s\"}]}").formatted(atendimento.getUuid(), fluor);
+        mockMvc.perform(como(TSB, post("/api/v1/plano-tratamento")).contentType(MediaType.APPLICATION_JSON).content(plano))
+                .andExpect(status().isForbidden());
+        String r = mockMvc.perform(como(DENTISTA, post("/api/v1/plano-tratamento")).contentType(MediaType.APPLICATION_JSON).content(plano))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String item = com.jayway.jsonpath.JsonPath.read(r, "$.itens[0].uuid");
+        mockMvc.perform(como(TSB, post("/api/v1/item-plano-tratamento/" + item + "/situacao")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"situacao\": \"EM_ANDAMENTO\"}")).andExpect(status().isForbidden());
+        mockMvc.perform(como(TSB, post("/api/v1/procedimento/")).contentType(MediaType.APPLICATION_JSON)
+                .content(procedimento("APLICACAO_FLUOR", ", \"itemPlanoId\": \"" + item + "\""))).andExpect(status().isCreated());
+        String planos = mockMvc.perform(como(DENTISTA, get("/api/v1/paciente/" + atendimento.getPaciente().getUuid() + "/planos-tratamento")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        org.assertj.core.api.Assertions.assertThat((java.util.List<String>) com.jayway.jsonpath.JsonPath.read(planos, "$[0].itens[*].situacao"))
+                .containsExactly("CONCLUIDO");
+    }
+
+    @Test
+    void tratamentoProteticoSoDoDentista() throws Exception {
+        String corpo = "{\"atendimentoId\": \"%s\", \"profissionalMatricula\": \"SBAUT-DENTISTA\", \"tipo\": \"TOTAL\", \"arcada\": \"SUPERIOR\"}"
+                .formatted(atendimento.getUuid());
+        mockMvc.perform(como(TSB, post("/api/v1/tratamento-protetico")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/tratamento-protetico")).contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void catalogoDeEspecialidadesLidoPorLogadoEMantidoPelaOrganizacao() throws Exception {
+        mockMvc.perform(get("/api/v1/especialidades")).andExpect(status().isUnauthorized());
+        mockMvc.perform(como(TSB, get("/api/v1/especialidades"))).andExpect(status().isOk());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/especialidade")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"codigo\": \"TSTSBAUT\", \"nome\": \"Teste\"}")).andExpect(status().isForbidden());
+    }
+}

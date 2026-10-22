@@ -66,6 +66,11 @@ public class Atendimento implements Serializable {
     @NotNull
     private LocalDateTime dataHora;
 
+    /** A especialidade (ADR-0134): habilita os registros da especialidade (a avaliação odontológica, na odontologia). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "especialidade_id", referencedColumnName = "uuid")
+    private Especialidade especialidade;
+
     public Atendimento(Paciente paciente, Profissional profissional, UnidadeDeSaude unidade, Setor setor,
                         Agendamento agendamento, TipoAtendimento tipo, StatusAtendimento status,
                         LocalDateTime dataHora) {
