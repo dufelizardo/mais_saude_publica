@@ -1,9 +1,9 @@
 # Modelo Operacional dos Equipamentos de Saúde
 
-**Data:** 2026-10-07 (criado)
+**Data:** 2026-10-07 (criado) · 2026-10-17 (MO1 implementada)
 **Status:** desenho aprovado na [ADR-0115](../adr/0115-modelo-operacional-dos-equipamentos.md), que aceita e completa
-a [ADR-0053](../adr/0053-criterio-de-governanca-para-equipamentos-de-saude.md). **Nada implementado ainda.** A
-implementação vem nas fatias MO1 a MO4 (seção 9).
+a [ADR-0053](../adr/0053-criterio-de-governanca-para-equipamentos-de-saude.md). **A MO1 (perfis e capacidades) está
+implementada** na [ADR-0117](../adr/0117-modelo-operacional-perfis-e-capacidades.md); MO2 a MO4 vêm depois (seção 9).
 
 > **Não estamos só modelando tipos de equipamentos; estamos modelando modos de operação diferentes dentro de uma
 > mesma rede.** O equipamento define o contexto e as capacidades; os domínios definem os processos de negócio.
@@ -163,7 +163,8 @@ A **UPA** é um equipamento de saúde (#1 e #29). O **respirador** é um bem pat
 ## 6. Catálogos iniciais
 
 **Os catálogos são dado, editáveis,** no padrão de `CapacidadeAdministrativa` e `PerfilAdministrativo` (ADRs 0031,
-0032), no contexto assistencial próprio.
+0032), no contexto assistencial próprio. A carga inicial (migração V11, ADR-0117) traz os 10 perfis abaixo e 46
+capacidades, com códigos estáveis (ex.: `CAPS_AD`, `ODONTO_ENDODONTIA`, `UTI`).
 
 | Perfil operacional | Exemplos de unidade |
 |---|---|
@@ -290,7 +291,7 @@ faltavam entram ao fim, e o mapa também fica com 31:
 
 | Fatia | Entrega | Destrava |
 |---|---|---|
-| **MO1** · perfis e capacidades | catálogos de perfil operacional e de capacidade assistencial, associação à unidade, aba "Capacidades" na tela Equipamentos | Saúde Bucal SB4 (CEO), Saúde Mental SM5 (CAPS), Emergências E3 (capacidade emergencial) |
+| **MO1** · perfis e capacidades ✅ ([ADR-0117](../adr/0117-modelo-operacional-perfis-e-capacidades.md)) | catálogos de perfil operacional e de capacidade assistencial, associação à unidade, aba "Capacidades" na tela Equipamentos | Saúde Bucal SB4 (CEO), Saúde Mental SM5 (CAPS), Emergências E3 (capacidade emergencial) |
 | **MO2** · serviços | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina), ligados a setores | Hospital composto; Leitos por serviço |
 | **MO3** · ponto operacional | local de realização no Atendimento; base, localização e rota da unidade móvel | atendimento domiciliar, Consultório na Rua, SAMU (com Transporte) |
 | **MO4** · domínios consultam capacidades | Leitos, Agenda, Saúde Mental, Saúde Bucal e Emergências passam a perguntar "a unidade tem a capacidade X?" | fim das regras implícitas por tipo |

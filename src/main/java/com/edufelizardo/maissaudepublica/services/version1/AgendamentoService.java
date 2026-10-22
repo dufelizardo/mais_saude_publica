@@ -3,15 +3,19 @@ package com.edufelizardo.maissaudepublica.services.version1;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.Agendamento;
+import com.edufelizardo.maissaudepublica.models.BlocoAgenda;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
+import com.edufelizardo.maissaudepublica.models.Programa;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AgendamentoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AgendamentoResponseDto;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAgendamento;
+import com.edufelizardo.maissaudepublica.repositories.AcompanhamentoProgramaticoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AgendamentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
+import com.edufelizardo.maissaudepublica.repositories.ProgramaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -45,6 +49,18 @@ public class AgendamentoService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private ProgramaRepository programaRepository;
+
+    @Autowired
+    private AcompanhamentoProgramaticoRepository acompanhamentoRepository;
+
+    @Autowired
+    private AcaoProgramaticaService acaoProgramaticaService;
+
+    @Autowired
+    private EspecialidadeService especialidadeService;
+
     public AgendamentoResponseDto criar(AgendamentoRequestDto dto) {
         Paciente paciente = buscarPacientePorId(dto.getPacienteId());
         Profissional profissional = buscarProfissionalPorMatricula(dto.getProfissionalMatricula());
@@ -52,7 +68,11 @@ public class AgendamentoService {
         Agendamento agendamento = new Agendamento(paciente, profissional, dto.getDataHora(),
                 dto.getStatus(), dto.getTipo(), dto.getObservacao());
         aplicarAgenda(agendamento, dto, null);
+        aplicarPrograma(agendamento, dto);
         agendamento = agendamentoRepository.save(agendamento);
+        if (dto.getAcaoProgramaticaId() != null) {
+            acaoProgramaticaService.vincularAgendamento(dto.getAcaoProgramaticaId(), agendamento);
+        }
         return AgendamentoResponseDto.fromAgendamento(agendamento);
     }
 
@@ -68,6 +88,7 @@ public class AgendamentoService {
         agendamento.setTipo(dto.getTipo());
         agendamento.setObservacao(dto.getObservacao());
         aplicarAgenda(agendamento, dto, uuid);
+        aplicarPrograma(agendamento, dto);
         agendamento = agendamentoRepository.save(agendamento);
         return AgendamentoResponseDto.fromAgendamento(agendamento);
     }
@@ -112,6 +133,11 @@ public class AgendamentoService {
     /** Com unidade, a marcação precisa caber na agenda: vaga livre, ou encaixe. Cancelada não ocupa vaga. */
     private void aplicarAgenda(Agendamento agendamento, AgendamentoRequestDto dto, UUID proprio) {
         boolean encaixe = Boolean.TRUE.equals(dto.getEncaixe());
+        if (dto.getEspecialidadeId() != null) {
+            agendamento.setEspecialidade(especialidadeService.ativa(dto.getEspecialidadeId()));
+        } else if (proprio == null) {
+            agendamento.setEspecialidade(null);
+        }
         agendamento.setEncaixe(encaixe);
         if (dto.getUnidadeId() == null) {
             agendamento.setUnidade(null);
@@ -123,6 +149,25 @@ public class AgendamentoService {
         if (dto.getStatus() != StatusAgendamento.CANCELADO) {
             agendaService.exigirMarcacaoPossivel(agendamento.getProfissional(), unidade, dto.getDataHora(), encaixe, proprio);
         }
+        // Sem especialidade informada, a do bloco que oferece a vaga (ADR-0134).
+        if (dto.getEspecialidadeId() == null && !encaixe) {
+            agendaService.blocoDaVaga(agendamento.getProfissional(), unidade, dto.getDataHora())
+                    .map(BlocoAgenda::getEspecialidade).ifPresent(agendamento::setEspecialidade);
+        }
+    }
+
+    /** O programa da marcação (ADR-0132): o paciente precisa ter acompanhamento vigente nele. */
+    private void aplicarPrograma(Agendamento agendamento, AgendamentoRequestDto dto) {
+        if (dto.getProgramaId() == null) {
+            agendamento.setPrograma(null);
+            return;
+        }
+        Programa programa = programaRepository.findById(dto.getProgramaId())
+                .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar o programa " + dto.getProgramaId() + " em nossos registros."));
+        if (!acompanhamentoRepository.existsByPaciente_UuidAndPrograma_UuidAndFimIsNull(agendamento.getPaciente().getUuid(), programa.getUuid())) {
+            throw new ResourceUnprocessableEntityException(agendamento.getPaciente().getNome() + " não é acompanhado no programa " + programa.getNome() + ".");
+        }
+        agendamento.setPrograma(programa);
     }
 
     public AgendamentoResponseDto buscarPorId(UUID uuid) {

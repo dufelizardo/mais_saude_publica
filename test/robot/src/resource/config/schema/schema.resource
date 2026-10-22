@@ -67,3 +67,21 @@ Resource    ../../schema/internacao/internacao_schema.resource
 Resource    ../../schema/equipamentos/equipamentos_schema.resource
 Resource    ../../schema/equipes/equipes_schema.resource
 Resource    ../../schema/escalas/escalas_schema.resource
+# PROGRAMAS (ADR-0118)
+Resource    ../../schema/programas/programas_schema.resource
+Resource    ../../schema/programas/acao_programatica_schema.resource
+Resource    ../../schema/programas/campanha_schema.resource
+Resource    ../../schema/saude_mental/saude_mental_schema.resource
+Resource    ../../schema/vigilancia/vigilancia_schema.resource
+Resource    ../../schema/vigilancia/vigilancia_contatos_schema.resource
+Resource    ../../schema/vigilancia/vigilancia_surto_schema.resource
+Resource    ../../schema/territorio/territorio_schema.resource
+Resource    ../../schema/territorio/cadastro_territorial_schema.resource
+Resource    ../../schema/territorio/adscricao_schema.resource
+# SAÚDE BUCAL (ADR-0134)
+Resource    ../../schema/saude_bucal/saude_bucal_schema.resource
+Resource    ../../schema/saude_bucal/odontograma_schema.resource
+Resource    ../../schema/saude_bucal/procedimento_odontologico_schema.resource
+Resource    ../../schema/saude_bucal/plano_tratamento_schema.resource
+Resource    ../../schema/saude_bucal/regulacao_odontologica_schema.resource
+Resource    ../../schema/saude_bucal/tratamento_protetico_schema.resource

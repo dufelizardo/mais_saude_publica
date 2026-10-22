@@ -37,9 +37,23 @@ public class Procedimento implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID uuid;
 
+    /**
+     * O atendimento do procedimento (ADR-0136). Antes ele só existia dentro de uma consulta; o procedimento odontológico
+     * (e o do técnico, que não registra consulta) fica direto no atendimento.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "consulta_id", referencedColumnName = "uuid", nullable = false)
+    @JoinColumn(name = "atendimento_id", referencedColumnName = "uuid", nullable = false, updatable = false)
+    private Atendimento atendimento;
+
+    /** A consulta em que foi feito, quando houver (ADR-0044). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "consulta_id", referencedColumnName = "uuid")
     private Consulta consulta;
+
+    /** O item do catálogo geral (ADR-0136); nulo nos registros antigos e no "outro", em texto livre. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "procedimento_catalogo_id", referencedColumnName = "uuid", updatable = false)
+    private ProcedimentoCatalogo catalogo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profissional_id", referencedColumnName = "uuid", nullable = false)
@@ -91,8 +105,9 @@ public class Procedimento implements Serializable {
 
     private String statusAlteradoPorCpf;
 
-    public Procedimento(Consulta consulta, Profissional profissional, String tipo, String descricao,
+    public Procedimento(Atendimento atendimento, Consulta consulta, Profissional profissional, String tipo, String descricao,
                          LocalDateTime dataRealizacao, StatusProcedimento status) {
+        this.atendimento = atendimento;
         this.consulta = consulta;
         this.profissional = profissional;
         this.tipo = tipo;

@@ -16,12 +16,16 @@ import { StatusAgendamento, TipoAgendamento } from '../../../core/models/agendam
 import { AcessoDaInterface } from '../../../core/models/auth';
 import { PacienteResponseDto } from '../../../core/models/paciente';
 import { ErrorResponseDto, ProfissionalResponseDto, SuccessResponseDto } from '../../../core/models/profissional';
+import { ProgramaResumoDto } from '../../../core/models/programa';
+import { EspecialidadeDto } from '../../../core/models/saude-bucal';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { AgendaService } from '../../../core/services/agenda';
 import { AgendamentoService } from '../../../core/services/agendamento';
 import { AuthService } from '../../../core/services/auth';
 import { PacienteService } from '../../../core/services/paciente';
 import { ProfissionalService } from '../../../core/services/profissional';
+import { ProgramaService } from '../../../core/services/programa';
+import { SaudeBucalService } from '../../../core/services/saude-bucal';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
@@ -117,6 +121,8 @@ export class Agenda {
   private readonly profissionalService = inject(ProfissionalService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
   private readonly pacienteService = inject(PacienteService);
+  private readonly programaService = inject(ProgramaService);
+  private readonly saudeBucalService = inject(SaudeBucalService);
 
   protected readonly formatCpf = formatCpf;
   protected readonly horaPx = HORA_PX;
@@ -140,6 +146,9 @@ export class Agenda {
   protected readonly visao = signal<Visao>('semana');
   protected readonly referencia = signal(hojeIso());
   protected readonly filtroTipo = signal<TipoAgendamento | ''>('');
+  /** Filtro por especialidade (ADR-0134): as vagas e marcações dela; bloqueios e afastamentos continuam. */
+  protected readonly filtroEspecialidade = signal('');
+  protected readonly especialidades = signal<EspecialidadeDto[]>([]);
 
   protected readonly agenda = signal<AgendaResponseDto | null>(null);
   protected readonly blocos = signal<BlocoAgendaResponseDto[]>([]);
@@ -161,7 +170,12 @@ export class Agenda {
     tipo: ['CONSULTA' as TipoAgendamento],
     encaixe: [false],
     observacao: [''],
+    programaId: [''],
   });
+  /** Programas ativos, para a marcação (ADR-0132). */
+  protected readonly programas = signal<ProgramaResumoDto[]>([]);
+  /** Vindo de uma ação programática ("Agendar"): o paciente, o programa e a ação que a marcação cumpre. */
+  protected readonly acaoProgramatica = signal<{ acaoId: string; pacienteId: string; programaId: string } | null>(null);
 
   protected readonly blocoForm = this.fb.nonNullable.group({
     diaSemana: ['MONDAY' as DiaSemana],
@@ -170,6 +184,7 @@ export class Agenda {
     duracaoMinutos: ['20'],
     tipo: ['CONSULTA' as TipoAgendamento],
     vigenteDesde: [''],
+    especialidadeId: [''],
   });
 
   protected readonly encerrarForm = this.fb.nonNullable.group({ vigenteAte: [''] });
@@ -231,9 +246,11 @@ export class Agenda {
     const inicioDia = this.horas()[0] ?? 7;
     const fimDia = (this.horas().at(-1) ?? 18) + 1;
     const tipo = this.filtroTipo();
+    const especialidade = this.filtroEspecialidade();
     const hoje = hojeIso();
     return ag.dias.map((d) => {
-      const visiveis = d.itens.filter((i) => !tipo || !i.tipoAtendimento || i.tipoAtendimento === tipo || i.tipo === 'BLOQUEIO' || i.tipo === 'AFASTAMENTO');
+      const visiveis = d.itens.filter((i) => !tipo || !i.tipoAtendimento || i.tipoAtendimento === tipo || i.tipo === 'BLOQUEIO' || i.tipo === 'AFASTAMENTO')
+        .filter((i) => !especialidade || i.tipo === 'BLOQUEIO' || i.tipo === 'AFASTAMENTO' || i.especialidadeId === especialidade);
       const dow = new Date(d.data + 'T12:00:00').getDay();
       return {
         data: d.data,
@@ -293,6 +310,11 @@ export class Agenda {
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     const q = this.route.snapshot.queryParamMap;
+    if (q.get('acao') && q.get('acaoPaciente') && q.get('acaoPrograma')) {
+      this.acaoProgramatica.set({ acaoId: q.get('acao')!, pacienteId: q.get('acaoPaciente')!, programaId: q.get('acaoPrograma')! });
+    }
+    this.programaService.listar().pipe(catchError(() => of([]))).subscribe((ps) => this.programas.set(ps.filter((p) => p.situacao === 'ATIVO')));
+    this.saudeBucalService.especialidades().pipe(catchError(() => of([]))).subscribe((e) => this.especialidades.set(e.filter((x) => x.ativa)));
     if (q.get('data')) this.referencia.set(q.get('data')!);
     if (q.get('visao') === 'dia') this.visao.set('dia');
     forkJoin({
@@ -487,7 +509,9 @@ export class Agenda {
 
   /** Sem vaga escolhida, abre como encaixe: o horário é livre. */
   protected abrirMarcar(dataHora = '', tipo: TipoAgendamento = 'CONSULTA'): void {
-    this.marcarForm.reset({ buscaPaciente: '', pacienteId: '', dataHora, tipo, encaixe: !dataHora, observacao: '' });
+    const acao = this.acaoProgramatica();
+    this.marcarForm.reset({ buscaPaciente: '', pacienteId: acao?.pacienteId ?? '', dataHora, tipo, encaixe: !dataHora, observacao: '',
+      programaId: acao?.programaId ?? '' });
     this.abrir({ tipo: 'marcar' });
   }
 
@@ -562,6 +586,8 @@ export class Agenda {
         observacao: v.observacao.trim() || undefined,
         unidadeId: this.unidadeId(),
         encaixe: v.encaixe,
+        programaId: v.programaId || null,
+        acaoProgramaticaId: this.acaoProgramatica() && v.pacienteId === this.acaoProgramatica()!.pacienteId ? this.acaoProgramatica()!.acaoId : null,
       }),
       v.encaixe ? 'Encaixe marcado' : 'Marcação feita',
       `${paciente?.nome ?? 'Paciente'} · ${this.dataDe(v.dataHora)} ${v.dataHora.slice(11, 16)}`,
@@ -610,6 +636,7 @@ export class Agenda {
         duracaoMinutos: dur,
         tipo: v.tipo,
         vigenteDesde: v.vigenteDesde || undefined,
+        especialidadeId: v.especialidadeId || null,
       }),
       'Bloco criado',
       `${this.rotuloDiaSemana(v.diaSemana)}, ${v.horaInicio} às ${v.horaFim} · ${this.vagasDoBloco()} vagas`,

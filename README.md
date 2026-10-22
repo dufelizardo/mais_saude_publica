@@ -25,11 +25,12 @@ com auditoria, controle de acesso por perfil e unidade, e testes de aceitação 
 
 | Área | O que tem |
 |---|---|
-| **Organização da rede** | hierarquia federal → estadual → municipal → regional → unidade; Equipamentos de Saúde com horário estruturado e situação operacional |
+| **Organização da rede** | hierarquia federal → estadual → municipal → regional → unidade; Equipamentos de Saúde com horário estruturado, situação operacional e modelo operacional (perfis e capacidades de cada unidade) |
 | **Recursos Humanos** | profissionais, lotação, cargos e salários, benefícios, desenvolvimento, recrutamento, folha, perfil; **equipes de saúde** e **escalas** com modelos de jornada |
 | **Administrativo** | setores, modelo administrativo, processos, necessidades de pessoal |
 | **Assistência** | pacientes, atendimentos, agenda do profissional, prontuário, enfermagem (triagem, evolução, medicação), farmácia (estoque, dispensação, transferência) |
 | **Rede assistencial** | laboratório (pedido, coleta, resultado, laudo), regulação do acesso (fila, agendamento, contrarreferência), leitos e internação |
+| **Programas de saúde** | catálogo de programas com público-alvo e unidades participantes; acompanhamento dos pacientes (inscrição, faltosos, atrasados); consulta pública na página inicial |
 | **Governança** | login (JWT), perfis e permissões com escopo por unidade, trilha de auditoria com alertas, prontuário por vínculo assistencial |
 
 O que cada domínio já tem e o que falta está em [`docs/STATUS-DOS-DOMINIOS.md`](docs/STATUS-DOS-DOMINIOS.md). O mapa

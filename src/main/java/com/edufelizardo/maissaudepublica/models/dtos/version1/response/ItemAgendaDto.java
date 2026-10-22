@@ -32,4 +32,7 @@ public class ItemAgendaDto implements Serializable {
     private StatusAgendamento status;
     /** Motivo do bloqueio ou do afastamento, ou a observação da marcação. */
     private String descricao;
+    /** A especialidade da vaga (do bloco) ou da marcação (ADR-0134): o filtro da Agenda. */
+    private UUID especialidadeId;
+    private String especialidadeNome;
 }

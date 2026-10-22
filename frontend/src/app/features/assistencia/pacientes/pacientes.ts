@@ -5,6 +5,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Modal } from '../../../shared/modal/modal';
+import { Drawer } from '../../../shared/drawer/drawer';
+import { AdscricaoDoPaciente } from './adscricao-do-paciente';
 import { formatCartaoSus, formatCpf, formatTelefone } from '../../../shared/format-mask';
 import { PacienteResponseDto, Sexo } from '../../../core/models/paciente';
 import { ErrorResponseDto } from '../../../core/models/profissional';
@@ -18,6 +20,18 @@ import { AgendamentoResponseDto } from '../../../core/models/agendamento';
 import { AgendamentoService } from '../../../core/services/agendamento';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import { AuthService } from '../../../core/services/auth';
+import {
+  AcaoProgramaticaDto,
+  AcompanhamentoDto,
+  AcompanhamentosDoPacienteDto,
+  MOTIVOS_SAIDA,
+  MotivoSaidaAcompanhamento,
+  ProgramaResumoDto,
+  SITUACOES_ACAO,
+  SITUACOES_ACOMPANHAMENTO,
+  TIPOS_ACAO,
+} from '../../../core/models/programa';
+import { ProgramaService } from '../../../core/services/programa';
 
 type AbaDetalhe = 'resumo' | 'historico' | 'programas' | 'vacinacao' | 'anexos';
 type ModoVisualizacao = 'lista' | 'cartoes';
@@ -33,7 +47,7 @@ interface TimelineItem {
 
 @Component({
   selector: 'app-pacientes',
-  imports: [ReactiveFormsModule, RouterLink, Modal, DatePipe, AcessoProntuario],
+  imports: [ReactiveFormsModule, RouterLink, Modal, Drawer, DatePipe, AcessoProntuario, AdscricaoDoPaciente],
   templateUrl: './pacientes.html',
   styleUrl: './pacientes.css',
 })
@@ -43,6 +57,36 @@ export class Pacientes {
   private readonly cepService = inject(CepService);
   private readonly prontuarioService = inject(ProntuarioService);
   private readonly agendamentoService = inject(AgendamentoService);
+  private readonly programaService = inject(ProgramaService);
+
+  // ── Programas de saúde do paciente (ADR-0119) ──────────────────────────────────────────────
+  protected readonly situacoesAcompanhamento = SITUACOES_ACOMPANHAMENTO;
+  /** Ações programáticas do paciente (ADR-0132). */
+  protected readonly tiposAcao = TIPOS_ACAO;
+  protected readonly situacoesAcao = SITUACOES_ACAO;
+  protected readonly acoesDoPaciente = signal<AcaoProgramaticaDto[]>([]);
+  protected readonly motivosSaida = MOTIVOS_SAIDA;
+  /** `undefined` carregando, `null` sem acesso ou bloqueado (ver programasBloqueio). */
+  protected readonly programasDoPaciente = signal<AcompanhamentosDoPacienteDto | null | undefined>(undefined);
+  protected readonly programasBloqueio = signal<string | null>(null);
+  /** Pacientes em algum programa, na rede (agregado). */
+  protected readonly emProgramas = signal<number | null>(null);
+  protected readonly catalogoProgramas = signal<ProgramaResumoDto[]>([]);
+  protected readonly filtroPrograma = signal('');
+  /** Ids dos pacientes do programa filtrado (no escopo de quem lê); `null` sem filtro. */
+  private readonly noPrograma = signal<Set<string> | null>(null);
+  protected readonly listaMotivosSaida = Object.keys(MOTIVOS_SAIDA) as MotivoSaidaAcompanhamento[];
+  /** Gaveta de faltoso ou de saída na aba Programas (ADR-0119). */
+  protected readonly gavetaPrograma = signal<
+    { tipo: 'situacao'; acompanhamento: AcompanhamentoDto; nova: 'ATIVO' | 'FALTOSO' } | { tipo: 'saida'; acompanhamento: AcompanhamentoDto } | null
+  >(null);
+  protected readonly salvandoPrograma = signal(false);
+  protected readonly erroPrograma = signal<string | null>(null);
+  protected readonly errosPrograma = signal<Record<string, string>>({});
+  protected readonly avisoPrograma = signal<{ titulo: string; detalhe: string } | null>(null);
+  private avisoTimer: ReturnType<typeof setTimeout> | undefined;
+  protected readonly situacaoProgramaForm = this.fb.nonNullable.group({ motivo: [''] });
+  protected readonly saidaProgramaForm = this.fb.nonNullable.group({ motivoSaida: ['' as MotivoSaidaAcompanhamento | ''], observacao: [''], fim: [''] });
 
   protected readonly sexos: Sexo[] = ['MASCULINO', 'FEMININO', 'IGNORADO'];
   protected readonly modoVisualizacao = signal<ModoVisualizacao>('lista');
@@ -156,6 +200,10 @@ export class Pacientes {
       if (faixa !== 'TODAS' && this.faixaEtaria(p.dataNascimento) !== faixa) {
         return false;
       }
+      const noPrograma = this.noPrograma();
+      if (noPrograma && !noPrograma.has(p.uuid)) {
+        return false;
+      }
       return true;
     });
   });
@@ -205,6 +253,10 @@ export class Pacientes {
       .subscribe((cep) => this.buscarCep(cep));
 
     this.carregarPacientes();
+    this.programaService.resumoAcompanhamentos().subscribe({ next: (r) => this.emProgramas.set(r.pacientes), error: () => this.emProgramas.set(null) });
+    if (this.pode('PROGRAMA.ACOMPANHAR')) {
+      this.programaService.listar().subscribe({ next: (ps) => this.catalogoProgramas.set(ps.filter((p) => p.inscritos > 0 || p.situacao === 'ATIVO')), error: () => this.catalogoProgramas.set([]) });
+    }
   }
 
   protected pode(...permissoes: string[]): boolean {
@@ -251,6 +303,131 @@ export class Pacientes {
   private carregarDetalhe(pacienteId: string): void {
     this.carregarProntuario(pacienteId);
     this.carregarAgendamentos(pacienteId);
+    this.carregarProgramas(pacienteId);
+  }
+
+  /** Programas do paciente com as regras do prontuário (vínculo ou acesso justificado; leitura auditada). */
+  protected carregarProgramas(pacienteId: string): void {
+    this.programasBloqueio.set(null);
+    if (!this.pode('PRONTUARIO.CONSULTAR', 'PROGRAMA.ACOMPANHAR')) {
+      this.programasDoPaciente.set(null);
+      return;
+    }
+    this.programasDoPaciente.set(undefined);
+    this.acoesDoPaciente.set([]);
+    this.programaService.doPaciente(pacienteId).subscribe({
+      next: (r) => {
+        if (this.selecionado()?.uuid !== pacienteId) return;
+        this.programasDoPaciente.set(r);
+        this.programaService.acoesDoPaciente(pacienteId).subscribe({
+          next: (a) => {
+            if (this.selecionado()?.uuid === pacienteId) this.acoesDoPaciente.set(a);
+          },
+          error: () => this.acoesDoPaciente.set([]),
+        });
+      },
+      error: (e) => {
+        if (this.selecionado()?.uuid !== pacienteId) return;
+        this.programasDoPaciente.set(null);
+        this.programasBloqueio.set(semVinculo(e));
+      },
+    });
+  }
+
+  /** Filtro por programa: só os pacientes acompanhados nele, nas unidades do acesso de quem lê. */
+  protected filtrarPorPrograma(programaId: string): void {
+    this.filtroPrograma.set(programaId);
+    if (!programaId) {
+      this.noPrograma.set(null);
+      return;
+    }
+    this.programaService.inscritos(programaId).subscribe({
+      next: (r) => this.noPrograma.set(new Set(r.lista.map((a) => a.pacienteId))),
+      error: () => this.noPrograma.set(new Set()),
+    });
+  }
+
+  // ── Faltoso e saída pela aba Programas (ADR-0119) ───────────────────────────────────────────
+
+  protected abrirSituacaoPrograma(acompanhamento: AcompanhamentoDto, nova: 'ATIVO' | 'FALTOSO'): void {
+    this.situacaoProgramaForm.reset({ motivo: '' });
+    this.abrirGavetaPrograma({ tipo: 'situacao', acompanhamento, nova });
+  }
+
+  protected abrirSaidaPrograma(acompanhamento: AcompanhamentoDto): void {
+    this.saidaProgramaForm.reset({ motivoSaida: '', observacao: '', fim: '' });
+    this.abrirGavetaPrograma({ tipo: 'saida', acompanhamento });
+  }
+
+  private abrirGavetaPrograma(g: NonNullable<ReturnType<typeof this.gavetaPrograma>>): void {
+    this.erroPrograma.set(null);
+    this.errosPrograma.set({});
+    this.gavetaPrograma.set(g);
+  }
+
+  protected fecharGavetaPrograma(): void {
+    this.gavetaPrograma.set(null);
+  }
+
+  protected erroCampoPrograma(campo: string): string {
+    return this.errosPrograma()[campo] ?? '';
+  }
+
+  protected salvarGavetaPrograma(): void {
+    const g = this.gavetaPrograma();
+    if (!g || this.salvandoPrograma()) return;
+    const erros: Record<string, string> = {};
+    const hoje = new Date();
+    const hojeIso = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+    if (g.tipo === 'situacao') {
+      if (!this.situacaoProgramaForm.getRawValue().motivo.trim()) erros['motivoSituacaoPrograma'] = 'Informe o motivo.';
+    } else {
+      const v = this.saidaProgramaForm.getRawValue();
+      if (!v.motivoSaida) erros['motivoSaidaPrograma'] = 'Escolha o motivo.';
+      if (!v.observacao.trim()) erros['observacaoSaidaPrograma'] = 'Descreva a saída.';
+      if (v.fim && v.fim > hojeIso) erros['fimSaidaPrograma'] = 'A saída não pode ser no futuro.';
+    }
+    this.errosPrograma.set(erros);
+    const primeiro = Object.keys(erros)[0];
+    if (primeiro) {
+      setTimeout(() => document.getElementById('f-' + primeiro)?.focus());
+      return;
+    }
+    const a = g.acompanhamento;
+    const req = g.tipo === 'situacao'
+      ? this.programaService.mudarSituacao(a.uuid, g.nova, this.situacaoProgramaForm.getRawValue().motivo.trim())
+      : this.programaService.encerrarAcompanhamento(a.uuid, this.saidaProgramaForm.getRawValue().motivoSaida as MotivoSaidaAcompanhamento,
+        this.saidaProgramaForm.getRawValue().observacao.trim(), this.saidaProgramaForm.getRawValue().fim);
+    const titulo = g.tipo === 'saida' ? 'Saída registrada' : g.nova === 'FALTOSO' ? 'Marcado como faltoso' : 'Voltou a ativo';
+    this.salvandoPrograma.set(true);
+    this.erroPrograma.set(null);
+    req.subscribe({
+      next: () => {
+        this.salvandoPrograma.set(false);
+        this.gavetaPrograma.set(null);
+        this.avisoPrograma.set({ titulo, detalhe: `${a.pacienteNome} · ${a.programaNome}` });
+        clearTimeout(this.avisoTimer);
+        this.avisoTimer = setTimeout(() => this.avisoPrograma.set(null), 4200);
+        this.carregarProgramas(a.pacienteId);
+        this.programaService.resumoAcompanhamentos().subscribe({ next: (r) => this.emProgramas.set(r.pacientes), error: () => undefined });
+      },
+      error: (e: HttpErrorResponse) => {
+        this.salvandoPrograma.set(false);
+        this.erroPrograma.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar. Tente novamente.');
+      },
+    });
+  }
+
+  /** Depois de um acesso justificado: libera o prontuário e os programas. */
+  protected liberado(pacienteId: string): void {
+    this.carregarProntuario(pacienteId);
+    this.carregarProgramas(pacienteId);
+  }
+
+  protected dataCurta(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    const [y, m, d] = iso.slice(0, 10).split('-');
+    return `${d}/${m}/${y}`;
   }
 
   private carregarAgendamentos(pacienteId: string): void {

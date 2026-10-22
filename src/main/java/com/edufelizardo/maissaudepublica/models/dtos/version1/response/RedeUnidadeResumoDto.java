@@ -3,6 +3,7 @@ package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoOperacional;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import lombok.*;
 
@@ -44,4 +45,6 @@ public class RedeUnidadeResumoDto implements Serializable {
     private long leitosOcupados;
     /** Tem horário estruturado (pelo menos um turno). */
     private boolean comHorario;
+    /** Códigos dos perfis operacionais vigentes (ADR-0117). */
+    private List<String> perfis;
 }

@@ -1,0 +1,434 @@
+<div class="info-block" id="imoveis-da-area">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--s-2); flex-wrap: wrap;">
+    <h3>Imóveis e famílias</h3>
+    <div style="display: flex; gap: var(--s-2); align-items: center;">
+      @if (imoveis() !== null && !aberto()) {
+        <select class="sel" aria-label="Filtrar imóveis por microárea" [value]="filtroMicroarea()" (change)="filtroMicroarea.set($any($event.target).value)">
+          <option value="">{{ microareasDoEscopo() ? 'Minhas microáreas' : 'Todas as microáreas' }}</option>
+          @for (m of microareasPermitidas(); track m.uuid) { <option [value]="m.uuid">Microárea {{ m.codigo }}</option> }
+        </select>
+      }
+      @if (podeCadastrar() && area().equipe && !aberto()) {
+        <button type="button" class="btn btn--ghost btn--sm" (click)="novoImovel()">Novo imóvel</button>
+      }
+    </div>
+  </div>
+
+  @if (imoveis() === null) {
+    <p class="cell-sub">O cadastro domiciliar e familiar é de quem cadastra ou gere o território desta área.</p>
+  } @else if (aberto(); as d) {
+    <!-- ── Ficha do imóvel ─────────────────────────────────────────────────────────────────── -->
+    <section id="ficha-imovel" aria-label="Ficha do imóvel" style="margin-top: var(--s-2);">
+      <div style="display: flex; justify-content: space-between; gap: var(--s-2); flex-wrap: wrap; align-items: flex-start;">
+        <div>
+          <button type="button" class="link-btn" (click)="fecharImovel()">← Imóveis da área</button>
+          <div class="cell-main" style="margin-top: var(--s-1);">{{ d.imovel.enderecoTexto }}</div>
+          <span class="cell-sub">{{ tiposImovel[d.imovel.tipo].rotulo }} · microárea {{ d.imovel.microareaCodigo }}@if (!d.imovel.ativo) { · inativo }@if (d.imovel.latitude == null) { · sem ponto no mapa }</span>
+        </div>
+        @if (podeCadastrar()) {
+          <div class="row-actions" style="flex-wrap: wrap;">
+            <button type="button" class="btn btn--ghost btn--sm" (click)="editarImovel(d)">Editar imóvel</button>
+            @if (d.imovel.tipo === 'DOMICILIO') { <button type="button" class="btn btn--ghost btn--sm" (click)="novoDomicilio(d)">Novo domicílio</button> }
+          </div>
+        }
+      </div>
+
+      @for (dom of d.domicilios; track dom.uuid) {
+        <div style="border: 1px solid var(--ink-100); border-radius: 10px; padding: var(--s-3); margin-top: var(--s-3);">
+          <div style="display: flex; justify-content: space-between; gap: var(--s-2); flex-wrap: wrap;">
+            <div>
+              <span class="cell-main">{{ dom.identificacao || 'Domicílio' }}@if (!dom.ativo) { <span class="tag tag--muted">Inativo</span> }</span>
+              <span class="cell-sub">{{ condicoes(dom) }}</span>
+            </div>
+            @if (podeCadastrar()) {
+              <div class="row-actions" style="flex-wrap: wrap;">
+                <button type="button" class="btn btn--ghost btn--sm" (click)="editarDomicilio(d, dom)" [attr.aria-label]="'Editar domicílio ' + (dom.identificacao || '')">Editar</button>
+                @if (dom.ativo) { <button type="button" class="btn btn--ghost btn--sm" (click)="novaFamilia(dom)">Nova família</button> }
+              </div>
+            }
+          </div>
+
+          @for (f of dom.familias; track f.uuid) {
+            <div style="margin-top: var(--s-3); padding-top: var(--s-2); border-top: 1px dashed var(--ink-100);" [attr.aria-label]="'Família de ' + f.responsavelNome">
+              <div style="display: flex; justify-content: space-between; gap: var(--s-2); flex-wrap: wrap;">
+                <div>
+                  <span class="cell-main">Família de {{ f.responsavelNome }}</span>
+                  <span class="cell-sub">desde {{ data(f.inicio) }}@if (f.rendaFamiliar) { · {{ rendas[f.rendaFamiliar] }} } @else { · renda não informada }</span>
+                </div>
+                @if (podeCadastrar()) {
+                  <div class="row-actions" style="flex-wrap: wrap;">
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="incluirPessoa(f)">Incluir pessoa</button>
+                    @if (f.membros.length > 1) { <button type="button" class="btn btn--ghost btn--sm" (click)="trocarResponsavel(f)">Trocar responsável</button> }
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="mudarRenda(f)">Renda</button>
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="mudanca(f)">Mudança</button>
+                  </div>
+                }
+              </div>
+              <ul style="list-style: none; margin: var(--s-2) 0 0; padding: 0;" [attr.aria-label]="'Pessoas da família de ' + f.responsavelNome">
+                @for (m of f.membros; track m.uuid) {
+                  <li style="display: flex; justify-content: space-between; gap: var(--s-2); flex-wrap: wrap; padding: var(--s-1) 0;">
+                    <span>
+                      <strong style="font-weight: 500;">{{ m.nome }}</strong>
+                      <span class="cell-sub" style="display: inline;"> · {{ parentescos[m.parentesco] }}@if (m.dataNascimento) { · {{ idade(m.dataNascimento) }} }</span>
+                      @if (m.enderecoDiverge) { <span class="tag tag--warn" title="O endereço do cadastro do paciente não é o deste imóvel">Endereço diferente no cadastro</span> }
+                    </span>
+                    @if (podeCadastrar()) {
+                      <span class="row-actions">
+                        @if (m.enderecoDiverge) {
+                          <button type="button" class="btn btn--ghost btn--sm" (click)="usarEnderecoDoImovel(m)" [attr.aria-label]="'Usar o endereço do imóvel no cadastro de ' + m.nome">Usar o endereço do imóvel</button>
+                        }
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="saida(f, m)" [attr.aria-label]="'Saída de ' + m.nome">Saída</button>
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+              @if (f.antigos.length) {
+                <p class="cell-sub">Já saíram: @for (a of f.antigos; track a.uuid; let ultimo = $last) { {{ a.nome }} ({{ data(a.fim) }}@if (a.motivoSaida) { · {{ a.motivoSaida }} })@if (!ultimo) { , } }</p>
+              }
+            </div>
+          } @empty {
+            <p class="cell-sub" style="margin-top: var(--s-2);">Nenhuma família morando aqui.</p>
+          }
+
+          @if (dom.anteriores.length) {
+            <button type="button" class="link-btn" style="margin-top: var(--s-2);" (click)="mostrarAnteriores.set(!mostrarAnteriores())">
+              {{ mostrarAnteriores() ? 'Esconder' : 'Ver' }} quem já morou aqui ({{ dom.anteriores.length }})
+            </button>
+            @if (mostrarAnteriores()) {
+              <ul class="tl" aria-label="Famílias que já moraram aqui">
+                @for (f of dom.anteriores; track f.uuid) {
+                  <li class="tl-row">Família de <strong>{{ f.responsavelNome }}</strong> · {{ data(f.inicio) }} a {{ data(f.fim) }}@if (f.motivoFim) { <span class="cell-sub">{{ f.motivoFim }}</span> }</li>
+                }
+              </ul>
+            }
+          }
+        </div>
+      } @empty {
+        <p class="cell-sub" style="margin-top: var(--s-3);">@if (d.imovel.tipo === 'DOMICILIO') { Sem domicílio cadastrado: cadastre o domicílio para registrar a família. } @else { Imóvel sem moradia. }</p>
+      }
+    </section>
+  } @else {
+    <!-- ── Lista ──────────────────────────────────────────────────────────────────────────── -->
+    @if (carregando() && !filtrados().length) {
+      <p class="cell-sub">Carregando…</p>
+    } @else if (!filtrados().length) {
+      <p class="cell-sub">@if (!area().equipe) { A área precisa de equipe responsável para o cadastro domiciliar. } @else { Nenhum imóvel cadastrado@if (filtroMicroarea()) { nesta microárea }. }</p>
+    } @else {
+      <ul style="list-style: none; margin: var(--s-2) 0 0; padding: 0;" aria-label="Imóveis da área">
+        @for (i of filtrados(); track i.uuid) {
+          <li>
+            <button type="button" class="link-row" style="display: flex; width: 100%; justify-content: space-between; gap: var(--s-2); text-align: left; background: none; border: 0; border-top: 1px solid var(--ink-100); padding: var(--s-2) 0; cursor: pointer;"
+              (click)="abrirImovel(i.uuid)" [attr.aria-label]="'Imóvel ' + i.enderecoTexto">
+              <span style="min-width: 0;">
+                <span class="cell-main">{{ i.enderecoTexto }}</span>
+                <span class="cell-sub">{{ tiposImovel[i.tipo].rotulo }} · microárea {{ i.microareaCodigo }}@if (!i.ativo) { · inativo }</span>
+              </span>
+              <span class="cell-sub" style="text-align: right; white-space: nowrap;">{{ i.familias }} família(s)<br />{{ i.pessoas }} pessoa(s)</span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  }
+</div>
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}
+
+<!-- ── Gaveta ───────────────────────────────────────────────────────────────────────────────── -->
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="tituloGaveta(g)" (fechar)="fecharGaveta()">
+    <form class="dw-form" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+      <div class="dw-body">
+        @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+
+        @switch (g.tipo) {
+          @case ('imovel') {
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-tipoImovel">Tipo</label>
+                <select id="f-tipoImovel" formControlName="tipoImovel">
+                  @for (t of listaTipos; track t) { <option [value]="t">{{ tiposImovel[t].rotulo }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-microareaId">Microárea</label>
+                <select id="f-microareaId" formControlName="microareaId" [attr.aria-invalid]="!!erro('microareaId')" aria-describedby="h-microareaId e-microareaId">
+                  <option value="">Pelo ponto no mapa</option>
+                  @for (m of microareasPermitidas(); track m.uuid) { <option [value]="m.uuid">Microárea {{ m.codigo }}</option> }
+                </select>
+                <p class="dw-hint" id="h-microareaId">Com o ponto marcado, ele precisa cair dentro da microárea desenhada.</p>
+                @if (erro('microareaId')) { <p class="dw-err" id="e-microareaId">{{ erro('microareaId') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field" style="flex: 2;">
+                <label for="f-logradouro">Logradouro <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-logradouro" type="text" formControlName="logradouro" autocomplete="off" [attr.aria-invalid]="!!erro('logradouro')" aria-describedby="e-logradouro" />
+                @if (erro('logradouro')) { <p class="dw-err" id="e-logradouro">{{ erro('logradouro') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-numero">Número <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-numero" type="text" formControlName="numero" autocomplete="off" placeholder="S/N" [attr.aria-invalid]="!!erro('numero')" aria-describedby="e-numero" />
+                @if (erro('numero')) { <p class="dw-err" id="e-numero">{{ erro('numero') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-complemento">Complemento<span class="opt">opcional</span></label>
+                <input id="f-complemento" type="text" formControlName="complemento" autocomplete="off" />
+              </div>
+              <div class="dw-field">
+                <label for="f-bairro">Bairro <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-bairro" type="text" formControlName="bairro" autocomplete="off" [attr.aria-invalid]="!!erro('bairro')" aria-describedby="e-bairro" />
+                @if (erro('bairro')) { <p class="dw-err" id="e-bairro">{{ erro('bairro') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-cep">CEP <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-cep" type="text" inputmode="numeric" formControlName="cep" autocomplete="off" [attr.aria-invalid]="!!erro('cep')" aria-describedby="e-cep" />
+                @if (erro('cep')) { <p class="dw-err" id="e-cep">{{ erro('cep') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-cidade">Cidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-cidade" type="text" formControlName="cidade" autocomplete="off" [attr.aria-invalid]="!!erro('cidade')" aria-describedby="e-cidade" />
+                @if (erro('cidade')) { <p class="dw-err" id="e-cidade">{{ erro('cidade') }}</p> }
+              </div>
+              <div class="dw-field" style="max-width: 90px;">
+                <label for="f-estado">UF <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-estado" type="text" maxlength="2" formControlName="estado" autocomplete="off" [attr.aria-invalid]="!!erro('estado')" aria-describedby="e-estado" />
+                @if (erro('estado')) { <p class="dw-err" id="e-estado">{{ erro('estado') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <span class="cell-sub">Clique no mapa onde fica o imóvel (opcional).</span>
+              <app-mapa [poligonos]="poligonosDaArea()" [pinos]="pinoDoForm()" [marcarPonto]="true" [altura]="240" [rotulo]="'Marcar o imóvel na área ' + area().codigo"
+                (ponto)="marcarPonto($event)" />
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-latitude">Latitude<span class="opt">opcional</span></label>
+                <input id="f-latitude" type="text" inputmode="decimal" class="mono" formControlName="latitude" (change)="mudarCoordenada()" [attr.aria-invalid]="!!erro('latitude')" aria-describedby="e-latitude" />
+                @if (erro('latitude')) { <p class="dw-err" id="e-latitude">{{ erro('latitude') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-longitude">Longitude<span class="opt">opcional</span></label>
+                <input id="f-longitude" type="text" inputmode="decimal" class="mono" formControlName="longitude" (change)="mudarCoordenada()" />
+              </div>
+            </div>
+            @if (g.item) {
+              <div class="dw-field">
+                <label class="switch" for="f-ativo">
+                  <span><b style="font-weight: 500;">Ativo</b><span class="cell-sub" id="h-ativo">Inativo (demolido, desocupado de vez), fica no histórico</span></span>
+                  <input type="checkbox" role="switch" id="f-ativo" formControlName="ativo" aria-describedby="h-ativo" />
+                </label>
+              </div>
+            }
+          }
+          @case ('domicilio') {
+            <div class="dw-field">
+              <label for="f-identificacao">Identificação no imóvel<span class="opt">opcional</span></label>
+              <input id="f-identificacao" type="text" maxlength="60" formControlName="identificacao" placeholder="Ex.: apto 12, casa dos fundos" autocomplete="off" />
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-situacao">Situação</label>
+                <select id="f-situacao" formControlName="situacao">
+                  <option value="">Não informada</option>
+                  @for (s of listaSituacoes; track s) { <option [value]="s">{{ situacoes[s] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-localizacao">Localização</label>
+                <select id="f-localizacao" formControlName="localizacao">
+                  <option value="">Não informada</option>
+                  @for (l of listaLocalizacoes; track l) { <option [value]="l">{{ localizacoes[l] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field" style="max-width: 120px;">
+                <label for="f-comodos">Cômodos</label>
+                <input id="f-comodos" type="text" inputmode="numeric" formControlName="comodos" [attr.aria-invalid]="!!erro('comodos')" aria-describedby="e-comodos" />
+                @if (erro('comodos')) { <p class="dw-err" id="e-comodos">{{ erro('comodos') }}</p> }
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-agua">Abastecimento de água</label>
+                <select id="f-agua" formControlName="agua">
+                  <option value="">Não informado</option>
+                  @for (a of listaAgua; track a) { <option [value]="a">{{ agua[a] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-esgoto">Escoamento sanitário</label>
+                <select id="f-esgoto" formControlName="esgoto">
+                  <option value="">Não informado</option>
+                  @for (e of listaEsgoto; track e) { <option [value]="e">{{ esgoto[e] }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-lixo">Destino do lixo</label>
+                <select id="f-lixo" formControlName="lixo">
+                  <option value="">Não informado</option>
+                  @for (l of listaLixo; track l) { <option [value]="l">{{ lixo[l] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-energia">Energia elétrica</label>
+                <select id="f-energia" formControlName="energia">
+                  <option value="">Não informado</option>
+                  <option value="sim">Sim</option>
+                  <option value="nao">Não</option>
+                </select>
+              </div>
+            </div>
+            @if (g.item) {
+              <div class="dw-field">
+                <label class="switch" for="f-ativo">
+                  <span><b style="font-weight: 500;">Ativo</b><span class="cell-sub" id="h-ativo-d">Inativo, não recebe família</span></span>
+                  <input type="checkbox" role="switch" id="f-ativo" formControlName="ativo" aria-describedby="h-ativo-d" />
+                </label>
+              </div>
+            }
+          }
+          @case ('familia') {
+            <ng-container *ngTemplateOutlet="escolherPaciente; context: { rotulo: 'Responsável' }"></ng-container>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-renda">Renda familiar</label>
+                <select id="f-renda" formControlName="renda">
+                  <option value="">Não informada</option>
+                  @for (r of listaRendas; track r) { <option [value]="r">{{ rendas[r] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-data">Desde<span class="opt">sem valor, hoje</span></label>
+                <input id="f-data" type="date" formControlName="data" />
+              </div>
+            </div>
+            <p class="cell-sub">As outras pessoas entram depois, por "Incluir pessoa", com o parentesco.</p>
+          }
+          @case ('membro') {
+            <ng-container *ngTemplateOutlet="escolherPaciente; context: { rotulo: 'Pessoa' }"></ng-container>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-parentesco">Parentesco com {{ g.familia.responsavelNome }}</label>
+                <select id="f-parentesco" formControlName="parentesco">
+                  @for (p of listaParentescos; track p) { <option [value]="p">{{ parentescos[p] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-data">Entrada<span class="opt">sem valor, hoje</span></label>
+                <input id="f-data" type="date" formControlName="data" />
+              </div>
+            </div>
+          }
+          @case ('saida') {
+            @if (g.membro.pacienteId === g.familia.responsavelId && g.familia.membros.length > 1) {
+              <div class="box box--warn"><div>{{ g.membro.nome }} é o responsável: troque o responsável antes da saída.</div></div>
+            }
+            @if (g.familia.membros.length === 1) {
+              <div class="box box--info"><div>É a última pessoa: a família deixa de morar aqui.</div></div>
+            }
+            <div class="dw-field">
+              <label for="f-motivo">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-motivo" type="text" maxlength="400" formControlName="motivo" placeholder="Ex.: saiu de casa, óbito, mudou de cidade" [attr.aria-invalid]="!!erro('motivo')" aria-describedby="e-motivo" />
+              @if (erro('motivo')) { <p class="dw-err" id="e-motivo">{{ erro('motivo') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-data">Data<span class="opt">sem valor, hoje</span></label>
+              <input id="f-data" type="date" formControlName="data" />
+            </div>
+          }
+          @case ('responsavel') {
+            <div class="dw-field">
+              <label for="f-membroId">Novo responsável <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-membroId" formControlName="membroId" [attr.aria-invalid]="!!erro('membroId')" aria-describedby="e-membroId">
+                <option value="">Escolha…</option>
+                @for (m of outrosMembros(g.familia); track m.uuid) { <option [value]="m.uuid">{{ m.nome }}</option> }
+              </select>
+              @if (erro('membroId')) { <p class="dw-err" id="e-membroId">{{ erro('membroId') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-parentesco">{{ g.familia.responsavelNome }} passa a ser, do novo responsável,</label>
+              <select id="f-parentesco" formControlName="parentesco">
+                @for (p of listaParentescos; track p) { <option [value]="p">{{ parentescos[p] }}</option> }
+              </select>
+            </div>
+          }
+          @case ('renda') {
+            <div class="dw-field">
+              <label for="f-renda">Renda familiar</label>
+              <select id="f-renda" formControlName="renda">
+                <option value="">Não informada</option>
+                @for (r of listaRendas; track r) { <option [value]="r">{{ rendas[r] }}</option> }
+              </select>
+            </div>
+          }
+          @case ('mudanca') {
+            <p class="cell-sub">A família inteira muda: aqui ela deixa de morar na data, e no destino começa com as mesmas pessoas. Para uma pessoa só, use a saída e inclua-a na outra família.</p>
+            <div class="dw-field">
+              <label for="f-destinoArea">Área de destino</label>
+              <select id="f-destinoArea" formControlName="destinoArea" (change)="escolherAreaDestino($any($event.target).value)">
+                @for (a of areas(); track a.uuid) { <option [value]="a.uuid">{{ a.rotulo }}</option> }
+              </select>
+            </div>
+            <div class="dw-field">
+              <label for="f-destinoImovel">Imóvel</label>
+              <select id="f-destinoImovel" formControlName="destinoImovel" (change)="escolherImovelDestino($any($event.target).value)">
+                <option value="">Escolha…</option>
+                @for (i of destinoImoveis(); track i.uuid) { <option [value]="i.uuid">{{ i.enderecoTexto }} · microárea {{ i.microareaCodigo }}</option> }
+              </select>
+            </div>
+            <div class="dw-field">
+              <label for="f-destinoDomicilio">Domicílio <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-destinoDomicilio" formControlName="destinoDomicilio" [attr.aria-invalid]="!!erro('destinoDomicilio')" aria-describedby="e-destinoDomicilio">
+                <option value="">Escolha…</option>
+                @for (d of destinoDomicilios(); track d.uuid) { <option [value]="d.uuid">{{ d.identificacao || 'Domicílio' }}</option> }
+              </select>
+              @if (erro('destinoDomicilio')) { <p class="dw-err" id="e-destinoDomicilio">{{ erro('destinoDomicilio') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-data">Data<span class="opt">sem valor, hoje</span></label>
+                <input id="f-data" type="date" formControlName="data" />
+              </div>
+              <div class="dw-field" style="flex: 2;">
+                <label for="f-motivo">Motivo<span class="opt">opcional</span></label>
+                <input id="f-motivo" type="text" maxlength="400" formControlName="motivo" />
+              </div>
+            </div>
+          }
+        }
+      </div>
+      <footer class="dw-foot">
+        <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Salvar' }}</button>
+      </footer>
+    </form>
+
+    <ng-template #escolherPaciente let-rotulo="rotulo">
+      <div class="dw-field">
+        <label for="f-busca-paciente">{{ rotulo }} <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+        <input id="f-busca-paciente" type="search" placeholder="Nome, CPF ou cartão SUS…" [value]="buscaPaciente()" (input)="buscaPaciente.set($any($event.target).value)" autocomplete="off" />
+      </div>
+      <div class="dw-field">
+        <label for="f-pacienteId" class="sr-only">Paciente encontrado</label>
+        <select id="f-pacienteId" [formControl]="form.controls.pacienteId" [attr.aria-invalid]="!!erro('pacienteId')" aria-describedby="h-pacienteId e-pacienteId">
+          <option value="">{{ buscaPaciente().trim().length < 2 ? 'Digite ao menos 2 letras' : pacientesEncontrados().length ? 'Escolha…' : 'Nenhum paciente encontrado' }}</option>
+          @for (p of pacientesEncontrados(); track p.uuid) { <option [value]="p.uuid">{{ p.nome }}@if (p.dataNascimento) { · {{ data(p.dataNascimento) }} }</option> }
+        </select>
+        <p class="dw-hint" id="h-pacienteId">A pessoa é o paciente cadastrado. Não achou? <a routerLink="/assistencia/pacientes" target="_blank">Cadastre o paciente</a> e volte.</p>
+        @if (erro('pacienteId')) { <p class="dw-err" id="e-pacienteId">{{ erro('pacienteId') }}</p> }
+      </div>
+    </ng-template>
+  </app-drawer>
+}

@@ -103,6 +103,31 @@ export interface InternacaoResponseDto {
   altaPorNome?: string | null;
   diasPermanencia: number;
   eventos?: EventoLeitoDto[] | null;
+  /** Internação psiquiátrica (ADR-0123). */
+  modalidade?: ModalidadeInternacao | null;
+  ordemJudicial?: string | null;
+  comunicacoesMp?: ComunicacaoMpDto[];
+  comunicacaoMpPendente?: MomentoComunicacaoMp | null;
+  prazoComunicacaoMp?: string | null;
+  comunicacaoMpVencida?: boolean;
+}
+
+export type ModalidadeInternacao = 'VOLUNTARIA' | 'INVOLUNTARIA' | 'COMPULSORIA';
+export type MomentoComunicacaoMp = 'ADMISSAO' | 'ALTA';
+
+export const MODALIDADES_INTERNACAO: Record<ModalidadeInternacao, string> = {
+  VOLUNTARIA: 'Voluntária',
+  INVOLUNTARIA: 'Involuntária',
+  COMPULSORIA: 'Compulsória (ordem judicial)',
+};
+
+export interface ComunicacaoMpDto {
+  uuid: string;
+  momento: MomentoComunicacaoMp;
+  comunicadaEm: string;
+  responsavelNome?: string | null;
+  protocolo?: string | null;
+  observacao?: string | null;
 }
 
 export const TIPOS_LEITO: Record<TipoLeito, string> = {

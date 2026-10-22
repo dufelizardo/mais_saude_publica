@@ -784,7 +784,8 @@ tbody tr:hover { background: var(--ink-50); }
 /* ====== Layout dividido: lista + painel de detalhe (ver ADR-0052) ====== */
 .split { display: grid; grid-template-columns: 1.2fr 1fr; gap: var(--s-4); align-items: start; }
 @media (max-width: 1100px) { .split { grid-template-columns: 1fr; } }
-.split .detail-card { position: sticky; top: calc(var(--top-h) + var(--s-4)); }
+/* Painel fixo, mas com rolagem própria: mais alto que a janela (ficha com mapa), o fim ficava inalcançável (ADR-0126). */
+.split .detail-card { position: sticky; top: calc(var(--top-h) + var(--s-4)); max-height: calc(100vh - var(--top-h) - 2 * var(--s-4)); overflow-y: auto; }
 @media (max-width: 1100px) { .split .detail-card { position: static; } }
 
 /* ====== Avatar com iniciais (linha da tabela e cabeçalho do painel, ver ADR-0052) ====== */
@@ -1441,6 +1442,10 @@ tfoot .linha-total th { text-align: left; }
 .team-stack .more { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 2px solid var(--ink-50); color: var(--ink-500); display: grid; place-items: center; font-size: 0.65rem; font-weight: 600; margin-left: -8px; }
 .eq-prof, .eq-vinc { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; font-size: 0.8125rem; }
 .eq-prof li { display: grid; }
+/* Modelo operacional na ficha da unidade (ADR-0117): linha com ação à direita e título do grupo. */
+.eq-prof li.mo-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.eq-prof li.mo-row > span { display: grid; min-width: 0; }
+.mo-grupo { margin: 14px 0 0; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-500); }
 .eq-horario { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
 .eq-horario th, .eq-horario td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--ink-100); }
 .eq-horario input[type="time"] { width: 96px; min-height: 32px; }
@@ -1740,3 +1745,58 @@ button.shift--off { text-align: center; }
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
   html { scroll-behavior: auto; }
 }
+
+/* ── Programas de Saúde (ADR-0118), pelo protótipo Programas.html: grade de cartões ─────────────────────────────────── */
+.pg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s-3); margin-bottom: var(--s-5); }
+.program { background: var(--white); border: 1px solid var(--ink-200); border-radius: 12px; padding: var(--s-4); display: grid; gap: var(--s-3); cursor: pointer; text-align: left; font: inherit; color: inherit; }
+.program:hover { border-color: var(--blue-700); box-shadow: var(--shadow-md); transform: translateY(-1px); transition: all 0.15s; }
+.program[aria-pressed="true"] { border-color: var(--blue-700); box-shadow: 0 0 0 3px rgba(19,81,180,0.12); }
+.program:focus-visible { outline: 3px solid var(--focus, #ffbf47); outline-offset: 2px; }
+.pg__head { display: flex; gap: 10px; align-items: flex-start; }
+.pg__icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; font-weight: 700; font-size: 0.75rem; }
+.pg__icon--blue { background: var(--blue-50); color: var(--blue-700); }
+.pg__icon--ok { background: var(--ok-bg); color: var(--ok); }
+.pg__icon--pink { background: var(--teal-bg); color: var(--teal); }
+.pg__icon--purple { background: var(--purple-bg); color: var(--purple); }
+.pg__icon--warn { background: var(--warn-bg); color: var(--warn); }
+.pg__title { font-size: 1rem; font-weight: 600; }
+.pg__sub { font-size: 0.72rem; color: var(--ink-500); margin-top: 1px; }
+.pg__counts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pg__count { background: var(--ink-50); border-radius: 8px; padding: 8px 10px; }
+.pg__count .lbl { font-size: 0.66rem; color: var(--ink-500); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.pg__count .val { font-weight: 600; font-size: 1.125rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.pg__count .val.soon { font-size: 0.75rem; font-weight: 500; color: var(--ink-500); }
+.pg__foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.72rem; color: var(--ink-500); min-height: 20px; }
+.pg__foot .resp { display: inline-flex; align-items: center; gap: 4px; }
+.pg-cond { display: flex; gap: 4px; flex-wrap: wrap; }
+.stat__val--soon { font-size: 1rem; font-weight: 500; color: var(--ink-500); }
+/* Landing: consulta pública dos programas (ADR-0118). */
+.prg-cat { font-size: 1.0625rem; margin: var(--s-6) 0 var(--s-3); }
+.prg-grid { margin-top: 0; }
+.prg-card { cursor: default; gap: 8px; }
+.prg-card__publico, .prg-card__onde { font-size: var(--fs-sm, 0.875rem); color: var(--ink-700); }
+/* Acompanhamento programático (ADR-0119): indicadores do programa e busca de paciente na gaveta. */
+.prg-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); padding: var(--s-4) var(--s-5) 0; }
+@media (max-width: 720px) { .prg-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.prg-kpis .kpi { background: var(--ink-50); border: 1px solid var(--ink-200); border-radius: 10px; padding: var(--s-3) var(--s-4); }
+.prg-kpis .kpi__val { font-size: 1.375rem; font-weight: 600; line-height: 1.1; }
+.prg-kpis .kpi__val--alert { color: var(--alert); }
+.prg-kpis .kpi__val--warn { color: var(--warn); }
+.prg-kpis .kpi__val--soon { font-size: 1rem; font-weight: 500; color: var(--ink-500); }
+.prg-kpis .kpi__lbl { color: var(--ink-500); font-size: 0.72rem; margin-top: 4px; }
+.prg-busca { border: 1px solid var(--ink-200); border-radius: 8px; padding: 6px 10px; margin-top: 6px; max-height: 220px; overflow: auto; }
+
+/* ── Mapa (ADR-0126) ─────────────────────────────────────────────────────────────────────────── */
+.mapa { position: relative; border: 1px solid var(--ink-100); border-radius: 10px; overflow: hidden; background: var(--ink-50); }
+.mapa__alvo { position: absolute; inset: 0; }
+.mapa__alvo--marcar { cursor: crosshair; }
+.mapa__alvo--marcar .leaflet-grab { cursor: crosshair; }
+.mapa__carregando { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-500); font-size: 0.85rem; }
+.mapa__rotulo { background: transparent; border: 0; box-shadow: none; font-weight: 700; font-size: 0.72rem; color: var(--ink-900); text-shadow: 0 0 3px #fff, 0 0 3px #fff; }
+.mapa__rotulo::before { display: none; }
+.unit-pin--destaque { outline: 3px solid var(--warn); outline-offset: 1px; }
+/* Imóvel do cadastro territorial (ADR-0127): menor e neutro, para não competir com as unidades. */
+.unit-pin.t-imovel { min-width: 18px; height: 18px; font-size: 0.5rem; background: var(--ink-700); }
+.mapa-barra { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; margin: var(--s-2) 0; }
+.mapa-legenda { display: flex; flex-wrap: wrap; gap: var(--s-3); font-size: 0.72rem; color: var(--ink-500); margin-top: var(--s-2); }
+.mapa-legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }

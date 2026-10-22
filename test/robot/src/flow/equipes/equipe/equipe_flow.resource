@@ -17,7 +17,7 @@ Seed Uma Equipe
     ${unidadeId}=    Seed A Unidade De Saude Uuid
     ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
     ${nome}=    Set Variable    Robot SF ${sufixo}
-    ${payload}=    Create Dictionary    unidadeId=${unidadeId}    tipo=ESF    nome=${nome}    microareas=14, 17
+    ${payload}=    Create Dictionary    unidadeId=${unidadeId}    tipo=ESF    nome=${nome}
     ${response}=    POST Create Equipe    ${payload}
     Should Be Equal As Integers    ${response.status_code}    201
     RETURN    ${response.json()}[resumo][uuid]    ${nome}    ${unidadeId}
@@ -91,7 +91,7 @@ Equipe - Saida - Status Code 200
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${uuid}    ${nome}    ${unidadeId}=    Seed Uma Equipe
     ${matricula}=    Seed Um Profissional Lotado    ${unidadeId}
-    ${payload}=    Create Dictionary    profissionalMatricula=${matricula}    funcao=ACS    microarea=14
+    ${payload}=    Create Dictionary    profissionalMatricula=${matricula}    funcao=ACS
     ${incluido}=    POST Membro Equipe    ${uuid}    ${payload}
     Should Be Equal As Integers    ${incluido.status_code}    200
     ${membroId}=    Set Variable    ${incluido.json()}[membros][0][uuid]

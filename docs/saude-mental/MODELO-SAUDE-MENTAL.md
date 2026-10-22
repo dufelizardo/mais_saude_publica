@@ -294,10 +294,10 @@ Território ──► população e adscrição    Programas ──► ações  
 
 | Fatia | Entrega | Depende de |
 |---|---|---|
-| **SM1** · base | acolhimento, avaliação, acompanhamento ligado ao programa, equipe e técnico de referência | Programas P2, Atendimento com especialidade (ADR-0111, SB1) |
-| **SM2** · PTS | objetivos, metas, intervenções previstas, rede de apoio, versões e revisão; registro de intervenções | SM1 |
-| **SM3** · risco e crise | avaliação de risco com histórico, evento de crise, pós-crise, sugestão de notificação; modalidade da internação e comunicação ao Ministério Público | SM1, Vigilância V1, regulação de urgência |
-| **SM4** · rede | referência e contrarreferência pela Regulação; cuidado compartilhado e matriciamento | SM1 |
+| **SM1** · base ✅ ([ADR-0120](../adr/0120-saude-mental-base.md)) | acolhimento, avaliação, acompanhamento ligado ao programa, equipe e técnico de referência | Programas P2 (o atendimento com especialidade da SB1 ficou opcional) |
+| **SM2** · PTS ✅ ([ADR-0121](../adr/0121-saude-mental-pts-intervencoes.md)) | objetivos, metas, intervenções previstas, rede de apoio, versões e revisão; registro de intervenções | SM1 |
+| **SM3** · risco e crise ✅ ([ADR-0123](../adr/0123-saude-mental-risco-crise.md); a notificação no sistema chegou com a V1, ADR-0124; o SAMU segue pendente) | avaliação de risco com histórico, evento de crise, pós-crise, sugestão de notificação; modalidade da internação e comunicação ao Ministério Público | SM1, Vigilância V1, regulação de urgência |
+| **SM4** · rede ✅ ([ADR-0122](../adr/0122-saude-mental-rede.md)) | referência e contrarreferência pela Regulação; cuidado compartilhado e matriciamento | SM1 |
 | **SM5** · CAPS e RAPS | modalidades de CAPS e componentes da RAPS como capacidades da unidade; serviços oferecidos | ADR-0053 |
 | **SM6** · intersetorialidade e indicadores | instituições externas, encaminhamento intersetorial, indicadores para o #19 | SM2 |
 

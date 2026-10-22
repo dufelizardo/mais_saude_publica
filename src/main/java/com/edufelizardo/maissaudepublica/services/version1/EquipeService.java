@@ -78,13 +78,18 @@ public class EquipeService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private TerritorioDaEquipe territorio;
+
     // ── Leitura ────────────────────────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public EquipesResponseDto listar(UUID unidadeId) {
         List<Equipe> equipes = visiveis(unidadeId);
         Map<UUID, List<MembroEquipe>> membros = membrosVigentes(equipes);
-        List<EquipeResumoDto> lista = equipes.stream().map(e -> resumo(e, membros.getOrDefault(e.getUuid(), List.of()))).toList();
+        Map<UUID, String> doTerritorio = territorio.microareasPorEquipe();
+        List<EquipeResumoDto> lista = equipes.stream().map(e -> resumo(e, membros.getOrDefault(e.getUuid(), List.of()),
+                doTerritorio.containsKey(e.getUuid()), doTerritorio.get(e.getUuid()))).toList();
         Map<TipoEquipe, Long> porTipo = new EnumMap<>(TipoEquipe.class);
         equipes.stream().filter(Equipe::isAtiva).forEach(e -> porTipo.merge(e.getTipo(), 1L, Long::sum));
         long vinculados = equipes.stream().filter(Equipe::isAtiva)
@@ -124,7 +129,7 @@ public class EquipeService {
         return detalhe(e);
     }
 
-    /** Edita nome, INE, situação, microáreas, coordenação, reunião e apoiadas. Unidade e tipo ficam. */
+    /** Edita nome, INE, situação, coordenação, reunião e apoiadas. Unidade e tipo ficam; as microáreas são do Território. */
     @Transactional
     public EquipeResponseDto atualizar(UUID uuid, EquipeRequestDto dto) {
         Equipe e = buscar(uuid);
@@ -175,15 +180,13 @@ public class EquipeService {
         if (inicio.isAfter(LocalDate.now())) {
             throw new ResourceBadRequestException("A entrada não pode ser no futuro.");
         }
-        MembroEquipe m = new MembroEquipe(null, e, p, dto.getFuncao(),
-                dto.getMicroarea() == null || dto.getMicroarea().isBlank() ? null : dto.getMicroarea().trim(), inicio, null, null,
-                UsuarioAutenticado.cpf());
+        MembroEquipe m = new MembroEquipe(null, e, p, dto.getFuncao(), inicio, null, null, UsuarioAutenticado.cpf());
         membroRepository.save(m);
         ContextoAuditoria.detalhe("Entrada de " + p.getMatricula() + " como " + dto.getFuncao() + ".");
         return detalhe(e);
     }
 
-    /** Saída: fecha a participação com data e motivo. Quem coordena deixa de coordenar. */
+    /** Saída: fecha a participação com data e motivo. Quem coordena deixa de coordenar; o ACS deixa a microárea. */
     @Transactional
     public EquipeResponseDto registrarSaida(UUID membroId, SaidaMembroEquipeRequestDto dto) {
         MembroEquipe m = membroRepository.findById(membroId).orElseThrow(() -> new ResourceNotFoundException(
@@ -200,6 +203,7 @@ public class EquipeService {
         m.setFim(fim);
         m.setMotivoSaida(dto.getMotivo().trim());
         membroRepository.save(m);
+        territorio.encerrarDoMembro(m, fim, m.getMotivoSaida());
         if (e.getCoordenador() != null && e.getCoordenador().getUuid().equals(m.getProfissional().getUuid())) {
             e.setCoordenador(null);
             equipeRepository.save(e);
@@ -218,7 +222,6 @@ public class EquipeService {
             });
         }
         e.setIne(ine);
-        e.setMicroareas(dto.getMicroareas() == null || dto.getMicroareas().isBlank() ? null : dto.getMicroareas().trim());
         if (dto.getReuniaoInicio() != null && dto.getReuniaoFim() != null && !dto.getReuniaoFim().isAfter(dto.getReuniaoInicio())) {
             throw new ResourceBadRequestException("A reunião precisa terminar depois de começar.");
         }
@@ -264,21 +267,26 @@ public class EquipeService {
                 .collect(Collectors.groupingBy(m -> m.getEquipe().getUuid()));
     }
 
-    private EquipeResumoDto resumo(Equipe e, List<MembroEquipe> vigentes) {
+    /** As microáreas são as da área da equipe no Território (ADR-0125); sem área, nenhuma. */
+    private EquipeResumoDto resumo(Equipe e, List<MembroEquipe> vigentes, boolean peloTerritorio, String microareasDoTerritorio) {
         Set<FuncaoEquipe> presentes = vigentes.stream().map(MembroEquipe::getFuncao).collect(Collectors.toSet());
         List<String> faltando = e.getTipo().composicaoMinima().stream()
                 .filter(grupo -> grupo.stream().noneMatch(presentes::contains))
                 .map(grupo -> grupo.stream().map(Enum::name).sorted().collect(Collectors.joining(" ou ")))
                 .toList();
         return new EquipeResumoDto(e.getUuid(), e.getNome(), e.getTipo(), e.getIne(), e.isAtiva(), e.getUnidade().getUuid(),
-                e.getUnidade().getNome(), e.getMicroareas(), e.getCoordenador() != null ? e.getCoordenador().getNome() : null,
+                e.getUnidade().getNome(), microareasDoTerritorio,
+                e.getCoordenador() != null ? e.getCoordenador().getNome() : null,
                 vigentes.size(), (int) vigentes.stream().filter(m -> m.getFuncao() == FuncaoEquipe.ACS).count(), faltando.isEmpty(), faltando,
-                vigentes.stream().map(m -> m.getProfissional().getNome()).sorted(String.CASE_INSENSITIVE_ORDER).toList(), e.getApoiadas().size());
+                vigentes.stream().map(m -> m.getProfissional().getNome()).sorted(String.CASE_INSENSITIVE_ORDER).toList(), e.getApoiadas().size(),
+                peloTerritorio);
     }
 
     private EquipeResponseDto detalhe(Equipe e) {
         List<MembroEquipe> todos = membroRepository.findByEquipe_UuidOrderByInicioAsc(e.getUuid());
         List<MembroEquipe> vigentes = todos.stream().filter(MembroEquipe::vigente).toList();
+        Optional<TerritorioDaEquipe.Vinculo> vinculo = territorio.daEquipe(e.getUuid(), todos.stream().map(MembroEquipe::getUuid).toList());
+        Map<UUID, String> microareaPorMembro = vinculo.map(TerritorioDaEquipe.Vinculo::microareaPorMembro).orElse(Map.of());
         Map<String, Lotacao> lotacoes = lotacaoRepository.findVigentesComUnidadeECargo().stream()
                 .filter(l -> l.getUnidade() != null && l.getUnidade().getUuid().equals(e.getUnidade().getUuid()))
                 .collect(Collectors.toMap(l -> l.getProfissional().getMatricula(), Function.identity(), (a, b) -> a));
@@ -290,7 +298,7 @@ public class EquipeService {
             Afastamento a = m.vigente() ? afastados.get(p.getMatricula()) : null;
             return new EquipeResponseDto.Membro(m.getUuid(), p.getMatricula(), p.getNome(),
                     p.getConselhoClasse() == null ? null : p.getConselhoClasse() + " " + Objects.toString(p.getNumeroConselho(), ""),
-                    m.getFuncao(), m.getMicroarea(), m.getInicio(), m.getFim(), m.getMotivoSaida(),
+                    m.getFuncao(), microareaPorMembro.get(m.getUuid()), m.getInicio(), m.getFim(), m.getMotivoSaida(),
                     l != null && l.getCargo() != null ? l.getCargo().getNome() : null, l != null ? l.getJornadaSemanalHoras() : null,
                     a != null ? a.getTipo().name() : null, a != null ? a.getDataFim() : null);
         };
@@ -300,7 +308,8 @@ public class EquipeService {
         List<EquipeResponseDto.Vinculo> apoiadaPor = equipeRepository.findAllByOrderByNomeAsc().stream()
                 .filter(o -> o.getApoiadas().stream().anyMatch(a -> a.getUuid().equals(e.getUuid())))
                 .map(o -> new EquipeResponseDto.Vinculo(o.getUuid(), o.getNome(), o.getTipo().name(), o.getUnidade().getNome())).toList();
-        return new EquipeResponseDto(resumo(e, vigentes), e.getCoordenador() != null ? e.getCoordenador().getMatricula() : null,
+        return new EquipeResponseDto(resumo(e, vigentes, vinculo.isPresent(), vinculo.map(TerritorioDaEquipe.Vinculo::microareasTexto).orElse(null)),
+                e.getCoordenador() != null ? e.getCoordenador().getMatricula() : null,
                 e.getReuniaoDia(), e.getReuniaoInicio(), e.getReuniaoFim(), e.getReuniaoLocal(),
                 vigentes.stream().sorted(Comparator.comparing(MembroEquipe::getFuncao).thenComparing(m -> m.getProfissional().getNome()))
                         .map(membro).toList(),

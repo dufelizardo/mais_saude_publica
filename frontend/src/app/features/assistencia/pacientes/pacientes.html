@@ -38,13 +38,13 @@
       <div class="stat__val">{{ novosCadastrosMes() }}</div>
     </div>
   </div>
-  <div class="stat stat--pending" title="Em breve — depende do domínio Programas de Saúde, ainda não implementado">
+  <div class="stat" title="Pacientes com acompanhamento vigente em algum programa de saúde (ADR-0119)">
     <span class="stat__icon" aria-hidden="true">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
     </span>
     <div>
       <div class="stat__lbl">Em programas de saúde</div>
-      <div class="stat__val">Em breve</div>
+      <div class="stat__val">{{ emProgramas() ?? '—' }}</div>
     </div>
   </div>
   <div class="stat stat--pending" title="Em breve — exigiria uma agregação nova sobre a triagem mais recente de cada paciente">
@@ -65,11 +65,16 @@
     <input type="search" placeholder="Buscar por nome ou CPF…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
   </label>
 
-  <label class="pill pill--select" title="Em breve — domínio Programas de Saúde ainda não existe">
+  @if (catalogoProgramas().length) {
+  <label class="pill pill--select" title="Pacientes acompanhados no programa, nas unidades do seu acesso">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
     <span class="sr-only">Programa</span>
-    <select disabled><option>Programa</option></select>
+    <select aria-label="Programa" (change)="filtrarPorPrograma($any($event.target).value)">
+      <option value="" [selected]="filtroPrograma() === ''">Todos os programas</option>
+      @for (pg of catalogoProgramas(); track pg.uuid) { <option [value]="pg.uuid" [selected]="filtroPrograma() === pg.uuid">{{ pg.nome }}</option> }
+    </select>
   </label>
+  }
 
   <label class="pill pill--select" title="Em breve — Paciente ainda não tem vínculo de unidade">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
@@ -216,7 +221,7 @@
 
       @if (prontuarioBloqueio() || prontuario()?.acesso?.base === 'JUSTIFICADO') {
         <div style="padding: var(--s-4) var(--s-5) 0;">
-          <app-acesso-prontuario [pacienteId]="p.uuid" [bloqueio]="prontuarioBloqueio()" [acesso]="prontuario()?.acesso" (liberado)="carregarProntuario(p.uuid)" />
+          <app-acesso-prontuario [pacienteId]="p.uuid" [bloqueio]="prontuarioBloqueio()" [acesso]="prontuario()?.acesso" (liberado)="liberado(p.uuid)" />
         </div>
       }
 
@@ -253,15 +258,40 @@
           }
         </div>
 
+        <!-- Equipe de referência pelo território (ADR-0128). -->
+        <app-adscricao-do-paciente [pacienteId]="p.uuid" [podeCadastrar]="pode('TERRITORIO.CADASTRAR')" />
+
         <div class="section-title" style="font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; padding: 0 var(--s-5); margin-bottom: 10px;">
           Programas vinculados
         </div>
-        <div class="empty-state" style="padding-top: 0;">
-          <span class="empty-state__icon" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
-          </span>
-          <div class="empty-state__title">Em breve</div>
-          <p class="empty-state__desc">Vai mostrar os programas de saúde vinculados ao paciente, como HiperDia e Saúde da Família — depende de um domínio de backend que ainda não existe.</p>
+        <div style="padding: 0 var(--s-5) var(--s-4);">
+        @if (programasDoPaciente(); as pp) {
+          @if (pp.vigentes.length) {
+            <ul class="eq-prof" aria-label="Programas vigentes do paciente">
+              @for (a of pp.vigentes; track a.uuid) {
+                <li class="mo-row">
+                  <span>
+                    <span class="cell-main">{{ a.programaNome }}@if (a.sensivel) { <span class="tag tag--purple" style="margin-left: 4px;">Sensível</span> }</span>
+                    <span class="cell-sub">{{ a.unidadeNome }}@if (a.equipeNome) { · {{ a.equipeNome }} } · desde {{ dataCurta(a.inicio) }}@if (a.ultimoAtendimento) { · último atendimento {{ dataCurta(a.ultimoAtendimento) }} }</span>
+                  </span>
+                  <span>
+                    <span [class]="'tag tag--' + situacoesAcompanhamento[a.situacao].classe">{{ situacoesAcompanhamento[a.situacao].rotulo }}</span>
+                    @if (a.atrasado) { <span class="tag tag--warn">Atrasado</span> }
+                  </span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Não está em nenhum programa.</p>
+          }
+          @if (pp.restritos) { <p class="cell-sub">{{ pp.restritos }} programa(s) com acesso restrito (sensível, de outra unidade).</p> }
+        } @else if (programasBloqueio()) {
+          <p style="color: var(--ink-500); font-size: 0.8125rem;">Sem vínculo assistencial: use "Acessar com justificativa" acima para ver os programas.</p>
+        } @else if (programasDoPaciente() === null) {
+          <p style="color: var(--ink-500); font-size: 0.8125rem;">Seu acesso não inclui os programas do paciente.</p>
+        } @else {
+          <p style="color: var(--ink-500); font-size: 0.8125rem;">Carregando os programas…</p>
+        }
         </div>
 
         <div class="section-title" style="font-size: 0.7rem; font-weight: 600; color: var(--ink-500); letter-spacing: 0.06em; text-transform: uppercase; padding: 0 var(--s-5); margin-bottom: 10px;">
@@ -344,12 +374,75 @@
       }
 
       @if (abaDetalhe() === 'programas') {
-        <div class="empty-state">
-          <span class="empty-state__icon" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
-          </span>
-          <div class="empty-state__title">Em breve</div>
-          <p class="empty-state__desc">Vai mostrar os programas de saúde vinculados ao paciente, como HiperDia e Saúde da Família — depende de um domínio de backend que ainda não existe.</p>
+        <div style="padding: var(--s-5);" aria-label="Programas de saúde do paciente">
+        @if (programasDoPaciente(); as pp) {
+          @if (pp.vigentes.length) {
+            <ul class="eq-prof" aria-label="Programas vigentes do paciente">
+              @for (a of pp.vigentes; track a.uuid) {
+                <li class="mo-row">
+                  <span>
+                    <span class="cell-main">{{ a.programaNome }}@if (a.sensivel) { <span class="tag tag--purple" style="margin-left: 4px;">Sensível</span> }</span>
+                    <span class="cell-sub">{{ a.unidadeNome }}@if (a.equipeNome) { · {{ a.equipeNome }} } · desde {{ dataCurta(a.inicio) }}@if (a.ultimoAtendimento) { · último atendimento {{ dataCurta(a.ultimoAtendimento) }} }</span>
+                  </span>
+                  <span>
+                    <span [class]="'tag tag--' + situacoesAcompanhamento[a.situacao].classe">{{ situacoesAcompanhamento[a.situacao].rotulo }}</span>
+                    @if (a.atrasado) { <span class="tag tag--warn">Atrasado</span> }
+                    @if (pode('PROGRAMA.ACOMPANHAR')) {
+                      @if (a.situacao === 'FALTOSO') {
+                        <button type="button" class="link-btn" (click)="abrirSituacaoPrograma(a, 'ATIVO')" [attr.aria-label]="'Voltar a ativo: ' + a.programaNome">Voltar a ativo</button>
+                      } @else {
+                        <button type="button" class="link-btn" (click)="abrirSituacaoPrograma(a, 'FALTOSO')" [attr.aria-label]="'Marcar faltoso: ' + a.programaNome">Marcar faltoso</button>
+                      }
+                      @if (a.programaCodigo !== 'SAUDE_MENTAL') {
+                        <button type="button" class="link-btn" (click)="abrirSaidaPrograma(a)" [attr.aria-label]="'Registrar saída: ' + a.programaNome">Saída</button>
+                      }
+                    }
+                    @if (a.programaCodigo === 'SAUDE_MENTAL' && pode('SAUDE_MENTAL.ACOMPANHAR')) {
+                      <a class="link-btn" routerLink="/assistencia/saude-mental" [queryParams]="{ paciente: a.pacienteId }" [attr.aria-label]="'Abrir em Saúde Mental: ' + a.pacienteNome">Abrir em Saúde Mental</a>
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p style="color: var(--ink-500); font-size: 0.8125rem;">Não está em nenhum programa.</p>
+          }
+          @if (pp.restritos) { <p class="cell-sub">{{ pp.restritos }} programa(s) com acesso restrito (sensível, de outra unidade).</p> }
+        } @else if (programasBloqueio()) {
+          <p style="color: var(--ink-500); font-size: 0.8125rem;">Sem vínculo assistencial: use "Acessar com justificativa" acima para ver os programas.</p>
+        } @else if (programasDoPaciente() === null) {
+          <p style="color: var(--ink-500); font-size: 0.8125rem;">Seu acesso não inclui os programas do paciente.</p>
+        } @else {
+          <p style="color: var(--ink-500); font-size: 0.8125rem;">Carregando os programas…</p>
+        }
+        @if (programasDoPaciente()?.encerrados?.length) {
+          <h4 class="mo-grupo">Histórico</h4>
+          <ul class="eq-prof" aria-label="Programas encerrados do paciente">
+            @for (a of programasDoPaciente()!.encerrados; track a.uuid) {
+              <li><span class="cell-main">{{ a.programaNome }} · {{ situacoesAcompanhamento[a.situacao].rotulo }}</span><span class="cell-sub">{{ dataCurta(a.inicio) }} a {{ dataCurta(a.fim) }}@if (a.motivoSaida) { · {{ motivosSaida[a.motivoSaida] }} }@if (a.observacaoSaida) { · {{ a.observacaoSaida }} }</span></li>
+            }
+          </ul>
+        }
+        @if (acoesDoPaciente().length) {
+          <h4 class="mo-grupo">Ações programáticas</h4>
+          <ul class="eq-prof" aria-label="Ações programáticas do paciente">
+            @for (a of acoesDoPaciente(); track a.uuid) {
+              <li class="mo-row">
+                <span>
+                  <span class="cell-main">{{ tiposAcao[a.tipo] }} · {{ a.programaNome }}</span>
+                  <span class="cell-sub">prevista {{ dataCurta(a.dataPrevista) }}@if (a.realizadaEm) { · realizada {{ dataCurta(a.realizadaEm) }} }@if (a.responsavelNome) { · {{ a.responsavelNome }} }@if (a.motivo) { · {{ a.motivo }} }</span>
+                </span>
+                <span>
+                  <span [class]="'tag tag--' + situacoesAcao[a.situacao].classe">{{ situacoesAcao[a.situacao].rotulo }}</span>
+                  @if (a.vencida) { <span class="tag tag--warn">Vencida</span> }
+                </span>
+              </li>
+            }
+          </ul>
+        }
+        @if (pode('PROGRAMA.ACOMPANHAR')) {
+          <a routerLink="/assistencia/programas" class="btn btn--ghost btn--block" style="margin-top: var(--s-3);">Inscrever em um programa</a>
+        }
         </div>
       }
 
@@ -513,4 +606,59 @@
       </div>
     </form>
   </app-modal>
+}
+
+<!-- ── Faltoso e saída pela aba Programas (ADR-0119) ─────────────────────────────────────────────── -->
+@if (gavetaPrograma(); as g) {
+  <app-drawer [titulo]="g.tipo === 'saida' ? 'Registrar saída do programa' : (g.nova === 'FALTOSO' ? 'Marcar como faltoso' : 'Voltar a ativo')" (fechar)="fecharGavetaPrograma()">
+    <form class="dw-form" (submit)="$event.preventDefault(); salvarGavetaPrograma()" novalidate>
+      <div class="dw-body">
+        @if (erroPrograma()) { <div class="box box--err" role="alert"><strong>{{ erroPrograma() }}</strong></div> }
+        <dl class="ro">
+          <div><dt>Paciente</dt><dd>{{ g.acompanhamento.pacienteNome }}</dd></div>
+          <div><dt>Programa</dt><dd>{{ g.acompanhamento.programaNome }} · {{ g.acompanhamento.unidadeNome }}</dd></div>
+        </dl>
+        @if (g.tipo === 'situacao') {
+          <div class="dw-field" [formGroup]="situacaoProgramaForm">
+            <label for="f-motivoSituacaoPrograma">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+            <input id="f-motivoSituacaoPrograma" type="text" maxlength="500" formControlName="motivo" [attr.aria-invalid]="!!erroCampoPrograma('motivoSituacaoPrograma')" aria-describedby="e-motivoSituacaoPrograma" />
+            @if (erroCampoPrograma('motivoSituacaoPrograma')) { <p class="dw-err" id="e-motivoSituacaoPrograma">{{ erroCampoPrograma('motivoSituacaoPrograma') }}</p> }
+          </div>
+        } @else {
+          <div [formGroup]="saidaProgramaForm">
+            <div class="dw-field">
+              <label for="f-motivoSaidaPrograma">Motivo da saída <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-motivoSaidaPrograma" formControlName="motivoSaida" [attr.aria-invalid]="!!erroCampoPrograma('motivoSaidaPrograma')" aria-describedby="e-motivoSaidaPrograma">
+                <option value="">Escolha…</option>
+                @for (m of listaMotivosSaida; track m) { <option [value]="m">{{ motivosSaida[m] }}</option> }
+              </select>
+              @if (erroCampoPrograma('motivoSaidaPrograma')) { <p class="dw-err" id="e-motivoSaidaPrograma">{{ erroCampoPrograma('motivoSaidaPrograma') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-observacaoSaidaPrograma">Descrição <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-observacaoSaidaPrograma" type="text" maxlength="500" formControlName="observacao" [attr.aria-invalid]="!!erroCampoPrograma('observacaoSaidaPrograma')" aria-describedby="e-observacaoSaidaPrograma" />
+              @if (erroCampoPrograma('observacaoSaidaPrograma')) { <p class="dw-err" id="e-observacaoSaidaPrograma">{{ erroCampoPrograma('observacaoSaidaPrograma') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-fimSaidaPrograma">Data da saída<span class="opt">opcional</span></label>
+              <input id="f-fimSaidaPrograma" type="date" formControlName="fim" [attr.aria-invalid]="!!erroCampoPrograma('fimSaidaPrograma')" aria-describedby="e-fimSaidaPrograma" />
+              @if (erroCampoPrograma('fimSaidaPrograma')) { <p class="dw-err" id="e-fimSaidaPrograma">{{ erroCampoPrograma('fimSaidaPrograma') }}</p> }
+            </div>
+            <div class="box box--info"><div>Alta conclui o acompanhamento; os outros motivos encerram. O registro fica no histórico.</div></div>
+          </div>
+        }
+      </div>
+      <footer class="dw-foot">
+        <button type="button" class="btn btn--ghost" (click)="fecharGavetaPrograma()">Cancelar</button>
+        <button type="submit" class="btn" [disabled]="salvandoPrograma()">{{ salvandoPrograma() ? 'Salvando…' : (g.tipo === 'saida' ? 'Registrar saída' : (g.nova === 'FALTOSO' ? 'Marcar faltoso' : 'Voltar a ativo')) }}</button>
+      </footer>
+    </form>
+  </app-drawer>
+}
+
+@if (avisoPrograma(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
 }

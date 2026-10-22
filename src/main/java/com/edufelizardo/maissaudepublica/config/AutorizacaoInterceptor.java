@@ -45,6 +45,10 @@ public class AutorizacaoInterceptor implements HandlerInterceptor {
         if (metodo.hasMethodAnnotation(RequerPermissao.class)) {
             return false;
         }
+        // Consulta pública da landing page (ADR-0118): sem login, sem permissão.
+        if (metodo.hasMethodAnnotation(RotaPublica.class)) {
+            return true;
+        }
         return metodo.hasMethodAnnotation(LiberadoParaAutenticados.class)
                 || AnnotatedElementUtils.hasAnnotation(metodo.getBeanType(), LiberadoParaAutenticados.class);
     }
