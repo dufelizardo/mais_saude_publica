@@ -160,6 +160,11 @@ export interface ItemPlanoTratamentoDto {
   solicitacaoRegulacaoId?: string | null;
   motivoSituacao?: string | null;
   situacaoAlteradaEm?: string | null;
+  /** O encaminhamento pela Regulação (ADR-0138). */
+  regulacaoProcedimentoNome?: string | null;
+  regulacaoStatus?: string | null;
+  regulacaoExecutanteNome?: string | null;
+  contrarreferencia?: string | null;
 }
 
 export interface PlanoTratamentoDto {

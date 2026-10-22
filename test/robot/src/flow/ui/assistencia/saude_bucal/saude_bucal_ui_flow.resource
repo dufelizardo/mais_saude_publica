@@ -4,6 +4,7 @@ Resource    ../../../../pom/common/mais_saude_publica_ui_common.resource
 Resource    ../../../saude_bucal/odontograma_flow.resource
 Resource    ../../../saude_bucal/procedimento_odontologico_flow.resource
 Resource    ../../../saude_bucal/plano_tratamento_flow.resource
+Resource    ../../../saude_bucal/regulacao_odontologica_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A base é criada pela API; a ação sob teste é feita pela tela.
@@ -137,5 +138,33 @@ UI Saude Bucal - Plano De Tratamento
     Wait For Elements State    css=[aria-label="Itens do plano"] li:has-text("flúor") >> text=Cancelado    visible
     Clicar Botao    Concluir tratamento
     Wait For Elements State    css=[aria-label="Plano de tratamento"] >> text=Planos anteriores (1)    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Saude Bucal - Encaminhar Pela Regulacao
+    [Documentation]    No plano de tratamento: encaminhar a pulpotomia do 46 pela Regulação, para a endodontia do CEO, e ver o item encaminhado (ADR-0138).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${item}    ${paciente}    ${unidade}    ${matricula}=    Seed Plano Com Pulpotomia
+    Ir Para Rota Do Frontend    /assistencia/atendimentos?aba=pront&pacienteId=${paciente}
+    Click    css=.pront-tl >> role=button[name="Abrir"] >> nth=0
+    Wait For Elements State    css=[aria-label="Itens do plano"] >> text=Pulpotomia    visible
+    Click    css=[aria-label="Encaminhar pela Regulação: Pulpotomia"]
+    Wait For Elements State    css=app-drawer [aria-label="Item do plano encaminhado"] >> text=Pulpotomia no 46    visible
+    Select Options By    id=f-procedimentoId    label    Endodontia (CEO)
+    Fill Text    id=f-cid    K04.0
+    Fill Text    id=f-justificativa    Pulpite irreversível no 46, indicação de canal.
+    Fill Text    id=f-profissionalMatricula    ${matricula}
+    Enviar Gaveta
+    Wait Until Keyword Succeeds    10x    1s    Item Do Plano Encaminhado    ${paciente}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Item Do Plano Encaminhado
+    [Documentation]    The plan item is forwarded by the regulation request.
+    [Arguments]    ${paciente}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${planos}=    GET Planos Do Paciente    ${paciente}
+    Should Be Equal    ${planos.json()}[0][itens][0][situacao]    ENCAMINHADO
+    Should Be Equal    ${planos.json()}[0][itens][0][regulacaoProcedimentoNome]    Endodontia (CEO)
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

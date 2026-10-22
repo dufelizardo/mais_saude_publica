@@ -1,11 +1,12 @@
 # Modelo do domínio Saúde Bucal
 
-**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1 a SB3 implementadas)
+**Data:** 2026-10-07 (criado) · 2026-10-21 (SB1 a SB3 implementadas) · 2026-10-22 (SB4a implementada)
 **Status:** desenho aprovado na [ADR-0111](../adr/0111-saude-bucal.md). **A SB1 (especialidade e avaliação
 odontológica), a SB2 (odontograma) e a SB3 (catálogo de procedimentos, procedimento odontológico e plano de
 tratamento) estão implementadas** nas ADRs [0134](../adr/0134-saude-bucal-base.md),
 [0135](../adr/0135-saude-bucal-odontograma.md), [0136](../adr/0136-saude-bucal-procedimento-odontologico.md) e
-[0137](../adr/0137-saude-bucal-plano-de-tratamento.md); SB4 e SB5 vêm depois (seção 14).
+[0137](../adr/0137-saude-bucal-plano-de-tratamento.md); a SB4a (encaminhamento pela Regulação) na
+[0138](../adr/0138-saude-bucal-encaminhamento-pela-regulacao.md); SB4b e SB5 vêm depois (seção 14).
 
 Saúde Bucal é um **domínio assistencial especializado**, e não um sistema odontológico isolado. Este documento
 mostra o que ele traz de próprio, o que reaproveita dos domínios que já existem, o odontograma com histórico, o plano
@@ -190,8 +191,10 @@ Não há fluxo odontológico próprio. O encaminhamento usa a **Regulação** (A
   pacientes com necessidades especiais entram como itens do **catálogo da Regulação**.
 - **Executante:** o **CEO** (Centro de Especialidades Odontológicas, no Mapa de Equipamentos).
 - **Plano:** o item fica "encaminhado", e a contrarreferência volta para ele.
-- **Tipo do CEO:** segue o critério da ADR-0053 (tipo próprio ou `CENTRO_ESPECIALIDADES` com especialização). A
-  decisão é na fatia SB4.
+- **Tipo do CEO:** segue o critério da ADR-0053 (tipo próprio ou `CENTRO_ESPECIALIDADES` com especialização).
+  **Decidido na SB4a ([ADR-0138](../adr/0138-saude-bucal-encaminhamento-pela-regulacao.md)):** sem tipo próprio; o CEO
+  é a unidade de especialidades com as capacidades odontológicas do Modelo Operacional, e o item regulado exige a
+  capacidade da executante.
 
 ```text
 Saúde Bucal (item do plano) → Regulação → CEO / serviço de referência → contrarreferência
@@ -274,7 +277,7 @@ saude-bucal/
 | **SB1** · base ✅ ([ADR-0134](../adr/0134-saude-bucal-base.md)) | especialidade no atendimento e na Agenda; avaliação odontológica | Atendimento, Equipe eSB |
 | **SB2** · odontograma ✅ ([ADR-0135](../adr/0135-saude-bucal-odontograma.md)) | catálogo de condições, registros com histórico, projeção por data, tela do odontograma | SB1 |
 | **SB3** · tratamento ✅ (SB3a [ADR-0136](../adr/0136-saude-bucal-procedimento-odontologico.md); SB3b [ADR-0137](../adr/0137-saude-bucal-plano-de-tratamento.md)) | catálogo geral de procedimentos, complemento odontológico, plano de tratamento, evolução | SB2 |
-| **SB4** · regulação e prótese | especialidades no catálogo da Regulação, CEO como executante, tratamento protético | SB3, Regulação |
+| **SB4** · regulação e prótese (SB4a ✅ [ADR-0138](../adr/0138-saude-bucal-encaminhamento-pela-regulacao.md); SB4b a fazer) | especialidades no catálogo da Regulação, CEO como executante, tratamento protético | SB3, Regulação |
 | **SB5** · saúde bucal coletiva | detalhe odontológico das ações coletivas | Programas P4, Território |
 
 ## 15. Dependências

@@ -6,6 +6,7 @@ import com.edufelizardo.maissaudepublica.models.enuns.NecessidadeTratamentoOdont
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoItemPlanoTratamento;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoPlanoTratamento;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusProcedimento;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusSolicitacaoRegulacao;
 import lombok.*;
 
 import java.io.Serial;
@@ -68,5 +69,10 @@ public class PlanoTratamentoDto implements Serializable {
         private UUID solicitacaoRegulacaoId;
         private String motivoSituacao;
         private Instant situacaoAlteradaEm;
+        /** O encaminhamento pela Regulação (ADR-0138): o item, a situação, a executante e a contrarreferência. */
+        private String regulacaoProcedimentoNome;
+        private StatusSolicitacaoRegulacao regulacaoStatus;
+        private String regulacaoExecutanteNome;
+        private String contrarreferencia;
     }
 }
