@@ -51,7 +51,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
-| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 a SB3 feitas; SB4 e SB5 |
+| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 a SB3 e SB4a feitas; SB4b e SB5 |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
@@ -68,14 +68,14 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| SB4 | 25 Saúde Bucal | especialidades odontológicas na Regulação, CEO como executante, tratamento protético |
+| SB4b | 25 Saúde Bucal | tratamento protético: etapas, laboratório de prótese (LRPD), entrega |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
-MO1 ✅ ──► SB4 (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
+MO1 ✅ ──► SB4a ✅ (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6
@@ -87,7 +87,7 @@ F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulner
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
-SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4
+SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
@@ -129,7 +129,7 @@ C1 ──► C2 · C4 · C5
   são capacidades no catálogo da MO1 ([ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
 - [x] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1, [ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
 - [ ] Serviços (MO2); coordenadas e pontos operacionais (MO3).
-- [ ] Tipo de unidade do CEO (Centro de Especialidades Odontológicas), pelo critério da ADR-0053 (domínio 25, SB4).
+- [x] Tipo de unidade do CEO: sem tipo próprio; é a unidade de especialidades com as capacidades odontológicas (ADR-0138).
 
 ### 2. RH
 
@@ -542,8 +542,12 @@ C1 ──► C2 · C4 · C5
   com motivo; permissão `ODONTOLOGIA.PLANEJAR`; seção Plano de tratamento no atendimento de odontologia.
 
 **Falta:**
-- [ ] **SB4 · Regulação e prótese:** especialidades odontológicas no catálogo da Regulação, CEO como executante,
-  tratamento protético.
+- [x] **SB4a · Encaminhamento pela Regulação** ([ADR-0138](./adr/0138-saude-bucal-encaminhamento-pela-regulacao.md)):
+  o CEO como unidade com as capacidades odontológicas (sem tipo próprio); o item regulado exige a capacidade da
+  executante (vale para toda a Regulação); as especialidades odontológicas no catálogo; a solicitação a partir do item
+  do plano, que fica encaminhado e volta a planejado na negativa, cancelamento ou falta; a contrarreferência no plano.
+- [ ] **SB4b · Tratamento protético:** tipo e arcada, etapas com data e profissional, laboratório de prótese (LRPD,
+  capacidade nova ou contratado), entrega e cancelamento.
 - [ ] **SB5 · Saúde bucal coletiva:** detalhe odontológico das ações coletivas (depende de Programas P4 e do
   Território).
 

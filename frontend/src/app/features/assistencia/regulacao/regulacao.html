@@ -217,7 +217,7 @@
         <tbody>
           @for (p of procedimentos(); track p.uuid) {
             <tr>
-              <td class="cell-main">{{ p.nome }}</td>
+              <td class="cell-main">{{ p.nome }}@if (p.capacidadeExigidaNome) { <span class="cell-sub">Exige da executante: {{ p.capacidadeExigidaNome }}</span> }</td>
               <td>{{ tiposProcedimento[p.tipo] }}</td>
               <td>@if (p.ativo) { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Em uso</span> } @else { <span class="badge badge--muted">Fora de uso</span> }</td>
               @if (pode('REGULACAO.REGULAR')) {
@@ -241,6 +241,11 @@
         <form class="dw-form" [formGroup]="novaForm" (ngSubmit)="salvar()" novalidate>
           <div class="dw-body">
             @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (itemPlano(); as ip) {
+              <div class="box box--info" aria-label="Item do plano encaminhado">
+                <div>Encaminha o item do plano de tratamento: {{ ip.nome }}. O item fica encaminhado; na negativa, volta a planejado, e a contrarreferência aparece no plano.</div>
+              </div>
+            }
             <div class="dw-field">
               <label for="f-buscaPaciente">Paciente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
               <input id="f-buscaPaciente" type="search" formControlName="buscaPaciente" autocomplete="off" placeholder="Buscar por nome ou CPF…" aria-describedby="h-pacienteId" />
@@ -627,6 +632,14 @@
               <select id="f-tipo" formControlName="tipo">
                 @for (t of listaTipos; track t) { <option [value]="t">{{ tiposProcedimento[t] }}</option> }
               </select>
+            </div>
+            <div class="dw-field">
+              <label for="f-capacidadeExigidaId">Capacidade exigida da executante<span class="opt">opcional</span></label>
+              <select id="f-capacidadeExigidaId" formControlName="capacidadeExigidaId" aria-describedby="h-capacidadeExigidaId">
+                <option value="">Qualquer unidade</option>
+                @for (c of capacidades(); track c.uuid) { <option [value]="c.uuid">{{ c.nome }}</option> }
+              </select>
+              <p class="dw-hint" id="h-capacidadeExigidaId">Do Modelo Operacional: a autorização só aceita executante com ela (o CEO com endodontia, por exemplo).</p>
             </div>
             <div class="dw-field">
               <label class="switch" for="f-ativo">

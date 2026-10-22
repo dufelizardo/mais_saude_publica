@@ -674,7 +674,7 @@
                   </section>
                   <section class="dsec" aria-label="Plano de tratamento">
                     <div class="dsec__h"><h3>Plano de tratamento</h3></div>
-                    <app-plano-tratamento [pacienteId]="a.pacienteUuid" [atendimentoId]="a.uuid" [avaliacaoId]="avaliacaoOdontologicaVigente(registros())"
+                    <app-plano-tratamento [pacienteId]="a.pacienteUuid" [atendimentoId]="a.uuid" [unidadeId]="a.unidadeUuid" [avaliacaoId]="avaliacaoOdontologicaVigente(registros())"
                       [podePlanejar]="pode('ODONTOLOGIA.PLANEJAR')" [podeExecutar]="pode('PROCEDIMENTO.REGISTRAR')" [catalogo]="catalogoOdontologico()"
                       [matriculaPadrao]="matriculaPadrao()" [recarregar]="registros()" (executar)="executarItemPlano(a.uuid, $event)" />
                   </section>

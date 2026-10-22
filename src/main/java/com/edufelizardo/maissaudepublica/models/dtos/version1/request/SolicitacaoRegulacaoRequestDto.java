@@ -44,4 +44,7 @@ public class SolicitacaoRegulacaoRequestDto implements Serializable {
 
     @NotNull
     private PrioridadeRegulacao prioridade;
+
+    /** O item do plano de tratamento odontológico encaminhado (ADR-0138), opcional. */
+    private UUID itemPlanoTratamentoId;
 }

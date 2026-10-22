@@ -231,6 +231,50 @@ public class PlanoTratamentoService {
         return dto(plano);
     }
 
+    // ── Encaminhamento pela Regulação (ADR-0138, chamado pelo SolicitacaoRegulacaoService) ─────────
+
+    /**
+     * A solicitação de regulação feita a partir do item: do mesmo paciente, num plano aberto, com o item planejado ou em
+     * andamento (422). O item fica encaminhado, ligado à solicitação.
+     */
+    @Transactional
+    public void encaminharPelaRegulacao(UUID itemId, SolicitacaoRegulacao solicitacao) {
+        ItemPlanoTratamento item = itemRepository.findById(itemId).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar o item do plano " + itemId + " em nossos registros."));
+        PlanoTratamento plano = item.getPlano();
+        if (!plano.getPaciente().getUuid().equals(solicitacao.getPaciente().getUuid())) {
+            throw new ResourceUnprocessableEntityException("O item é do plano de outro paciente.");
+        }
+        if (plano.getSituacao() != SituacaoPlanoTratamento.ABERTO) {
+            throw new ResourceUnprocessableEntityException("O plano de tratamento está " + plano.getSituacao() + ".");
+        }
+        if (item.getSituacao() != SituacaoItemPlanoTratamento.PLANEJADO && item.getSituacao() != SituacaoItemPlanoTratamento.EM_ANDAMENTO) {
+            throw new ResourceUnprocessableEntityException("O item está " + item.getSituacao() + ": só se encaminha o planejado ou em andamento.");
+        }
+        item.setSituacao(SituacaoItemPlanoTratamento.ENCAMINHADO);
+        item.setSolicitacaoRegulacao(solicitacao);
+        item.setMotivoSituacao("Regulação: " + solicitacao.getProcedimento().getNome());
+        marcarAlteracao(item);
+        itemRepository.save(item);
+    }
+
+    /**
+     * A solicitação negada, cancelada ou com falta do paciente devolve o item encaminhado a planejado, com o motivo: a
+     * necessidade continua, e o dentista decide o próximo passo. Fora do plano aberto, nada muda.
+     */
+    @Transactional
+    public void aoEncerrarSolicitacao(SolicitacaoRegulacao solicitacao, String motivo) {
+        for (ItemPlanoTratamento item : itemRepository.findBySolicitacaoRegulacao_Uuid(solicitacao.getUuid())) {
+            if (item.getSituacao() == SituacaoItemPlanoTratamento.ENCAMINHADO && item.getPlano().getSituacao() == SituacaoPlanoTratamento.ABERTO) {
+                item.setSituacao(SituacaoItemPlanoTratamento.PLANEJADO);
+                item.setSolicitacaoRegulacao(null);
+                item.setMotivoSituacao(motivo.length() > 500 ? motivo.substring(0, 500) : motivo);
+                marcarAlteracao(item);
+                itemRepository.save(item);
+            }
+        }
+    }
+
     // ── Execução pelo procedimento (chamada pelo ProcedimentoService) ──────────────────────────────
 
     /**
@@ -395,10 +439,13 @@ public class PlanoTratamentoService {
     private static PlanoTratamentoDto.Item item(ItemPlanoTratamento i) {
         ProcedimentoCatalogo c = i.getProcedimentoPrevisto();
         Procedimento p = i.getProcedimento();
+        SolicitacaoRegulacao s = i.getSolicitacaoRegulacao();
         return new PlanoTratamentoDto.Item(i.getUuid(), i.getOrdem(), c.getUuid(), c.getNome(), c.getSigtap(), c.getAlcance(), c.isExigeDentista(),
                 i.getDente(), i.getFaces().stream().sorted().toList(), i.getObservacao(), i.getSituacao(), p != null ? p.getUuid() : null,
-                p != null ? p.getStatus() : null, i.getSolicitacaoRegulacao() != null ? i.getSolicitacaoRegulacao().getUuid() : null,
-                i.getMotivoSituacao(), i.getSituacaoAlteradaEm());
+                p != null ? p.getStatus() : null, s != null ? s.getUuid() : null, i.getMotivoSituacao(), i.getSituacaoAlteradaEm(),
+                s != null ? s.getProcedimento().getNome() : null, s != null ? s.getStatus() : null,
+                s != null ? s.getUnidadeExecutante() != null ? s.getUnidadeExecutante().getNome() : null : null,
+                s != null ? s.getContrarreferencia() : null);
     }
 
     private static String texto(String s) {

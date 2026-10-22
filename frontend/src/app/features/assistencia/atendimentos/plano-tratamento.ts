@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ProcedimentoCatalogoDto } from '../../../core/models/procedimento';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import {
@@ -25,6 +26,7 @@ type Acao = { tipo: 'item'; itemId: string; situacao: SituacaoItemPlanoTratament
  */
 @Component({
   selector: 'app-plano-tratamento',
+  imports: [RouterLink],
   template: `
     @if (erro()) { <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div> }
     @if (aberto(); as p) {
@@ -48,12 +50,17 @@ type Acao = { tipo: 'item'; itemId: string; situacao: SituacaoItemPlanoTratament
               <span>
                 <span class="cell-main">{{ i.ordem }}. {{ i.procedimentoNome }} <span [class]="'tag tag--' + situacoesItem[i.situacao].classe">{{ situacoesItem[i.situacao].rotulo }}</span></span>
                 <span class="cell-sub">{{ complemento(i) }}@if (i.motivoSituacao) { · {{ i.motivoSituacao }} }</span>
+                @if (i.regulacaoProcedimentoNome) {
+                  <span class="cell-sub" aria-label="Regulação do item">Regulação: {{ i.regulacaoProcedimentoNome }} · {{ statusRegulacao(i.regulacaoStatus) }}@if (i.regulacaoExecutanteNome) { · {{ i.regulacaoExecutanteNome }} }</span>
+                }
+                @if (i.contrarreferencia) { <span class="cell-sub" aria-label="Contrarreferência"><b>Contrarreferência:</b> {{ i.contrarreferencia }}</span> }
               </span>
               @if (pendente(i)) {
                 <span class="row-actions">
                   @if (podeExecutar()) { <button type="button" class="btn btn--sm" (click)="executar.emit(i)" [attr.aria-label]="'Executar: ' + i.procedimentoNome">Executar</button> }
                   @if (podePlanejar()) {
                     @if (i.situacao === 'PLANEJADO') { <button type="button" class="link-btn" (click)="mudar(i.uuid, 'EM_ANDAMENTO', null)" [attr.aria-label]="'Em andamento: ' + i.procedimentoNome">Em andamento</button> }
+                    <a class="link-btn" routerLink="/assistencia/regulacao" [queryParams]="{ acao: 'nova', pacienteId: pacienteId(), unidadeId: unidadeId(), itemPlanoId: i.uuid, itemPlanoNome: i.procedimentoNome + (i.dente ? ' no ' + i.dente : '') }" [attr.aria-label]="'Encaminhar pela Regulação: ' + i.procedimentoNome">Pela Regulação</a>
                     <button type="button" class="link-btn" (click)="pedir({ tipo: 'item', itemId: i.uuid, situacao: 'ENCAMINHADO' })" [attr.aria-label]="'Encaminhar: ' + i.procedimentoNome">Encaminhar</button>
                     <button type="button" class="link-btn" (click)="pedir({ tipo: 'item', itemId: i.uuid, situacao: 'CANCELADO' })" [attr.aria-label]="'Cancelar: ' + i.procedimentoNome">Cancelar</button>
                   }
@@ -141,6 +148,8 @@ export class PlanoTratamento {
 
   readonly pacienteId = input.required<string>();
   readonly atendimentoId = input.required<string>();
+  /** A unidade do atendimento: a solicitante no encaminhamento pela Regulação (ADR-0138). */
+  readonly unidadeId = input<string | null>(null);
   /** A avaliação odontológica vigente: o diagnóstico e a prioridade do plano vêm dela. */
   readonly avaliacaoId = input<string | null>(null);
   readonly podePlanejar = input(false);
@@ -196,6 +205,14 @@ export class PlanoTratamento {
 
   protected pendente(i: ItemPlanoTratamentoDto): boolean {
     return i.situacao === 'PLANEJADO' || i.situacao === 'EM_ANDAMENTO';
+  }
+
+  protected statusRegulacao(s?: string | null): string {
+    const rotulos: Record<string, string> = {
+      SOLICITADA: 'na fila', DEVOLVIDA: 'devolvida', AUTORIZADA: 'autorizada', AGENDADA: 'agendada', REALIZADA: 'realizada',
+      NEGADA: 'negada', FALTOU: 'faltou', CANCELADA: 'cancelada',
+    };
+    return s ? rotulos[s] ?? s : '';
   }
 
   protected complemento(i: ItemPlanoTratamentoDto): string {

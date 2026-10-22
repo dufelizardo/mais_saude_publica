@@ -17,4 +17,7 @@ public interface ItemPlanoTratamentoRepository extends JpaRepository<ItemPlanoTr
 
     /** O item que o procedimento executa, se houver. */
     Optional<ItemPlanoTratamento> findByProcedimento_Uuid(UUID procedimentoId);
+
+    /** Os itens encaminhados por uma solicitação de regulação (ADR-0138). */
+    List<ItemPlanoTratamento> findBySolicitacaoRegulacao_Uuid(UUID solicitacaoId);
 }
