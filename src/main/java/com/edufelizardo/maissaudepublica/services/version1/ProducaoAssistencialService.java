@@ -1,8 +1,6 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
-import com.edufelizardo.maissaudepublica.exceptions.ResourceForbiddenException;
-import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AgendaProducaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ContagemProducaoDto;
@@ -39,7 +37,7 @@ import java.util.stream.Collectors;
 @Service
 public class ProducaoAssistencialService {
 
-    public static final String CONSULTAR = "INDICADOR.CONSULTAR";
+    public static final String CONSULTAR = EscopoDosIndicadores.CONSULTAR;
 
     /** Período máximo de uma consulta: um ano (e um dia, para o ano bissexto). */
     private static final long MAXIMO_DIAS = 366;
@@ -64,15 +62,7 @@ public class ProducaoAssistencialService {
     private UnidadeDeSaudeRepository unidadeRepository;
 
     @Autowired
-    private ControleDeAcesso controleDeAcesso;
-
-    /** As unidades consideradas: a pedida, ou as do acesso (nulo = todas). */
-    private record Escopo(UnidadeDeSaude unidade, Set<UUID> unidades, String abrangencia) {
-        /** O registro sem unidade não entra em nenhuma abrangência (ADR-0143). */
-        boolean contem(UUID unidadeId) {
-            return unidadeId != null && (unidades == null || unidades.contains(unidadeId));
-        }
-    }
+    private EscopoDosIndicadores escopoDosIndicadores;
 
     private record Periodo(LocalDate de, LocalDate ate) {
         long dias() {
@@ -87,7 +77,7 @@ public class ProducaoAssistencialService {
     @Transactional(readOnly = true)
     public ProducaoAssistencialDto producao(LocalDate de, LocalDate ate, UUID unidadeId) {
         Periodo p = periodo(de, ate);
-        Escopo e = escopo(unidadeId);
+        EscopoDosIndicadores.Escopo e = escopoDosIndicadores.de(unidadeId);
         Periodo ant = p.anterior();
         List<Object[]> atendimentos = atendimentos(e, p);
         long anterior = atendimentos(e, ant).size();
@@ -142,7 +132,7 @@ public class ProducaoAssistencialService {
 
         BigDecimal media = BigDecimal.valueOf(total).divide(BigDecimal.valueOf(p.dias()), 1, RoundingMode.HALF_UP);
         return new ProducaoAssistencialDto(p.de(), p.ate(), ant.de(), ant.ate(),
-                e.unidade() == null ? null : e.unidade().getUuid(), e.unidade() == null ? null : e.unidade().getNome(), e.abrangencia(),
+                e.unidadeId(), e.unidade() == null ? null : e.unidade().getNome(), e.abrangencia(),
                 total, anterior, variacao(total, anterior), media, porTipo, porEspecialidade, porCategoria, porFaixa, porSexo,
                 List.of(horas), agenda(e, p), agenda(e, ant));
     }
@@ -157,7 +147,7 @@ public class ProducaoAssistencialService {
         if (n < 1 || n > maximo) {
             throw new ResourceBadRequestException("A série por " + (g == GranularidadeSerie.DIA ? "dia" : "mês") + " vai de 1 a " + maximo + " pontos.");
         }
-        Escopo e = escopo(unidadeId);
+        EscopoDosIndicadores.Escopo e = escopoDosIndicadores.de(unidadeId);
         LocalDate hoje = LocalDate.now();
         LocalDate inicio = g == GranularidadeSerie.DIA ? hoje.minusDays(n - 1L) : YearMonth.from(hoje).minusMonths(n - 1L).atDay(1);
         Periodo p = new Periodo(inicio, hoje);
@@ -182,14 +172,14 @@ public class ProducaoAssistencialService {
         }
         List<SerieProducaoDto.Ponto> lista = pontosMap.entrySet().stream()
                 .map(x -> new SerieProducaoDto.Ponto(x.getKey(), x.getValue()[0], x.getValue()[1])).toList();
-        return new SerieProducaoDto(g, e.unidade() == null ? null : e.unidade().getUuid(), lista);
+        return new SerieProducaoDto(g, e.unidadeId(), lista);
     }
 
     /** As unidades do acesso com produção no período ou no anterior, da maior para a menor. */
     @Transactional(readOnly = true)
     public List<ProducaoUnidadeDto> unidades(LocalDate de, LocalDate ate) {
         Periodo p = periodo(de, ate);
-        Escopo e = escopo(null);
+        EscopoDosIndicadores.Escopo e = escopoDosIndicadores.de(null);
         Map<UUID, Long> atual = contarPorUnidade(atendimentos(e, p));
         Map<UUID, Long> anterior = contarPorUnidade(atendimentos(e, p.anterior()));
         Set<UUID> ids = new HashSet<>(atual.keySet());
@@ -250,35 +240,17 @@ public class ProducaoAssistencialService {
         return p;
     }
 
-    private Escopo escopo(UUID unidadeId) {
-        if (unidadeId != null) {
-            UnidadeDeSaude u = unidadeRepository.findById(unidadeId).orElseThrow(() -> new ResourceNotFoundException(
-                    "Não foi possível encontrar a unidade " + unidadeId + " em nossos registros."));
-            controleDeAcesso.exigir(CONSULTAR, u);
-            return new Escopo(u, Set.of(u.getUuid()), u.getNome());
-        }
-        controleDeAcesso.exigirAlguma(CONSULTAR);
-        Optional<Set<UUID>> visiveis = controleDeAcesso.unidadesVisiveis(CONSULTAR);
-        if (visiveis.isEmpty()) {
-            return new Escopo(null, null, "Rede municipal");
-        }
-        if (visiveis.get().isEmpty()) {
-            throw new ResourceForbiddenException("Seu acesso não inclui " + CONSULTAR + " em nenhuma unidade.");
-        }
-        return new Escopo(null, visiveis.get(), "Unidades do seu acesso");
-    }
-
-    private List<Object[]> atendimentos(Escopo e, Periodo p) {
+    private List<Object[]> atendimentos(EscopoDosIndicadores.Escopo e, Periodo p) {
         return atendimentoRepository.findConcluidosParaProducao(p.de().atStartOfDay(), p.ate().plusDays(1).atStartOfDay()).stream()
                 .filter(l -> e.contem((UUID) l[0])).toList();
     }
 
-    private List<Object[]> agendamentos(Escopo e, Periodo p) {
+    private List<Object[]> agendamentos(EscopoDosIndicadores.Escopo e, Periodo p) {
         return agendamentoRepository.findParaProducao(p.de().atStartOfDay(), p.ate().plusDays(1).atStartOfDay()).stream()
                 .filter(l -> e.contem((UUID) l[0])).toList();
     }
 
-    private AgendaProducaoDto agenda(Escopo e, Periodo p) {
+    private AgendaProducaoDto agenda(EscopoDosIndicadores.Escopo e, Periodo p) {
         long marcados = 0, realizados = 0, faltas = 0, cancelados = 0, encaixes = 0;
         for (Object[] l : agendamentos(e, p)) {
             marcados++;

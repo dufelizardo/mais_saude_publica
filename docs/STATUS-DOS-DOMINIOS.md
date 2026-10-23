@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-23 (BI1, depois da release 1.7.0)
+- **Atualizado em:** 2026-10-23 (BI2, depois da release 1.7.0)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -45,7 +45,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
-| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 feita (Sala de Situação com a produção); BI2 a BI5 |
+| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 e BI2 feitas (Sala de Situação: produção e situação operacional); BI3 a BI5 |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
@@ -84,7 +84,7 @@ MO1 ✅ ──► SB4a ✅ (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) ·
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 (indicadores da rede)
-BI1 ✅ ──► BI2 (situação operacional: espera, ocupação, escala) · BI3 ──► BI4 (relatórios) · BI5 (coordenações)
+BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ──► BI4 (relatórios) · BI5 (coordenações)
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
@@ -393,9 +393,13 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   concluídos no período e no anterior, média diária, por tipo, especialidade, categoria do profissional, faixa etária,
   sexo e hora; agenda (marcações, realizadas, faltas, canceladas, encaixes e absenteísmo); série por dia e por mês;
   ranking de unidades; exportação CSV auditada; tela Sala de Situação pelo protótipo `Painel.html`.
+- [x] **BI2 · Situação operacional** ([ADR-0144](./adr/0144-bi-situacao-operacional.md)): a chegada do paciente
+  gravada pelo sistema (V35); a situação agora (em atendimento, aguardando triagem e consulta, maior espera); o tempo de
+  espera com média, mediana e p90; a ocupação das agendas por especialidade pela montagem da Agenda; as ocorrências da
+  escala (sem cobertura e afastados, sem nomear licença médica); alertas de fila, espera, agenda e escala com limites
+  na configuração; atualização a cada minuto na Sala de Situação.
 
 **Falta:**
-- [ ] **BI2 · Situação operacional:** alertas, tempo médio de espera, ocupação das agendas e ausências da escala.
 - [ ] **BI3 · Indicadores da rede:** os programáticos (P6, [ADR-0141](./adr/0141-programas-metas-e-indicadores.md)) e
   os de vigilância consolidados por unidade e território.
 - [ ] **BI4 · Relatórios** (protótipo `Relatorios.html`).

@@ -116,4 +116,18 @@ class ProducaoAutorizacaoControllerTest {
                 Integer.class, GESTOR);
         assertThat(exportacoes).isEqualTo(1);
     }
+
+    @Test
+    void situacaoOperacionalPedeIndicadorConsultarNoEscopo() throws Exception {
+        // BI2 (ADR-0144): a mesma permissão e o mesmo escopo da produção.
+        for (String rota : List.of("situacao", "situacao/espera", "situacao/ocupacao", "situacao/escala")) {
+            mockMvc.perform(get("/api/v1/" + rota)).andExpect(status().isUnauthorized());
+            mockMvc.perform(como(ENFERMEIRO, get("/api/v1/" + rota))).andExpect(status().isForbidden());
+            mockMvc.perform(como(GESTOR, get("/api/v1/" + rota + "?unidadeId=" + ubs.getUuid()))).andExpect(status().isOk());
+            mockMvc.perform(como(GESTOR, get("/api/v1/" + rota + "?unidadeId=" + outra.getUuid()))).andExpect(status().isForbidden());
+        }
+        String r = mockMvc.perform(como(GESTOR, get("/api/v1/situacao"))).andExpect(status().isOk()).andReturn().getResponse()
+                .getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat((String) JsonPath.read(r, "$.abrangencia")).isEqualTo("Unidades do seu acesso");
+    }
 }

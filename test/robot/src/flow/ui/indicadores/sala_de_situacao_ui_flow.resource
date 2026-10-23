@@ -1,6 +1,7 @@
 *** Settings ***
 Resource    ../../../pom/ui/indicadores/sala_de_situacao_ui_pom.resource
 Resource    ../../indicadores/producao_flow.resource
+Resource    ../../indicadores/situacao_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A base é criada pela API; a consulta sob teste é feita pela tela.
@@ -37,5 +38,19 @@ UI Sala - Producao Da Unidade
     Wait Until Keyword Succeeds    10s    500ms    UI Sala - Atendimentos Devem Ser    1
     Click    css=[aria-label="Granularidade"] >> role=button[name="Mês"]
     Wait For Elements State    css=svg[aria-label="Gráfico de atendimentos por mês"]    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Sala - Situacao Operacional
+    [Documentation]    A vaga aberta da próxima hora acende o alerta de escala e aparece nas ocorrências; os cartões da BI2 aparecem.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed Unidade Com Turno Sem Cobertura
+    UI Sala - Abrir
+    Select Options By    id=f-ss-unidade    value    ${unidade}
+    Wait For Elements State    css=[aria-label="Alertas da situação"] >> text=Escala descoberta    visible
+    Wait For Elements State    css=table[aria-label="Lista de ocorrências da escala"] >> text=Vaga aberta    visible
+    Wait For Elements State    css=[aria-label="Situação agora"] >> text=Dados ao vivo    visible
+    Wait For Elements State    css=[aria-label="Ocupação das agendas"]    visible
+    Wait For Elements State    css=[aria-label="Tempo de espera"]    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
