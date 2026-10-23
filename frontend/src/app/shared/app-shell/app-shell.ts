@@ -45,6 +45,8 @@ const MENU: Record<string, string[]> = {
   '/assistencia/saude-mental': ['SAUDE_MENTAL.ACOLHER', 'SAUDE_MENTAL.ACOMPANHAR'],
   // Vigilância epidemiológica (ADR-0124).
   '/vigilancia': ['VIGILANCIA.NOTIFICAR', 'VIGILANCIA.INVESTIGAR', 'VIGILANCIA.GERENCIAR'],
+  // Sala de Situação (ADR-0143): só agregados, para quem consulta indicadores.
+  '/sala-de-situacao': ['INDICADOR.CONSULTAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],
   '/administracao/auditoria': ['AUDITORIA.CONSULTAR'],
 };

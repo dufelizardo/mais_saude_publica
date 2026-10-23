@@ -54,6 +54,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("ADMINISTRATIVO.CONSULTAR", new Def("Consultar o setor administrativo", OPERACAO));
         PERMISSOES.put("ADMINISTRATIVO.GERENCIAR", new Def("Registrar e alterar o setor administrativo", OPERACAO));
         // Catálogo de programas de saúde (ADR-0118); o acompanhamento de pacientes (PROGRAMA.ACOMPANHAR) vem na P2.
+        // Indicadores e BI (ADRs 0142 e 0143): só agregados, na unidade do escopo ou na rede.
+        PERMISSOES.put("INDICADOR.CONSULTAR", new Def("Consultar indicadores de produção e gestão (só agregados, sem paciente)", OPERACAO));
         PERMISSOES.put("PROGRAMA.GERENCIAR", new Def("Cadastrar programas de saúde, categorias e as unidades que os oferecem", OPERACAO));
         // Acompanhamento programático (ADR-0119): estar num programa revela diagnóstico.
         PERMISSOES.put("PROGRAMA.ACOMPANHAR", new Def("Inscrever pacientes em programas de saúde e acompanhar a situação", ACESSO_AO_DADO_DE_SAUDE));
@@ -129,7 +131,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "Gestão de RH, setor administrativo, estoque e acessos no seu escopo.",
                 List.of("ACESSO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR", "ADMINISTRATIVO.CONSULTAR",
                         "ADMINISTRATIVO.GERENCIAR", "PACIENTE.CONSULTAR", "FARMACIA.CONSULTAR", "EQUIPE.GERENCIAR",
-                        "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR")));
+                        "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
+                        "INDICADOR.CONSULTAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -165,7 +168,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "REGISTRO_CLINICO.RETIFICAR_DE_OUTROS", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR",
                         "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
-                        "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR")));
+                        "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR")));
         // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
                 "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",
