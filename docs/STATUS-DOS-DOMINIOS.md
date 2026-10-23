@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-22 (P6, depois da release 1.7.0)
+- **Atualizado em:** 2026-10-23 (BI1, depois da release 1.7.0)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -45,7 +45,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
-| 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
+| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 feita (Sala de Situação com a produção); BI2 a BI5 |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 11 ✅ · 9 🟡 · 2 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 11 ✅ · 10 🟡 · 2 📐 · 8 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -75,6 +75,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
+| BI3 | 19 Indicadores e BI | indicadores programáticos e de vigilância consolidados na rede, com metas |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -82,7 +83,8 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 MO1 ✅ ──► SB4a ✅ (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
-P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI1 (indicadores da rede)
+P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 (indicadores da rede)
+BI1 ✅ ──► BI2 (situação operacional: espera, ocupação, escala) · BI3 ──► BI4 (relatórios) · BI5 (coordenações)
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
@@ -383,14 +385,21 @@ C1 ──► C2 · C4 · C5
 
 ### 19. Indicadores / BI
 
-**Estado:** ⬜. Hoje só existem indicadores locais em cada tela.
+**Estado:** 🟡. Desenhado na [ADR-0142](./adr/0142-indicadores-bi-e-gestao.md): camada de leitura, só agregados,
+calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
+
+**Temos:**
+- [x] **BI1 · Produção assistencial por unidade** ([ADR-0143](./adr/0143-bi-producao-assistencial.md)): atendimentos
+  concluídos no período e no anterior, média diária, por tipo, especialidade, categoria do profissional, faixa etária,
+  sexo e hora; agenda (marcações, realizadas, faltas, canceladas, encaixes e absenteísmo); série por dia e por mês;
+  ranking de unidades; exportação CSV auditada; tela Sala de Situação pelo protótipo `Painel.html`.
 
 **Falta:**
-- [ ] Sala de Situação (protótipo `Painel.html`).
-- [ ] Relatórios (protótipo `Relatorios.html`).
-- [ ] Indicadores consolidados da rede, que vão receber também os indicadores programáticos (domínio 22, P6, já
-  calculados pela [ADR-0141](./adr/0141-programas-metas-e-indicadores.md)).
-- [ ] Coordenações & Gerência (protótipo `Coordenacoes.html`).
+- [ ] **BI2 · Situação operacional:** alertas, tempo médio de espera, ocupação das agendas e ausências da escala.
+- [ ] **BI3 · Indicadores da rede:** os programáticos (P6, [ADR-0141](./adr/0141-programas-metas-e-indicadores.md)) e
+  os de vigilância consolidados por unidade e território.
+- [ ] **BI4 · Relatórios** (protótipo `Relatorios.html`).
+- [ ] **BI5 · Coordenações & Gerência** (protótipo `Coordenacoes.html`).
 
 ### 20. Integrações / Identidade / Segurança / Governo
 

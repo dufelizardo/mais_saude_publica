@@ -1,0 +1,6 @@
+*** Comments ***
+    Mais Saúde Pública API - Indicadores e BI, fatia BI1: produção assistencial por unidade (ADR-0143).
+*** Variables ***
+${PRODUCAO_ASSISTENCIAL_SCHEMA}    ${{{'required': ['de', 'ate', 'anteriorDe', 'anteriorAte', 'abrangencia', 'atendimentos', 'atendimentosAnterior', 'mediaDiaria', 'porTipo', 'porEspecialidade', 'porCategoria', 'porFaixaEtaria', 'porSexo', 'porHora', 'agenda', 'agendaAnterior'], 'types': {'de': str, 'ate': str, 'anteriorDe': str, 'anteriorAte': str, 'unidadeId': str, 'unidadeNome': str, 'abrangencia': str, 'atendimentos': int, 'atendimentosAnterior': int, 'variacao': (int, float), 'mediaDiaria': (int, float), 'porTipo': list, 'porEspecialidade': list, 'porCategoria': list, 'porFaixaEtaria': list, 'porSexo': list, 'porHora': list, 'agenda': dict, 'agendaAnterior': dict}}}}
+${SERIE_PRODUCAO_SCHEMA}    ${{{'required': ['granularidade', 'pontos'], 'types': {'granularidade': str, 'unidadeId': str, 'pontos': list}, 'enums': {'granularidade': ['DIA', 'MES']}}}}
+${PRODUCAO_UNIDADE_SCHEMA}    ${{{'required': ['unidadeId', 'unidadeNome', 'atendimentos', 'atendimentosAnterior'], 'types': {'unidadeId': str, 'unidadeNome': str, 'tipo': str, 'atendimentos': int, 'atendimentosAnterior': int, 'variacao': (int, float)}}}}
