@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAgendamento;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoRisco;
 import com.edufelizardo.maissaudepublica.repositories.EvolucaoEnfermagemRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProcedimentoRepository;
@@ -32,6 +33,7 @@ import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -102,6 +104,7 @@ public class AtendimentoService {
         Atendimento atendimento = new Atendimento(paciente, profissional, unidade, setor, agendamento,
                 dto.getTipo(), dto.getStatus(), dto.getDataHora());
         atendimento.setEspecialidade(especialidade(dto, agendamento, null));
+        registrarChegada(atendimento);
         atendimento = atendimentoRepository.save(atendimento);
         ContextoAuditoria.registro(atendimento.getUuid());
         return AtendimentoResponseDto.fromAtendimento(atendimento);
@@ -141,9 +144,20 @@ public class AtendimentoService {
         atendimento.setStatus(dto.getStatus());
         atendimento.setDataHora(dto.getDataHora());
         atendimento.setEspecialidade(especialidade(dto, agendamento, atendimento.getEspecialidade()));
+        registrarChegada(atendimento);
         atendimento = atendimentoRepository.save(atendimento);
         ContextoAuditoria.registro(atendimento.getUuid());
         return AtendimentoResponseDto.fromAtendimento(atendimento);
+    }
+
+    /**
+     * A chegada (ADR-0144): a primeira vez que o atendimento fica "em andamento", na abertura, no acolhimento ou na mudança
+     * de situação. Depois não muda, nem quando o atendimento é editado.
+     */
+    private static void registrarChegada(Atendimento atendimento) {
+        if (atendimento.getChegadaEm() == null && atendimento.getStatus() == StatusAtendimento.EM_ANDAMENTO) {
+            atendimento.setChegadaEm(LocalDateTime.now());
+        }
     }
 
     /**

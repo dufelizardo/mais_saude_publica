@@ -33,4 +33,9 @@ public interface ConsultaRepository extends JpaRepository<Consulta, UUID> {
     @Query("select c.atendimento.uuid, count(c) from Consulta c "
             + "where not exists (select r from Consulta r where r.retificacaoDe = c) group by c.atendimento.uuid")
     List<Object[]> contarVigentesPorAtendimento();
+
+    /** O primeiro registro de consulta de cada atendimento (ADR-0144): [atendimento, data e hora]. */
+    @Query("select c.atendimento.uuid, min(c.dataHora) from Consulta c where c.atendimento.uuid in ?1 "
+            + "group by c.atendimento.uuid")
+    List<Object[]> findPrimeiraPorAtendimento(java.util.Collection<UUID> atendimentos);
 }

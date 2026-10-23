@@ -1,13 +1,18 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { ErrorResponseDto } from '../../core/models/profissional';
 import {
   ContagemProducaoDto,
+  EsperaAtendimentoDto,
   GranularidadeSerie,
+  OcorrenciaEscalaDto,
+  OcupacaoAgendaDto,
   ProducaoAssistencialDto,
   ProducaoUnidadeDto,
   SerieProducaoDto,
+  SituacaoAgoraDto,
 } from '../../core/models/producao';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import { ProducaoService } from '../../core/services/producao';
@@ -16,18 +21,20 @@ import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
 
 /**
- * Sala de Situação (BI1, ADR-0143), pelo protótipo Painel.html: a produção assistencial da rede ou da unidade no
- * período, com o período anterior, a série por dia e por mês, as distribuições, a agenda e o ranking de unidades. Só
- * números. Os blocos que dependem de outras fatias (alertas, vacinação, ocupação, escala) ficam "Em breve".
+ * Sala de Situação, pelo protótipo Painel.html: a produção assistencial da rede ou da unidade no período (BI1,
+ * ADR-0143) e a situação operacional (BI2, ADR-0144) — alertas, fila agora, tempo de espera, ocupação das agendas e
+ * ocorrências da escala, atualizados a cada minuto. Só números. Vacinação e programas na rede ficam "Em breve".
  */
 @Component({
   selector: 'app-sala-de-situacao',
+  imports: [RouterLink],
   templateUrl: './sala-de-situacao.html',
   styleUrl: './sala-de-situacao.css',
 })
 export class SalaDeSituacao {
   private readonly service = inject(ProducaoService);
   private readonly unidadeService = inject(UnidadeSaudeService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly presets: { id: Preset; rotulo: string }[] = [
     { id: 'HOJE', rotulo: 'Hoje' },
@@ -48,6 +55,10 @@ export class SalaDeSituacao {
   protected readonly ranking = signal<ProducaoUnidadeDto[]>([]);
   protected readonly erro = signal<string | null>(null);
   protected readonly exportando = signal(false);
+  protected readonly situacao = signal<SituacaoAgoraDto | null>(null);
+  protected readonly espera = signal<EsperaAtendimentoDto | null>(null);
+  protected readonly ocupacao = signal<OcupacaoAgendaDto | null>(null);
+  protected readonly escala = signal<OcorrenciaEscalaDto[]>([]);
 
   protected readonly largura = 640;
   protected readonly altura = 160;
@@ -67,6 +78,13 @@ export class SalaDeSituacao {
       const filtro = { de: this.de(), ate: this.ate(), unidadeId: this.unidadeId() };
       untracked(() => this.carregar(filtro));
     });
+    // Situação ao vivo (BI2): carrega com a unidade e de novo a cada minuto.
+    effect(() => {
+      const u = this.unidadeId();
+      untracked(() => this.carregarSituacao(u));
+    });
+    const relogio = setInterval(() => this.carregarSituacao(this.unidadeId()), 60_000);
+    this.destroyRef.onDestroy(() => clearInterval(relogio));
     effect(() => {
       const g = this.granularidade();
       const u = this.unidadeId();
@@ -181,6 +199,31 @@ export class SalaDeSituacao {
     return n <= 12 || k % Math.ceil(n / 10) === 0 || k === n - 1;
   }
 
+  protected minutos(v: number | null | undefined): string {
+    if (v == null) {
+      return '—';
+    }
+    const m = Math.round(Number(v));
+    return m < 60 ? `${m} min` : `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}`;
+  }
+
+  protected hora(isoDataHora: string): string {
+    return isoDataHora.slice(11, 16);
+  }
+
+  protected diaHora(isoDataHora: string): string {
+    const [a, m, d] = isoDataHora.slice(0, 10).split('-');
+    return `${d}/${m} ${isoDataHora.slice(11, 16)}`;
+  }
+
+  protected rotuloDaRota(tipo: string): string {
+    return tipo === 'ESCALA' ? 'Ver escala' : tipo === 'AGENDA' ? 'Ver agenda' : 'Ver atendimentos';
+  }
+
+  protected classeOcupacao(p: number | null | undefined): string {
+    return p == null ? 'ss-bar__fill' : p >= 95 ? 'ss-bar__fill ss-bar__fill--alert' : p >= 80 ? 'ss-bar__fill ss-bar__fill--warn' : 'ss-bar__fill';
+  }
+
   protected data(isoData: string): string {
     const [a, m, d] = isoData.slice(0, 10).split('-');
     return `${d}/${m}/${a}`;
@@ -201,6 +244,14 @@ export class SalaDeSituacao {
       },
     });
     this.service.unidades(filtro).pipe(catchError(() => of([]))).subscribe((l) => this.ranking.set(l.slice(0, 10)));
+    this.service.espera(filtro).pipe(catchError(() => of(null))).subscribe((e) => this.espera.set(e));
+  }
+
+  private carregarSituacao(unidadeId: string): void {
+    const u = unidadeId || undefined;
+    this.service.situacao(u).pipe(catchError(() => of(null))).subscribe((s) => this.situacao.set(s));
+    this.service.ocupacao(u).pipe(catchError(() => of(null))).subscribe((o) => this.ocupacao.set(o));
+    this.service.escala(u).pipe(catchError(() => of([]))).subscribe((l) => this.escala.set(l));
   }
 }
 

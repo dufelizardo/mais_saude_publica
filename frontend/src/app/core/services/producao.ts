@@ -1,9 +1,19 @@
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { FiltroProducao, GranularidadeSerie, ProducaoAssistencialDto, ProducaoUnidadeDto, SerieProducaoDto } from '../models/producao';
+import {
+  EsperaAtendimentoDto,
+  FiltroProducao,
+  GranularidadeSerie,
+  OcorrenciaEscalaDto,
+  OcupacaoAgendaDto,
+  ProducaoAssistencialDto,
+  ProducaoUnidadeDto,
+  SerieProducaoDto,
+  SituacaoAgoraDto,
+} from '../models/producao';
 
-/** Produção assistencial por unidade (BI1, ADR-0143): resumo, série, ranking e exportação. */
+/** Sala de Situação: produção assistencial (BI1, ADR-0143) e situação operacional (BI2, ADR-0144). */
 @Injectable({ providedIn: 'root' })
 export class ProducaoService {
   private readonly http = inject(HttpClient);
@@ -23,6 +33,24 @@ export class ProducaoService {
 
   exportar(filtro: FiltroProducao = {}): Observable<HttpResponse<Blob>> {
     return this.http.get(`${this.api}/exportacao`, { params: params(filtro), responseType: 'blob', observe: 'response' });
+  }
+
+  // ── Situação operacional (BI2, ADR-0144) ──
+
+  situacao(unidadeId?: string): Observable<SituacaoAgoraDto> {
+    return this.http.get<SituacaoAgoraDto>('/api/v1/situacao', { params: params({ unidadeId }) });
+  }
+
+  espera(filtro: FiltroProducao = {}): Observable<EsperaAtendimentoDto> {
+    return this.http.get<EsperaAtendimentoDto>('/api/v1/situacao/espera', { params: params(filtro) });
+  }
+
+  ocupacao(unidadeId?: string): Observable<OcupacaoAgendaDto> {
+    return this.http.get<OcupacaoAgendaDto>('/api/v1/situacao/ocupacao', { params: params({ unidadeId }) });
+  }
+
+  escala(unidadeId?: string): Observable<OcorrenciaEscalaDto[]> {
+    return this.http.get<OcorrenciaEscalaDto[]>('/api/v1/situacao/escala', { params: params({ unidadeId }) });
   }
 }
 

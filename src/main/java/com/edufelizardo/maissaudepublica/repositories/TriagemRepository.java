@@ -44,4 +44,9 @@ public interface TriagemRepository extends JpaRepository<Triagem, UUID> {
     @Query("select t.atendimento.uuid, t.classificacaoRisco from Triagem t "
             + "where not exists (select r from Triagem r where r.retificacaoDe = t) order by t.dataHora desc")
     List<Object[]> riscosVigentesDoMaisRecente();
+
+    /** O primeiro registro de triagem de cada atendimento (ADR-0144): [atendimento, data e hora]. */
+    @Query("select t.atendimento.uuid, min(t.dataHora) from Triagem t where t.atendimento.uuid in ?1 "
+            + "group by t.atendimento.uuid")
+    List<Object[]> findPrimeiraPorAtendimento(java.util.Collection<UUID> atendimentos);
 }
