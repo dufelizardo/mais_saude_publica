@@ -65,6 +65,8 @@ public class SecurityConfig {
 
         http.authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**", "/api/v1/publico/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // Verificações do Kubernetes (ADR-0145): só o estado, sem detalhe nem dado.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(this::responderNaoAutenticado))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
