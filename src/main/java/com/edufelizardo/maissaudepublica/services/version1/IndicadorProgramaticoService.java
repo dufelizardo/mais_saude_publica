@@ -117,6 +117,28 @@ public class IndicadorProgramaticoService {
         return lista;
     }
 
+    /**
+     * Para os indicadores da rede (BI3, ADR-0146): os indicadores do programa numa unidade (nula = a rede), com a meta da
+     * unidade e, sem ela, a da rede. Mesma apuração do detalhe do programa; não confere acesso — quem chama já conferiu o
+     * escopo e o programa sensível.
+     */
+    @Transactional(readOnly = true)
+    public List<IndicadorApuradoDto> apurarParaRede(Programa programa, UnidadeDeSaude unidade, LocalDate inicio, LocalDate fim) {
+        List<MetaProgramatica> metas = metaRepository.findDoPrograma(programa.getUuid());
+        List<IndicadorApuradoDto> lista = new ArrayList<>();
+        for (IndicadorProgramatico i : IndicadorProgramatico.values()) {
+            if (!i.aplicaA(programa.getCodigo())) {
+                continue;
+            }
+            MetaProgramatica meta = metaVigente(metas, i, unidade, fim);
+            if (meta == null && unidade != null) {
+                meta = metaVigente(metas, i, null, fim);
+            }
+            lista.add(dto(i, apurar(i, programa, unidade, inicio, fim, meta), inicio, fim, meta));
+        }
+        return lista;
+    }
+
     /** A evolução mensal do indicador nos últimos meses (padrão 12), com a meta vigente de cada mês para o exame. */
     @Transactional(readOnly = true)
     public SerieIndicadorDto serie(UUID programaId, IndicadorProgramatico indicador, UUID unidadeId, Integer meses) {

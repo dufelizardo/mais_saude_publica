@@ -9,10 +9,13 @@ import {
   GranularidadeSerie,
   OcorrenciaEscalaDto,
   OcupacaoAgendaDto,
+  ProgramaPorUnidadeDto,
+  ProgramasNaRedeDto,
   ProducaoAssistencialDto,
   ProducaoUnidadeDto,
   SerieProducaoDto,
   SituacaoAgoraDto,
+  VigilanciaNaRedeDto,
 } from '../../core/models/producao';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import { ProducaoService } from '../../core/services/producao';
@@ -23,7 +26,8 @@ type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
 /**
  * Sala de Situação, pelo protótipo Painel.html: a produção assistencial da rede ou da unidade no período (BI1,
  * ADR-0143) e a situação operacional (BI2, ADR-0144) — alertas, fila agora, tempo de espera, ocupação das agendas e
- * ocorrências da escala, atualizados a cada minuto. Só números. Vacinação e programas na rede ficam "Em breve".
+ * ocorrências da escala, atualizados a cada minuto — e os indicadores da rede (BI3, ADR-0146): programas de saúde e
+ * vigilância por unidade e território. Só números. A vacinação fica "Em breve".
  */
 @Component({
   selector: 'app-sala-de-situacao',
@@ -59,6 +63,15 @@ export class SalaDeSituacao {
   protected readonly espera = signal<EsperaAtendimentoDto | null>(null);
   protected readonly ocupacao = signal<OcupacaoAgendaDto | null>(null);
   protected readonly escala = signal<OcorrenciaEscalaDto[]>([]);
+  protected readonly programasRede = signal<ProgramasNaRedeDto | null>(null);
+  protected readonly vigilanciaRede = signal<VigilanciaNaRedeDto | null>(null);
+  protected readonly programaAberto = signal<string | null>(null);
+  protected readonly porUnidade = signal<ProgramaPorUnidadeDto | null>(null);
+  protected readonly todosOsProgramas = signal(false);
+  /** Os programas oferecidos por alguma unidade do acesso (ou com inscritos); os demais, recolhidos. */
+  protected readonly programasEmUso = computed(() => (this.programasRede()?.programas ?? []).filter((p) => p.unidades > 0 || p.inscritosAtivos > 0));
+  protected readonly programasSemUnidade = computed(() => (this.programasRede()?.programas ?? []).filter((p) => p.unidades === 0 && p.inscritosAtivos === 0));
+  protected readonly maxSemana = computed(() => Math.max(1, ...(this.vigilanciaRede()?.semanas ?? []).map((s) => s.notificacoes)));
 
   protected readonly largura = 640;
   protected readonly altura = 160;
@@ -216,6 +229,32 @@ export class SalaDeSituacao {
     return `${d}/${m} ${isoDataHora.slice(11, 16)}`;
   }
 
+  /** Abre (ou fecha) o programa unidade por unidade. */
+  protected abrirPrograma(programaId: string): void {
+    if (this.programaAberto() === programaId) {
+      this.programaAberto.set(null);
+      this.porUnidade.set(null);
+      return;
+    }
+    this.programaAberto.set(programaId);
+    this.porUnidade.set(null);
+    this.service
+      .programaPorUnidade(programaId, { de: this.de(), ate: this.ate() })
+      .pipe(catchError(() => of(null)))
+      .subscribe((p) => this.porUnidade.set(p));
+  }
+
+  protected valorIndicador(i: { tipo: string; aplicavel: boolean; valor?: number | null }): string {
+    if (!i.aplicavel || i.valor == null) {
+      return '—';
+    }
+    return i.tipo === 'PERCENTUAL' ? `${Number(i.valor).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%` : this.numero(i.valor);
+  }
+
+  protected classeSituacao(s: string | null | undefined): string {
+    return s === 'ATINGIDA' ? 'tag tag--ok' : s === 'EM_RISCO' ? 'tag tag--warn' : s === 'ABAIXO' ? 'tag tag--err' : 'tag tag--info';
+  }
+
   protected rotuloDaRota(tipo: string): string {
     return tipo === 'ESCALA' ? 'Ver escala' : tipo === 'AGENDA' ? 'Ver agenda' : 'Ver atendimentos';
   }
@@ -245,6 +284,10 @@ export class SalaDeSituacao {
     });
     this.service.unidades(filtro).pipe(catchError(() => of([]))).subscribe((l) => this.ranking.set(l.slice(0, 10)));
     this.service.espera(filtro).pipe(catchError(() => of(null))).subscribe((e) => this.espera.set(e));
+    this.service.programasNaRede(filtro).pipe(catchError(() => of(null))).subscribe((p) => this.programasRede.set(p));
+    this.service.vigilanciaNaRede(filtro).pipe(catchError(() => of(null))).subscribe((v) => this.vigilanciaRede.set(v));
+    this.programaAberto.set(null);
+    this.porUnidade.set(null);
   }
 
   private carregarSituacao(unidadeId: string): void {

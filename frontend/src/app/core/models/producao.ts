@@ -124,3 +124,75 @@ export interface OcorrenciaEscalaDto {
   situacao: 'SEM_COBERTURA' | 'AFASTADO';
   motivo: string;
 }
+
+// ── Indicadores da rede (BI3, ADR-0146) ──
+
+export interface ProgramaNaRedeDto {
+  programaId: string;
+  codigo: string;
+  nome: string;
+  sensivel: boolean;
+  unidades: number;
+  inscritosAtivos: number;
+  novos: number;
+  saidas: number;
+  faltosos: number;
+  emDiaNumerador: number;
+  emDiaDenominador?: number | null;
+  emDiaPercentual?: number | null;
+  metasAtingidas: number;
+  metasEmRisco: number;
+  metasAbaixo: number;
+  metasSemDados: number;
+}
+
+export interface ProgramasNaRedeDto {
+  de: string;
+  ate: string;
+  unidadeId?: string | null;
+  abrangencia: string;
+  sensiveisOcultos: number;
+  programas: ProgramaNaRedeDto[];
+}
+
+export interface ProgramaPorUnidadeDto {
+  programaId: string;
+  nome: string;
+  de: string;
+  ate: string;
+  unidades: {
+    unidadeId: string;
+    unidadeNome: string;
+    inscritosAtivos: number;
+    metasAbaixo: number;
+    metasEmRisco: number;
+    indicadores: {
+      indicador: string;
+      nome: string;
+      tipo: 'PERCENTUAL' | 'QUANTIDADE';
+      aplicavel: boolean;
+      valor?: number | null;
+      alvo?: number | null;
+      situacao?: 'ATINGIDA' | 'EM_RISCO' | 'ABAIXO' | 'SEM_DADOS' | null;
+    }[];
+  }[];
+}
+
+export interface VigilanciaNaRedeDto {
+  de: string;
+  ate: string;
+  unidadeId?: string | null;
+  abrangencia: string;
+  notificadas: number;
+  confirmadas: number;
+  descartadas: number;
+  emAberto: number;
+  encerradas: number;
+  encerradasNoPrazo: number;
+  oportunidadeEncerramento?: number | null;
+  sensiveisOcultas: number;
+  agravos: { codigo: string; nome: string; notificadas: number; confirmadas: number; emAberto: number; encerradas: number; oportunidadeEncerramento?: number | null }[];
+  semanas: { ano: number; semana: number; inicio: string; notificacoes: number }[];
+  regularidade: { ano: number; semana: number; unidadesAssistenciais: number; comNotificacao: number; comNegativa: number; regulares: number; percentual?: number | null };
+  territorio: { territorio: string; area: string; microarea: string; notificacoes: number }[];
+}

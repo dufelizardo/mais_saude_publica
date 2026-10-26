@@ -73,6 +73,7 @@ Resource    ../../schema/programas/acao_programatica_schema.resource
 Resource    ../../schema/programas/campanha_schema.resource
 Resource    ../../schema/indicadores/producao_schema.resource
 Resource    ../../schema/indicadores/situacao_schema.resource
+Resource    ../../schema/indicadores/indicadores_rede_schema.resource
 Resource    ../../schema/programas/indicador_programatico_schema.resource
 Resource    ../../schema/saude_mental/saude_mental_schema.resource
 Resource    ../../schema/vigilancia/vigilancia_schema.resource

@@ -42,7 +42,8 @@ class ProducaoAutorizacaoControllerTest {
     private static final String PREFIXO = "ProducaoAut Teste ";
     private static final String GESTOR = "94501867360";
     private static final String ENFERMEIRO = "94501867361";
-    private static final List<String> CPFS = List.of(GESTOR, ENFERMEIRO);
+    private static final String COORDENADOR = "94501867362";
+    private static final List<String> CPFS = List.of(GESTOR, ENFERMEIRO, COORDENADOR);
 
     @Autowired private MockMvc mockMvc;
     @Autowired private JdbcTemplate jdbc;
@@ -51,6 +52,7 @@ class ProducaoAutorizacaoControllerTest {
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private AtribuicaoAcessoRepository atribuicaoRepository;
     @Autowired private PapelRepository papelRepository;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.PacienteRepository pacienteRepository;
 
     private UnidadeDeSaude ubs;
     private UnidadeDeSaude outra;
@@ -62,10 +64,13 @@ class ProducaoAutorizacaoControllerTest {
         outra = unidade("Outra");
         atribuir(GESTOR, "GESTOR", ubs);
         atribuir(ENFERMEIRO, "ENFERMEIRO", ubs);
+        atribuir(COORDENADOR, "COORDENADOR_DE_ENFERMAGEM", ubs);
     }
 
     @AfterEach
     void limpar() {
+        jdbc.update("delete from tb_notificacao where unidade_id in (select uuid from tb_unidade_de_saude where nome like ?)", PREFIXO + "%");
+        jdbc.update("delete from tb_paciente where nome like ?", PREFIXO + "%");
         for (String cpf : CPFS) {
             atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
             usuarioRepository.findByCpf(cpf).ifPresent(usuarioRepository::delete);
@@ -129,5 +134,41 @@ class ProducaoAutorizacaoControllerTest {
         String r = mockMvc.perform(como(GESTOR, get("/api/v1/situacao"))).andExpect(status().isOk()).andReturn().getResponse()
                 .getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
         assertThat((String) JsonPath.read(r, "$.abrangencia")).isEqualTo("Unidades do seu acesso");
+    }
+
+    @Test
+    void indicadoresDaRedeEscondemOSensivelSemAPermissao() throws Exception {
+        // BI3 (ADR-0146): a mesma permissão e escopo; programa sensível só com PROGRAMA.ACOMPANHAR; agravo sensível sem o nome
+        // sem VIGILANCIA.INVESTIGAR.
+        for (String rota : List.of("indicadores-rede/programas", "indicadores-rede/vigilancia", "indicadores-rede/exportacao")) {
+            mockMvc.perform(get("/api/v1/" + rota)).andExpect(status().isUnauthorized());
+            mockMvc.perform(como(ENFERMEIRO, get("/api/v1/" + rota))).andExpect(status().isForbidden());
+            mockMvc.perform(como(GESTOR, get("/api/v1/" + rota + "?unidadeId=" + outra.getUuid()))).andExpect(status().isForbidden());
+        }
+        String mental = jdbc.queryForObject("select cast(uuid as varchar) from tb_programa where codigo = 'SAUDE_MENTAL'", String.class);
+        String gestor = mockMvc.perform(como(GESTOR, get("/api/v1/indicadores-rede/programas"))).andExpect(status().isOk()).andReturn()
+                .getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat((Integer) JsonPath.read(gestor, "$.sensiveisOcultos")).isGreaterThanOrEqualTo(1);
+        assertThat((List<String>) JsonPath.read(gestor, "$.programas[*].codigo")).doesNotContain("SAUDE_MENTAL");
+        mockMvc.perform(como(GESTOR, get("/api/v1/indicadores-rede/programa/" + mental + "/unidades"))).andExpect(status().isForbidden());
+        String coordenador = mockMvc.perform(como(COORDENADOR, get("/api/v1/indicadores-rede/programas"))).andExpect(status().isOk()).andReturn()
+                .getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat((List<String>) JsonPath.read(coordenador, "$.programas[*].codigo")).contains("SAUDE_MENTAL");
+        mockMvc.perform(como(COORDENADOR, get("/api/v1/indicadores-rede/programa/" + mental + "/unidades"))).andExpect(status().isOk());
+
+        com.edufelizardo.maissaudepublica.models.Paciente p = new com.edufelizardo.maissaudepublica.models.Paciente();
+        p.setNome(PREFIXO + "Paciente");
+        p.setCpf("94501867399");
+        p.setAtivo(true);
+        p = pacienteRepository.save(p);
+        String sensivel = jdbc.queryForObject("select cast(uuid as varchar) from tb_agravo where sensivel order by codigo limit 1", String.class);
+        String codigo = jdbc.queryForObject("select codigo from tb_agravo where uuid = cast(? as uuid)", String.class, sensivel);
+        jdbc.update("insert into tb_notificacao (uuid, agravo_id, paciente_id, unidade_id, data_notificacao, prazo_encerramento, registrada_em, origem, situacao) "
+                + "values (gen_random_uuid(), cast(? as uuid), ?, ?, current_date, current_date + 30, now(), 'ATENDIMENTO', 'NOTIFICADA')", sensivel, p.getUuid(), ubs.getUuid());
+        String vig = mockMvc.perform(como(GESTOR, get("/api/v1/indicadores-rede/vigilancia?unidadeId=" + ubs.getUuid()))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat((Integer) JsonPath.read(vig, "$.notificadas")).isEqualTo(1);
+        assertThat((Integer) JsonPath.read(vig, "$.sensiveisOcultas")).isEqualTo(1);
+        assertThat((List<String>) JsonPath.read(vig, "$.agravos[*].codigo")).doesNotContain(codigo);
     }
 }

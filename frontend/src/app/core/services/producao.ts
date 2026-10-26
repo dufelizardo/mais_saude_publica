@@ -7,13 +7,16 @@ import {
   GranularidadeSerie,
   OcorrenciaEscalaDto,
   OcupacaoAgendaDto,
+  ProgramaPorUnidadeDto,
+  ProgramasNaRedeDto,
   ProducaoAssistencialDto,
   ProducaoUnidadeDto,
   SerieProducaoDto,
   SituacaoAgoraDto,
+  VigilanciaNaRedeDto,
 } from '../models/producao';
 
-/** Sala de Situação: produção assistencial (BI1, ADR-0143) e situação operacional (BI2, ADR-0144). */
+/** Sala de Situação: produção (BI1, ADR-0143), situação operacional (BI2, ADR-0144) e indicadores da rede (BI3, ADR-0146). */
 @Injectable({ providedIn: 'root' })
 export class ProducaoService {
   private readonly http = inject(HttpClient);
@@ -51,6 +54,20 @@ export class ProducaoService {
 
   escala(unidadeId?: string): Observable<OcorrenciaEscalaDto[]> {
     return this.http.get<OcorrenciaEscalaDto[]>('/api/v1/situacao/escala', { params: params({ unidadeId }) });
+  }
+
+  // ── Indicadores da rede (BI3, ADR-0146) ──
+
+  programasNaRede(filtro: FiltroProducao = {}): Observable<ProgramasNaRedeDto> {
+    return this.http.get<ProgramasNaRedeDto>('/api/v1/indicadores-rede/programas', { params: params(filtro) });
+  }
+
+  programaPorUnidade(programaId: string, filtro: FiltroProducao = {}): Observable<ProgramaPorUnidadeDto> {
+    return this.http.get<ProgramaPorUnidadeDto>(`/api/v1/indicadores-rede/programa/${programaId}/unidades`, { params: params({ de: filtro.de, ate: filtro.ate }) });
+  }
+
+  vigilanciaNaRede(filtro: FiltroProducao = {}): Observable<VigilanciaNaRedeDto> {
+    return this.http.get<VigilanciaNaRedeDto>('/api/v1/indicadores-rede/vigilancia', { params: params(filtro) });
   }
 }
 
