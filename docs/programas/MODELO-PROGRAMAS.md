@@ -1,11 +1,11 @@
 # Modelo do domínio Programas, Ações e Linhas de Cuidado
 
-**Data:** 2026-10-07 (criado) · 2026-10-17 (P1 implementada) · 2026-10-18 (P2 implementada) · 2026-10-21 (P4 e P3 implementadas)
+**Data:** 2026-10-07 (criado) · 2026-10-17 (P1 implementada) · 2026-10-18 (P2 implementada) · 2026-10-21 (P4 e P3 implementadas) · 2026-10-22 (P6 implementada)
 **Status:** desenho aprovado na [ADR-0109](../adr/0109-programas-acoes-e-linhas-de-cuidado.md). **A P1 (catálogo)
-a P2 (acompanhamento), a P3 (campanhas) e a P4 (ações programáticas) estão implementadas** nas ADRs
-[0118](../adr/0118-programas-catalogo.md), [0119](../adr/0119-programas-acompanhamento.md),
-[0133](../adr/0133-programas-campanhas.md) e [0132](../adr/0132-programas-acoes-programaticas.md); P5 e P6 vêm depois
-(seção 12).
+a P2 (acompanhamento), a P3 (campanhas), a P4 (ações programáticas) e a P6 (metas e indicadores) estão implementadas**
+nas ADRs [0118](../adr/0118-programas-catalogo.md), [0119](../adr/0119-programas-acompanhamento.md),
+[0133](../adr/0133-programas-campanhas.md), [0132](../adr/0132-programas-acoes-programaticas.md) e
+[0141](../adr/0141-programas-metas-e-indicadores.md); a P5 vem depois (seção 12).
 
 Este documento detalha o domínio: os conceitos e por que ficam separados, as entidades, o acompanhamento do cidadão,
 o dado sensível, como o protótipo `Programas.html` se encaixa nas fatias e onde o domínio liga com o que já existe.
@@ -220,7 +220,7 @@ Editável pelo município. Inclui os programas do protótipo e os nacionais comu
 
 | Categoria | Programas |
 |---|---|
-| Atenção Básica | Saúde da Família, Saúde Bucal, Imunização, Planejamento Reprodutivo |
+| Atenção Básica | Saúde da Família, Saúde Bucal, Imunização, Planejamento Reprodutivo, Saúde na Escola (PSE, ADR-0140) |
 | Crônicos | HiperDia (hipertensão e diabetes), Tuberculose, Hanseníase, Tabagismo |
 | Ciclos de vida | Pré-natal, Saúde da Mulher, Saúde da Criança, Saúde do Idoso |
 | Saúde Mental | Saúde Mental (CAPS e acolhimento); o acompanhamento é aberto pelo domínio Saúde Mental, que guarda o detalhe clínico ([ADR-0112](../adr/0112-saude-mental.md)) |
@@ -248,7 +248,7 @@ Editável pelo município. Inclui os programas do protótipo e os nacionais comu
 | **P3** · campanhas ✅ ([ADR-0133](../adr/0133-programas-campanhas.md)) | cadastro com período, público, meta e locais; tela e consulta pública na landing page | P1 |
 | **P4** · ações programáticas ✅ ([ADR-0132](../adr/0132-programas-acoes-programaticas.md)) | ação prevista ligada ao registro assistencial; ações pendentes e busca ativa; programa na marcação da Agenda | P2 |
 | **P5** · linhas de cuidado | percurso com etapas, serviços e unidades de referência | Atendimento, Regulação e Prontuário maduros |
-| **P6** · metas e indicadores | cobertura, controle, pré-natal adequado, faltosos; alimenta o #19 Indicadores e BI | P2, P4 |
+| **P6** · metas e indicadores ✅ ([ADR-0141](../adr/0141-programas-metas-e-indicadores.md)) | indicadores calculados (em dia, cobertura, ações, PA controlada, exame no alvo, pré-natal com 6 consultas, tratamento odontológico, próteses, escovação), metas por unidade ou rede com situação, evolução de 12 meses e relatório CSV; alimenta o #19 Indicadores e BI | P2, P4 |
 
 As ondas são as da análise original, com uma troca: **campanhas sobem para a P3**. São catálogo simples e foram
 pedidas explicitamente.

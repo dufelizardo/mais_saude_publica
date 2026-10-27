@@ -86,6 +86,7 @@ class ProgramaAutorizacaoControllerTest {
 
     @AfterEach
     void limpar() {
+        jdbc.update("delete from tb_meta_programatica where registrado_por_cpf in (?, ?)", GESTOR, ENFERMEIRO);
         jdbc.update("delete from tb_programa where codigo = 'TESTE_PG_AUT'");
         jdbc.update("delete from tb_local_campanha where campanha_id in (select uuid from tb_campanha where nome like ?)", PREFIXO + "%");
         jdbc.update("delete from tb_campanha where nome like ?", PREFIXO + "%");
@@ -143,5 +144,22 @@ class ProgramaAutorizacaoControllerTest {
         // O local é incluído por quem gerencia programas na unidade.
         mockMvc.perform(como(GESTOR, post("/api/v1/campanha/" + id + "/local")).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"unidadeId\": \"%s\"}".formatted(ubs.getUuid()))).andExpect(status().isCreated());
+    }
+
+    @Test
+    void indicadoresDoProgramaSensivelPedemAcompanharEMetaPedeGerenciar() throws Exception {
+        String mental = jdbc.queryForObject("select cast(uuid as varchar) from tb_programa where codigo = 'SAUDE_MENTAL'", String.class);
+        String hiperdia = jdbc.queryForObject("select cast(uuid as varchar) from tb_programa where codigo = 'HIPERDIA'", String.class);
+        // P6 (ADR-0141): o programa sensível só mostra os números a quem acompanha; o gestor vê os demais.
+        mockMvc.perform(get("/api/v1/programa/" + mental + "/indicadores")).andExpect(status().isUnauthorized());
+        mockMvc.perform(como(GESTOR, get("/api/v1/programa/" + mental + "/indicadores"))).andExpect(status().isForbidden());
+        mockMvc.perform(como(ENFERMEIRO, get("/api/v1/programa/" + mental + "/indicadores"))).andExpect(status().isOk());
+        mockMvc.perform(como(GESTOR, get("/api/v1/programa/" + hiperdia + "/indicadores"))).andExpect(status().isOk());
+        String meta = "{\"indicador\": \"ACOMPANHADOS_EM_DIA\", \"unidadeId\": \"%s\", \"alvo\": 70, \"inicio\": \"%s\", \"fim\": \"%s\"}"
+                .formatted(ubs.getUuid(), java.time.LocalDate.now(), java.time.LocalDate.now().plusDays(30));
+        mockMvc.perform(como(ENFERMEIRO, post("/api/v1/programa/" + hiperdia + "/meta")).contentType(MediaType.APPLICATION_JSON).content(meta))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(GESTOR, post("/api/v1/programa/" + hiperdia + "/meta")).contentType(MediaType.APPLICATION_JSON).content(meta))
+                .andExpect(status().isCreated());
     }
 }

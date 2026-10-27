@@ -35,9 +35,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -104,6 +106,16 @@ class SaudeBucalAutorizacaoControllerTest {
     @AfterEach
     void limpar() {
         String atendimentos = "(select uuid from tb_atendimento where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%'))";
+        String acoes = "(select uuid from tb_acao_programatica where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%'))";
+        jdbc.update("delete from tb_avaliacao_bucal_coletiva where acao_id in " + acoes);
+        jdbc.update("delete from tb_acao_saude_bucal_atividade where detalhe_id in (select uuid from tb_acao_saude_bucal where acao_id in " + acoes + ")");
+        jdbc.update("delete from tb_acao_saude_bucal where acao_id in " + acoes);
+        jdbc.update("delete from tb_acao_programatica_participante where acao_id in " + acoes);
+        jdbc.update("delete from tb_acao_programatica where uuid in " + acoes);
+        jdbc.update("delete from tb_evento_acompanhamento where acompanhamento_id in (select uuid from tb_acompanhamento_programatico where unidade_id in "
+                + "(select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%'))");
+        jdbc.update("delete from tb_acompanhamento_programatico where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%')");
+        jdbc.update("delete from tb_participacao_programa where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%')");
         String procedimentos = "(select uuid from tb_procedimento where atendimento_id in " + atendimentos + ")";
         String planos = "(select uuid from tb_plano_tratamento where atendimento_id in " + atendimentos + ")";
         String proteses = "(select uuid from tb_tratamento_protetico where atendimento_id in " + atendimentos + ")";
@@ -222,6 +234,31 @@ class SaudeBucalAutorizacaoControllerTest {
                 .andExpect(status().isForbidden());
         mockMvc.perform(como(DENTISTA, post("/api/v1/tratamento-protetico")).contentType(MediaType.APPLICATION_JSON).content(corpo))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    void saudeBucalColetivaDetalheDoTecnicoAvaliacaoDoDentista() throws Exception {
+        String bucal = jdbc.queryForObject("select cast(uuid as varchar) from tb_programa where codigo = 'SAUDE_BUCAL'", String.class);
+        jdbc.update("insert into tb_participacao_programa (uuid, programa_id, unidade_id, inicio) values (gen_random_uuid(), cast(? as uuid), ?, ?)",
+                bucal, ubs.getUuid(), java.time.LocalDate.now().minusYears(1));
+        UUID paciente = atendimento.getPaciente().getUuid();
+        mockMvc.perform(como(DENTISTA, post("/api/v1/programa/" + bucal + "/acompanhamento")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"pacienteId\": \"%s\", \"unidadeId\": \"%s\"}".formatted(paciente, ubs.getUuid()))).andExpect(status().isCreated());
+        String r = mockMvc.perform(como(DENTISTA, post("/api/v1/acao-programatica")).contentType(MediaType.APPLICATION_JSON)
+                .content(("{\"programaId\": \"%s\", \"tipo\": \"GRUPO\", \"unidadeId\": \"%s\", \"dataPrevista\": \"%s\", "
+                        + "\"participantesIds\": [\"%s\"]}").formatted(bucal, ubs.getUuid(), java.time.LocalDate.now().minusDays(1), paciente)))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String acao = com.jayway.jsonpath.JsonPath.read(r, "$.uuid");
+        mockMvc.perform(como(TSB, post("/api/v1/acao-programatica/" + acao + "/realizacao")).contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isOk());
+        mockMvc.perform(como(TSB, put("/api/v1/acao-programatica/" + acao + "/saude-bucal")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"atividades\": [\"ESCOVACAO_SUPERVISIONADA\", \"APLICACAO_TOPICA_FLUOR\"], \"localTipo\": \"ESCOLA\"}"))
+                .andExpect(status().isOk());
+        String avaliacao = "{\"resultados\": [{\"pacienteId\": \"%s\", \"risco\": \"ALTO\", \"necessidadeTratamento\": \"URGENCIA\"}]}".formatted(paciente);
+        mockMvc.perform(como(TSB, post("/api/v1/acao-programatica/" + acao + "/avaliacao-bucal")).contentType(MediaType.APPLICATION_JSON).content(avaliacao))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(DENTISTA, post("/api/v1/acao-programatica/" + acao + "/avaliacao-bucal")).contentType(MediaType.APPLICATION_JSON).content(avaliacao))
+                .andExpect(status().isOk());
     }
 
     @Test

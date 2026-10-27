@@ -18,6 +18,10 @@ public interface AcaoProgramaticaRepository extends JpaRepository<AcaoProgramati
 
     List<AcaoProgramatica> findByCampanha_Uuid(UUID campanhaId);
 
+    /** As ações do programa previstas no intervalo (indicadores, ADR-0141). */
+    @Query("select a from AcaoProgramatica a join fetch a.unidade where a.programa.uuid = ?1 and a.dataPrevista >= ?2 and a.dataPrevista <= ?3")
+    List<AcaoProgramatica> findDoProgramaNoIntervalo(UUID programaId, java.time.LocalDate de, java.time.LocalDate ate);
+
     boolean existsByLocalCampanha_Uuid(UUID localId);
 
     boolean existsByAcompanhamento_UuidAndTipoAndSituacao(UUID acompanhamentoId, TipoAcaoProgramatica tipo, SituacaoAcaoProgramatica situacao);

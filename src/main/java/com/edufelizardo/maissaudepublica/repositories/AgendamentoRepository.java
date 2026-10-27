@@ -12,4 +12,9 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, UUID> 
 
     List<Agendamento> findByProfissional_UuidAndDataHoraBetweenOrderByDataHoraAsc(UUID profissionalId, java.time.LocalDateTime de,
                                                                                   java.time.LocalDateTime ate);
+
+    /** Produção assistencial (ADR-0143): [unidade, dataHora, status, encaixe] de cada marcação no intervalo. */
+    @org.springframework.data.jpa.repository.Query("select g.unidade.uuid, g.dataHora, g.status, g.encaixe from Agendamento g "
+            + "where g.unidade is not null and g.dataHora >= ?1 and g.dataHora < ?2")
+    List<Object[]> findParaProducao(java.time.LocalDateTime de, java.time.LocalDateTime ate);
 }

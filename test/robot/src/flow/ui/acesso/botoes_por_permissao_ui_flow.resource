@@ -17,11 +17,15 @@ Preparar Usuarios Dos Botoes
     Conceder Papel    ${idTecnico}    TECNICO_DE_ENFERMAGEM
     ${cpfRecepcao}    ${idRecepcao}=    Criar Usuario Pela Administracao    Robot Recepcao Botoes
     Conceder Papel    ${idRecepcao}    RECEPCAO
+    ${cpfGestor}    ${idGestor}=    Criar Usuario Pela Administracao    Robot Gestor Botoes
+    Conceder Papel    ${idGestor}    GESTOR
     Trocar Senha Provisoria    ${cpfTecnico}
     Trocar Senha Provisoria    ${cpfRecepcao}
+    Trocar Senha Provisoria    ${cpfGestor}
     Definir Token Da Sessao De API    ${EMPTY}
     Set Suite Variable    ${BOTOES_TECNICO}    ${cpfTecnico}
     Set Suite Variable    ${BOTOES_RECEPCAO}    ${cpfRecepcao}
+    Set Suite Variable    ${BOTOES_GESTOR}    ${cpfGestor}
     Abrir Navegador Do Mais Saude Publica
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -73,5 +77,30 @@ UI Botoes - Recepcao Ve Cadastro E Abertura
     Botao Deve Aparecer    /assistencia/pacientes    Novo paciente    1
     Botao Deve Aparecer    /assistencia/atendimentos    Iniciar atendimento    1
     Botao Deve Aparecer    /assistencia/atendimentos    Acolhimento    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Itens Sala De Situacao No Menu Devem Ser
+    [Documentation]    Conta os links Sala de Situação do menu.
+    [Arguments]    ${quantidade}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${n}=    Get Element Count    css=a.nav-item >> text=Sala de Situação
+    Should Be Equal As Integers    ${n}    ${quantidade}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Botoes - Sala De Situacao So Para Quem Consulta Indicadores
+    [Documentation]    A recepção não vê a Sala de Situação no menu (sem INDICADOR.CONSULTAR); o gestor vê e abre (ADR-0143).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Entrar Como    ${BOTOES_RECEPCAO}
+    Ir Para Rota Do Frontend    /assistencia/pacientes
+    Ler Titulo Da Pagina
+    Wait Until Keyword Succeeds    5s    250ms    Itens Sala De Situacao No Menu Devem Ser    0
+    Entrar Como    ${BOTOES_GESTOR}
+    Ir Para Rota Do Frontend    /assistencia/pacientes
+    Ler Titulo Da Pagina
+    Wait Until Keyword Succeeds    5s    250ms    Itens Sala De Situacao No Menu Devem Ser    1
+    Click    css=a.nav-item >> text=Sala de Situação
+    Wait For Elements State    css=[aria-label="Indicadores do período"]    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

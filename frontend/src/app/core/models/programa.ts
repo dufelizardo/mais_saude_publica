@@ -383,3 +383,84 @@ export interface CampanhaPublicaDto {
   realizado: number;
   locais: { nome: string; endereco?: string | null; funcionamento?: string | null; latitude?: number | null; longitude?: number | null }[];
 }
+
+// ── Metas e indicadores programáticos (P6, ADR-0141): só números ──
+
+export type IndicadorProgramatico =
+  | 'ACOMPANHADOS_EM_DIA'
+  | 'COBERTURA'
+  | 'ACOES_REALIZADAS'
+  | 'PA_CONTROLADA'
+  | 'EXAME_NO_ALVO'
+  | 'PRE_NATAL_6_CONSULTAS'
+  | 'TRATAMENTO_ODONTOLOGICO_CONCLUIDO'
+  | 'PROTESES_ENTREGUES'
+  | 'ESCOVACAO_SUPERVISIONADA';
+
+export type TipoValorIndicador = 'PERCENTUAL' | 'QUANTIDADE';
+export type SituacaoMetaProgramatica = 'ATINGIDA' | 'EM_RISCO' | 'ABAIXO' | 'SEM_DADOS';
+
+export const SITUACOES_META: Record<SituacaoMetaProgramatica, { rotulo: string; classe: string }> = {
+  ATINGIDA: { rotulo: 'Meta atingida', classe: 'ok' },
+  EM_RISCO: { rotulo: 'Em risco', classe: 'warn' },
+  ABAIXO: { rotulo: 'Abaixo da meta', classe: 'err' },
+  SEM_DADOS: { rotulo: 'Sem dados', classe: 'info' },
+};
+
+export interface IndicadorApuradoDto {
+  indicador: IndicadorProgramatico;
+  nome: string;
+  descricao: string;
+  tipo: TipoValorIndicador;
+  aplicavel: boolean;
+  motivo?: string | null;
+  numerador: number;
+  denominador?: number | null;
+  valor?: number | null;
+  de: string;
+  ate: string;
+  metaId?: string | null;
+  alvo?: number | null;
+  situacao?: SituacaoMetaProgramatica | null;
+}
+
+export interface SerieIndicadorDto {
+  indicador: IndicadorProgramatico;
+  nome: string;
+  aplicavel: boolean;
+  motivo?: string | null;
+  pontos: { mes: string; numerador: number; denominador?: number | null; valor?: number | null }[];
+}
+
+export interface MetaProgramaticaDto {
+  uuid: string;
+  programaId: string;
+  indicador: IndicadorProgramatico;
+  indicadorNome: string;
+  unidadeId?: string | null;
+  unidadeNome?: string | null;
+  alvo: number;
+  inicio: string;
+  fim: string;
+  exameId?: string | null;
+  exameNome?: string | null;
+  limiteMinimo?: number | null;
+  limiteMaximo?: number | null;
+}
+
+export interface MetaProgramaticaRequestDto {
+  indicador: IndicadorProgramatico;
+  unidadeId?: string | null;
+  alvo: number;
+  inicio: string;
+  fim: string;
+  exameId?: string | null;
+  limiteMinimo?: number | null;
+  limiteMaximo?: number | null;
+}
+
+export interface FiltroIndicadores {
+  de?: string;
+  ate?: string;
+  unidadeId?: string;
+}

@@ -179,8 +179,8 @@ jobs:
       - name: Esperar API e frontend responderem
         run: |
           for i in $(seq 1 90); do
-            api=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/v3/api-docs || echo 000)
-            seg=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8083/v3/api-docs || echo 000)
+            api=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health || echo 000)
+            seg=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8083/actuator/health || echo 000)
             front=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:4200/ || echo 000)
             echo "Tentativa $i: API $api, API com seguranca $seg, front $front"
             if [ "$api" = "200" ] && [ "$seg" = "200" ] && [ "$front" = "200" ]; then exit 0; fi
@@ -299,12 +299,12 @@ jobs:
             msp-app:ci
 
       - name: Esperar a aplicação responder
-        # Usa /v3/api-docs (springdoc) como probe, nao um endpoint de negocio: GET /api/v1/federal/
-        # retorna 404 de proposito quando a lista esta vazia (banco recem-criado, sem seed), entao
-        # nao serve como sinal de "app no ar".
+        # Usa o health do Actuator (ADR-0145), nao um endpoint de negocio nem o /v3/api-docs: o Swagger
+        # da API inteira ficou pesado, e GET /api/v1/federal/ retorna 404 de proposito com a lista vazia
+        # (banco recem-criado), entao nao serve como sinal de "app no ar".
         run: |
           for i in $(seq 1 60); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/v3/api-docs || echo "000")
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health || echo "000")
             echo "Tentativa $i: HTTP $code"
             if [ "$code" = "200" ]; then
               echo "Aplicação no ar (HTTP $code)."
@@ -313,7 +313,7 @@ jobs:
             sleep 3
           done
           echo "Aplicação não respondeu a tempo. Corpo da última resposta:"
-          curl -sS -i http://localhost:8080/v3/api-docs || true
+          curl -sS -i http://localhost:8080/actuator/health || true
           echo "--- Logs do container ---"
           docker logs msp-app
           exit 1

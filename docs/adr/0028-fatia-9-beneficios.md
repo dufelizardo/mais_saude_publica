@@ -2,7 +2,8 @@
 
 ## Status
 
-Aceita. Backend implementado (`encerrar`); frontend em implementação.
+Aceita e implementada. O encerramento da adesão (`encerrar`) está no backend e na aba Benefícios do perfil do
+profissional (ADRs 0084 a 0086).
 
 ## Contexto
 

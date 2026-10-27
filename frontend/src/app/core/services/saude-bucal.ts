@@ -7,6 +7,11 @@ import {
   AvaliacaoOdontologicaRequestDto,
   EspecialidadeDto,
   EspecialidadeRequestDto,
+  AcaoSaudeBucalDto,
+  AcaoSaudeBucalRequestDto,
+  ConvocacaoSaudeBucalDto,
+  NecessidadeTratamentoOdontologico,
+  RiscoSaudeBucal,
   EtapaProteticaRequestDto,
   TratamentoProteticoDto,
   TratamentoProteticoRequestDto,
@@ -118,5 +123,23 @@ export class SaudeBucalService {
 
   cancelarProtese(id: string, motivo: string): Observable<TratamentoProteticoDto> {
     return this.http.post<TratamentoProteticoDto>(`${this.api}/tratamento-protetico/${id}/cancelamento`, { motivo });
+  }
+
+  // ── Saúde bucal coletiva (ADR-0140) ────────────────────────────────────────────────────────────
+
+  saudeBucalDaAcao(acaoId: string): Observable<AcaoSaudeBucalDto> {
+    return this.http.get<AcaoSaudeBucalDto>(`${this.api}/acao-programatica/${acaoId}/saude-bucal`);
+  }
+
+  salvarSaudeBucalDaAcao(acaoId: string, dto: AcaoSaudeBucalRequestDto): Observable<AcaoSaudeBucalDto> {
+    return this.http.put<AcaoSaudeBucalDto>(`${this.api}/acao-programatica/${acaoId}/saude-bucal`, dto);
+  }
+
+  avaliarColetiva(acaoId: string, resultados: { pacienteId: string; risco: RiscoSaudeBucal; necessidadeTratamento: NecessidadeTratamentoOdontologico }[]): Observable<AcaoSaudeBucalDto> {
+    return this.http.post<AcaoSaudeBucalDto>(`${this.api}/acao-programatica/${acaoId}/avaliacao-bucal`, { resultados });
+  }
+
+  aConvocar(unidadeId: string): Observable<ConvocacaoSaudeBucalDto[]> {
+    return this.http.get<ConvocacaoSaudeBucalDto[]>(`${this.api}/saude-bucal/a-convocar`, { params: { unidadeId } });
   }
 }

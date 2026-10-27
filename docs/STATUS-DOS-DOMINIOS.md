@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-22 (release 1.7.0)
+- **Atualizado em:** 2026-10-26 (release 1.8.0)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -45,13 +45,13 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
-| 19 | [Indicadores / BI](#19-indicadores--bi) | ⬜ | Sala de Situação e Relatórios |
+| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI3 feitas (Sala de Situação: produção, situação operacional e indicadores da rede); BI4 e BI5 |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
-| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 feitas; P5 e P6 |
+| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
-| 25 | [Saúde Bucal](#25-saúde-bucal) | 🟡 | SB1 a SB4 feitas; falta SB5 |
+| 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 10 ✅ · 10 🟡 · 2 📐 · 9 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 11 ✅ · 10 🟡 · 2 📐 · 8 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,9 +68,14 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| SB5 | 25 Saúde Bucal | saúde bucal coletiva: detalhe odontológico das ações coletivas (Programas P4) |
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
+| P5 | 22 Programas | linhas de cuidado |
+| V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
+| E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
+| MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
+| MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
+| BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -78,16 +83,17 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 MO1 ✅ ──► SB4a ✅ (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
-P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6
+P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
+BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 (relatórios) · BI5 (coordenações)
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
-P4 ✅ ──► SB5 (saúde bucal coletiva) · C3 (educação em saúde)
+P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
 F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
-SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5
+SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
@@ -379,13 +385,28 @@ C1 ──► C2 · C4 · C5
 
 ### 19. Indicadores / BI
 
-**Estado:** ⬜. Hoje só existem indicadores locais em cada tela.
+**Estado:** 🟡. Desenhado na [ADR-0142](./adr/0142-indicadores-bi-e-gestao.md): camada de leitura, só agregados,
+calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
+
+**Temos:**
+- [x] **BI1 · Produção assistencial por unidade** ([ADR-0143](./adr/0143-bi-producao-assistencial.md)): atendimentos
+  concluídos no período e no anterior, média diária, por tipo, especialidade, categoria do profissional, faixa etária,
+  sexo e hora; agenda (marcações, realizadas, faltas, canceladas, encaixes e absenteísmo); série por dia e por mês;
+  ranking de unidades; exportação CSV auditada; tela Sala de Situação pelo protótipo `Painel.html`.
+- [x] **BI2 · Situação operacional** ([ADR-0144](./adr/0144-bi-situacao-operacional.md)): a chegada do paciente
+  gravada pelo sistema (V35); a situação agora (em atendimento, aguardando triagem e consulta, maior espera); o tempo de
+  espera com média, mediana e p90; a ocupação das agendas por especialidade pela montagem da Agenda; as ocorrências da
+  escala (sem cobertura e afastados, sem nomear licença médica); alertas de fila, espera, agenda e escala com limites
+  na configuração; atualização a cada minuto na Sala de Situação.
+- [x] **BI3 · Indicadores da rede** ([ADR-0146](./adr/0146-bi-indicadores-da-rede.md)): os programas ativos
+  consolidados pela apuração da P6 (inscritos, novos, saídas, faltosos, em dia e situação das metas) e cada programa
+  por unidade, com a meta da unidade ou da rede; a vigilância por agravo com a oportunidade de encerramento, as 12
+  semanas epidemiológicas, a regularidade da notificação e o território; programa e agravo sensíveis escondidos sem a
+  permissão; cartões na Sala de Situação.
 
 **Falta:**
-- [ ] Sala de Situação (protótipo `Painel.html`).
-- [ ] Relatórios (protótipo `Relatorios.html`).
-- [ ] Indicadores consolidados da rede, que vão receber também os indicadores programáticos (domínio 22, P6).
-- [ ] Coordenações & Gerência (protótipo `Coordenacoes.html`).
+- [ ] **BI4 · Relatórios** (protótipo `Relatorios.html`).
+- [ ] **BI5 · Coordenações & Gerência** (protótipo `Coordenacoes.html`).
 
 ### 20. Integrações / Identidade / Segurança / Governo
 
@@ -469,11 +490,15 @@ C1 ──► C2 · C4 · C5
   cancelamento; locais da rede ou temporários sob a unidade responsável; ações da campanha (coletivas, no local, com as
   pessoas atendidas) dando o andamento da meta; aba Campanhas e a consulta pública na landing page
   (`/api/v1/publico/campanha`).
+- [x] **P6 · Metas e indicadores** ([ADR-0141](./adr/0141-programas-metas-e-indicadores.md)): indicadores
+  calculados dos registros, no período e na rede ou na unidade (acompanhados em dia, cobertura, ações realizadas, PA
+  controlada, exame no alvo, pré-natal com 6 consultas, tratamento odontológico concluído, próteses entregues e
+  escovação supervisionada); metas por indicador e unidade com a situação (atingida, em risco, abaixo); evolução de
+  12 meses; relatório em CSV; só números, e o programa sensível só para quem acompanha.
 
 **Falta:**
 - [x] Lista de elegíveis pelo público-alvo entre os adscritos da equipe (ADR-0128); faltam os critérios clínicos (gestação, condição).
 - [ ] **P5 · Linhas de cuidado.**
-- [ ] **P6 · Metas e indicadores programáticos.**
 
 ### 23. Vigilância em Saúde
 
@@ -517,8 +542,9 @@ C1 ──► C2 · C4 · C5
 
 ### 25. Saúde Bucal
 
-**Estado:** 🟡. Desenhado na [ADR-0111](./adr/0111-saude-bucal.md); detalhe em
-[`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md). A equipe eSB já existe (ADR-0103).
+**Estado:** ✅. Desenhado na [ADR-0111](./adr/0111-saude-bucal.md) e implementado nas fatias SB1 a SB5 (ADRs 0134 a
+0140); detalhe em [`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md). A equipe eSB já existe
+(ADR-0103).
 
 **Temos:**
 - [x] **SB1 · Base** ([ADR-0134](./adr/0134-saude-bucal-base.md)): catálogo de especialidades (com a marca de
@@ -540,8 +566,6 @@ C1 ──► C2 · C4 · C5
   pelos procedimentos (realizado conclui, agendado põe em andamento, cancelado devolve a planejado); em andamento,
   encaminhado (com a solicitação de regulação) e cancelado pelo dentista; tratamento concluído com data e abandono
   com motivo; permissão `ODONTOLOGIA.PLANEJAR`; seção Plano de tratamento no atendimento de odontologia.
-
-**Falta:**
 - [x] **SB4a · Encaminhamento pela Regulação** ([ADR-0138](./adr/0138-saude-bucal-encaminhamento-pela-regulacao.md)):
   o CEO como unidade com as capacidades odontológicas (sem tipo próprio); o item regulado exige a capacidade da
   executante (vale para toda a Regulação); as especialidades odontológicas no catálogo; a solicitação a partir do item
@@ -550,8 +574,14 @@ C1 ──► C2 · C4 · C5
   pela arcada, unitária pelo dente; etapas na ordem do ciclo (prova e laboratório se alternam), com data e
   profissional; laboratório da rede (capacidade nova LRPD) ou contratado; a entrega grava a unitária no odontograma;
   conclusão depois da entrega e cancelamento com motivo; seção Prótese no atendimento de odontologia.
-- [ ] **SB5 · Saúde bucal coletiva:** detalhe odontológico das ações coletivas (depende de Programas P4 e do
-  Território).
+- [x] **SB5 · Saúde bucal coletiva** ([ADR-0140](./adr/0140-saude-bucal-coletiva.md)): detalhe odontológico da ação
+  coletiva dos programas Saúde Bucal e PSE (atividades, local, público, kits); avaliação de risco por participante na
+  ação realizada com lista nominal; lista a convocar (necessidade de tratamento sem plano aberto); o PSE no catálogo de
+  Programas.
+
+**Falta:**
+- [ ] Índice CPO-D do levantamento epidemiológico e indicadores odontológicos (tratamento concluído, primeira consulta
+  programática), pela P6 e pelo BI.
 
 ### 26. Saúde Mental
 

@@ -98,7 +98,7 @@ jobs:
       - name: Esperar a aplicação responder
         run: |
           for i in $(seq 1 60); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/v3/api-docs || echo "000")
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/actuator/health || echo "000")
             if [ "$code" = "200" ]; then
               echo "Aplicação no ar (HTTP $code)."
               exit 0

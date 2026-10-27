@@ -11,12 +11,12 @@
   "private": true,
   "packageManager": "npm@11.18.0",
   "dependencies": {
-    "@angular/common": "^22.1.0",
-    "@angular/compiler": "^22.1.0",
-    "@angular/core": "^22.1.0",
-    "@angular/forms": "^22.1.0",
-    "@angular/platform-browser": "^22.1.0",
-    "@angular/router": "^22.1.0",
+    "@angular/common": "^22.2.3",
+    "@angular/compiler": "^22.2.3",
+    "@angular/core": "^22.2.3",
+    "@angular/forms": "^22.2.3",
+    "@angular/platform-browser": "^22.2.3",
+    "@angular/router": "^22.2.3",
     "@geoman-io/leaflet-geoman-free": "2.20.3",
     "@tmcw/togeojson": "7.1.3",
     "@turf/area": "7.4.0",
@@ -28,13 +28,16 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "^22.1.8",
-    "@angular/cli": "^22.1.8",
-    "@angular/compiler-cli": "^22.1.0",
+    "@angular/build": "^22.2.3",
+    "@angular/cli": "^22.2.3",
+    "@angular/compiler-cli": "^22.2.3",
     "@types/leaflet": "1.9.22",
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2",
-    "vitest": "^4.0.8"
+    "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "vite": "8.3.5"
   }
 }
