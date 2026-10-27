@@ -2,6 +2,7 @@
 Resource    ../../../pom/ui/indicadores/sala_de_situacao_ui_pom.resource
 Resource    ../../indicadores/producao_flow.resource
 Resource    ../../indicadores/situacao_flow.resource
+Resource    ../../indicadores/indicadores_rede_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A base é criada pela API; a consulta sob teste é feita pela tela.
@@ -52,5 +53,18 @@ UI Sala - Situacao Operacional
     Wait For Elements State    css=[aria-label="Situação agora"] >> text=Dados ao vivo    visible
     Wait For Elements State    css=[aria-label="Ocupação das agendas"]    visible
     Wait For Elements State    css=[aria-label="Tempo de espera"]    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Sala - Indicadores Da Rede
+    [Documentation]    Os cartões de programas e de vigilância aparecem; o HiperDia abre a lista por unidade com a unidade nova.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${programa}    ${unidade}    ${nome}=    Seed HiperDia Com Inscrito
+    UI Sala - Abrir
+    Select Options By    id=f-ss-unidade    value    ${unidade}
+    Wait For Elements State    css=[aria-label="Vigilância"] >> text=regularidade    visible
+    Click    css=[aria-label="Programas de saúde"] >> role=button[name="Programa: HiperDia"]
+    Wait For Elements State    css=table[aria-label="Por unidade: HiperDia"]    visible
+    Wait For Elements State    css=table[aria-label="Por unidade: HiperDia"] >> text=Acompanhados    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

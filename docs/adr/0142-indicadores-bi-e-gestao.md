@@ -3,7 +3,8 @@
 ## Status
 
 Aceita. **Desenho do domínio**; cada fatia tem ADR própria. Implementadas: BI1 (produção assistencial por unidade) na
-[ADR-0143](./0143-bi-producao-assistencial.md) e BI2 (situação operacional) na [ADR-0144](./0144-bi-situacao-operacional.md).
+[ADR-0143](./0143-bi-producao-assistencial.md), BI2 (situação operacional) na [ADR-0144](./0144-bi-situacao-operacional.md) e BI3
+(indicadores da rede) na [ADR-0146](./0146-bi-indicadores-da-rede.md).
 
 ## Contexto
 
@@ -48,7 +49,7 @@ Aceita. **Desenho do domínio**; cada fatia tem ADR própria. Implementadas: BI1
 |---|---|---|
 | **BI1** · produção assistencial ✅ ([ADR-0143](./0143-bi-producao-assistencial.md)) | atendimentos por dia e por mês, distribuições, agenda (faltas, encaixes, absenteísmo), ranking de unidades; Sala de Situação | Atendimento, Agenda |
 | **BI2** · situação operacional ✅ ([ADR-0144](./0144-bi-situacao-operacional.md)) | alertas (fila, espera, agenda, escala), tempo de espera pela chegada registrada, ocupação das agendas, ocorrências da escala | BI1, Escalas, chegada do atendimento |
-| **BI3** · indicadores da rede | indicadores programáticos (P6) e de vigilância consolidados por unidade e território, com metas | BI1, P6, Vigilância |
+| **BI3** · indicadores da rede ✅ ([ADR-0146](./0146-bi-indicadores-da-rede.md)) | indicadores programáticos (P6) e de vigilância consolidados por unidade e território, com metas | BI1, P6, Vigilância |
 | **BI4** · relatórios | catálogo de relatórios com filtros e exportação (`Relatorios.html`) | BI1 a BI3 |
 | **BI5** · coordenações e gerência | painel por coordenação e regional (`Coordenacoes.html`) | BI3, estrutura organizacional |
 

@@ -50,6 +50,18 @@ public class ControleDeAcesso {
         }
     }
 
+    /**
+     * Se o usuário tem alguma das permissões, em qualquer escopo, sem lançar (para mostrar ou esconder um dado sensível
+     * num agregado, ADR-0146). Com a autorização desligada, tem.
+     */
+    public boolean temAlguma(String... permissoes) {
+        if (!ativo()) {
+            return true;
+        }
+        String cpf = UsuarioAutenticado.cpf();
+        return cpf != null && Arrays.stream(permissoes).anyMatch(p -> autorizacaoService.tem(cpf, p));
+    }
+
     /** A permissão num escopo que cubra a unidade; sem unidade, na rede inteira. */
     public void exigir(String permissao, UnidadeDeSaude unidade) {
         ContextoAuditoria.unidade(unidade);

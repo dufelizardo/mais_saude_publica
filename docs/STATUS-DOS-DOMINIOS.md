@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-23 (BI2, depois da release 1.7.0)
+- **Atualizado em:** 2026-10-26 (BI3, depois da release 1.7.0)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -45,7 +45,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
-| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 e BI2 feitas (Sala de Situação: produção e situação operacional); BI3 a BI5 |
+| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI3 feitas (Sala de Situação: produção, situação operacional e indicadores da rede); BI4 e BI5 |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
@@ -75,7 +75,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
-| BI3 | 19 Indicadores e BI | indicadores programáticos e de vigilância consolidados na rede, com metas |
+| BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -83,8 +83,8 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 MO1 ✅ ──► SB4a ✅ (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
-P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 (indicadores da rede)
-BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ──► BI4 (relatórios) · BI5 (coordenações)
+P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
+BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 (relatórios) · BI5 (coordenações)
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
@@ -398,10 +398,13 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   espera com média, mediana e p90; a ocupação das agendas por especialidade pela montagem da Agenda; as ocorrências da
   escala (sem cobertura e afastados, sem nomear licença médica); alertas de fila, espera, agenda e escala com limites
   na configuração; atualização a cada minuto na Sala de Situação.
+- [x] **BI3 · Indicadores da rede** ([ADR-0146](./adr/0146-bi-indicadores-da-rede.md)): os programas ativos
+  consolidados pela apuração da P6 (inscritos, novos, saídas, faltosos, em dia e situação das metas) e cada programa
+  por unidade, com a meta da unidade ou da rede; a vigilância por agravo com a oportunidade de encerramento, as 12
+  semanas epidemiológicas, a regularidade da notificação e o território; programa e agravo sensíveis escondidos sem a
+  permissão; cartões na Sala de Situação.
 
 **Falta:**
-- [ ] **BI3 · Indicadores da rede:** os programáticos (P6, [ADR-0141](./adr/0141-programas-metas-e-indicadores.md)) e
-  os de vigilância consolidados por unidade e território.
 - [ ] **BI4 · Relatórios** (protótipo `Relatorios.html`).
 - [ ] **BI5 · Coordenações & Gerência** (protótipo `Coordenacoes.html`).
 
