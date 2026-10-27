@@ -20,6 +20,8 @@ import {
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { ProgramaService } from '../../../core/services/programa';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { PROGRAMAS_SAUDE_BUCAL } from '../../../core/models/saude-bucal';
+import { SaudeBucalDaAcao } from './saude-bucal-da-acao';
 
 type Periodo = 'semana' | 'quatro' | 'mes';
 type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto } | { tipo: 'situacao'; acao: AcaoProgramaticaDto; situacao: 'NAO_REALIZADA' | 'CANCELADA' };
@@ -31,7 +33,7 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
  */
 @Component({
   selector: 'app-acoes-programaticas',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, Drawer, SaudeBucalDaAcao],
   template: `
     <div class="filters" style="margin-bottom: var(--s-3); flex-wrap: wrap;">
       @if (!programaFixo() && !campanhaFixa()) {
@@ -75,6 +77,9 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
                     @if (a.sugestao) { <span class="cell-sub" style="color: var(--warn);">{{ a.sugestao }}</span> }
                   </td>
                   <td class="num">
+                    @if (temSaudeBucal(a)) {
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="saudeBucal.set(a)" [attr.aria-label]="'Saúde bucal: ' + rotulo(a)">Saúde bucal</button>
+                    }
                     @if (podeAcompanhar() && a.situacao === 'PENDENTE') {
                       <div class="row-actions">
                         @if (!a.coletiva && a.tipo === 'CONSULTA_PROGRAMADA' && !a.agendamentoId) {
@@ -98,6 +103,14 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
       <div class="box box--err" role="alert"><strong>Não foi possível carregar as ações.</strong></div>
     } @else {
       <p class="cell-sub">Carregando as ações…</p>
+    }
+
+    @if (saudeBucal(); as sb) {
+      <app-drawer titulo="Saúde bucal da ação" (fechar)="saudeBucal.set(null)">
+        <div class="dw-form"><div class="dw-body">
+          <app-saude-bucal-da-acao [acao]="sb" [podeAcompanhar]="podeAcompanhar()" [podeAvaliar]="podeAvaliarBucal()" />
+        </div></div>
+      </app-drawer>
     }
 
     @if (gaveta(); as g) {
@@ -273,6 +286,10 @@ export class AcoesProgramaticas {
   /** Avisa quem mostra a campanha (o andamento da meta muda com a realização). */
   readonly alterada = output<void>();
   readonly podeAcompanhar = input(false);
+  /** A avaliação coletiva de risco em saúde bucal é do cirurgião-dentista (ADR-0140). */
+  readonly podeAvaliarBucal = input(false);
+  /** A ação aberta na gaveta de saúde bucal (ADR-0140). */
+  protected readonly saudeBucal = signal<AcaoProgramaticaDto | null>(null);
   /** Muda para recarregar (ex.: uma busca ativa gerada na lista de inscritos). */
   readonly versao = input(0);
 
@@ -456,6 +473,12 @@ export class AcoesProgramaticas {
         this.erro.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar a ação.');
       },
     });
+  }
+
+  /** A ação coletiva dos programas Saúde Bucal e PSE, prevista ou realizada, ganha o detalhe de saúde bucal (ADR-0140). */
+  protected temSaudeBucal(a: AcaoProgramaticaDto): boolean {
+    return a.coletiva && PROGRAMAS_SAUDE_BUCAL.includes(a.programaCodigo) && (a.situacao === 'PENDENTE' || a.situacao === 'REALIZADA')
+      && (this.podeAcompanhar() || this.podeAvaliarBucal());
   }
 }
 

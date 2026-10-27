@@ -1,11 +1,11 @@
 # Pendências e estado dos ambientes
 
-Documento vivo, com **o que falta** no projeto depois da release **v1.4.0** (2026-10-01). Cada item aponta
+Documento vivo, com **o que falta** no projeto (revisto na release **v1.7.0**, 2026-10-22). Cada item aponta
 para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou abrir uma pendência.
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.7.0, promovida em 2026-10-22). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.8.0, promovida em 2026-10-26). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -167,7 +167,9 @@ real":
   - #15 Patrimônio;
   - #17 Financeiro;
   - #18 Qualidade;
-  - #19 Indicadores e BI.
+  - #19 Indicadores e BI — desenhado na ADR-0142; ~~BI1 (produção assistencial e Sala de Situação)~~ — ADR-0143;
+    ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; faltam BI4 (relatórios) e BI5
+    (coordenações).
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —
   perfis e capacidades, ADR-0117. Faltam MO2 (serviços), MO3 (ponto operacional) e MO4 (domínios consultam
   capacidades).
@@ -180,14 +182,14 @@ real":
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (sem a notificação no sistema, V1, e sem o SAMU, regulação
   de urgência); faltam SM5 e SM6
   (intersetorialidade e indicadores).
-- **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134, ~~SB2 (odontograma)~~ — ADR-0135, ~~SB3a (catálogo e procedimento odontológico)~~ — ADR-0136, ~~SB3b (plano de tratamento)~~ — ADR-0137; ~~SB4a (encaminhamento pela Regulação)~~ — ADR-0138; ~~SB4b (prótese)~~ — ADR-0139; falta SB5 (coletiva).
+- **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134, ~~SB2 (odontograma)~~ — ADR-0135, ~~SB3a (catálogo e procedimento odontológico)~~ — ADR-0136, ~~SB3b (plano de tratamento)~~ — ADR-0137; ~~SB4a (encaminhamento pela Regulação)~~ — ADR-0138; ~~SB4b (prótese)~~ — ADR-0139; ~~SB5 (coletiva)~~ — ADR-0140. Domínio completo; CPO-D e indicadores ficam para a P6 e o BI.
 - **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias ~~V1 (fundação)~~ — ADR-0124,
   ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131; faltam V3 (sanitária) a V5
   (trabalhador e integrações).
 - **#24 Imunização** — reservado pela ADR-0110; a desenhar em ADR própria.
 - **#22 Programas, Ações e Linhas de Cuidado** — desenhado na ADR-0109; programas e campanhas cadastráveis.
   Fatias: ~~P1 (catálogo)~~ — ADR-0118; ~~P2 (acompanhamento)~~ — ADR-0119 (elegíveis por idade e sexo na
-  ADR-0128; os critérios clínicos ficam para depois); ~~P4 (ações e programa na Agenda)~~ — ADR-0132; ~~P3 (campanhas e consulta pública)~~ — ADR-0133; faltam P5 (linhas de cuidado) e P6 (metas e indicadores).
+  ADR-0128; os critérios clínicos ficam para depois); ~~P4 (ações e programa na Agenda)~~ — ADR-0132; ~~P3 (campanhas e consulta pública)~~ — ADR-0133; ~~P6 (metas e indicadores)~~ — ADR-0141; falta P5 (linhas de cuidado).
 - **#21 Território e Adscrição** — desenhado na ADR-0108; ~~F1 (fundação)~~ — ADR-0125; ~~F2 (mapa)~~ — ADR-0126;
   ~~F3a (imóvel, domicílio e família)~~ — ADR-0127; ~~F3b (adscrição e cobertura)~~ — ADR-0128; ~~F4
   (escopo de acesso e fim do texto das microáreas)~~ — ADR-0129. Falta ligar o escopo territorial quando a rede tiver o

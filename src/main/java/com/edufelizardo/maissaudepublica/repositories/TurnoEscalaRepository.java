@@ -18,4 +18,9 @@ public interface TurnoEscalaRepository extends JpaRepository<TurnoEscala, UUID> 
     /** Turnos dos profissionais (em qualquer unidade) que tocam o intervalo [de, ate). */
     @Query("select t from TurnoEscala t where t.profissional.uuid in :profissionais and t.inicioEm < :ate and t.fimEm > :de order by t.inicioEm")
     List<TurnoEscala> dosProfissionaisEntre(Collection<UUID> profissionais, LocalDateTime de, LocalDateTime ate);
+
+    /** Turnos de qualquer unidade que tocam o intervalo [de, ate), com o profissional (ADR-0144). */
+    @Query("select t from TurnoEscala t join fetch t.unidade left join fetch t.profissional where t.inicioEm < :ate and t.fimEm > :de "
+            + "order by t.inicioEm")
+    List<TurnoEscala> entre(LocalDateTime de, LocalDateTime ate);
 }

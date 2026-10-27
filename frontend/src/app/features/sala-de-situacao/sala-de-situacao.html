@@ -1,0 +1,336 @@
+<header class="page-head">
+  <div>
+    <h1>Sala de Situação da Saúde</h1>
+    <p>Produção assistencial · {{ producao()?.abrangencia ?? 'carregando…' }}@if (producao(); as p) { · {{ data(p.de) }} a {{ data(p.ate) }} }</p>
+  </div>
+  <div class="page-actions ss-filtros">
+    <div class="dw-field">
+      <label for="f-ss-unidade">Unidade</label>
+      <select id="f-ss-unidade" [value]="unidadeId()" (change)="unidadeId.set($any($event.target).value)">
+        <option value="">Todas do meu acesso</option>
+        @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+      </select>
+    </div>
+    <div class="seg" role="group" aria-label="Período">
+      @for (p of presets; track p.id) {
+        <button type="button" [attr.aria-pressed]="preset() === p.id" (click)="escolher(p.id)">{{ p.rotulo }}</button>
+      }
+    </div>
+    <div class="dw-field"><label for="f-ss-de">De</label><input id="f-ss-de" type="date" [value]="de()" (change)="periodo('de', $any($event.target).value)" /></div>
+    <div class="dw-field"><label for="f-ss-ate">Até</label><input id="f-ss-ate" type="date" [value]="ate()" (change)="periodo('ate', $any($event.target).value)" /></div>
+    <button type="button" class="btn btn--ghost" (click)="exportar()" [disabled]="exportando() || !producao()">Exportar</button>
+  </div>
+</header>
+
+@if (erro()) { <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div> }
+
+@if (situacao(); as sit) {
+  @if (sit.alertas.length) {
+    <section class="ss-alertas" aria-label="Alertas da situação">
+      @for (a of sit.alertas; track $index) {
+        <article [class]="'ss-alerta ss-alerta--' + (a.gravidade === 'ALTA' ? 'alta' : 'media')" [attr.aria-label]="'Alerta: ' + a.titulo">
+          <div>
+            <div class="ss-alerta__titulo">{{ a.titulo }}</div>
+            <div class="ss-alerta__detalhe">{{ a.detalhe }}</div>
+          </div>
+          <a class="btn btn--ghost btn--sm" [routerLink]="a.rota">{{ rotuloDaRota(a.tipo) }}</a>
+        </article>
+      }
+    </section>
+  }
+}
+
+@if (producao() === undefined) {
+  <p class="cell-sub">Calculando a produção…</p>
+} @else if (producao(); as p) {
+  <section class="ss-kpis" aria-label="Indicadores do período">
+    <div class="ss-kpi">
+      <div class="ss-kpi__top"><span class="ss-kpi__lbl">Atendimentos concluídos</span><span [class]="classeDelta(p.variacao)">{{ textoDelta(p.variacao) }}</span></div>
+      <div class="ss-kpi__val mono" aria-label="Atendimentos concluídos">{{ numero(p.atendimentos) }}</div>
+      <div class="ss-kpi__sub">anterior: {{ numero(p.atendimentosAnterior) }}</div>
+    </div>
+    <div class="ss-kpi">
+      <div class="ss-kpi__top"><span class="ss-kpi__lbl">Média diária</span></div>
+      <div class="ss-kpi__val mono">{{ numero(p.mediaDiaria) }}</div>
+      <div class="ss-kpi__sub">atendimentos por dia</div>
+    </div>
+    <div class="ss-kpi">
+      <div class="ss-kpi__top"><span class="ss-kpi__lbl">Marcações na agenda</span><span [class]="classeDelta(delta(p.agenda.marcados, p.agendaAnterior.marcados))">{{ textoDelta(delta(p.agenda.marcados, p.agendaAnterior.marcados)) }}</span></div>
+      <div class="ss-kpi__val mono">{{ numero(p.agenda.marcados) }}</div>
+      <div class="ss-kpi__sub">{{ numero(p.agenda.realizados) }} realizadas · {{ numero(p.agenda.cancelados) }} canceladas</div>
+    </div>
+    <div class="ss-kpi">
+      <div class="ss-kpi__top"><span class="ss-kpi__lbl">Faltas registradas</span><span [class]="classeDelta(delta(p.agenda.faltas, p.agendaAnterior.faltas), false)">{{ textoDelta(delta(p.agenda.faltas, p.agendaAnterior.faltas)) }}</span></div>
+      <div class="ss-kpi__val mono" aria-label="Faltas registradas">{{ numero(p.agenda.faltas) }}</div>
+      <div class="ss-kpi__sub">anterior: {{ numero(p.agendaAnterior.faltas) }}</div>
+    </div>
+    <div class="ss-kpi">
+      <div class="ss-kpi__top"><span class="ss-kpi__lbl">Absenteísmo</span></div>
+      <div class="ss-kpi__val mono">{{ p.agenda.absenteismo == null ? '—' : numero(p.agenda.absenteismo) }}<small>@if (p.agenda.absenteismo != null) { % }</small></div>
+      <div class="ss-kpi__sub">faltas sobre realizadas e faltas</div>
+    </div>
+    <div class="ss-kpi">
+      <div class="ss-kpi__top"><span class="ss-kpi__lbl">Encaixes realizados</span><span [class]="classeDelta(delta(p.agenda.encaixes, p.agendaAnterior.encaixes))">{{ textoDelta(delta(p.agenda.encaixes, p.agendaAnterior.encaixes)) }}</span></div>
+      <div class="ss-kpi__val mono">{{ numero(p.agenda.encaixes) }}</div>
+      <div class="ss-kpi__sub">anterior: {{ numero(p.agendaAnterior.encaixes) }}</div>
+    </div>
+  </section>
+
+  <div class="ss-row ss-row--2">
+    <section class="card ss-card" aria-label="Situação agora">
+      <div class="ss-card__head">
+        <div><h2 class="ss-card__title">Agora</h2><p class="ss-card__sub">Atendimentos em andamento nas últimas 24 horas</p></div>
+        @if (situacao(); as sit) { <span class="ss-ao-vivo"><span class="dot" aria-hidden="true"></span>Dados ao vivo · {{ hora(sit.atualizadoEm) }}</span> }
+      </div>
+      @if (situacao(); as sit) {
+        <div class="ss-agora">
+          <div><div class="ss-kpi__val mono" aria-label="Em atendimento agora">{{ numero(sit.emAtendimento) }}</div><div class="ss-kpi__sub">em atendimento</div></div>
+          <div><div class="ss-kpi__val mono" aria-label="Aguardando triagem">{{ numero(sit.aguardandoTriagem) }}</div><div class="ss-kpi__sub">aguardando triagem</div></div>
+          <div><div class="ss-kpi__val mono" aria-label="Aguardando consulta">{{ numero(sit.aguardandoConsulta) }}</div><div class="ss-kpi__sub">aguardando consulta</div></div>
+          <div><div class="ss-kpi__val mono" aria-label="Maior espera">{{ minutos(sit.maiorEsperaMinutos) }}</div><div class="ss-kpi__sub">maior espera</div></div>
+        </div>
+      } @else {
+        <p class="cell-sub">Carregando a situação…</p>
+      }
+    </section>
+    <section class="card ss-card" aria-label="Tempo de espera">
+      <div class="ss-card__head">
+        <div><h2 class="ss-card__title">Tempo de espera</h2><p class="ss-card__sub">No período, a partir da chegada registrada</p></div>
+      </div>
+      @if (espera(); as e) {
+        <table class="ss-espera" aria-label="Tempos de espera">
+          <thead><tr><th scope="col">Da chegada até</th><th scope="col" class="num">Média</th><th scope="col" class="num">Mediana</th><th scope="col" class="num">90%</th></tr></thead>
+          <tbody>
+            <tr><td>o primeiro contato</td><td class="num mono" aria-label="Espera média até o primeiro contato">{{ minutos(e.primeiroContato.mediaMinutos) }}</td><td class="num mono">{{ minutos(e.primeiroContato.medianaMinutos) }}</td><td class="num mono">{{ minutos(e.primeiroContato.p90Minutos) }}</td></tr>
+            <tr><td>a consulta</td><td class="num mono">{{ minutos(e.consulta.mediaMinutos) }}</td><td class="num mono">{{ minutos(e.consulta.medianaMinutos) }}</td><td class="num mono">{{ minutos(e.consulta.p90Minutos) }}</td></tr>
+          </tbody>
+        </table>
+        <p class="cell-sub">{{ numero(e.comChegada) }} atendimento(s) com chegada registrada@if (e.descartados) { · {{ numero(e.descartados) }} descartado(s) por erro de registro }. A chegada é gravada a partir da BI2.</p>
+      } @else {
+        <p class="cell-sub">Sem tempos no período.</p>
+      }
+    </section>
+  </div>
+
+  <div class="ss-row ss-row--2">
+    <section class="card ss-card" aria-label="Evolução dos atendimentos">
+      <div class="ss-card__head">
+        <div><h2 class="ss-card__title">Atendimentos {{ granularidade() === 'DIA' ? 'por dia' : 'por mês' }}</h2>
+          <p class="ss-card__sub">{{ granularidade() === 'DIA' ? 'Últimos 30 dias' : 'Últimos 12 meses' }} · concluídos</p></div>
+        <div class="seg" role="group" aria-label="Granularidade">
+          <button type="button" [attr.aria-pressed]="granularidade() === 'DIA'" (click)="granularidade.set('DIA')">Dia</button>
+          <button type="button" [attr.aria-pressed]="granularidade() === 'MES'" (click)="granularidade.set('MES')">Mês</button>
+        </div>
+      </div>
+      @if (serie(); as s) {
+        <svg [attr.viewBox]="'0 0 ' + largura + ' ' + altura" width="100%" role="img" [attr.aria-label]="'Gráfico de atendimentos ' + (s.granularidade === 'DIA' ? 'por dia' : 'por mês')">
+          @for (pt of s.pontos; track pt.periodo; let k = $index) {
+            <rect [attr.x]="barraX(k, s.pontos.length)" [attr.y]="altura - 18 - barraAltura(pt.atendimentos, maxSerie())" [attr.width]="barraLargura(s.pontos.length)"
+              [attr.height]="barraAltura(pt.atendimentos, maxSerie())" rx="2" fill="var(--blue-700)"><title>{{ pt.periodo }}: {{ pt.atendimentos }} atendimento(s), {{ pt.faltas }} falta(s)</title></rect>
+            @if (mostrarRotulo(k, s.pontos.length)) {
+              <text [attr.x]="barraX(k, s.pontos.length) + barraLargura(s.pontos.length) / 2" [attr.y]="altura - 4" font-size="10" text-anchor="middle" fill="var(--ink-500)">{{ rotuloPonto(pt.periodo, s.granularidade) }}</text>
+            }
+          }
+        </svg>
+        <table class="sr-only" aria-label="Atendimentos da série"><tbody>
+          @for (pt of s.pontos; track pt.periodo) { <tr><td>{{ pt.periodo }}</td><td>{{ pt.atendimentos }}</td><td>{{ pt.faltas }}</td></tr> }
+        </tbody></table>
+      } @else {
+        <p class="cell-sub">Sem série.</p>
+      }
+    </section>
+
+    <section class="card ss-card" aria-label="Atendimentos por hora">
+      <div class="ss-card__head">
+        <div><h2 class="ss-card__title">Atendimentos por hora</h2>
+          <p class="ss-card__sub">@if (pico() != null) { Pico às {{ pico() }}h no período } @else { Sem atendimentos no período }</p></div>
+      </div>
+      <svg [attr.viewBox]="'0 0 ' + largura + ' ' + altura" width="100%" role="img" aria-label="Gráfico de atendimentos por hora do dia">
+        @for (v of p.porHora; track $index; let h = $index) {
+          <rect [attr.x]="barraX(h, 24)" [attr.y]="altura - 18 - barraAltura(v, maxHora())" [attr.width]="barraLargura(24)" [attr.height]="barraAltura(v, maxHora())"
+            rx="2" [attr.fill]="h === pico() ? 'var(--blue-700)' : 'var(--blue-400)'"><title>{{ h }}h: {{ v }}</title></rect>
+          @if (h % 3 === 0) { <text [attr.x]="barraX(h, 24) + barraLargura(24) / 2" [attr.y]="altura - 4" font-size="10" text-anchor="middle" fill="var(--ink-500)">{{ h }}h</text> }
+        }
+      </svg>
+    </section>
+  </div>
+
+  <div class="ss-row ss-row--3">
+    <section class="card ss-card" aria-label="Atendimento por faixa etária">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Atendimento por faixa etária</h2><p class="ss-card__sub">Idade no dia do atendimento</p></div></div>
+      <ul class="ss-bars">
+        @for (c of p.porFaixaEtaria; track c.chave) {
+          @if (c.chave !== 'SEM_DATA' || c.quantidade > 0) {
+            <li class="ss-bar"><span class="ss-bar__lbl">{{ c.rotulo }}</span><span class="ss-bar__track"><span class="ss-bar__fill" [style.width]="largura100(c.quantidade, maior(p.porFaixaEtaria))"></span></span><span class="ss-bar__val mono">{{ numero(c.quantidade) }}</span></li>
+          }
+        }
+      </ul>
+    </section>
+    <section class="card ss-card" aria-label="Por tipo e categoria profissional">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Por tipo e categoria</h2><p class="ss-card__sub">Tipo de atendimento e conselho do profissional</p></div></div>
+      <ul class="ss-bars" aria-label="Por tipo de atendimento">
+        @for (c of p.porTipo; track c.chave) {
+          <li class="ss-bar"><span class="ss-bar__lbl">{{ c.rotulo }}</span><span class="ss-bar__track"><span class="ss-bar__fill" [style.width]="largura100(c.quantidade, maior(p.porTipo))"></span></span><span class="ss-bar__val mono">{{ numero(c.quantidade) }}</span></li>
+        }
+      </ul>
+      <ul class="ss-bars" aria-label="Por categoria profissional" style="margin-top: var(--s-4);">
+        @for (c of p.porCategoria; track c.chave) {
+          <li class="ss-bar"><span class="ss-bar__lbl">{{ c.rotulo }}</span><span class="ss-bar__track"><span class="ss-bar__fill ss-bar__fill--alt" [style.width]="largura100(c.quantidade, maior(p.porCategoria))"></span></span><span class="ss-bar__val mono">{{ numero(c.quantidade) }}</span></li>
+        } @empty { <li class="cell-sub">Sem atendimentos no período.</li> }
+      </ul>
+    </section>
+    <section class="card ss-card" aria-label="Por especialidade e sexo">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Por especialidade e sexo</h2><p class="ss-card__sub">As oito especialidades com mais atendimentos</p></div></div>
+      <ul class="ss-bars" aria-label="Por especialidade">
+        @for (c of topEspecialidades(p.porEspecialidade); track c.chave) {
+          <li class="ss-bar"><span class="ss-bar__lbl">{{ c.rotulo }}</span><span class="ss-bar__track"><span class="ss-bar__fill" [style.width]="largura100(c.quantidade, maior(p.porEspecialidade))"></span></span><span class="ss-bar__val mono">{{ numero(c.quantidade) }}</span></li>
+        } @empty { <li class="cell-sub">Sem atendimentos no período.</li> }
+      </ul>
+      <ul class="ss-bars" aria-label="Por sexo" style="margin-top: var(--s-4);">
+        @for (c of p.porSexo; track c.chave) {
+          @if (c.quantidade > 0 || c.chave === 'FEMININO' || c.chave === 'MASCULINO') {
+            <li class="ss-bar"><span class="ss-bar__lbl">{{ c.rotulo }}</span><span class="ss-bar__track"><span class="ss-bar__fill ss-bar__fill--alt" [style.width]="largura100(c.quantidade, maior(p.porSexo))"></span></span><span class="ss-bar__val mono">{{ numero(c.quantidade) }}</span></li>
+          }
+        }
+      </ul>
+    </section>
+  </div>
+
+  <div class="ss-row ss-row--2">
+    <section class="card ss-card" aria-label="Ocorrências da escala">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Ocorrências da escala</h2><p class="ss-card__sub">Próximos 7 dias · turnos sem profissional ou com o profissional afastado</p></div><a class="link-btn ss-nowrap" routerLink="/rh/escalas">Ver escala completa →</a></div>
+      @if (escala().length) {
+        <div class="tbl-wrap ss-escala">
+          <table aria-label="Lista de ocorrências da escala">
+            <thead><tr><th scope="col">Profissional</th><th scope="col">Unidade</th><th scope="col">Turno</th></tr></thead>
+            <tbody>
+              @for (o of escala(); track o.turnoId) {
+                <tr>
+                  <td><span class="cell-main">{{ o.profissionalNome ?? 'Vaga aberta' }} <span [class]="'tag tag--' + (o.situacao === 'SEM_COBERTURA' ? 'err' : 'warn')">{{ o.motivo }}</span></span>@if (o.funcao) { <span class="cell-sub">{{ o.funcao }}</span> }</td>
+                  <td>{{ o.unidadeNome }}</td>
+                  <td class="mono">{{ diaHora(o.inicio) }}–{{ hora(o.fim) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="cell-sub">Nenhuma ocorrência na escala dos próximos 7 dias.</p>
+      }
+    </section>
+    <section class="card ss-card" aria-label="Ocupação das agendas">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Ocupação das agendas</h2><p class="ss-card__sub">Especialidades · próximos 7 dias@if (ocupacao(); as o) { · {{ numero(o.ocupadas) }} de {{ numero(o.ofertadas) }} vagas }</p></div></div>
+      <ul class="ss-bars">
+        @for (l of ocupacao()?.especialidades ?? []; track l.especialidade) {
+          <li class="ss-bar"><span class="ss-bar__lbl">{{ l.especialidade }}<small class="cell-sub" style="display: block;">{{ numero(l.ofertadas) }} vagas</small></span><span class="ss-bar__track"><span [class]="classeOcupacao(l.percentual)" [style.width]="(l.percentual ?? 0) + '%'"></span></span><span class="ss-bar__val mono">{{ l.percentual == null ? '—' : l.percentual + '%' }}</span></li>
+        } @empty { <li class="cell-sub">Nenhuma vaga de agenda nos próximos 7 dias.</li> }
+      </ul>
+    </section>
+  </div>
+
+  <div class="ss-row ss-row--2">
+    <section class="card ss-card" aria-label="Programas de saúde">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Programas de saúde</h2><p class="ss-card__sub">Pacientes acompanhados · clique para ver por unidade</p></div><a class="link-btn ss-nowrap" routerLink="/assistencia/programas">Gerenciar →</a></div>
+      @if (programasRede(); as pr) {
+        <ul class="ss-progs">
+          @for (x of todosOsProgramas() ? pr.programas : programasEmUso(); track x.programaId) {
+            <li>
+              <button type="button" class="ss-prog" (click)="abrirPrograma(x.programaId)" [attr.aria-expanded]="programaAberto() === x.programaId" [attr.aria-label]="'Programa: ' + x.nome">
+                <span class="ss-prog__nome">{{ x.nome }}<small class="cell-sub" style="display: block;">{{ numero(x.inscritosAtivos) }} acompanhado(s) · {{ x.unidades }} unidade(s)@if (x.faltosos) { · {{ numero(x.faltosos) }} faltoso(s) }</small></span>
+                <span class="ss-prog__dados">
+                  @if (x.emDiaPercentual != null) { <span class="mono" title="Acompanhados em dia">{{ numero(x.emDiaPercentual) }}% em dia</span> }
+                  @if (x.novos) { <span class="ss-delta ss-delta--up">+{{ numero(x.novos) }}</span> }
+                  @if (x.metasAbaixo) { <span class="tag tag--err">{{ x.metasAbaixo }} abaixo</span> }
+                  @if (x.metasEmRisco) { <span class="tag tag--warn">{{ x.metasEmRisco }} em risco</span> }
+                  @if (x.metasAtingidas) { <span class="tag tag--ok">{{ x.metasAtingidas }} atingida(s)</span> }
+                </span>
+              </button>
+              @if (programaAberto() === x.programaId) {
+                @if (porUnidade(); as pu) {
+                  <div class="tbl-wrap">
+                    <table [attr.aria-label]="'Por unidade: ' + x.nome">
+                      <thead><tr><th scope="col">Unidade</th><th scope="col" class="num">Acompanhados</th>@for (i of pu.unidades[0]?.indicadores ?? []; track i.indicador) { <th scope="col" class="num">{{ i.nome }}</th> }</tr></thead>
+                      <tbody>
+                        @for (u of pu.unidades; track u.unidadeId) {
+                          <tr>
+                            <td>{{ u.unidadeNome }}</td>
+                            <td class="num mono">{{ numero(u.inscritosAtivos) }}</td>
+                            @for (i of u.indicadores; track i.indicador) {
+                              <td class="num"><span class="mono">{{ valorIndicador(i) }}</span>@if (i.situacao) { <span [class]="classeSituacao(i.situacao)" style="display: block; margin-top: 2px;">meta {{ i.alvo }}</span> }</td>
+                            }
+                          </tr>
+                        } @empty { <tr><td colspan="2" class="cell-sub">Nenhuma unidade do seu acesso oferece este programa.</td></tr> }
+                      </tbody>
+                    </table>
+                  </div>
+                } @else {
+                  <p class="cell-sub">Calculando por unidade…</p>
+                }
+              }
+            </li>
+          } @empty { <li class="cell-sub">Nenhum programa oferecido pelas unidades do seu acesso.</li> }
+        </ul>
+        @if (programasSemUnidade().length) {
+          <button type="button" class="link-btn" (click)="todosOsProgramas.set(!todosOsProgramas())">{{ todosOsProgramas() ? 'Esconder' : 'Mostrar' }} {{ programasSemUnidade().length }} programa(s) sem unidade participante</button>
+        }
+        @if (pr.sensiveisOcultos) { <p class="cell-sub">{{ pr.sensiveisOcultos }} programa(s) sensível(is) não exibido(s): são de quem acompanha os pacientes.</p> }
+      } @else {
+        <p class="cell-sub">Calculando os programas…</p>
+      }
+    </section>
+    <section class="card ss-card" aria-label="Vigilância">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Vigilância</h2><p class="ss-card__sub">Notificações no período</p></div><a class="link-btn ss-nowrap" routerLink="/vigilancia">Abrir →</a></div>
+      @if (vigilanciaRede(); as v) {
+        <div class="ss-agora ss-agora--3">
+          <div><div class="ss-kpi__val mono" aria-label="Notificações no período">{{ numero(v.notificadas) }}</div><div class="ss-kpi__sub">notificadas · {{ numero(v.emAberto) }} em aberto</div></div>
+          <div><div class="ss-kpi__val mono" aria-label="Oportunidade de encerramento">{{ v.oportunidadeEncerramento == null ? '—' : numero(v.oportunidadeEncerramento) + '%' }}</div><div class="ss-kpi__sub">encerradas no prazo</div></div>
+          <div><div class="ss-kpi__val mono" aria-label="Regularidade da notificação">{{ v.regularidade.percentual == null ? '—' : numero(v.regularidade.percentual) + '%' }}</div><div class="ss-kpi__sub">regularidade · SE {{ v.regularidade.semana }} ({{ v.regularidade.regulares }} de {{ v.regularidade.unidadesAssistenciais }})</div></div>
+        </div>
+        <svg [attr.viewBox]="'0 0 ' + largura + ' 90'" width="100%" role="img" aria-label="Notificações por semana epidemiológica">
+          @for (s of v.semanas; track s.semana; let k = $index) {
+            <rect [attr.x]="barraX(k, v.semanas.length)" [attr.y]="72 - (s.notificacoes / maxSemana()) * 60" [attr.width]="barraLargura(v.semanas.length)" [attr.height]="(s.notificacoes / maxSemana()) * 60" rx="2" fill="var(--blue-700)"><title>SE {{ s.semana }}/{{ s.ano }}: {{ s.notificacoes }}</title></rect>
+            <text [attr.x]="barraX(k, v.semanas.length) + barraLargura(v.semanas.length) / 2" y="86" font-size="10" text-anchor="middle" fill="var(--ink-500)">{{ s.semana }}</text>
+          }
+        </svg>
+        <ul class="ss-bars" aria-label="Agravos mais notificados" style="margin-top: var(--s-3);">
+          @for (a of v.agravos.slice(0, 5); track a.codigo) {
+            <li class="ss-bar"><span class="ss-bar__lbl">{{ a.nome }}<small class="cell-sub" style="display: block;">@if (a.oportunidadeEncerramento != null) { {{ numero(a.oportunidadeEncerramento) }}% no prazo } @else { {{ numero(a.emAberto) }} em aberto }</small></span><span class="ss-bar__track"><span class="ss-bar__fill" [style.width]="largura100(a.notificadas, v.agravos[0].notificadas)"></span></span><span class="ss-bar__val mono">{{ numero(a.notificadas) }}</span></li>
+          } @empty { <li class="cell-sub">Nenhuma notificação no período.</li> }
+        </ul>
+        @if (v.territorio.length) {
+          <h3 class="mo-grupo" style="margin-top: var(--s-4);">Por território</h3>
+          <ul class="eq-prof" aria-label="Notificações por território">
+            @for (t of v.territorio.slice(0, 6); track $index) {
+              <li class="mo-row"><span><span class="cell-main">{{ t.microarea === '—' ? t.territorio : t.microarea }}</span>@if (t.microarea !== '—') { <span class="cell-sub">{{ t.area }} · {{ t.territorio }}</span> }</span><span class="mono">{{ numero(t.notificacoes) }}</span></li>
+            }
+          </ul>
+        }
+        @if (v.sensiveisOcultas) { <p class="cell-sub">{{ v.sensiveisOcultas }} notificação(ões) de agravo sensível somada(s) ao total, sem o nome.</p> }
+      } @else {
+        <p class="cell-sub">Calculando a vigilância…</p>
+      }
+    </section>
+  </div>
+
+  <div class="ss-row ss-row--2">
+    <section class="card ss-card" aria-label="Produtividade por unidade">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Produtividade por unidade</h2><p class="ss-card__sub">Atendimentos concluídos no período · variação sobre o anterior</p></div></div>
+      <ol class="ss-rank">
+        @for (r of ranking(); track r.unidadeId; let i = $index) {
+          <li class="ss-rank__row" [class.ss-rank__row--top]="i < 3">
+            <span class="ss-rank__pos mono">{{ (i + 1).toString().padStart(2, '0') }}</span>
+            <span class="ss-rank__name">{{ r.unidadeNome }}<span class="ss-bar__track" style="display: block; margin-top: 4px;"><span class="ss-bar__fill" [style.width]="largura100(r.atendimentos, maxRanking())"></span></span></span>
+            <span class="ss-rank__val"><b class="mono">{{ numero(r.atendimentos) }}</b><span [class]="classeDelta(r.variacao)">{{ textoDelta(r.variacao) }}</span></span>
+          </li>
+        } @empty { <li class="cell-sub">Nenhuma unidade com produção no período.</li> }
+      </ol>
+    </section>
+    <section class="card ss-card" aria-label="Em breve na Sala de Situação">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Em breve</h2><p class="ss-card__sub">Blocos do painel que dependem de outras fatias</p></div></div>
+      <ul class="eq-prof">
+        <li class="mo-row"><span><span class="cell-main">Cobertura vacinal e doses aplicadas</span><span class="cell-sub">Domínio 24, Imunização</span></span><span class="tag tag--info">Em breve</span></li>
+      </ul>
+    </section>
+  </div>
+  <p class="cell-sub ss-fonte">Fonte: atendimentos, agenda, escala, programas e vigilância do Mais Saúde Pública, calculados na hora · só agregados, sem paciente · a exportação entra na auditoria.</p>
+}

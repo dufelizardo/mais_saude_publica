@@ -13,6 +13,12 @@
     </a>
 
     <nav class="sidebar__nav">
+      @if (podeVer('/sala-de-situacao')) {
+        <a routerLink="/sala-de-situacao" routerLinkActive #rlaSala="routerLinkActive" [attr.aria-current]="rlaSala.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>
+          <span class="nav-item__label">Sala de Situação</span>
+        </a>
+      }
       <div class="nav-group">
         <button type="button" class="nav-group__label" (click)="toggleGrupo('Recursos Humanos')" [attr.aria-expanded]="estaExpandido('Recursos Humanos')">
           <span>Recursos Humanos</span>

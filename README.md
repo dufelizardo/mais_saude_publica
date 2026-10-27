@@ -1,6 +1,6 @@
 # Mais Saúde Pública
 
-[![Pipeline de Promoção](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/pipeline.yml/badge.svg?branch=developer)](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/pipeline.yml)
+[![Pipeline de Promoção](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/pipeline.yml/badge.svg?branch=main)](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/pipeline.yml)
 [![CodeQL](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/codeql.yml/badge.svg)](https://github.com/dufelizardo/mais_saude_publica/actions/workflows/codeql.yml)
 [![Release](https://img.shields.io/github/v/release/dufelizardo/mais_saude_publica)](https://github.com/dufelizardo/mais_saude_publica/releases/latest)
 [![Licença](https://img.shields.io/github/license/dufelizardo/mais_saude_publica)](LICENSE)

@@ -2,8 +2,11 @@
 
 ## Status
 
-Aceita. **Desenho, sem implementação.** A implementação vem nas fatias V1 a V5, cada uma com ADR própria. O detalhe
-está em [`vigilancia/MODELO-VIGILANCIA.md`](../vigilancia/MODELO-VIGILANCIA.md).
+Aceita. **Desenho**; cada fatia tem ADR própria. Implementadas: V1 (vigilância epidemiológica) na
+[ADR-0124](./0124-vigilancia-epidemiologica-fundacao.md), V2a (contatos, local e mapa) na
+[ADR-0130](./0130-vigilancia-contatos-local-e-mapa.md) e V2b (surto e medidas) na
+[ADR-0131](./0131-vigilancia-surto-e-medidas.md); V3 a V5 vêm depois. O detalhe está em
+[`vigilancia/MODELO-VIGILANCIA.md`](../vigilancia/MODELO-VIGILANCIA.md).
 
 ## Contexto
 

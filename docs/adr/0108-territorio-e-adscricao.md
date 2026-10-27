@@ -2,8 +2,10 @@
 
 ## Status
 
-Aceita. **Desenho, sem implementação.** A implementação vem nas fatias F1 a F4, cada uma com ADR própria. O detalhe
-está em [`territorio/MODELO-TERRITORIO.md`](../territorio/MODELO-TERRITORIO.md).
+Aceita e implementada por inteiro nas fatias F1 a F4: ADRs [0125](./0125-territorio-fundacao.md),
+[0126](./0126-territorio-mapa.md), [0127](./0127-cadastro-territorial.md), [0128](./0128-adscricao-e-cobertura.md) e
+[0129](./0129-escopo-territorial.md) (o escopo territorial fica atrás de interruptor). O detalhe está em
+[`territorio/MODELO-TERRITORIO.md`](../territorio/MODELO-TERRITORIO.md).
 
 ## Contexto
 

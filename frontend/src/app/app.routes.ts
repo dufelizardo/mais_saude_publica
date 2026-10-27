@@ -148,6 +148,12 @@ export const routes: Routes = [
         data: { breadcrumb: 'Programas de Saúde', area: 'Assistência' },
       },
       // Saúde Mental (ADR-0120), carregada sob demanda.
+      // Sala de Situação (BI1, ADR-0143), carregada sob demanda.
+      {
+        path: 'sala-de-situacao',
+        loadComponent: () => import('./features/sala-de-situacao/sala-de-situacao').then((m) => m.SalaDeSituacao),
+        data: { breadcrumb: 'Sala de Situação', area: 'Indicadores' },
+      },
       // Vigilância epidemiológica (ADR-0124), carregada sob demanda.
       {
         path: 'vigilancia',

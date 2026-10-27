@@ -39,10 +39,13 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -345,6 +348,44 @@ public class AgendaService {
     }
 
     // ── Montagem ───────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Ocupação das agendas por especialidade (BI2, ADR-0144): vagas ofertadas e ocupadas no período, com a mesma montagem
+     * da agenda (blocos menos bloqueios, afastamentos e horário da unidade). {@code unidades} nulo é a rede inteira. Não
+     * confere acesso: quem chama já conferiu o escopo. Devolve {especialidade: [ofertadas, ocupadas]}, sem especialidade
+     * como "Sem especialidade".
+     */
+    @Transactional(readOnly = true)
+    public Map<String, long[]> ocupacaoPorEspecialidade(Set<UUID> unidades, LocalDate de, LocalDate ate) {
+        Map<String, long[]> ocupacao = new TreeMap<>();
+        Map<String, BlocoAgenda> pares = new LinkedHashMap<>();
+        for (BlocoAgenda b : blocoRepository.findAll()) {
+            boolean vigente = (b.getVigenteAte() == null || !b.getVigenteAte().isBefore(de))
+                    && (b.getVigenteDesde() == null || !b.getVigenteDesde().isAfter(ate));
+            if (vigente && (unidades == null || unidades.contains(b.getUnidade().getUuid()))) {
+                pares.putIfAbsent(b.getProfissional().getUuid() + "|" + b.getUnidade().getUuid(), b);
+            }
+        }
+        for (BlocoAgenda par : pares.values()) {
+            Montagem m = montar(par.getProfissional(), par.getUnidade(), de, ate);
+            for (LocalDate dia = de; !dia.isAfter(ate); dia = dia.plusDays(1)) {
+                List<Agendamento> doDia = m.agendamentosEm(dia);
+                for (Vaga v : m.vagasEm(dia)) {
+                    boolean marcado = doDia.stream().anyMatch(a -> !a.isEncaixe() && a.getDataHora().equals(v.inicio));
+                    if (!marcado && v.bloqueada) {
+                        continue;
+                    }
+                    String nome = especialidadeNome(v.bloco);
+                    long[] c = ocupacao.computeIfAbsent(nome == null ? "Sem especialidade" : nome, k -> new long[2]);
+                    c[0]++;
+                    if (marcado) {
+                        c[1]++;
+                    }
+                }
+            }
+        }
+        return ocupacao;
+    }
 
     private Montagem montar(Profissional profissional, UnidadeDeSaude unidade, LocalDate de, LocalDate ate) {
         LocalDateTime inicio = de.atStartOfDay();

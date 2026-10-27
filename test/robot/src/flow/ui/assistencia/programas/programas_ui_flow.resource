@@ -5,6 +5,7 @@ Resource    ../../../programas/programa/programa_flow.resource
 Resource    ../../../programas/acompanhamento/acompanhamento_flow.resource
 Resource    ../../../programas/acao/acao_programatica_flow.resource
 Resource    ../../../programas/campanha/campanha_flow.resource
+Resource    ../../../programas/indicador/indicador_programatico_flow.resource
 Resource    ../../../../pom/ui/assistencia/pacientes/pacientes_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -330,5 +331,37 @@ UI Programas - Acao Da Campanha
     Fill Text    id=f-acao-quantidade    30
     Click    css=app-drawer >> nth=1 >> css=footer >> role=button[name="Confirmar"]
     Wait For Elements State    css=[aria-label="Andamento da meta"] >> text=30 de 100    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Indicadores Na Tela
+    [Documentation]    No detalhe do HiperDia, os indicadores da unidade e a evolução de 12 meses (ADR-0141).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${programa}    ${unidade}    ${nomeUnidade}=    Seed HiperDia Na Unidade
+    UI Programas - Abrir Programa    ${programa}
+    Wait Until Keyword Succeeds    10s    500ms    UI Programas - Detalhe Deve Ser    HiperDia
+    Select Options By    id=f-ind-unidade    value    ${unidade}
+    Wait For Elements State    css=[aria-label="Indicadores do programa"] >> text=PA controlada    visible
+    Wait For Elements State    css=[aria-label="Indicadores do programa"] >> text=Acompanhados em dia    visible
+    Clicar Botao    Evolução: PA controlada
+    Wait For Elements State    css=svg[aria-label="Gráfico: PA controlada"]    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Cadastrar Meta
+    [Documentation]    Cadastra a meta da unidade pela tela e a vê na lista de metas (ADR-0141).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${programa}    ${unidade}    ${nomeUnidade}=    Seed HiperDia Na Unidade
+    UI Programas - Abrir Programa    ${programa}
+    Wait Until Keyword Succeeds    10s    500ms    UI Programas - Detalhe Deve Ser    HiperDia
+    Wait For Elements State    css=[aria-label="Indicadores do programa"] >> text=Acompanhados em dia    visible
+    Select Options By    id=f-meta-indicador    value    ACOMPANHADOS_EM_DIA
+    Select Options By    id=f-meta-unidade    value    ${unidade}
+    Fill Text    id=f-meta-alvo    70
+    Clicar Botao    Cadastrar meta
+    Wait For Elements State    css=[aria-label="Metas do programa"] >> text=${nomeUnidade}    visible
+    ${metas}=    GET Metas Do Programa    ${programa}
+    ${daUnidade}=    Evaluate    [m for m in $metas.json() if m.get("unidadeId") == $unidade]
+    Length Should Be    ${daUnidade}    1
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
