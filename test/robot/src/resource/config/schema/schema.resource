@@ -71,6 +71,10 @@ Resource    ../../schema/escalas/escalas_schema.resource
 Resource    ../../schema/programas/programas_schema.resource
 Resource    ../../schema/programas/acao_programatica_schema.resource
 Resource    ../../schema/programas/campanha_schema.resource
+Resource    ../../schema/indicadores/producao_schema.resource
+Resource    ../../schema/indicadores/situacao_schema.resource
+Resource    ../../schema/indicadores/indicadores_rede_schema.resource
+Resource    ../../schema/programas/indicador_programatico_schema.resource
 Resource    ../../schema/saude_mental/saude_mental_schema.resource
 Resource    ../../schema/vigilancia/vigilancia_schema.resource
 Resource    ../../schema/vigilancia/vigilancia_contatos_schema.resource
@@ -85,3 +89,4 @@ Resource    ../../schema/saude_bucal/procedimento_odontologico_schema.resource
 Resource    ../../schema/saude_bucal/plano_tratamento_schema.resource
 Resource    ../../schema/saude_bucal/regulacao_odontologica_schema.resource
 Resource    ../../schema/saude_bucal/tratamento_protetico_schema.resource
+Resource    ../../schema/saude_bucal/saude_bucal_coletiva_schema.resource

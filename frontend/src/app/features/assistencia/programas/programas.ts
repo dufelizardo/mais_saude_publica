@@ -36,7 +36,9 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { AcoesProgramaticas } from './acoes-programaticas';
 import { Campanhas } from './campanhas';
+import { SaudeBucalAConvocar } from './saude-bucal-a-convocar';
 import { ElegiveisDoPrograma } from './elegiveis-do-programa';
+import { IndicadoresDoPrograma, baixarArquivo } from './indicadores-do-programa';
 
 type Gaveta =
   | { tipo: 'programa'; item: ProgramaDto | null }
@@ -55,7 +57,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-programas',
-  imports: [ReactiveFormsModule, Drawer, ElegiveisDoPrograma, AcoesProgramaticas, Campanhas],
+  imports: [ReactiveFormsModule, Drawer, ElegiveisDoPrograma, AcoesProgramaticas, Campanhas, SaudeBucalAConvocar, IndicadoresDoPrograma],
   templateUrl: './programas.html',
 })
 export class Programas {
@@ -92,7 +94,7 @@ export class Programas {
   protected readonly unidadeFiltro = signal('');
   protected readonly selecionadoId = signal<string | null>(null);
   /** Os programas (catálogo) ou as ações programáticas do escopo (ADR-0132). */
-  protected readonly visao = signal<'programas' | 'acoes' | 'campanhas'>('programas');
+  protected readonly visao = signal<'programas' | 'acoes' | 'campanhas' | 'saude-bucal'>('programas');
   protected readonly versaoAcoes = signal(0);
   protected readonly detalhe = signal<ProgramaDto | null>(null);
   protected readonly mostrarEncerradas = signal(false);
@@ -142,6 +144,8 @@ export class Programas {
 
   protected readonly podeGerenciar = computed(() => this.pode('PROGRAMA.GERENCIAR'));
   protected readonly podeAcompanhar = computed(() => this.pode('PROGRAMA.ACOMPANHAR'));
+  /** A avaliação coletiva de saúde bucal é do cirurgião-dentista (ADR-0140). */
+  protected readonly podeAvaliarBucal = computed(() => this.pode('ODONTOLOGIA.REGISTRAR'));
 
   /** Inscritos filtrados pela situação escolhida na lista. */
   protected readonly inscritosFiltrados = computed(() => {
@@ -244,6 +248,23 @@ export class Programas {
 
   protected verPacientes(): void {
     document.getElementById('inscritos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  protected irParaIndicadores(e: Event): void {
+    e.preventDefault();
+    document.getElementById('indicadores')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /** O relatório do programa aberto (ADR-0141): os indicadores do mês, na rede, em CSV. */
+  protected exportarRelatorio(): void {
+    const d = this.detalhe();
+    if (!d) {
+      return;
+    }
+    this.service.indicadoresCsv(d.resumo.uuid).subscribe({
+      next: (r) => baixarArquivo(r.body, r.headers.get('Content-Disposition'), 'indicadores-programa.csv'),
+      error: () => this.mostrarToast('Não foi possível exportar', 'Os indicadores deste programa não puderam ser gerados.'),
+    });
   }
 
   // ── Apresentação ───────────────────────────────────────────────────────────────────────────

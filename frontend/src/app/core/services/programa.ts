@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { ElegiveisDto } from '../models/adscricao';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -12,8 +12,13 @@ import {
   CampanhaPublicaDto,
   CampanhaRequestDto,
   CategoriaProgramaDto,
+  FiltroIndicadores,
+  IndicadorApuradoDto,
+  IndicadorProgramatico,
   InscritosProgramaDto,
   LocalCampanhaRequestDto,
+  MetaProgramaticaDto,
+  MetaProgramaticaRequestDto,
   MotivoSaidaAcompanhamento,
   ProgramaDto,
   ProgramaPublicoDto,
@@ -21,6 +26,7 @@ import {
   ProgramaResumoDto,
   RealizacaoAcaoRequestDto,
   ResumoAcompanhamentosDto,
+  SerieIndicadorDto,
   SituacaoAcompanhamento,
 } from '../models/programa';
 
@@ -179,5 +185,49 @@ export class ProgramaService {
 
   publico(): Observable<ProgramaPublicoDto[]> {
     return this.http.get<ProgramaPublicoDto[]>(`${this.api}/publico/programa`);
+  }
+
+  // ── Metas e indicadores (P6, ADR-0141) ──
+
+  indicadores(programaId: string, filtro: FiltroIndicadores = {}): Observable<IndicadorApuradoDto[]> {
+    return this.http.get<IndicadorApuradoDto[]>(`${this.api}/programa/${programaId}/indicadores`, { params: this.filtro(filtro) });
+  }
+
+  indicadoresCsv(programaId: string, filtro: FiltroIndicadores = {}): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.api}/programa/${programaId}/indicadores.csv`, { params: this.filtro(filtro), responseType: 'blob', observe: 'response' });
+  }
+
+  serieIndicador(programaId: string, indicador: IndicadorProgramatico, unidadeId?: string, meses = 12): Observable<SerieIndicadorDto> {
+    let params = new HttpParams().set('meses', meses);
+    if (unidadeId) {
+      params = params.set('unidadeId', unidadeId);
+    }
+    return this.http.get<SerieIndicadorDto>(`${this.api}/programa/${programaId}/indicador/${indicador}/serie`, { params });
+  }
+
+  metas(programaId: string): Observable<MetaProgramaticaDto[]> {
+    return this.http.get<MetaProgramaticaDto[]>(`${this.api}/programa/${programaId}/metas`);
+  }
+
+  criarMeta(programaId: string, dto: MetaProgramaticaRequestDto): Observable<MetaProgramaticaDto> {
+    return this.http.post<MetaProgramaticaDto>(`${this.api}/programa/${programaId}/meta`, dto);
+  }
+
+  atualizarMeta(uuid: string, dto: MetaProgramaticaRequestDto): Observable<MetaProgramaticaDto> {
+    return this.http.put<MetaProgramaticaDto>(`${this.api}/meta-programatica/${uuid}`, dto);
+  }
+
+  excluirMeta(uuid: string): Observable<void> {
+    return this.http.delete<void>(`${this.api}/meta-programatica/${uuid}`);
+  }
+
+  private filtro(f: FiltroIndicadores): HttpParams {
+    let params = new HttpParams();
+    for (const [k, v] of Object.entries(f)) {
+      if (v) {
+        params = params.set(k, v);
+      }
+    }
+    return params;
   }
 }

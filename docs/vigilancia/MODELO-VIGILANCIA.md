@@ -1,8 +1,10 @@
 # Modelo do domínio Vigilância em Saúde
 
-**Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0110](../adr/0110-vigilancia-em-saude.md). **Nada implementado ainda.** A
-implementação vem nas fatias V1 a V5 (seção 14), cada uma com ADR própria.
+**Data:** 2026-10-07 (criado) · 2026-10-20 (V1 e V2 implementadas)
+**Status:** desenho aprovado na [ADR-0110](../adr/0110-vigilancia-em-saude.md). **A V1 (vigilância epidemiológica) e
+a V2 (contatos, local e mapa; surto e medidas) estão implementadas** nas ADRs
+[0124](../adr/0124-vigilancia-epidemiologica-fundacao.md), [0130](../adr/0130-vigilancia-contatos-local-e-mapa.md) e
+[0131](../adr/0131-vigilancia-surto-e-medidas.md); V3 a V5 vêm depois (seção 14).
 
 A vigilância **não é mais um módulo assistencial**: é uma camada de inteligência e intervenção sobre riscos,
 doenças, agravos e eventos de saúde pública, ligada a território, população e rede. Este documento detalha os

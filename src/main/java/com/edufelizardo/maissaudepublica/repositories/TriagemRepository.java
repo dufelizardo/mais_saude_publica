@@ -17,6 +17,12 @@ public interface TriagemRepository extends JpaRepository<Triagem, UUID> {
      */
     List<Triagem> findByAtendimentoUuid(UUID atendimentoUuid);
 
+    /** Paciente, data e pressão arterial das triagens dos pacientes no intervalo (indicadores, ADR-0141). */
+    @Query("select t.atendimento.paciente.uuid, t.dataHora, t.pressaoArterial from Triagem t "
+            + "where t.atendimento.paciente.uuid in ?1 and t.dataHora >= ?2 and t.dataHora < ?3 and t.pressaoArterial is not null "
+            + "and not exists (select r from Triagem r where r.retificacaoDe = t)")
+    List<Object[]> findPressoesNoIntervalo(java.util.Collection<UUID> pacienteIds, java.time.LocalDateTime de, java.time.LocalDateTime ate);
+
     /** Existe uma versão que corrige este registro? (ADR-0062) */
     boolean existsByRetificacaoDe_Uuid(UUID uuid);
 
@@ -38,4 +44,9 @@ public interface TriagemRepository extends JpaRepository<Triagem, UUID> {
     @Query("select t.atendimento.uuid, t.classificacaoRisco from Triagem t "
             + "where not exists (select r from Triagem r where r.retificacaoDe = t) order by t.dataHora desc")
     List<Object[]> riscosVigentesDoMaisRecente();
+
+    /** O primeiro registro de triagem de cada atendimento (ADR-0144): [atendimento, data e hora]. */
+    @Query("select t.atendimento.uuid, min(t.dataHora) from Triagem t where t.atendimento.uuid in ?1 "
+            + "group by t.atendimento.uuid")
+    List<Object[]> findPrimeiraPorAtendimento(java.util.Collection<UUID> atendimentos);
 }

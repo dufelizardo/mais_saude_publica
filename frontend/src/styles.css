@@ -1800,3 +1800,25 @@ button.shift--off { text-align: center; }
 .mapa-barra { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; margin: var(--s-2) 0; }
 .mapa-legenda { display: flex; flex-wrap: wrap; gap: var(--s-3); font-size: 0.72rem; color: var(--ink-500); margin-top: var(--s-2); }
 .mapa-legenda i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
+
+/* Painéis de indicadores (Sala de Situação, ADRs 0143, 0144 e 0146): cartão, grade, barras e variação, para qualquer tela de indicadores. */
+.ss-delta { font-size: 0.7rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
+.ss-delta--up { color: var(--ok); background: var(--ok-bg); }
+.ss-delta--down { color: var(--alert); background: var(--alert-bg); }
+.ss-delta--neutral { color: var(--ink-500); background: var(--ink-100); }
+.ss-row { display: grid; gap: var(--s-4); margin-bottom: var(--s-4); }
+.ss-row--2 { grid-template-columns: 1.4fr 1fr; }
+.ss-row--3 { grid-template-columns: 1fr 1fr 1fr; }
+.ss-card { padding: var(--s-5); min-width: 0; }
+.ss-card__head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s-3); margin-bottom: var(--s-4); }
+.ss-card__title { font-size: 1rem; font-weight: 600; }
+.ss-card__sub { color: var(--ink-500); font-size: 0.78rem; margin-top: 2px; }
+.ss-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+.ss-bar { display: grid; grid-template-columns: minmax(110px, 40%) 1fr 56px; gap: 12px; align-items: center; }
+.ss-bar__lbl { font-size: 0.8125rem; color: var(--ink-700); font-weight: 500; }
+.ss-bar__track { background: var(--ink-100); border-radius: 999px; height: 10px; overflow: hidden; }
+.ss-bar__fill { display: block; height: 100%; background: var(--blue-700); border-radius: inherit; transition: width 0.4s; }
+.ss-bar__fill--alt { background: var(--blue-400); }
+.ss-bar__val { text-align: right; font-weight: 600; font-size: 0.8125rem; }
+.ss-bar__fill--warn { background: var(--warn); }
+.ss-bar__fill--alert { background: var(--alert); }

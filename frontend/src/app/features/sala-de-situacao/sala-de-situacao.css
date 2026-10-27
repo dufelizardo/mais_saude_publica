@@ -1,0 +1,52 @@
+/* Sala de Situação (ADRs 0143, 0144 e 0146), pelo protótipo Painel.html; fundo var(--ink-50) do layout. */
+.ss-rank, .ss-progs { list-style: none; margin: 0; padding: 0; display: grid; }
+.ss-filtros { display: flex; gap: var(--s-3); align-items: flex-end; flex-wrap: wrap; }
+.ss-filtros .dw-field { margin: 0; }
+.ss-kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--s-3); margin-bottom: var(--s-5); }
+.ss-kpi { background: var(--white); border: 1px solid var(--ink-200); border-radius: var(--r-lg); padding: var(--s-4); }
+.ss-kpi__top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ss-kpi__lbl { color: var(--ink-500); font-size: 0.78rem; }
+.ss-kpi__val { font-size: 1.625rem; font-weight: 600; margin-top: var(--s-3); letter-spacing: -0.02em; line-height: 1; }
+.ss-kpi__val small { font-size: 0.875rem; color: var(--ink-500); margin-left: 2px; }
+.ss-kpi__sub { color: var(--ink-500); font-size: 0.72rem; margin-top: 6px; }
+.ss-rank { gap: 2px; }
+.ss-rank__row { display: grid; grid-template-columns: 28px 1fr 110px; align-items: center; gap: 12px; padding: 8px 6px; border-radius: 6px; }
+.ss-rank__row:hover { background: var(--ink-50); }
+.ss-rank__pos { font-size: 0.75rem; color: var(--ink-400); text-align: center; font-weight: 500; }
+.ss-rank__row--top .ss-rank__pos { color: var(--blue-700); font-weight: 600; }
+.ss-rank__name { font-size: 0.875rem; font-weight: 500; min-width: 0; }
+.ss-rank__val { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 0.875rem; }
+.ss-alertas { display: grid; gap: var(--s-3); margin-bottom: var(--s-5); }
+.ss-alerta { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding: var(--s-4); border-radius: var(--r-lg);
+  border: 1px solid var(--ink-200); border-left-width: 4px; background: var(--white); }
+.ss-alerta--alta { border-left-color: var(--alert); background: var(--alert-bg); }
+.ss-alerta--media { border-left-color: var(--warn); background: var(--warn-bg); }
+.ss-alerta__titulo { font-weight: 600; font-size: 0.9375rem; }
+.ss-alerta__detalhe { color: var(--ink-700); font-size: 0.8125rem; margin-top: 2px; }
+.ss-ao-vivo { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--ok); font-weight: 600; white-space: nowrap; }
+.ss-ao-vivo .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.ss-agora { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s-3); }
+.ss-espera { width: 100%; font-size: 0.875rem; margin-bottom: var(--s-3); }
+.ss-espera th, .ss-espera td { padding: 6px 4px; }
+.ss-escala table { min-width: 0; width: 100%; }
+.ss-progs { gap: 4px; grid-template-columns: minmax(0, 1fr); }
+.ss-prog { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); padding: 10px 8px; border: 0;
+  border-radius: 8px; background: transparent; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.ss-prog:hover, .ss-prog[aria-expanded="true"] { background: var(--ink-50); }
+.ss-prog__nome { font-weight: 500; font-size: 0.875rem; min-width: 0; }
+.ss-prog__dados { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; font-size: 0.8125rem; }
+.ss-agora--3 { grid-template-columns: repeat(3, 1fr); margin-bottom: var(--s-3); }
+.ss-nowrap { white-space: nowrap; }
+.ss-fonte { margin-top: var(--s-2); }
+
+@media (max-width: 1200px) {
+  .ss-kpis { grid-template-columns: repeat(3, 1fr); }
+  .ss-row--3 { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 860px) {
+  .ss-kpis { grid-template-columns: repeat(2, 1fr); }
+  .ss-agora { grid-template-columns: repeat(2, 1fr); }
+  .ss-alerta { flex-direction: column; align-items: flex-start; }
+  .ss-row--2, .ss-row--3 { grid-template-columns: 1fr; }
+}

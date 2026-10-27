@@ -66,6 +66,12 @@ public class Atendimento implements Serializable {
     @NotNull
     private LocalDateTime dataHora;
 
+    /**
+     * A chegada do paciente (ADR-0144): gravada pelo sistema quando o atendimento passa a "em andamento", e não muda
+     * depois. Nula nos atendimentos anteriores à BI2 e nos registrados já concluídos.
+     */
+    private LocalDateTime chegadaEm;
+
     /** A especialidade (ADR-0134): habilita os registros da especialidade (a avaliação odontológica, na odontologia). */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "especialidade_id", referencedColumnName = "uuid")

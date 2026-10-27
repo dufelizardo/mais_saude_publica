@@ -2,6 +2,9 @@
 
 ## Status
 
+> **Revista em 2026-10-23 pela [ADR-0145](./0145-saude-da-aplicacao-para-o-kubernetes.md):** as verificações de saúde da
+> API usam o `/actuator/health`, e não mais o `/v3/api-docs`.
+
 **Implementada.** Concluída em 2026-09-10: SO instalado, rede configurada, k3s + MetalLB +
 ArgoCD (Core) no ar, os 4 ambientes (`dev`/`qaa`/`homologacao`/`prod`) publicados via GitOps e
 saudáveis, imagem publicada em `ghcr.io`, domínios locais funcionando via `hosts`. Ver "Passo a
