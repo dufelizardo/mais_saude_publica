@@ -403,7 +403,7 @@ export type SituacaoMetaProgramatica = 'ATINGIDA' | 'EM_RISCO' | 'ABAIXO' | 'SEM
 export const SITUACOES_META: Record<SituacaoMetaProgramatica, { rotulo: string; classe: string }> = {
   ATINGIDA: { rotulo: 'Meta atingida', classe: 'ok' },
   EM_RISCO: { rotulo: 'Em risco', classe: 'warn' },
-  ABAIXO: { rotulo: 'Abaixo da meta', classe: 'err' },
+  ABAIXO: { rotulo: 'Abaixo da meta', classe: 'alert' },
   SEM_DADOS: { rotulo: 'Sem dados', classe: 'info' },
 };
 

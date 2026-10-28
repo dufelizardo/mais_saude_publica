@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-26 (release 1.8.0)
+- **Atualizado em:** 2026-10-27 (I1, depois da release 1.8.0)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -50,7 +50,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
-| 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
+| 24 | [Imunização](#24-imunização) | 🟡 | I1 feita (caderneta de vacinação e Sala de Vacina); I2 a I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 11 ✅ · 10 🟡 · 2 📐 · 8 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 11 ✅ · 11 🟡 · 2 📐 · 7 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -73,6 +73,8 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | P5 | 22 Programas | linhas de cuidado |
 | V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
 | E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
+| I2 | 24 Imunização | sala de vacina e cadeia de frio: lotes, livro de movimentação, frasco aberto, temperatura da câmara |
+| I3 | 24 Imunização | cobertura vacinal, homogeneidade, abandono, busca ativa e campanha com a meta real |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
 | BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
@@ -97,6 +99,7 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
+I1 ✅ ──► I2 · I3 (com a adscrição ✅) ──► vacinação na Sala de Situação · I4 (com V1 ✅) · I5 (domínio 20)
 ```
 
 **Dependem de itens ainda não desenhados** (precisam de ADR de domínio antes):
@@ -532,13 +535,24 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 
 ### 24. Imunização
 
-**Estado:** ⬜. Reservado pela [ADR-0110](./adr/0110-vigilancia-em-saude.md).
+**Estado:** 🟡. Desenhado na [ADR-0147](./adr/0147-imunizacao.md) (reservado pela
+[ADR-0110](./adr/0110-vigilancia-em-saude.md)): imunobiológico como catálogo próprio, calendário como dado, dose
+aplicada como registro clínico com retificação, estoque de vacinas da própria Imunização.
+
+**Temos:**
+- [x] **I1 · Fundação** ([ADR-0147](./adr/0147-imunizacao.md)): catálogo de 20 imunobiológicos e o calendário do PNI
+  (criança, adolescente, adulto, idoso e gestante) como dado editável; registro da dose aplicada (quem aplicou, lote)
+  ou transcrita da caderneta (data); dose repetida 409, fora da idade ou do intervalo só com justificativa;
+  retificação e anulação; situação vacinal calculada (aplicada, atrasada, próxima, futura, fora da idade);
+  caderneta na aba Vacinação do paciente; tela Sala de Vacina com as doses do dia e os adscritos com dose atrasada.
 
 **Falta:**
-- [ ] Desenho (ADR): imunobiológico, calendário, dose aplicada, cobertura, eventos adversos, cadeia de frio.
-  Integra com Vigilância (23), Programas (22, campanha de vacinação), Estoque (13) e Paciente (aba Vacinação).
-- [ ] Implementação.
-- [ ] Integração com o SI-PNI (depende do domínio 20).
+- [ ] **I2 · Sala de vacina e cadeia de frio:** lotes por unidade e livro de movimentação, frasco aberto, temperatura
+  da câmara e lotes sob suspeita.
+- [ ] **I3 · Cobertura e campanhas:** cobertura vacinal, homogeneidade, abandono, busca ativa por microárea, a meta real
+  da campanha e o bloco de vacinação da Sala de Situação.
+- [ ] **I4 · ESAVI:** evento adverso pós-vacinação pela Vigilância.
+- [ ] **I5 · Integração com o SI-PNI/RNDS** (depende do domínio 20).
 
 ### 25. Saúde Bucal
 

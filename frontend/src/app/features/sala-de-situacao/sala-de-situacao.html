@@ -206,7 +206,7 @@
             <tbody>
               @for (o of escala(); track o.turnoId) {
                 <tr>
-                  <td><span class="cell-main">{{ o.profissionalNome ?? 'Vaga aberta' }} <span [class]="'tag tag--' + (o.situacao === 'SEM_COBERTURA' ? 'err' : 'warn')">{{ o.motivo }}</span></span>@if (o.funcao) { <span class="cell-sub">{{ o.funcao }}</span> }</td>
+                  <td><span class="cell-main">{{ o.profissionalNome ?? 'Vaga aberta' }} <span [class]="'tag tag--' + (o.situacao === 'SEM_COBERTURA' ? 'alert' : 'warn')">{{ o.motivo }}</span></span>@if (o.funcao) { <span class="cell-sub">{{ o.funcao }}</span> }</td>
                   <td>{{ o.unidadeNome }}</td>
                   <td class="mono">{{ diaHora(o.inicio) }}–{{ hora(o.fim) }}</td>
                 </tr>
@@ -240,7 +240,7 @@
                 <span class="ss-prog__dados">
                   @if (x.emDiaPercentual != null) { <span class="mono" title="Acompanhados em dia">{{ numero(x.emDiaPercentual) }}% em dia</span> }
                   @if (x.novos) { <span class="ss-delta ss-delta--up">+{{ numero(x.novos) }}</span> }
-                  @if (x.metasAbaixo) { <span class="tag tag--err">{{ x.metasAbaixo }} abaixo</span> }
+                  @if (x.metasAbaixo) { <span class="tag tag--alert">{{ x.metasAbaixo }} abaixo</span> }
                   @if (x.metasEmRisco) { <span class="tag tag--warn">{{ x.metasEmRisco }} em risco</span> }
                   @if (x.metasAtingidas) { <span class="tag tag--ok">{{ x.metasAtingidas }} atingida(s)</span> }
                 </span>
