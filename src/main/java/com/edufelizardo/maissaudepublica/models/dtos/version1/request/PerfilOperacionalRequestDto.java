@@ -30,4 +30,7 @@ public class PerfilOperacionalRequestDto implements Serializable {
 
     /** Sem valor, ativo. */
     private Boolean ativo;
+
+    /** O componente da RAPS (ADR-0153); no cadastro, vazio fica fora da RAPS; no ajuste, vazio mantém o que está. */
+    private com.edufelizardo.maissaudepublica.models.enuns.ComponenteRaps componenteRaps;
 }

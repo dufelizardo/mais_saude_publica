@@ -27,4 +27,5 @@ public class CapacidadeAssistencialResponseDto implements Serializable {
     private String perfilCodigo;
     private String perfilNome;
     private long unidades;
+    private com.edufelizardo.maissaudepublica.models.enuns.ComponenteRaps componenteRaps;
 }

@@ -4,6 +4,8 @@
     <p>Acolhimento e casos em acompanhamento · conteúdo restrito à equipe de referência</p>
   </div>
   <div class="page-actions">
+    <a class="btn btn--ghost" routerLink="/assistencia/saude-mental/raps">Rede (RAPS)</a>
+    @if (pode('SAUDE_MENTAL.ACOMPANHAR')) { <a class="btn btn--ghost" routerLink="/assistencia/saude-mental/acolhimento-noturno">Acolhimento noturno</a> }
     @if (pode('SAUDE_MENTAL.CRISE')) {
       <button type="button" class="btn btn--ghost" (click)="abrirNovaCrise(null)">Registrar crise</button>
     }

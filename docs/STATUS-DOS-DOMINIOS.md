@@ -52,7 +52,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
-| 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
+| 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM5 feitas (SM3 sem o SAMU); intersetorialidade e indicadores (SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
@@ -69,7 +69,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
-| SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
 | V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
 | E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
@@ -79,7 +78,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
-MO1 ✅ ──► SB4a ✅ (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
+MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
@@ -130,8 +129,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - [ ] Acessibilidade.
 - [ ] Exportação.
 - [ ] Inspeção sanitária.
-- [ ] Componentes da RAPS e serviços do CAPS (domínio 26, SM5). As modalidades de CAPS (I, II, III, i, AD, AD III) já
-  são capacidades no catálogo da MO1 ([ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
+- [x] Componentes da RAPS no catálogo do modelo operacional e o acolhimento noturno do CAPS (domínio 26, SM5,
+  [ADR-0153](./adr/0153-saude-mental-caps-e-raps.md)).
 - [x] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1, [ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
 - [ ] Serviços (MO2); coordenadas e pontos operacionais (MO3).
 - [x] Tipo de unidade do CEO: sem tipo próprio; é a unidade de especialidades com as capacidades odontológicas (ADR-0138).
@@ -643,11 +642,17 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   tipo, medidas e reavaliação com prazo, indicadores; evento de crise com ou sem caso, etapas, pós-crise e desfecho,
   notificação de violência autoprovocada sugerida e registrada como feita; na Internação, a modalidade (Lei
   10.216/2001) e a comunicação da involuntária ao Ministério Público em 72 horas, com a pendência à vista.
+- [x] **SM5 · CAPS e RAPS** ([ADR-0153](./adr/0153-saude-mental-caps-e-raps.md)): o componente da RAPS como dado do
+  modelo operacional (perfis e capacidades, com as capacidades novas de Consultório na Rua, Centro de convivência,
+  Unidade de acolhimento, Serviço residencial terapêutico e Geração de trabalho e renda); painel da RAPS por componente
+  com os casos, as intervenções dos últimos 90 dias e as lacunas da rede; acolhimento noturno do CAPS com vagas,
+  permanência máxima, entrada, prorrogação e saída; telas Rede (RAPS) e Acolhimento noturno.
 
 **Falta:**
 - [ ] **SM3 · o que ficou:** a notificação de violência autoprovocada no sistema (depende da Vigilância V1) e o
   acionamento do SAMU (depende da regulação de urgência).
-- [ ] **SM5 · CAPS e RAPS:** modalidades de CAPS e componentes da RAPS como capacidades da unidade (ADR-0053).
+- [ ] CAPS de referência por território e a produção do CAPS para o faturamento (RAAS, depende do domínio 20), depois da
+  SM5 (ADR-0153).
 - [ ] **SM6 · Intersetorialidade e indicadores:** instituições externas e encaminhamento intersetorial (pelo item 31),
   indicadores.
 

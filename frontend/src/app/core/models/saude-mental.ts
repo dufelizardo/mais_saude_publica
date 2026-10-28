@@ -406,3 +406,50 @@ export interface InternacaoResumoSaudeMentalDto {
   status: string;
   modalidade?: string | null;
 }
+
+// ── CAPS e RAPS (ADR-0153) ──
+
+export type ComponenteRaps = 'ATENCAO_BASICA' | 'ATENCAO_PSICOSSOCIAL_ESPECIALIZADA' | 'URGENCIA_EMERGENCIA' | 'RESIDENCIAL_TRANSITORIO' | 'HOSPITALAR'
+  | 'DESINSTITUCIONALIZACAO' | 'REABILITACAO_PSICOSSOCIAL';
+
+export interface PontoRapsDto {
+  unidadeId: string;
+  unidadeNome: string;
+  tipo?: string | null;
+  capacidades: string[];
+  casosEmAcompanhamento: number;
+  intervencoes90Dias: { chave: string; rotulo: string; quantidade: number }[];
+}
+
+export interface PainelRapsDto {
+  abrangencia: string;
+  componentes: { componente: ComponenteRaps; rotulo: string; unidades: PontoRapsDto[] }[];
+  lacunas: string[];
+}
+
+export interface PermanenciaAcolhimentoDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  entrada: string;
+  saidaPrevista: string;
+  saida?: string | null;
+  dias: number;
+  passouDaSaidaPrevista: boolean;
+  alemDoMaximo: boolean;
+  justificativaPrazo?: string | null;
+  motivoSaida?: string | null;
+}
+
+export interface AcolhimentoNoturnoDto {
+  unidadeId: string;
+  unidadeNome: string;
+  temAcolhimentoNoturno: boolean;
+  vagas?: number | null;
+  permanenciaMaximaDias?: number | null;
+  ocupadas: number;
+  acolhidos: PermanenciaAcolhimentoDto[];
+  saidasRecentes: PermanenciaAcolhimentoDto[];
+}
