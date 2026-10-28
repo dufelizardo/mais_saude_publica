@@ -38,8 +38,11 @@ public class RegistroVacinacaoRequestDto implements Serializable {
     /** Padrão: agora, na aplicada; obrigatória na transcrita. */
     private LocalDateTime aplicadaEm;
     private String profissionalMatricula;
+    /** Na unidade sem sala de vacina: o lote em texto (obrigatório na aplicada). */
     @Size(max = 40)
     private String lote;
+    /** Na unidade com sala de vacina (ADR-0148): o lote do estoque (obrigatório na aplicada). */
+    private UUID loteEstoqueId;
     @Size(max = 100)
     private String fabricante;
     private ViaVacina via;

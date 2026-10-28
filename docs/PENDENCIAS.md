@@ -187,7 +187,8 @@ real":
   ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131; faltam V3 (sanitária) a V5
   (trabalhador e integrações).
 - **#24 Imunização** — desenhado na ADR-0147; ~~I1 (fundação: catálogo, calendário, dose, caderneta e Sala de Vacina)~~
-  — ADR-0147; faltam I2 (sala de vacina e cadeia de frio), I3 (cobertura e campanhas), I4 (ESAVI) e I5 (SI-PNI).
+  — ADR-0147; ~~I2 (sala de vacina e cadeia de frio)~~ — ADR-0148 (sem o remanejamento entre unidades, o pedido à rede
+  de frio e o termômetro automático); faltam I3 (cobertura e campanhas), I4 (ESAVI) e I5 (SI-PNI).
 - **#22 Programas, Ações e Linhas de Cuidado** — desenhado na ADR-0109; programas e campanhas cadastráveis.
   Fatias: ~~P1 (catálogo)~~ — ADR-0118; ~~P2 (acompanhamento)~~ — ADR-0119 (elegíveis por idade e sexo na
   ADR-0128; os critérios clínicos ficam para depois); ~~P4 (ações e programa na Agenda)~~ — ADR-0132; ~~P3 (campanhas e consulta pública)~~ — ADR-0133; ~~P6 (metas e indicadores)~~ — ADR-0141; falta P5 (linhas de cuidado).

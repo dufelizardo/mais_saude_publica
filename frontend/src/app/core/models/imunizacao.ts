@@ -114,6 +114,8 @@ export interface RegistroVacinacaoRequestDto {
   aplicadaEm?: string | null;
   profissionalMatricula?: string | null;
   lote?: string | null;
+  /** Na unidade com sala de vacina (ADR-0148): o lote do estoque. */
+  loteEstoqueId?: string | null;
   fabricante?: string | null;
   via?: ViaVacina | null;
   localAplicacao?: LocalAplicacaoVacina | null;
@@ -155,6 +157,8 @@ export interface RegistroVacinacaoDto {
   retificacaoDeId?: string | null;
   motivoRetificacao?: string | null;
   registradoEm: string;
+  loteEstoqueId?: string | null;
+  frascoId?: string | null;
 }
 
 export interface DoseCalendarioDto {
@@ -217,4 +221,179 @@ export function idadeTexto(meses: number | null | undefined): string {
   const anos = Math.floor(meses / 12);
   const resto = meses % 12;
   return `${anos} anos${resto ? ` e ${resto} ${resto === 1 ? 'mês' : 'meses'}` : ''}`;
+}
+
+// ── Sala de vacina: estoque e cadeia de frio (ADR-0148) ──
+
+export type SituacaoLoteImunobiologico = 'DISPONIVEL' | 'SOB_SUSPEITA' | 'INUTILIZADO';
+export type TipoMovimentacaoImunobiologico = 'ENTRADA' | 'APLICACAO' | 'ESTORNO_APLICACAO' | 'PERDA_FISICA' | 'PERDA_TECNICA' | 'AJUSTE_INVENTARIO';
+export type MotivoPerdaImunobiologico =
+  | 'VENCIMENTO'
+  | 'QUEBRA'
+  | 'FALHA_EQUIPAMENTO'
+  | 'FALTA_ENERGIA'
+  | 'TRANSPORTE'
+  | 'EXCURSAO_TEMPERATURA'
+  | 'FRASCO_ABERTO_VENCIDO'
+  | 'OUTRO';
+export type TurnoLeituraTemperatura = 'MANHA' | 'TARDE';
+
+export const SITUACOES_LOTE: Record<SituacaoLoteImunobiologico, { rotulo: string; classe: string }> = {
+  DISPONIVEL: { rotulo: 'Disponível', classe: 'ok' },
+  SOB_SUSPEITA: { rotulo: 'Sob suspeita', classe: 'alert' },
+  INUTILIZADO: { rotulo: 'Inutilizado', classe: 'muted' },
+};
+
+export const TIPOS_MOVIMENTACAO: Record<TipoMovimentacaoImunobiologico, string> = {
+  ENTRADA: 'Entrada',
+  APLICACAO: 'Aplicação',
+  ESTORNO_APLICACAO: 'Estorno de aplicação',
+  PERDA_FISICA: 'Perda física',
+  PERDA_TECNICA: 'Perda técnica',
+  AJUSTE_INVENTARIO: 'Ajuste de inventário',
+};
+
+/** Os motivos que a equipe informa; a perda do frasco aberto vencido é apurada pelo sistema. */
+export const MOTIVOS_PERDA: Partial<Record<MotivoPerdaImunobiologico, string>> = {
+  QUEBRA: 'Quebra do frasco',
+  VENCIMENTO: 'Vencimento do lote',
+  FALHA_EQUIPAMENTO: 'Falha do equipamento',
+  FALTA_ENERGIA: 'Falta de energia',
+  TRANSPORTE: 'Problema no transporte',
+  EXCURSAO_TEMPERATURA: 'Excursão de temperatura',
+  OUTRO: 'Outro',
+};
+
+export const TURNOS: Record<TurnoLeituraTemperatura, string> = { MANHA: 'Manhã', TARDE: 'Tarde' };
+
+export interface LoteImunobiologicoDto {
+  uuid: string;
+  unidadeId: string;
+  imunobiologicoId: string;
+  sigla: string;
+  imunobiologicoNome: string;
+  numeroLote: string;
+  fabricante?: string | null;
+  validade: string;
+  doses: number;
+  camaraId?: string | null;
+  camaraNome?: string | null;
+  situacao: SituacaoLoteImunobiologico;
+  sobSuspeitaDesde?: string | null;
+  parecer?: string | null;
+  vencido: boolean;
+  venceEm30Dias: boolean;
+  aplicavel: boolean;
+}
+
+export interface FrascoAbertoDto {
+  uuid: string;
+  loteId: string;
+  sigla: string;
+  numeroLote: string;
+  abertoEm: string;
+  validoAte: string;
+  dosesNoFrasco: number;
+  dosesUsadas: number;
+  dosesRestantes: number;
+  minutosRestantes: number;
+}
+
+export interface EstoqueSalaVacinaDto {
+  unidadeId: string;
+  unidadeNome: string;
+  temSalaDeVacina: boolean;
+  porVacina: { imunobiologicoId: string; sigla: string; nome: string; doses: number; lotes: number }[];
+  lotes: LoteImunobiologicoDto[];
+  frascos: FrascoAbertoDto[];
+  aplicadasMes: number;
+  perdaTecnicaMes: number;
+  perdaFisicaMes: number;
+}
+
+export interface MovimentacaoImunobiologicoDto {
+  uuid: string;
+  tipo: TipoMovimentacaoImunobiologico;
+  doses: number;
+  saldoApos: number;
+  motivoPerda?: MotivoPerdaImunobiologico | null;
+  justificativa?: string | null;
+  registroVacinacaoId?: string | null;
+  frascoId?: string | null;
+  registradoEm: string;
+  registradoPorCpf?: string | null;
+}
+
+export interface EntradaLoteRequestDto {
+  unidadeId: string;
+  imunobiologicoId: string;
+  numeroLote: string;
+  fabricante?: string | null;
+  validade: string;
+  doses: number;
+  camaraId?: string | null;
+  justificativa?: string | null;
+}
+
+export interface LeituraTemperaturaDto {
+  uuid: string;
+  camaraId: string;
+  camaraNome: string;
+  lidaEm: string;
+  turno: TurnoLeituraTemperatura;
+  temperaturaAtual: number;
+  temperaturaMinima: number;
+  temperaturaMaxima: number;
+  excursao: boolean;
+  profissionalNome?: string | null;
+  observacao?: string | null;
+  lotesPostosSobSuspeita: number;
+}
+
+export interface CamaraRefrigeracaoDto {
+  uuid: string;
+  unidadeId: string;
+  nome: string;
+  temperaturaMinima: number;
+  temperaturaMaxima: number;
+  ativa: boolean;
+  ultimaLeitura?: LeituraTemperaturaDto | null;
+  lotesSobSuspeita: number;
+}
+
+export interface CadeiaFrioDto {
+  unidadeId: string;
+  data: string;
+  camaras: CamaraRefrigeracaoDto[];
+  leituras: LeituraTemperaturaDto[];
+  pendencias: string[];
+  lotesSobSuspeita: LoteImunobiologicoDto[];
+}
+
+export interface LeituraTemperaturaRequestDto {
+  lidaEm?: string | null;
+  turno?: TurnoLeituraTemperatura | null;
+  temperaturaAtual: number;
+  temperaturaMinima: number;
+  temperaturaMaxima: number;
+  profissionalMatricula?: string | null;
+  observacao?: string | null;
+}
+
+/** "3 h 20 min", "45 min". */
+export function prazoTexto(minutos: number): string {
+  if (minutos <= 0) {
+    return 'vencido';
+  }
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
+  if (h >= 48) {
+    return `${Math.floor(h / 24)} dias`;
+  }
+  return h ? `${h} h${m ? ` ${m} min` : ''}` : `${m} min`;
+}
+
+/** "2026-11-30" → "30/11/2026". */
+export function dataBr(iso: string | null | undefined): string {
+  return iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '—';
 }
