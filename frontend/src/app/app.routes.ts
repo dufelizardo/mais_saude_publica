@@ -104,6 +104,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/modelo-operacional/modelo-operacional').then((m) => m.ModeloOperacional),
         data: { breadcrumb: 'Modelo operacional', area: 'Administrativo' },
       },
+      // Instituições da rede intersetorial (ADR-0154): o catálogo é aberto a quem está logado.
+      {
+        path: 'administrativo/instituicoes-externas',
+        loadComponent: () => import('./features/administrativo/instituicoes-externas/instituicoes-externas').then((m) => m.InstituicoesExternas),
+        data: { breadcrumb: 'Instituições da rede intersetorial', area: 'Administrativo' },
+      },
       // Território (ADR-0125), carregado sob demanda.
       {
         path: 'administrativo/territorio',

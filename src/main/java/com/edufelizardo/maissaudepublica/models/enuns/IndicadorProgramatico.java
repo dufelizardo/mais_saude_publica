@@ -23,7 +23,18 @@ public enum IndicadorProgramatico {
             TipoValorIndicador.PERCENTUAL, Set.of("SAUDE_BUCAL"), false),
     PROTESES_ENTREGUES("Próteses entregues", "Próteses dentárias entregues no período.", TipoValorIndicador.QUANTIDADE, Set.of("SAUDE_BUCAL"), false),
     ESCOVACAO_SUPERVISIONADA("Escovação supervisionada", "Pessoas atendidas em ações coletivas com escovação supervisionada no período.",
-            TipoValorIndicador.QUANTIDADE, Set.of("SAUDE_BUCAL", "SAUDE_NA_ESCOLA"), false);
+            TipoValorIndicador.QUANTIDADE, Set.of("SAUDE_BUCAL", "SAUDE_NA_ESCOLA"), false),
+    // Saúde Mental (ADR-0155): os prazos que ainda não venceram ficam fora do denominador.
+    PTS_EM_DIA("PTS em dia", "Casos abertos no fim do período com o PTS vigente dentro da data de revisão, sobre os casos abertos.",
+            TipoValorIndicador.PERCENTUAL, Set.of("SAUDE_MENTAL"), false),
+    AVALIACAO_EM_30_DIAS("Avaliação em até 30 dias", "Casos abertos no período com a primeira avaliação em até 30 dias do início, sobre os "
+            + "abertos no período (sem os de menos de 30 dias ainda sem avaliação).", TipoValorIndicador.PERCENTUAL, Set.of("SAUDE_MENTAL"), false),
+    POS_CRISE_EM_7_DIAS("Pós-crise em até 7 dias", "Crises identificadas no período com o acompanhamento pós-crise em até 7 dias, sobre as "
+            + "crises do período (sem as de menos de 7 dias ainda sem pós-crise).", TipoValorIndicador.PERCENTUAL, Set.of("SAUDE_MENTAL"), false),
+    COMUNICACAO_MP_NO_PRAZO("Comunicação ao MP no prazo", "Internações involuntárias admitidas no período comunicadas ao Ministério Público em "
+            + "até 72 horas (Lei 10.216/2001), sobre as involuntárias do período.", TipoValorIndicador.PERCENTUAL, Set.of("SAUDE_MENTAL"), false),
+    RETORNO_INTERSETORIAL("Retorno intersetorial", "Encaminhamentos a instituições de outros setores enviados no período que já têm o retorno "
+            + "da instituição, sobre os enviados (sem os cancelados).", TipoValorIndicador.PERCENTUAL, Set.of("SAUDE_MENTAL"), false);
 
     private final String nome;
     private final String descricao;

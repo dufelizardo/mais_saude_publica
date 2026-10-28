@@ -34,6 +34,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.Acompanha
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AvaliacaoSaudeMentalDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CasosSaudeMentalDto;
 import com.edufelizardo.maissaudepublica.models.enuns.DesfechoAcolhimentoSaudeMental;
+import com.edufelizardo.maissaudepublica.models.enuns.DominioOrigemEncaminhamento;
 import com.edufelizardo.maissaudepublica.models.enuns.MotivoSaidaAcompanhamento;
 import com.edufelizardo.maissaudepublica.models.enuns.RiscoInicialSaudeMental;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoAcompanhamento;
@@ -81,6 +82,9 @@ public class SaudeMentalService {
     public static final String ACOLHER = "SAUDE_MENTAL.ACOLHER";
     public static final String ACOMPANHAR = "SAUDE_MENTAL.ACOMPANHAR";
     public static final String PROGRAMA_SAUDE_MENTAL = "SAUDE_MENTAL";
+
+    @Autowired
+    private EncaminhamentoIntersetorialService encaminhamentoIntersetorial;
 
     @Autowired
     private AcompanhamentoSaudeMentalRepository casoRepository;
@@ -321,7 +325,8 @@ public class SaudeMentalService {
     /**
      * Os casos vigentes nas unidades do escopo, sem conteúdo clínico. {@code escopo}: TECNICO (sou o técnico de
      * referência) ou EQUIPE (sou de uma equipe de referência); sem escopo, todos os do meu acesso. {@code pendencia}:
-     * SEM_AVALIACAO, SEM_PTS ou PTS_A_REVISAR (ADR-0121); RISCO_ALTO ou REAVALIACAO_VENCIDA (ADR-0123).
+     * SEM_AVALIACAO, SEM_PTS ou PTS_A_REVISAR (ADR-0121); RISCO_ALTO ou REAVALIACAO_VENCIDA (ADR-0123); RETORNO_INTERSETORIAL
+     * (ADR-0155).
      */
     @Transactional(readOnly = true)
     public CasosSaudeMentalDto casos(UUID unidadeId, UUID pacienteId, String escopo, SituacaoAcompanhamento situacao, String pendencia) {
@@ -335,6 +340,7 @@ public class SaudeMentalService {
         Map<UUID, Instant> ultimas = ultimasAvaliacoes(ids);
         Map<UUID, ProjetoTerapeuticoSingular> pts = terapeutico.ptsVigentes(ids);
         Map<UUID, boolean[]> riscos = crise.indicadores(ids);
+        Set<UUID> semRetorno = encaminhamentoIntersetorial.origensSemRetorno(DominioOrigemEncaminhamento.SAUDE_MENTAL, ids);
         String cpf = UsuarioAutenticado.cpf();
         Set<UUID> minhasEquipes = cpf == null ? Set.of() : minhasEquipes(cpf);
         List<AcompanhamentoSaudeMentalDto> todos = vigentes.stream()
@@ -349,6 +355,7 @@ public class SaudeMentalService {
                     return r != null && minhasEquipes.contains(r.getEquipe().getUuid());
                 })
                 .map(c -> resumo(c, referencias.get(c.getUuid()), ultimas.get(c.getUuid()), pts.get(c.getUuid()), riscos.get(c.getUuid())))
+                .peek(d -> d.setRetornoIntersetorialVencido(semRetorno.contains(d.getUuid())))
                 .toList();
         List<AcompanhamentoSaudeMentalDto> lista = todos.stream()
                 .filter(d -> situacao == null || d.getSituacao() == situacao)
@@ -357,7 +364,8 @@ public class SaudeMentalService {
                         || ("SEM_PTS".equalsIgnoreCase(pendencia) && d.getPtsVersao() == null)
                         || ("PTS_A_REVISAR".equalsIgnoreCase(pendencia) && d.isPtsRevisaoVencida())
                         || ("RISCO_ALTO".equalsIgnoreCase(pendencia) && d.isRiscoAlto())
-                        || ("REAVALIACAO_VENCIDA".equalsIgnoreCase(pendencia) && d.isReavaliacaoRiscoVencida()))
+                        || ("REAVALIACAO_VENCIDA".equalsIgnoreCase(pendencia) && d.isReavaliacaoRiscoVencida())
+                        || ("RETORNO_INTERSETORIAL".equalsIgnoreCase(pendencia) && d.isRetornoIntersetorialVencido()))
                 .sorted(Comparator.comparing((AcompanhamentoSaudeMentalDto d) -> !d.isRiscoAlto())
                         .thenComparing(d -> d.getSituacao() != SituacaoAcompanhamento.FALTOSO)
                         .thenComparing(d -> d.getUltimaAvaliacaoEm() != null)
@@ -369,7 +377,8 @@ public class SaudeMentalService {
                 todos.stream().filter(d -> d.getPtsVersao() == null).count(),
                 todos.stream().filter(AcompanhamentoSaudeMentalDto::isPtsRevisaoVencida).count(),
                 todos.stream().filter(AcompanhamentoSaudeMentalDto::isRiscoAlto).count(),
-                todos.stream().filter(AcompanhamentoSaudeMentalDto::isReavaliacaoRiscoVencida).count(), lista);
+                todos.stream().filter(AcompanhamentoSaudeMentalDto::isReavaliacaoRiscoVencida).count(),
+                todos.stream().filter(AcompanhamentoSaudeMentalDto::isRetornoIntersetorialVencido).count(), lista);
     }
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
@@ -582,6 +591,8 @@ public class SaudeMentalService {
                 crise.indicadores(List.of(caso.getUuid())).get(caso.getUuid()));
         d.setConteudoLiberado(liberado);
         d.setAcesso(acesso);
+        d.setRetornoIntersetorialVencido(!encaminhamentoIntersetorial.origensSemRetorno(DominioOrigemEncaminhamento.SAUDE_MENTAL,
+                List.of(caso.getUuid())).isEmpty());
         d.setReferencias(referencias.stream().map(r -> new AcompanhamentoSaudeMentalDto.Referencia(r.getEquipe().getUuid(),
                 r.getEquipe().getNome(), r.getTecnico().getMatricula(), r.getTecnico().getNome(), r.getInicio(), r.getFim(),
                 r.getMotivo())).toList());
@@ -602,6 +613,7 @@ public class SaudeMentalService {
             d.setRiscos(crise.riscos(caso.getUuid()));
             d.setCrises(crise.crisesDoCaso(caso.getPaciente().getUuid(), caso.getUuid()));
             d.setInternacoes(crise.internacoes(caso.getPaciente().getUuid()));
+            d.setEncaminhamentosIntersetoriais(encaminhamentoIntersetorial.listarDaOrigem(DominioOrigemEncaminhamento.SAUDE_MENTAL, caso.getUuid()));
         }
         return d;
     }
@@ -623,7 +635,7 @@ public class SaudeMentalService {
                 pts != null ? pts.getVersao() : null, pts != null ? pts.getRevisarEm() : null, TerapeuticoLeitura.revisaoVencida(pts), 0,
                 List.of(), List.of(), List.of(), List.of(), List.of(), List.of(),
                 c.getCasoAnterior() != null ? c.getCasoAnterior().getUuid() : null,
-                risco != null && risco[0], risco != null && risco[1], List.of(), List.of(), List.of());
+                risco != null && risco[0], risco != null && risco[1], List.of(), List.of(), List.of(), List.of(), false);
     }
 
     private static AcolhimentoSaudeMentalDto acolhimentoDto(AcolhimentoSaudeMental a, boolean liberado) {

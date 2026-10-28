@@ -104,6 +104,13 @@
               </a>
             }
 
+            @if (podeVer('/administrativo/instituicoes-externas')) {
+              <a routerLink="/administrativo/instituicoes-externas" routerLinkActive #rlaInstituicoes="routerLinkActive" [attr.aria-current]="rlaInstituicoes.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2.5"></circle><circle cx="19" cy="5" r="2.5"></circle><circle cx="19" cy="19" r="2.5"></circle><line x1="7.3" y1="10.9" x2="16.7" y2="6.1"></line><line x1="7.3" y1="13.1" x2="16.7" y2="17.9"></line></svg>
+                <span class="nav-item__label">Rede intersetorial</span>
+              </a>
+            }
+
             @if (podeVer('/administrativo/modelo-operacional')) {
               <a routerLink="/administrativo/modelo-operacional" routerLinkActive #rlaModeloOperacional="routerLinkActive" [attr.aria-current]="rlaModeloOperacional.isActive ? 'page' : null" class="nav-item">
                 <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path></svg>

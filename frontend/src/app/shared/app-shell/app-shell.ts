@@ -32,6 +32,8 @@ const MENU: Record<string, string[]> = {
   '/administrativo/necessidades-de-pessoal': [...ADMINISTRATIVO, ...RH],
   // Território (ADR-0125): o recorte geográfico é aberto a quem está logado.
   '/administrativo/territorio': [],
+  // Instituições da rede intersetorial (ADR-0154): o catálogo é aberto a quem está logado.
+  '/administrativo/instituicoes-externas': [],
   '/assistencia/pacientes': ['PACIENTE.CONSULTAR'],
   '/assistencia/agenda': ['AGENDAMENTO.GERENCIAR', 'ATENDIMENTO.GERENCIAR', 'REGULACAO.REGULAR'],
   '/assistencia/atendimentos': ['ATENDIMENTO.GERENCIAR', 'PRONTUARIO.CONSULTAR', 'AGENDAMENTO.GERENCIAR'],

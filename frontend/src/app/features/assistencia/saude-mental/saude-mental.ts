@@ -48,6 +48,14 @@ import { PacienteService } from '../../../core/services/paciente';
 import { RegulacaoService } from '../../../core/services/regulacao';
 import { semVinculo } from '../../../core/services/prontuario';
 import { SaudeMentalService } from '../../../core/services/saude-mental';
+import { IntersetorialidadeService } from '../../../core/services/intersetorialidade';
+import {
+  EncaminhamentoIntersetorialDto,
+  InstituicaoExternaDto,
+  SETORES_INTERSETORIAIS,
+  SITUACOES_ENCAMINHAMENTO_INTERSETORIAL,
+  TIPOS_INSTITUICAO,
+} from '../../../core/models/intersetorialidade';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-prontuario';
 import { Drawer } from '../../../shared/drawer/drawer';
@@ -61,6 +69,8 @@ type Gaveta =
   | { tipo: 'intervencao'; caso: AcompanhamentoSaudeMentalDto }
   | { tipo: 'rede'; caso: AcompanhamentoSaudeMentalDto }
   | { tipo: 'sairRede'; caso: AcompanhamentoSaudeMentalDto; pessoa: PessoaRedeApoioDto }
+  | { tipo: 'intersetorial'; caso: AcompanhamentoSaudeMentalDto }
+  | { tipo: 'retornoIntersetorial'; caso: AcompanhamentoSaudeMentalDto; enc: EncaminhamentoIntersetorialDto; modo: 'recebimento' | 'retorno' | 'cancelamento' }
   | { tipo: 'encaminhar'; caso: AcompanhamentoSaudeMentalDto }
   | { tipo: 'compartilhar'; caso: AcompanhamentoSaudeMentalDto }
   | { tipo: 'fimCompartilhamento'; caso: AcompanhamentoSaudeMentalDto; compartilhamento: CompartilhamentoCuidadoDto }
@@ -96,6 +106,9 @@ export class SaudeMental {
   private readonly equipeService = inject(EquipeService);
   private readonly pacienteService = inject(PacienteService);
   private readonly regulacaoService = inject(RegulacaoService);
+  private readonly intersetorialService = inject(IntersetorialidadeService);
+  /** As instituições ativas do catálogo intersetorial (ADR-0155), carregadas ao encaminhar. */
+  protected readonly instituicoes = signal<InstituicaoExternaDto[]>([]);
 
   protected readonly riscos = RISCOS;
   protected readonly listaRiscos = Object.keys(RISCOS) as RiscoInicialSaudeMental[];
@@ -111,6 +124,9 @@ export class SaudeMental {
   protected readonly situacoesIntervencao = SITUACOES_INTERVENCAO;
   protected readonly papeisRede = PAPEIS_REDE;
   protected readonly listaPapeisRede = Object.keys(PAPEIS_REDE) as PapelRedeApoio[];
+  protected readonly setoresIntersetoriais = SETORES_INTERSETORIAIS;
+  protected readonly tiposInstituicao = TIPOS_INSTITUICAO;
+  protected readonly situacoesIntersetoriais = SITUACOES_ENCAMINHAMENTO_INTERSETORIAL;
   protected readonly statusEncaminhamento = STATUS_ENCAMINHAMENTO;
   protected readonly prioridades = PRIORIDADES_ENCAMINHAMENTO;
   protected readonly listaPrioridades = Object.keys(PRIORIDADES_ENCAMINHAMENTO);
@@ -204,6 +220,8 @@ export class SaudeMental {
   });
   protected readonly redeForm = this.fb.nonNullable.group({ nome: [''], papel: ['' as PapelRedeApoio | ''], vinculo: [''], telefone: [''], observacao: [''] });
   protected readonly sairRedeForm = this.fb.nonNullable.group({ motivo: [''] });
+  protected readonly intersetorialForm = this.fb.nonNullable.group({ instituicaoId: [''], motivo: [''], enviadoEm: [''], retornoEsperadoEm: [''] });
+  protected readonly retornoIntersetorialForm = this.fb.nonNullable.group({ data: [''], desfecho: ['' as 'CONCLUIDO' | 'RECUSADO' | ''], texto: [''] });
   protected readonly encaminharForm = this.fb.nonNullable.group({
     modo: ['NOVO' as 'NOVO' | 'VINCULAR'], solicitacaoId: [''], procedimentoId: [''], cid: [''], justificativa: [''], prioridade: [''], profissionalMatricula: [''],
   });
@@ -384,6 +402,10 @@ export class SaudeMental {
     if (g.tipo === 'intervencao') return 'Registrar intervenção';
     if (g.tipo === 'rede') return 'Incluir na rede de apoio';
     if (g.tipo === 'sairRede') return 'Tirar da rede de apoio';
+    if (g.tipo === 'intersetorial') return 'Encaminhar a outro setor';
+    if (g.tipo === 'retornoIntersetorial') {
+      return g.modo === 'recebimento' ? 'A instituição recebeu' : g.modo === 'retorno' ? 'Retorno da instituição' : 'Cancelar o encaminhamento';
+    }
     if (g.tipo === 'encaminhar') return 'Encaminhar pela Regulação';
     if (g.tipo === 'compartilhar') return 'Compartilhar o cuidado';
     if (g.tipo === 'fimCompartilhamento') return 'Encerrar o compartilhamento';
@@ -542,6 +564,19 @@ export class SaudeMental {
     this.abrir({ tipo: 'sairRede', caso, pessoa });
   }
 
+  protected abrirIntersetorial(caso: AcompanhamentoSaudeMentalDto): void {
+    const prazo = new Date();
+    prazo.setDate(prazo.getDate() + 30);
+    this.intersetorialForm.reset({ instituicaoId: '', motivo: '', enviadoEm: this.hojeIso(), retornoEsperadoEm: prazo.toISOString().slice(0, 10) });
+    this.intersetorialService.listar({ ativas: true }).pipe(catchError(() => of([]))).subscribe((l) => this.instituicoes.set(l));
+    this.abrir({ tipo: 'intersetorial', caso });
+  }
+
+  protected abrirRetornoIntersetorial(caso: AcompanhamentoSaudeMentalDto, enc: EncaminhamentoIntersetorialDto, modo: 'recebimento' | 'retorno' | 'cancelamento'): void {
+    this.retornoIntersetorialForm.reset({ data: this.hojeIso(), desfecho: '', texto: '' });
+    this.abrir({ tipo: 'retornoIntersetorial', caso, enc, modo });
+  }
+
   /** O tipo escolhido na intervenção é a discussão de caso em apoio matricial. */
   protected tipoEhMatriciamento(): boolean {
     return this.tipos().find((t) => t.uuid === this.intervencaoForm.controls.tipoId.value)?.codigo === 'MATRICIAMENTO';
@@ -698,6 +733,8 @@ export class SaudeMental {
     else if (g.tipo === 'intervencao') this.salvarIntervencao(g.caso);
     else if (g.tipo === 'rede') this.salvarRede(g.caso);
     else if (g.tipo === 'sairRede') this.salvarSairRede(g.caso, g.pessoa);
+    else if (g.tipo === 'intersetorial') this.salvarIntersetorial(g.caso);
+    else if (g.tipo === 'retornoIntersetorial') this.salvarRetornoIntersetorial(g.caso, g.enc, g.modo);
     else if (g.tipo === 'encaminhar') this.salvarEncaminhamento(g.caso);
     else if (g.tipo === 'compartilhar') this.salvarCompartilhamento(g.caso);
     else if (g.tipo === 'fimCompartilhamento') this.salvarFimCompartilhamento(g.caso, g.compartilhamento);
@@ -856,6 +893,35 @@ export class SaudeMental {
     const v = this.sairRedeForm.getRawValue();
     if (!this.validar(v.motivo.trim() ? {} : { motivoSaidaRede: 'Informe o motivo.' })) return;
     this.enviarCaso(this.service.encerrarNaRede(caso.uuid, pessoa.uuid, v.motivo.trim()), 'Saiu da rede de apoio', caso, 'rede');
+  }
+
+  private salvarIntersetorial(caso: AcompanhamentoSaudeMentalDto): void {
+    const v = this.intersetorialForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.instituicaoId) erros['instituicaoIntersetorial'] = 'Escolha a instituição.';
+    if (!v.motivo.trim()) erros['motivoIntersetorial'] = 'Informe o motivo do encaminhamento.';
+    if (v.enviadoEm && v.enviadoEm > this.hojeIso()) erros['enviadoIntersetorial'] = 'O envio não pode ser no futuro.';
+    if (!v.retornoEsperadoEm) erros['prazoIntersetorial'] = 'Informe até quando se espera o retorno.';
+    else if (v.retornoEsperadoEm < (v.enviadoEm || this.hojeIso())) erros['prazoIntersetorial'] = 'O retorno esperado não pode ser antes do envio.';
+    if (!this.validar(erros)) return;
+    this.enviarCaso(this.intersetorialService.encaminhar(caso.uuid, {
+      instituicaoId: v.instituicaoId, motivo: v.motivo.trim(), enviadoEm: v.enviadoEm || null, retornoEsperadoEm: v.retornoEsperadoEm,
+    }), 'Encaminhado a outro setor', caso, 'rede');
+  }
+
+  private salvarRetornoIntersetorial(caso: AcompanhamentoSaudeMentalDto, enc: EncaminhamentoIntersetorialDto, modo: 'recebimento' | 'retorno' | 'cancelamento'): void {
+    const v = this.retornoIntersetorialForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (modo !== 'cancelamento' && v.data && (v.data < enc.enviadoEm || v.data > this.hojeIso())) erros['dataIntersetorial'] = 'A data vai do envio até hoje.';
+    if (modo === 'retorno' && !v.desfecho) erros['desfechoIntersetorial'] = 'Escolha o desfecho.';
+    if (modo !== 'recebimento' && !v.texto.trim()) {
+      erros['textoIntersetorial'] = modo === 'retorno' ? 'Descreva o retorno da instituição.' : 'Informe o motivo.';
+    }
+    if (!this.validar(erros)) return;
+    const req = modo === 'recebimento' ? this.intersetorialService.receber(caso.uuid, enc.uuid, v.data || null)
+      : modo === 'retorno' ? this.intersetorialService.retorno(caso.uuid, enc.uuid, { data: v.data || null, desfecho: v.desfecho as 'CONCLUIDO' | 'RECUSADO', retorno: v.texto.trim() })
+        : this.intersetorialService.cancelar(caso.uuid, enc.uuid, v.texto.trim());
+    this.enviarCaso(req, modo === 'recebimento' ? 'Recebimento registrado' : modo === 'retorno' ? 'Retorno registrado' : 'Encaminhamento cancelado', caso, 'rede');
   }
 
   private salvarRisco(caso: AcompanhamentoSaudeMentalDto): void {
