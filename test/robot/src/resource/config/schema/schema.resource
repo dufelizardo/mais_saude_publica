@@ -71,6 +71,7 @@ Resource    ../../schema/escalas/escalas_schema.resource
 Resource    ../../schema/programas/programas_schema.resource
 Resource    ../../schema/programas/acao_programatica_schema.resource
 Resource    ../../schema/programas/campanha_schema.resource
+Resource    ../../schema/programas/linha_cuidado_schema.resource
 Resource    ../../schema/indicadores/producao_schema.resource
 Resource    ../../schema/indicadores/situacao_schema.resource
 Resource    ../../schema/indicadores/indicadores_rede_schema.resource

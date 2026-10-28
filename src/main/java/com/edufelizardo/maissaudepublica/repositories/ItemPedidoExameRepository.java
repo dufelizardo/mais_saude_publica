@@ -21,6 +21,11 @@ public interface ItemPedidoExameRepository extends JpaRepository<ItemPedidoExame
 
     List<ItemPedidoExame> findByAmostra_Uuid(UUID amostraId);
 
+    /** Os exames liberados do paciente, com o resultado (as etapas de exame da linha de cuidado, ADR-0152). */
+    @Query("select i from ItemPedidoExame i join fetch i.exame join fetch i.resultadoAtual r join i.pedido p where p.paciente.uuid = :paciente "
+            + "and i.status = com.edufelizardo.maissaudepublica.models.enuns.StatusItemExame.LIBERADO")
+    List<ItemPedidoExame> findLiberadosDoPaciente(@Param("paciente") UUID pacienteId);
+
     /** Trava o item: dois profissionais não registram ou liberam o mesmo exame ao mesmo tempo. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from ItemPedidoExame i where i.uuid = :uuid")

@@ -5,6 +5,7 @@ Resource    ../../../programas/programa/programa_flow.resource
 Resource    ../../../programas/acompanhamento/acompanhamento_flow.resource
 Resource    ../../../programas/acao/acao_programatica_flow.resource
 Resource    ../../../programas/campanha/campanha_flow.resource
+Resource    ../../../programas/linha/linha_cuidado_flow.resource
 Resource    ../../../programas/indicador/indicador_programatico_flow.resource
 Resource    ../../../../pom/ui/assistencia/pacientes/pacientes_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -363,5 +364,53 @@ UI Programas - Cadastrar Meta
     ${metas}=    GET Metas Do Programa    ${programa}
     ${daUnidade}=    Evaluate    [m for m in $metas.json() if m.get("unidadeId") == $unidade]
     Length Should Be    ${daUnidade}    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Linha De Cuidado No Paciente
+    [Documentation]    Na aba Programas do paciente: abrir a linha da gestante e registrar a etapa manual (ADR-0152).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}=    Seed Vacinacao
+    ${gestante}=    Id Da Linha    GESTANTE
+    ${inicio}=    Evaluate    (datetime.date.today() - datetime.timedelta(days=100)).isoformat()    modules=datetime
+    Ir Para Rota Do Frontend    /assistencia/pacientes?id=${dados}[paciente]&aba=programas
+    Click    role=button[name="Abrir linha de cuidado"]
+    Select Options By    id=f-lp-linha    value    ${gestante}
+    Fill Text    id=f-lp-inicio    ${inicio}
+    Select Options By    id=f-lp-unidade    value    ${dados}[unidade]
+    Click    css=app-drawer >> role=button[name="Abrir"]
+    Wait For Elements State    css=[aria-label="Etapas do percurso"] >> li:has-text("1ª consulta") >> text=Atrasada    visible
+    Click    role=button[name="Registrar Testes rápidos de sífilis, HIV e hepatites"]
+    Fill Text    id=f-pl-observacao    Não reagentes
+    Click    css=app-drawer >> role=button[name="Confirmar"]
+    Wait For Elements State    css=[aria-label="Etapas do percurso"] >> li:has-text("Testes rápidos") >> text=Cumprida    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Painel Das Linhas
+    [Documentation]    Na aba Linhas de cuidado: o percurso atrasado aparece no painel, e a etapa é dispensada com o motivo (ADR-0152).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}    ${p}=    Percurso Da Gestante
+    UI Programas - Abrir
+    Clicar Aba    Linhas de cuidado
+    Click    role=button[name="Abrir percurso: ${dados}[nome] Gestante: do pré-natal ao puerpério"]
+    Click    role=button[name="Dispensar Vacina dTpa (até a 36ª semana)"]
+    Fill Text    id=f-pl-observacao    Vacinada em outro município
+    Click    css=app-drawer >> role=button[name="Confirmar"]
+    Wait For Elements State    css=[aria-label="Etapas do percurso"] >> li:has-text("dTpa") >> text=Dispensada    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Editor Da Linha
+    [Documentation]    O editor da linha abre com o programa e o tipo de cada etapa selecionados (ADR-0152).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI Programas - Abrir
+    Clicar Aba    Linhas de cuidado
+    Click    role=button[name="Editar linha: Gestante: do pré-natal ao puerpério"]
+    Wait For Elements State    id=f-et-tipo-1    visible
+    Get Selected Options    id=f-lc-programa    label    ==    Pré-natal
+    Get Selected Options    id=f-et-tipo-1    value    ==    MANUAL
+    Get Selected Options    id=f-et-tipo-2    value    ==    VACINA
+    Get Selected Options    id=f-et-desde-5    value    ==    ETAPA_ANTERIOR
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

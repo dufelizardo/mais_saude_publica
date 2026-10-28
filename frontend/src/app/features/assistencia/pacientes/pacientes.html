@@ -423,6 +423,7 @@
             }
           </ul>
         }
+        @if (selecionado(); as sp) { <app-linhas-do-paciente [pacienteId]="sp.uuid" [podeAcompanhar]="pode('PROGRAMA.ACOMPANHAR')" /> }
         @if (acoesDoPaciente().length) {
           <h4 class="mo-grupo">Ações programáticas</h4>
           <ul class="eq-prof" aria-label="Ações programáticas do paciente">
