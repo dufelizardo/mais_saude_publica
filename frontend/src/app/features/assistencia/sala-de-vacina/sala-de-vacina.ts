@@ -15,21 +15,24 @@ import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { ImunizacaoService } from '../../../core/services/imunizacao';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { RegistrarDose } from '../vacinacao/registrar-dose';
+import { CadeiaDeFrio } from './cadeia-de-frio';
+import { EstoqueSalaVacina } from './estoque-sala-vacina';
 
-type Aba = 'dia' | 'atrasados' | 'calendario';
+type Aba = 'dia' | 'atrasados' | 'estoque' | 'frio' | 'calendario';
 
 /**
  * Sala de Vacina (ADR-0147): o registro das doses do dia na unidade, com a contagem por vacina; os adscritos com dose
- * atrasada, para a busca ativa; e o calendário vacinal vigente.
+ * atrasada, para a busca ativa; o estoque e a cadeia de frio da unidade com sala de vacina (ADR-0148); e o calendário
+ * vacinal vigente.
  */
 @Component({
   selector: 'app-sala-de-vacina',
-  imports: [RouterLink, RegistrarDose],
+  imports: [RouterLink, RegistrarDose, EstoqueSalaVacina, CadeiaDeFrio],
   template: `
     <header class="page-head">
       <div>
         <h1>Sala de Vacina</h1>
-        <p>Registro das doses, atrasados para a busca ativa e o calendário vacinal</p>
+        <p>Registro das doses, atrasados para a busca ativa, estoque, cadeia de frio e o calendário vacinal</p>
       </div>
       <div class="page-actions vac-filtros">
         <div class="dw-field">
@@ -46,6 +49,8 @@ type Aba = 'dia' | 'atrasados' | 'calendario';
     <div class="page-tabs" role="tablist" aria-label="Sala de vacina">
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'dia'" (click)="aba.set('dia')">Doses do dia</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'atrasados'" (click)="aba.set('atrasados')">Atrasados</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'estoque'" (click)="aba.set('estoque')">Estoque</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'frio'" (click)="aba.set('frio')">Cadeia de frio</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'calendario'" (click)="aba.set('calendario')">Calendário vacinal</button>
     </div>
 
@@ -64,7 +69,11 @@ type Aba = 'dia' | 'atrasados' | 'calendario';
         }
       </section>
     } @else if (!unidadeId()) {
-      <p class="cell-sub">Escolha a unidade para ver as doses do dia e os atrasados.</p>
+      <p class="cell-sub">Escolha a unidade para ver as doses do dia, os atrasados, o estoque e a cadeia de frio.</p>
+    } @else if (aba() === 'estoque') {
+      <app-estoque-sala-vacina [unidadeId]="unidadeId()" [versao]="versao()" />
+    } @else if (aba() === 'frio') {
+      <app-cadeia-de-frio [unidadeId]="unidadeId()" [versao]="versao()" />
     } @else if (aba() === 'dia') {
       <section class="card" style="padding: var(--s-5);" aria-label="Doses do dia">
         <div class="vac-cab">
@@ -145,6 +154,8 @@ export class SalaDeVacina {
   protected readonly atrasados = signal<AtrasadoVacinacaoDto[] | null | undefined>(undefined);
   protected readonly calendario = signal<EsquemaVacinalDto[]>([]);
   protected readonly registrando = signal(false);
+  /** Sobe a cada dose registrada: as abas Estoque e Cadeia de frio recarregam (a dose baixa o lote e abre o frasco). */
+  protected readonly versao = signal(0);
   protected readonly erro = signal<string | null>(null);
 
   protected readonly calendarioPorPublico = computed(() => {
@@ -173,6 +184,7 @@ export class SalaDeVacina {
 
   protected aoSalvar(): void {
     this.registrando.set(false);
+    this.versao.update((v) => v + 1);
     this.carregar(this.unidadeId(), this.data(), this.aba());
   }
 

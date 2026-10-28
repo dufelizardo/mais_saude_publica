@@ -78,6 +78,16 @@ public class RegistroVacinacao implements Serializable {
     @Column(length = 40, updatable = false)
     private String lote;
 
+    /** Na unidade com sala de vacina (ADR-0148): o lote do estoque de onde a dose saiu. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lote_estoque_id", referencedColumnName = "uuid", updatable = false)
+    private LoteImunobiologico loteEstoque;
+
+    /** O frasco multidose aberto de onde a dose saiu. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "frasco_id", referencedColumnName = "uuid", updatable = false)
+    private FrascoAberto frasco;
+
     @Column(length = 100, updatable = false)
     private String fabricante;
 

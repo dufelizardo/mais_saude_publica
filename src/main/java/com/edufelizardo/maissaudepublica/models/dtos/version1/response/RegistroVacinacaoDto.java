@@ -52,4 +52,7 @@ public class RegistroVacinacaoDto implements Serializable {
     private UUID retificacaoDeId;
     private String motivoRetificacao;
     private Instant registradoEm;
+    /** O lote do estoque e o frasco aberto de onde a dose saiu (ADR-0148). */
+    private UUID loteEstoqueId;
+    private UUID frascoId;
 }

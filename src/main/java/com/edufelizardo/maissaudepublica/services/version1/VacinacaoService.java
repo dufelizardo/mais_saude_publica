@@ -76,13 +76,18 @@ public class VacinacaoService {
     @Autowired private AdscricaoRepository adscricaoRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
     @Autowired private VinculoAssistencialService vinculoService;
+    @Autowired private EstoqueVacinaService estoqueService;
 
     // ── Registro ───────────────────────────────────────────────────────────────────────────────
 
     @Transactional
     public RegistroVacinacaoDto registrar(RegistroVacinacaoRequestDto dto) {
         RegistroVacinacao r = novo(dto, null);
+        boolean baixa = baixar(r, dto, null);
         r = repository.save(r);
+        if (baixa) {
+            estoqueService.lancarAplicacao(r);
+        }
         ContextoAuditoria.registro(r.getUuid());
         return dto(r);
     }
@@ -101,7 +106,11 @@ public class VacinacaoService {
         RegistroVacinacao r = novo(dto, original);
         r.setRetificacaoDe(original);
         r.setMotivoRetificacao(dto.getMotivoRetificacao().trim());
+        boolean baixa = baixar(r, dto, original);
         r = repository.save(r);
+        if (baixa) {
+            estoqueService.lancarAplicacao(r);
+        }
         ContextoAuditoria.registro(r.getUuid());
         return dto(r);
     }
@@ -117,6 +126,7 @@ public class VacinacaoService {
         r.setMotivoAnulacao(dto.getMotivo().trim());
         r.setAnuladaEm(Instant.now());
         r.setAnuladaPorCpf(UsuarioAutenticado.cpf());
+        estoqueService.estornar(r);
         ContextoAuditoria.registro(r.getUuid());
         return dto(repository.save(r));
     }
@@ -255,7 +265,15 @@ public class VacinacaoService {
         if (aplicada && profissional == null) {
             throw new ResourceBadRequestException("Informe quem aplicou a dose.");
         }
-        if (aplicada && (dto.getLote() == null || dto.getLote().isBlank())) {
+        boolean sala = aplicada && estoqueService.temSalaDeVacina(unidade.getUuid());
+        if (sala && dto.getLoteEstoqueId() == null) {
+            throw new ResourceBadRequestException("A unidade tem sala de vacina: escolha o lote do estoque de onde a dose saiu.");
+        }
+        if (!sala && dto.getLoteEstoqueId() != null) {
+            throw new ResourceUnprocessableEntityException(aplicada ? "A unidade " + unidade.getNome() + " não controla estoque de vacina: "
+                    + "informe o lote em texto." : "A dose transcrita da caderneta não sai do estoque.");
+        }
+        if (aplicada && !sala && (dto.getLote() == null || dto.getLote().isBlank())) {
             throw new ResourceBadRequestException("Informe o lote da dose aplicada.");
         }
         Campanha campanha = null;
@@ -316,6 +334,29 @@ public class VacinacaoService {
         r.setRegistradoEm(Instant.now());
         r.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         return r;
+    }
+
+    /**
+     * A baixa no estoque da sala de vacina (ADR-0148), antes de gravar a dose. Na retificação que mantém o lote, a dose
+     * segue ligada ao mesmo lote e frasco, sem novo lançamento; se o lote muda (ou a dose deixa de sair do estoque), a
+     * anterior volta ao lote. Devolve se houve baixa (o lançamento sai depois de gravada a dose).
+     */
+    private boolean baixar(RegistroVacinacao r, RegistroVacinacaoRequestDto dto, RegistroVacinacao original) {
+        UUID loteId = dto.getLoteEstoqueId();
+        if (original != null && original.getLoteEstoque() != null) {
+            if (loteId != null && loteId.equals(original.getLoteEstoque().getUuid())) {
+                r.setLoteEstoque(original.getLoteEstoque());
+                r.setFrasco(original.getFrasco());
+                r.setLote(original.getLote());
+                return false;
+            }
+            estoqueService.estornar(original);
+        }
+        if (loteId == null) {
+            return false;
+        }
+        estoqueService.baixar(r, loteId);
+        return true;
     }
 
     /**
@@ -397,6 +438,7 @@ public class VacinacaoService {
                 p != null ? p.getMatricula() : null, p != null ? p.getNome() : null, r.getOrigem(), r.getLocalOrigem(), r.getLote(), r.getFabricante(),
                 r.getVia(), r.getLocalAplicacao(), r.getEstrategia(), r.getCampanha() != null ? r.getCampanha().getUuid() : null,
                 r.getCampanha() != null ? r.getCampanha().getNome() : null, r.isGestante(), r.getJustificativa(), r.getObservacao(),
-                r.getRetificacaoDe() != null ? r.getRetificacaoDe().getUuid() : null, r.getMotivoRetificacao(), r.getRegistradoEm());
+                r.getRetificacaoDe() != null ? r.getRetificacaoDe().getUuid() : null, r.getMotivoRetificacao(), r.getRegistradoEm(),
+                r.getLoteEstoque() != null ? r.getLoteEstoque().getUuid() : null, r.getFrasco() != null ? r.getFrasco().getUuid() : null);
     }
 }

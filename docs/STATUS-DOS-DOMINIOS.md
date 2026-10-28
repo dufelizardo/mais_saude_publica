@@ -50,7 +50,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
-| 24 | [Imunização](#24-imunização) | 🟡 | I1 feita (caderneta de vacinação e Sala de Vacina); I2 a I5 |
+| 24 | [Imunização](#24-imunização) | 🟡 | I1 e I2 feitas (caderneta, Sala de Vacina, estoque e cadeia de frio); I3 a I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
@@ -73,7 +73,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | P5 | 22 Programas | linhas de cuidado |
 | V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
 | E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
-| I2 | 24 Imunização | sala de vacina e cadeia de frio: lotes, livro de movimentação, frasco aberto, temperatura da câmara |
 | I3 | 24 Imunização | cobertura vacinal, homogeneidade, abandono, busca ativa e campanha com a meta real |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
@@ -545,10 +544,16 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   ou transcrita da caderneta (data); dose repetida 409, fora da idade ou do intervalo só com justificativa;
   retificação e anulação; situação vacinal calculada (aplicada, atrasada, próxima, futura, fora da idade);
   caderneta na aba Vacinação do paciente; tela Sala de Vacina com as doses do dia e os adscritos com dose atrasada.
+- [x] **I2 · Sala de vacina e cadeia de frio** ([ADR-0148](./adr/0148-imunizacao-sala-de-vacina.md)): capacidade
+  "Sala de vacina" (transversal) no modelo operacional; na unidade com ela, lote de imunobiológico com livro de
+  movimentação em doses (entrada, aplicação, estorno, perdas física e técnica, ajuste) e a dose aplicada saindo do
+  lote com baixa automática; frasco multidose aberto com prazo e perda técnica no vencimento; câmara de refrigeração
+  com duas leituras por dia, pendência do turno sem leitura e excursão que põe os lotes sob suspeita até a coordenação
+  liberar ou inutilizar; abas Estoque e Cadeia de frio na Sala de Vacina.
 
 **Falta:**
-- [ ] **I2 · Sala de vacina e cadeia de frio:** lotes por unidade e livro de movimentação, frasco aberto, temperatura
-  da câmara e lotes sob suspeita.
+- [ ] **Remanejamento de lote entre unidades,** pedido à rede de frio e termômetro automático (depois da I2;
+  ADR-0148).
 - [ ] **I3 · Cobertura e campanhas:** cobertura vacinal, homogeneidade, abandono, busca ativa por microárea, a meta real
   da campanha e o bloco de vacinação da Sala de Situação.
 - [ ] **I4 · ESAVI:** evento adverso pós-vacinação pela Vigilância.

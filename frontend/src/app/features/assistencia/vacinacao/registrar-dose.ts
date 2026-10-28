@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, Input, OnInit, Output, computed, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, computed, effect, inject, signal, untracked } from '@angular/core';
 import { catchError, of } from 'rxjs';
 import {
   DOSES,
@@ -7,6 +7,7 @@ import {
   ESTRATEGIAS,
   EstrategiaVacinacao,
   EsquemaVacinalDto,
+  EstoqueSalaVacinaDto,
   ImunobiologicoDto,
   LOCAIS_APLICACAO,
   LocalAplicacaoVacina,
@@ -15,6 +16,7 @@ import {
   RegistroVacinacaoRequestDto,
   VIAS,
   ViaVacina,
+  dataBr,
 } from '../../../core/models/imunizacao';
 import { PacienteResponseDto } from '../../../core/models/paciente';
 import { ErrorResponseDto } from '../../../core/models/profissional';
@@ -27,7 +29,8 @@ import { Drawer } from '../../../shared/drawer/drawer';
 /**
  * Registro de dose (ADR-0147), na gaveta: aplicada na unidade (com quem aplicou e o lote) ou transcrita da caderneta
  * (com a data e onde foi aplicada). Fora da idade ou do intervalo do calendário, a API pede a justificativa e o campo
- * aparece. Também retifica uma dose vigente, com o motivo (ADR-0062).
+ * aparece. Também retifica uma dose vigente, com o motivo (ADR-0062). Na unidade com sala de vacina (ADR-0148), a dose
+ * aplicada sai de um lote do estoque, escolhido na lista dos aplicáveis daquela vacina, em vez do lote em texto.
  */
 @Component({
   selector: 'app-registrar-dose',
@@ -92,7 +95,18 @@ import { Drawer } from '../../../shared/drawer/drawer';
           @if (origem() === 'APLICADA') {
             <div class="dw-row">
               <div class="dw-field"><label for="f-vac-matricula">Quem aplicou (matrícula) <span class="req" aria-hidden="true">*</span></label><input id="f-vac-matricula" type="text" [value]="matricula()" (input)="matricula.set($any($event.target).value)" /></div>
-              <div class="dw-field"><label for="f-vac-lote">Lote <span class="req" aria-hidden="true">*</span></label><input id="f-vac-lote" type="text" maxlength="40" [value]="lote()" (input)="lote.set($any($event.target).value)" /></div>
+              @if (estoque()?.temSalaDeVacina) {
+                <div class="dw-field">
+                  <label for="f-vac-lote-estoque">Lote do estoque <span class="req" aria-hidden="true">*</span></label>
+                  <select id="f-vac-lote-estoque" [value]="loteEstoqueId()" (change)="loteEstoqueId.set($any($event.target).value)">
+                    <option value="">Escolha…</option>
+                    @for (l of lotesDaVacina(); track l.uuid) { <option [value]="l.uuid">{{ l.numeroLote }} · val. {{ data(l.validade) }} · {{ l.doses }} doses</option> }
+                  </select>
+                  @if (imunoId() && !lotesDaVacina().length) { <p class="dw-hint">Sem lote aplicável desta vacina no estoque da unidade.</p> }
+                </div>
+              } @else {
+                <div class="dw-field"><label for="f-vac-lote">Lote <span class="req" aria-hidden="true">*</span></label><input id="f-vac-lote" type="text" maxlength="40" [value]="lote()" (input)="lote.set($any($event.target).value)" /></div>
+              }
             </div>
             <div class="dw-row">
               <div class="dw-field">
@@ -177,6 +191,8 @@ export class RegistrarDose implements OnInit {
   protected readonly dose = signal<DoseVacinal | ''>('');
   protected readonly matricula = signal('');
   protected readonly lote = signal('');
+  protected readonly loteEstoqueId = signal('');
+  protected readonly estoque = signal<EstoqueSalaVacinaDto | null>(null);
   protected readonly fabricante = signal('');
   protected readonly via = signal<ViaVacina>('INTRAMUSCULAR');
   protected readonly local = signal<LocalAplicacaoVacina | ''>('');
@@ -190,6 +206,10 @@ export class RegistrarDose implements OnInit {
   protected readonly erro = signal<string | null>(null);
   protected readonly salvando = signal(false);
 
+  /** Os lotes aplicáveis da vacina escolhida (o da dose em retificação também, para manter). */
+  protected readonly lotesDaVacina = computed(() =>
+    (this.estoque()?.lotes ?? []).filter((l) => l.imunobiologicoId === this.imunoId() && (l.aplicavel || l.uuid === this.retificando?.loteEstoqueId)),
+  );
   protected readonly imunosAtivos = computed(() => this.imunos().filter((i) => i.ativo || i.uuid === this.imunoId()));
   /** As doses do calendário para a vacina escolhida; sem calendário, todas. */
   protected readonly dosesDaVacina = computed<DoseVacinal[]>(() => {
@@ -206,6 +226,23 @@ export class RegistrarDose implements OnInit {
       .filter((p) => p.nome.toLowerCase().includes(q) || (digitos.length >= 3 && ((p.cpf ?? '').includes(digitos) || (p.cartaoSus ?? '').includes(digitos))))
       .slice(0, 8);
   });
+
+  constructor() {
+    effect(() => {
+      const u = this.unidadeId();
+      const aplicada = this.origem() === 'APLICADA';
+      untracked(() => {
+        this.estoque.set(null);
+        if (u && aplicada) {
+          this.service.estoque(u).pipe(catchError(() => of(null))).subscribe((e) => this.estoque.set(e));
+        }
+      });
+    });
+  }
+
+  protected data(iso: string): string {
+    return dataBr(iso);
+  }
 
   ngOnInit(): void {
     this.origem.set(this.origemInicial);
@@ -229,6 +266,7 @@ export class RegistrarDose implements OnInit {
       this.dose.set(r.dose);
       this.matricula.set(r.profissionalMatricula ?? '');
       this.lote.set(r.lote ?? '');
+      this.loteEstoqueId.set(r.loteEstoqueId ?? '');
       this.fabricante.set(r.fabricante ?? '');
       this.via.set(r.via ?? 'INTRAMUSCULAR');
       this.local.set(r.localAplicacao ?? '');
@@ -248,6 +286,7 @@ export class RegistrarDose implements OnInit {
   protected escolherImuno(uuid: string): void {
     this.imunoId.set(uuid);
     this.dose.set('');
+    this.loteEstoqueId.set('');
     const i = this.imunos().find((x) => x.uuid === uuid);
     if (i) {
       this.via.set(i.via);
@@ -260,6 +299,11 @@ export class RegistrarDose implements OnInit {
       this.erro.set('Preencha o paciente, a unidade, a vacina e a dose.');
       return;
     }
+    const sala = this.origem() === 'APLICADA' && !!this.estoque()?.temSalaDeVacina;
+    if (sala && !this.loteEstoqueId()) {
+      this.erro.set('Escolha o lote do estoque de onde a dose saiu.');
+      return;
+    }
     const dto: RegistroVacinacaoRequestDto = {
       pacienteId,
       imunobiologicoId: this.imunoId(),
@@ -268,7 +312,8 @@ export class RegistrarDose implements OnInit {
       origem: this.origem(),
       aplicadaEm: this.quando() ? `${this.quando()}:00`.slice(0, 19) : null,
       profissionalMatricula: this.origem() === 'APLICADA' ? this.matricula().trim() : null,
-      lote: this.lote().trim() || null,
+      lote: sala ? null : this.lote().trim() || null,
+      loteEstoqueId: sala ? this.loteEstoqueId() || null : null,
       fabricante: this.origem() === 'APLICADA' ? this.fabricante().trim() || null : null,
       via: this.origem() === 'APLICADA' ? this.via() : null,
       localAplicacao: this.origem() === 'APLICADA' ? this.local() || null : null,

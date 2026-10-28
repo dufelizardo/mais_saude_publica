@@ -3,7 +3,7 @@
 ## Status
 
 Aceita. **Desenho do domínio 24** (reservado pela [ADR-0110](./0110-vigilancia-em-saude.md)) e **I1 implementada**. As
-fatias I2 a I5 têm ADR própria quando entrarem.
+fatias I2 a I5 têm ADR própria quando entrarem: a I2 está na [ADR-0148](./0148-imunizacao-sala-de-vacina.md).
 
 ## Contexto
 
@@ -44,7 +44,7 @@ fatias I2 a I5 têm ADR própria quando entrarem.
 | Fatia | Entrega | Depende de |
 |---|---|---|
 | **I1** · fundação ✅ | imunobiológicos, calendário, registro de dose (aplicada e transcrita), situação vacinal, caderneta do paciente e Sala de Vacina | — |
-| **I2** · sala de vacina e cadeia de frio | capacidade "sala de vacina" (MO1); lotes por unidade com livro de movimentação (entrada, baixa na aplicação, perdas técnica e física, transferência); frasco aberto com validade; temperatura da câmara duas vezes ao dia e lotes sob suspeita na excursão | I1 |
+| **I2** · sala de vacina e cadeia de frio ✅ ([ADR-0148](./0148-imunizacao-sala-de-vacina.md)) | capacidade "sala de vacina" (MO1); lotes por unidade com livro de movimentação (entrada, baixa na aplicação, perdas técnica e física; o remanejamento entre unidades ficou para depois); frasco aberto com validade; temperatura da câmara duas vezes ao dia e lotes sob suspeita na excursão | I1 |
 | **I3** · cobertura e campanhas | dose da campanha no andamento real da meta; cobertura vacinal, homogeneidade e taxa de abandono por vacina, unidade e território; busca ativa por microárea; vacinação na Sala de Situação | I1, adscrição (#21) |
 | **I4** · ESAVI | evento supostamente atribuível à vacinação, notificado pela Vigilância e ligado à dose | I1, V1 |
 | **I5** · SI-PNI/RNDS | envio das doses ao Ministério | domínio 20 |
@@ -134,7 +134,8 @@ fatias I2 a I5 têm ADR própria quando entrarem.
 
 - **A situação vacinal depende da data de nascimento** e só conta as doses de idade definida. A da gestante, as de
   campanha e as do adulto não vacinado ficam como recomendação, sem gerar atraso.
-- **O lote é texto até a I2.** A I2 liga a dose ao lote do estoque da sala de vacina e dá baixa na aplicação.
+- **O lote é texto até a I2.** A I2 ([ADR-0148](./0148-imunizacao-sala-de-vacina.md)) liga a dose ao lote do estoque
+  da sala de vacina e dá baixa na aplicação; a unidade sem sala de vacina segue com o lote em texto.
 - **A lista de atrasados vem da adscrição** (domínio 21): quem não está adscrito a uma equipe da unidade não aparece
   nela, mas a caderneta de cada paciente mostra os atrasos.
 - **A cobertura vacinal e o bloco de vacinação da Sala de Situação** ficam para a I3.
