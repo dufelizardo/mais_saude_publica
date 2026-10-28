@@ -399,7 +399,13 @@ export type IndicadorProgramatico =
   | 'PRE_NATAL_6_CONSULTAS'
   | 'TRATAMENTO_ODONTOLOGICO_CONCLUIDO'
   | 'PROTESES_ENTREGUES'
-  | 'ESCOVACAO_SUPERVISIONADA';
+  | 'ESCOVACAO_SUPERVISIONADA'
+  // Saúde Mental (ADR-0155).
+  | 'PTS_EM_DIA'
+  | 'AVALIACAO_EM_30_DIAS'
+  | 'POS_CRISE_EM_7_DIAS'
+  | 'COMUNICACAO_MP_NO_PRAZO'
+  | 'RETORNO_INTERSETORIAL';
 
 export type TipoValorIndicador = 'PERCENTUAL' | 'QUANTIDADE';
 export type SituacaoMetaProgramatica = 'ATINGIDA' | 'EM_RISCO' | 'ABAIXO' | 'SEM_DADOS';

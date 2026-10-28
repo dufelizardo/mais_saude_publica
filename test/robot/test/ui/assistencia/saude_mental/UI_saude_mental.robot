@@ -4,6 +4,7 @@ Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_pt
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_rede_ui_scenario.resource
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_risco_crise_ui_scenario.resource
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_raps_ui_scenario.resource
+Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_intersetorial_ui_scenario.resource
 Resource    ../../../../src/scenario/common/ui_sessao_scenario.resource
 Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
@@ -155,5 +156,13 @@ CT-017 - Acolhimento noturno
     [Tags]    UI    UiSaudeMental
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - SAUDE MENTAL - ACOLHIMENTO NOTURNO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-018 - Encaminhamento intersetorial
+    [Documentation]    Encaminhar o caso a uma instituição do catálogo e registrar o retorno (ADR-0155).
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - ENCAMINHAMENTO INTERSETORIAL
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

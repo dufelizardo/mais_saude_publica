@@ -72,6 +72,10 @@ public class AcompanhamentoSaudeMentalDto implements Serializable {
     private List<AvaliacaoRiscoDto> riscos;
     private List<EventoCriseDto> crises;
     private List<InternacaoResumoSaudeMentalDto> internacoes;
+    /** Encaminhamentos a instituições de outros setores (ADR-0155), o mais recente primeiro; só com conteúdo liberado. */
+    private List<EncaminhamentoIntersetorialDto> encaminhamentosIntersetoriais;
+    /** Algum encaminhamento intersetorial em aberto depois do prazo de retorno. Também na lista. */
+    private boolean retornoIntersetorialVencido;
 
     @Getter
     @Setter

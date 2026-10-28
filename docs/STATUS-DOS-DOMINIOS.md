@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-27 (I1, depois da release 1.8.0)
+- **Atualizado em:** 2026-10-28 (SM6 e Intersetorialidade IS1)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -52,14 +52,14 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
-| 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM5 feitas (SM3 sem o SAMU); intersetorialidade e indicadores (SM6) |
+| 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
-| 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
+| 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 12 ✅ · 10 🟡 · 2 📐 · 7 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 13 ✅ · 10 🟡 · 2 📐 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -92,7 +92,8 @@ F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulner
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
-SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
+SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
+IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
@@ -107,7 +108,6 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 | Estoque (13) e Transporte (16) | E4 (insumos e veículos), SAMU |
 | Regulação de urgência (11) | SM3 (acionar SAMU), E4 |
 | Gestão da Rede (30) | cotas PPI da Regulação |
-| Intersetorialidade (31) | SM6, encaminhamentos da Vigilância e das Emergências |
 
 ## 2. Domínios
 
@@ -620,7 +620,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 26. Saúde Mental
 
-**Estado:** 🟡. Desenhado na [ADR-0112](./adr/0112-saude-mental.md); detalhe em
+**Estado:** ✅ (SM1 a SM6). Desenhado na [ADR-0112](./adr/0112-saude-mental.md); detalhe em
 [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md).
 
 **Temos:**
@@ -647,14 +647,18 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   Unidade de acolhimento, Serviço residencial terapêutico e Geração de trabalho e renda); painel da RAPS por componente
   com os casos, as intervenções dos últimos 90 dias e as lacunas da rede; acolhimento noturno do CAPS com vagas,
   permanência máxima, entrada, prorrogação e saída; telas Rede (RAPS) e Acolhimento noturno.
+- [x] **SM6 · Intersetorialidade e indicadores** ([ADR-0155](./adr/0155-saude-mental-intersetorialidade-e-indicadores.md)):
+  encaminhamento do caso a instituições de outros setores (pelo catálogo da IS1, ADR-0154), com recebimento, retorno
+  (concluído ou recusado) e cancelamento; o sem retorno no prazo como pendência do caso e filtro da lista; cinco
+  indicadores no conjunto da P6 (PTS em dia, avaliação em até 30 dias, pós-crise em até 7 dias, comunicação ao MP no
+  prazo e retorno intersetorial), com metas, série e Sala de Situação.
 
 **Falta:**
 - [ ] **SM3 · o que ficou:** a notificação de violência autoprovocada no sistema (depende da Vigilância V1) e o
   acionamento do SAMU (depende da regulação de urgência).
 - [ ] CAPS de referência por território e a produção do CAPS para o faturamento (RAAS, depende do domínio 20), depois da
   SM5 (ADR-0153).
-- [ ] **SM6 · Intersetorialidade e indicadores:** instituições externas e encaminhamento intersetorial (pelo item 31),
-  indicadores.
+- [ ] A guia de encaminhamento intersetorial para imprimir (depende de Documentos).
 
 ### 27. Gestão de Emergências e Desastres
 
@@ -717,13 +721,22 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 31. Intersetorialidade e Proteção Social
 
-**Estado:** ⬜. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md).
+**Estado:** 🟡. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md); desenhado na
+[ADR-0154](./adr/0154-intersetorialidade.md).
+
+**Temos:**
+- [x] **IS1 · Catálogo e encaminhamento** ([ADR-0154](./adr/0154-intersetorialidade.md)): catálogo único de
+  instituições externas (setor e tipo, contato, ativa), lido por quem está logado e mantido com
+  `INTERSETORIAL.GERENCIAR` (Gestor e Assistente social); encaminhamento com origem em qualquer domínio (enviado,
+  recebido, concluído, recusado, cancelado; sem retorno derivado do prazo); tela Instituições da rede intersetorial.
+  Primeiro uso: a Saúde Mental (SM6).
 
 **Falta:**
-- [ ] Desenho (ADR): catálogo único de instituições externas (CRAS, CREAS, escolas, Conselho Tutelar, Defensoria,
-  Ministério Público, abrigos) e encaminhamento intersetorial com retorno.
-- [ ] Implementação, reaproveitada por Saúde Mental (SM6), Vigilância (violência), Emergências (abrigos) e
-  Comunicação.
+- [ ] O encaminhamento pela Vigilância (violência: Conselho Tutelar, CREAS) e pelas Emergências (abrigos), com as
+  próprias fatias.
+- [ ] O painel de encaminhamentos por instituição, para a gestão da rede intersetorial.
+- [ ] A guia de encaminhamento para imprimir (Documentos) e a integração com o CadÚnico e o prontuário SUAS
+  (domínio 20, adiado).
 
 ## 3. Pendências transversais
 

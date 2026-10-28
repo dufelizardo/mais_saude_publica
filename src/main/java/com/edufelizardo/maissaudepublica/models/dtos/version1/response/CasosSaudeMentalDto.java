@@ -24,5 +24,7 @@ public class CasosSaudeMentalDto implements Serializable {
     private long ptsARevisar;
     private long riscoAlto;
     private long reavaliacaoRiscoVencida;
+    /** Casos com encaminhamento intersetorial sem retorno no prazo (ADR-0155). */
+    private long retornoIntersetorialVencido;
     private List<AcompanhamentoSaudeMentalDto> lista;
 }

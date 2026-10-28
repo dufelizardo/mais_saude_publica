@@ -22,4 +22,11 @@ public interface AcompanhamentoSaudeMentalRepository extends JpaRepository<Acomp
     List<AcompanhamentoSaudeMental> findDoPaciente(UUID pacienteId);
 
     boolean existsByAcompanhamentoProgramatico_UuidAndFimIsNull(UUID acompanhamentoProgramaticoId);
+
+    /** Os casos abertos na data (começaram até ela e não tinham terminado), para os indicadores (ADR-0155). */
+    @Query("select a from AcompanhamentoSaudeMental a join fetch a.unidade where a.inicio <= ?1 and (a.fim is null or a.fim > ?1)")
+    List<AcompanhamentoSaudeMental> findAbertosEm(java.time.LocalDate dia);
+
+    @Query("select a from AcompanhamentoSaudeMental a join fetch a.unidade where a.inicio between ?1 and ?2")
+    List<AcompanhamentoSaudeMental> findIniciadosNoIntervalo(java.time.LocalDate de, java.time.LocalDate ate);
 }

@@ -1,5 +1,6 @@
 import { MotivoSaidaAcompanhamento, PeriodicidadeAcompanhamento, SituacaoAcompanhamento } from './programa';
 import { AcessoProntuarioDto } from './prontuario';
+import { EncaminhamentoIntersetorialDto } from './intersetorialidade';
 
 // ── Saúde Mental, fatia SM1 (ADR-0120) ─────────────────────────────────────────────────────────
 
@@ -109,6 +110,9 @@ export interface AcompanhamentoSaudeMentalDto {
   riscos: AvaliacaoRiscoDto[];
   crises: EventoCriseDto[];
   internacoes: InternacaoResumoSaudeMentalDto[];
+  /** Encaminhamentos a instituições de outros setores (ADR-0155). */
+  encaminhamentosIntersetoriais: EncaminhamentoIntersetorialDto[];
+  retornoIntersetorialVencido: boolean;
 }
 
 export interface CasosSaudeMentalDto {
@@ -119,6 +123,7 @@ export interface CasosSaudeMentalDto {
   ptsARevisar: number;
   riscoAlto: number;
   reavaliacaoRiscoVencida: number;
+  retornoIntersetorialVencido: number;
   lista: AcompanhamentoSaudeMentalDto[];
 }
 
@@ -149,7 +154,7 @@ export interface AvaliacaoSaudeMentalRequestDto {
 export type SituacaoObjetivoTerapeutico = 'EM_ANDAMENTO' | 'ALCANCADO' | 'NAO_ALCANCADO' | 'SUSPENSO';
 export type SituacaoIntervencaoSaudeMental = 'REALIZADA' | 'NAO_COMPARECEU';
 export type PapelRedeApoio = 'FAMILIAR' | 'CUIDADOR' | 'PESSOA_DE_REFERENCIA' | 'SERVICO' | 'OUTRO';
-export type PendenciaSaudeMental = '' | 'SEM_AVALIACAO' | 'SEM_PTS' | 'PTS_A_REVISAR' | 'RISCO_ALTO' | 'REAVALIACAO_VENCIDA';
+export type PendenciaSaudeMental = '' | 'SEM_AVALIACAO' | 'SEM_PTS' | 'PTS_A_REVISAR' | 'RISCO_ALTO' | 'REAVALIACAO_VENCIDA' | 'RETORNO_INTERSETORIAL';
 
 export const SITUACOES_OBJETIVO: Record<SituacaoObjetivoTerapeutico, { rotulo: string; classe: string }> = {
   EM_ANDAMENTO: { rotulo: 'Em andamento', classe: 'info' },

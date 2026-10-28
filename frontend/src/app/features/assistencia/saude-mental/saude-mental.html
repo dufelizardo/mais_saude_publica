@@ -70,6 +70,7 @@
     <button type="button" [attr.aria-pressed]="pendencia() === 'PTS_A_REVISAR'" (click)="filtrarPendencia('PTS_A_REVISAR')">PTS a revisar</button>
     <button type="button" [attr.aria-pressed]="pendencia() === 'RISCO_ALTO'" (click)="filtrarPendencia('RISCO_ALTO')">Risco alto <span class="cnt">{{ casos()?.riscoAlto ?? 0 }}</span></button>
     <button type="button" [attr.aria-pressed]="pendencia() === 'REAVALIACAO_VENCIDA'" (click)="filtrarPendencia('REAVALIACAO_VENCIDA')">Reavaliação vencida</button>
+    <button type="button" [attr.aria-pressed]="pendencia() === 'RETORNO_INTERSETORIAL'" (click)="filtrarPendencia('RETORNO_INTERSETORIAL')">Sem retorno intersetorial@if (casos()?.retornoIntersetorialVencido) { <span class="cnt">{{ casos()?.retornoIntersetorialVencido }}</span> }</button>
   </div>
   <label class="pill pill--select" style="margin-left: auto;">
     <span class="sr-only">Unidade</span>
@@ -317,6 +318,34 @@
                 <li><span class="cell-main">{{ r.nome }} · {{ papeisRede[r.papel] }}</span><span class="cell-sub">{{ data(r.inicio) }} a {{ data(r.fim) }}@if (r.motivoFim) { · {{ r.motivoFim }} }</span></li>
               }
             </ul>
+          }
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: var(--s-5);">
+            <h4 class="mo-grupo" style="margin: 0;">Encaminhamentos intersetoriais</h4>
+            @if (!d.fim && podeAcompanhar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirIntersetorial(d)">Encaminhar a outro setor</button> }
+          </div>
+          @if (d.encaminhamentosIntersetoriais.length) {
+            <ul class="eq-prof" aria-label="Encaminhamentos intersetoriais">
+              @for (e of d.encaminhamentosIntersetoriais; track e.uuid) {
+                <li class="mo-row">
+                  <span>
+                    <span class="cell-main">{{ e.instituicaoNome }} <span [class]="'tag tag--' + situacoesIntersetoriais[e.situacao].classe">{{ situacoesIntersetoriais[e.situacao].rotulo }}</span>@if (e.semRetorno) { <span class="tag tag--warn">Sem retorno no prazo</span> }</span>
+                    <span class="cell-sub">{{ tiposInstituicao[e.tipo].rotulo }} · {{ setoresIntersetoriais[e.setor] }} · enviado em {{ data(e.enviadoEm) }} · retorno até {{ data(e.retornoEsperadoEm) }}@if (e.instituicaoTelefone) { · {{ e.instituicaoTelefone }} }</span>
+                    <span class="cell-sub">{{ e.motivo }}</span>
+                    @if (e.retorno) { <span class="cell-sub">Retorno em {{ data(e.retornoEm) }}: {{ e.retorno }}</span> }
+                    @if (e.motivoCancelamento) { <span class="cell-sub">Cancelado: {{ e.motivoCancelamento }}</span> }
+                  </span>
+                  @if (!d.fim && podeAcompanhar() && (e.situacao === 'ENVIADO' || e.situacao === 'RECEBIDO')) {
+                    <span class="row-actions">
+                      @if (e.situacao === 'ENVIADO') { <button type="button" class="link-btn" (click)="abrirRetornoIntersetorial(d, e, 'recebimento')" [attr.aria-label]="'Recebido por ' + e.instituicaoNome">Recebido</button> }
+                      <button type="button" class="link-btn" (click)="abrirRetornoIntersetorial(d, e, 'retorno')" [attr.aria-label]="'Retorno de ' + e.instituicaoNome">Retorno</button>
+                      <button type="button" class="link-btn" (click)="abrirRetornoIntersetorial(d, e, 'cancelamento')" [attr.aria-label]="'Cancelar encaminhamento a ' + e.instituicaoNome">Cancelar</button>
+                    </span>
+                  }
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="cell-sub">Nenhum encaminhamento a outro setor: CRAS, CREAS, escola, Conselho Tutelar e as demais instituições do catálogo.</p>
           }
         }
         @case ('risco') {
@@ -895,6 +924,84 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Incluir' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('intersetorial') {
+        <form class="dw-form" [formGroup]="intersetorialForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Paciente</dt><dd>{{ g.caso.pacienteNome }}</dd></div><div><dt>Unidade</dt><dd>{{ g.caso.unidadeNome }}</dd></div></dl>
+            <div class="dw-field">
+              <label for="f-instituicaoIntersetorial">Instituição <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-instituicaoIntersetorial" formControlName="instituicaoId" [attr.aria-invalid]="!!erroCampo('instituicaoIntersetorial')" aria-describedby="e-instituicaoIntersetorial">
+                <option value="">Escolha…</option>
+                @for (i of instituicoes(); track i.uuid) { <option [value]="i.uuid" [selected]="intersetorialForm.controls.instituicaoId.value === i.uuid">{{ i.nome }} · {{ setoresIntersetoriais[i.setor] }}</option> }
+              </select>
+              @if (erroCampo('instituicaoIntersetorial')) { <p class="dw-err" id="e-instituicaoIntersetorial">{{ erroCampo('instituicaoIntersetorial') }}</p> }
+              @if (!instituicoes().length) { <p class="cell-sub">O catálogo está vazio: as instituições são cadastradas em Administrativo · Rede intersetorial.</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-motivoIntersetorial">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-motivoIntersetorial" rows="3" maxlength="1000" formControlName="motivo" placeholder="Ex.: inclusão no CadÚnico e benefício eventual" [attr.aria-invalid]="!!erroCampo('motivoIntersetorial')" aria-describedby="e-motivoIntersetorial"></textarea>
+              @if (erroCampo('motivoIntersetorial')) { <p class="dw-err" id="e-motivoIntersetorial">{{ erroCampo('motivoIntersetorial') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-enviadoIntersetorial">Enviado em</label>
+                <input id="f-enviadoIntersetorial" type="date" formControlName="enviadoEm" [attr.aria-invalid]="!!erroCampo('enviadoIntersetorial')" aria-describedby="e-enviadoIntersetorial" />
+                @if (erroCampo('enviadoIntersetorial')) { <p class="dw-err" id="e-enviadoIntersetorial">{{ erroCampo('enviadoIntersetorial') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-prazoIntersetorial">Retorno esperado até <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-prazoIntersetorial" type="date" formControlName="retornoEsperadoEm" [attr.aria-invalid]="!!erroCampo('prazoIntersetorial')" aria-describedby="e-prazoIntersetorial" />
+                @if (erroCampo('prazoIntersetorial')) { <p class="dw-err" id="e-prazoIntersetorial">{{ erroCampo('prazoIntersetorial') }}</p> }
+              </div>
+            </div>
+            <div class="box box--info"><div>O sistema não acessa a instituição: registre aqui o envio e, depois, o retorno. Sem retorno no prazo, vira pendência do caso.</div></div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Encaminhar' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('retornoIntersetorial') {
+        <form class="dw-form" [formGroup]="retornoIntersetorialForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Instituição</dt><dd>{{ g.enc.instituicaoNome }}</dd></div><div><dt>Enviado em</dt><dd>{{ data(g.enc.enviadoEm) }}</dd></div></dl>
+            @if (g.modo !== 'cancelamento') {
+              <div class="dw-field">
+                <label for="f-dataIntersetorial">{{ g.modo === 'recebimento' ? 'Recebido em' : 'Retorno em' }}</label>
+                <input id="f-dataIntersetorial" type="date" formControlName="data" [attr.aria-invalid]="!!erroCampo('dataIntersetorial')" aria-describedby="e-dataIntersetorial" />
+                @if (erroCampo('dataIntersetorial')) { <p class="dw-err" id="e-dataIntersetorial">{{ erroCampo('dataIntersetorial') }}</p> }
+              </div>
+            }
+            @if (g.modo === 'retorno') {
+              <div class="dw-field">
+                <label for="f-desfechoIntersetorial">Desfecho <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-desfechoIntersetorial" formControlName="desfecho" [attr.aria-invalid]="!!erroCampo('desfechoIntersetorial')" aria-describedby="e-desfechoIntersetorial">
+                  <option value="">Escolha…</option>
+                  <option value="CONCLUIDO">Concluído: a instituição atendeu</option>
+                  <option value="RECUSADO">Recusado: a instituição não atendeu</option>
+                </select>
+                @if (erroCampo('desfechoIntersetorial')) { <p class="dw-err" id="e-desfechoIntersetorial">{{ erroCampo('desfechoIntersetorial') }}</p> }
+              </div>
+            }
+            @if (g.modo !== 'recebimento') {
+              <div class="dw-field">
+                <label for="f-textoIntersetorial">{{ g.modo === 'retorno' ? 'O que a instituição informou' : 'Motivo' }} <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <textarea id="f-textoIntersetorial" rows="3" [attr.maxlength]="g.modo === 'retorno' ? 2000 : 500" formControlName="texto" [attr.aria-invalid]="!!erroCampo('textoIntersetorial')" aria-describedby="e-textoIntersetorial"></textarea>
+                @if (erroCampo('textoIntersetorial')) { <p class="dw-err" id="e-textoIntersetorial">{{ erroCampo('textoIntersetorial') }}</p> }
+              </div>
+            }
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : g.modo === 'cancelamento' ? 'Cancelar o encaminhamento' : 'Registrar' }}</button>
           </footer>
         </form>
       }

@@ -16,4 +16,8 @@ public interface AvaliacaoSaudeMentalRepository extends JpaRepository<AvaliacaoS
     @Query("select a.acompanhamento.uuid, max(a.realizadaEm) from AvaliacaoSaudeMental a where a.acompanhamento.uuid in ?1 "
             + "group by a.acompanhamento.uuid")
     List<Object[]> findUltimas(Collection<UUID> acompanhamentoIds);
+
+    @Query("select a.acompanhamento.uuid, min(a.realizadaEm) from AvaliacaoSaudeMental a where a.acompanhamento.uuid in ?1 "
+            + "group by a.acompanhamento.uuid")
+    List<Object[]> findPrimeiras(Collection<UUID> acompanhamentoIds);
 }
