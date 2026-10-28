@@ -147,6 +147,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/assistencia/programas/programas').then((m) => m.Programas),
         data: { breadcrumb: 'Programas de Saúde', area: 'Assistência' },
       },
+      // Sala de Vacina (ADR-0147), carregada sob demanda.
+      {
+        path: 'assistencia/sala-de-vacina',
+        loadComponent: () => import('./features/assistencia/sala-de-vacina/sala-de-vacina').then((m) => m.SalaDeVacina),
+        data: { breadcrumb: 'Sala de Vacina', area: 'Assistência' },
+      },
       // Saúde Mental (ADR-0120), carregada sob demanda.
       // Sala de Situação (BI1, ADR-0143), carregada sob demanda.
       {

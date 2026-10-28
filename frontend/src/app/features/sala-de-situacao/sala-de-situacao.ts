@@ -252,7 +252,7 @@ export class SalaDeSituacao {
   }
 
   protected classeSituacao(s: string | null | undefined): string {
-    return s === 'ATINGIDA' ? 'tag tag--ok' : s === 'EM_RISCO' ? 'tag tag--warn' : s === 'ABAIXO' ? 'tag tag--err' : 'tag tag--info';
+    return s === 'ATINGIDA' ? 'tag tag--ok' : s === 'EM_RISCO' ? 'tag tag--warn' : s === 'ABAIXO' ? 'tag tag--alert' : 'tag tag--info';
   }
 
   protected rotuloDaRota(tipo: string): string {

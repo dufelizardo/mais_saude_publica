@@ -41,6 +41,8 @@ const MENU: Record<string, string[]> = {
   '/assistencia/leitos': ['INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'LEITO.GERENCIAR'],
   // Catálogo de programas (ADR-0118): aberto a quem está logado.
   '/assistencia/programas': [],
+  // Sala de Vacina (ADR-0147): de quem vacina.
+  '/assistencia/sala-de-vacina': ['VACINACAO.REGISTRAR'],
   // Saúde Mental (ADR-0120): só quem acolhe ou acompanha.
   '/assistencia/saude-mental': ['SAUDE_MENTAL.ACOLHER', 'SAUDE_MENTAL.ACOMPANHAR'],
   // Vigilância epidemiológica (ADR-0124).
@@ -53,7 +55,7 @@ const MENU: Record<string, string[]> = {
 
 /** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
 const GRUPOS: Record<string, string[]> = {
-  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas', '/assistencia/saude-mental'],
+  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas', '/assistencia/sala-de-vacina', '/assistencia/saude-mental'],
   Vigilância: ['/vigilancia'],
   Administração: ['/administracao/usuarios', '/administracao/auditoria'],
 };

@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Modal } from '../../../shared/modal/modal';
 import { Drawer } from '../../../shared/drawer/drawer';
@@ -32,6 +32,7 @@ import {
   TIPOS_ACAO,
 } from '../../../core/models/programa';
 import { ProgramaService } from '../../../core/services/programa';
+import { CadernetaVacinacao } from '../vacinacao/caderneta-vacinacao';
 
 type AbaDetalhe = 'resumo' | 'historico' | 'programas' | 'vacinacao' | 'anexos';
 type ModoVisualizacao = 'lista' | 'cartoes';
@@ -47,7 +48,7 @@ interface TimelineItem {
 
 @Component({
   selector: 'app-pacientes',
-  imports: [ReactiveFormsModule, RouterLink, Modal, Drawer, DatePipe, AcessoProntuario, AdscricaoDoPaciente],
+  imports: [ReactiveFormsModule, RouterLink, Modal, Drawer, DatePipe, AcessoProntuario, AdscricaoDoPaciente, CadernetaVacinacao],
   templateUrl: './pacientes.html',
   styleUrl: './pacientes.css',
 })
@@ -246,6 +247,9 @@ export class Pacientes {
   /** O que a tela oferece (ADR-0079): sem a permissão, o botão nem aparece. A API continua decidindo. */
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
 
+  private readonly rota = inject(ActivatedRoute);
+  private pedidoAtendido = false;
+
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.form.controls.cep.valueChanges
@@ -282,6 +286,18 @@ export class Pacientes {
   }
 
   private reselecionarAposRecarga(pacientes: PacienteResponseDto[]): void {
+    // Vindo de outra tela (a sala de vacina, ADR-0147): ?id= abre o paciente e ?aba= a aba pedida, uma vez.
+    const pedido = this.rota.snapshot.queryParamMap.get('id');
+    const pedidoNaLista = pedido && !this.pedidoAtendido ? pacientes.find((p) => p.uuid === pedido) : undefined;
+    if (pedidoNaLista) {
+      this.pedidoAtendido = true;
+      const aba = this.rota.snapshot.queryParamMap.get('aba') as AbaDetalhe | null;
+      this.selecionar(pedidoNaLista);
+      if (aba && ['resumo', 'historico', 'programas', 'vacinacao', 'anexos'].includes(aba)) {
+        this.selecionarAba(aba);
+      }
+      return;
+    }
     const atual = this.selecionado();
     const mantido = atual ? pacientes.find((p) => p.uuid === atual.uuid) : undefined;
     const proximo = mantido ?? pacientes[0] ?? null;

@@ -447,12 +447,12 @@
       }
 
       @if (abaDetalhe() === 'vacinacao') {
-        <div class="empty-state">
-          <span class="empty-state__icon" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.6 5.4 21 3m-9.75 9.75L9 15m2.25-2.25L15 9m-3.75 3.75L9 15m9-9-3.35 3.35M5 19l1.5-4.5L15 6l3 3-8.5 8.5L5 19Z"></path></svg>
-          </span>
-          <div class="empty-state__title">Em breve</div>
-          <p class="empty-state__desc">Vai mostrar o histórico de vacinação do paciente — depende de um domínio de backend que ainda não existe.</p>
+        <div style="padding: var(--s-5);" aria-label="Vacinação do paciente">
+          @if (pode('PRONTUARIO.CONSULTAR', 'VACINACAO.REGISTRAR')) {
+            <app-caderneta-vacinacao [pacienteId]="p.uuid" [pacienteNome]="p.nome" [podeRegistrar]="pode('VACINACAO.REGISTRAR')" />
+          } @else {
+            <p class="cell-sub">A caderneta de vacinação é dado de saúde: é de quem consulta o prontuário ou vacina.</p>
+          }
         </div>
       }
 

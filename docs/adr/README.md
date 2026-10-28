@@ -162,6 +162,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0144](./0144-bi-situacao-operacional.md) | Indicadores e BI: situação operacional (BI2) | Aceita e implementada |
 | [0145](./0145-saude-da-aplicacao-para-o-kubernetes.md) | Saúde da aplicação para as verificações do Kubernetes | Aceita e implementada |
 | [0146](./0146-bi-indicadores-da-rede.md) | Indicadores e BI: indicadores da rede (BI3) | Aceita e implementada |
+| [0147](./0147-imunizacao.md) | Imunização: domínio próprio e fundação (I1) | Aceita (desenho; I1 implementada; I2 a I5 a fazer) |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 
