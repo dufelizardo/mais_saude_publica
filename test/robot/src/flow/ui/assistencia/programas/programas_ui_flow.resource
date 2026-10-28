@@ -315,19 +315,19 @@ UI Programas - Campanha Na Landing
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 UI Programas - Acao Da Campanha
-    [Documentation]    Na gaveta da campanha: prever a vacinação no local e confirmar com as pessoas atendidas.
+    [Documentation]    Na gaveta da campanha: prever a ação no local e confirmar com as pessoas atendidas (na de vacinação, a meta anda pela dose, ADR-0149).
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${campanha}    ${nome}    ${local}    ${unidade}=    Seed Campanha Com Local
+    ${campanha}    ${nome}    ${local}    ${unidade}=    Seed Campanha Com Local    RASTREAMENTO
     UI Programas - Abrir
     Clicar Aba    Campanhas
     Clicar Botao    Abrir campanha: ${nome}
     Wait For Elements State    css=[aria-label="Locais da campanha"] li    visible
     Click    css=app-drawer >> role=button[name="Prever ação"]
     Click    css=app-drawer >> nth=1 >> css=footer >> role=button[name="Prever ação"]
-    Wait For Elements State    css=[aria-label="Ações programáticas"] >> text=Vacina    visible
+    Wait For Elements State    css=[aria-label="Ações programáticas"] >> text=Mobilização    visible
     ${detalhe}=    GET Campanha    ${campanha}
     ${nomeLocal}=    Set Variable    ${detalhe.json()}[locais][0][nome]
-    Clicar Botao    Confirmar: Vacina ${nomeLocal}
+    Clicar Botao    Confirmar: Mobilização ${nomeLocal}
     Fill Text    id=f-acao-quantidade    30
     Click    css=app-drawer >> nth=1 >> css=footer >> role=button[name="Confirmar"]
     Wait For Elements State    css=[aria-label="Andamento da meta"] >> text=30 de 100    visible

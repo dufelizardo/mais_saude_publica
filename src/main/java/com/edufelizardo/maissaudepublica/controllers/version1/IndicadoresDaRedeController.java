@@ -4,7 +4,9 @@ import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProgramaPorUnidadeDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProgramasNaRedeDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.VacinacaoNaRedeDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.VigilanciaNaRedeDto;
+import com.edufelizardo.maissaudepublica.services.version1.CoberturaVacinalService;
 import com.edufelizardo.maissaudepublica.services.version1.IndicadoresDaRedeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +31,21 @@ public class IndicadoresDaRedeController {
 
     @Autowired
     private IndicadoresDaRedeService service;
+
+    @Autowired
+    private CoberturaVacinalService coberturaService;
+
+    @RequerPermissao({"INDICADOR.CONSULTAR"})
+    @GetMapping(value = "indicadores-rede/vacinacao", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Vacinação na rede", description = "As doses aplicadas no período por estratégia e por vacina, a cobertura das "
+            + "vacinas de referência hoje (pelo cadastro), a homogeneidade, o abandono e as campanhas de vacinação do período com o andamento "
+            + "(ADR-0149).", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<VacinacaoNaRedeDto> vacinacao(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
+                                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
+                                                        @RequestParam(required = false) UUID unidadeId) {
+        return ResponseEntity.ok(coberturaService.naRede(de, ate, unidadeId));
+    }
 
     @RequerPermissao({"INDICADOR.CONSULTAR"})
     @GetMapping(value = "indicadores-rede/programas", produces = MediaType.APPLICATION_JSON_VALUE)

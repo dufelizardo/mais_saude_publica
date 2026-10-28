@@ -103,6 +103,51 @@ export interface EsquemaVacinalDto {
   vigenteAte?: string | null;
   ordem: number;
   ativo: boolean;
+  /** A dose de referência da cobertura da vacina, com a meta em % (ADR-0149). */
+  medeCobertura: boolean;
+  metaCobertura?: number | null;
+}
+
+export interface EsquemaVacinalRequestDto {
+  imunobiologicoId: string;
+  dose: DoseVacinal;
+  publico: PublicoVacinal;
+  idadeMinimaMeses?: number | null;
+  idadeRecomendadaMeses?: number | null;
+  idadeMaximaMeses?: number | null;
+  intervaloMinimoDias?: number | null;
+  repeticaoAnos?: number | null;
+  contaNaSituacao: boolean;
+  observacao?: string | null;
+  vigenteDesde: string;
+  vigenteAte?: string | null;
+  ordem: number;
+  ativo: boolean;
+  medeCobertura?: boolean | null;
+  metaCobertura?: number | null;
+}
+
+/** O pedido de ajuste com os dados atuais da dose, trocando só o que vem em {@code mudancas}. */
+export function esquemaRequest(e: EsquemaVacinalDto, mudancas: Partial<EsquemaVacinalRequestDto>): EsquemaVacinalRequestDto {
+  return {
+    imunobiologicoId: e.imunobiologicoId,
+    dose: e.dose,
+    publico: e.publico,
+    idadeMinimaMeses: e.idadeMinimaMeses,
+    idadeRecomendadaMeses: e.idadeRecomendadaMeses,
+    idadeMaximaMeses: e.idadeMaximaMeses,
+    intervaloMinimoDias: e.intervaloMinimoDias,
+    repeticaoAnos: e.repeticaoAnos,
+    contaNaSituacao: e.contaNaSituacao,
+    observacao: e.observacao,
+    vigenteDesde: e.vigenteDesde,
+    vigenteAte: e.vigenteAte,
+    ordem: e.ordem,
+    ativo: e.ativo,
+    medeCobertura: e.medeCobertura,
+    metaCobertura: e.metaCobertura,
+    ...mudancas,
+  };
 }
 
 export interface RegistroVacinacaoRequestDto {
@@ -208,6 +253,88 @@ export interface AtrasadoVacinacaoDto {
   microareaNome?: string | null;
   atrasadas: string[];
   atrasadaDesde: string;
+  equipeId?: string | null;
+  microareaId?: string | null;
+  acsNome?: string | null;
+  endereco?: string | null;
+}
+
+// ── Cobertura (ADR-0149) ──
+
+export type ClasseAbandonoVacinal = 'BAIXA' | 'MEDIA' | 'ALTA';
+
+export const CLASSES_ABANDONO: Record<ClasseAbandonoVacinal, string> = { BAIXA: 'Baixo', MEDIA: 'Médio', ALTA: 'Alto' };
+
+export interface CoberturaVacinaDto {
+  esquemaId: string;
+  imunobiologicoId: string;
+  sigla: string;
+  nome: string;
+  dose: DoseVacinal;
+  doseRotulo: string;
+  idadeRecomendadaMeses: number;
+  meta: number;
+  coorte: number;
+  vacinados: number;
+  cobertura?: number | null;
+  atingida: boolean;
+  homogeneidadeTerritorios?: number | null;
+  comPrimeiraDose?: number | null;
+  abandono?: number | null;
+  classeAbandono?: ClasseAbandonoVacinal | null;
+}
+
+export interface CoberturaItemDto {
+  esquemaId: string;
+  coorte: number;
+  vacinados: number;
+  cobertura?: number | null;
+  atingida: boolean;
+}
+
+export interface CoberturaRecorteDto {
+  id?: string | null;
+  nome: string;
+  homogeneidade?: number | null;
+  vacinasNaMeta: number;
+  vacinasAvaliadas: number;
+  itens: CoberturaItemDto[];
+}
+
+export interface CoberturaVacinalDto {
+  nivel: 'REDE' | 'UNIDADE' | 'EQUIPE' | 'MICROAREA';
+  abrangencia: string;
+  unidadeId?: string | null;
+  equipeId?: string | null;
+  microareaId?: string | null;
+  dataReferencia: string;
+  homogeneidade?: number | null;
+  vacinasNaMeta: number;
+  vacinasAvaliadas: number;
+  abandonoAlto: number;
+  vacinas: CoberturaVacinaDto[];
+  recorteRotulo?: string | null;
+  recortes: CoberturaRecorteDto[];
+}
+
+export interface FiltroCobertura {
+  unidadeId?: string;
+  equipeId?: string;
+  microareaId?: string;
+  data?: string;
+}
+
+/** "95%" ou "—". */
+export function percentual(v: number | null | undefined): string {
+  return v == null ? '—' : `${Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+}
+
+/** A classe da tag pela meta: atingida, perto (até 10 pontos abaixo) ou abaixo; sem coorte, neutra. */
+export function classeCobertura(cobertura: number | null | undefined, meta: number): string {
+  if (cobertura == null) {
+    return 'tag tag--muted';
+  }
+  return cobertura >= meta ? 'tag tag--ok' : cobertura >= meta - 10 ? 'tag tag--warn' : 'tag tag--alert';
 }
 
 /** "7 meses", "2 anos e 3 meses". */

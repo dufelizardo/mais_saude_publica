@@ -6,9 +6,12 @@ import {
   CadeiaFrioDto,
   CadernetaVacinacaoDto,
   CamaraRefrigeracaoDto,
+  CoberturaVacinalDto,
   EntradaLoteRequestDto,
   EsquemaVacinalDto,
+  EsquemaVacinalRequestDto,
   EstoqueSalaVacinaDto,
+  FiltroCobertura,
   ImunobiologicoDto,
   LeituraTemperaturaDto,
   LeituraTemperaturaRequestDto,
@@ -20,7 +23,10 @@ import {
   VacinacaoDoDiaDto,
 } from '../models/imunizacao';
 
-/** Imunização (ADR-0147): catálogo, calendário, registro de vacinação, caderneta e sala de vacina; estoque e cadeia de frio (ADR-0148). */
+/**
+ * Imunização (ADR-0147): catálogo, calendário, registro de vacinação, caderneta e sala de vacina; estoque e cadeia de
+ * frio (ADR-0148); cobertura e busca ativa (ADR-0149).
+ */
 @Injectable({ providedIn: 'root' })
 export class ImunizacaoService {
   private readonly http = inject(HttpClient);
@@ -58,8 +64,31 @@ export class ImunizacaoService {
     return this.http.get<VacinacaoDoDiaDto>(`${this.api}/vacinacao/dia`, { params });
   }
 
-  atrasados(unidadeId: string): Observable<AtrasadoVacinacaoDto[]> {
-    return this.http.get<AtrasadoVacinacaoDto[]>(`${this.api}/vacinacao/atrasados`, { params: new HttpParams().set('unidadeId', unidadeId) });
+  atualizarEsquema(uuid: string, dto: EsquemaVacinalRequestDto): Observable<EsquemaVacinalDto> {
+    return this.http.put<EsquemaVacinalDto>(`${this.api}/esquema-vacinal/${uuid}`, dto);
+  }
+
+  atrasados(unidadeId: string, equipeId?: string, microareaId?: string): Observable<AtrasadoVacinacaoDto[]> {
+    let params = new HttpParams().set('unidadeId', unidadeId);
+    if (equipeId) {
+      params = params.set('equipeId', equipeId);
+    }
+    if (microareaId) {
+      params = params.set('microareaId', microareaId);
+    }
+    return this.http.get<AtrasadoVacinacaoDto[]>(`${this.api}/vacinacao/atrasados`, { params });
+  }
+
+  // ── Cobertura (ADR-0149) ──
+
+  cobertura(filtro: FiltroCobertura = {}): Observable<CoberturaVacinalDto> {
+    let params = new HttpParams();
+    for (const [k, v] of Object.entries(filtro)) {
+      if (v) {
+        params = params.set(k, v);
+      }
+    }
+    return this.http.get<CoberturaVacinalDto>(`${this.api}/vacinacao/cobertura`, { params });
   }
 
   // ── Estoque (ADR-0148) ──

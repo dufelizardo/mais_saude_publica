@@ -29,4 +29,15 @@ public interface RegistroVacinacaoRepository extends JpaRepository<RegistroVacin
             + "and r.origem = com.edufelizardo.maissaudepublica.models.enuns.OrigemRegistroVacinacao.APLICADA and r.anulada = false "
             + "and not exists (select 1 from RegistroVacinacao s where s.retificacaoDe = r) order by r.aplicadaEm")
     List<RegistroVacinacao> findAplicadasDaUnidade(UUID unidadeId, LocalDateTime de, LocalDateTime ate);
+
+    /** As aplicadas vigentes da rede no intervalo (a vacinação na Sala de Situação, ADR-0149); o escopo filtra depois. */
+    @Query("select r from RegistroVacinacao r join fetch r.imunobiologico join fetch r.unidade where r.aplicadaEm >= ?1 and r.aplicadaEm < ?2 "
+            + "and r.origem = com.edufelizardo.maissaudepublica.models.enuns.OrigemRegistroVacinacao.APLICADA and r.anulada = false "
+            + "and not exists (select 1 from RegistroVacinacao s where s.retificacaoDe = r)")
+    List<RegistroVacinacao> findAplicadasEntre(LocalDateTime de, LocalDateTime ate);
+
+    /** As pessoas vacinadas na campanha (doses vigentes com a campanha), o andamento da meta (ADR-0149). */
+    @Query("select count(distinct r.paciente.uuid) from RegistroVacinacao r where r.campanha.uuid = ?1 and r.anulada = false "
+            + "and not exists (select 1 from RegistroVacinacao s where s.retificacaoDe = r)")
+    long countPessoasDaCampanha(UUID campanhaId);
 }

@@ -325,12 +325,37 @@
         } @empty { <li class="cell-sub">Nenhuma unidade com produção no período.</li> }
       </ol>
     </section>
-    <section class="card ss-card" aria-label="Em breve na Sala de Situação">
-      <div class="ss-card__head"><div><h2 class="ss-card__title">Em breve</h2><p class="ss-card__sub">Blocos do painel que dependem de outras fatias</p></div></div>
-      <ul class="eq-prof">
-        <li class="mo-row"><span><span class="cell-main">Cobertura vacinal e doses aplicadas</span><span class="cell-sub">Domínio 24, Imunização</span></span><span class="tag tag--info">Em breve</span></li>
-      </ul>
+    <section class="card ss-card" aria-label="Vacinação">
+      <div class="ss-card__head"><div><h2 class="ss-card__title">Vacinação</h2><p class="ss-card__sub">Doses aplicadas no período · cobertura de hoje pelo cadastro</p></div>
+        <a class="link-btn" routerLink="/assistencia/sala-de-vacina">Ver sala de vacina</a></div>
+      @if (vacinacaoRede(); as v) {
+        <div class="ss-vac">
+          <div><b class="mono" aria-label="Doses aplicadas no período">{{ numero(v.dosesAplicadas) }}</b><span class="cell-sub">doses aplicadas</span></div>
+          <div><b class="mono" aria-label="Homogeneidade entre vacinas">{{ pct(v.homogeneidade) }}</b><span class="cell-sub">homogeneidade ({{ v.vacinasNaMeta }} de {{ v.vacinasAvaliadas }} na meta)</span></div>
+          <div><b class="mono">{{ v.abandonoAlto }}</b><span class="cell-sub">com abandono alto</span></div>
+        </div>
+        @if (v.porEstrategia.length) {
+          <p class="cell-sub" aria-label="Doses por estratégia">@for (e of v.porEstrategia; track e.chave; let ultimo = $last) { {{ e.rotulo }}: {{ numero(e.quantidade) }}@if (!ultimo) { · } }</p>
+        }
+        <ul class="eq-prof" aria-label="Cobertura por vacina">
+          @for (c of v.cobertura; track c.esquemaId) {
+            <li class="mo-row"><span><span class="cell-main">{{ c.sigla }} · {{ c.doseRotulo }}</span><span class="cell-sub">{{ c.vacinados }} de {{ c.coorte }} · meta {{ pct(c.meta) }}</span></span>
+              <span [class]="classeVacina(c.cobertura, c.meta)">{{ pct(c.cobertura) }}</span></li>
+          }
+        </ul>
+        @if (v.campanhas.length) {
+          <h3 class="mo-grupo" style="margin-top: var(--s-4);">Campanhas de vacinação</h3>
+          <ul class="eq-prof" aria-label="Campanhas de vacinação">
+            @for (c of v.campanhas; track c.uuid) {
+              <li class="mo-row"><span><span class="cell-main">{{ c.nome }}</span><span class="cell-sub">{{ data(c.inicio) }} a {{ data(c.fim) }}</span></span>
+                <span class="mono">{{ numero(c.realizado) }}@if (c.metaQuantidade) { de {{ numero(c.metaQuantidade) }} }</span></li>
+            }
+          </ul>
+        }
+      } @else {
+        <p class="cell-sub">Calculando a vacinação…</p>
+      }
     </section>
   </div>
-  <p class="cell-sub ss-fonte">Fonte: atendimentos, agenda, escala, programas e vigilância do Mais Saúde Pública, calculados na hora · só agregados, sem paciente · a exportação entra na auditoria.</p>
+  <p class="cell-sub ss-fonte">Fonte: atendimentos, agenda, escala, programas, vigilância e vacinação do Mais Saúde Pública, calculados na hora · só agregados, sem paciente · a exportação entra na auditoria.</p>
 }

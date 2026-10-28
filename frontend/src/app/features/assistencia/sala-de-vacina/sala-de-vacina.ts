@@ -8,31 +8,38 @@ import {
   PUBLICOS,
   PublicoVacinal,
   VacinacaoDoDiaDto,
+  esquemaRequest,
   idadeTexto,
+  percentual,
 } from '../../../core/models/imunizacao';
+import { EquipeResumoDto } from '../../../core/models/equipe';
+import { EquipeService } from '../../../core/services/equipe';
+import { Drawer } from '../../../shared/drawer/drawer';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { ImunizacaoService } from '../../../core/services/imunizacao';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { RegistrarDose } from '../vacinacao/registrar-dose';
 import { CadeiaDeFrio } from './cadeia-de-frio';
+import { CoberturaVacinal } from './cobertura-vacinal';
 import { EstoqueSalaVacina } from './estoque-sala-vacina';
 
-type Aba = 'dia' | 'atrasados' | 'estoque' | 'frio' | 'calendario';
+type Aba = 'dia' | 'atrasados' | 'cobertura' | 'estoque' | 'frio' | 'calendario';
 
 /**
  * Sala de Vacina (ADR-0147): o registro das doses do dia na unidade, com a contagem por vacina; os adscritos com dose
- * atrasada, para a busca ativa; o estoque e a cadeia de frio da unidade com sala de vacina (ADR-0148); e o calendário
- * vacinal vigente.
+ * atrasada, para a busca ativa por equipe e microárea, com a lista para imprimir; a cobertura vacinal (ADR-0149); o
+ * estoque e a cadeia de frio da unidade com sala de vacina (ADR-0148); e o calendário vacinal vigente, com a meta das
+ * doses que medem a cobertura.
  */
 @Component({
   selector: 'app-sala-de-vacina',
-  imports: [RouterLink, RegistrarDose, EstoqueSalaVacina, CadeiaDeFrio],
+  imports: [RouterLink, RegistrarDose, EstoqueSalaVacina, CadeiaDeFrio, CoberturaVacinal, Drawer],
   template: `
     <header class="page-head">
       <div>
         <h1>Sala de Vacina</h1>
-        <p>Registro das doses, atrasados para a busca ativa, estoque, cadeia de frio e o calendário vacinal</p>
+        <p>Registro das doses, atrasados para a busca ativa, cobertura, estoque, cadeia de frio e o calendário vacinal</p>
       </div>
       <div class="page-actions vac-filtros">
         <div class="dw-field">
@@ -49,6 +56,7 @@ type Aba = 'dia' | 'atrasados' | 'estoque' | 'frio' | 'calendario';
     <div class="page-tabs" role="tablist" aria-label="Sala de vacina">
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'dia'" (click)="aba.set('dia')">Doses do dia</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'atrasados'" (click)="aba.set('atrasados')">Atrasados</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'cobertura'" (click)="aba.set('cobertura')">Cobertura</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'estoque'" (click)="aba.set('estoque')">Estoque</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'frio'" (click)="aba.set('frio')">Cadeia de frio</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'calendario'" (click)="aba.set('calendario')">Calendário vacinal</button>
@@ -63,11 +71,19 @@ type Aba = 'dia' | 'atrasados' | 'estoque' | 'frio' | 'calendario';
           <ul class="eq-prof">
             @for (e of g.esquemas; track e.uuid) {
               <li class="mo-row"><span><span class="cell-main">{{ e.sigla }} · {{ e.doseRotulo }}</span><span class="cell-sub">{{ e.observacao }}</span></span>
-                @if (!e.contaNaSituacao) { <span class="tag tag--muted">Conforme a situação</span> }</li>
+                <span class="vac-acoes">
+                  @if (!e.contaNaSituacao) { <span class="tag tag--muted">Conforme a situação</span> }
+                  @if (e.medeCobertura) { <span class="tag tag--info">Cobertura · meta {{ pct(e.metaCobertura) }}</span> }
+                  @if (e.publico === 'CRIANCA' && e.idadeRecomendadaMeses != null) {
+                    <button type="button" class="link-btn" (click)="editarMeta(e)" [attr.aria-label]="'Meta de cobertura de ' + e.sigla + ', ' + e.doseRotulo">Meta</button>
+                  }
+                </span></li>
             }
           </ul>
         }
       </section>
+    } @else if (aba() === 'cobertura') {
+      <app-cobertura-vacinal [unidadeId]="unidadeId()" />
     } @else if (!unidadeId()) {
       <p class="cell-sub">Escolha a unidade para ver as doses do dia, os atrasados, o estoque e a cadeia de frio.</p>
     } @else if (aba() === 'estoque') {
@@ -107,26 +123,67 @@ type Aba = 'dia' | 'atrasados' | 'estoque' | 'frio' | 'calendario';
     } @else {
       <section class="card" style="padding: var(--s-5);" aria-label="Atrasados">
         <p class="cell-sub">Adscritos às equipes da unidade com alguma dose do calendário atrasada, os de atraso mais antigo primeiro.</p>
+        <div class="vac-cab">
+          <div class="vac-filtros">
+            <div class="dw-field"><label for="f-at-equipe">Equipe</label>
+              <select id="f-at-equipe" [value]="equipeId()" (change)="trocarEquipe($any($event.target).value)">
+                <option value="">Todas as equipes</option>
+                @for (e of equipes(); track e.uuid) { <option [value]="e.uuid">{{ e.nome }}</option> }
+              </select>
+            </div>
+            @if (equipeId()) {
+              <div class="dw-field"><label for="f-at-microarea">Microárea</label>
+                <select id="f-at-microarea" [value]="microareaId()" (change)="microareaId.set($any($event.target).value)">
+                  <option value="">Todas as microáreas</option>
+                  @for (m of microareas(); track m.id) { <option [value]="m.id">{{ m.nome }}</option> }
+                </select>
+              </div>
+            }
+          </div>
+          <a class="btn btn--sm btn--ghost" target="_blank" [routerLink]="['/busca-ativa/vacinacao']"
+            [queryParams]="{ unidadeId: unidadeId(), equipeId: equipeId() || null, microareaId: microareaId() || null }">Imprimir lista</a>
+        </div>
         @if (atrasados() === undefined) {
           <p class="cell-sub">Calculando…</p>
         } @else {
           <div class="tbl-wrap vac-tabela">
             <table aria-label="Pacientes com dose atrasada">
-              <thead><tr><th scope="col">Paciente</th><th scope="col">Idade</th><th scope="col">Equipe · microárea</th><th scope="col">Doses atrasadas</th></tr></thead>
+              <thead><tr><th scope="col">Paciente</th><th scope="col">Idade</th><th scope="col">Equipe · microárea</th><th scope="col">Onde mora</th><th scope="col">Doses atrasadas</th></tr></thead>
               <tbody>
-                @for (a of atrasados() ?? []; track a.pacienteId) {
+                @for (a of atrasadosFiltrados(); track a.pacienteId) {
                   <tr>
                     <td><a [routerLink]="['/assistencia/pacientes']" [queryParams]="{ id: a.pacienteId, aba: 'vacinacao' }">{{ a.pacienteNome }}</a></td>
                     <td>{{ idade(a.idadeMeses) }}</td>
-                    <td>{{ a.equipeNome ?? '—' }}@if (a.microareaNome) { · {{ a.microareaNome }} }</td>
+                    <td>{{ a.equipeNome ?? '—' }}@if (a.microareaNome) { · {{ a.microareaNome }} }@if (a.acsNome) { <span class="cell-sub">ACS {{ a.acsNome }}</span> }</td>
+                    <td>{{ a.endereco ?? '—' }}</td>
                     <td>@for (x of a.atrasadas; track x) { <span class="tag tag--alert" style="margin: 0 4px 4px 0;">{{ x }}</span> }</td>
                   </tr>
-                } @empty { <tr><td colspan="4" class="cell-sub">Nenhum adscrito com dose atrasada.</td></tr> }
+                } @empty { <tr><td colspan="5" class="cell-sub">Nenhum adscrito com dose atrasada.</td></tr> }
               </tbody>
             </table>
           </div>
         }
       </section>
+    }
+
+    @if (metaDe(); as e) {
+      <app-drawer [titulo]="'Meta de cobertura · ' + e.sigla + ', ' + e.doseRotulo" (fechar)="metaDe.set(null)">
+        <form class="dw-form" (submit)="$event.preventDefault(); salvarMeta(e)" novalidate>
+          <div class="dw-body">
+            @if (metaErro()) { <div class="box box--err" role="alert"><strong>{{ metaErro() }}</strong></div> }
+            <label class="switch" for="f-meta-mede"><span><b style="font-weight: 500;">Mede a cobertura</b></span>
+              <input type="checkbox" role="switch" id="f-meta-mede" [checked]="metaMede()" (change)="metaMede.set($any($event.target).checked)" /></label>
+            <div class="dw-field"><label for="f-meta-valor">Meta (%)</label>
+              <input id="f-meta-valor" type="number" min="1" max="100" step="0.5" [value]="metaValor()" (input)="metaValor.set($any($event.target).value)" /></div>
+            <p class="dw-hint">A dose de referência da cobertura da vacina. A coorte são as crianças de 1 a 12 meses depois da idade recomendada
+              ({{ e.idadeRecomendadaMeses }} meses).</p>
+          </div>
+          <div class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="metaDe.set(null)">Cancelar</button>
+            <button type="submit" class="btn">Salvar</button>
+          </div>
+        </form>
+      </app-drawer>
     }
 
     @if (registrando()) {
@@ -139,11 +196,13 @@ type Aba = 'dia' | 'atrasados' | 'estoque' | 'frio' | 'calendario';
     .vac-cab { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-3); }
     .vac-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: var(--s-3); }
     .vac-tabela table { min-width: 0; width: 100%; }
+    .vac-acoes { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   `,
 })
 export class SalaDeVacina {
   private readonly service = inject(ImunizacaoService);
   private readonly unidadeService = inject(UnidadeSaudeService);
+  private readonly equipeService = inject(EquipeService);
 
   protected readonly publicos = PUBLICOS;
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
@@ -157,6 +216,25 @@ export class SalaDeVacina {
   /** Sobe a cada dose registrada: as abas Estoque e Cadeia de frio recarregam (a dose baixa o lote e abre o frasco). */
   protected readonly versao = signal(0);
   protected readonly erro = signal<string | null>(null);
+  /** A busca ativa por equipe (na API) e microárea (na lista), ADR-0149. */
+  protected readonly equipes = signal<EquipeResumoDto[]>([]);
+  protected readonly equipeId = signal('');
+  protected readonly microareaId = signal('');
+  protected readonly microareas = computed(() => {
+    const m = new Map<string, string>();
+    for (const a of this.atrasados() ?? []) {
+      if (a.microareaId && a.microareaNome) {
+        m.set(a.microareaId, a.microareaNome);
+      }
+    }
+    return [...m].map(([id, nome]) => ({ id, nome })).sort((x, y) => x.nome.localeCompare(y.nome));
+  });
+  protected readonly atrasadosFiltrados = computed(() => (this.atrasados() ?? []).filter((a) => !this.microareaId() || a.microareaId === this.microareaId()));
+  /** A meta de cobertura da dose do calendário em edição. */
+  protected readonly metaDe = signal<EsquemaVacinalDto | null>(null);
+  protected readonly metaMede = signal(false);
+  protected readonly metaValor = signal('');
+  protected readonly metaErro = signal<string | null>(null);
 
   protected readonly calendarioPorPublico = computed(() => {
     const grupos = new Map<PublicoVacinal, EsquemaVacinalDto[]>();
@@ -176,9 +254,50 @@ export class SalaDeVacina {
     this.service.calendario().pipe(catchError(() => of([]))).subscribe((l) => this.calendario.set(l));
     effect(() => {
       const u = this.unidadeId();
+      untracked(() => {
+        this.equipeId.set('');
+        this.microareaId.set('');
+        this.equipes.set([]);
+        if (u) {
+          this.equipeService.listar(u).pipe(catchError(() => of(null))).subscribe((r) => this.equipes.set(r?.lista ?? []));
+        }
+      });
+    });
+    effect(() => {
+      const u = this.unidadeId();
       const d = this.data();
       const a = this.aba();
+      this.equipeId();
       untracked(() => this.carregar(u, d, a));
+    });
+  }
+
+  protected trocarEquipe(id: string): void {
+    this.microareaId.set('');
+    this.equipeId.set(id);
+  }
+
+  protected pct(v: number | null | undefined): string {
+    return percentual(v);
+  }
+
+  protected editarMeta(e: EsquemaVacinalDto): void {
+    this.metaErro.set(null);
+    this.metaMede.set(e.medeCobertura);
+    this.metaValor.set(e.metaCobertura != null ? String(e.metaCobertura) : '95');
+    this.metaDe.set(e);
+  }
+
+  protected salvarMeta(e: EsquemaVacinalDto): void {
+    const meta = this.metaValor() === '' ? null : Number(this.metaValor());
+    this.service.atualizarEsquema(e.uuid, esquemaRequest(e, { medeCobertura: this.metaMede(), metaCobertura: meta })).subscribe({
+      next: (novo) => {
+        this.calendario.update((l) => l.map((x) => (x.uuid === novo.uuid ? novo : x)));
+        this.metaDe.set(null);
+      },
+      error: (err: HttpErrorResponse) =>
+        this.metaErro.set(err.status === 403 ? 'Seu acesso não inclui o calendário vacinal (IMUNIZACAO.GERENCIAR).'
+          : ((err.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar a meta.')),
     });
   }
 
@@ -204,7 +323,7 @@ export class SalaDeVacina {
       });
     } else if (aba === 'atrasados') {
       this.atrasados.set(undefined);
-      this.service.atrasados(unidadeId).subscribe({
+      this.service.atrasados(unidadeId, this.equipeId() || undefined).subscribe({
         next: (l) => this.atrasados.set(l),
         error: (e: HttpErrorResponse) => {
           this.atrasados.set(null);

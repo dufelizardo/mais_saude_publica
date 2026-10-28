@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -45,4 +46,9 @@ public class EsquemaVacinalRequestDto implements Serializable {
     private LocalDate vigenteAte;
     private Integer ordem;
     private Boolean ativo;
+    /** Vazio mantém o que está (ADR-0149). */
+    private Boolean medeCobertura;
+    @DecimalMin(value = "1", message = "A meta de cobertura vai de 1% a 100%.")
+    @DecimalMax(value = "100", message = "A meta de cobertura vai de 1% a 100%.")
+    private BigDecimal metaCobertura;
 }

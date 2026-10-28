@@ -7,13 +7,15 @@ import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
 /**
  * Uma dose do calendário vacinal (ADR-0147), como dado: o imunobiológico e a dose, o público, as idades mínima,
  * recomendada e máxima (em meses), o intervalo mínimo desde a dose anterior do mesmo imunobiológico, a repetição (o dT a
- * cada 10 anos) e a vigência. Quando o calendário nacional muda, cadastra-se a nova versão — não se programa.
+ * cada 10 anos) e a vigência. Quando o calendário nacional muda, cadastra-se a nova versão — não se programa. A dose
+ * que mede a cobertura da vacina tem a meta (ADR-0149).
  */
 @Entity
 @Table(name = "TB_ESQUEMA_VACINAL", indexes = @Index(name = "ix_esquema_vacinal_imunobiologico", columnList = "imunobiologico_id"))
@@ -61,6 +63,14 @@ public class EsquemaVacinal implements Serializable {
 
     @Column(length = 300)
     private String observacao;
+
+    /** A dose de referência da cobertura da vacina (a 3ª da penta, a 1ª da tríplice viral), na criança (ADR-0149). */
+    @Column(nullable = false)
+    private boolean medeCobertura;
+
+    /** A meta da cobertura, em % (90 para BCG e rotavírus, 95 para as demais, pelo PNI). */
+    @Column(precision = 5, scale = 2)
+    private BigDecimal metaCobertura;
 
     @Column(nullable = false)
     private LocalDate vigenteDesde;

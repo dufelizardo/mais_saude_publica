@@ -10,12 +10,14 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EsquemaVac
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ImunobiologicoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EsquemaVacinalDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ImunobiologicoDto;
+import com.edufelizardo.maissaudepublica.models.enuns.PublicoVacinal;
 import com.edufelizardo.maissaudepublica.repositories.EsquemaVacinalRepository;
 import com.edufelizardo.maissaudepublica.repositories.ImunobiologicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -140,6 +142,17 @@ public class ImunizacaoCatalogoService {
         e.setVigenteAte(dto.getVigenteAte());
         e.setOrdem(dto.getOrdem() == null ? 999 : dto.getOrdem());
         e.setAtivo(dto.getAtivo() == null || dto.getAtivo());
+        // A cobertura (ADR-0149): vazio mantém; a dose que mede pede a meta, a idade recomendada e o público criança.
+        boolean mede = dto.getMedeCobertura() != null ? dto.getMedeCobertura() : e.isMedeCobertura();
+        BigDecimal meta = dto.getMetaCobertura() != null ? dto.getMetaCobertura() : e.getMetaCobertura();
+        if (mede && meta == null) {
+            throw new ResourceBadRequestException("Informe a meta da cobertura (em %).");
+        }
+        if (mede && (rec == null || dto.getPublico() != PublicoVacinal.CRIANCA)) {
+            throw new ResourceBadRequestException("Só a dose da criança com idade recomendada mede a cobertura (a coorte sai dessa idade).");
+        }
+        e.setMedeCobertura(mede);
+        e.setMetaCobertura(meta);
     }
 
     private Imunobiologico imunobiologico(UUID uuid) {
@@ -160,6 +173,7 @@ public class ImunizacaoCatalogoService {
         Imunobiologico i = e.getImunobiologico();
         return new EsquemaVacinalDto(e.getUuid(), i.getUuid(), i.getNome(), i.getSigla(), e.getDose(), e.getDose().rotulo(), e.getPublico(),
                 e.getIdadeMinimaMeses(), e.getIdadeRecomendadaMeses(), e.getIdadeMaximaMeses(), e.getIntervaloMinimoDias(), e.getRepeticaoAnos(),
-                e.isContaNaSituacao(), e.getObservacao(), e.getVigenteDesde(), e.getVigenteAte(), e.getOrdem(), e.isAtivo());
+                e.isContaNaSituacao(), e.getObservacao(), e.getVigenteDesde(), e.getVigenteAte(), e.getOrdem(), e.isAtivo(),
+                e.isMedeCobertura(), e.getMetaCobertura());
     }
 }
