@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import {
   CadernetaVacinacaoDto,
@@ -19,12 +20,13 @@ import { RegistrarDose } from './registrar-dose';
 
 /**
  * Caderneta de vacinação do paciente (ADR-0147): a situação pelo calendário (atrasadas, próximas, futuras, aplicadas),
- * as doses registradas — com retificação e anulação — e as recomendações conforme a situação vacinal. Dado de saúde:
- * a API aplica as regras do prontuário.
+ * as doses registradas — com retificação e anulação — e as recomendações conforme a situação vacinal. Cada dose leva a
+ * "Notificar ESAVI" na Vigilância, e as contraindicações por ESAVI aparecem no alto (ADR-0150). Dado de saúde: a API
+ * aplica as regras do prontuário.
  */
 @Component({
   selector: 'app-caderneta-vacinacao',
-  imports: [RegistrarDose, Drawer],
+  imports: [RegistrarDose, Drawer, RouterLink],
   template: `
     @if (erro()) { <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div> }
     @if (caderneta() === undefined) {
@@ -49,6 +51,14 @@ import { RegistrarDose } from './registrar-dose';
           </div>
         }
       </div>
+
+      @if (c.contraindicacoes.length) {
+        <div class="box box--warn" role="status" aria-label="Contraindicações vacinais">
+          @for (x of c.contraindicacoes; track x.imunobiologicoId) {
+            <div><strong>{{ x.sigla }} contraindicada por ESAVI</strong> desde {{ data(x.desde) }}. Nova dose só com a justificativa (decisão do CRIE).</div>
+          }
+        </div>
+      }
 
       @if (c.situacaoDisponivel) {
         <div class="vac-cab">
@@ -80,6 +90,12 @@ import { RegistrarDose } from './registrar-dose';
             <span>
               <span class="cell-main">{{ r.sigla }} · {{ r.doseRotulo }} <span class="cell-sub" style="display: inline;">em {{ data(r.aplicadaEm) }}</span></span>
               <span class="cell-sub">@if (r.origem === 'TRANSCRITA') { Transcrita da caderneta@if (r.localOrigem) { · {{ r.localOrigem }} } } @else { {{ r.unidadeNome }} }@if (r.lote) { · lote {{ r.lote }} } · {{ estrategias[r.estrategia] }}@if (r.justificativa) { · fora do calendário: {{ r.justificativa }} }</span>
+            </span>
+            <span class="row-actions">
+              @if (c.dosesNotificadas.includes(r.uuid)) { <span class="tag tag--warn">ESAVI notificado</span> }
+              <a class="link-btn" routerLink="/vigilancia" [attr.aria-label]="'Notificar ESAVI de ' + r.sigla + ' ' + r.doseRotulo"
+                [queryParams]="{ notificar: 1, agravo: 'ESAVI', origem: 'VACINACAO', doseId: r.uuid, doseRotulo: r.sigla + ', ' + r.doseRotulo + ' de ' + data(r.aplicadaEm),
+                  pacienteId: pacienteId(), pacienteNome: pacienteNome(), unidadeId: r.unidadeId }">Notificar ESAVI</a>
             </span>
             @if (podeRegistrar()) {
               <span class="row-actions">

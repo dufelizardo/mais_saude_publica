@@ -9,6 +9,7 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityE
 import com.edufelizardo.maissaudepublica.models.Adscricao;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.Campanha;
+import com.edufelizardo.maissaudepublica.models.ContraindicacaoVacinal;
 import com.edufelizardo.maissaudepublica.models.Equipe;
 import com.edufelizardo.maissaudepublica.models.EsquemaVacinal;
 import com.edufelizardo.maissaudepublica.models.Imunobiologico;
@@ -36,6 +37,8 @@ import com.edufelizardo.maissaudepublica.models.enuns.TipoCampanha;
 import com.edufelizardo.maissaudepublica.repositories.AdscricaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
 import com.edufelizardo.maissaudepublica.repositories.CampanhaRepository;
+import com.edufelizardo.maissaudepublica.repositories.ContraindicacaoVacinalRepository;
+import com.edufelizardo.maissaudepublica.repositories.NotificacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.EquipeRepository;
 import com.edufelizardo.maissaudepublica.repositories.EsquemaVacinalRepository;
 import com.edufelizardo.maissaudepublica.repositories.ImunobiologicoRepository;
@@ -82,6 +85,8 @@ public class VacinacaoService {
     @Autowired private EstoqueVacinaService estoqueService;
     @Autowired private AdscricaoService adscricaoService;
     @Autowired private MembroNucleoRepository membroRepository;
+    @Autowired private ContraindicacaoVacinalRepository contraindicacaoRepository;
+    @Autowired private NotificacaoRepository notificacaoRepository;
 
     // ── Registro ───────────────────────────────────────────────────────────────────────────────
 
@@ -147,9 +152,17 @@ public class VacinacaoService {
         ContextoAuditoria.paciente(pacienteId);
         List<RegistroVacinacao> doses = repository.findVigentesDoPaciente(pacienteId);
         List<RegistroVacinacaoDto> dosesDto = doses.stream().map(VacinacaoService::dto).toList();
+        // As contraindicações por ESAVI e as doses já notificadas (ADR-0150).
+        List<CadernetaVacinacaoDto.Contraindicacao> contraindicacoes = contraindicacaoRepository.findDoPaciente(pacienteId).stream()
+                .map(c -> new CadernetaVacinacaoDto.Contraindicacao(c.getImunobiologico().getUuid(), c.getImunobiologico().getSigla(),
+                        c.getImunobiologico().getNome(), c.getDesde(), c.getMotivo(), c.getNotificacao() != null ? c.getNotificacao().getUuid() : null))
+                .toList();
+        List<UUID> notificadas = doses.isEmpty() ? List.of()
+                : notificacaoRepository.findDosesNotificadas(doses.stream().map(RegistroVacinacao::getUuid).toList()).stream().distinct().toList();
         LocalDate hoje = LocalDate.now();
         if (p.getDataNascimento() == null) {
-            return new CadernetaVacinacaoDto(p.getUuid(), p.getNome(), null, null, false, false, 0, 0, List.of(), List.of(), dosesDto);
+            return new CadernetaVacinacaoDto(p.getUuid(), p.getNome(), null, null, false, false, 0, 0, List.of(), List.of(), dosesDto,
+                    contraindicacoes, notificadas);
         }
         List<EsquemaVacinal> esquemas = esquemaRepository.findTodos();
         List<DoseCalendarioDto> calendario = CalendarioVacinal.situacao(p.getDataNascimento(), hoje, esquemas, doses);
@@ -163,7 +176,7 @@ public class VacinacaoService {
                 .filter(e -> e.getPublico() != PublicoVacinal.GESTANTE || (p.getSexo() == Sexo.FEMININO && idade <= 600))
                 .map(ImunizacaoCatalogoService::dto).toList();
         return new CadernetaVacinacaoDto(p.getUuid(), p.getNome(), p.getDataNascimento(), (int) idade, true, atrasadas == 0, atrasadas, proximas,
-                calendario, recomendacoes, dosesDto);
+                calendario, recomendacoes, dosesDto, contraindicacoes, notificadas);
     }
 
     // ── Sala de vacina ─────────────────────────────────────────────────────────────────────────
@@ -342,6 +355,13 @@ public class VacinacaoService {
                 .orElse(null);
         exigirSemRepeticao(dto.getDose(), imuno, esquema, vigentes, quando);
         String justificativa = dto.getJustificativa() == null || dto.getJustificativa().isBlank() ? null : dto.getJustificativa().trim();
+        // A vacina contraindicada por ESAVI só entra com a justificativa: a decisão do CRIE (ADR-0150).
+        Optional<ContraindicacaoVacinal> contraindicada = aplicada
+                ? contraindicacaoRepository.findByPaciente_UuidAndImunobiologico_Uuid(paciente.getUuid(), imuno.getUuid()) : Optional.empty();
+        if (contraindicada.isPresent() && justificativa == null) {
+            throw new ResourceUnprocessableEntityException(imuno.getSigla() + " está contraindicada para o paciente desde "
+                    + contraindicada.get().getDesde() + " (ESAVI): informe a justificativa, a decisão do CRIE, para registrar.");
+        }
         if (aplicada && esquema != null && paciente.getDataNascimento() != null) {
             String fora = foraDoEsquema(esquema, paciente.getDataNascimento(), quando, imuno, vigentes);
             if (fora != null && justificativa == null) {

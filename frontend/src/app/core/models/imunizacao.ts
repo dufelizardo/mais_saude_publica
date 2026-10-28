@@ -233,6 +233,18 @@ export interface CadernetaVacinacaoDto {
   calendario: DoseCalendarioDto[];
   recomendacoes: EsquemaVacinalDto[];
   doses: RegistroVacinacaoDto[];
+  /** As contraindicações por ESAVI e as doses já notificadas na Vigilância (ADR-0150). */
+  contraindicacoes: ContraindicacaoVacinalDto[];
+  dosesNotificadas: string[];
+}
+
+export interface ContraindicacaoVacinalDto {
+  imunobiologicoId: string;
+  sigla: string;
+  nome: string;
+  desde: string;
+  motivo: string;
+  notificacaoId?: string | null;
 }
 
 export interface VacinacaoDoDiaDto {

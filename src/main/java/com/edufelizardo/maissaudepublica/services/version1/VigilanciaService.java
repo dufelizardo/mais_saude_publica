@@ -126,6 +126,10 @@ public class VigilanciaService {
 
     @Autowired
     private SurtoService surtoService;
+
+    /** ESAVI e erro de imunização (ADR-0150). */
+    @Autowired
+    private EsaviService esaviService;
     private static final Set<ClassificacaoCasoEpidemiologico> FINAIS = Set.of(ClassificacaoCasoEpidemiologico.CONFIRMADO,
             ClassificacaoCasoEpidemiologico.DESCARTADO, ClassificacaoCasoEpidemiologico.INCONCLUSIVO);
 
@@ -298,6 +302,7 @@ public class VigilanciaService {
         } else if (!respostas.isEmpty()) {
             throw new ResourceBadRequestException("O agravo " + agravo.getNome() + " não tem ficha específica; envie a notificação sem respostas.");
         }
+        esaviService.aplicarNaNotificacao(n, dto);
         n.setSituacao(SituacaoNotificacao.NOTIFICADA);
         n.setPrazoEncerramento(data.plusDays(agravo.getPrazoEncerramentoDias()));
         n.setRegistradaEm(Instant.now());
@@ -518,8 +523,10 @@ public class VigilanciaService {
     @Transactional
     public NotificacaoDto encerrar(UUID notificacaoId, EncerramentoNotificacaoRequestDto dto) {
         Notificacao n = paraInvestigar(notificacaoId);
+        // O ESAVI se encerra pela causalidade, que dá a classificação final (ADR-0150).
+        ClassificacaoCasoEpidemiologico peloEsavi = esaviService.encerrar(n, dto);
         List<ClassificacaoCaso> historico = classificacaoRepository.findDaNotificacao(n.getUuid());
-        ClassificacaoCasoEpidemiologico atual = historico.isEmpty() ? null : historico.get(0).getClassificacao();
+        ClassificacaoCasoEpidemiologico atual = peloEsavi != null ? peloEsavi : historico.isEmpty() ? null : historico.get(0).getClassificacao();
         if (atual == null || !FINAIS.contains(atual)) {
             throw new ResourceUnprocessableEntityException("Para encerrar, classifique o caso como confirmado, descartado ou inconclusivo.");
         }
@@ -614,6 +621,9 @@ public class VigilanciaService {
                 }
             }
         }
+        // A dose aplicada fora do calendário: erro de imunização (ADR-0150).
+        compulsorios.stream().filter(a -> EsaviService.ERRO_IMUNIZACAO.equals(a.getCodigo())).findFirst()
+                .ifPresent(erro -> lista.addAll(esaviService.sugestoes(erro, desde, noEscopo)));
         // Uma sugestão por paciente e agravo: a mais recente.
         Map<String, SugestaoNotificacaoDto> unicas = new LinkedHashMap<>();
         lista.stream().sorted(Comparator.comparing(SugestaoNotificacaoDto::getDetectadaEm).reversed())
@@ -951,7 +961,7 @@ public class VigilanciaService {
                 null, null, List.of(), n.getLatitude(), n.getLongitude(), n.getOrigemLocal(),
                 n.getMicroarea() != null ? n.getMicroarea().getCodigo() : null, n.getMicroarea() != null ? n.getMicroarea().getArea().getCodigo() : null,
                 List.of(), n.getSurto() != null ? n.getSurto().getUuid() : null, n.getSurto() != null ? n.getSurto().getNome() : null, List.of(),
-                List.of());
+                List.of(), n.getGravidadeEsavi(), n.getCausalidadeEsavi(), n.getCondutaEsavi(), List.of());
     }
 
     private NotificacaoDto detalhe(Notificacao n, boolean completo) {
@@ -960,6 +970,7 @@ public class VigilanciaService {
             return d;
         }
         d.setLocalProvavel(n.getLocalProvavel());
+        d.setDoses(esaviService.doses(n));
         if (n.getFichaVersao() != null) {
             fichaRepository.findByAgravo_UuidAndVersao(n.getAgravo().getUuid(), n.getFichaVersao()).ifPresent(f -> d.setFicha(campos(f)));
             try {

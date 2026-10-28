@@ -35,6 +35,9 @@ public class VacinacaoNaRedeDto implements Serializable {
     private int abandonoAlto;
     private List<CoberturaVacinalDto.Vacina> cobertura;
     private List<Campanha> campanhas;
+    /** As notificações de ESAVI do período, e as graves (ADR-0150). */
+    private long esaviNotificados;
+    private long esaviGraves;
 
     @Getter
     @Setter

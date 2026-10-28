@@ -15,8 +15,16 @@ import {
   CRITERIOS,
   CampoFichaDto,
   ClassificacaoCaso,
+  AGRAVO_ERRO_IMUNIZACAO,
+  AGRAVO_ESAVI,
+  CAUSALIDADES_ESAVI,
+  CONDUTAS_ESAVI,
+  CausalidadeEsavi,
+  CondutaEsquemaEsavi,
   CriterioClassificacao,
   EVOLUCOES,
+  GRAVIDADES_ESAVI,
+  GravidadeEsavi,
   NotificacaoDto,
   NotificacoesDto,
   ORIGENS,
@@ -45,7 +53,7 @@ import { NovoSurto, Surtos } from './surtos';
 type Aba = 'notificacoes' | 'mapa' | 'surtos' | 'sugestoes' | 'semanas' | 'agravos';
 type Gaveta =
   | { tipo: 'notificar'; prefixo: Partial<{ pacienteId: string; pacienteNome: string; unidadeId: string; agravoId: string; origem: OrigemNotificacao;
-      internacaoId: string; pedidoExameId: string; criseId: string; contatoId: string; contatoDe: string }> }
+      internacaoId: string; pedidoExameId: string; criseId: string; contatoId: string; contatoDe: string; doseIds: string[]; doseRotulo: string }> }
   | { tipo: 'notificacao'; id: string }
   | { tipo: 'agravo'; agravo: AgravoDto | null }
   | { tipo: 'ficha'; agravo: AgravoDto };
@@ -126,7 +134,20 @@ export class Vigilancia {
   });
   protected readonly investigacaoForm = this.fb.nonNullable.group({ exposicao: [''], localProvavelInfeccao: [''], medidas: [''] });
   protected readonly classificacaoForm = this.fb.nonNullable.group({ classificacao: [''], criterio: [''], justificativa: [''] });
-  protected readonly encerramentoForm = this.fb.nonNullable.group({ evolucao: [''] });
+  protected readonly encerramentoForm = this.fb.nonNullable.group({ evolucao: [''], causalidade: [''], conduta: [''] });
+  /** ESAVI e erro de imunização (ADR-0150): as doses da notificação, a gravidade e os rótulos. */
+  protected readonly doseIds = signal<string[]>([]);
+  protected readonly doseRotulo = signal('');
+  protected readonly gravidade = signal<GravidadeEsavi | ''>('');
+  protected readonly gravidades = GRAVIDADES_ESAVI;
+  protected readonly listaGravidades = Object.keys(GRAVIDADES_ESAVI) as GravidadeEsavi[];
+  protected readonly causalidades = CAUSALIDADES_ESAVI;
+  protected readonly listaCausalidades = Object.keys(CAUSALIDADES_ESAVI) as CausalidadeEsavi[];
+  protected readonly condutas = CONDUTAS_ESAVI;
+  protected readonly listaCondutas = Object.keys(CONDUTAS_ESAVI) as CondutaEsquemaEsavi[];
+  /** O código do agravo escolhido na notificação. */
+  protected readonly codigoEscolhido = computed(() => this.agravos().find((a) => a.uuid === this.agravoEscolhido())?.codigo ?? '');
+  protected readonly agravoVacinal = computed(() => this.codigoEscolhido() === AGRAVO_ESAVI || this.codigoEscolhido() === AGRAVO_ERRO_IMUNIZACAO);
   protected readonly agravoForm = this.fb.nonNullable.group({
     codigo: [''], nome: [''], descricao: [''], cids: [''], compulsorio: [true], periodicidade: ['SEMANAL' as PeriodicidadeNotificacao],
     prazoEncerramentoDias: ['60'], periodoMonitoramentoContatoDias: [''], sensivel: [false], ativo: [true],
@@ -177,6 +198,7 @@ export class Vigilancia {
     this.abrirNotificar({
       pacienteId: q.get('pacienteId') ?? '', pacienteNome: q.get('pacienteNome') ?? '', unidadeId: q.get('unidadeId') ?? '',
       agravoId: agravo?.uuid ?? '', origem: (q.get('origem') as OrigemNotificacao) ?? 'ATENDIMENTO', criseId: q.get('criseId') ?? '',
+      doseIds: q.get('doseId') ? [q.get('doseId')!] : [], doseRotulo: q.get('doseRotulo') ?? '',
     });
   }
 
@@ -274,6 +296,9 @@ export class Vigilancia {
       contatoId: prefixo.contatoId ?? '',
     });
     this.agravoEscolhido.set(prefixo.agravoId ?? '');
+    this.doseIds.set(prefixo.doseIds ?? []);
+    this.doseRotulo.set(prefixo.doseRotulo ?? '');
+    this.gravidade.set('');
     this.respostas.set({});
     this.buscaPaciente.set(prefixo.pacienteNome ?? '');
     if (!this.pacientes().length) this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
@@ -285,6 +310,7 @@ export class Vigilancia {
       pacienteId: s.pacienteId, pacienteNome: s.pacienteNome, unidadeId: s.unidadeId, agravoId: s.agravoId, origem: s.origem,
       internacaoId: s.origem === 'INTERNACAO' ? s.referenciaId : undefined, pedidoExameId: s.origem === 'EXAME' ? s.referenciaId : undefined,
       criseId: s.origem === 'SAUDE_MENTAL' ? s.referenciaId : undefined,
+      doseIds: s.origem === 'VACINACAO' ? [s.referenciaId] : undefined, doseRotulo: s.origem === 'VACINACAO' ? 'a dose sugerida' : undefined,
     });
   }
 
@@ -303,7 +329,7 @@ export class Vigilancia {
     this.detalhe.set(null);
     this.investigacaoForm.reset({ exposicao: '', localProvavelInfeccao: '', medidas: '' });
     this.classificacaoForm.reset({ classificacao: '', criterio: '', justificativa: '' });
-    this.encerramentoForm.reset({ evolucao: '' });
+    this.encerramentoForm.reset({ evolucao: '', causalidade: '', conduta: '' });
     this.abrir({ tipo: 'notificacao', id });
     this.service.notificacao(id).subscribe({
       next: (n) => {
@@ -394,6 +420,8 @@ export class Vigilancia {
     if (!v.pacienteId) erros['buscaPaciente'] = 'Escolha o paciente na lista.';
     if (!v.unidadeId) erros['unidadeNotificante'] = 'Escolha a unidade notificante.';
     if (!v.agravoId) erros['agravo'] = 'Escolha o agravo.';
+    if (this.agravoVacinal() && !this.doseIds().length) erros['agravo'] = 'O ESAVI e o erro de imunização partem da dose: notifique pela caderneta do paciente.';
+    if (this.codigoEscolhido() === AGRAVO_ESAVI && !this.gravidade()) erros['gravidade'] = 'Escolha a gravidade.';
     for (const c of this.fichaEscolhida()) {
       const r = this.respostas()[c.chave];
       const vazio = r == null || r === '' || (Array.isArray(r) && !r.length);
@@ -410,7 +438,8 @@ export class Vigilancia {
       pacienteId: v.pacienteId, unidadeId: v.unidadeId, agravoId: v.agravoId, origem: v.origem,
       dataPrimeirosSintomas: v.dataPrimeirosSintomas || null, dataNotificacao: v.dataNotificacao || null, localProvavel: v.localProvavel.trim() || null,
       internacaoId: v.internacaoId || null, pedidoExameId: v.pedidoExameId || null, criseId: v.criseId || null, contatoId: v.contatoId || null,
-      respostas,
+      respostas, doseIds: this.agravoVacinal() ? this.doseIds() : [],
+      gravidade: this.codigoEscolhido() === AGRAVO_ESAVI && this.gravidade() ? (this.gravidade() as GravidadeEsavi) : null,
     }), (n) => {
       this.mostrarToast('Notificação registrada', n.aviso ?? `${n.pacienteNome} · ${n.agravoNome}`);
       this.abrirNotificacao(n.uuid);
@@ -442,8 +471,13 @@ export class Vigilancia {
 
   protected salvarEncerramento(n: NotificacaoDto): void {
     const v = this.encerramentoForm.getRawValue();
-    if (!this.validar(v.evolucao ? {} : { evolucao: 'Escolha a evolução.' })) return;
-    this.enviar(this.service.encerrar(n.uuid, v.evolucao), (d) => {
+    const esavi = n.agravoCodigo === AGRAVO_ESAVI;
+    const erros: Record<string, string> = {};
+    if (!v.evolucao) erros['evolucao'] = 'Escolha a evolução.';
+    if (esavi && !v.causalidade) erros['causalidade'] = 'Escolha a causalidade.';
+    if (esavi && !v.conduta) erros['conduta'] = 'Escolha a conduta sobre o esquema.';
+    if (!this.validar(erros)) return;
+    this.enviar(this.service.encerrar(n.uuid, v.evolucao, esavi ? { causalidade: v.causalidade, conduta: v.conduta } : undefined), (d) => {
       this.detalhe.set(d);
       this.mostrarToast('Notificação encerrada', d.pacienteNome);
     });

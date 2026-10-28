@@ -50,7 +50,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
-| 24 | [Imunização](#24-imunização) | 🟡 | I1 a I3 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura e campanhas); I4 e I5 |
+| 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
@@ -97,7 +97,7 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
-I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 (com V1 ✅) · I5 (domínio 20)
+I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
 
 **Dependem de itens ainda não desenhados** (precisam de ADR de domínio antes):
@@ -557,13 +557,18 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   equipe e microárea; busca ativa filtrada por equipe e microárea, com o agente comunitário, onde mora e a lista para
   imprimir; andamento da campanha de vacinação pelas pessoas vacinadas, com as vacinas da campanha; aba Cobertura na
   Sala de Vacina, bloco Vacinação na Sala de Situação e cobertura no detalhe da equipe.
+- [x] **I4 · ESAVI e erro de imunização** ([ADR-0150](./adr/0150-imunizacao-esavi.md)): os dois agravos no catálogo da
+  Vigilância, com ficha; a notificação ligada às doses (origem Vacinação), com a gravidade do ESAVI; o encerramento do
+  ESAVI pela causalidade da OMS e pela conduta sobre o esquema; a contraindicação vacinal na caderneta e no registro da
+  dose (só com justificativa); a dose fora do calendário como sugestão de erro de imunização; "Notificar ESAVI" na
+  caderneta e o ESAVI no bloco Vacinação da Sala de Situação.
 
 **Falta:**
 - [ ] **Remanejamento de lote entre unidades,** pedido à rede de frio e termômetro automático (depois da I2;
   ADR-0148).
 - [ ] **Cobertura sobre os nascidos vivos (SINASC)** e de adolescentes, adultos e gestantes; cobertura vacinal nas
   metas programáticas (depois da I3; ADR-0149).
-- [ ] **I4 · ESAVI:** evento adverso pós-vacinação pela Vigilância.
+- [ ] **Alerta de ESAVI por lote** e revogação da contraindicação pelo CRIE (depois da I4; ADR-0150).
 - [ ] **I5 · Integração com o SI-PNI/RNDS** (depende do domínio 20).
 
 ### 25. Saúde Bucal

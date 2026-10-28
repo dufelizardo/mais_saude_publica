@@ -69,8 +69,9 @@ export class VigilanciaService {
     return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/classificacao`, dto);
   }
 
-  encerrar(uuid: string, evolucao: string): Observable<NotificacaoDto> {
-    return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/encerramento`, { evolucao });
+  /** No ESAVI, com a causalidade e a conduta sobre o esquema (ADR-0150). */
+  encerrar(uuid: string, evolucao: string, esavi?: { causalidade: string; conduta: string }): Observable<NotificacaoDto> {
+    return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/encerramento`, { evolucao, ...(esavi ?? {}) });
   }
 
   sugestoes(unidadeId?: string): Observable<SugestaoNotificacaoDto[]> {

@@ -1,7 +1,10 @@
 package com.edufelizardo.maissaudepublica.models;
 
+import com.edufelizardo.maissaudepublica.models.enuns.CausalidadeEsavi;
 import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoCasoEpidemiologico;
+import com.edufelizardo.maissaudepublica.models.enuns.CondutaEsquemaEsavi;
 import com.edufelizardo.maissaudepublica.models.enuns.EvolucaoCaso;
+import com.edufelizardo.maissaudepublica.models.enuns.GravidadeEsavi;
 import com.edufelizardo.maissaudepublica.models.enuns.OrigemLocalCaso;
 import com.edufelizardo.maissaudepublica.models.enuns.OrigemNotificacao;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoNotificacao;
@@ -12,6 +15,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -126,4 +131,25 @@ public class Notificacao implements Serializable {
     private Surto surto;
 
     private Instant surtoIncluidaEm;
+
+    // ── ESAVI e erro de imunização (ADR-0150) ──
+
+    /** As doses suspeitas (a criança costuma tomar várias no mesmo dia). */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "TB_NOTIFICACAO_DOSE", joinColumns = @JoinColumn(name = "notificacao_id"),
+            inverseJoinColumns = @JoinColumn(name = "registro_vacinacao_id"))
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<RegistroVacinacao> doses = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    @Column(updatable = false)
+    private GravidadeEsavi gravidadeEsavi;
+
+    /** No encerramento do ESAVI: dá a classificação final. */
+    @Enumerated(EnumType.STRING)
+    private CausalidadeEsavi causalidadeEsavi;
+
+    @Enumerated(EnumType.STRING)
+    private CondutaEsquemaEsavi condutaEsavi;
 }

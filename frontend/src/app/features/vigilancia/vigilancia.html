@@ -235,6 +235,22 @@
                 <input id="f-dataPrimeirosSintomas" type="date" formControlName="dataPrimeirosSintomas" />
               </div>
             </div>
+            @if (agravoVacinal()) {
+              <div class="box box--info" aria-label="Doses da notificação">
+                @if (doseIds().length) { <div>Ligada a {{ doseRotulo() || (doseIds().length + ' dose(s)') }} da caderneta do paciente.</div> }
+                @else { <div>O ESAVI e o erro de imunização partem da dose: abra a caderneta do paciente e use "Notificar ESAVI".</div> }
+              </div>
+              @if (codigoEscolhido() === 'ESAVI') {
+                <div class="dw-field">
+                  <label for="f-gravidade">Gravidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <select id="f-gravidade" [value]="gravidade()" (change)="gravidade.set($any($event.target).value)" [attr.aria-invalid]="!!erroCampo('gravidade')" aria-describedby="e-gravidade">
+                    <option value="">Escolha…</option>
+                    @for (g of listaGravidades; track g) { <option [value]="g">{{ gravidades[g] }}</option> }
+                  </select>
+                  @if (erroCampo('gravidade')) { <p class="dw-err" id="e-gravidade">{{ erroCampo('gravidade') }}</p> }
+                </div>
+              }
+            }
             <div class="dw-field">
               <label for="f-localProvavel">Local provável<span class="opt">opcional</span></label>
               <input id="f-localProvavel" type="text" maxlength="500" formControlName="localProvavel" placeholder="Endereço ou referência" />
@@ -292,7 +308,18 @@
                 <div><dt>Notificação</dt><dd>{{ data(n.dataNotificacao) }} · {{ origens[n.origem] }}@if (n.dataPrimeirosSintomas) { · sintomas em {{ data(n.dataPrimeirosSintomas) }} }</dd></div>
                 <div><dt>Situação</dt><dd>{{ situacoes[n.situacao].rotulo }} · encerrar até {{ data(n.prazoEncerramento) }}@if (n.encerramentoAtrasado) { (atrasado) }</dd></div>
                 @if (n.surtoNome) { <div><dt>Surto</dt><dd><span class="tag tag--purple">{{ n.surtoNome }}</span></dd></div> }
+                @if (n.gravidadeEsavi) { <div><dt>Gravidade</dt><dd><span [class]="n.gravidadeEsavi === 'GRAVE' ? 'tag tag--alert' : 'tag tag--info'">{{ gravidades[n.gravidadeEsavi] }}</span></dd></div> }
+                @if (n.causalidadeEsavi) { <div><dt>Causalidade</dt><dd>{{ causalidades[n.causalidadeEsavi] }}</dd></div> }
+                @if (n.condutaEsavi) { <div><dt>Conduta</dt><dd>{{ condutas[n.condutaEsavi] }}</dd></div> }
               </dl>
+              @if (n.doses?.length) {
+                <h4 class="mo-grupo">Doses</h4>
+                <ul class="eq-prof" aria-label="Doses da notificação">
+                  @for (d of n.doses; track d.uuid) {
+                    <li class="mo-row"><span><span class="cell-main">{{ d.sigla }} · {{ d.doseRotulo }}</span><span class="cell-sub">{{ dataHora(d.aplicadaEm) }} · {{ d.unidadeNome }}@if (d.lote) { · lote {{ d.lote }} }</span></span></li>
+                  }
+                </ul>
+              }
               @if (n.ficha.length) {
                 <h4 class="mo-grupo">Ficha (versão {{ n.fichaVersao }})</h4>
                 <dl class="info-list" aria-label="Respostas da ficha">
@@ -361,9 +388,27 @@
                       <option value="">Escolha…</option>
                       @for (e of listaEvolucoes; track e) { <option [value]="e">{{ $any(evolucoes)[e] }}</option> }
                     </select>
-                    <p class="dw-hint" id="h-evolucao">Encerrar pede a classificação final: confirmado, descartado ou inconclusivo.</p>
+                    <p class="dw-hint" id="h-evolucao">@if (n.agravoCodigo === 'ESAVI') { No ESAVI, a causalidade dá a classificação final. } @else { Encerrar pede a classificação final: confirmado, descartado ou inconclusivo. }</p>
                     @if (erroCampo('evolucao')) { <p class="dw-err" id="e-evolucao">{{ erroCampo('evolucao') }}</p> }
                   </div>
+                  @if (n.agravoCodigo === 'ESAVI') {
+                    <div class="dw-field">
+                      <label for="f-causalidade">Causalidade (OMS)</label>
+                      <select id="f-causalidade" formControlName="causalidade" [attr.aria-invalid]="!!erroCampo('causalidade')" aria-describedby="e-causalidade">
+                        <option value="">Escolha…</option>
+                        @for (c of listaCausalidades; track c) { <option [value]="c">{{ causalidades[c] }}</option> }
+                      </select>
+                      @if (erroCampo('causalidade')) { <p class="dw-err" id="e-causalidade">{{ erroCampo('causalidade') }}</p> }
+                    </div>
+                    <div class="dw-field">
+                      <label for="f-conduta">Conduta sobre o esquema</label>
+                      <select id="f-conduta" formControlName="conduta" [attr.aria-invalid]="!!erroCampo('conduta')" aria-describedby="e-conduta">
+                        <option value="">Escolha…</option>
+                        @for (c of listaCondutas; track c) { <option [value]="c">{{ condutas[c] }}</option> }
+                      </select>
+                      @if (erroCampo('conduta')) { <p class="dw-err" id="e-conduta">{{ erroCampo('conduta') }}</p> }
+                    </div>
+                  }
                   <div class="dw-field" style="align-self: end;"><button type="submit" class="btn btn--sm" [disabled]="submitting()">Encerrar a notificação</button></div>
                 </form>
               }
