@@ -3,6 +3,8 @@ Resource    ../../../pom/ui/imunizacao/sala_de_vacina_ui_pom.resource
 Resource    ../../imunizacao/vacinacao_flow.resource
 Resource    ../../imunizacao/sala_de_vacina_flow.resource
 Resource    ../../imunizacao/cobertura_vacinal_flow.resource
+Resource    ../../imunizacao/esavi_flow.resource
+Resource    ../../../pom/ui/vigilancia/vigilancia_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A base é criada pela API; a ação sob teste é feita pela tela.
@@ -122,5 +124,38 @@ UI Vacina - Busca Ativa Por Microarea
     Wait For Elements State    css=table[aria-label="Pacientes com dose atrasada"] >> tr:has-text("${dados}[nome]") >> text=ACS    visible
     Wait For Elements State    css=table[aria-label="Pacientes com dose atrasada"] >> tr:has-text("${dados}[nome]") >> text=Rua Robot    visible
     Wait For Elements State    role=link[name="Imprimir lista"]    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vacina - Notificar Esavi Pela Caderneta
+    [Documentation]    Na caderneta: "Notificar ESAVI" abre a notificação da Vigilância já com a dose; com a gravidade e a ficha, registra (ADR-0150).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}=    Seed Vacinacao
+    ${dose}=    Transcrever Dose Do Adulto    ${dados}
+    UI Vacina - Abrir Caderneta    ${dados}[paciente]
+    Click    role=link[name^="Notificar ESAVI de dT"]
+    Wait For Elements State    css=[aria-label="Doses da notificação"] >> text=Ligada a dT    visible
+    Escolher Opcao Da Gaveta    gravidade    NAO_GRAVE
+    Click    css=#f-ficha-manifestacoes >> text=Reação local
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Notificação registrada
+    Wait For Elements State    css=ul[aria-label="Doses da notificação"] >> text=dT · Reforço    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vacina - Encerrar Esavi Com Contraindicacao
+    [Documentation]    Na Vigilância: encerrar o ESAVI com a causalidade e a conduta; a caderneta mostra a contraindicação (ADR-0150).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}    ${dose}    ${notificacao}=    Esavi Notificado
+    UI Vigilancia - Abrir
+    Clicar Botao    Abrir notificação: ${dados}[nome] Evento supostamente atribuível à vacinação ou imunização (ESAVI)
+    Escolher Opcao Da Gaveta    evolucao    CURA
+    Escolher Opcao Da Gaveta    causalidade    A1_REACAO_PRODUTO
+    Escolher Opcao Da Gaveta    conduta    CONTRAINDICAR
+    Clicar Botao    Encerrar a notificação
+    Wait For Elements State    css=app-drawer >> text=Encerrada em    visible
+    UI Vacina - Abrir Caderneta    ${dados}[paciente]
+    Wait For Elements State    css=[aria-label="Contraindicações vacinais"] >> text=dT contraindicada por ESAVI    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

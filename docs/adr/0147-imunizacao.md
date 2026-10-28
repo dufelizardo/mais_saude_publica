@@ -3,8 +3,8 @@
 ## Status
 
 Aceita. **Desenho do domínio 24** (reservado pela [ADR-0110](./0110-vigilancia-em-saude.md)) e **I1 implementada**. As
-fatias I2 a I5 têm ADR própria quando entrarem: a I2 está na [ADR-0148](./0148-imunizacao-sala-de-vacina.md) e a I3
-na [ADR-0149](./0149-imunizacao-cobertura-e-campanhas.md).
+fatias I2 a I5 têm ADR própria quando entrarem: a I2 está na [ADR-0148](./0148-imunizacao-sala-de-vacina.md), a I3
+na [ADR-0149](./0149-imunizacao-cobertura-e-campanhas.md) e a I4 na [ADR-0150](./0150-imunizacao-esavi.md).
 
 ## Contexto
 
@@ -47,7 +47,7 @@ na [ADR-0149](./0149-imunizacao-cobertura-e-campanhas.md).
 | **I1** · fundação ✅ | imunobiológicos, calendário, registro de dose (aplicada e transcrita), situação vacinal, caderneta do paciente e Sala de Vacina | — |
 | **I2** · sala de vacina e cadeia de frio ✅ ([ADR-0148](./0148-imunizacao-sala-de-vacina.md)) | capacidade "sala de vacina" (MO1); lotes por unidade com livro de movimentação (entrada, baixa na aplicação, perdas técnica e física; o remanejamento entre unidades ficou para depois); frasco aberto com validade; temperatura da câmara duas vezes ao dia e lotes sob suspeita na excursão | I1 |
 | **I3** · cobertura e campanhas ✅ ([ADR-0149](./0149-imunizacao-cobertura-e-campanhas.md)) | dose da campanha no andamento real da meta; cobertura vacinal, homogeneidade e taxa de abandono por vacina, unidade e território; busca ativa por microárea; vacinação na Sala de Situação | I1, adscrição (#21) |
-| **I4** · ESAVI | evento supostamente atribuível à vacinação, notificado pela Vigilância e ligado à dose | I1, V1 |
+| **I4** · ESAVI ✅ ([ADR-0150](./0150-imunizacao-esavi.md)) | evento supostamente atribuível à vacinação, notificado pela Vigilância e ligado à dose | I1, V1 |
 | **I5** · SI-PNI/RNDS | envio das doses ao Ministério | domínio 20 |
 
 ## Decisão — a fatia I1

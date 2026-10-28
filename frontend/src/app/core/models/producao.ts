@@ -202,6 +202,9 @@ export interface VacinacaoNaRedeDto {
     metaQuantidade?: number | null;
     realizado: number;
   }[];
+  /** Os ESAVI notificados no período, e os graves (ADR-0150). */
+  esaviNotificados: number;
+  esaviGraves: number;
 }
 
 export interface VigilanciaNaRedeDto {

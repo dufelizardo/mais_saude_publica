@@ -333,6 +333,7 @@
           <div><b class="mono" aria-label="Doses aplicadas no período">{{ numero(v.dosesAplicadas) }}</b><span class="cell-sub">doses aplicadas</span></div>
           <div><b class="mono" aria-label="Homogeneidade entre vacinas">{{ pct(v.homogeneidade) }}</b><span class="cell-sub">homogeneidade ({{ v.vacinasNaMeta }} de {{ v.vacinasAvaliadas }} na meta)</span></div>
           <div><b class="mono">{{ v.abandonoAlto }}</b><span class="cell-sub">com abandono alto</span></div>
+          <div><b class="mono" aria-label="ESAVI notificados no período">{{ numero(v.esaviNotificados) }}</b><span class="cell-sub">ESAVI ({{ v.esaviGraves }} grave(s))</span></div>
         </div>
         @if (v.porEstrategia.length) {
           <p class="cell-sub" aria-label="Doses por estratégia">@for (e of v.porEstrategia; track e.chave; let ultimo = $last) { {{ e.rotulo }}: {{ numero(e.quantidade) }}@if (!ultimo) { · } }</p>

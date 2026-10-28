@@ -4,6 +4,7 @@ import com.edufelizardo.maissaudepublica.models.RegistroVacinacao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -40,4 +41,11 @@ public interface RegistroVacinacaoRepository extends JpaRepository<RegistroVacin
     @Query("select count(distinct r.paciente.uuid) from RegistroVacinacao r where r.campanha.uuid = ?1 and r.anulada = false "
             + "and not exists (select 1 from RegistroVacinacao s where s.retificacaoDe = r)")
     long countPessoasDaCampanha(UUID campanhaId);
+
+    /** As aplicadas vigentes registradas desde o instante com justificativa (fora do calendário): a sugestão de erro de imunização (ADR-0150). */
+    @Query("select r from RegistroVacinacao r join fetch r.imunobiologico join fetch r.paciente join fetch r.unidade left join fetch r.esquema "
+            + "where r.registradoEm >= ?1 and r.justificativa is not null "
+            + "and r.origem = com.edufelizardo.maissaudepublica.models.enuns.OrigemRegistroVacinacao.APLICADA and r.anulada = false "
+            + "and not exists (select 1 from RegistroVacinacao s where s.retificacaoDe = r)")
+    List<RegistroVacinacao> findAplicadasComJustificativaDesde(Instant desde);
 }

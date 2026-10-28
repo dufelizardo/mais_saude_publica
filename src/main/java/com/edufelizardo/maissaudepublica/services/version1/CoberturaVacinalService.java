@@ -18,6 +18,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.Vacinacao
 import com.edufelizardo.maissaudepublica.models.enuns.ClasseAbandonoVacinal;
 import com.edufelizardo.maissaudepublica.models.enuns.DoseVacinal;
 import com.edufelizardo.maissaudepublica.models.enuns.EstrategiaVacinacao;
+import com.edufelizardo.maissaudepublica.models.enuns.GravidadeEsavi;
 import com.edufelizardo.maissaudepublica.models.enuns.PublicoVacinal;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoCampanha;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoCampanha;
@@ -26,6 +27,7 @@ import com.edufelizardo.maissaudepublica.repositories.CampanhaRepository;
 import com.edufelizardo.maissaudepublica.repositories.EquipeRepository;
 import com.edufelizardo.maissaudepublica.repositories.EsquemaVacinalRepository;
 import com.edufelizardo.maissaudepublica.repositories.MicroareaRepository;
+import com.edufelizardo.maissaudepublica.repositories.NotificacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.RegistroVacinacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,6 +68,7 @@ public class CoberturaVacinalService {
     @Autowired private CampanhaRepository campanhaRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
     @Autowired private EscopoDosIndicadores escopoDosIndicadores;
+    @Autowired private NotificacaoRepository notificacaoRepository;
 
     /** Uma criança adscrita: onde está, o nascimento e as doses vigentes até a data (imunobiológico e dose). */
     record Crianca(UUID unidadeId, String unidadeNome, UUID equipeId, String equipeNome, UUID microareaId, String microareaNome,
@@ -204,6 +207,11 @@ public class CoberturaVacinalService {
         Calendario cal = calendario(hoje);
         Resultado r = calcular(cal, criancas(a -> escopo.contem(a.getEquipe().getUnidade().getUuid()), cal, hoje), hoje, null);
 
+        // Os ESAVI notificados no período, na abrangência (ADR-0150).
+        List<com.edufelizardo.maissaudepublica.models.Notificacao> esavi = notificacaoRepository.findTodas().stream()
+                .filter(n -> EsaviService.ESAVI.equals(n.getAgravo().getCodigo()) && escopo.contem(n.getUnidade().getUuid())
+                        && !n.getDataNotificacao().isBefore(inicio) && !n.getDataNotificacao().isAfter(fim))
+                .toList();
         List<VacinacaoNaRedeDto.Campanha> campanhas = campanhaRepository.findTodas().stream()
                 .filter(c -> c.getTipo() == TipoCampanha.VACINACAO && c.getCanceladaEm() == null
                         && !c.getInicio().isAfter(fim) && !c.getFim().isBefore(inicio))
@@ -217,7 +225,8 @@ public class CoberturaVacinalService {
                 porSigla.entrySet().stream().map(x -> new ContagemProducaoDto(x.getKey(), nomes.get(x.getKey()), x.getValue()))
                         .sorted(Comparator.comparingLong(ContagemProducaoDto::getQuantidade).reversed().thenComparing(ContagemProducaoDto::getChave))
                         .limit(10).toList(),
-                r.homogeneidade(), r.naMeta(), r.avaliadas(), r.abandonoAlto(), r.vacinas(), campanhas);
+                r.homogeneidade(), r.naMeta(), r.avaliadas(), r.abandonoAlto(), r.vacinas(), campanhas, esavi.size(),
+                esavi.stream().filter(n -> n.getGravidadeEsavi() == GravidadeEsavi.GRAVE).count());
     }
 
     // ── Cálculo ────────────────────────────────────────────────────────────────────────────────

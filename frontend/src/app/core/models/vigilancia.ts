@@ -2,7 +2,40 @@
 
 export type PeriodicidadeNotificacao = 'IMEDIATA' | 'SEMANAL';
 export type CriterioClassificacao = 'LABORATORIAL' | 'CLINICO_EPIDEMIOLOGICO' | 'CLINICO';
-export type OrigemNotificacao = 'ATENDIMENTO' | 'INTERNACAO' | 'EXAME' | 'SAUDE_MENTAL' | 'BUSCA_ATIVA' | 'COMUNIDADE' | 'OUTRA';
+export type OrigemNotificacao = 'ATENDIMENTO' | 'INTERNACAO' | 'EXAME' | 'SAUDE_MENTAL' | 'VACINACAO' | 'BUSCA_ATIVA' | 'COMUNIDADE' | 'OUTRA';
+
+// ── ESAVI e erro de imunização (ADR-0150) ──
+export type GravidadeEsavi = 'NAO_GRAVE' | 'GRAVE';
+export type CausalidadeEsavi = 'A1_REACAO_PRODUTO' | 'A2_DESVIO_QUALIDADE' | 'A3_ERRO_IMUNIZACAO' | 'A4_ANSIEDADE' | 'B_INDETERMINADO'
+  | 'C_COINCIDENTE' | 'D_INCLASSIFICAVEL';
+export type CondutaEsquemaEsavi = 'MANTER' | 'PRECAUCAO_CRIE' | 'CONTRAINDICAR';
+export const AGRAVO_ESAVI = 'ESAVI';
+export const AGRAVO_ERRO_IMUNIZACAO = 'ERRO_IMUNIZACAO';
+export const GRAVIDADES_ESAVI: Record<GravidadeEsavi, string> = { NAO_GRAVE: 'Não grave', GRAVE: 'Grave · comunicação imediata' };
+export const CAUSALIDADES_ESAVI: Record<CausalidadeEsavi, string> = {
+  A1_REACAO_PRODUTO: 'A1 · reação ligada ao produto',
+  A2_DESVIO_QUALIDADE: 'A2 · desvio de qualidade do produto',
+  A3_ERRO_IMUNIZACAO: 'A3 · erro de imunização',
+  A4_ANSIEDADE: 'A4 · ansiedade pela imunização',
+  B_INDETERMINADO: 'B · indeterminado',
+  C_COINCIDENTE: 'C · coincidente',
+  D_INCLASSIFICAVEL: 'D · inclassificável',
+};
+export const CONDUTAS_ESAVI: Record<CondutaEsquemaEsavi, string> = {
+  MANTER: 'Manter o esquema',
+  PRECAUCAO_CRIE: 'Continuar com precaução (CRIE)',
+  CONTRAINDICAR: 'Contraindicar as doses seguintes',
+};
+
+export interface DoseNotificadaDto {
+  uuid: string;
+  imunobiologicoId: string;
+  sigla: string;
+  doseRotulo: string;
+  aplicadaEm: string;
+  lote?: string | null;
+  unidadeNome: string;
+}
 export type SituacaoNotificacao = 'NOTIFICADA' | 'EM_INVESTIGACAO' | 'ENCERRADA';
 export type ClassificacaoCaso = 'SUSPEITO' | 'PROVAVEL' | 'CONFIRMADO' | 'DESCARTADO' | 'INCONCLUSIVO';
 export type EvolucaoCaso = 'CURA' | 'OBITO_PELO_AGRAVO' | 'OBITO_POR_OUTRA_CAUSA' | 'IGNORADA';
@@ -186,7 +219,7 @@ export const CRITERIOS: Record<CriterioClassificacao, string> = {
   LABORATORIAL: 'Laboratorial', CLINICO_EPIDEMIOLOGICO: 'Clínico-epidemiológico', CLINICO: 'Clínico',
 };
 export const ORIGENS: Record<OrigemNotificacao, string> = {
-  ATENDIMENTO: 'Atendimento', INTERNACAO: 'Internação', EXAME: 'Exame', SAUDE_MENTAL: 'Saúde mental (crise)',
+  ATENDIMENTO: 'Atendimento', INTERNACAO: 'Internação', EXAME: 'Exame', SAUDE_MENTAL: 'Saúde mental (crise)', VACINACAO: 'Vacinação',
   BUSCA_ATIVA: 'Busca ativa', COMUNIDADE: 'Comunidade', OUTRA: 'Outra',
 };
 export const SITUACOES_NOTIFICACAO: Record<SituacaoNotificacao, { rotulo: string; classe: string }> = {
@@ -275,6 +308,10 @@ export interface NotificacaoDto {
   surtoNome?: string | null;
   medidas?: MedidaControleDto[];
   linhaDoTempo?: EventoLinhaDoTempoDto[];
+  gravidadeEsavi?: GravidadeEsavi | null;
+  causalidadeEsavi?: CausalidadeEsavi | null;
+  condutaEsavi?: CondutaEsquemaEsavi | null;
+  doses?: DoseNotificadaDto[];
 }
 
 export interface NotificacoesDto {
@@ -338,6 +375,8 @@ export interface NotificacaoRequestDto {
   latitude?: number | null;
   longitude?: number | null;
   contatoId?: string | null;
+  doseIds?: string[];
+  gravidade?: GravidadeEsavi | null;
 }
 
 export interface AgravoRequestDto {
