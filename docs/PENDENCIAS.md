@@ -193,7 +193,8 @@ real":
   contraindicação); falta I5 (SI-PNI).
 - **#22 Programas, Ações e Linhas de Cuidado** — desenhado na ADR-0109; programas e campanhas cadastráveis.
   Fatias: ~~P1 (catálogo)~~ — ADR-0118; ~~P2 (acompanhamento)~~ — ADR-0119 (elegíveis por idade e sexo na
-  ADR-0128; os critérios clínicos ficam para depois); ~~P4 (ações e programa na Agenda)~~ — ADR-0132; ~~P3 (campanhas e consulta pública)~~ — ADR-0133; ~~P6 (metas e indicadores)~~ — ADR-0141; falta P5 (linhas de cuidado).
+  ADR-0128; os critérios clínicos ficam para depois); ~~P4 (ações e programa na Agenda)~~ — ADR-0132; ~~P3 (campanhas e consulta pública)~~ — ADR-0133; ~~P6 (metas e indicadores)~~ — ADR-0141; ~~P5 (linhas de cuidado)~~ — ADR-0152 (sem linhas recorrentes e
+  indicadores de linha). Domínio completo.
 - **#21 Território e Adscrição** — desenhado na ADR-0108; ~~F1 (fundação)~~ — ADR-0125; ~~F2 (mapa)~~ — ADR-0126;
   ~~F3a (imóvel, domicílio e família)~~ — ADR-0127; ~~F3b (adscrição e cobertura)~~ — ADR-0128; ~~F4
   (escopo de acesso e fim do texto das microáreas)~~ — ADR-0129. Falta ligar o escopo territorial quando a rede tiver o

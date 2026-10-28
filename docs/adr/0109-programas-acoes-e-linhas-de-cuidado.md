@@ -6,7 +6,8 @@ Aceita. **Desenho**; cada fatia tem ADR própria. Implementadas: P1 (catálogo) 
 [ADR-0118](./0118-programas-catalogo.md), P2 (acompanhamento) na [ADR-0119](./0119-programas-acompanhamento.md), P3
 (campanhas) na [ADR-0133](./0133-programas-campanhas.md) e P4 (ações programáticas) na
 [ADR-0132](./0132-programas-acoes-programaticas.md) e P6 (metas e indicadores) na
-[ADR-0141](./0141-programas-metas-e-indicadores.md); a P5 vem depois. O detalhe está em
+[ADR-0141](./0141-programas-metas-e-indicadores.md) e P5 (linhas de cuidado) na
+[ADR-0152](./0152-programas-linhas-de-cuidado.md): o domínio está completo. O detalhe está em
 [`programas/MODELO-PROGRAMAS.md`](../programas/MODELO-PROGRAMAS.md).
 
 ## Contexto

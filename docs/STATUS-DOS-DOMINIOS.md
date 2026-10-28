@@ -48,7 +48,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI3 feitas (Sala de Situação: produção, situação operacional e indicadores da rede); BI4 e BI5 |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
-| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
+| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
 
-**Resumo:** 31 itens mais Documentos: 11 ✅ · 11 🟡 · 2 📐 · 7 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 12 ✅ · 10 🟡 · 2 📐 · 7 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -70,7 +70,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 |---|---|---|
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
-| P5 | 22 Programas | linhas de cuidado |
 | V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
 | E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
@@ -471,7 +470,7 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 
 ### 22. Programas, Ações e Linhas de Cuidado
 
-**Estado:** 🟡. Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md); detalhe em
+**Estado:** ✅. Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), com as seis fatias feitas; detalhe em
 [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md).
 
 **Temos:**
@@ -498,10 +497,16 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   controlada, exame no alvo, pré-natal com 6 consultas, tratamento odontológico concluído, próteses entregues e
   escovação supervisionada); metas por indicador e unidade com a situação (atingida, em risco, abaixo); evolução de
   12 meses; relatório em CSV; só números, e o programa sensível só para quem acompanha.
+- [x] **P5 · Linhas de cuidado** ([ADR-0152](./adr/0152-programas-linhas-de-cuidado.md)): linha cadastrável com as
+  etapas como dado (cumpridas por atendimento, exame liberado, regulação realizada, vacina, alta de internação com CID
+  ou registro manual; quantidade e prazo do início ou da etapa anterior); percurso do paciente com a situação calculada
+  (cumprida, no prazo, atrasada, aguardando a anterior, dispensada), registro manual, dispensa e encerramento; painel
+  com atrasados e a sugestão de abrir a linha para quem está no programa; carga da gestante e da primeira semana da
+  criança; aba Linhas de cuidado em Programas e as linhas na aba Programas do paciente.
 
 **Falta:**
 - [x] Lista de elegíveis pelo público-alvo entre os adscritos da equipe (ADR-0128); faltam os critérios clínicos (gestação, condição).
-- [ ] **P5 · Linhas de cuidado.**
+- [ ] Linhas recorrentes e indicadores de linha (P6 e Sala de Situação), depois da P5 (ADR-0152).
 
 ### 23. Vigilância em Saúde
 

@@ -468,3 +468,153 @@ export interface FiltroIndicadores {
   ate?: string;
   unidadeId?: string;
 }
+
+// ── Linhas de cuidado (ADR-0152) ──
+
+export type TipoEtapaLinhaCuidado = 'ATENDIMENTO' | 'EXAME' | 'REGULACAO' | 'VACINA' | 'INTERNACAO' | 'MANUAL';
+export type ReferenciaPrazoEtapa = 'INICIO' | 'ETAPA_ANTERIOR';
+export type SituacaoPercursoLinha = 'EM_CURSO' | 'CONCLUIDO' | 'INTERROMPIDO';
+export type SituacaoEtapaPercurso = 'CUMPRIDA' | 'PENDENTE' | 'ATRASADA' | 'AGUARDANDO' | 'DISPENSADA';
+
+export const TIPOS_ETAPA: Record<TipoEtapaLinhaCuidado, string> = {
+  ATENDIMENTO: 'Atendimento', EXAME: 'Exame liberado', REGULACAO: 'Regulação realizada', VACINA: 'Vacina', INTERNACAO: 'Alta de internação',
+  MANUAL: 'Registro manual',
+};
+export const SITUACOES_PERCURSO: Record<SituacaoPercursoLinha, { rotulo: string; classe: string }> = {
+  EM_CURSO: { rotulo: 'Em curso', classe: 'info' },
+  CONCLUIDO: { rotulo: 'Concluído', classe: 'ok' },
+  INTERROMPIDO: { rotulo: 'Interrompido', classe: 'muted' },
+};
+export const SITUACOES_ETAPA: Record<SituacaoEtapaPercurso, { rotulo: string; classe: string }> = {
+  CUMPRIDA: { rotulo: 'Cumprida', classe: 'ok' },
+  PENDENTE: { rotulo: 'No prazo', classe: 'info' },
+  ATRASADA: { rotulo: 'Atrasada', classe: 'alert' },
+  AGUARDANDO: { rotulo: 'Aguardando a anterior', classe: 'muted' },
+  DISPENSADA: { rotulo: 'Dispensada', classe: 'muted' },
+};
+
+export interface EtapaLinhaCuidadoDto {
+  uuid: string;
+  ordem: number;
+  nome: string;
+  tipo: TipoEtapaLinhaCuidado;
+  especialidadeId?: string | null;
+  especialidadeNome?: string | null;
+  exameId?: string | null;
+  exameNome?: string | null;
+  procedimentoId?: string | null;
+  procedimentoNome?: string | null;
+  imunobiologicoId?: string | null;
+  imunobiologicoSigla?: string | null;
+  cids?: string | null;
+  quantidade: number;
+  prazoDias?: number | null;
+  prazoDesde: ReferenciaPrazoEtapa;
+  obrigatoria: boolean;
+  ativa: boolean;
+  criterio: string;
+}
+
+export interface LinhaCuidadoDto {
+  uuid: string;
+  codigo: string;
+  nome: string;
+  descricao?: string | null;
+  programaId?: string | null;
+  programaNome?: string | null;
+  sensivel: boolean;
+  ativa: boolean;
+  percursosEmCurso: number;
+  etapas: EtapaLinhaCuidadoDto[];
+}
+
+export interface EtapaLinhaCuidadoRequestDto {
+  uuid?: string | null;
+  nome: string;
+  tipo: TipoEtapaLinhaCuidado;
+  especialidadeId?: string | null;
+  exameId?: string | null;
+  procedimentoId?: string | null;
+  imunobiologicoId?: string | null;
+  cids?: string | null;
+  quantidade?: number | null;
+  prazoDias?: number | null;
+  prazoDesde?: ReferenciaPrazoEtapa;
+  obrigatoria?: boolean;
+}
+
+export interface LinhaCuidadoRequestDto {
+  codigo: string;
+  nome: string;
+  descricao?: string | null;
+  programaId?: string | null;
+  ativa?: boolean;
+  etapas: EtapaLinhaCuidadoRequestDto[];
+}
+
+export interface EtapaPercursoDto {
+  etapaId: string;
+  ordem: number;
+  nome: string;
+  tipo: TipoEtapaLinhaCuidado;
+  obrigatoria: boolean;
+  quantidade: number;
+  realizadas: number;
+  situacao: SituacaoEtapaPercurso;
+  prazo?: string | null;
+  cumpridaEm?: string | null;
+  evidencia?: string | null;
+  observacao?: string | null;
+}
+
+export interface PercursoLinhaDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  linhaId: string;
+  linhaCodigo: string;
+  linhaNome: string;
+  sensivel: boolean;
+  inicio: string;
+  unidadeId: string;
+  unidadeNome: string;
+  equipeId?: string | null;
+  equipeNome?: string | null;
+  acompanhamentoId?: string | null;
+  situacao: SituacaoPercursoLinha;
+  encerradoEm?: string | null;
+  motivoEncerramento?: string | null;
+  atrasado: boolean;
+  etapaAtual?: string | null;
+  obrigatoriasFeitas: number;
+  obrigatorias: number;
+  etapas: EtapaPercursoDto[];
+}
+
+export interface PercursoLinhaRequestDto {
+  pacienteId: string;
+  linhaId: string;
+  inicio: string;
+  unidadeId: string;
+  equipeId?: string | null;
+  acompanhamentoId?: string | null;
+}
+
+export interface SugestaoLinhaCuidadoDto {
+  pacienteId: string;
+  pacienteNome: string;
+  linhaId: string;
+  linhaNome: string;
+  acompanhamentoId: string;
+  unidadeId: string;
+  unidadeNome: string;
+  equipeId?: string | null;
+  inscritoDesde: string;
+}
+
+export interface PainelLinhasCuidadoDto {
+  emCurso: number;
+  atrasados: number;
+  percursos: PercursoLinhaDto[];
+  sugestoes: SugestaoLinhaCuidadoDto[];
+}

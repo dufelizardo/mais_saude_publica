@@ -1,0 +1,7 @@
+*** Comments ***
+    Mais Saúde Pública API - Programas, fatia P5 (ADR-0152).
+*** Variables ***
+${LINHA_CUIDADO_SCHEMA}    ${{{'required': ['uuid', 'codigo', 'nome', 'sensivel', 'ativa', 'percursosEmCurso', 'etapas'], 'types': {'uuid': str, 'codigo': str, 'nome': str, 'descricao': str, 'programaId': str, 'programaNome': str, 'sensivel': bool, 'ativa': bool, 'percursosEmCurso': int, 'etapas': list}}}}
+${PERCURSO_LINHA_SCHEMA}    ${{{'required': ['uuid', 'pacienteId', 'linhaId', 'inicio', 'unidadeId', 'situacao', 'atrasado', 'obrigatoriasFeitas', 'obrigatorias', 'etapas'], 'types': {'uuid': str, 'pacienteId': str, 'pacienteNome': str, 'linhaId': str, 'linhaNome': str, 'inicio': str, 'unidadeId': str, 'situacao': str, 'atrasado': bool, 'etapaAtual': str, 'obrigatoriasFeitas': int, 'obrigatorias': int, 'etapas': list}, 'enums': {'situacao': ['EM_CURSO', 'CONCLUIDO', 'INTERROMPIDO']}}}}
+${ETAPA_PERCURSO_SCHEMA}    ${{{'required': ['etapaId', 'ordem', 'nome', 'tipo', 'obrigatoria', 'quantidade', 'realizadas', 'situacao'], 'types': {'etapaId': str, 'ordem': int, 'nome': str, 'tipo': str, 'obrigatoria': bool, 'quantidade': int, 'realizadas': int, 'situacao': str, 'prazo': str, 'cumpridaEm': str, 'evidencia': str, 'observacao': str}, 'enums': {'situacao': ['CUMPRIDA', 'PENDENTE', 'ATRASADA', 'AGUARDANDO', 'DISPENSADA']}}}}
+${PAINEL_LINHAS_SCHEMA}    ${{{'required': ['emCurso', 'atrasados', 'percursos', 'sugestoes'], 'types': {'emCurso': int, 'atrasados': int, 'percursos': list, 'sugestoes': list}}}}

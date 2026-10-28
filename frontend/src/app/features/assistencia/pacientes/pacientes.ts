@@ -32,6 +32,7 @@ import {
   TIPOS_ACAO,
 } from '../../../core/models/programa';
 import { ProgramaService } from '../../../core/services/programa';
+import { LinhasDoPaciente } from '../programas/linhas-do-paciente';
 import { CadernetaVacinacao } from '../vacinacao/caderneta-vacinacao';
 
 type AbaDetalhe = 'resumo' | 'historico' | 'programas' | 'vacinacao' | 'anexos';
@@ -48,7 +49,7 @@ interface TimelineItem {
 
 @Component({
   selector: 'app-pacientes',
-  imports: [ReactiveFormsModule, RouterLink, Modal, Drawer, DatePipe, AcessoProntuario, AdscricaoDoPaciente, CadernetaVacinacao],
+  imports: [ReactiveFormsModule, RouterLink, Modal, Drawer, DatePipe, AcessoProntuario, AdscricaoDoPaciente, CadernetaVacinacao, LinhasDoPaciente],
   templateUrl: './pacientes.html',
   styleUrl: './pacientes.css',
 })
