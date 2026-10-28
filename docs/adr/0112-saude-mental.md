@@ -4,8 +4,8 @@
 
 Aceita. **Desenho**; cada fatia tem ADR própria. Implementadas: SM1 (base) na [ADR-0120](./0120-saude-mental-base.md),
 SM2 (PTS e intervenções) na [ADR-0121](./0121-saude-mental-pts-intervencoes.md), SM4 (rede) na
-[ADR-0122](./0122-saude-mental-rede.md) e SM3 (risco e crise) na [ADR-0123](./0123-saude-mental-risco-crise.md); SM5 e
-SM6 vêm depois. O detalhe está em [`saude-mental/MODELO-SAUDE-MENTAL.md`](../saude-mental/MODELO-SAUDE-MENTAL.md).
+[ADR-0122](./0122-saude-mental-rede.md), SM3 (risco e crise) na [ADR-0123](./0123-saude-mental-risco-crise.md) e SM5
+(CAPS e RAPS) na [ADR-0153](./0153-saude-mental-caps-e-raps.md); a SM6 vem depois. O detalhe está em [`saude-mental/MODELO-SAUDE-MENTAL.md`](../saude-mental/MODELO-SAUDE-MENTAL.md).
 
 ## Contexto
 

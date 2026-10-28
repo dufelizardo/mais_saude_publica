@@ -4,7 +4,8 @@
 **Status:** desenho aprovado na [ADR-0112](../adr/0112-saude-mental.md). **A SM1 (base), a SM2 (PTS e
 intervenções), a SM3 (risco e crise) e a SM4 (rede) estão implementadas** nas ADRs
 [0120](../adr/0120-saude-mental-base.md), [0121](../adr/0121-saude-mental-pts-intervencoes.md),
-[0123](../adr/0123-saude-mental-risco-crise.md) e [0122](../adr/0122-saude-mental-rede.md); SM5 e SM6 vêm depois
+[0123](../adr/0123-saude-mental-risco-crise.md) e [0122](../adr/0122-saude-mental-rede.md), e a SM5 (CAPS e RAPS) na
+[0153](../adr/0153-saude-mental-caps-e-raps.md); a SM6 vem depois
 (seção 16).
 
 O foco do domínio é a **atenção psicossocial**, e não um "prontuário de psicologia". O núcleo é
@@ -301,7 +302,7 @@ Território ──► população e adscrição    Programas ──► ações  
 | **SM2** · PTS ✅ ([ADR-0121](../adr/0121-saude-mental-pts-intervencoes.md)) | objetivos, metas, intervenções previstas, rede de apoio, versões e revisão; registro de intervenções | SM1 |
 | **SM3** · risco e crise ✅ ([ADR-0123](../adr/0123-saude-mental-risco-crise.md); a notificação no sistema chegou com a V1, ADR-0124; o SAMU segue pendente) | avaliação de risco com histórico, evento de crise, pós-crise, sugestão de notificação; modalidade da internação e comunicação ao Ministério Público | SM1, Vigilância V1, regulação de urgência |
 | **SM4** · rede ✅ ([ADR-0122](../adr/0122-saude-mental-rede.md)) | referência e contrarreferência pela Regulação; cuidado compartilhado e matriciamento | SM1 |
-| **SM5** · CAPS e RAPS | modalidades de CAPS e componentes da RAPS como capacidades da unidade; serviços oferecidos | ADR-0053 |
+| **SM5** · CAPS e RAPS ✅ ([ADR-0153](../adr/0153-saude-mental-caps-e-raps.md)) | componente da RAPS no catálogo do modelo operacional; painel da RAPS com os serviços oferecidos pelas intervenções e as lacunas; acolhimento noturno do CAPS | ADR-0053, MO1 |
 | **SM6** · intersetorialidade e indicadores | instituições externas, encaminhamento intersetorial, indicadores para o #19 | SM2 |
 
 **Fora do escopo agora:**

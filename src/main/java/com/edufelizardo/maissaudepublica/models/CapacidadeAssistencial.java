@@ -47,4 +47,8 @@ public class CapacidadeAssistencial implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "perfil_operacional_id", referencedColumnName = "uuid")
     private PerfilOperacional perfil;
+
+    /** O componente da RAPS (ADR-0153); vazio, fora da RAPS. */
+    @Enumerated(EnumType.STRING)
+    private com.edufelizardo.maissaudepublica.models.enuns.ComponenteRaps componenteRaps;
 }

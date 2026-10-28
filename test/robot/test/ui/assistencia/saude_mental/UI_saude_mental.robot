@@ -3,6 +3,7 @@ Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_ui
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_pts_ui_scenario.resource
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_rede_ui_scenario.resource
 Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_risco_crise_ui_scenario.resource
+Resource    ../../../../src/scenario/ui/assistencia/saude_mental/saude_mental_raps_ui_scenario.resource
 Resource    ../../../../src/scenario/common/ui_sessao_scenario.resource
 Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
@@ -138,5 +139,21 @@ CT-015 - Registrar a notificação da crise
     [Tags]    UI    UiSaudeMental
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - SAUDE MENTAL - NOTIFICACAO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-016 - Rede de atenção psicossocial
+    [Documentation]    A unidade com CAPS III aparece na atenção psicossocial especializada (ADR-0153).
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - RAPS
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-017 - Acolhimento noturno
+    [Documentation]    Entrada do paciente do caso na unidade e saída com o motivo (ADR-0153).
+    [Tags]    UI    UiSaudeMental
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - SAUDE MENTAL - ACOLHIMENTO NOTURNO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

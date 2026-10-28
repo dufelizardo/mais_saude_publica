@@ -177,6 +177,17 @@ export const routes: Routes = [
         loadComponent: () => import('./features/assistencia/saude-mental/saude-mental').then((m) => m.SaudeMental),
         data: { breadcrumb: 'Saúde Mental', area: 'Assistência' },
       },
+      // A RAPS e o acolhimento noturno do CAPS (ADR-0153).
+      {
+        path: 'assistencia/saude-mental/raps',
+        loadComponent: () => import('./features/assistencia/saude-mental/rede-raps').then((m) => m.RedeRaps),
+        data: { breadcrumb: 'Rede de Atenção Psicossocial', area: 'Assistência' },
+      },
+      {
+        path: 'assistencia/saude-mental/acolhimento-noturno',
+        loadComponent: () => import('./features/assistencia/saude-mental/acolhimento-noturno').then((m) => m.AcolhimentoNoturno),
+        data: { breadcrumb: 'Acolhimento noturno', area: 'Assistência' },
+      },
       {
         path: 'assistencia/leitos',
         loadComponent: () => import('./features/assistencia/leitos/leitos').then((m) => m.Leitos),
