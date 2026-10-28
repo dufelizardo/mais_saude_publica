@@ -147,6 +147,8 @@ Mudam também:
     - a recepção não vê;
     - a gestão vê a cobertura e a Sala de Situação, mas não a busca ativa;
     - a Sala de Situação é de quem consulta indicadores.
+  - `CampanhaControllerTest`: o teste de ação e andamento passou a usar um mutirão, porque na campanha de vacinação o
+    andamento vem das doses.
 - **Robot de API:** `test/imunizacao/CoberturaVacinal.robot`, CT-001 a CT-011. O teste da P3 de ação e andamento passou
   a usar uma campanha de rastreamento.
 - **Robot de tela:**
