@@ -15,8 +15,10 @@ import {
   ProducaoUnidadeDto,
   SerieProducaoDto,
   SituacaoAgoraDto,
+  VacinacaoNaRedeDto,
   VigilanciaNaRedeDto,
 } from '../../core/models/producao';
+import { classeCobertura, percentual } from '../../core/models/imunizacao';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import { ProducaoService } from '../../core/services/producao';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
@@ -27,7 +29,8 @@ type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
  * Sala de Situação, pelo protótipo Painel.html: a produção assistencial da rede ou da unidade no período (BI1,
  * ADR-0143) e a situação operacional (BI2, ADR-0144) — alertas, fila agora, tempo de espera, ocupação das agendas e
  * ocorrências da escala, atualizados a cada minuto — e os indicadores da rede (BI3, ADR-0146): programas de saúde e
- * vigilância por unidade e território. Só números. A vacinação fica "Em breve".
+ * vigilância por unidade e território; a vacinação, com as doses do período, a cobertura pelo cadastro e as campanhas
+ * (ADR-0149). Só números.
  */
 @Component({
   selector: 'app-sala-de-situacao',
@@ -65,6 +68,7 @@ export class SalaDeSituacao {
   protected readonly escala = signal<OcorrenciaEscalaDto[]>([]);
   protected readonly programasRede = signal<ProgramasNaRedeDto | null>(null);
   protected readonly vigilanciaRede = signal<VigilanciaNaRedeDto | null>(null);
+  protected readonly vacinacaoRede = signal<VacinacaoNaRedeDto | null>(null);
   protected readonly programaAberto = signal<string | null>(null);
   protected readonly porUnidade = signal<ProgramaPorUnidadeDto | null>(null);
   protected readonly todosOsProgramas = signal(false);
@@ -251,6 +255,14 @@ export class SalaDeSituacao {
     return i.tipo === 'PERCENTUAL' ? `${Number(i.valor).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%` : this.numero(i.valor);
   }
 
+  protected pct(v: number | null | undefined): string {
+    return percentual(v);
+  }
+
+  protected classeVacina(cobertura: number | null | undefined, meta: number): string {
+    return classeCobertura(cobertura, meta);
+  }
+
   protected classeSituacao(s: string | null | undefined): string {
     return s === 'ATINGIDA' ? 'tag tag--ok' : s === 'EM_RISCO' ? 'tag tag--warn' : s === 'ABAIXO' ? 'tag tag--alert' : 'tag tag--info';
   }
@@ -286,6 +298,8 @@ export class SalaDeSituacao {
     this.service.espera(filtro).pipe(catchError(() => of(null))).subscribe((e) => this.espera.set(e));
     this.service.programasNaRede(filtro).pipe(catchError(() => of(null))).subscribe((p) => this.programasRede.set(p));
     this.service.vigilanciaNaRede(filtro).pipe(catchError(() => of(null))).subscribe((v) => this.vigilanciaRede.set(v));
+    this.vacinacaoRede.set(null);
+    this.service.vacinacaoNaRede(filtro).pipe(catchError(() => of(null))).subscribe((v) => this.vacinacaoRede.set(v));
     this.programaAberto.set(null);
     this.porUnidade.set(null);
   }

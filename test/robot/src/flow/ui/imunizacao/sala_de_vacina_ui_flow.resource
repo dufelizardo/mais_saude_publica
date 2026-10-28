@@ -2,6 +2,7 @@
 Resource    ../../../pom/ui/imunizacao/sala_de_vacina_ui_pom.resource
 Resource    ../../imunizacao/vacinacao_flow.resource
 Resource    ../../imunizacao/sala_de_vacina_flow.resource
+Resource    ../../imunizacao/cobertura_vacinal_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A base é criada pela API; a ação sob teste é feita pela tela.
@@ -91,5 +92,35 @@ UI Vacina - Excursao E Avaliacao
     Fill Text    id=f-ava-parecer    Dentro da estabilidade informada pelo fabricante.
     Click    css=app-drawer >> role=button[name="Liberar"]
     Wait For Elements State    css=section[aria-label="Lotes sob suspeita"]    detached
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vacina - Cobertura Por Equipe
+    [Documentation]    Na aba Cobertura: a criança com BCG dá 100% na unidade; a equipe abre a cobertura por microárea (ADR-0149).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}=    Seed Crianca Na Microarea
+    Transcrever Dose    ${dados}    BCG    UNICA    300
+    UI Vacina - Abrir Sala
+    Select Options By    id=f-sv-unidade    value    ${dados}[unidade]
+    Click    role=tab[name="Cobertura"]
+    Wait For Elements State    css=table[aria-label="Cobertura por vacina"] >> tr:has-text("BCG · Dose única") >> text=100%    visible
+    Click    css=table[aria-label="Cobertura por equipe"] >> role=button
+    Wait For Elements State    css=table[aria-label="Cobertura por microárea"] >> text=Microárea 07    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vacina - Busca Ativa Por Microarea
+    [Documentation]    Na aba Atrasados: filtrar a equipe e a microárea e ver a criança com o agente comunitário e onde mora (ADR-0149).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}=    Seed Crianca Na Microarea
+    UI Vacina - Abrir Sala
+    Select Options By    id=f-sv-unidade    value    ${dados}[unidade]
+    Click    role=tab[name="Atrasados"]
+    Select Options By    id=f-at-equipe    value    ${dados}[equipe]
+    Wait For Elements State    id=f-at-microarea >> option >> text=Microárea 07    attached
+    Select Options By    id=f-at-microarea    value    ${dados}[micro]
+    Wait For Elements State    css=table[aria-label="Pacientes com dose atrasada"] >> tr:has-text("${dados}[nome]") >> text=ACS    visible
+    Wait For Elements State    css=table[aria-label="Pacientes com dose atrasada"] >> tr:has-text("${dados}[nome]") >> text=Rua Robot    visible
+    Wait For Elements State    role=link[name="Imprimir lista"]    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

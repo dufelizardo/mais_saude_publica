@@ -13,6 +13,8 @@ import {
   TipoCampanha,
 } from '../../../core/models/programa';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
+import { ImunobiologicoDto } from '../../../core/models/imunizacao';
+import { ImunizacaoService } from '../../../core/services/imunizacao';
 import { ProgramaService } from '../../../core/services/programa';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { AcoesProgramaticas } from './acoes-programaticas';
@@ -115,6 +117,16 @@ type Gaveta = { tipo: 'campanha'; campanha: CampanhaDto | null } | { tipo: 'deta
                 <div class="dw-field"><label for="f-campanha-meta">Meta</label><input id="f-campanha-meta" type="text" maxlength="300" formControlName="metaDescricao" placeholder="Ex.: 90% de cobertura" /></div>
                 <div class="dw-field"><label for="f-campanha-meta-qtd">Pessoas<span class="opt">opcional</span></label><input id="f-campanha-meta-qtd" type="number" min="1" formControlName="metaQuantidade" /></div>
               </div>
+              @if (form.controls.tipo.value === 'VACINACAO') {
+                <h4 class="mo-grupo">Vacinas da campanha</h4>
+                <p class="dw-hint">O andamento conta as pessoas vacinadas com a campanha na dose. Sem vacina marcada, vale qualquer uma; com elas, a dose
+                  de outra vacina não entra na campanha.</p>
+                <div class="camp-vacinas" role="group" aria-label="Vacinas da campanha">
+                  @for (i of imunobiologicos(); track i.uuid) {
+                    <label><input type="checkbox" [checked]="vacinas().has(i.uuid)" (change)="alternarVacina(i.uuid)" /> {{ i.sigla }}</label>
+                  }
+                </div>
+              }
             </div>
             <footer class="dw-foot">
               <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
@@ -131,6 +143,7 @@ type Gaveta = { tipo: 'campanha'; campanha: CampanhaDto | null } | { tipo: 'deta
                   <div><dt>Período</dt><dd>{{ data(c.inicio) }} a {{ data(c.fim) }} · {{ tipos[c.tipo] }}@if (c.programaNome) { · {{ c.programaNome }} }</dd></div>
                   <div><dt>Público</dt><dd>{{ c.publico }}</dd></div>
                   @if (c.descricao) { <div><dt>Descrição</dt><dd>{{ c.descricao }}</dd></div> }
+                  @if (c.tipo === 'VACINACAO') { <div><dt>Vacinas</dt><dd>{{ c.imunobiologicoSiglas.length ? c.imunobiologicoSiglas.join(', ') : 'Qualquer vacina' }}</dd></div> }
                   @if (c.motivoCancelamento) { <div><dt>Cancelada</dt><dd>{{ c.motivoCancelamento }}</dd></div> }
                 </dl>
                 @if (c.metaQuantidade || c.metaDescricao) {
@@ -214,10 +227,15 @@ type Gaveta = { tipo: 'campanha'; campanha: CampanhaDto | null } | { tipo: 'deta
       </app-drawer>
     }
   `,
+  styles: `
+    .camp-vacinas { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+    .camp-vacinas label { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; }
+  `,
 })
 export class Campanhas {
   private readonly fb = inject(FormBuilder);
   private readonly service = inject(ProgramaService);
+  private readonly imunizacaoService = inject(ImunizacaoService);
 
   readonly programas = input<ProgramaResumoDto[]>([]);
   readonly unidades = input<UnidadeSaudeResponseDto[]>([]);
@@ -242,6 +260,9 @@ export class Campanhas {
     publicoDescricao: '', metaDescricao: '', metaQuantidade: '',
   });
   protected readonly localForm = this.fb.nonNullable.group({ temporario: 'nao', unidadeId: '', nome: '', endereco: '', funcionamento: '' });
+  /** As vacinas da campanha de vacinação (ADR-0149). */
+  protected readonly imunobiologicos = signal<ImunobiologicoDto[]>([]);
+  protected readonly vacinas = signal<Set<string>>(new Set());
   protected readonly programasAtivos = computed(() => this.programas().filter((p) => p.situacao === 'ATIVO'));
 
   constructor() {
@@ -269,8 +290,21 @@ export class Campanhas {
       sexo: c?.sexo ?? '', publicoDescricao: c?.publicoDescricao ?? '', metaDescricao: c?.metaDescricao ?? '',
       metaQuantidade: c?.metaQuantidade != null ? String(c.metaQuantidade) : '',
     });
+    this.vacinas.set(new Set(c?.imunobiologicoIds ?? []));
+    if (!this.imunobiologicos().length) {
+      this.imunizacaoService.imunobiologicos().pipe(catchError(() => of([])))
+        .subscribe((l) => this.imunobiologicos.set(l.filter((i) => i.ativo).sort((a, b) => a.sigla.localeCompare(b.sigla))));
+    }
     this.erro.set(null);
     this.gaveta.set({ tipo: 'campanha', campanha: c });
+  }
+
+  protected alternarVacina(id: string): void {
+    this.vacinas.update((s) => {
+      const n = new Set(s);
+      if (!n.delete(id)) n.add(id);
+      return n;
+    });
   }
 
   protected abrirDetalhe(id: string): void {
@@ -298,6 +332,7 @@ export class Campanhas {
       nome: v.nome.trim(), tipo: v.tipo as TipoCampanha, programaId: v.programaId || null, inicio: v.inicio, fim: v.fim, descricao: v.descricao.trim() || null,
       idadeMinima: numero(v.idadeMinima), idadeMaxima: numero(v.idadeMaxima), sexo: (v.sexo || null) as SexoPublico | null,
       publicoDescricao: v.publicoDescricao.trim() || null, metaDescricao: v.metaDescricao.trim() || null, metaQuantidade: numero(v.metaQuantidade),
+      imunobiologicoIds: v.tipo === 'VACINACAO' ? [...this.vacinas()] : [],
     };
     this.salvando.set(true);
     (atual ? this.service.atualizarCampanha(atual.uuid, dto) : this.service.criarCampanha(dto)).subscribe({

@@ -50,7 +50,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
-| 24 | [Imunização](#24-imunização) | 🟡 | I1 e I2 feitas (caderneta, Sala de Vacina, estoque e cadeia de frio); I3 a I5 |
+| 24 | [Imunização](#24-imunização) | 🟡 | I1 a I3 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura e campanhas); I4 e I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
@@ -73,7 +73,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | P5 | 22 Programas | linhas de cuidado |
 | V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
 | E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
-| I3 | 24 Imunização | cobertura vacinal, homogeneidade, abandono, busca ativa e campanha com a meta real |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
 | BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
@@ -98,7 +97,7 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
 E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
-I1 ✅ ──► I2 · I3 (com a adscrição ✅) ──► vacinação na Sala de Situação · I4 (com V1 ✅) · I5 (domínio 20)
+I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 (com V1 ✅) · I5 (domínio 20)
 ```
 
 **Dependem de itens ainda não desenhados** (precisam de ADR de domínio antes):
@@ -111,7 +110,6 @@ I1 ✅ ──► I2 · I3 (com a adscrição ✅) ──► vacinação na Sala 
 | Regulação de urgência (11) | SM3 (acionar SAMU), E4 |
 | Gestão da Rede (30) | cotas PPI da Regulação |
 | Intersetorialidade (31) | SM6, encaminhamentos da Vigilância e das Emergências |
-| Imunização (24) | aba Vacinação de Pacientes, doses das campanhas |
 
 ## 2. Domínios
 
@@ -405,6 +403,9 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   por unidade, com a meta da unidade ou da rede; a vigilância por agravo com a oportunidade de encerramento, as 12
   semanas epidemiológicas, a regularidade da notificação e o território; programa e agravo sensíveis escondidos sem a
   permissão; cartões na Sala de Situação.
+- [x] **Vacinação na Sala de Situação** (fatia I3 da Imunização,
+  [ADR-0149](./adr/0149-imunizacao-cobertura-e-campanhas.md)): doses do período por estratégia, cobertura das vacinas de
+  referência, homogeneidade, abandono e campanhas de vacinação com o andamento, no lugar do bloco "Em breve".
 
 **Falta:**
 - [ ] **BI4 · Relatórios** (protótipo `Relatorios.html`).
@@ -550,12 +551,18 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   lote com baixa automática; frasco multidose aberto com prazo e perda técnica no vencimento; câmara de refrigeração
   com duas leituras por dia, pendência do turno sem leitura e excursão que põe os lotes sob suspeita até a coordenação
   liberar ou inutilizar; abas Estoque e Cadeia de frio na Sala de Vacina.
+- [x] **I3 · Cobertura e campanhas** ([ADR-0149](./adr/0149-imunizacao-cobertura-e-campanhas.md)): a dose de
+  referência e a meta no calendário (dado editável); cobertura pelo cadastro (coorte de crianças adscritas de 1 a 12
+  meses depois da idade recomendada), homogeneidade entre vacinas e entre territórios e taxa de abandono, por unidade,
+  equipe e microárea; busca ativa filtrada por equipe e microárea, com o agente comunitário, onde mora e a lista para
+  imprimir; andamento da campanha de vacinação pelas pessoas vacinadas, com as vacinas da campanha; aba Cobertura na
+  Sala de Vacina, bloco Vacinação na Sala de Situação e cobertura no detalhe da equipe.
 
 **Falta:**
 - [ ] **Remanejamento de lote entre unidades,** pedido à rede de frio e termômetro automático (depois da I2;
   ADR-0148).
-- [ ] **I3 · Cobertura e campanhas:** cobertura vacinal, homogeneidade, abandono, busca ativa por microárea, a meta real
-  da campanha e o bloco de vacinação da Sala de Situação.
+- [ ] **Cobertura sobre os nascidos vivos (SINASC)** e de adolescentes, adultos e gestantes; cobertura vacinal nas
+  metas programáticas (depois da I3; ADR-0149).
 - [ ] **I4 · ESAVI:** evento adverso pós-vacinação pela Vigilância.
 - [ ] **I5 · Integração com o SI-PNI/RNDS** (depende do domínio 20).
 

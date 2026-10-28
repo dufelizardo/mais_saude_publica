@@ -27,6 +27,8 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { CoberturaDto } from '../../../core/models/adscricao';
 import { TerritorioService } from '../../../core/services/territorio';
+import { CoberturaVacinalDto, classeCobertura, percentual } from '../../../core/models/imunizacao';
+import { ImunizacaoService } from '../../../core/services/imunizacao';
 
 type Gaveta =
   | { tipo: 'equipe'; equipe: EquipeResponseDto | null }
@@ -71,6 +73,9 @@ export class Equipes {
   /** Cobertura da equipe pelo cadastro territorial (ADR-0128): só números. */
   protected readonly cobertura = signal<CoberturaDto | null>(null);
   private readonly territorioService = inject(TerritorioService);
+  private readonly imunizacaoService = inject(ImunizacaoService);
+  /** A cobertura vacinal da equipe (ADR-0149); nula sem acesso ou enquanto calcula. */
+  protected readonly coberturaVacinal = signal<CoberturaVacinalDto | null>(null);
   /** Programas de saúde em que a equipe participa, com os inscritos dela (ADR-0119). */
   protected readonly programasDaEquipe = signal<ProgramaResumoDto[] | null>(null);
 
@@ -191,6 +196,10 @@ export class Equipes {
     this.territorioService.cobertura(uuid).pipe(catchError(() => of(null))).subscribe((c) => {
       if (this.selecionadaId() === uuid) this.cobertura.set(c);
     });
+    this.coberturaVacinal.set(null);
+    this.imunizacaoService.cobertura({ equipeId: uuid }).pipe(catchError(() => of(null))).subscribe((c) => {
+      if (this.selecionadaId() === uuid) this.coberturaVacinal.set(c);
+    });
     this.programasDaEquipe.set(null);
     this.programaService.listar({ equipeId: uuid }).subscribe({ next: (ps) => this.programasDaEquipe.set(ps), error: () => this.programasDaEquipe.set([]) });
   }
@@ -222,6 +231,14 @@ export class Equipes {
 
   protected faltando(e: EquipeResumoDto): string {
     return e.faltando.map((f) => f.split(' ou ').map((x) => this.funcoes[x as FuncaoEquipe] ?? x).join(' ou ')).join(', ');
+  }
+
+  protected pct(v: number | null | undefined): string {
+    return percentual(v);
+  }
+
+  protected classeVacina(cobertura: number | null | undefined, meta: number): string {
+    return classeCobertura(cobertura, meta);
   }
 
   /** Pessoas cadastradas na microárea, pela cobertura (ADR-0128). */

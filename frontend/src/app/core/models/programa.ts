@@ -339,6 +339,9 @@ export interface CampanhaDto {
   acoesPendentes: number;
   acoesRealizadas: number;
   locais: LocalCampanhaDto[];
+  /** As vacinas da campanha de vacinação; vazio = qualquer uma (ADR-0149). */
+  imunobiologicoIds: string[];
+  imunobiologicoSiglas: string[];
 }
 
 export interface CampanhaRequestDto {
@@ -356,6 +359,7 @@ export interface CampanhaRequestDto {
   publicoDescricao?: string | null;
   metaDescricao?: string | null;
   metaQuantidade?: number | null;
+  imunobiologicoIds?: string[];
 }
 
 export interface LocalCampanhaRequestDto {

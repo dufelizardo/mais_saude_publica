@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -38,4 +39,6 @@ public class EsquemaVacinalDto implements Serializable {
     private LocalDate vigenteAte;
     private int ordem;
     private boolean ativo;
+    private boolean medeCobertura;
+    private BigDecimal metaCobertura;
 }

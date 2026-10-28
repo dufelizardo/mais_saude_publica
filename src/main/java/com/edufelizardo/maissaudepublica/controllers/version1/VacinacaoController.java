@@ -12,11 +12,13 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Imunobiolo
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RegistroVacinacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AtrasadoVacinacaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CadernetaVacinacaoDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CoberturaVacinalDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EsquemaVacinalDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ImunobiologicoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.RegistroVacinacaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.VacinacaoDoDiaDto;
 import com.edufelizardo.maissaudepublica.services.version1.ImunizacaoCatalogoService;
+import com.edufelizardo.maissaudepublica.services.version1.CoberturaVacinalService;
 import com.edufelizardo.maissaudepublica.services.version1.VacinacaoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,6 +47,9 @@ public class VacinacaoController {
 
     @Autowired
     private VacinacaoService service;
+
+    @Autowired
+    private CoberturaVacinalService coberturaService;
 
     // ── Catálogo e calendário ──
 
@@ -148,10 +153,23 @@ public class VacinacaoController {
     @AuditarLeitura
     @RequerPermissao({"VACINACAO.REGISTRAR"})
     @GetMapping(value = "vacinacao/atrasados", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Atrasados da unidade", description = "Os adscritos às equipes da unidade com dose atrasada, para a busca ativa.",
-            tags = TAG)
+    @Operation(summary = "Atrasados da unidade", description = "Os adscritos às equipes da unidade com dose atrasada, para a busca ativa, "
+            + "com a equipe e a microárea (filtros), o agente comunitário e onde mora. Equipe de outra unidade, 400.", tags = TAG)
     @ApiErrorResponsesListagem
-    public ResponseEntity<List<AtrasadoVacinacaoDto>> atrasados(@RequestParam UUID unidadeId) {
-        return ResponseEntity.ok(service.atrasados(unidadeId));
+    public ResponseEntity<List<AtrasadoVacinacaoDto>> atrasados(@RequestParam UUID unidadeId, @RequestParam(required = false) UUID equipeId,
+                                                                @RequestParam(required = false) UUID microareaId) {
+        return ResponseEntity.ok(service.atrasados(unidadeId, equipeId, microareaId));
+    }
+
+    @RequerPermissao({"VACINACAO.REGISTRAR", "IMUNIZACAO.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @GetMapping(value = "vacinacao/cobertura", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Cobertura vacinal", description = "Pelo cadastro: por vacina de referência, a coorte, as vacinadas, a cobertura "
+            + "contra a meta, a homogeneidade (entre vacinas e entre territórios) e a taxa de abandono. Sem filtro, as unidades do acesso por "
+            + "unidade; com a unidade, por equipe; com a equipe, por microárea; com a equipe e a microárea, a microárea. Só números.", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<CoberturaVacinalDto> cobertura(@RequestParam(required = false) UUID unidadeId, @RequestParam(required = false) UUID equipeId,
+                                                         @RequestParam(required = false) UUID microareaId,
+                                                         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
+        return ResponseEntity.ok(coberturaService.cobertura(unidadeId, equipeId, microareaId, data));
     }
 }

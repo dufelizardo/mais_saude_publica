@@ -61,4 +61,7 @@ public class CampanhaRequestDto implements Serializable {
 
     @Min(value = 1, message = "A meta é de pelo menos 1 pessoa.")
     private Integer metaQuantidade;
+
+    /** Só na de vacinação (ADR-0149): nulo mantém as que estão; a lista vazia = qualquer vacina. */
+    private List<UUID> imunobiologicoIds;
 }

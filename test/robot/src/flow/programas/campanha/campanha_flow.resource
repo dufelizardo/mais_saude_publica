@@ -11,13 +11,14 @@ Resource    ../../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 Seed Campanha Com Local
-    [Documentation]    Creates a running vaccination campaign with a network unit as place; returns the campaign, its name, the place and the unit.
+    [Documentation]    Creates a running campaign (vaccination by default) with a network unit as place; returns the campaign, its name, the place and the unit.
+    [Arguments]    ${tipo}=VACINACAO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
     ${fim}=    Evaluate    (datetime.date.today() + datetime.timedelta(days=30)).isoformat()    modules=datetime
     ${sufixo}=    Generate Random String    6    [UPPER]
     ${nome}=    Set Variable    Campanha Robot ${sufixo}
-    ${payload}=    Create Dictionary    nome=${nome}    tipo=VACINACAO    inicio=${hoje}    fim=${fim}    idadeMinima=${60}    metaQuantidade=${100}
+    ${payload}=    Create Dictionary    nome=${nome}    tipo=${tipo}    inicio=${hoje}    fim=${fim}    idadeMinima=${60}    metaQuantidade=${100}
     ${c}=    POST Campanha    ${payload}
     Should Be Equal As Integers    ${c.status_code}    201
     ${unidade}=    Seed A Unidade De Saude Uuid
@@ -92,11 +93,11 @@ Campanha - Local Temporario Sem Nome - Status Code 400
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 Campanha - Acao E Andamento - Status Code 201
-    [Documentation]    A campaign action at a place; done with the people served, it moves the goal.
+    [Documentation]    A campaign action at a place; done with the people served, it moves the goal (the vaccination one counts the doses, ADR-0149).
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${campanha}    ${nome}    ${local}    ${unidade}=    Seed Campanha Com Local
+    ${campanha}    ${nome}    ${local}    ${unidade}=    Seed Campanha Com Local    RASTREAMENTO
     ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
-    ${payload}=    Create Dictionary    campanhaId=${campanha}    localCampanhaId=${local}    tipo=VACINA    dataPrevista=${hoje}
+    ${payload}=    Create Dictionary    campanhaId=${campanha}    localCampanhaId=${local}    tipo=AFERICAO    dataPrevista=${hoje}
     ${a}=    POST Acao Programatica    ${payload}
     Should Be Equal As Integers    ${a.status_code}    201
     Should Be Equal    ${a.json()}[campanhaNome]    ${nome}

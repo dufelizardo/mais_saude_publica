@@ -19,6 +19,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/assistencia/laboratorio/laudo/laudo-exame').then((m) => m.LaudoExame),
   },
+  // Lista de busca ativa de vacinação (ADR-0149): fora do AppShell, para imprimir limpo.
+  {
+    path: 'busca-ativa/vacinacao',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/assistencia/sala-de-vacina/busca-ativa-vacinacao').then((m) => m.BuscaAtivaVacinacao),
+  },
   {
     path: '',
     component: AppShell,

@@ -50,3 +50,5 @@
   .ss-alerta { flex-direction: column; align-items: flex-start; }
   .ss-row--2, .ss-row--3 { grid-template-columns: 1fr; }
 }
+.ss-vac { display: flex; gap: var(--s-4); flex-wrap: wrap; margin-bottom: var(--s-3); }
+.ss-vac div { display: flex; flex-direction: column; }

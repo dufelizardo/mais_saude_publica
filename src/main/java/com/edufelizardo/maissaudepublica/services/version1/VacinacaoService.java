@@ -12,6 +12,7 @@ import com.edufelizardo.maissaudepublica.models.Campanha;
 import com.edufelizardo.maissaudepublica.models.Equipe;
 import com.edufelizardo.maissaudepublica.models.EsquemaVacinal;
 import com.edufelizardo.maissaudepublica.models.Imunobiologico;
+import com.edufelizardo.maissaudepublica.models.MembroNucleo;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.RegistroVacinacao;
@@ -38,6 +39,7 @@ import com.edufelizardo.maissaudepublica.repositories.CampanhaRepository;
 import com.edufelizardo.maissaudepublica.repositories.EquipeRepository;
 import com.edufelizardo.maissaudepublica.repositories.EsquemaVacinalRepository;
 import com.edufelizardo.maissaudepublica.repositories.ImunobiologicoRepository;
+import com.edufelizardo.maissaudepublica.repositories.MembroNucleoRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.RegistroVacinacaoRepository;
@@ -56,7 +58,8 @@ import java.util.stream.Collectors;
 /**
  * Vacinação, fatia I1 da Imunização (ADR-0147): o registro da dose (aplicada na unidade, ou transcrita da caderneta), a
  * retificação e a anulação (ADR-0062), a caderneta do paciente com a situação vacinal pelo calendário, a sala de vacina
- * do dia e os adscritos com dose atrasada. A caderneta é dado de saúde: segue as regras do prontuário (ADR-0076).
+ * do dia e os adscritos com dose atrasada, por equipe e microárea, com o agente comunitário e onde mora (busca ativa,
+ * ADR-0149). A caderneta é dado de saúde: segue as regras do prontuário (ADR-0076).
  */
 @Service
 public class VacinacaoService {
@@ -77,6 +80,8 @@ public class VacinacaoService {
     @Autowired private ControleDeAcesso controleDeAcesso;
     @Autowired private VinculoAssistencialService vinculoService;
     @Autowired private EstoqueVacinaService estoqueService;
+    @Autowired private AdscricaoService adscricaoService;
+    @Autowired private MembroNucleoRepository membroRepository;
 
     // ── Registro ───────────────────────────────────────────────────────────────────────────────
 
@@ -182,18 +187,31 @@ public class VacinacaoService {
         return new VacinacaoDoDiaDto(u.getUuid(), u.getNome(), dia, lista.size(), porImuno, lista.stream().map(VacinacaoService::dto).toList());
     }
 
-    /** Os adscritos às equipes da unidade com alguma dose atrasada, os de atraso mais antigo primeiro (busca ativa). */
+    /**
+     * Os adscritos às equipes da unidade com alguma dose atrasada, os de atraso mais antigo primeiro (busca ativa); a
+     * equipe e a microárea filtram (ADR-0149). A equipe precisa ser da unidade (400).
+     */
     @Transactional(readOnly = true)
-    public List<AtrasadoVacinacaoDto> atrasados(UUID unidadeId) {
+    public List<AtrasadoVacinacaoDto> atrasados(UUID unidadeId, UUID equipeId, UUID microareaId) {
         UnidadeDeSaude u = unidade(unidadeId);
         controleDeAcesso.exigir(REGISTRAR, u);
+        if (equipeId != null) {
+            Equipe eq = equipeRepository.findById(equipeId).orElseThrow(() -> new ResourceNotFoundException(
+                    "Não foi possível encontrar a equipe " + equipeId + " em nossos registros."));
+            if (eq.getUnidade() == null || !eq.getUnidade().getUuid().equals(unidadeId)) {
+                throw new ResourceBadRequestException("A equipe " + eq.getNome() + " não é da unidade " + u.getNome() + ".");
+            }
+        }
         Map<UUID, Adscricao> adscritos = new LinkedHashMap<>();
         for (Equipe e : equipeRepository.findAllByOrderByNomeAsc()) {
-            if (e.getUnidade() == null || !e.getUnidade().getUuid().equals(unidadeId)) {
+            if (e.getUnidade() == null || !e.getUnidade().getUuid().equals(unidadeId) || (equipeId != null && !e.getUuid().equals(equipeId))) {
                 continue;
             }
             for (Adscricao a : adscricaoRepository.findByEquipe_UuidAndFimIsNull(e.getUuid())) {
                 Paciente p = a.getPaciente();
+                if (microareaId != null && (a.getMicroarea() == null || !a.getMicroarea().getUuid().equals(microareaId))) {
+                    continue;
+                }
                 if (p.isAtivo() && p.getDataNascimento() != null) {
                     adscritos.putIfAbsent(p.getUuid(), a);
                 }
@@ -207,6 +225,7 @@ public class VacinacaoService {
         List<EsquemaVacinal> esquemas = esquemaRepository.findTodos();
         LocalDate hoje = LocalDate.now();
         List<AtrasadoVacinacaoDto> lista = new ArrayList<>();
+        Map<UUID, Optional<String>> acs = new HashMap<>();
         for (Adscricao a : adscritos.values()) {
             Paciente p = a.getPaciente();
             List<DoseCalendarioDto> atrasadas = CalendarioVacinal.situacao(p.getDataNascimento(), hoje, esquemas,
@@ -217,15 +236,30 @@ public class VacinacaoService {
                 continue;
             }
             lista.add(new AtrasadoVacinacaoDto(p.getUuid(), p.getNome(), p.getDataNascimento(), (int) CalendarioVacinal.idadeMeses(p.getDataNascimento(), hoje),
-                    a.getEquipe().getNome(), a.getMicroarea() != null ? a.getMicroarea().getNome() : null,
+                    a.getEquipe().getNome(), a.getMicroarea() != null ? CoberturaVacinalService.nomeDaMicroarea(a.getMicroarea()) : null,
                     atrasadas.stream().map(d -> d.getSigla() + ", " + d.getDoseRotulo().toLowerCase(Locale.ROOT)).toList(),
-                    atrasadas.get(0).getDataPrevista()));
+                    atrasadas.get(0).getDataPrevista(), a.getEquipe().getUuid(), a.getMicroarea() != null ? a.getMicroarea().getUuid() : null,
+                    a.getMicroarea() == null ? null : acs.computeIfAbsent(a.getMicroarea().getUuid(),
+                            k -> Optional.ofNullable(adscricaoService.acsDaMicroarea(a.getMicroarea()))).orElse(null),
+                    endereco(p)));
         }
         lista.sort(Comparator.comparing(AtrasadoVacinacaoDto::getAtrasadaDesde).thenComparing(AtrasadoVacinacaoDto::getPacienteNome));
         return lista;
     }
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────
+
+    /** Onde mora: o domicílio do cadastro territorial; sem ele, o endereço do cadastro do paciente. */
+    private String endereco(Paciente p) {
+        Optional<MembroNucleo> mora = membroRepository.findByPaciente_UuidAndFimIsNull(p.getUuid());
+        if (mora.isPresent()) {
+            return CadastroTerritorialService.textoEndereco(mora.get().getNucleo().getDomicilio().getImovel().getEndereco(),
+                    mora.get().getNucleo().getDomicilio().getIdentificacao());
+        }
+        String texto = p.getEndereco() == null || p.getEndereco().getLogradouro() == null ? null
+                : CadastroTerritorialService.textoEndereco(p.getEndereco(), null);
+        return texto == null || texto.isBlank() ? null : texto;
+    }
 
     /**
      * Monta a dose com as regras: a aplicada pede quem aplicou e o lote; a transcrita pede a data; não há dose no futuro
@@ -282,6 +316,9 @@ public class VacinacaoService {
                     "Não foi possível encontrar a campanha " + dto.getCampanhaId() + " em nossos registros."));
             if (campanha.getTipo() != TipoCampanha.VACINACAO) {
                 throw new ResourceUnprocessableEntityException("A campanha " + campanha.getNome() + " não é de vacinação.");
+            }
+            if (!campanha.getImunobiologicos().isEmpty() && campanha.getImunobiologicos().stream().noneMatch(i -> i.getUuid().equals(imuno.getUuid()))) {
+                throw new ResourceUnprocessableEntityException("A campanha " + campanha.getNome() + " não é de " + imuno.getSigla() + ".");
             }
         }
         Atendimento atendimento = null;
