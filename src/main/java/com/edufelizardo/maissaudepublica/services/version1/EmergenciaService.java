@@ -89,6 +89,7 @@ public class EmergenciaService {
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
     @Autowired private AtivacaoPlanoService ativacao;
+    @Autowired private CoordenacaoEmergenciaService coordenacao;
 
     // ── Catálogos ──────────────────────────────────────────────────────────────────────────────────
 
@@ -290,7 +291,11 @@ public class EmergenciaService {
     @Transactional(readOnly = true)
     public List<EmergenciaDto> emergencias(SituacaoEmergencia situacao) {
         List<Emergencia> lista = emergenciaRepository.findTodas().stream().filter(e -> situacao == null || e.getSituacao() == situacao).toList();
-        return lista.stream().map(e -> resumo(e, avaliacaoRepository.findDaEmergencia(e.getUuid()).stream().findFirst().orElse(null))).toList();
+        return lista.stream().map(e -> {
+            EmergenciaDto d = resumo(e, avaliacaoRepository.findDaEmergencia(e.getUuid()).stream().findFirst().orElse(null));
+            d.setAcoesAtrasadas(coordenacao.atrasadas(e));
+            return d;
+        }).toList();
     }
 
     @Transactional(readOnly = true)
@@ -363,6 +368,7 @@ public class EmergenciaService {
         em.setMotivoEncerramento(dto.getMotivo().trim());
         emergenciaRepository.save(em);
         ativacao.desativarTodas(em, "Emergência encerrada: " + dto.getMotivo().trim());
+        coordenacao.desativarCapacidades(em, "Emergência encerrada: " + dto.getMotivo().trim());
         ContextoAuditoria.registro(em.getUuid());
         ContextoAuditoria.detalhe("Emergência encerrada.");
         return detalhe(em);
@@ -388,6 +394,62 @@ public class EmergenciaService {
         ativacao.desativar(em, ativacaoId, dto);
         ContextoAuditoria.registro(em.getUuid());
         return detalhe(em);
+    }
+
+    // ── Coordenação: ações, mobilização e capacidade (E3, ADR-0158) ────────────────────────────────
+
+    private static final String COORDENAR = "EMERGENCIA.COORDENAR";
+
+    /** Executa a escrita da coordenação na emergência ativa (422) e devolve a emergência. */
+    private EmergenciaDto coordenar(UUID uuid, java.util.function.Consumer<Emergencia> escrita) {
+        controleDeAcesso.exigirAlguma(COORDENAR);
+        Emergencia em = ativa(uuid);
+        escrita.accept(em);
+        ContextoAuditoria.registro(em.getUuid());
+        return detalhe(em);
+    }
+
+    @Transactional
+    public EmergenciaDto novaAcao(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.AcaoEmergencialRequestDto dto) {
+        return coordenar(uuid, em -> coordenacao.novaAcao(em, dto));
+    }
+
+    @Transactional
+    public EmergenciaDto gerarAcoesDoPlano(UUID uuid) {
+        return coordenar(uuid, coordenacao::gerarAcoesDoPlano);
+    }
+
+    @Transactional
+    public EmergenciaDto situacaoDaAcao(UUID uuid, UUID acaoId, com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoAcaoEmergencialRequestDto dto) {
+        return coordenar(uuid, em -> coordenacao.situacaoDaAcao(em, acaoId, dto));
+    }
+
+    @Transactional
+    public EmergenciaDto mobilizar(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.MobilizacaoRequestDto dto) {
+        return coordenar(uuid, em -> coordenacao.mobilizar(em, dto));
+    }
+
+    @Transactional
+    public EmergenciaDto situacaoDaMobilizacao(UUID uuid, UUID mobilizacaoId,
+                                              com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoMobilizacaoRequestDto dto) {
+        return coordenar(uuid, em -> coordenacao.situacaoDaMobilizacao(em, mobilizacaoId, dto));
+    }
+
+    @Transactional
+    public EmergenciaDto ligarTransferencia(UUID uuid, UUID mobilizacaoId,
+                                           com.edufelizardo.maissaudepublica.models.dtos.version1.request.TransferenciaMobilizacaoRequestDto dto) {
+        return coordenar(uuid, em -> coordenacao.ligarTransferencia(em, mobilizacaoId, dto));
+    }
+
+    @Transactional
+    public EmergenciaDto ativarCapacidade(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.AtivacaoCapacidadeRequestDto dto) {
+        return coordenar(uuid, em -> coordenacao.ativarCapacidade(em, dto));
+    }
+
+    @Transactional
+    public EmergenciaDto desativarCapacidade(UUID uuid, UUID ativacaoId,
+                                            com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesativacaoCapacidadeRequestDto dto) {
+        return coordenar(uuid, em -> coordenacao.desativarCapacidade(em, ativacaoId, dto.getJustificativa()));
     }
 
     // ── Impacto ────────────────────────────────────────────────────────────────────────────────────
@@ -554,6 +616,7 @@ public class EmergenciaService {
                 a.getProfissionaisIndisponiveis(), a.getLeitosIndisponiveis(), a.getMedicamentosCriticos(), a.getEquipamentos(), a.getTransporte(),
                 a.getInfraestrutura(), a.getNivelImpacto(), a.getObservacao())).toList());
         d.setPlanos(ativacao.planosDaEmergencia(em));
+        coordenacao.preencher(d, em, avaliacoes.isEmpty() ? null : avaliacoes.get(0));
         return d;
     }
 
@@ -565,7 +628,7 @@ public class EmergenciaService {
                 n.getUuid(), n.getOrdem(), n.getNome(), em.getSituacao(), em.getInicio(), em.getFim(), em.getMotivoEncerramento(),
                 r != null ? r.getMatricula() : null, r != null ? r.getNome() : null, ultima != null ? ultima.getNivelImpacto() : null,
                 ultima != null ? ultima.getAvaliadaEm() : null, null, List.of(), em.getEspinNumero(), em.getEspinData(), em.getDecretoTipo(),
-                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of());
+                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of(), List.of(), 0, List.of(), List.of(), List.of());
     }
 
     private static EventoEmergencialDto dto(EventoEmergencial e, UUID emergenciaId) {

@@ -1,7 +1,15 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.enuns.CategoriaTipoEmergencia;
+import com.edufelizardo.maissaudepublica.models.enuns.PrioridadeAcaoEmergencial;
+import com.edufelizardo.maissaudepublica.models.enuns.RecursoCapacidade;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoAcaoEmergencial;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoAtivacaoCapacidade;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoAtivacaoPlano;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoMobilizacao;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoOperacional;
+import com.edufelizardo.maissaudepublica.models.enuns.StatusTransferenciaFarmacia;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoMobilizacao;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoRegistroAtivacao;
 import com.edufelizardo.maissaudepublica.models.enuns.NivelImpacto;
@@ -55,6 +63,12 @@ public class EmergenciaDto implements Serializable {
     private List<Avaliacao> avaliacoes;
     /** Os planos de contingência ativados na emergência (ADR-0157), os ativos primeiro; na lista, vazio. */
     private List<PlanoAtivo> planos;
+    /** A coordenação (ADR-0158): ações, quantas atrasadas (também na lista), mobilizações, capacidade ativada e unidades afetadas. */
+    private List<AcaoItem> acoes;
+    private int acoesAtrasadas;
+    private List<MobilizacaoItem> mobilizacoes;
+    private List<CapacidadeAtivada> capacidades;
+    private List<UnidadeAfetada> unidadesAfetadas;
 
     /** Microárea do território afetado. */
     @Getter
@@ -179,5 +193,102 @@ public class EmergenciaDto implements Serializable {
         private Integer prazoHoras;
         private Instant prazoEm;
         private String unidadeNome;
+    }
+
+    /** Uma ação emergencial do quadro. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class AcaoItem implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private UUID uuid;
+        private String descricao;
+        private String responsavel;
+        private String unidadeNome;
+        private PrioridadeAcaoEmergencial prioridade;
+        private Instant prazo;
+        private SituacaoAcaoEmergencial situacao;
+        private boolean atrasada;
+        private String planoCodigo;
+        private Instant iniciadaEm;
+        private Instant concluidaEm;
+        private String motivoCancelamento;
+        private String observacao;
+    }
+
+    /** Uma mobilização; a situação da ligada a uma transferência acompanha a dela. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class MobilizacaoItem implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private UUID uuid;
+        private TipoMobilizacao tipo;
+        private String origemNome;
+        private UUID destinoId;
+        private String destinoNome;
+        private String profissionalMatricula;
+        private String profissionalNome;
+        private String recurso;
+        private Integer quantidade;
+        private String responsavel;
+        private LocalDate inicio;
+        private LocalDate fim;
+        private SituacaoMobilizacao situacao;
+        private UUID transferenciaId;
+        private StatusTransferenciaFarmacia transferenciaStatus;
+        private boolean autorizaEscala;
+        private String motivoCancelamento;
+    }
+
+    /** Capacidade emergencial ativada na emergência. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class CapacidadeAtivada implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private UUID uuid;
+        private UUID capacidadeId;
+        private String unidadeNome;
+        private RecursoCapacidade recurso;
+        private int normal;
+        private int emergencial;
+        private int quantidade;
+        private SituacaoAtivacaoCapacidade situacao;
+        private Instant inicio;
+        private Instant fim;
+        private String justificativa;
+        private String justificativaFim;
+    }
+
+    /** Unidade da última avaliação de impacto, com a situação operacional atual. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class UnidadeAfetada implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private UUID uuid;
+        private String nome;
+        private SituacaoOperacional situacaoOperacional;
     }
 }

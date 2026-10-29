@@ -26,10 +26,12 @@ import { AuthService } from '../../core/services/auth';
 import { EmergenciaService } from '../../core/services/emergencia';
 import { Drawer } from '../../shared/drawer/drawer';
 import { EdicaoMapa, Mapa, PinoMapa, PoligonoMapa } from '../../shared/mapa/mapa';
+import { CapacidadeEmergencial } from './capacidade-emergencial';
 import { CatalogosEmergencia } from './catalogos-emergencia';
+import { CoordenacaoEmergencia } from './coordenacao-emergencia';
 import { PlanosContingencia } from './planos-contingencia';
 
-type Aba = 'ativas' | 'eventos' | 'encerradas' | 'planos' | 'catalogos';
+type Aba = 'ativas' | 'eventos' | 'encerradas' | 'planos' | 'capacidade' | 'catalogos';
 type Gaveta =
   | { tipo: 'evento' }
   | { tipo: 'descartar'; evento: EventoEmergencialDto }
@@ -44,7 +46,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-emergencias',
-  imports: [Drawer, Mapa, PlanosContingencia, CatalogosEmergencia],
+  imports: [Drawer, Mapa, PlanosContingencia, CatalogosEmergencia, CapacidadeEmergencial, CoordenacaoEmergencia],
   template: `
     <header class="page-head">
       <div>
@@ -63,11 +65,14 @@ type Gaveta =
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'eventos'" (click)="aba.set('eventos')">Eventos <span class="cnt">{{ eventosAbertos() }}</span></button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'encerradas'" (click)="aba.set('encerradas')">Encerradas</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'planos'" (click)="aba.set('planos')">Planos de contingência</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'capacidade'" (click)="aba.set('capacidade')">Capacidade emergencial</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'catalogos'" (click)="aba.set('catalogos')">Catálogos</button>
     </div>
 
     @if (aba() === 'planos') {
       <app-planos-contingencia [tipos]="tipos()" [niveis]="niveis()" [podeGerenciar]="pode('CONTINGENCIA.GERENCIAR')" />
+    } @else if (aba() === 'capacidade') {
+      <app-capacidade-emergencial [podeGerenciar]="pode('CONTINGENCIA.GERENCIAR')" />
     } @else if (aba() === 'catalogos') {
       <app-catalogos-emergencia [tipos]="tipos()" [niveis]="niveis()" [podeGerenciar]="pode('CONTINGENCIA.GERENCIAR')" (alterado)="carregarCatalogos()" />
     } @else if (aba() === 'eventos') {
@@ -104,7 +109,7 @@ type Gaveta =
                 <td><span class="cell-main">{{ e.nome }}</span><span class="cell-sub">{{ e.tipoNome }}@if (e.cobrade) { · COBRADE {{ e.cobrade }} }</span></td>
                 <td><span [class]="'tag tag--' + classe(e.nivelOrdem)">{{ e.nivelNome }}</span></td>
                 <td class="mono">{{ dataHora(e.inicio) }}@if (e.fim) { <span class="cell-sub">até {{ dataHora(e.fim) }}</span> }</td>
-                <td>@if (e.ultimoImpacto) { <span [class]="'tag tag--' + impactos[e.ultimoImpacto].classe">{{ impactos[e.ultimoImpacto].rotulo }}</span> } @else { <span class="cell-sub">sem avaliação</span> }</td>
+                <td>@if (e.acoesAtrasadas) { <span class="tag tag--alert">{{ e.acoesAtrasadas }} ação(ões) atrasada(s)</span> }@if (e.ultimoImpacto) { <span [class]="'tag tag--' + impactos[e.ultimoImpacto].classe">{{ impactos[e.ultimoImpacto].rotulo }}</span> } @else { <span class="cell-sub">sem avaliação</span> }</td>
                 <td class="row-actions"><button type="button" class="btn btn--ghost btn--sm" (click)="selecionar(e.uuid)" [attr.aria-label]="'Abrir ' + e.nome">Abrir</button></td>
               </tr>
             } @empty { <tr><td colspan="5" class="cell-sub">{{ aba() === 'ativas' ? 'Nenhuma emergência ativa.' : 'Nenhuma emergência encerrada.' }}</td></tr> }
@@ -113,7 +118,7 @@ type Gaveta =
       </div>
     }
 
-    @if (aba() !== 'planos' && aba() !== 'catalogos' && detalhe(); as d) {
+    @if (aba() !== 'planos' && aba() !== 'catalogos' && aba() !== 'capacidade' && detalhe(); as d) {
       <section class="card em-detalhe" [attr.aria-label]="'Emergência ' + d.nome">
         <div class="em-cab">
           <div>
@@ -165,6 +170,8 @@ type Gaveta =
             </ul>
           } @else { <p class="cell-sub">Nenhum plano ativado nesta emergência.</p> }
         </div>
+
+        <app-coordenacao-emergencia [emergencia]="d" [podeCoordenar]="pode('EMERGENCIA.COORDENAR')" (alterada)="aposCoordenacao($event)" />
 
         <div class="em-grade">
           <div>
@@ -417,6 +424,11 @@ export class Emergencias {
   protected pode(...permissoes: string[]): boolean {
     const a = this.acesso();
     return !a.restrito || permissoes.some((p) => a.permissoes.has(p));
+  }
+
+  protected aposCoordenacao(d: EmergenciaDto): void {
+    this.detalhe.set(d);
+    this.carregar();
   }
 
   protected carregarCatalogos(): void {

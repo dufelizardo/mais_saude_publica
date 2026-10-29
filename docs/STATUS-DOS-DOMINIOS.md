@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-29 (Emergências E2)
+- **Atualizado em:** 2026-10-29 (Emergências E3)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -53,7 +53,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
-| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 e E2 feitas (núcleo; plano de contingência e ativação); E3 a E6 |
+| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3 feitas (núcleo; contingência; ações, mobilização e capacidade); E4 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
@@ -70,7 +70,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 |---|---|---|
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
-| E3 | 27 Emergências | ações emergenciais acompanhadas, mobilização e capacidade emergencial |
+| E5 | 27 Emergências | desmobilização, relatório pós-evento, lições aprendidas e revisão do plano |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
 | BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
@@ -78,7 +78,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
-MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 (capacidade emergencial) · MO2 → MO4
+MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
@@ -94,7 +94,7 @@ V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergen
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
-E1 ✅ ──► E2 ✅ ──► E3 ──► E4 · E5 ──► E6
+E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
@@ -676,11 +676,14 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   vigente, substituída, revogada) com níveis, critérios e ações previstas por nível, recursos, contatos e unidades;
   ativação na emergência pela autoridade, com passos (ativado, nível alterado automático, desativado) e as ações
   previstas do nível atual com prazo; encerramento desativa os planos; telas de planos e de catálogos.
+- [x] **E3 · Coordenação** ([ADR-0158](./adr/0158-emergencias-coordenacao.md)): quadro de ações (geradas das ações
+  previstas do plano ou avulsas; atrasadas no alto, também na Sala de Situação); mobilização registrada e executada pelo
+  dono (o profissional mobilizado ganha turno na Escala sem lotação na unidade de destino, rastreável; o medicamento segue
+  a transferência da Farmácia; insumo, equipamento e veículo como necessidade); capacidade emergencial cadastrada por
+  unidade e ativada na emergência até o limite; unidades afetadas com a situação operacional.
 
 **Falta:**
 - [ ] A escolha manual das microáreas na tela (a API aceita a lista).
-- [ ] **E3 · Mobilização:** mobilização (com a exceção de turnos fora da lotação na Escala), capacidade emergencial,
-  ações emergenciais, unidade afetada pela situação operacional.
 - [ ] **E4 · Integração da rede:** redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas,
   pacientes deslocados; Estoque e Transporte quando existirem.
 - [ ] **E5 · Pós-evento:** desmobilização, relatório, lições aprendidas, revisão do plano, indicadores.

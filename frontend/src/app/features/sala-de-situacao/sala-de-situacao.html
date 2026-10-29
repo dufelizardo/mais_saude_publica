@@ -30,7 +30,7 @@
       <article class="ss-alerta ss-alerta--alta" [attr.aria-label]="'Emergência ativa: ' + e.nome">
         <div>
           <div class="ss-alerta__titulo">Emergência ativa: {{ e.nome }} <span [class]="'tag tag--' + classeDoNivel(e.nivelOrdem)">{{ e.nivelNome }}</span></div>
-          <div class="ss-alerta__detalhe">{{ e.tipoNome }} · desde {{ desde(e.inicio) }}</div>
+          <div class="ss-alerta__detalhe">{{ e.tipoNome }} · desde {{ desde(e.inicio) }}@if (e.acoesAtrasadas) { · {{ e.acoesAtrasadas }} ação(ões) atrasada(s) }</div>
         </div>
         <a class="btn btn--ghost btn--sm" routerLink="/vigilancia/emergencias" [queryParams]="{ emergencia: e.uuid }">Ver emergência</a>
       </article>

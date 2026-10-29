@@ -23,6 +23,8 @@ export interface TurnoEscalaDto {
   descricao?: string | null;
   vaga: boolean;
   alertas: string[];
+  /** A emergência cuja mobilização autorizou o turno sem lotação na unidade (ADR-0158). */
+  mobilizacaoEmergencia?: string | null;
 }
 
 export interface AusenciaEscalaDto {

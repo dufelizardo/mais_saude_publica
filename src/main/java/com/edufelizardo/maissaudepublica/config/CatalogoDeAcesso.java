@@ -80,6 +80,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("EMERGENCIA.REGISTRAR", new Def("Registrar evento emergencial, território e avaliação de impacto", OPERACAO));
         PERMISSOES.put("EMERGENCIA.ATIVAR", new Def("Converter o evento em emergência, mudar o nível, registrar ESPIN e decreto e encerrar",
                 OPERACAO));
+        // A coordenação da resposta (ADR-0158): ações, mobilização e capacidade emergencial ativada.
+        PERMISSOES.put("EMERGENCIA.COORDENAR", new Def("Coordenar a resposta: ações emergenciais, mobilização e capacidade emergencial", OPERACAO));
         PERMISSOES.put("CONTINGENCIA.GERENCIAR", new Def("Manter os tipos e níveis de emergência e, depois, os planos de contingência", OPERACAO));
         // Saúde Bucal (ADR-0134): a avaliação e o diagnóstico são do cirurgião-dentista (Lei 5.081/1966).
         PERMISSOES.put("ODONTOLOGIA.REGISTRAR", new Def("Registrar a avaliação odontológica (cirurgião-dentista)", ACESSO_AO_DADO_DE_SAUDE));
@@ -144,7 +146,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "ADMINISTRATIVO.GERENCIAR", "PACIENTE.CONSULTAR", "FARMACIA.CONSULTAR", "EQUIPE.GERENCIAR",
                         "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
                         "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR",
-                        "CONTINGENCIA.GERENCIAR")));
+                        "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -181,7 +183,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
-                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR")));
+                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR")));
         // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
                 "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",

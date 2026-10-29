@@ -118,6 +118,123 @@ export interface EmergenciaDto {
   }[];
   /** Os planos de contingência ativados (ADR-0157), os ativos primeiro. */
   planos: PlanoAtivoDto[];
+  /** A coordenação (ADR-0158). */
+  acoes: AcaoEmergencialDto[];
+  acoesAtrasadas: number;
+  mobilizacoes: MobilizacaoDto[];
+  capacidades: CapacidadeAtivadaDto[];
+  unidadesAfetadas: { uuid: string; nome: string; situacaoOperacional: string }[];
+}
+
+// ── Coordenação (E3, ADR-0158) ──
+
+export type PrioridadeAcaoEmergencial = 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
+export type SituacaoAcaoEmergencial = 'PENDENTE' | 'EM_EXECUCAO' | 'CONCLUIDA' | 'CANCELADA';
+export type TipoMobilizacao = 'PROFISSIONAL' | 'MEDICAMENTO' | 'INSUMO' | 'EQUIPAMENTO' | 'VEICULO' | 'LEITO' | 'ESPACO_FISICO';
+export type SituacaoMobilizacao = 'SOLICITADA' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'CANCELADA';
+export type RecursoCapacidade = 'ATENDIMENTOS_DIA' | 'LEITOS' | 'CONSULTORIOS' | 'OUTRO';
+
+export const PRIORIDADES_ACAO: Record<PrioridadeAcaoEmergencial, { rotulo: string; classe: string }> = {
+  BAIXA: { rotulo: 'Baixa', classe: 'muted' },
+  MEDIA: { rotulo: 'Média', classe: 'info' },
+  ALTA: { rotulo: 'Alta', classe: 'warn' },
+  URGENTE: { rotulo: 'Urgente', classe: 'alert' },
+};
+
+export const SITUACOES_ACAO: Record<SituacaoAcaoEmergencial, { rotulo: string; classe: string }> = {
+  PENDENTE: { rotulo: 'Pendente', classe: 'info' },
+  EM_EXECUCAO: { rotulo: 'Em execução', classe: 'warn' },
+  CONCLUIDA: { rotulo: 'Concluída', classe: 'ok' },
+  CANCELADA: { rotulo: 'Cancelada', classe: 'muted' },
+};
+
+export const TIPOS_MOBILIZACAO: Record<TipoMobilizacao, string> = {
+  PROFISSIONAL: 'Profissional',
+  MEDICAMENTO: 'Medicamento',
+  INSUMO: 'Insumo',
+  EQUIPAMENTO: 'Equipamento',
+  VEICULO: 'Veículo',
+  LEITO: 'Leito',
+  ESPACO_FISICO: 'Espaço físico',
+};
+
+export const SITUACOES_MOBILIZACAO: Record<SituacaoMobilizacao, { rotulo: string; classe: string }> = {
+  SOLICITADA: { rotulo: 'Solicitada', classe: 'info' },
+  EM_ANDAMENTO: { rotulo: 'Em andamento', classe: 'warn' },
+  CONCLUIDA: { rotulo: 'Concluída', classe: 'ok' },
+  CANCELADA: { rotulo: 'Cancelada', classe: 'muted' },
+};
+
+export const RECURSOS_CAPACIDADE: Record<RecursoCapacidade, string> = {
+  ATENDIMENTOS_DIA: 'Atendimentos por dia',
+  LEITOS: 'Leitos',
+  CONSULTORIOS: 'Consultórios',
+  OUTRO: 'Outro',
+};
+
+export interface AcaoEmergencialDto {
+  uuid: string;
+  descricao: string;
+  responsavel: string;
+  unidadeNome: string | null;
+  prioridade: PrioridadeAcaoEmergencial;
+  prazo: string | null;
+  situacao: SituacaoAcaoEmergencial;
+  atrasada: boolean;
+  planoCodigo: string | null;
+  iniciadaEm: string | null;
+  concluidaEm: string | null;
+  motivoCancelamento: string | null;
+  observacao: string | null;
+}
+
+export interface MobilizacaoDto {
+  uuid: string;
+  tipo: TipoMobilizacao;
+  origemNome: string | null;
+  destinoId: string;
+  destinoNome: string;
+  profissionalMatricula: string | null;
+  profissionalNome: string | null;
+  recurso: string;
+  quantidade: number | null;
+  responsavel: string | null;
+  inicio: string;
+  fim: string | null;
+  situacao: SituacaoMobilizacao;
+  transferenciaId: string | null;
+  transferenciaStatus: string | null;
+  autorizaEscala: boolean;
+  motivoCancelamento: string | null;
+}
+
+export interface CapacidadeAtivadaDto {
+  uuid: string;
+  capacidadeId: string;
+  unidadeNome: string;
+  recurso: RecursoCapacidade;
+  normal: number;
+  emergencial: number;
+  quantidade: number;
+  situacao: 'ATIVA' | 'DESATIVADA';
+  inicio: string;
+  fim: string | null;
+  justificativa: string;
+  justificativaFim: string | null;
+}
+
+export interface CapacidadeEmergencialDto {
+  uuid: string;
+  unidadeId: string;
+  unidadeNome: string;
+  recurso: RecursoCapacidade;
+  normal: number;
+  emergencial: number;
+  ativadaAgora: number;
+  leitosAtivos: number | null;
+  observacao: string | null;
+  ativa: boolean;
+  atualizadaEm: string;
 }
 
 export interface PlanoAtivoDto {
