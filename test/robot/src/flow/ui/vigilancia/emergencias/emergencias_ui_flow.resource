@@ -1,7 +1,7 @@
 *** Settings ***
 Library     String
 Resource    ../../../../pom/ui/vigilancia/emergencias/emergencias_ui_pom.resource
-Resource    ../../../emergencias/contingencia_flow.resource
+Resource    ../../../emergencias/coordenacao_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Emergências e desastres (ADR-0156); as bases vêm pela API.
@@ -95,5 +95,43 @@ UI Emergencias - Plano Pelo Editor
     Wait For Elements State    css=app-drawer >> text=Rascunho    visible
     Click    css=app-drawer >> role=button[name="Publicar"]
     Wait For Elements State    css=app-drawer >> [aria-label="Versões do plano"] >> text=Vigente    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Quadro De Acoes
+    [Documentation]    Na emergência: nova ação pela gaveta, iniciar e concluir.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${em}=    Seed Emergencia
+    UI Emergencias - Abrir Tela    ${em.json()}[uuid]
+    Wait For Elements State    css=section.em-detalhe    visible
+    Clicar Botao    Nova ação
+    Fill Text    id=f-co-descricao    Abrir abrigo no ginásio
+    Fill Text    id=f-co-responsavel    Assistência social
+    Select Options By    id=f-co-prioridade    value    URGENTE
+    Enviar Gaveta
+    Wait For Elements State    css=table[aria-label="Ações emergenciais"] >> text=Abrir abrigo no ginásio    visible
+    Click    role=button[name="Iniciar: Abrir abrigo no ginásio"]
+    Enviar Gaveta
+    Wait For Elements State    css=table[aria-label="Ações emergenciais"] >> text=Em execução    visible
+    Click    role=button[name="Concluir: Abrir abrigo no ginásio"]
+    Enviar Gaveta
+    Wait For Elements State    css=table[aria-label="Ações emergenciais"] >> text=Concluída    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Mobilizar Profissional
+    [Documentation]    Na emergência: mobiliza o profissional, que passa a autorizar turno na Escala.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${em}=    Seed Emergencia
+    ${matricula}=    Seed A Profissional Matricula
+    ${destino}=    Seed A Unidade De Saude Uuid
+    UI Emergencias - Abrir Tela    ${em.json()}[uuid]
+    Wait For Elements State    css=section.em-detalhe    visible
+    Clicar Botao    Mobilizar
+    Wait For Elements State    css=#f-co-destino option[value="${destino}"]    attached
+    Select Options By    id=f-co-destino    value    ${destino}
+    Fill Text    id=f-co-matricula    ${matricula}
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Mobilizações"] >> text=Autoriza turno na Escala    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

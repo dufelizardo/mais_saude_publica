@@ -3,6 +3,12 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   AvaliacaoImpactoRequestDto,
+  CapacidadeEmergencialDto,
+  PrioridadeAcaoEmergencial,
+  RecursoCapacidade,
+  SituacaoAcaoEmergencial,
+  SituacaoMobilizacao,
+  TipoMobilizacao,
   EmergenciaDto,
   EventoEmergencialDto,
   FonteEventoEmergencial,
@@ -123,5 +129,49 @@ export class EmergenciaService {
 
   desativarPlano(emergenciaId: string, ativacaoId: string, justificativa: string): Observable<EmergenciaDto> {
     return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${emergenciaId}/plano-ativo/${ativacaoId}/desativacao`, { justificativa });
+  }
+
+  // ── Coordenação (E3, ADR-0158) ──
+
+  novaAcao(uuid: string, dto: { descricao: string; responsavel: string; unidadeId: string | null; prioridade: PrioridadeAcaoEmergencial; prazo: string | null }): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/acao`, dto);
+  }
+
+  gerarAcoesDoPlano(uuid: string): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/acoes-do-plano`, {});
+  }
+
+  situacaoDaAcao(uuid: string, acaoId: string, situacao: SituacaoAcaoEmergencial, observacao: string | null, motivo: string | null): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/acao/${acaoId}/situacao`, { situacao, observacao, motivo });
+  }
+
+  mobilizar(uuid: string, dto: { tipo: TipoMobilizacao; origemId: string | null; destinoId: string; profissionalMatricula: string | null; recurso: string | null; quantidade: number | null; responsavel: string | null; inicio: string | null; fim: string | null }): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/mobilizacao`, dto);
+  }
+
+  situacaoDaMobilizacao(uuid: string, mobilizacaoId: string, situacao: SituacaoMobilizacao, motivo: string | null): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/mobilizacao/${mobilizacaoId}/situacao`, { situacao, motivo });
+  }
+
+  ligarTransferencia(uuid: string, mobilizacaoId: string, transferenciaId: string): Observable<EmergenciaDto> {
+    return this.http.put<EmergenciaDto>(`${this.api}/emergencia/${uuid}/mobilizacao/${mobilizacaoId}/transferencia`, { transferenciaId });
+  }
+
+  capacidades(unidadeId?: string): Observable<CapacidadeEmergencialDto[]> {
+    const params = unidadeId ? new HttpParams().set('unidadeId', unidadeId) : undefined;
+    return this.http.get<CapacidadeEmergencialDto[]>(`${this.api}/emergencias/capacidades`, { params });
+  }
+
+  salvarCapacidade(uuid: string | null, dto: { unidadeId: string; recurso: RecursoCapacidade; normal: number; emergencial: number; observacao: string | null; ativa: boolean | null }): Observable<CapacidadeEmergencialDto> {
+    return uuid ? this.http.put<CapacidadeEmergencialDto>(`${this.api}/emergencias/capacidade/${uuid}`, dto)
+      : this.http.post<CapacidadeEmergencialDto>(`${this.api}/emergencias/capacidade`, dto);
+  }
+
+  ativarCapacidade(uuid: string, capacidadeId: string, quantidade: number, justificativa: string): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/capacidade-ativa`, { capacidadeId, quantidade, justificativa });
+  }
+
+  desativarCapacidade(uuid: string, ativacaoId: string, justificativa: string): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/capacidade-ativa/${ativacaoId}/desativacao`, { justificativa });
   }
 }

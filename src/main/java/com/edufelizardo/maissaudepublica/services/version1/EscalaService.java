@@ -94,6 +94,9 @@ public class EscalaService {
     private LotacaoRepository lotacaoRepository;
 
     @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.MobilizacaoRepository mobilizacaoRepository;
+
+    @Autowired
     private AfastamentoRepository afastamentoRepository;
 
     @Autowired
@@ -145,6 +148,11 @@ public class EscalaService {
                     .forEach(l -> pessoas.put(l.getProfissional().getUuid(), l.getProfissional()));
         }
         daUnidade.stream().filter(t -> !t.vaga()).forEach(t -> pessoas.put(t.getProfissional().getUuid(), t.getProfissional()));
+        if (equipe == null) {
+            // Os mobilizados para a unidade numa emergência ativa (ADR-0158) entram na semana, para receber turno sem lotação.
+            mobilizacaoRepository.findQueAutorizamNaUnidade(unidade.getUuid(), seg, seg.plusDays(6))
+                    .forEach(m -> pessoas.putIfAbsent(m.getProfissional().getUuid(), m.getProfissional()));
+        }
 
         Map<UUID, List<TurnoEscala>> turnosPorPessoa = pessoas.isEmpty() ? Map.of()
                 : turnoRepository.dosProfissionaisEntre(pessoas.keySet(), de.minusDays(1), ate.plusDays(1)).stream()
@@ -292,7 +300,7 @@ public class EscalaService {
         List<CopiaSemanaResponseDto.Ignorado> ignorados = new ArrayList<>();
         for (TurnoEscala o : turnoRepository.daUnidadeEntre(unidade.getUuid(), origem.atStartOfDay(), origem.plusDays(7).atStartOfDay())) {
             TurnoEscala t = new TurnoEscala(null, unidade, o.getEquipe(), o.getProfissional(), o.getFuncao(), o.getTipo(),
-                    o.getInicioEm().plusDays(dias), o.getFimEm().plusDays(dias), o.getDescricao(), o.getIntervaloMinutos(), UsuarioAutenticado.cpf());
+                    o.getInicioEm().plusDays(dias), o.getFimEm().plusDays(dias), o.getDescricao(), o.getIntervaloMinutos(), UsuarioAutenticado.cpf(), null);
             String nome = t.vaga() ? null : t.getProfissional().getNome();
             if (t.getInicioEm().toLocalDate().isBefore(LocalDate.now())) {
                 ignorados.add(new CopiaSemanaResponseDto.Ignorado(t.getInicioEm().toLocalDate(), nome, "O dia já passou."));
@@ -465,7 +473,9 @@ public class EscalaService {
         boolean lotado = lotacaoRepository.findByProfissional_MatriculaOrderByDataInicioDesc(p.getMatricula()).stream()
                 .anyMatch(l -> l.getUnidade() != null && l.getUnidade().getUuid().equals(t.getUnidade().getUuid())
                         && !l.getDataInicio().isAfter(data) && (l.getDataFim() == null || !l.getDataFim().isBefore(data)));
-        if (!lotado) {
+        // Exceção controlada (ADR-0158): o profissional mobilizado para a unidade numa emergência ativa, sem lotação falsa.
+        t.setMobilizacao(lotado ? null : mobilizacaoRepository.findQueAutorizam(p.getUuid(), t.getUnidade().getUuid(), data).stream().findFirst().orElse(null));
+        if (!lotado && t.getMobilizacao() == null) {
             throw new ResourceUnprocessableEntityException(p.getNome() + " não tem lotação na " + t.getUnidade().getNome() + " em "
                     + data.format(DIA) + ".");
         }
@@ -550,7 +560,7 @@ public class EscalaService {
                 t.getEquipe() != null ? t.getEquipe().getUuid() : null, t.getEquipe() != null ? t.getEquipe().getNome() : null,
                 p != null ? p.getMatricula() : null, p != null ? p.getNome() : null, t.getFuncao(), t.getTipo(),
                 t.getInicioEm().toLocalDate(), t.getInicioEm(), t.getFimEm(), horas(t.minutos()), t.getIntervaloMinutos(), t.getDescricao(), t.vaga(),
-                alertas);
+                alertas, t.getMobilizacao() != null ? t.getMobilizacao().getEmergencia().getNome() : null);
     }
 
     private EscalaSemanaResponseDto.Ausencia ausencia(Afastamento a, Lotacao l) {

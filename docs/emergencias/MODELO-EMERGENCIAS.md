@@ -1,9 +1,10 @@
 # Modelo do domínio Gestão de Emergências e Desastres
 
 **Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0113](../adr/0113-emergencias-e-desastres.md). **A E1 (núcleo) e a E2 (contingência)
-estão implementadas** nas [ADR-0156](../adr/0156-emergencias-nucleo.md) e [ADR-0157](../adr/0157-emergencias-contingencia.md);
-as fatias E3 a E6 vêm depois (seção 17), cada uma com ADR própria.
+**Status:** desenho aprovado na [ADR-0113](../adr/0113-emergencias-e-desastres.md). **A E1 (núcleo), a E2 (contingência)
+e a E3 (coordenação) estão implementadas** nas [ADR-0156](../adr/0156-emergencias-nucleo.md),
+[ADR-0157](../adr/0157-emergencias-contingencia.md) e [ADR-0158](../adr/0158-emergencias-coordenacao.md); as fatias E4 a
+E6 vêm depois (seção 17), cada uma com ADR própria.
 
 O domínio é uma **camada de coordenação extraordinária**, ativada quando um evento ultrapassa a operação normal da
 rede. Não substitui Vigilância, Regulação, Estoque, Transporte nem a capacidade da rede.
@@ -313,7 +314,7 @@ EVENTO → DETECÇÃO E REGISTRO → AVALIAÇÃO PRELIMINAR ─┬─ NORMAL ─
 |---|---|---|
 | **E1** · núcleo ✅ ([ADR-0156](../adr/0156-emergencias-nucleo.md)) | evento, emergência, tipo (COBRADE), nível, situação, avaliação de impacto, território afetado | Território (opcional) |
 | **E2** · contingência ✅ ([ADR-0157](../adr/0157-emergencias-contingencia.md)) | plano versionado, critérios, ações previstas, ativação com histórico | E1 |
-| **E3** · mobilização | mobilização (com a exceção da Escala), capacidade emergencial, ações, unidade afetada pela situação operacional | E2 |
+| **E3** · mobilização ✅ ([ADR-0158](../adr/0158-emergencias-coordenacao.md)) | mobilização (com a exceção da Escala), capacidade emergencial, ações, unidade afetada pela situação operacional | E2 |
 | **E4** · integração da rede | redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas, pacientes deslocados; Estoque e Transporte quando existirem | E3 |
 | **E5** · pós-evento | desmobilização, relatório, lições, revisão do plano, indicadores | E3 |
 | **E6** · especializados | eventos de massa, epidemias, desastres ambientais, hospital de campanha como capacidade | E5 |

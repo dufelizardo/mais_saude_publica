@@ -1695,6 +1695,8 @@ button.shift--off { text-align: center; }
 .shift--training { background: var(--ok-bg); color: var(--ok); border-left: 3px solid var(--ok); }
 .shift--open { background: var(--white); color: var(--alert); border: 1px dashed var(--alert); border-left: 3px solid var(--alert); }
 .shift--fora { opacity: 0.6; }
+/* Turno autorizado por mobilização em emergência (ADR-0158), sem lotação na unidade. */
+.shift .shift__mob { opacity: 1; font-weight: 600; color: var(--alert); }
 .week-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-3); padding: var(--s-4) var(--s-5); border-top: 1px solid var(--ink-100); }
 @media (max-width: 900px) { .week-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .ws-tile { background: var(--ink-50); border: 1px solid var(--ink-200); border-radius: 10px; padding: 10px 12px; }

@@ -3,6 +3,14 @@ package com.edufelizardo.maissaudepublica.controllers.version1;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AcaoEmergencialRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoAcaoEmergencialRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MobilizacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoMobilizacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TransferenciaMobilizacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CapacidadeEmergencialRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AtivacaoCapacidadeRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesativacaoCapacidadeRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AtivacaoPlanoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AvaliacaoImpactoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesativacaoPlanoRequestDto;
@@ -17,6 +25,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Referencia
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoEventoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TerritorioEmergenciaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TipoEmergenciaRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CapacidadeEmergencialDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EmergenciaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EventoEmergencialDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NivelEmergenciaDto;
@@ -25,6 +34,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SugestaoI
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TipoEmergenciaDto;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEventoEmergencial;
+import com.edufelizardo.maissaudepublica.services.version1.CapacidadeEmergencialService;
 import com.edufelizardo.maissaudepublica.services.version1.EmergenciaService;
 import com.edufelizardo.maissaudepublica.services.version1.PlanoContingenciaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,7 +52,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping(value = "/api/v1/")
 @Tag(name = "Emergências e Desastres", description = "Evento emergencial, emergência com nível e território, avaliação de impacto "
-        + "e plano de contingência (ver docs/adr/0156-emergencias-nucleo.md e docs/adr/0157-emergencias-contingencia.md).")
+        + "plano de contingência, ações, mobilização e capacidade (ver as ADRs 0156 a 0158).")
 public class EmergenciaController {
 
     private static final String TAG = "Emergências e Desastres";
@@ -53,9 +63,12 @@ public class EmergenciaController {
     @Autowired
     private PlanoContingenciaService planoService;
 
+    @Autowired
+    private CapacidadeEmergencialService capacidadeService;
+
     // ── Catálogos ──
 
-    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
     @GetMapping(value = "emergencias/tipos", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Tipos de emergência", description = "O catálogo, com o código COBRADE dos desastres.", tags = TAG)
     @ApiErrorResponsesBusca
@@ -79,7 +92,7 @@ public class EmergenciaController {
         return ResponseEntity.ok(service.atualizarTipo(uuid, dto));
     }
 
-    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
     @GetMapping(value = "emergencias/niveis", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Níveis de resposta", description = "Em ordem, de 0 a 3 na carga.", tags = TAG)
     @ApiErrorResponsesBusca
@@ -105,7 +118,7 @@ public class EmergenciaController {
 
     // ── Evento ──
 
-    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "INDICADOR.CONSULTAR"})
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
     @GetMapping(value = "eventos-emergenciais", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Eventos emergenciais", description = "Os mais recentes primeiro, pela situação.", tags = TAG)
     @ApiErrorResponsesBusca
@@ -113,7 +126,7 @@ public class EmergenciaController {
         return ResponseEntity.ok(service.eventos(situacao));
     }
 
-    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "INDICADOR.CONSULTAR"})
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
     @GetMapping(value = "evento-emergencial/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Evento emergencial", tags = TAG)
     @ApiErrorResponsesBusca
@@ -148,7 +161,7 @@ public class EmergenciaController {
 
     // ── Emergência ──
 
-    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "INDICADOR.CONSULTAR"})
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
     @GetMapping(value = "emergencias", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Emergências", description = "As mais recentes primeiro, pela situação, com o nível e o último impacto.", tags = TAG)
     @ApiErrorResponsesBusca
@@ -156,7 +169,7 @@ public class EmergenciaController {
         return ResponseEntity.ok(service.emergencias(situacao));
     }
 
-    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "INDICADOR.CONSULTAR"})
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
     @GetMapping(value = "emergencia/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Emergência", description = "Com o território, o histórico de níveis e as avaliações de impacto.", tags = TAG)
     @ApiErrorResponsesBusca
@@ -196,7 +209,7 @@ public class EmergenciaController {
         return ResponseEntity.ok(service.encerrar(uuid, dto));
     }
 
-    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "INDICADOR.CONSULTAR"})
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
     @GetMapping(value = "emergencia/{uuid}/sugestao-impacto", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Sugestão para a avaliação de impacto", description = "População das microáreas, unidades dentro da área e leitos fora de uso.",
             tags = TAG)
@@ -215,7 +228,7 @@ public class EmergenciaController {
 
     // ── Planos de contingência (E2, ADR-0157) ──
 
-    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
     @GetMapping(value = "emergencias/planos", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Planos de contingência", description = "As versões, pelo nome; com vigentes=true só as vigentes; pelo tipo.", tags = TAG)
     @ApiErrorResponsesBusca
@@ -223,7 +236,7 @@ public class EmergenciaController {
         return ResponseEntity.ok(planoService.listar(vigentes, tipoId));
     }
 
-    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
     @GetMapping(value = "emergencias/plano/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Plano de contingência", description = "A versão com os critérios, as ações, os recursos, os contatos e as demais versões.", tags = TAG)
     @ApiErrorResponsesBusca
@@ -288,5 +301,95 @@ public class EmergenciaController {
     public ResponseEntity<EmergenciaDto> desativarPlano(@PathVariable UUID uuid, @PathVariable UUID ativacaoId,
                                                         @Valid @RequestBody DesativacaoPlanoRequestDto dto) {
         return ResponseEntity.ok(service.desativarPlano(uuid, ativacaoId, dto));
+    }
+
+    // ── Coordenação: ações, mobilização e capacidade (E3, ADR-0158) ──
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR"})
+    @PostMapping(value = "emergencia/{uuid}/acao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Nova ação emergencial", description = "Avulsa, com prioridade e prazo; emergência encerrada, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> novaAcao(@PathVariable UUID uuid, @Valid @RequestBody AcaoEmergencialRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.novaAcao(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR"})
+    @PostMapping(value = "emergencia/{uuid}/acoes-do-plano", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Gera as ações do plano", description = "Uma por ação prevista do nível atual nos planos ativos, sem repetir; nada a gerar, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> gerarAcoes(@PathVariable UUID uuid) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.gerarAcoesDoPlano(uuid));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR"})
+    @PostMapping(value = "emergencia/{uuid}/acao/{acaoId}/situacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Situação da ação", description = "Em execução, concluída ou cancelada (com o motivo, 400); concluída ou cancelada não muda (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> situacaoDaAcao(@PathVariable UUID uuid, @PathVariable UUID acaoId, @Valid @RequestBody SituacaoAcaoEmergencialRequestDto dto) {
+        return ResponseEntity.ok(service.situacaoDaAcao(uuid, acaoId, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR"})
+    @PostMapping(value = "emergencia/{uuid}/mobilizacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Mobiliza um recurso", description = "O profissional pela matrícula (autoriza turno sem lotação na unidade de destino); os demais pelo recurso.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> mobilizar(@PathVariable UUID uuid, @Valid @RequestBody MobilizacaoRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.mobilizar(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR"})
+    @PostMapping(value = "emergencia/{uuid}/mobilizacao/{mobilizacaoId}/situacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Situação da mobilização", description = "Em andamento, concluída ou cancelada (com o motivo); a ligada a transferência segue a Farmácia (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> situacaoDaMobilizacao(@PathVariable UUID uuid, @PathVariable UUID mobilizacaoId, @Valid @RequestBody SituacaoMobilizacaoRequestDto dto) {
+        return ResponseEntity.ok(service.situacaoDaMobilizacao(uuid, mobilizacaoId, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR"})
+    @PutMapping(value = "emergencia/{uuid}/mobilizacao/{mobilizacaoId}/transferencia", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Liga a transferência da Farmácia", description = "Só medicamento, para a mesma unidade de destino (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> ligarTransferencia(@PathVariable UUID uuid, @PathVariable UUID mobilizacaoId, @Valid @RequestBody TransferenciaMobilizacaoRequestDto dto) {
+        return ResponseEntity.ok(service.ligarTransferencia(uuid, mobilizacaoId, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR"})
+    @PostMapping(value = "emergencia/{uuid}/capacidade-ativa", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Ativa capacidade emergencial", description = "Até o que resta do ativável da unidade (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> ativarCapacidade(@PathVariable UUID uuid, @Valid @RequestBody AtivacaoCapacidadeRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.ativarCapacidade(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR"})
+    @PostMapping(value = "emergencia/{uuid}/capacidade-ativa/{ativacaoId}/desativacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Desativa a capacidade", description = "Com a justificativa; já desativada, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> desativarCapacidade(@PathVariable UUID uuid, @PathVariable UUID ativacaoId, @Valid @RequestBody DesativacaoCapacidadeRequestDto dto) {
+        return ResponseEntity.ok(service.desativarCapacidade(uuid, ativacaoId, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @GetMapping(value = "emergencias/capacidades", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Capacidade emergencial das unidades", description = "Normal, ativável e o ativado agora; nos leitos, os leitos ativos.", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<List<CapacidadeEmergencialDto>> capacidades(@RequestParam(required = false) UUID unidadeId) {
+        return ResponseEntity.ok(capacidadeService.listar(unidadeId));
+    }
+
+    @RequerPermissao({"CONTINGENCIA.GERENCIAR"})
+    @PostMapping(value = "emergencias/capacidade", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Cadastra a capacidade emergencial", description = "Uma por unidade e recurso (409).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<CapacidadeEmergencialDto> criarCapacidade(@Valid @RequestBody CapacidadeEmergencialRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(capacidadeService.criar(dto));
+    }
+
+    @RequerPermissao({"CONTINGENCIA.GERENCIAR"})
+    @PutMapping(value = "emergencias/capacidade/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Ajusta a capacidade emergencial", description = "Unidade e recurso não mudam; o ativável não fica abaixo do ativado (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<CapacidadeEmergencialDto> atualizarCapacidade(@PathVariable UUID uuid, @Valid @RequestBody CapacidadeEmergencialRequestDto dto) {
+        return ResponseEntity.ok(capacidadeService.atualizar(uuid, dto));
     }
 }
