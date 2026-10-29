@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-28 (SM6 e Intersetorialidade IS1)
+- **Atualizado em:** 2026-10-28 (Emergências E1)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -53,13 +53,13 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
-| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
+| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 feita (evento, emergência, nível, território e impacto); E2 a E6 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 13 ✅ · 10 🟡 · 2 📐 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 13 ✅ · 11 🟡 · 1 📐 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -70,7 +70,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 |---|---|---|
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
-| E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
+| E2 | 27 Emergências | plano de contingência versionado, critérios, ações previstas e ativação com plano |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
 | BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
@@ -86,15 +86,15 @@ BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 (rel
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
-F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
+F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 ✅ (área afetada) · Equipamentos com mapa real ✅
 F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
-V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
+V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergencial)
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
-E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
+E1 ✅ ──► E2 ──► E3 ──► E4 · E5 ──► E6
 C1 ──► C2 · C4 · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
@@ -662,11 +662,20 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 27. Gestão de Emergências e Desastres
 
-**Estado:** 📐. Desenhado na [ADR-0113](./adr/0113-emergencias-e-desastres.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0113](./adr/0113-emergencias-e-desastres.md); detalhe em
 [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md).
 
+**Temos:**
+- [x] **E1 · Núcleo** ([ADR-0156](./adr/0156-emergencias-nucleo.md)): catálogos de tipo (COBRADE) e nível (0 a 3);
+  evento emergencial com fonte, área e o surto de origem (registrado, monitorado, descartado, convertido); emergência
+  com nível em histórico, território afetado (polígono e microáreas atingidas), ESPIN e decreto registrados e
+  encerramento; avaliação de impacto datada com sugestões dos donos (pessoas das microáreas, unidades na área, leitos
+  fora de uso); permissões `EMERGENCIA.REGISTRAR`, `EMERGENCIA.ATIVAR` e `CONTINGENCIA.GERENCIAR`; tela Emergências,
+  aviso na Sala de Situação e atalho no surto.
+
 **Falta:**
-- [ ] **E1 · Núcleo:** evento, emergência, tipo (COBRADE), nível, situação, avaliação de impacto, território afetado.
+- [ ] A tela dos catálogos de tipo e nível (a API existe; a carga cobre o uso inicial) e a escolha manual das
+  microáreas na tela (a API aceita a lista).
 - [ ] **E2 · Contingência:** plano versionado, critérios de ativação, ações previstas, ativação com histórico.
 - [ ] **E3 · Mobilização:** mobilização (com a exceção de turnos fora da lotação na Escala), capacidade emergencial,
   ações emergenciais, unidade afetada pela situação operacional.

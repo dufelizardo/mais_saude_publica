@@ -49,6 +49,8 @@ const MENU: Record<string, string[]> = {
   '/assistencia/saude-mental': ['SAUDE_MENTAL.ACOLHER', 'SAUDE_MENTAL.ACOMPANHAR'],
   // Vigilância epidemiológica (ADR-0124).
   '/vigilancia': ['VIGILANCIA.NOTIFICAR', 'VIGILANCIA.INVESTIGAR', 'VIGILANCIA.GERENCIAR'],
+  // Emergências e Desastres (ADR-0156): quem registra, ativa, mantém os catálogos ou consulta indicadores.
+  '/vigilancia/emergencias': ['EMERGENCIA.REGISTRAR', 'EMERGENCIA.ATIVAR', 'CONTINGENCIA.GERENCIAR', 'INDICADOR.CONSULTAR'],
   // Sala de Situação (ADR-0143): só agregados, para quem consulta indicadores.
   '/sala-de-situacao': ['INDICADOR.CONSULTAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],
@@ -58,7 +60,7 @@ const MENU: Record<string, string[]> = {
 /** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
 const GRUPOS: Record<string, string[]> = {
   Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas', '/assistencia/sala-de-vacina', '/assistencia/saude-mental'],
-  Vigilância: ['/vigilancia'],
+  Vigilância: ['/vigilancia', '/vigilancia/emergencias'],
   Administração: ['/administracao/usuarios', '/administracao/auditoria'],
 };
 

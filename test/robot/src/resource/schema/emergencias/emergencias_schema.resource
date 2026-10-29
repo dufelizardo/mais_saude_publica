@@ -1,0 +1,6 @@
+*** Comments ***
+    Mais Saúde Pública API - Emergências e Desastres, fatia E1 (ADR-0156).
+*** Variables ***
+${EVENTO_EMERGENCIAL_SCHEMA}    ${{{'required': ['uuid', 'tipoId', 'tipoNome', 'ocorridoEm', 'fonte', 'descricao', 'situacao', 'registradoEm'], 'types': {'uuid': str, 'tipoId': str, 'tipoNome': str, 'cobrade': str, 'ocorridoEm': str, 'local': str, 'geometria': str, 'fonte': str, 'descricao': str, 'surtoId': str, 'surtoNome': str, 'situacao': str, 'motivoDescarte': str, 'emergenciaId': str, 'registradoEm': str}, 'enums': {'situacao': ['REGISTRADO', 'MONITORADO', 'DESCARTADO', 'CONVERTIDO']}}}}
+${EMERGENCIA_SCHEMA}    ${{{'required': ['uuid', 'nome', 'eventoId', 'tipoNome', 'nivelId', 'nivelOrdem', 'nivelNome', 'situacao', 'inicio', 'microareas', 'niveis', 'avaliacoes'], 'types': {'uuid': str, 'nome': str, 'eventoId': str, 'tipoNome': str, 'nivelId': str, 'nivelOrdem': int, 'nivelNome': str, 'situacao': str, 'inicio': str, 'fim': str, 'motivoEncerramento': str, 'ultimoImpacto': str, 'geometria': str, 'microareas': list, 'niveis': list, 'avaliacoes': list}, 'enums': {'situacao': ['ATIVA', 'ENCERRADA']}}}}
+${SUGESTAO_IMPACTO_SCHEMA}    ${{{'required': ['microareas', 'unidades', 'leitosIndisponiveis'], 'types': {'populacaoAfetada': int, 'microareas': int, 'unidades': list, 'leitosIndisponiveis': int}}}}

@@ -179,8 +179,8 @@ real":
   (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
 - **#28 Comunicação e Educação em Saúde** (futuro) — desenhado na ADR-0114; fatias C1 (comunicação básica) a C6
   (avaliação).
-- **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; fatias E1 (núcleo) a E6 (eventos
-  especializados).
+- **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; ~~E1 (núcleo)~~ — ADR-0156 (sem a tela dos
+  catálogos e a escolha manual das microáreas); faltam E2 (contingência) a E6 (eventos especializados).
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (sem a notificação no sistema, V1, e sem o SAMU, regulação
   de urgência); ~~SM5 (CAPS e RAPS)~~ — ADR-0153 (sem o CAPS de referência por território e a RAAS); ~~SM6
   (intersetorialidade e indicadores)~~ — ADR-0155. Domínio completo; o SAMU na crise segue com a regulação de urgência.

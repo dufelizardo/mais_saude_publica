@@ -156,7 +156,7 @@
       }
       @case ('surtos') {
         <app-surtos [surtos]="surtos()" [agravos]="agravos()" [unidades]="unidades()" [notificacoes]="notificacoes()?.lista ?? []"
-          [unidadePadrao]="unidadeFiltro()" [podeInvestigar]="podeInvestigar()" [novo]="novoSurto()" (abrirNotificacao)="abrirNotificacao($event)"
+          [unidadePadrao]="unidadeFiltro()" [podeInvestigar]="podeInvestigar()" [podeRegistrarEmergencia]="pode('EMERGENCIA.REGISTRAR')" [novo]="novoSurto()" (abrirNotificacao)="abrirNotificacao($event)"
           (verNoMapa)="verSurtoNoMapa($event)" (alterado)="carregar()" />
       }
       @case ('agravos') {
