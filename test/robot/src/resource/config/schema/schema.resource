@@ -79,6 +79,7 @@ Resource    ../../schema/imunizacao/vacinacao_schema.resource
 Resource    ../../schema/imunizacao/sala_de_vacina_schema.resource
 Resource    ../../schema/saude_mental/raps_schema.resource
 Resource    ../../schema/intersetorialidade/intersetorialidade_schema.resource
+Resource    ../../schema/emergencias/emergencias_schema.resource
 Resource    ../../schema/imunizacao/cobertura_vacinal_schema.resource
 Resource    ../../schema/imunizacao/esavi_schema.resource
 Resource    ../../schema/programas/indicador_programatico_schema.resource

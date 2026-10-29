@@ -76,6 +76,11 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Intersetorialidade (ADR-0154): o catálogo de instituições externas é cadastro, sem paciente.
         PERMISSOES.put("INTERSETORIAL.GERENCIAR", new Def("Manter o catálogo de instituições externas (CRAS, CREAS, escolas, Conselho Tutelar...)",
                 OPERACAO));
+        // Emergências e Desastres (ADR-0156): registrar o evento e o impacto; ativar é da autoridade sanitária ou do gestor.
+        PERMISSOES.put("EMERGENCIA.REGISTRAR", new Def("Registrar evento emergencial, território e avaliação de impacto", OPERACAO));
+        PERMISSOES.put("EMERGENCIA.ATIVAR", new Def("Converter o evento em emergência, mudar o nível, registrar ESPIN e decreto e encerrar",
+                OPERACAO));
+        PERMISSOES.put("CONTINGENCIA.GERENCIAR", new Def("Manter os tipos e níveis de emergência e, depois, os planos de contingência", OPERACAO));
         // Saúde Bucal (ADR-0134): a avaliação e o diagnóstico são do cirurgião-dentista (Lei 5.081/1966).
         PERMISSOES.put("ODONTOLOGIA.REGISTRAR", new Def("Registrar a avaliação odontológica (cirurgião-dentista)", ACESSO_AO_DADO_DE_SAUDE));
         // Plano de tratamento odontológico (ADR-0137): abrir, conduzir e concluir é do cirurgião-dentista.
@@ -138,7 +143,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 List.of("ACESSO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR", "ADMINISTRATIVO.CONSULTAR",
                         "ADMINISTRATIVO.GERENCIAR", "PACIENTE.CONSULTAR", "FARMACIA.CONSULTAR", "EQUIPE.GERENCIAR",
                         "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
-                        "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR")));
+                        "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR",
+                        "CONTINGENCIA.GERENCIAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -175,7 +181,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
-                        "IMUNIZACAO.GERENCIAR")));
+                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR")));
         // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
                 "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",
@@ -207,7 +213,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("VIGILANCIA_EPIDEMIOLOGICA", new PapelPadrao("Vigilância epidemiológica",
                 "Investiga, classifica e encerra notificações e mantém o catálogo de agravos.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "VIGILANCIA.NOTIFICAR", "VIGILANCIA.INVESTIGAR", "VIGILANCIA.GERENCIAR",
-                        "IMUNIZACAO.GERENCIAR")));
+                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR")));
         // Saúde Bucal (ADR-0134): as funções já existiam na eSB (ADR-0103); faltavam os papéis de acesso.
         PAPEIS.put("CIRURGIAO_DENTISTA", new PapelPadrao("Cirurgião-dentista",
                 "Avaliação, diagnóstico e procedimentos odontológicos (Lei 5.081/1966); lê o prontuário com vínculo.",

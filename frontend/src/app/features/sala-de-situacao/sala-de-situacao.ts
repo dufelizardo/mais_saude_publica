@@ -21,6 +21,8 @@ import {
 import { classeCobertura, percentual } from '../../core/models/imunizacao';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import { ProducaoService } from '../../core/services/producao';
+import { EmergenciaService } from '../../core/services/emergencia';
+import { EmergenciaDto, classeDoNivel } from '../../core/models/emergencia';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 
 type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
@@ -40,6 +42,15 @@ type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
 })
 export class SalaDeSituacao {
   private readonly service = inject(ProducaoService);
+  private readonly emergenciaService = inject(EmergenciaService);
+  /** As emergências ativas (ADR-0156), no alto da tela; sem acesso, nada. */
+  protected readonly emergencias = signal<EmergenciaDto[]>([]);
+  protected readonly classeDoNivel = classeDoNivel;
+
+  /** A data local do início da emergência (o instante vem em UTC). */
+  protected desde(instante: string): string {
+    return new Date(instante).toLocaleDateString('pt-BR');
+  }
   private readonly unidadeService = inject(UnidadeSaudeService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -309,6 +320,7 @@ export class SalaDeSituacao {
     this.service.situacao(u).pipe(catchError(() => of(null))).subscribe((s) => this.situacao.set(s));
     this.service.ocupacao(u).pipe(catchError(() => of(null))).subscribe((o) => this.ocupacao.set(o));
     this.service.escala(u).pipe(catchError(() => of([]))).subscribe((l) => this.escala.set(l));
+    this.emergenciaService.emergencias('ATIVA').pipe(catchError(() => of([]))).subscribe((l) => this.emergencias.set(l));
   }
 }
 

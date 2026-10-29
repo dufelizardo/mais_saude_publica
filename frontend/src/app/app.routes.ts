@@ -173,6 +173,12 @@ export const routes: Routes = [
         data: { breadcrumb: 'Sala de Situação', area: 'Indicadores' },
       },
       // Vigilância epidemiológica (ADR-0124), carregada sob demanda.
+      // Emergências e Desastres (ADR-0156).
+      {
+        path: 'vigilancia/emergencias',
+        loadComponent: () => import('./features/vigilancia/emergencias').then((m) => m.Emergencias),
+        data: { breadcrumb: 'Emergências e desastres', area: 'Vigilância' },
+      },
       {
         path: 'vigilancia',
         loadComponent: () => import('./features/vigilancia/vigilancia').then((m) => m.Vigilancia),
