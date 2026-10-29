@@ -7,6 +7,8 @@ import {
   EventoEmergencialDto,
   FonteEventoEmergencial,
   NivelEmergenciaDto,
+  PlanoContingenciaDto,
+  PlanoContingenciaRequestDto,
   SituacaoEmergencia,
   SituacaoEventoEmergencial,
   SugestaoImpactoDto,
@@ -76,5 +78,50 @@ export class EmergenciaService {
 
   avaliar(uuid: string, dto: AvaliacaoImpactoRequestDto): Observable<EmergenciaDto> {
     return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/avaliacao-impacto`, dto);
+  }
+
+  // ── Catálogos e planos (E2, ADR-0157) ──
+
+  salvarTipo(uuid: string | null, dto: { codigo: string; nome: string; categoria: 'DESASTRE' | 'SAUDE'; cobrade: string | null; ativo: boolean | null }): Observable<TipoEmergenciaDto> {
+    return uuid ? this.http.put<TipoEmergenciaDto>(`${this.api}/emergencias/tipo/${uuid}`, dto) : this.http.post<TipoEmergenciaDto>(`${this.api}/emergencias/tipo`, dto);
+  }
+
+  salvarNivel(uuid: string | null, dto: { ordem: number; nome: string; descricao: string | null; ativo: boolean | null }): Observable<NivelEmergenciaDto> {
+    return uuid ? this.http.put<NivelEmergenciaDto>(`${this.api}/emergencias/nivel/${uuid}`, dto) : this.http.post<NivelEmergenciaDto>(`${this.api}/emergencias/nivel`, dto);
+  }
+
+  planos(filtro: { vigentes?: boolean; tipoId?: string } = {}): Observable<PlanoContingenciaDto[]> {
+    let params = new HttpParams();
+    if (filtro.vigentes) params = params.set('vigentes', 'true');
+    if (filtro.tipoId) params = params.set('tipoId', filtro.tipoId);
+    return this.http.get<PlanoContingenciaDto[]>(`${this.api}/emergencias/planos`, { params });
+  }
+
+  plano(uuid: string): Observable<PlanoContingenciaDto> {
+    return this.http.get<PlanoContingenciaDto>(`${this.api}/emergencias/plano/${uuid}`);
+  }
+
+  salvarPlano(uuid: string | null, dto: PlanoContingenciaRequestDto): Observable<PlanoContingenciaDto> {
+    return uuid ? this.http.put<PlanoContingenciaDto>(`${this.api}/emergencias/plano/${uuid}`, dto) : this.http.post<PlanoContingenciaDto>(`${this.api}/emergencias/plano`, dto);
+  }
+
+  revisarPlano(uuid: string): Observable<PlanoContingenciaDto> {
+    return this.http.post<PlanoContingenciaDto>(`${this.api}/emergencias/plano/${uuid}/revisao`, {});
+  }
+
+  publicarPlano(uuid: string): Observable<PlanoContingenciaDto> {
+    return this.http.post<PlanoContingenciaDto>(`${this.api}/emergencias/plano/${uuid}/publicacao`, {});
+  }
+
+  revogarPlano(uuid: string, motivo: string): Observable<PlanoContingenciaDto> {
+    return this.http.post<PlanoContingenciaDto>(`${this.api}/emergencias/plano/${uuid}/revogacao`, { motivo });
+  }
+
+  ativarPlano(emergenciaId: string, planoId: string, autoridade: string, justificativa: string): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${emergenciaId}/plano-ativo`, { planoId, autoridade, justificativa });
+  }
+
+  desativarPlano(emergenciaId: string, ativacaoId: string, justificativa: string): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${emergenciaId}/plano-ativo/${ativacaoId}/desativacao`, { justificativa });
   }
 }

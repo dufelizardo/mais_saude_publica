@@ -88,6 +88,7 @@ public class EmergenciaService {
     @Autowired private LeitoRepository leitoRepository;
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private AtivacaoPlanoService ativacao;
 
     // ── Catálogos ──────────────────────────────────────────────────────────────────────────────────
 
@@ -310,6 +311,7 @@ public class EmergenciaService {
         em.setNivel(novo);
         emergenciaRepository.save(em);
         registrarMudanca(em, anterior, novo, dto.getJustificativa());
+        ativacao.registrarNivel(em, novo, dto.getJustificativa());
         ContextoAuditoria.registro(em.getUuid());
         ContextoAuditoria.detalhe((novo.getOrdem() > anterior.getOrdem() ? "Nível elevado: " : "Nível reduzido: ") + anterior.getNome() + " → "
                 + novo.getNome() + ".");
@@ -360,8 +362,31 @@ public class EmergenciaService {
         em.setFim(Instant.now());
         em.setMotivoEncerramento(dto.getMotivo().trim());
         emergenciaRepository.save(em);
+        ativacao.desativarTodas(em, "Emergência encerrada: " + dto.getMotivo().trim());
         ContextoAuditoria.registro(em.getUuid());
         ContextoAuditoria.detalhe("Emergência encerrada.");
+        return detalhe(em);
+    }
+
+    // ── Planos de contingência na emergência (E2, ADR-0157) ─────────────────────────────────────────
+
+    /** Ativa o plano vigente do tipo da emergência que cobre o nível atual (422); já ativo, 409. */
+    @Transactional
+    public EmergenciaDto ativarPlano(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.AtivacaoPlanoRequestDto dto) {
+        controleDeAcesso.exigirAlguma(ATIVAR);
+        Emergencia em = ativa(uuid);
+        ativacao.ativar(em, dto);
+        ContextoAuditoria.registro(em.getUuid());
+        return detalhe(em);
+    }
+
+    /** Desativa o plano ativo na emergência, com a justificativa; já desativado, 422. */
+    @Transactional
+    public EmergenciaDto desativarPlano(UUID uuid, UUID ativacaoId, com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesativacaoPlanoRequestDto dto) {
+        controleDeAcesso.exigirAlguma(ATIVAR);
+        Emergencia em = ativa(uuid);
+        ativacao.desativar(em, ativacaoId, dto);
+        ContextoAuditoria.registro(em.getUuid());
         return detalhe(em);
     }
 
@@ -528,6 +553,7 @@ public class EmergenciaService {
                 a.getUnidadesAfetadas().stream().map(UnidadeDeSaude::getNome).sorted(String.CASE_INSENSITIVE_ORDER).toList(),
                 a.getProfissionaisIndisponiveis(), a.getLeitosIndisponiveis(), a.getMedicamentosCriticos(), a.getEquipamentos(), a.getTransporte(),
                 a.getInfraestrutura(), a.getNivelImpacto(), a.getObservacao())).toList());
+        d.setPlanos(ativacao.planosDaEmergencia(em));
         return d;
     }
 
@@ -539,7 +565,7 @@ public class EmergenciaService {
                 n.getUuid(), n.getOrdem(), n.getNome(), em.getSituacao(), em.getInicio(), em.getFim(), em.getMotivoEncerramento(),
                 r != null ? r.getMatricula() : null, r != null ? r.getNome() : null, ultima != null ? ultima.getNivelImpacto() : null,
                 ultima != null ? ultima.getAvaliadaEm() : null, null, List.of(), em.getEspinNumero(), em.getEspinData(), em.getDecretoTipo(),
-                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of());
+                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of());
     }
 
     private static EventoEmergencialDto dto(EventoEmergencial e, UUID emergenciaId) {

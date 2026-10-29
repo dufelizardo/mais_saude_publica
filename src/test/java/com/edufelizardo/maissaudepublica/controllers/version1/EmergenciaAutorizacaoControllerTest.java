@@ -75,9 +75,16 @@ class EmergenciaAutorizacaoControllerTest {
     @AfterEach
     void limpar() {
         String emergencias = "(select e.uuid from tb_emergencia e join tb_evento_emergencial v on v.uuid = e.evento_id where v.descricao like '" + PREFIXO + "%')";
+        jdbc.update("delete from tb_registro_ativacao_plano where ativacao_id in (select uuid from tb_ativacao_plano where emergencia_id in "
+                + emergencias + ")");
+        jdbc.update("delete from tb_ativacao_plano where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_mudanca_nivel_emergencia where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_emergencia where uuid in " + emergencias);
         jdbc.update("delete from tb_evento_emergencial where descricao like '" + PREFIXO + "%'");
+        String planos = "(select uuid from tb_plano_contingencia where codigo like 'EMGAUT_%')";
+        jdbc.update("delete from tb_acao_plano where plano_id in " + planos);
+        jdbc.update("delete from tb_plano_contingencia_nivel where plano_id in " + planos);
+        jdbc.update("delete from tb_plano_contingencia where codigo like 'EMGAUT_%'");
         for (String cpf : CPFS) {
             atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
             usuarioRepository.findByCpf(cpf).ifPresent(usuarioRepository::delete);
@@ -134,5 +141,32 @@ class EmergenciaAutorizacaoControllerTest {
         // O catálogo: o gestor mantém; a vigilância não.
         String tipoNovo = "{\"codigo\": \"EMGAUT_X\", \"nome\": \"X\", \"categoria\": \"SAUDE\"}";
         assertThat(status(VIGILANCIA, json(post("/api/v1/emergencias/tipo"), tipoNovo))).isEqualTo(403);
+    }
+
+    @Test
+    void planosPorPapel() throws Exception {
+        String tipo = jdbc.queryForObject("select cast(uuid as varchar) from tb_tipo_emergencia where codigo = 'EPIDEMIA'", String.class);
+        String nivel = jdbc.queryForObject("select cast(uuid as varchar) from tb_nivel_emergencia where ordem = 1", String.class);
+        String plano = "{\"codigo\": \"EMGAUT_DENGUE\", \"nome\": \"Plano da dengue\", \"tipoId\": \"" + tipo + "\", \"objetivo\": \"Responder\", "
+                + "\"vigenciaInicio\": \"" + java.time.LocalDate.now().minusDays(1) + "\", \"nivelIds\": [\"" + nivel + "\"], \"acoes\": [{\"nivelId\": \""
+                + nivel + "\", \"descricao\": \"Mutirão\", \"responsavel\": \"Vigilância\"}]}";
+        // Manter o plano: o gestor; a vigilância lê, mas não mantém.
+        assertThat(status(VIGILANCIA, json(post("/api/v1/emergencias/plano"), plano))).isEqualTo(403);
+        String r = mockMvc.perform(como(GESTOR, json(post("/api/v1/emergencias/plano"), plano))).andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+        String id = JsonPath.read(r, "$.uuid");
+        assertThat(status(GESTOR, post("/api/v1/emergencias/plano/" + id + "/publicacao"))).isEqualTo(200);
+        assertThat(status(VIGILANCIA, get("/api/v1/emergencias/planos"))).isEqualTo(200);
+        assertThat(status(RECEPCAO, get("/api/v1/emergencias/planos"))).isEqualTo(403);
+
+        // Ativar na emergência: a autoridade; a vigilância não.
+        String evento = JsonPath.read(mockMvc.perform(como(VIGILANCIA, json(post("/api/v1/evento-emergencial"), "{\"tipoId\": \"" + tipo
+                + "\", \"fonte\": \"VIGILANCIA\", \"descricao\": \"" + PREFIXO + "Dengue\"}"))).andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8), "$.uuid");
+        String em = JsonPath.read(mockMvc.perform(como(GESTOR, json(post("/api/v1/evento-emergencial/" + evento + "/emergencia"), "{\"nome\": \"Dengue\", "
+                + "\"nivelId\": \"" + nivel + "\", \"justificativa\": \"Limiar\"}"))).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), "$.uuid");
+        String ativar = "{\"planoId\": \"" + id + "\", \"autoridade\": \"Secretário\", \"justificativa\": \"Limiar\"}";
+        assertThat(status(VIGILANCIA, json(post("/api/v1/emergencia/" + em + "/plano-ativo"), ativar))).isEqualTo(403);
+        assertThat(status(GESTOR, json(post("/api/v1/emergencia/" + em + "/plano-ativo"), ativar))).isEqualTo(201);
     }
 }

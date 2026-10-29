@@ -3,7 +3,11 @@ package com.edufelizardo.maissaudepublica.controllers.version1;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AtivacaoPlanoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AvaliacaoImpactoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesativacaoPlanoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.PlanoContingenciaRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RevogacaoPlanoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ConversaoEmergenciaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EncerramentoEmergenciaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EventoEmergencialRequestDto;
@@ -16,11 +20,13 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TipoEmerge
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EmergenciaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EventoEmergencialDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NivelEmergenciaDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PlanoContingenciaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SugestaoImpactoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TipoEmergenciaDto;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEventoEmergencial;
 import com.edufelizardo.maissaudepublica.services.version1.EmergenciaService;
+import com.edufelizardo.maissaudepublica.services.version1.PlanoContingenciaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -36,13 +42,16 @@ import java.util.UUID;
 @RestController
 @RequestMapping(value = "/api/v1/")
 @Tag(name = "Emergências e Desastres", description = "Evento emergencial, emergência com nível e território, avaliação de impacto "
-        + "(ver docs/adr/0156-emergencias-nucleo.md).")
+        + "e plano de contingência (ver docs/adr/0156-emergencias-nucleo.md e docs/adr/0157-emergencias-contingencia.md).")
 public class EmergenciaController {
 
     private static final String TAG = "Emergências e Desastres";
 
     @Autowired
     private EmergenciaService service;
+
+    @Autowired
+    private PlanoContingenciaService planoService;
 
     // ── Catálogos ──
 
@@ -202,5 +211,82 @@ public class EmergenciaController {
     @ApiErrorResponsesMutacao
     public ResponseEntity<EmergenciaDto> avaliar(@PathVariable UUID uuid, @Valid @RequestBody AvaliacaoImpactoRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.avaliar(uuid, dto));
+    }
+
+    // ── Planos de contingência (E2, ADR-0157) ──
+
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @GetMapping(value = "emergencias/planos", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Planos de contingência", description = "As versões, pelo nome; com vigentes=true só as vigentes; pelo tipo.", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<List<PlanoContingenciaDto>> planos(@RequestParam(required = false) Boolean vigentes, @RequestParam(required = false) UUID tipoId) {
+        return ResponseEntity.ok(planoService.listar(vigentes, tipoId));
+    }
+
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @GetMapping(value = "emergencias/plano/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Plano de contingência", description = "A versão com os critérios, as ações, os recursos, os contatos e as demais versões.", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<PlanoContingenciaDto> plano(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(planoService.buscar(uuid));
+    }
+
+    @RequerPermissao({"CONTINGENCIA.GERENCIAR"})
+    @PostMapping(value = "emergencias/plano", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Cadastra o plano (rascunho)", description = "Código obrigatório (400) e único (409); critério ou ação fora dos níveis, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<PlanoContingenciaDto> criarPlano(@Valid @RequestBody PlanoContingenciaRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(planoService.criar(dto));
+    }
+
+    @RequerPermissao({"CONTINGENCIA.GERENCIAR"})
+    @PutMapping(value = "emergencias/plano/{uuid}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Ajusta o rascunho", description = "Fora do rascunho, 422; o código não muda.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<PlanoContingenciaDto> atualizarPlano(@PathVariable UUID uuid, @Valid @RequestBody PlanoContingenciaRequestDto dto) {
+        return ResponseEntity.ok(planoService.atualizar(uuid, dto));
+    }
+
+    @RequerPermissao({"CONTINGENCIA.GERENCIAR"})
+    @PostMapping(value = "emergencias/plano/{uuid}/revisao", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Revisa a versão vigente", description = "Copia para um rascunho novo; não vigente, 422; rascunho já aberto, 409.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<PlanoContingenciaDto> revisarPlano(@PathVariable UUID uuid) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(planoService.revisar(uuid));
+    }
+
+    @RequerPermissao({"CONTINGENCIA.GERENCIAR"})
+    @PostMapping(value = "emergencias/plano/{uuid}/publicacao", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Publica o rascunho", description = "Sem ação prevista ou com a vigência terminada, 422; a vigente anterior passa a substituída.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<PlanoContingenciaDto> publicarPlano(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(planoService.publicar(uuid));
+    }
+
+    @RequerPermissao({"CONTINGENCIA.GERENCIAR"})
+    @PostMapping(value = "emergencias/plano/{uuid}/revogacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Revoga a versão", description = "A vigente ou o rascunho, com o motivo; fora de uso, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<PlanoContingenciaDto> revogarPlano(@PathVariable UUID uuid, @Valid @RequestBody RevogacaoPlanoRequestDto dto) {
+        return ResponseEntity.ok(planoService.revogar(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.ATIVAR"})
+    @PostMapping(value = "emergencia/{uuid}/plano-ativo", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Ativa o plano na emergência", description = "Vigente, em vigência, do mesmo tipo e cobrindo o nível atual (422); já ativo, 409.",
+            tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> ativarPlano(@PathVariable UUID uuid, @Valid @RequestBody AtivacaoPlanoRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.ativarPlano(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.ATIVAR"})
+    @PostMapping(value = "emergencia/{uuid}/plano-ativo/{ativacaoId}/desativacao", produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Desativa o plano na emergência", description = "Com a justificativa; já desativado, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> desativarPlano(@PathVariable UUID uuid, @PathVariable UUID ativacaoId,
+                                                        @Valid @RequestBody DesativacaoPlanoRequestDto dto) {
+        return ResponseEntity.ok(service.desativarPlano(uuid, ativacaoId, dto));
     }
 }
