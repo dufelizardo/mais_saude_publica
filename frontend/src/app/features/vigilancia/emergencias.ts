@@ -12,6 +12,9 @@ import {
   NIVEIS_IMPACTO,
   NivelEmergenciaDto,
   NivelImpacto,
+  PlanoAtivoDto,
+  PlanoContingenciaDto,
+  TIPOS_REGISTRO_ATIVACAO,
   SITUACOES_EVENTO,
   SugestaoImpactoDto,
   TipoDecretoEmergencia,
@@ -23,13 +26,16 @@ import { AuthService } from '../../core/services/auth';
 import { EmergenciaService } from '../../core/services/emergencia';
 import { Drawer } from '../../shared/drawer/drawer';
 import { EdicaoMapa, Mapa, PinoMapa, PoligonoMapa } from '../../shared/mapa/mapa';
+import { CatalogosEmergencia } from './catalogos-emergencia';
+import { PlanosContingencia } from './planos-contingencia';
 
-type Aba = 'ativas' | 'eventos' | 'encerradas';
+type Aba = 'ativas' | 'eventos' | 'encerradas' | 'planos' | 'catalogos';
 type Gaveta =
   | { tipo: 'evento' }
   | { tipo: 'descartar'; evento: EventoEmergencialDto }
   | { tipo: 'converter'; evento: EventoEmergencialDto }
-  | { tipo: 'nivel' | 'territorio' | 'referencias' | 'avaliacao' | 'encerrar'; emergencia: EmergenciaDto };
+  | { tipo: 'nivel' | 'territorio' | 'referencias' | 'avaliacao' | 'encerrar' | 'ativarPlano'; emergencia: EmergenciaDto }
+  | { tipo: 'desativarPlano'; emergencia: EmergenciaDto; plano: PlanoAtivoDto };
 
 /**
  * Emergências e Desastres, fatia E1 (ADR-0156): os eventos (registrar, monitorar, descartar, converter) e as emergências
@@ -38,7 +44,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-emergencias',
-  imports: [Drawer, Mapa],
+  imports: [Drawer, Mapa, PlanosContingencia, CatalogosEmergencia],
   template: `
     <header class="page-head">
       <div>
@@ -56,9 +62,15 @@ type Gaveta =
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'ativas'" (click)="aba.set('ativas')">Emergências ativas <span class="cnt">{{ ativas().length }}</span></button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'eventos'" (click)="aba.set('eventos')">Eventos <span class="cnt">{{ eventosAbertos() }}</span></button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'encerradas'" (click)="aba.set('encerradas')">Encerradas</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'planos'" (click)="aba.set('planos')">Planos de contingência</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'catalogos'" (click)="aba.set('catalogos')">Catálogos</button>
     </div>
 
-    @if (aba() === 'eventos') {
+    @if (aba() === 'planos') {
+      <app-planos-contingencia [tipos]="tipos()" [niveis]="niveis()" [podeGerenciar]="pode('CONTINGENCIA.GERENCIAR')" />
+    } @else if (aba() === 'catalogos') {
+      <app-catalogos-emergencia [tipos]="tipos()" [niveis]="niveis()" [podeGerenciar]="pode('CONTINGENCIA.GERENCIAR')" (alterado)="carregarCatalogos()" />
+    } @else if (aba() === 'eventos') {
       <div class="tbl-wrap card">
         <table aria-label="Eventos emergenciais">
           <thead><tr><th scope="col">Evento</th><th scope="col">Ocorrido</th><th scope="col">Fonte</th><th scope="col">Situação</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
@@ -101,7 +113,7 @@ type Gaveta =
       </div>
     }
 
-    @if (detalhe(); as d) {
+    @if (aba() !== 'planos' && aba() !== 'catalogos' && detalhe(); as d) {
       <section class="card em-detalhe" [attr.aria-label]="'Emergência ' + d.nome">
         <div class="em-cab">
           <div>
@@ -124,6 +136,35 @@ type Gaveta =
           }
         </div>
         @if (d.motivoEncerramento) { <div class="box box--info"><div>Encerrada: {{ d.motivoEncerramento }}</div></div> }
+
+        <div class="em-planos">
+          <div class="em-cab" style="margin-bottom: var(--s-2);">
+            <h3 class="mo-grupo" style="margin: 0;">Planos de contingência</h3>
+            @if (d.situacao === 'ATIVA' && pode('EMERGENCIA.ATIVAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirAtivarPlano(d)">Ativar plano</button> }
+          </div>
+          @if (d.planos.length) {
+            <ul class="eq-prof" aria-label="Planos da emergência">
+              @for (p of d.planos; track p.ativacaoId) {
+                <li>
+                  <div class="em-cab" style="margin: 0;">
+                    <span class="cell-main">{{ p.nome }} <span class="cell-sub mono" style="display: inline;">{{ p.codigo }} v{{ p.versao }}</span>
+                      <span [class]="'tag tag--' + (p.situacao === 'ATIVA' ? 'ok' : 'muted')">{{ p.situacao === 'ATIVA' ? 'Ativo' : 'Desativado' }}</span>
+                      @if (p.situacao === 'ATIVA' && !p.cobreNivelAtual) { <span class="tag tag--warn">Não cobre o nível atual</span> }</span>
+                    @if (p.situacao === 'ATIVA' && d.situacao === 'ATIVA' && pode('EMERGENCIA.ATIVAR')) { <button type="button" class="link-btn" (click)="abrirDesativarPlano(d, p)" [attr.aria-label]="'Desativar ' + p.nome">Desativar</button> }
+                  </div>
+                  @if (p.acoesDoNivel.length) {
+                    <ul class="em-acoes" [attr.aria-label]="'Ações previstas para o nível: ' + p.nome">
+                      @for (a of p.acoesDoNivel; track $index) {
+                        <li>{{ a.descricao }} <span class="cell-sub" style="display: inline;">· {{ a.responsavel }}@if (a.prazoEm) { · até {{ dataHora(a.prazoEm) }} }@if (a.unidadeNome) { · {{ a.unidadeNome }} }</span></li>
+                      }
+                    </ul>
+                  }
+                  <span class="cell-sub">@for (r of p.registros; track $index; let ultimo = $last) { {{ tiposRegistro[r.tipo] }} ({{ r.nivelNome }}) em {{ dataHora(r.registradoEm) }}@if (r.autoridade) { por {{ r.autoridade }} }@if (!ultimo) { · } }</span>
+                </li>
+              }
+            </ul>
+          } @else { <p class="cell-sub">Nenhum plano ativado nesta emergência.</p> }
+        </div>
 
         <div class="em-grade">
           <div>
@@ -212,6 +253,9 @@ type Gaveta =
                 </div>
                 <div class="dw-field"><label for="f-em-justificativa">Justificativa <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-justificativa" rows="3" maxlength="1000" [value]="campo()['justificativa'] ?? ''" (input)="set('justificativa', $event)"></textarea></div>
                 <div class="box box--info"><div>O território afetado começa pela área do evento e pelas microáreas que ela atinge.</div></div>
+                @if (planosSugeridos().length) {
+                  <div class="box box--info"><div>Planos vigentes de {{ g.evento.tipoNome }}: @for (p of planosSugeridos(); track p.uuid; let ultimo = $last) { {{ p.nome }}@if (!ultimo) { · } }. Ative depois de converter.</div></div>
+                }
               }
               @case ('nivel') {
                 <dl class="ro"><div><dt>Nível atual</dt><dd>{{ g.emergencia.nivelNome }}</dd></div></dl>
@@ -273,6 +317,22 @@ type Gaveta =
                 <div class="dw-field"><label for="f-em-infraestrutura">Infraestrutura<span class="opt">opcional</span></label><input id="f-em-infraestrutura" type="text" maxlength="1000" [value]="campo()['infraestrutura'] ?? ''" (input)="set('infraestrutura', $event)" /></div>
                 <div class="dw-field"><label for="f-em-observacao">Observação<span class="opt">opcional</span></label><textarea id="f-em-observacao" rows="2" maxlength="2000" [value]="campo()['observacao'] ?? ''" (input)="set('observacao', $event)"></textarea></div>
               }
+              @case ('ativarPlano') {
+                <dl class="ro"><div><dt>Emergência</dt><dd>{{ g.emergencia.nome }} · {{ g.emergencia.tipoNome }} · {{ g.emergencia.nivelNome }}</dd></div></dl>
+                <div class="dw-field"><label for="f-em-plano">Plano vigente <span class="req" aria-hidden="true">*</span></label>
+                  <select id="f-em-plano" (change)="campo.set({ ...campo(), planoId: $any($event.target).value })">
+                    <option value="" [selected]="!campo()['planoId']">Escolha…</option>
+                    @for (p of planosSugeridos(); track p.uuid) { <option [value]="p.uuid" [selected]="campo()['planoId'] === p.uuid">{{ p.nome }} · v{{ p.versao }}@if (!cobre(p, g.emergencia)) { (não cobre o nível atual) }</option> }
+                  </select>
+                  @if (!planosSugeridos().length) { <p class="cell-sub">Nenhum plano vigente de {{ g.emergencia.tipoNome }}. Cadastre na aba Planos de contingência.</p> }
+                </div>
+                <div class="dw-field"><label for="f-em-autoridade">Autoridade <span class="req" aria-hidden="true">*</span></label><input id="f-em-autoridade" type="text" maxlength="200" [value]="campo()['autoridade'] ?? ''" (input)="set('autoridade', $event)" placeholder="Ex.: Secretário de Saúde" /></div>
+                <div class="dw-field"><label for="f-em-justificativa">Justificativa <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-justificativa" rows="3" maxlength="1000" [value]="campo()['justificativa'] ?? ''" (input)="set('justificativa', $event)"></textarea></div>
+              }
+              @case ('desativarPlano') {
+                <dl class="ro"><div><dt>Plano</dt><dd>{{ g.plano.nome }} · v{{ g.plano.versao }}</dd></div></dl>
+                <div class="dw-field"><label for="f-em-justificativa">Justificativa <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-justificativa" rows="3" maxlength="1000" [value]="campo()['justificativa'] ?? ''" (input)="set('justificativa', $event)"></textarea></div>
+              }
               @case ('encerrar') {
                 <div class="dw-field"><label for="f-em-motivo">Motivo do encerramento <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-motivo" rows="3" maxlength="1000" [value]="campo()['motivo'] ?? ''" (input)="set('motivo', $event)"></textarea></div>
                 <div class="box box--info"><div>A desmobilização dos recursos e o relatório pós-evento chegam na fatia E5.</div></div>
@@ -289,7 +349,10 @@ type Gaveta =
     .em-cab { display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-3); }
     .em-titulo { margin: 0 0 var(--s-1); font-size: 1.25rem; }
     .em-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--s-5); }
-    .em-check { display: flex; gap: var(--s-2); align-items: center; margin: var(--s-1) 0; }
+    .em-check { display: flex; gap: var(--s-2); align-items: center; margin: var(--s-1) 0; font-weight: 400; }
+    .dw-field .em-check input { width: auto; min-height: 0; padding: 0; }
+    .em-planos { margin-bottom: var(--s-4); }
+    .em-acoes { margin: var(--s-1) 0; padding-left: var(--s-4); }
   `,
 })
 export class Emergencias {
@@ -303,6 +366,8 @@ export class Emergencias {
   protected readonly impactos = NIVEIS_IMPACTO;
   protected readonly listaImpactos = Object.keys(NIVEIS_IMPACTO) as NivelImpacto[];
   protected readonly decretos = DECRETOS;
+  protected readonly tiposRegistro = TIPOS_REGISTRO_ATIVACAO;
+  protected readonly planosSugeridos = signal<PlanoContingenciaDto[]>([]);
   protected readonly listaDecretos = Object.keys(DECRETOS) as TipoDecretoEmergencia[];
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
@@ -339,8 +404,7 @@ export class Emergencias {
 
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
-    this.service.tipos().pipe(catchError(() => of([]))).subscribe((t) => this.tipos.set(t));
-    this.service.niveis().pipe(catchError(() => of([]))).subscribe((n) => this.niveis.set(n));
+    this.carregarCatalogos();
     this.carregar();
     const q = this.route.snapshot.queryParamMap;
     if (q.get('surtoId')) {
@@ -353,6 +417,29 @@ export class Emergencias {
   protected pode(...permissoes: string[]): boolean {
     const a = this.acesso();
     return !a.restrito || permissoes.some((p) => a.permissoes.has(p));
+  }
+
+  protected carregarCatalogos(): void {
+    this.service.tipos().pipe(catchError(() => of([]))).subscribe((t) => this.tipos.set(t));
+    this.service.niveis().pipe(catchError(() => of([]))).subscribe((n) => this.niveis.set(n));
+  }
+
+  protected cobre(p: PlanoContingenciaDto, e: EmergenciaDto): boolean {
+    return p.niveis.some((n) => n.uuid === e.nivelId);
+  }
+
+  private sugerirPlanos(tipoId: string): void {
+    this.planosSugeridos.set([]);
+    this.service.planos({ vigentes: true, tipoId }).pipe(catchError(() => of([]))).subscribe((l) => this.planosSugeridos.set(l));
+  }
+
+  protected abrirAtivarPlano(d: EmergenciaDto): void {
+    this.sugerirPlanos(d.tipoId);
+    this.abrir({ tipo: 'ativarPlano', emergencia: d });
+  }
+
+  protected abrirDesativarPlano(d: EmergenciaDto, p: PlanoAtivoDto): void {
+    this.abrir({ tipo: 'desativarPlano', emergencia: d, plano: p });
   }
 
   protected classe(ordem: number): string {
@@ -372,6 +459,8 @@ export class Emergencias {
       case 'territorio': return 'Território afetado';
       case 'referencias': return 'ESPIN e decreto';
       case 'avaliacao': return 'Avaliação de impacto';
+      case 'ativarPlano': return 'Ativar plano de contingência';
+      case 'desativarPlano': return 'Desativar o plano';
       default: return 'Encerrar a emergência';
     }
   }
@@ -390,6 +479,7 @@ export class Emergencias {
   }
 
   protected abrirConverter(e: EventoEmergencialDto): void {
+    this.sugerirPlanos(e.tipoId);
     this.abrir({ tipo: 'converter', evento: e }, { nome: `${e.tipoNome}${e.local ? ' · ' + e.local : ''}` });
   }
 
@@ -482,6 +572,14 @@ export class Emergencias {
           espinNumero: t('espinNumero'), espinData: t('espinData'), decretoTipo: (t('decretoTipo') as TipoDecretoEmergencia | null),
           decretoNumero: t('decretoNumero'), decretoData: t('decretoData'),
         });
+        break;
+      case 'ativarPlano':
+        if (!t('planoId') || !t('autoridade') || !t('justificativa')) falta = 'Escolha o plano e informe a autoridade e a justificativa.';
+        req = this.service.ativarPlano(g.emergencia.uuid, c['planoId'], t('autoridade') ?? '', t('justificativa') ?? '');
+        break;
+      case 'desativarPlano':
+        if (!t('justificativa')) falta = 'Justifique a desativação.';
+        req = this.service.desativarPlano(g.emergencia.uuid, g.plano.ativacaoId, t('justificativa') ?? '');
         break;
       case 'avaliacao':
         if (!t('impacto')) falta = 'Escolha o nível de impacto.';

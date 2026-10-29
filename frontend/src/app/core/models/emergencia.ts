@@ -116,6 +116,78 @@ export interface EmergenciaDto {
     nivelImpacto: NivelImpacto;
     observacao: string | null;
   }[];
+  /** Os planos de contingência ativados (ADR-0157), os ativos primeiro. */
+  planos: PlanoAtivoDto[];
+}
+
+export interface PlanoAtivoDto {
+  ativacaoId: string;
+  planoId: string;
+  codigo: string;
+  nome: string;
+  versao: number;
+  situacao: 'ATIVA' | 'DESATIVADA';
+  ativadaEm: string;
+  desativadaEm: string | null;
+  cobreNivelAtual: boolean;
+  registros: { tipo: 'ATIVADO' | 'NIVEL_ALTERADO' | 'DESATIVADO'; nivelNome: string; nivelCoberto: boolean; autoridade: string | null; justificativa: string; registradoEm: string }[];
+  acoesDoNivel: { descricao: string; responsavel: string; prazoHoras: number | null; prazoEm: string | null; unidadeNome: string | null }[];
+}
+
+// ── Plano de contingência (E2, ADR-0157) ──
+
+export type SituacaoPlanoContingencia = 'RASCUNHO' | 'VIGENTE' | 'SUBSTITUIDA' | 'REVOGADA';
+
+export const SITUACOES_PLANO: Record<SituacaoPlanoContingencia, { rotulo: string; classe: string }> = {
+  RASCUNHO: { rotulo: 'Rascunho', classe: 'info' },
+  VIGENTE: { rotulo: 'Vigente', classe: 'ok' },
+  SUBSTITUIDA: { rotulo: 'Substituída', classe: 'muted' },
+  REVOGADA: { rotulo: 'Revogada', classe: 'muted' },
+};
+
+export const TIPOS_REGISTRO_ATIVACAO: Record<PlanoAtivoDto['registros'][number]['tipo'], string> = {
+  ATIVADO: 'Ativado',
+  NIVEL_ALTERADO: 'Nível alterado',
+  DESATIVADO: 'Desativado',
+};
+
+export interface PlanoContingenciaDto {
+  uuid: string;
+  codigo: string;
+  versao: number;
+  nome: string;
+  tipoId: string;
+  tipoNome: string;
+  objetivo: string;
+  vigenciaInicio: string;
+  vigenciaFim: string | null;
+  situacao: SituacaoPlanoContingencia;
+  niveis: { uuid: string; ordem: number; nome: string }[];
+  unidades: { uuid: string; nome: string }[];
+  criterios: { uuid: string; nivelId: string; nivelNome: string; descricao: string }[];
+  acoes: { uuid: string; nivelId: string; nivelNome: string; descricao: string; responsavel: string; prazoHoras: number | null; unidadeId: string | null; unidadeNome: string | null }[];
+  recursos: { descricao: string; quantidade: number | null }[];
+  contatos: { nome: string; papel: string | null; telefone: string | null }[];
+  criadoEm: string;
+  publicadoEm: string | null;
+  encerradoEm: string | null;
+  motivoRevogacao: string | null;
+  versoes: { uuid: string; versao: number; situacao: SituacaoPlanoContingencia; publicadoEm: string | null; encerradoEm: string | null }[];
+}
+
+export interface PlanoContingenciaRequestDto {
+  codigo?: string | null;
+  nome: string;
+  tipoId: string;
+  objetivo: string;
+  vigenciaInicio: string;
+  vigenciaFim: string | null;
+  nivelIds: string[];
+  unidadeIds: string[];
+  criterios: { nivelId: string; descricao: string }[];
+  acoes: { nivelId: string; descricao: string; responsavel: string; prazoHoras: number | null; unidadeId: string | null }[];
+  recursos: { descricao: string; quantidade: number | null }[];
+  contatos: { nome: string; papel: string | null; telefone: string | null }[];
 }
 
 export interface SugestaoImpactoDto {
