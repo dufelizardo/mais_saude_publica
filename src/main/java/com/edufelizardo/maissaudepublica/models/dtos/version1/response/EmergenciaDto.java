@@ -69,6 +69,9 @@ public class EmergenciaDto implements Serializable {
     private List<MobilizacaoItem> mobilizacoes;
     private List<CapacidadeAtivada> capacidades;
     private List<UnidadeAfetada> unidadesAfetadas;
+    /** A desmobilização (ADR-0159), quando iniciada, e o que falta para encerrar. */
+    private DesmobilizacaoItem desmobilizacao;
+    private List<String> pendencias;
 
     /** Microárea do território afetado. */
     @Getter
@@ -290,5 +293,25 @@ public class EmergenciaDto implements Serializable {
         private UUID uuid;
         private String nome;
         private SituacaoOperacional situacaoOperacional;
+    }
+
+    /** O registro da desmobilização: quem, por quê e o que foi liberado. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class DesmobilizacaoItem implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private Instant iniciadaEm;
+        private String responsavel;
+        private String justificativa;
+        private int mobilizacoesConcluidas;
+        private int profissionaisLiberados;
+        private int capacidadesDesativadas;
+        private int planosDesativados;
     }
 }

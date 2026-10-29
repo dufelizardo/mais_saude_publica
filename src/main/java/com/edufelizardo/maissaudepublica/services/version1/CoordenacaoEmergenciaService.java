@@ -291,10 +291,70 @@ class CoordenacaoEmergenciaService {
         fechar(a, justificativa.trim());
     }
 
-    /** Encerrar a emergência desativa a capacidade ativada nela. */
-    void desativarCapacidades(Emergencia em, String justificativa) {
-        ativacaoCapacidadeRepository.findDaEmergencia(em.getUuid()).stream().filter(a -> a.getSituacao() == SituacaoAtivacaoCapacidade.ATIVA)
-                .forEach(a -> fechar(a, justificativa));
+    /** Desmobilizar ou encerrar a emergência desativa a capacidade ativada nela; devolve quantas. */
+    int desativarCapacidades(Emergencia em, String justificativa) {
+        List<AtivacaoCapacidade> ativas = ativacaoCapacidadeRepository.findDaEmergencia(em.getUuid()).stream()
+                .filter(a -> a.getSituacao() == SituacaoAtivacaoCapacidade.ATIVA).toList();
+        ativas.forEach(a -> fechar(a, justificativa));
+        return ativas.size();
+    }
+
+    /**
+     * Desmobilizar ou encerrar conclui as mobilizações em aberto (fim hoje): a exceção da Escala acaba para turnos novos. As
+     * ligadas a uma transferência seguem a Farmácia e ficam como estão. Devolve {mobilizações, profissionais}.
+     */
+    int[] concluirMobilizacoes(Emergencia em) {
+        LocalDate hoje = LocalDate.now();
+        int mobilizacoes = 0;
+        int profissionais = 0;
+        for (Mobilizacao m : mobilizacaoRepository.findDaEmergencia(em.getUuid())) {
+            if (!aberta(m) || m.getTransferencia() != null) {
+                continue;
+            }
+            m.setSituacao(SituacaoMobilizacao.CONCLUIDA);
+            if (m.getFim() == null || m.getFim().isAfter(hoje)) {
+                m.setFim(hoje.isBefore(m.getInicio()) ? m.getInicio() : hoje);
+            }
+            mobilizacaoRepository.save(m);
+            mobilizacoes++;
+            profissionais += m.getTipo() == TipoMobilizacao.PROFISSIONAL ? 1 : 0;
+        }
+        return new int[]{mobilizacoes, profissionais};
+    }
+
+    int acoesAbertas(Emergencia em) {
+        return (int) acaoRepository.findDaEmergencia(em.getUuid()).stream()
+                .filter(a -> a.getSituacao() == SituacaoAcaoEmergencial.PENDENTE || a.getSituacao() == SituacaoAcaoEmergencial.EM_EXECUCAO).count();
+    }
+
+    /** Cancela as ações que restaram abertas, com o motivo; devolve quantas. */
+    int cancelarAbertas(Emergencia em, String motivo) {
+        int n = 0;
+        for (AcaoEmergencial a : acaoRepository.findDaEmergencia(em.getUuid())) {
+            if (a.getSituacao() == SituacaoAcaoEmergencial.PENDENTE || a.getSituacao() == SituacaoAcaoEmergencial.EM_EXECUCAO) {
+                a.setSituacao(SituacaoAcaoEmergencial.CANCELADA);
+                a.setMotivoCancelamento(motivo);
+                acaoRepository.save(a);
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /** O que falta para encerrar: ações abertas e unidades afetadas fora de operação (só aviso). */
+    List<String> pendencias(Emergencia em, AvaliacaoImpacto ultima) {
+        List<String> lista = new java.util.ArrayList<>();
+        int abertas = acoesAbertas(em);
+        if (abertas > 0) {
+            lista.add(abertas + " ação(ões) em aberto: conclua ou cancele antes de encerrar.");
+        }
+        if (ultima != null) {
+            ultima.getUnidadesAfetadas().stream()
+                    .filter(u -> u.getSituacaoOperacional() != com.edufelizardo.maissaudepublica.models.enuns.SituacaoOperacional.EM_OPERACAO)
+                    .sorted(Comparator.comparing(UnidadeDeSaude::getNome, String.CASE_INSENSITIVE_ORDER))
+                    .forEach(u -> lista.add(u.getNome() + " ainda não voltou à operação (Equipamentos de Saúde)."));
+        }
+        return lista;
     }
 
     private void fechar(AtivacaoCapacidade a, String justificativa) {

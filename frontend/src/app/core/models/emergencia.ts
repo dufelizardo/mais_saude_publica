@@ -3,7 +3,7 @@
 export type CategoriaTipoEmergencia = 'DESASTRE' | 'SAUDE';
 export type FonteEventoEmergencial = 'VIGILANCIA' | 'UNIDADE' | 'DEFESA_CIVIL' | 'GESTOR' | 'PROFISSIONAL' | 'SISTEMA_EXTERNO';
 export type SituacaoEventoEmergencial = 'REGISTRADO' | 'MONITORADO' | 'DESCARTADO' | 'CONVERTIDO';
-export type SituacaoEmergencia = 'ATIVA' | 'ENCERRADA';
+export type SituacaoEmergencia = 'ATIVA' | 'EM_DESMOBILIZACAO' | 'ENCERRADA';
 export type NivelImpacto = 'BAIXO' | 'MODERADO' | 'ALTO' | 'CRITICO';
 export type TipoDecretoEmergencia = 'SITUACAO_DE_EMERGENCIA' | 'CALAMIDADE_PUBLICA';
 
@@ -124,6 +124,17 @@ export interface EmergenciaDto {
   mobilizacoes: MobilizacaoDto[];
   capacidades: CapacidadeAtivadaDto[];
   unidadesAfetadas: { uuid: string; nome: string; situacaoOperacional: string }[];
+  /** A desmobilização (ADR-0159), quando iniciada, e o que falta para encerrar. */
+  desmobilizacao: {
+    iniciadaEm: string;
+    responsavel: string;
+    justificativa: string;
+    mobilizacoesConcluidas: number;
+    profissionaisLiberados: number;
+    capacidadesDesativadas: number;
+    planosDesativados: number;
+  } | null;
+  pendencias: string[];
 }
 
 // ── Coordenação (E3, ADR-0158) ──
@@ -325,4 +336,45 @@ export interface AvaliacaoImpactoRequestDto {
   infraestrutura: string | null;
   nivelImpacto: NivelImpacto;
   observacao: string | null;
+}
+
+// ── Relatório pós-evento (E5, ADR-0159) ──
+
+export const SITUACOES_EMERGENCIA: Record<SituacaoEmergencia, { rotulo: string; classe: string }> = {
+  ATIVA: { rotulo: 'Ativa', classe: 'alert' },
+  EM_DESMOBILIZACAO: { rotulo: 'Em desmobilização', classe: 'warn' },
+  ENCERRADA: { rotulo: 'Encerrada', classe: 'muted' },
+};
+
+export interface RelatorioPosEventoDto {
+  uuid: string | null;
+  emergenciaId: string;
+  situacao: 'RASCUNHO' | 'FINALIZADO' | null;
+  resumo: string | null;
+  problemas: string | null;
+  licoes: string | null;
+  recomendacoes: { uuid: string; descricao: string; planoCodigo: string | null; planoRevisaoId: string | null; planoRevisaoVersao: number | null }[];
+  planosUsados: { codigo: string; nome: string; versao: number }[];
+  indicadores: {
+    duracaoHoras: number;
+    horasAteAtivacao: number;
+    nivelMaximo: string;
+    mudancasDeNivel: number;
+    acoesTotal: number;
+    acoesConcluidas: number;
+    acoesCanceladas: number;
+    acoesComPrazo: number;
+    acoesConcluidasNoPrazo: number;
+    percentualNoPrazo: number | null;
+    mobilizacoes: number;
+    profissionaisMobilizados: number;
+    mobilizacoesPorTipo: { chave: string; quantidade: number }[];
+    capacidadeAtivada: number;
+    populacaoAfetada: number | null;
+    unidadesAfetadas: number;
+    leitosIndisponiveis: number | null;
+  };
+  criadoEm: string | null;
+  atualizadoEm: string | null;
+  finalizadoEm: string | null;
 }

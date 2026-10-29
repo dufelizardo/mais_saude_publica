@@ -1,10 +1,11 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   AvaliacaoImpactoRequestDto,
   CapacidadeEmergencialDto,
   PrioridadeAcaoEmergencial,
+  RelatorioPosEventoDto,
   RecursoCapacidade,
   SituacaoAcaoEmergencial,
   SituacaoMobilizacao,
@@ -173,5 +174,35 @@ export class EmergenciaService {
 
   desativarCapacidade(uuid: string, ativacaoId: string, justificativa: string): Observable<EmergenciaDto> {
     return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/capacidade-ativa/${ativacaoId}/desativacao`, { justificativa });
+  }
+
+  // ── Desmobilização e relatório pós-evento (E5, ADR-0159) ──
+
+  desmobilizar(uuid: string, responsavel: string, justificativa: string): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/desmobilizacao`, { responsavel, justificativa });
+  }
+
+  cancelarAcoesRestantes(uuid: string, motivo: string): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/acoes-restantes/cancelamento`, { motivo });
+  }
+
+  relatorio(uuid: string): Observable<RelatorioPosEventoDto> {
+    return this.http.get<RelatorioPosEventoDto>(`${this.api}/emergencia/${uuid}/relatorio`);
+  }
+
+  salvarRelatorio(uuid: string, dto: { resumo: string | null; problemas: string | null; licoes: string | null; recomendacoes: { descricao: string; planoCodigo: string | null }[] }): Observable<RelatorioPosEventoDto> {
+    return this.http.put<RelatorioPosEventoDto>(`${this.api}/emergencia/${uuid}/relatorio`, dto);
+  }
+
+  finalizarRelatorio(uuid: string): Observable<RelatorioPosEventoDto> {
+    return this.http.post<RelatorioPosEventoDto>(`${this.api}/emergencia/${uuid}/relatorio/finalizacao`, {});
+  }
+
+  revisarPlanoDaRecomendacao(uuid: string, recomendacaoId: string): Observable<RelatorioPosEventoDto> {
+    return this.http.post<RelatorioPosEventoDto>(`${this.api}/emergencia/${uuid}/relatorio/recomendacao/${recomendacaoId}/revisao-plano`, {});
+  }
+
+  relatorioCsv(uuid: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.api}/emergencia/${uuid}/relatorio.csv`, { responseType: 'blob', observe: 'response' });
   }
 }

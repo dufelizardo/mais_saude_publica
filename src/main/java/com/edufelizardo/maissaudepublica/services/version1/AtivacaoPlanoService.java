@@ -91,11 +91,13 @@ class AtivacaoPlanoService {
         }
     }
 
-    /** Encerrar a emergência desativa os planos ativos. */
-    void desativarTodas(Emergencia em, String justificativa) {
-        for (AtivacaoPlano a : ativas(em)) {
+    /** Desmobilizar ou encerrar a emergência desativa os planos ativos; devolve quantos. */
+    int desativarTodas(Emergencia em, String justificativa) {
+        List<AtivacaoPlano> ativas = ativas(em);
+        for (AtivacaoPlano a : ativas) {
             fechar(a, em, null, justificativa);
         }
+        return ativas.size();
     }
 
     /** Os planos da emergência (os ativos primeiro), com os passos e, nos ativos, as ações previstas para o nível atual. */

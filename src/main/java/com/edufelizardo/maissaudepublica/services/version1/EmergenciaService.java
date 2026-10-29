@@ -90,6 +90,7 @@ public class EmergenciaService {
     @Autowired private ControleDeAcesso controleDeAcesso;
     @Autowired private AtivacaoPlanoService ativacao;
     @Autowired private CoordenacaoEmergenciaService coordenacao;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.DesmobilizacaoRepository desmobilizacaoRepository;
 
     // ── Catálogos ──────────────────────────────────────────────────────────────────────────────────
 
@@ -358,20 +359,69 @@ public class EmergenciaService {
         return detalhe(em);
     }
 
-    /** Encerra com o motivo: só a ativa (422). */
+    /**
+     * Encerra com o motivo. Da ativa, faz as liberações da desmobilização (evento curto); da desmobilização, pede nenhuma ação
+     * aberta (422). Encerrada, 422.
+     */
     @Transactional
     public EmergenciaDto encerrar(UUID uuid, EncerramentoEmergenciaRequestDto dto) {
         controleDeAcesso.exigirAlguma(ATIVAR);
-        Emergencia em = ativa(uuid);
+        Emergencia em = aberta(uuid);
+        if (em.getSituacao() == SituacaoEmergencia.EM_DESMOBILIZACAO && coordenacao.acoesAbertas(em) > 0) {
+            throw new ResourceUnprocessableEntityException("Há ações em aberto: conclua ou cancele antes de encerrar.");
+        }
+        liberar(em, "Emergência encerrada: " + dto.getMotivo().trim());
         em.setSituacao(SituacaoEmergencia.ENCERRADA);
         em.setFim(Instant.now());
         em.setMotivoEncerramento(dto.getMotivo().trim());
         emergenciaRepository.save(em);
-        ativacao.desativarTodas(em, "Emergência encerrada: " + dto.getMotivo().trim());
-        coordenacao.desativarCapacidades(em, "Emergência encerrada: " + dto.getMotivo().trim());
         ContextoAuditoria.registro(em.getUuid());
         ContextoAuditoria.detalhe("Emergência encerrada.");
         return detalhe(em);
+    }
+
+    // ── Desmobilização (E5, ADR-0159) ───────────────────────────────────────────────────────────────
+
+    /**
+     * Inicia a desmobilização da emergência ativa (422): conclui as mobilizações abertas, desativa a capacidade e os planos e
+     * registra o que foi liberado. Daí em diante não entra ação, mobilização nem capacidade nova.
+     */
+    @Transactional
+    public EmergenciaDto iniciarDesmobilizacao(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesmobilizacaoRequestDto dto) {
+        controleDeAcesso.exigirAlguma(ATIVAR);
+        Emergencia em = ativa(uuid);
+        int[] liberado = liberar(em, "Desmobilização: " + dto.getJustificativa().trim());
+        desmobilizacaoRepository.save(new com.edufelizardo.maissaudepublica.models.Desmobilizacao(null, em, Instant.now(), dto.getResponsavel().trim(),
+                dto.getJustificativa().trim(), liberado[0], liberado[1], liberado[2], liberado[3], UsuarioAutenticado.cpf()));
+        em.setSituacao(SituacaoEmergencia.EM_DESMOBILIZACAO);
+        emergenciaRepository.save(em);
+        ContextoAuditoria.registro(em.getUuid());
+        ContextoAuditoria.detalhe("Desmobilização iniciada: " + liberado[0] + " mobilização(ões), " + liberado[2] + " capacidade(s), " + liberado[3]
+                + " plano(s).");
+        return detalhe(em);
+    }
+
+    /** Cancela as ações que restaram abertas na desmobilização (fora dela, 422; nenhuma aberta, 422). */
+    @Transactional
+    public EmergenciaDto cancelarAcoesRestantes(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.CancelamentoAcoesRequestDto dto) {
+        controleDeAcesso.exigirAlguma(COORDENAR, ATIVAR);
+        Emergencia em = buscarEmergencia(uuid);
+        if (em.getSituacao() != SituacaoEmergencia.EM_DESMOBILIZACAO) {
+            throw new ResourceUnprocessableEntityException("Cancelar as ações restantes é da desmobilização.");
+        }
+        if (coordenacao.cancelarAbertas(em, dto.getMotivo().trim()) == 0) {
+            throw new ResourceUnprocessableEntityException("Não há ação em aberto.");
+        }
+        ContextoAuditoria.registro(em.getUuid());
+        return detalhe(em);
+    }
+
+    /** As liberações da desmobilização e do encerramento: {mobilizações, profissionais, capacidades, planos}. */
+    private int[] liberar(Emergencia em, String justificativa) {
+        int[] mob = coordenacao.concluirMobilizacoes(em);
+        int capacidades = coordenacao.desativarCapacidades(em, justificativa);
+        int planos = ativacao.desativarTodas(em, justificativa);
+        return new int[]{mob[0], mob[1], capacidades, planos};
     }
 
     // ── Planos de contingência na emergência (E2, ADR-0157) ─────────────────────────────────────────
@@ -390,7 +440,7 @@ public class EmergenciaService {
     @Transactional
     public EmergenciaDto desativarPlano(UUID uuid, UUID ativacaoId, com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesativacaoPlanoRequestDto dto) {
         controleDeAcesso.exigirAlguma(ATIVAR);
-        Emergencia em = ativa(uuid);
+        Emergencia em = aberta(uuid);
         ativacao.desativar(em, ativacaoId, dto);
         ContextoAuditoria.registro(em.getUuid());
         return detalhe(em);
@@ -402,8 +452,13 @@ public class EmergenciaService {
 
     /** Executa a escrita da coordenação na emergência ativa (422) e devolve a emergência. */
     private EmergenciaDto coordenar(UUID uuid, java.util.function.Consumer<Emergencia> escrita) {
+        return coordenar(uuid, false, escrita);
+    }
+
+    /** Idem; com {@code naDesmobilizacao}, vale também na desmobilização (concluir o que ficou aberto). */
+    private EmergenciaDto coordenar(UUID uuid, boolean naDesmobilizacao, java.util.function.Consumer<Emergencia> escrita) {
         controleDeAcesso.exigirAlguma(COORDENAR);
-        Emergencia em = ativa(uuid);
+        Emergencia em = naDesmobilizacao ? aberta(uuid) : ativa(uuid);
         escrita.accept(em);
         ContextoAuditoria.registro(em.getUuid());
         return detalhe(em);
@@ -421,7 +476,7 @@ public class EmergenciaService {
 
     @Transactional
     public EmergenciaDto situacaoDaAcao(UUID uuid, UUID acaoId, com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoAcaoEmergencialRequestDto dto) {
-        return coordenar(uuid, em -> coordenacao.situacaoDaAcao(em, acaoId, dto));
+        return coordenar(uuid, true, em -> coordenacao.situacaoDaAcao(em, acaoId, dto));
     }
 
     @Transactional
@@ -432,7 +487,7 @@ public class EmergenciaService {
     @Transactional
     public EmergenciaDto situacaoDaMobilizacao(UUID uuid, UUID mobilizacaoId,
                                               com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoMobilizacaoRequestDto dto) {
-        return coordenar(uuid, em -> coordenacao.situacaoDaMobilizacao(em, mobilizacaoId, dto));
+        return coordenar(uuid, true, em -> coordenacao.situacaoDaMobilizacao(em, mobilizacaoId, dto));
     }
 
     @Transactional
@@ -449,7 +504,7 @@ public class EmergenciaService {
     @Transactional
     public EmergenciaDto desativarCapacidade(UUID uuid, UUID ativacaoId,
                                             com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesativacaoCapacidadeRequestDto dto) {
-        return coordenar(uuid, em -> coordenacao.desativarCapacidade(em, ativacaoId, dto.getJustificativa()));
+        return coordenar(uuid, true, em -> coordenacao.desativarCapacidade(em, ativacaoId, dto.getJustificativa()));
     }
 
     // ── Impacto ────────────────────────────────────────────────────────────────────────────────────
@@ -572,7 +627,19 @@ public class EmergenciaService {
 
     private Emergencia ativa(UUID uuid) {
         Emergencia em = buscarEmergencia(uuid);
+        if (em.getSituacao() == SituacaoEmergencia.EM_DESMOBILIZACAO) {
+            throw new ResourceUnprocessableEntityException("A emergência está em desmobilização: só se conclui o que ficou aberto.");
+        }
         if (em.getSituacao() != SituacaoEmergencia.ATIVA) {
+            throw new ResourceUnprocessableEntityException("A emergência já foi encerrada.");
+        }
+        return em;
+    }
+
+    /** Ativa ou em desmobilização (encerrada, 422). */
+    private Emergencia aberta(UUID uuid) {
+        Emergencia em = buscarEmergencia(uuid);
+        if (em.getSituacao() == SituacaoEmergencia.ENCERRADA) {
             throw new ResourceUnprocessableEntityException("A emergência já foi encerrada.");
         }
         return em;
@@ -617,6 +684,11 @@ public class EmergenciaService {
                 a.getInfraestrutura(), a.getNivelImpacto(), a.getObservacao())).toList());
         d.setPlanos(ativacao.planosDaEmergencia(em));
         coordenacao.preencher(d, em, avaliacoes.isEmpty() ? null : avaliacoes.get(0));
+        desmobilizacaoRepository.findByEmergencia_Uuid(em.getUuid()).ifPresent(x -> d.setDesmobilizacao(new EmergenciaDto.DesmobilizacaoItem(
+                x.getIniciadaEm(), x.getResponsavel(), x.getJustificativa(), x.getMobilizacoesConcluidas(), x.getProfissionaisLiberados(),
+                x.getCapacidadesDesativadas(), x.getPlanosDesativados())));
+        d.setPendencias(em.getSituacao() == SituacaoEmergencia.ENCERRADA ? List.of()
+                : coordenacao.pendencias(em, avaliacoes.isEmpty() ? null : avaliacoes.get(0)));
         return d;
     }
 
@@ -628,7 +700,7 @@ public class EmergenciaService {
                 n.getUuid(), n.getOrdem(), n.getNome(), em.getSituacao(), em.getInicio(), em.getFim(), em.getMotivoEncerramento(),
                 r != null ? r.getMatricula() : null, r != null ? r.getNome() : null, ultima != null ? ultima.getNivelImpacto() : null,
                 ultima != null ? ultima.getAvaliadaEm() : null, null, List.of(), em.getEspinNumero(), em.getEspinData(), em.getDecretoTipo(),
-                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of(), List.of(), 0, List.of(), List.of(), List.of());
+                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of(), List.of(), 0, List.of(), List.of(), List.of(), null, List.of());
     }
 
     private static EventoEmergencialDto dto(EventoEmergencial e, UUID emergenciaId) {

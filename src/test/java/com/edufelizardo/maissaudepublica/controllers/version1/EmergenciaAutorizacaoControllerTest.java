@@ -30,6 +30,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 /**
  * Emergências com login e autorização ligados (ADR-0156): a vigilância registra o evento e o impacto; ativar e mudar o
@@ -80,6 +81,8 @@ class EmergenciaAutorizacaoControllerTest {
         jdbc.update("delete from tb_registro_ativacao_plano where ativacao_id in (select uuid from tb_ativacao_plano where emergencia_id in "
                 + emergencias + ")");
         jdbc.update("delete from tb_ativacao_plano where emergencia_id in " + emergencias);
+        jdbc.update("delete from tb_relatorio_pos_evento where emergencia_id in " + emergencias);
+        jdbc.update("delete from tb_desmobilizacao where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_acao_emergencial where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_capacidade_emergencial where unidade_id in (select uuid from tb_unidade_de_saude where nome like '" + PREFIXO + "%')");
         jdbc.update("delete from tb_mudanca_nivel_emergencia where emergencia_id in " + emergencias);
@@ -192,5 +195,29 @@ class EmergenciaAutorizacaoControllerTest {
         String capacidade = "{\"unidadeId\": \"" + unidade.getUuid() + "\", \"recurso\": \"ATENDIMENTOS_DIA\", \"normal\": 100, \"emergencial\": 60}";
         assertThat(status(COORDENADOR, json(post("/api/v1/emergencias/capacidade"), capacidade))).isEqualTo(403);
         assertThat(status(GESTOR, json(post("/api/v1/emergencias/capacidade"), capacidade))).isEqualTo(201);
+    }
+
+    @Test
+    void desmobilizacaoERelatorioPorPapel() throws Exception {
+        String tipo = jdbc.queryForObject("select cast(uuid as varchar) from tb_tipo_emergencia where codigo = 'EPIDEMIA'", String.class);
+        String nivel = jdbc.queryForObject("select cast(uuid as varchar) from tb_nivel_emergencia where ordem = 1", String.class);
+        String evento = JsonPath.read(mockMvc.perform(como(VIGILANCIA, json(post("/api/v1/evento-emergencial"), "{\"tipoId\": \"" + tipo
+                + "\", \"fonte\": \"VIGILANCIA\", \"descricao\": \"" + PREFIXO + "Desmobilização\"}"))).andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8), "$.uuid");
+        String em = JsonPath.read(mockMvc.perform(como(GESTOR, json(post("/api/v1/evento-emergencial/" + evento + "/emergencia"), "{\"nome\": \"Dengue\", "
+                + "\"nivelId\": \"" + nivel + "\", \"justificativa\": \"Limiar\"}"))).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), "$.uuid");
+        String desmob = "{\"responsavel\": \"Secretário\", \"justificativa\": \"Queda dos casos\"}";
+        // Desmobilizar é da autoridade; o coordenador não.
+        assertThat(status(COORDENADOR, json(post("/api/v1/emergencia/" + em + "/desmobilizacao"), desmob))).isEqualTo(403);
+        assertThat(status(GESTOR, json(post("/api/v1/emergencia/" + em + "/desmobilizacao"), desmob))).isEqualTo(200);
+        // O rascunho do relatório: a coordenação escreve; a vigilância lê, mas não escreve.
+        String rel = "{\"resumo\": \"Surto controlado\"}";
+        assertThat(status(VIGILANCIA, json(put("/api/v1/emergencia/" + em + "/relatorio"), rel))).isEqualTo(403);
+        assertThat(status(COORDENADOR, json(put("/api/v1/emergencia/" + em + "/relatorio"), rel))).isEqualTo(200);
+        assertThat(status(VIGILANCIA, get("/api/v1/emergencia/" + em + "/relatorio"))).isEqualTo(200);
+        // Finalizar é da autoridade.
+        assertThat(status(GESTOR, json(post("/api/v1/emergencia/" + em + "/encerramento"), "{\"motivo\": \"Fim\"}"))).isEqualTo(200);
+        assertThat(status(COORDENADOR, post("/api/v1/emergencia/" + em + "/relatorio/finalizacao"))).isEqualTo(403);
+        assertThat(status(GESTOR, post("/api/v1/emergencia/" + em + "/relatorio/finalizacao"))).isEqualTo(200);
     }
 }
