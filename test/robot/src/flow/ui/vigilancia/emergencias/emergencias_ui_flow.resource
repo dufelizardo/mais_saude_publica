@@ -3,6 +3,7 @@ Library     String
 Resource    ../../../../pom/ui/vigilancia/emergencias/emergencias_ui_pom.resource
 Resource    ../../../emergencias/desmobilizacao_flow.resource
 Resource    ../../../emergencias/eventos_especializados_flow.resource
+Resource    ../../../emergencias/epidemia_exposicao_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Emergências e desastres (ADR-0156); as bases vêm pela API.
@@ -224,5 +225,37 @@ UI Emergencias - Estrutura E Boletim
     Wait For Elements State    css=[aria-label="Estruturas temporárias"] >> text=Tenda Robot    visible
     Click    role=button[name="Abrir Tenda Robot"]
     Wait For Elements State    role=button[name="Abrir Tenda Robot"]    detached
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Painel Da Epidemia
+    [Documentation]    Pela tela: escolhe o agravo da epidemia e vê os números e a curva (ADR-0161).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${em}=    Seed Emergencia Do Tipo    EPIDEMIA
+    Seed Caso De Sarampo
+    ${sarampo}=    Id Do Agravo    SARAMPO
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=[aria-label="Situação epidemiológica"]    visible
+    Clicar Botao    Escolher agravo
+    Select Options By    id=f-es-agravo    value    ${sarampo}
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Números da epidemia"]    visible
+    Wait For Elements State    css=app-curva-epidemica [role="list"]    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Exposicao Ambiental
+    [Documentation]    Pela tela: registra a exposição ambiental do desastre (ADR-0161).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${em}=    Seed Emergencia Do Tipo    PRODUTO_PERIGOSO
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=[aria-label="Exposição ambiental"]    visible
+    Clicar Botao    Nova exposição
+    Select Options By    id=f-es-meio    value    AGUA
+    Fill Text    id=f-es-agente    Benzeno
+    Fill Text    id=f-es-expostos    1200
+    Fill Text    id=f-es-recomendacao    Não usar a água da torneira
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Exposições ambientais"] >> text=Benzeno    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

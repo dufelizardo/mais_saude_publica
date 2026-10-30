@@ -86,6 +86,9 @@ class EmergenciaAutorizacaoControllerTest {
                 + emergencias + ")");
         jdbc.update("delete from tb_estrutura_temporaria where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_evento_massa where emergencia_id in " + emergencias);
+        jdbc.update("delete from tb_exposicao_ambiental_unidade where exposicao_id in (select uuid from tb_exposicao_ambiental where emergencia_id in "
+                + emergencias + ")");
+        jdbc.update("delete from tb_exposicao_ambiental where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_relatorio_pos_evento where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_desmobilizacao where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_acao_emergencial where emergencia_id in " + emergencias);
@@ -261,5 +264,20 @@ class EmergenciaAutorizacaoControllerTest {
         String boletim = "{\"data\": \"" + java.time.LocalDate.now() + "\", \"atendimentos\": 40}";
         assertThat(status(RECEPCAO, json(post(posto + "/boletim"), boletim))).isEqualTo(403);
         assertThat(status(VIGILANCIA, json(post(posto + "/boletim"), boletim))).isEqualTo(201);
+    }
+
+    @Test
+    void exposicaoAmbientalPorPapel() throws Exception {
+        String tipo = jdbc.queryForObject("select cast(uuid as varchar) from tb_tipo_emergencia where codigo = 'PRODUTO_PERIGOSO'", String.class);
+        String nivel = jdbc.queryForObject("select cast(uuid as varchar) from tb_nivel_emergencia where ordem = 1", String.class);
+        String evento = JsonPath.read(mockMvc.perform(como(VIGILANCIA, json(post("/api/v1/evento-emergencial"), "{\"tipoId\": \"" + tipo
+                + "\", \"fonte\": \"VIGILANCIA\", \"descricao\": \"" + PREFIXO + "Vazamento\"}"))).andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8), "$.uuid");
+        String em = JsonPath.read(mockMvc.perform(como(GESTOR, json(post("/api/v1/evento-emergencial/" + evento + "/emergencia"), "{\"nome\": \"Vazamento\", "
+                + "\"nivelId\": \"" + nivel + "\", \"justificativa\": \"Limiar\"}"))).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8), "$.uuid");
+        String exposicao = "{\"meio\": \"AGUA\", \"agente\": \"Benzeno\", \"populacaoExposta\": 300}";
+        // A exposição ambiental é registro (ADR-0161): a vigilância sim; a recepção não.
+        assertThat(status(RECEPCAO, json(post("/api/v1/emergencia/" + em + "/exposicao-ambiental"), exposicao))).isEqualTo(403);
+        assertThat(status(VIGILANCIA, json(post("/api/v1/emergencia/" + em + "/exposicao-ambiental"), exposicao))).isEqualTo(201);
     }
 }

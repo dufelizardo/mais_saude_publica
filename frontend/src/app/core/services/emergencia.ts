@@ -6,6 +6,8 @@ import {
   BoletimEstruturaRequestDto,
   EstruturaTemporariaRequestDto,
   EventoMassaRequestDto,
+  ExposicaoAmbientalRequestDto,
+  PainelEpidemiaDto,
   PerfilTipoEmergencia,
   SituacaoEstruturaTemporaria,
   CapacidadeEmergencialDto,
@@ -233,5 +235,19 @@ export class EmergenciaService {
 
   boletim(uuid: string, estruturaId: string, dto: BoletimEstruturaRequestDto): Observable<EmergenciaDto> {
     return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/estrutura/${estruturaId}/boletim`, dto);
+  }
+
+  // ── Epidemia e desastre ambiental (E6b, ADR-0161) ──
+
+  definirAgravo(uuid: string, agravoId: string): Observable<EmergenciaDto> {
+    return this.http.put<EmergenciaDto>(`${this.api}/emergencia/${uuid}/agravo`, { agravoId });
+  }
+
+  painelEpidemia(uuid: string): Observable<PainelEpidemiaDto> {
+    return this.http.get<PainelEpidemiaDto>(`${this.api}/emergencia/${uuid}/painel-epidemia`);
+  }
+
+  registrarExposicao(uuid: string, dto: ExposicaoAmbientalRequestDto): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/exposicao-ambiental`, dto);
   }
 }
