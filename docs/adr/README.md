@@ -128,7 +128,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0110](./0110-vigilancia-em-saude.md) | Vigilância em Saúde: domínio próprio (e Imunização reservada como #24) | Aceita (desenho; V1 na ADR-0124, V2 nas ADRs 0130 e 0131, V3 a V5 a fazer) |
 | [0111](./0111-saude-bucal.md) | Saúde Bucal: domínio assistencial especializado | Aceita e implementada (SB1 a SB5 nas ADRs 0134 a 0140) |
 | [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; SM1 a SM4 nas ADRs 0120 a 0123, SM5 na 0153 e SM6 na 0155; domínio completo) |
-| [0113](./0113-emergencias-e-desastres.md) | Gestão de Emergências e Desastres: coordenação extraordinária | Aceita (desenho; E1 a E3 nas ADRs 0156 a 0158 e E5 na 0159; E4 e E6 a fazer) |
+| [0113](./0113-emergencias-e-desastres.md) | Gestão de Emergências e Desastres: coordenação extraordinária | Aceita (desenho; E1 a E3 nas ADRs 0156 a 0158, E5 na 0159 e E6a na 0160; E4 e E6b a fazer) |
 | [0114](./0114-comunicacao-e-educacao-em-saude.md) | Comunicação e Educação em Saúde: domínio futuro | Aceita (desenho; implementação nas fatias C1 a C6) |
 | [0115](./0115-modelo-operacional-dos-equipamentos.md) | Modelo Operacional dos Equipamentos e reconciliação do mapa (#29 a #31) | Aceita (desenho; MO1 na ADR-0117, MO2 a MO4 a fazer) |
 | [0116](./0116-marco-mapa-de-dominios-fechado.md) | Marco: mapa de domínios fechado e regra para novos domínios | Aceita |
@@ -174,6 +174,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0157](./0157-emergencias-contingencia.md) | Emergências e Desastres: plano de contingência e ativação (E2) | Aceita e implementada |
 | [0158](./0158-emergencias-coordenacao.md) | Emergências e Desastres: ações, mobilização e capacidade emergencial (E3) | Aceita e implementada |
 | [0159](./0159-emergencias-desmobilizacao-e-relatorio.md) | Emergências e Desastres: desmobilização e relatório pós-evento (E5) | Aceita e implementada |
+| [0160](./0160-emergencias-evento-de-massa-e-estruturas-temporarias.md) | Emergências e Desastres: evento de massa e estruturas temporárias (E6a) | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

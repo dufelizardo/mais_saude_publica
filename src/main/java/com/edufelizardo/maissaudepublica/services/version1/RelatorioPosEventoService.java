@@ -68,6 +68,7 @@ public class RelatorioPosEventoService {
     @Autowired private PlanoContingenciaRepository planoRepository;
     @Autowired private PlanoContingenciaService planoService;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private EventoEspecializadoService especializado;
 
     /** O relatório (sem rascunho, só os números). */
     @Transactional(readOnly = true)
@@ -85,7 +86,7 @@ public class RelatorioPosEventoService {
     public RelatorioPosEventoDto salvar(UUID emergenciaId, RelatorioPosEventoRequestDto dto) {
         controleDeAcesso.exigirAlguma("EMERGENCIA.COORDENAR", EmergenciaService.ATIVAR);
         Emergencia em = emergencia(emergenciaId);
-        if (em.getSituacao() == SituacaoEmergencia.ATIVA) {
+        if (em.getSituacao() == SituacaoEmergencia.ATIVA || em.getSituacao() == SituacaoEmergencia.PLANEJADA) {
             throw new ResourceUnprocessableEntityException("O relatório começa na desmobilização.");
         }
         RelatorioPosEvento r = repository.findByEmergencia_Uuid(emergenciaId).orElse(null);
@@ -199,6 +200,12 @@ public class RelatorioPosEventoService {
         linha(sb, "População afetada", i.getPopulacaoAfetada());
         linha(sb, "Unidades afetadas", i.getUnidadesAfetadas());
         linha(sb, "Leitos indisponíveis", i.getLeitosIndisponiveis());
+        linha(sb, "Estruturas temporárias", i.getEstruturas());
+        linha(sb, "Atendimentos nas estruturas", i.getAtendimentosEstruturas());
+        linha(sb, "Remoções para a rede", i.getRemocoesEstruturas());
+        linha(sb, "Casos graves nas estruturas", i.getCasosGravesEstruturas());
+        linha(sb, "Óbitos nas estruturas", i.getObitosEstruturas());
+        linha(sb, "Público estimado", i.getPublicoEstimado());
         return sb.toString();
     }
 
@@ -221,13 +228,16 @@ public class RelatorioPosEventoService {
         mobs.forEach(m -> porTipo.merge(m.getTipo(), 1, Integer::sum));
         int capacidade = capacidadeRepository.findDaEmergencia(em.getUuid()).stream().mapToInt(AtivacaoCapacidade::getQuantidade).sum();
         AvaliacaoImpacto ultima = avaliacaoRepository.findDaEmergencia(em.getUuid()).stream().findFirst().orElse(null);
+        int[] estruturas = especializado.totais(em);
+        var massa = especializado.eventoMassa(em);
         return new RelatorioPosEventoDto.Indicadores(horas(em.getInicio(), fim), horas(em.getEvento().getOcorridoEm(), em.getInicio()), maximo,
                 Math.max(0, niveis.size() - 1), acoes.size(), concluidas, canceladas, comPrazo.size(), noPrazo,
                 comPrazo.isEmpty() ? null : BigDecimal.valueOf(noPrazo * 100.0 / comPrazo.size()).setScale(1, RoundingMode.HALF_UP).doubleValue(),
                 mobs.size(), (int) mobs.stream().filter(m -> m.getTipo() == TipoMobilizacao.PROFISSIONAL).count(),
                 porTipo.entrySet().stream().map(e -> new RelatorioPosEventoDto.Contagem(e.getKey().name(), e.getValue())).toList(), capacidade,
                 ultima != null ? ultima.getPopulacaoAfetada() : null, ultima != null ? ultima.getUnidadesAfetadas().size() : 0,
-                ultima != null ? ultima.getLeitosIndisponiveis() : null);
+                ultima != null ? ultima.getLeitosIndisponiveis() : null, estruturas[0], estruturas[1], estruturas[2], estruturas[3], estruturas[4],
+                massa != null ? massa.getPublicoEstimado() : null);
     }
 
     private static double horas(Instant de, Instant ate) {

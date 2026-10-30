@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../../pom/ui/vigilancia/emergencias/emergencias_ui_pom.resource
 Resource    ../../../emergencias/desmobilizacao_flow.resource
+Resource    ../../../emergencias/eventos_especializados_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Emergências e desastres (ADR-0156); as bases vêm pela API.
@@ -174,5 +175,54 @@ UI Emergencias - Relatorio Pos Evento
     Wait For Elements State    css=[aria-label="Relatório pós-evento"] >> text=Rascunho    visible
     Click    css=[aria-label="Recomendações do relatório"] >> role=button[name^="Revisar plano"]
     Wait For Elements State    css=[aria-label="Recomendações do relatório"] >> text=/revisão aberta na versão 2/    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Evento De Massa Planejado
+    [Documentation]    Pela tela: o evento planejado ganha os dados do evento e inicia a operação (ADR-0160).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${em}=    Seed Evento De Massa Planejado
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=section.em-detalhe .em-cab .tag >> text="Planejada"    visible
+    Wait For Elements State    role=tab[name=/Planejadas/]    visible
+    Clicar Botao    Dados do evento
+    ${inicio}=    Evaluate    (datetime.datetime.now() + datetime.timedelta(days=2)).strftime('%Y-%m-%dT18:00')    modules=datetime
+    ${fim}=    Evaluate    (datetime.datetime.now() + datetime.timedelta(days=3)).strftime('%Y-%m-%dT02:00')    modules=datetime
+    Fill Text    id=f-es-local    Avenida Central
+    Fill Text    id=f-es-inicio    ${inicio}
+    Fill Text    id=f-es-fim    ${fim}
+    Fill Text    id=f-es-publico    80000
+    Select Options By    id=f-es-risco    value    ALTO
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Evento de massa"] >> text=Avenida Central    visible
+    Wait For Elements State    css=[aria-label="Evento de massa"] >> text=Risco alto    visible
+    Clicar Botao    Iniciar operação
+    Fill Text    id=f-em-justificativa    Abertura dos portões
+    Enviar Gaveta
+    Wait For Elements State    css=section.em-detalhe .em-cab .tag >> text="Ativa"    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Estrutura E Boletim
+    [Documentation]    Pela tela: nova estrutura temporária e o boletim da que está em operação (ADR-0160).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${em}    ${posto}=    Evento De Massa Em Operacao
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=[aria-label="Estruturas temporárias"] >> text=Em operação    visible
+    Click    role=button[name="Boletim de Posto Robot"]
+    Fill Text    id=f-es-atend    50
+    Fill Text    id=f-es-remocoes    2
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Estruturas temporárias"] >> text=50 atendimento(s)    visible
+    Clicar Botao    Nova estrutura
+    Select Options By    id=f-es-tipo    value    TENDA_HIDRATACAO
+    Fill Text    id=f-es-nome    Tenda Robot
+    Fill Text    id=f-es-local-est    Praça da Matriz
+    Select Options By    id=f-es-unidade    value    ${unidade}
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Estruturas temporárias"] >> text=Tenda Robot    visible
+    Click    role=button[name="Abrir Tenda Robot"]
+    Wait For Elements State    role=button[name="Abrir Tenda Robot"]    detached
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

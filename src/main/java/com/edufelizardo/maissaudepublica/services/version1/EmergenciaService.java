@@ -32,6 +32,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EventoEme
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NivelEmergenciaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SugestaoImpactoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.TipoEmergenciaDto;
+import com.edufelizardo.maissaudepublica.models.enuns.PerfilTipoEmergencia;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEventoEmergencial;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoLeito;
@@ -91,6 +92,7 @@ public class EmergenciaService {
     @Autowired private AtivacaoPlanoService ativacao;
     @Autowired private CoordenacaoEmergenciaService coordenacao;
     @Autowired private com.edufelizardo.maissaudepublica.repositories.DesmobilizacaoRepository desmobilizacaoRepository;
+    @Autowired private EventoEspecializadoService especializado;
 
     // ── Catálogos ──────────────────────────────────────────────────────────────────────────────────
 
@@ -109,6 +111,7 @@ public class EmergenciaService {
         }
         TipoEmergencia t = new TipoEmergencia();
         t.setCodigo(codigo);
+        t.setPerfil(PerfilTipoEmergencia.GERAL);
         preencher(t, dto);
         t.setAtivo(dto.getAtivo() == null || dto.getAtivo());
         tipoRepository.save(t);
@@ -137,6 +140,9 @@ public class EmergenciaService {
         t.setNome(dto.getNome().trim());
         t.setCategoria(dto.getCategoria());
         t.setCobrade(texto(dto.getCobrade()));
+        if (dto.getPerfil() != null) {
+            t.setPerfil(dto.getPerfil());
+        }
     }
 
     @Transactional(readOnly = true)
@@ -256,7 +262,8 @@ public class EmergenciaService {
 
     /**
      * Converte o evento em emergência, no nível inicial e com a justificativa (a primeira mudança de nível). Já convertido,
-     * 409; descartado, 422. Sem território, a área do evento e as microáreas que ela atinge.
+     * 409; descartado, 422. Sem território, a área do evento e as microáreas que ela atinge. Planejada (ADR-0160), só no
+     * perfil evento de massa (422): a operação começa depois.
      */
     @Transactional
     public EmergenciaDto converter(UUID eventoId, ConversaoEmergenciaRequestDto dto) {
@@ -268,13 +275,17 @@ public class EmergenciaService {
         if (evento.getSituacao() == SituacaoEventoEmergencial.DESCARTADO) {
             throw new ResourceUnprocessableEntityException("O evento foi descartado; registre outro se a situação mudou.");
         }
+        boolean planejada = Boolean.TRUE.equals(dto.getPlanejada());
+        if (planejada && evento.getTipo().getPerfil() != PerfilTipoEmergencia.EVENTO_DE_MASSA) {
+            throw new ResourceUnprocessableEntityException("Só o evento de massa é planejado; os outros tipos já começam ativos.");
+        }
         NivelEmergencia nivel = nivelAtivo(dto.getNivelId());
         Emergencia em = new Emergencia();
         em.setEvento(evento);
         em.setNome(dto.getNome().trim());
         em.setTipo(evento.getTipo());
         em.setNivel(nivel);
-        em.setSituacao(SituacaoEmergencia.ATIVA);
+        em.setSituacao(planejada ? SituacaoEmergencia.PLANEJADA : SituacaoEmergencia.ATIVA);
         em.setInicio(Instant.now());
         em.setResponsavel(responsavel(dto.getResponsavelMatricula()));
         em.setRegistradoPorCpf(UsuarioAutenticado.cpf());
@@ -285,7 +296,8 @@ public class EmergenciaService {
         evento.setSituacao(SituacaoEventoEmergencial.CONVERTIDO);
         eventoRepository.save(evento);
         ContextoAuditoria.registro(em.getUuid());
-        ContextoAuditoria.detalhe("Emergência ativada no " + nivel.getNome() + ".");
+        ContextoAuditoria.detalhe(planejada ? "Evento de massa planejado, previsto no " + nivel.getNome() + "."
+                : "Emergência ativada no " + nivel.getNome() + ".");
         return detalhe(em);
     }
 
@@ -295,6 +307,7 @@ public class EmergenciaService {
         return lista.stream().map(e -> {
             EmergenciaDto d = resumo(e, avaliacaoRepository.findDaEmergencia(e.getUuid()).stream().findFirst().orElse(null));
             d.setAcoesAtrasadas(coordenacao.atrasadas(e));
+            d.setEventoMassa(especializado.eventoMassa(e));
             return d;
         }).toList();
     }
@@ -328,7 +341,7 @@ public class EmergenciaService {
     @Transactional
     public EmergenciaDto definirTerritorio(UUID uuid, TerritorioEmergenciaRequestDto dto) {
         controleDeAcesso.exigirAlguma(REGISTRAR, ATIVAR);
-        Emergencia em = ativa(uuid);
+        Emergencia em = ativaOuPlanejada(uuid);
         aplicarTerritorio(em, dto.getGeometria(), dto.getMicroareaIds());
         emergenciaRepository.save(em);
         ContextoAuditoria.registro(em.getUuid());
@@ -361,12 +374,13 @@ public class EmergenciaService {
 
     /**
      * Encerra com o motivo. Da ativa, faz as liberações da desmobilização (evento curto); da desmobilização, pede nenhuma ação
-     * aberta (422). Encerrada, 422.
+     * aberta (422); da planejada, cancela o evento (ADR-0160). Encerrada, 422.
      */
     @Transactional
     public EmergenciaDto encerrar(UUID uuid, EncerramentoEmergenciaRequestDto dto) {
         controleDeAcesso.exigirAlguma(ATIVAR);
         Emergencia em = aberta(uuid);
+        boolean planejadaAntes = em.getSituacao() == SituacaoEmergencia.PLANEJADA;
         if (em.getSituacao() == SituacaoEmergencia.EM_DESMOBILIZACAO && coordenacao.acoesAbertas(em) > 0) {
             throw new ResourceUnprocessableEntityException("Há ações em aberto: conclua ou cancele antes de encerrar.");
         }
@@ -376,7 +390,7 @@ public class EmergenciaService {
         em.setMotivoEncerramento(dto.getMotivo().trim());
         emergenciaRepository.save(em);
         ContextoAuditoria.registro(em.getUuid());
-        ContextoAuditoria.detalhe("Emergência encerrada.");
+        ContextoAuditoria.detalhe(planejadaAntes ? "Evento de massa cancelado antes da operação." : "Emergência encerrada.");
         return detalhe(em);
     }
 
@@ -392,12 +406,12 @@ public class EmergenciaService {
         Emergencia em = ativa(uuid);
         int[] liberado = liberar(em, "Desmobilização: " + dto.getJustificativa().trim());
         desmobilizacaoRepository.save(new com.edufelizardo.maissaudepublica.models.Desmobilizacao(null, em, Instant.now(), dto.getResponsavel().trim(),
-                dto.getJustificativa().trim(), liberado[0], liberado[1], liberado[2], liberado[3], UsuarioAutenticado.cpf()));
+                dto.getJustificativa().trim(), liberado[0], liberado[1], liberado[2], liberado[3], liberado[4], UsuarioAutenticado.cpf()));
         em.setSituacao(SituacaoEmergencia.EM_DESMOBILIZACAO);
         emergenciaRepository.save(em);
         ContextoAuditoria.registro(em.getUuid());
         ContextoAuditoria.detalhe("Desmobilização iniciada: " + liberado[0] + " mobilização(ões), " + liberado[2] + " capacidade(s), " + liberado[3]
-                + " plano(s).");
+                + " plano(s), " + liberado[4] + " estrutura(s).");
         return detalhe(em);
     }
 
@@ -416,12 +430,86 @@ public class EmergenciaService {
         return detalhe(em);
     }
 
-    /** As liberações da desmobilização e do encerramento: {mobilizações, profissionais, capacidades, planos}. */
+    /** As liberações da desmobilização e do encerramento: {mobilizações, profissionais, capacidades, planos, estruturas}. */
     private int[] liberar(Emergencia em, String justificativa) {
         int[] mob = coordenacao.concluirMobilizacoes(em);
         int capacidades = coordenacao.desativarCapacidades(em, justificativa);
         int planos = ativacao.desativarTodas(em, justificativa);
-        return new int[]{mob[0], mob[1], capacidades, planos};
+        int estruturas = especializado.desativarTodas(em, justificativa);
+        return new int[]{mob[0], mob[1], capacidades, planos, estruturas};
+    }
+
+    // ── Eventos especializados (E6a, ADR-0160) ──────────────────────────────────────────────────────
+
+    /** Os dados do evento de massa: a emergência planejada ou ativa (422), do perfil evento de massa (422). */
+    @Transactional
+    public EmergenciaDto salvarEventoMassa(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.EventoMassaRequestDto dto) {
+        controleDeAcesso.exigirAlguma(COORDENAR, ATIVAR);
+        Emergencia em = ativaOuPlanejada(uuid);
+        especializado.salvarEventoMassa(em, dto);
+        ContextoAuditoria.registro(em.getUuid());
+        return detalhe(em);
+    }
+
+    /** Inicia a operação da planejada (422), com os dados do evento preenchidos (422): passa a ativa, a contar de agora. */
+    @Transactional
+    public EmergenciaDto iniciarOperacao(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.InicioOperacaoRequestDto dto) {
+        controleDeAcesso.exigirAlguma(ATIVAR);
+        Emergencia em = buscarEmergencia(uuid);
+        if (em.getSituacao() != SituacaoEmergencia.PLANEJADA) {
+            throw new ResourceUnprocessableEntityException("A operação começa da emergência planejada.");
+        }
+        if (!especializado.temEventoMassa(em)) {
+            throw new ResourceUnprocessableEntityException("Preencha os dados do evento de massa antes de iniciar a operação.");
+        }
+        em.setSituacao(SituacaoEmergencia.ATIVA);
+        em.setInicio(Instant.now());
+        emergenciaRepository.save(em);
+        ContextoAuditoria.registro(em.getUuid());
+        ContextoAuditoria.detalhe("Operação iniciada: " + dto.getJustificativa().trim());
+        return detalhe(em);
+    }
+
+    /** Estrutura temporária nova (planejada): a emergência planejada ou ativa (422). */
+    @Transactional
+    public EmergenciaDto novaEstrutura(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.EstruturaTemporariaRequestDto dto) {
+        controleDeAcesso.exigirAlguma(COORDENAR, ATIVAR);
+        Emergencia em = ativaOuPlanejada(uuid);
+        especializado.novaEstrutura(em, dto);
+        ContextoAuditoria.registro(em.getUuid());
+        return detalhe(em);
+    }
+
+    @Transactional
+    public EmergenciaDto atualizarEstrutura(UUID uuid, UUID estruturaId,
+                                           com.edufelizardo.maissaudepublica.models.dtos.version1.request.EstruturaTemporariaRequestDto dto) {
+        controleDeAcesso.exigirAlguma(COORDENAR, ATIVAR);
+        Emergencia em = ativaOuPlanejada(uuid);
+        especializado.atualizarEstrutura(em, estruturaId, dto);
+        ContextoAuditoria.registro(em.getUuid());
+        return detalhe(em);
+    }
+
+    /** Em operação ou desativada; desativar vale também na desmobilização. */
+    @Transactional
+    public EmergenciaDto situacaoDaEstrutura(UUID uuid, UUID estruturaId,
+                                            com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoEstruturaRequestDto dto) {
+        controleDeAcesso.exigirAlguma(COORDENAR, ATIVAR);
+        Emergencia em = aberta(uuid);
+        especializado.situacaoDaEstrutura(em, estruturaId, dto);
+        ContextoAuditoria.registro(em.getUuid());
+        ContextoAuditoria.detalhe("Estrutura temporária " + dto.getSituacao() + ".");
+        return detalhe(em);
+    }
+
+    /** Boletim da estrutura que já operou; vale também na desmobilização (o último dia). */
+    @Transactional
+    public EmergenciaDto boletim(UUID uuid, UUID estruturaId, com.edufelizardo.maissaudepublica.models.dtos.version1.request.BoletimEstruturaRequestDto dto) {
+        controleDeAcesso.exigirAlguma(REGISTRAR);
+        Emergencia em = aberta(uuid);
+        especializado.boletim(em, estruturaId, dto);
+        ContextoAuditoria.registro(em.getUuid());
+        return detalhe(em);
     }
 
     // ── Planos de contingência na emergência (E2, ADR-0157) ─────────────────────────────────────────
@@ -627,6 +715,9 @@ public class EmergenciaService {
 
     private Emergencia ativa(UUID uuid) {
         Emergencia em = buscarEmergencia(uuid);
+        if (em.getSituacao() == SituacaoEmergencia.PLANEJADA) {
+            throw new ResourceUnprocessableEntityException("A emergência está planejada: inicie a operação antes.");
+        }
         if (em.getSituacao() == SituacaoEmergencia.EM_DESMOBILIZACAO) {
             throw new ResourceUnprocessableEntityException("A emergência está em desmobilização: só se conclui o que ficou aberto.");
         }
@@ -636,7 +727,13 @@ public class EmergenciaService {
         return em;
     }
 
-    /** Ativa ou em desmobilização (encerrada, 422). */
+    /** Planejada ou ativa (em desmobilização ou encerrada, 422). */
+    private Emergencia ativaOuPlanejada(UUID uuid) {
+        Emergencia em = buscarEmergencia(uuid);
+        return em.getSituacao() == SituacaoEmergencia.PLANEJADA ? em : ativa(uuid);
+    }
+
+    /** Planejada, ativa ou em desmobilização (encerrada, 422). */
     private Emergencia aberta(UUID uuid) {
         Emergencia em = buscarEmergencia(uuid);
         if (em.getSituacao() == SituacaoEmergencia.ENCERRADA) {
@@ -686,9 +783,11 @@ public class EmergenciaService {
         coordenacao.preencher(d, em, avaliacoes.isEmpty() ? null : avaliacoes.get(0));
         desmobilizacaoRepository.findByEmergencia_Uuid(em.getUuid()).ifPresent(x -> d.setDesmobilizacao(new EmergenciaDto.DesmobilizacaoItem(
                 x.getIniciadaEm(), x.getResponsavel(), x.getJustificativa(), x.getMobilizacoesConcluidas(), x.getProfissionaisLiberados(),
-                x.getCapacidadesDesativadas(), x.getPlanosDesativados())));
+                x.getCapacidadesDesativadas(), x.getPlanosDesativados(), x.getEstruturasDesativadas())));
         d.setPendencias(em.getSituacao() == SituacaoEmergencia.ENCERRADA ? List.of()
                 : coordenacao.pendencias(em, avaliacoes.isEmpty() ? null : avaliacoes.get(0)));
+        d.setEventoMassa(especializado.eventoMassa(em));
+        d.setEstruturas(especializado.estruturas(em));
         return d;
     }
 
@@ -700,7 +799,8 @@ public class EmergenciaService {
                 n.getUuid(), n.getOrdem(), n.getNome(), em.getSituacao(), em.getInicio(), em.getFim(), em.getMotivoEncerramento(),
                 r != null ? r.getMatricula() : null, r != null ? r.getNome() : null, ultima != null ? ultima.getNivelImpacto() : null,
                 ultima != null ? ultima.getAvaliadaEm() : null, null, List.of(), em.getEspinNumero(), em.getEspinData(), em.getDecretoTipo(),
-                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of(), List.of(), 0, List.of(), List.of(), List.of(), null, List.of());
+                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of(), List.of(), 0, List.of(), List.of(), List.of(), null, List.of(),
+                t.getPerfil(), null, List.of());
     }
 
     private static EventoEmergencialDto dto(EventoEmergencial e, UUID emergenciaId) {
@@ -710,7 +810,7 @@ public class EmergenciaService {
     }
 
     private static TipoEmergenciaDto dto(TipoEmergencia t) {
-        return new TipoEmergenciaDto(t.getUuid(), t.getCodigo(), t.getNome(), t.getCategoria(), t.getCobrade(), t.isAtivo());
+        return new TipoEmergenciaDto(t.getUuid(), t.getCodigo(), t.getNome(), t.getCategoria(), t.getCobrade(), t.getPerfil(), t.isAtivo());
     }
 
     private static NivelEmergenciaDto dto(NivelEmergencia n) {

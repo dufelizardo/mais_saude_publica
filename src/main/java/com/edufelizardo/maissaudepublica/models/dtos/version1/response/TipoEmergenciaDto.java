@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.enuns.CategoriaTipoEmergencia;
+import com.edufelizardo.maissaudepublica.models.enuns.PerfilTipoEmergencia;
 import lombok.*;
 
 import java.io.Serial;
@@ -23,5 +24,6 @@ public class TipoEmergenciaDto implements Serializable {
     private String nome;
     private CategoriaTipoEmergencia categoria;
     private String cobrade;
+    private PerfilTipoEmergencia perfil;
     private boolean ativo;
 }

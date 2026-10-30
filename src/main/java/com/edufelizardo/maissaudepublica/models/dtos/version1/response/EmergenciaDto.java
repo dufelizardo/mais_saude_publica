@@ -1,6 +1,11 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.enuns.CategoriaTipoEmergencia;
+import com.edufelizardo.maissaudepublica.models.enuns.NaturezaEventoMassa;
+import com.edufelizardo.maissaudepublica.models.enuns.PerfilTipoEmergencia;
+import com.edufelizardo.maissaudepublica.models.enuns.RiscoEventoMassa;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEstruturaTemporaria;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoEstruturaTemporaria;
 import com.edufelizardo.maissaudepublica.models.enuns.PrioridadeAcaoEmergencial;
 import com.edufelizardo.maissaudepublica.models.enuns.RecursoCapacidade;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoAcaoEmergencial;
@@ -72,6 +77,10 @@ public class EmergenciaDto implements Serializable {
     /** A desmobilização (ADR-0159), quando iniciada, e o que falta para encerrar. */
     private DesmobilizacaoItem desmobilizacao;
     private List<String> pendencias;
+    /** O perfil do tipo, os dados do evento de massa (também na lista) e as estruturas temporárias (ADR-0160; na lista, vazio). */
+    private PerfilTipoEmergencia perfil;
+    private EventoMassaItem eventoMassa;
+    private List<EstruturaItem> estruturas;
 
     /** Microárea do território afetado. */
     @Getter
@@ -313,5 +322,85 @@ public class EmergenciaDto implements Serializable {
         private int profissionaisLiberados;
         private int capacidadesDesativadas;
         private int planosDesativados;
+        private int estruturasDesativadas;
+    }
+
+    /** Os dados do evento de massa. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class EventoMassaItem implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private NaturezaEventoMassa natureza;
+        private String local;
+        private Instant inicioPrevisto;
+        private Instant fimPrevisto;
+        private int publicoEstimado;
+        private Integer publicoMaximo;
+        private String organizador;
+        private String contato;
+        private RiscoEventoMassa risco;
+        private String observacao;
+        private Instant atualizadoEm;
+    }
+
+    /** Uma estrutura temporária, com os boletins (os mais recentes primeiro) e os totais. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class EstruturaItem implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private UUID uuid;
+        private TipoEstruturaTemporaria tipo;
+        private String nome;
+        private String local;
+        private Double latitude;
+        private Double longitude;
+        private UUID unidadeReferenciaId;
+        private String unidadeReferenciaNome;
+        private int leitos;
+        private Integer atendimentosDia;
+        private int ambulancias;
+        private String horario;
+        private SituacaoEstruturaTemporaria situacao;
+        private Instant ativadaEm;
+        private Instant desativadaEm;
+        private String motivoDesativacao;
+        private int atendimentos;
+        private int remocoes;
+        private int casosGraves;
+        private int obitos;
+        private List<Boletim> boletins;
+    }
+
+    /** Um boletim da estrutura. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class Boletim implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private UUID uuid;
+        private LocalDate data;
+        private int atendimentos;
+        private int remocoes;
+        private int casosGraves;
+        private int obitos;
+        private String observacao;
+        private Instant registradoEm;
     }
 }

@@ -41,6 +41,23 @@
   </section>
 }
 
+@if (eventosPlanejados().length) {
+  <section class="ss-alertas" aria-label="Eventos de massa planejados">
+    @for (e of eventosPlanejados().slice(0, 3); track e.uuid) {
+      <article class="ss-alerta ss-alerta--baixa" [attr.aria-label]="'Evento de massa planejado: ' + e.nome">
+        <div>
+          <div class="ss-alerta__titulo">Evento de massa planejado: {{ e.nome }}</div>
+          <div class="ss-alerta__detalhe">{{ e.eventoMassa!.local }} · {{ quando(e.eventoMassa!.inicioPrevisto) }} · {{ e.eventoMassa!.publicoEstimado.toLocaleString('pt-BR') }} pessoas estimadas</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/vigilancia/emergencias" [queryParams]="{ emergencia: e.uuid }">Ver evento</a>
+      </article>
+    }
+    @if (eventosPlanejados().length > 3) {
+      <a class="link-btn" routerLink="/vigilancia/emergencias">e mais {{ eventosPlanejados().length - 3 }} evento(s) planejado(s)</a>
+    }
+  </section>
+}
+
 @if (situacao(); as sit) {
   @if (sit.alertas.length) {
     <section class="ss-alertas" aria-label="Alertas da situação">

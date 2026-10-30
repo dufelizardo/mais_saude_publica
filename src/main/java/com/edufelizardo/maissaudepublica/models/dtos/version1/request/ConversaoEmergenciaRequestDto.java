@@ -30,4 +30,6 @@ public class ConversaoEmergenciaRequestDto implements Serializable {
     private String responsavelMatricula;
     private String geometria;
     private List<UUID> microareaIds;
+    /** Planejada (só no perfil evento de massa, ADR-0160): a operação começa depois. */
+    private Boolean planejada;
 }

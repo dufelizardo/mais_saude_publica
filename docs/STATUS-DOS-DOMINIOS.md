@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-29 (Emergências E5)
+- **Atualizado em:** 2026-10-30 (Emergências E6a)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -53,7 +53,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
-| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3 e E5 feitas (núcleo; contingência; coordenação; desmobilização e relatório); E4 e E6 |
+| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6a feitas (núcleo; contingência; coordenação; desmobilização e relatório; evento de massa e estruturas temporárias); E4 e E6b |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
@@ -70,7 +70,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 |---|---|---|
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 | V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
-| E6 | 27 Emergências | eventos especializados: eventos de massa, epidemias, desastres ambientais, hospital de campanha |
+| E6b | 27 Emergências | painel da epidemia (da Vigilância) e exposição ambiental |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
 | BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
@@ -94,7 +94,7 @@ V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergen
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
-E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6
+E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6a ✅ ──► E6b
 C1 ──► C2 · C4 · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
@@ -685,12 +685,20 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   desmobilização" (libera de uma vez mobilizações, capacidade e planos, bloqueia o que é novo, mostra as pendências);
   encerramento sem ação aberta; relatório pós-evento com os números calculados, o texto da equipe, as recomendações que
   abrem a revisão do plano (E2), finalização e CSV.
+- [x] **E6a · Evento de massa e estruturas temporárias** ([ADR-0160](./adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md)):
+  perfil do tipo (geral, evento de massa, epidemia, desastre ambiental); emergência planejada para o evento de massa,
+  com os dados do evento (natureza, local, período, público, organizador, risco) e o início da operação; estruturas
+  temporárias (posto médico, tenda de hidratação, hospital de campanha como capacidade, ligadas a uma unidade de
+  referência) com os boletins; desativadas na desmobilização; os números no relatório; o evento planejado na Sala de
+  Situação.
 
 **Falta:**
 - [ ] A escolha manual das microáreas na tela (a API aceita a lista).
 - [ ] **E4 · Integração da rede:** redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas,
   pacientes deslocados; Estoque e Transporte quando existirem.
-- [ ] **E6 · Especializados:** eventos de massa, epidemias, desastres ambientais, hospital de campanha como capacidade.
+- [ ] **E6b · Epidemia e desastre ambiental:** painel da epidemia a partir da Vigilância (curva por semana, confirmados,
+  óbitos, na área afetada) e exposição ambiental (meio, agente, população exposta, medidas).
+- [ ] Ambulâncias da estrutura como veículos (depende de Transporte) e hospital de campanha com leitos próprios.
 - [ ] Comunicação de risco à população: feita pelo domínio 28 (comunicado emergencial).
 
 ### 28. Comunicação e Educação em Saúde

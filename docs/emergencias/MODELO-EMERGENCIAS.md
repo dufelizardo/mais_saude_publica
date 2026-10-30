@@ -2,9 +2,10 @@
 
 **Data:** 2026-10-07 (criado)
 **Status:** desenho aprovado na [ADR-0113](../adr/0113-emergencias-e-desastres.md). **As E1 (núcleo), E2 (contingência),
-E3 (coordenação) e E5 (desmobilização e relatório) estão implementadas** nas [ADR-0156](../adr/0156-emergencias-nucleo.md),
-[ADR-0157](../adr/0157-emergencias-contingencia.md), [ADR-0158](../adr/0158-emergencias-coordenacao.md) e
-[ADR-0159](../adr/0159-emergencias-desmobilizacao-e-relatorio.md); a E4 e a E6 vêm depois (seção 17).
+E3 (coordenação), E5 (desmobilização e relatório) e E6a (evento de massa e estruturas temporárias) estão implementadas**
+nas [ADR-0156](../adr/0156-emergencias-nucleo.md), [ADR-0157](../adr/0157-emergencias-contingencia.md),
+[ADR-0158](../adr/0158-emergencias-coordenacao.md), [ADR-0159](../adr/0159-emergencias-desmobilizacao-e-relatorio.md) e
+[ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md); a E4 e a E6b vêm depois (seção 17).
 
 O domínio é uma **camada de coordenação extraordinária**, ativada quando um evento ultrapassa a operação normal da
 rede. Não substitui Vigilância, Regulação, Estoque, Transporte nem a capacidade da rede.
@@ -256,7 +257,10 @@ O surto pode ser a origem do evento emergencial.
 
 - **Eventos de massa** (carnaval, show, jogo, festival, manifestação, evento religioso) são um **tipo de emergência
   planejada**, com público estimado, local, período, postos de atendimento, ambulâncias e plano de contingência. Ficam
-  para a fatia E6, não como domínio separado.
+  para a fatia E6, não como domínio separado. **Feito na E6a** ([ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md)):
+  o perfil do tipo diz o que é próprio; a emergência do evento de massa nasce **planejada** e a operação começa depois;
+  postos, tendas de hidratação e hospital de campanha são **estruturas temporárias** ligadas a uma unidade de referência
+  (capacidade, não unidade), com boletins.
 - **COE:** o domínio dá suporte ao Centro de Operações de Emergências, com quem coordena e as decisões e ações
   registradas. **Não é** um sistema de comando e controle militarizado.
 - **Defesa Civil:** o Mais Saúde Pública não a substitui. É o sistema da **resposta em saúde**.
@@ -317,7 +321,8 @@ EVENTO → DETECÇÃO E REGISTRO → AVALIAÇÃO PRELIMINAR ─┬─ NORMAL ─
 | **E3** · mobilização ✅ ([ADR-0158](../adr/0158-emergencias-coordenacao.md)) | mobilização (com a exceção da Escala), capacidade emergencial, ações, unidade afetada pela situação operacional | E2 |
 | **E4** · integração da rede | redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas, pacientes deslocados; Estoque e Transporte quando existirem | E3 |
 | **E5** · pós-evento ✅ ([ADR-0159](../adr/0159-emergencias-desmobilizacao-e-relatorio.md)) | desmobilização, relatório, lições, revisão do plano, indicadores | E3 |
-| **E6** · especializados | eventos de massa, epidemias, desastres ambientais, hospital de campanha como capacidade | E5 |
+| **E6a** · evento de massa e estruturas ✅ ([ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md)) | perfil do tipo, emergência planejada, dados do evento de massa, estruturas temporárias (hospital de campanha como capacidade) e boletins | E5 |
+| **E6b** · epidemia e desastre ambiental | painel da epidemia a partir da Vigilância e exposição ambiental | E6a |
 
 **Fora do escopo agora:**
 - sistema da Defesa Civil;
