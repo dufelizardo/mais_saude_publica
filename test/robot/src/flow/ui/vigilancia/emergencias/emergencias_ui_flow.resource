@@ -1,7 +1,7 @@
 *** Settings ***
 Library     String
 Resource    ../../../../pom/ui/vigilancia/emergencias/emergencias_ui_pom.resource
-Resource    ../../../emergencias/coordenacao_flow.resource
+Resource    ../../../emergencias/desmobilizacao_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Emergências e desastres (ADR-0156); as bases vêm pela API.
@@ -133,5 +133,46 @@ UI Emergencias - Mobilizar Profissional
     Fill Text    id=f-co-matricula    ${matricula}
     Enviar Gaveta
     Wait For Elements State    css=[aria-label="Mobilizações"] >> text=Autoriza turno na Escala    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Desmobilizar
+    [Documentation]    Pela tela: inicia a desmobilização, vê a pendência, cancela as ações restantes e encerra.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${em}    ${plano}=    Seed Emergencia Com Plano Ativo
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=section.em-detalhe    visible
+    Clicar Botao    Iniciar desmobilização
+    Fill Text    id=f-em-responsavel-desmob    Secretário de Saúde
+    Fill Text    id=f-em-justificativa    Águas baixando
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Desmobilização"]    visible
+    Wait For Elements State    css=[aria-label="Pendências da desmobilização"] >> text=/em aberto/    visible
+    Clicar Botao    Cancelar ações restantes
+    Fill Text    id=f-em-motivo    Desnecessárias após a cheia
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Pendências da desmobilização"]    detached
+    Click    css=section.em-detalhe >> role=button[name="Encerrar"]
+    Fill Text    id=f-em-motivo    Rede normalizada
+    Enviar Gaveta
+    Wait For Elements State    css=section.em-detalhe >> text=Encerrada    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Relatorio Pos Evento
+    [Documentation]    Na desmobilização: os números, o rascunho com a recomendação e a revisão do plano.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${em}    ${plano}=    Seed Emergencia Com Plano Ativo
+    Desmobilizar    ${em}
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=[aria-label="Números do evento"]    visible
+    Fill Text    id=f-rp-resumo    Cheia de três dias na região norte
+    Click    role=button[name="Adicionar recomendação"]
+    Fill Text    css=[aria-label="Recomendação 1"]    Abrir o abrigo já no nível 1
+    Select Options By    css=[aria-label="Plano da recomendação 1"]    value    ${plano}
+    Click    role=button[name="Salvar rascunho"]
+    Wait For Elements State    css=[aria-label="Relatório pós-evento"] >> text=Rascunho    visible
+    Click    css=[aria-label="Recomendações do relatório"] >> role=button[name^="Revisar plano"]
+    Wait For Elements State    css=[aria-label="Recomendações do relatório"] >> text=/revisão aberta na versão 2/    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -12,6 +12,7 @@ import {
   NIVEIS_IMPACTO,
   NivelEmergenciaDto,
   NivelImpacto,
+  SITUACOES_EMERGENCIA,
   PlanoAtivoDto,
   PlanoContingenciaDto,
   TIPOS_REGISTRO_ATIVACAO,
@@ -30,13 +31,14 @@ import { CapacidadeEmergencial } from './capacidade-emergencial';
 import { CatalogosEmergencia } from './catalogos-emergencia';
 import { CoordenacaoEmergencia } from './coordenacao-emergencia';
 import { PlanosContingencia } from './planos-contingencia';
+import { RelatorioPosEvento } from './relatorio-pos-evento';
 
-type Aba = 'ativas' | 'eventos' | 'encerradas' | 'planos' | 'capacidade' | 'catalogos';
+type Aba = 'ativas' | 'desmobilizacao' | 'eventos' | 'encerradas' | 'planos' | 'capacidade' | 'catalogos';
 type Gaveta =
   | { tipo: 'evento' }
   | { tipo: 'descartar'; evento: EventoEmergencialDto }
   | { tipo: 'converter'; evento: EventoEmergencialDto }
-  | { tipo: 'nivel' | 'territorio' | 'referencias' | 'avaliacao' | 'encerrar' | 'ativarPlano'; emergencia: EmergenciaDto }
+  | { tipo: 'nivel' | 'territorio' | 'referencias' | 'avaliacao' | 'encerrar' | 'ativarPlano' | 'desmobilizar' | 'cancelarRestantes'; emergencia: EmergenciaDto }
   | { tipo: 'desativarPlano'; emergencia: EmergenciaDto; plano: PlanoAtivoDto };
 
 /**
@@ -46,7 +48,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-emergencias',
-  imports: [Drawer, Mapa, PlanosContingencia, CatalogosEmergencia, CapacidadeEmergencial, CoordenacaoEmergencia],
+  imports: [Drawer, Mapa, PlanosContingencia, CatalogosEmergencia, CapacidadeEmergencial, CoordenacaoEmergencia, RelatorioPosEvento],
   template: `
     <header class="page-head">
       <div>
@@ -63,6 +65,7 @@ type Gaveta =
     <div class="tabs" role="tablist" aria-label="Seções das emergências">
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'ativas'" (click)="aba.set('ativas')">Emergências ativas <span class="cnt">{{ ativas().length }}</span></button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'eventos'" (click)="aba.set('eventos')">Eventos <span class="cnt">{{ eventosAbertos() }}</span></button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'desmobilizacao'" (click)="aba.set('desmobilizacao')">Em desmobilização@if (emDesmobilizacao().length) { <span class="cnt">{{ emDesmobilizacao().length }}</span> }</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'encerradas'" (click)="aba.set('encerradas')">Encerradas</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'planos'" (click)="aba.set('planos')">Planos de contingência</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'capacidade'" (click)="aba.set('capacidade')">Capacidade emergencial</button>
@@ -101,10 +104,10 @@ type Gaveta =
       </div>
     } @else {
       <div class="tbl-wrap card">
-        <table [attr.aria-label]="aba() === 'ativas' ? 'Emergências ativas' : 'Emergências encerradas'">
+        <table [attr.aria-label]="aba() === 'ativas' ? 'Emergências ativas' : aba() === 'desmobilizacao' ? 'Emergências em desmobilização' : 'Emergências encerradas'">
           <thead><tr><th scope="col">Emergência</th><th scope="col">Nível</th><th scope="col">Início</th><th scope="col">Último impacto</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
           <tbody>
-            @for (e of (aba() === 'ativas' ? ativas() : encerradas()); track e.uuid) {
+            @for (e of (aba() === 'ativas' ? ativas() : aba() === 'desmobilizacao' ? emDesmobilizacao() : encerradas()); track e.uuid) {
               <tr [class.is-selected]="detalhe()?.uuid === e.uuid">
                 <td><span class="cell-main">{{ e.nome }}</span><span class="cell-sub">{{ e.tipoNome }}@if (e.cobrade) { · COBRADE {{ e.cobrade }} }</span></td>
                 <td><span [class]="'tag tag--' + classe(e.nivelOrdem)">{{ e.nivelNome }}</span></td>
@@ -112,7 +115,7 @@ type Gaveta =
                 <td>@if (e.acoesAtrasadas) { <span class="tag tag--alert">{{ e.acoesAtrasadas }} ação(ões) atrasada(s)</span> }@if (e.ultimoImpacto) { <span [class]="'tag tag--' + impactos[e.ultimoImpacto].classe">{{ impactos[e.ultimoImpacto].rotulo }}</span> } @else { <span class="cell-sub">sem avaliação</span> }</td>
                 <td class="row-actions"><button type="button" class="btn btn--ghost btn--sm" (click)="selecionar(e.uuid)" [attr.aria-label]="'Abrir ' + e.nome">Abrir</button></td>
               </tr>
-            } @empty { <tr><td colspan="5" class="cell-sub">{{ aba() === 'ativas' ? 'Nenhuma emergência ativa.' : 'Nenhuma emergência encerrada.' }}</td></tr> }
+            } @empty { <tr><td colspan="5" class="cell-sub">{{ aba() === 'ativas' ? 'Nenhuma emergência ativa.' : aba() === 'desmobilizacao' ? 'Nenhuma emergência em desmobilização.' : 'Nenhuma emergência encerrada.' }}</td></tr> }
           </tbody>
         </table>
       </div>
@@ -125,7 +128,7 @@ type Gaveta =
             <h2 class="em-titulo">{{ d.nome }}</h2>
             <p class="cell-sub">{{ d.tipoNome }}@if (d.cobrade) { · COBRADE {{ d.cobrade }} } · desde {{ dataHora(d.inicio) }}@if (d.responsavelNome) { · responsável {{ d.responsavelNome }} }</p>
             <span [class]="'tag tag--' + classe(d.nivelOrdem)">{{ d.nivelNome }}</span>
-            <span [class]="'tag tag--' + (d.situacao === 'ATIVA' ? 'alert' : 'muted')">{{ d.situacao === 'ATIVA' ? 'Ativa' : 'Encerrada' }}</span>
+            <span [class]="'tag tag--' + situacoesEmergencia[d.situacao].classe">{{ situacoesEmergencia[d.situacao].rotulo }}</span>
             @if (d.ultimoImpacto) { <span [class]="'tag tag--' + impactos[d.ultimoImpacto].classe">Impacto {{ impactos[d.ultimoImpacto].rotulo.toLowerCase() }}</span> }
           </div>
           @if (d.situacao === 'ATIVA') {
@@ -135,11 +138,29 @@ type Gaveta =
               @if (pode('EMERGENCIA.ATIVAR')) {
                 <button type="button" class="btn btn--ghost btn--sm" (click)="abrirNivel(d)">Mudar nível</button>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="abrirReferencias(d)">ESPIN e decreto</button>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="abrir({ tipo: 'desmobilizar', emergencia: d })">Iniciar desmobilização</button>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEncerrar(d)">Encerrar</button>
               }
             </div>
           }
+          @if (d.situacao === 'EM_DESMOBILIZACAO') {
+            <div class="row-actions" style="flex-wrap: wrap;">
+              @if (pode('EMERGENCIA.COORDENAR', 'EMERGENCIA.ATIVAR') && acoesAbertas(d)) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrir({ tipo: 'cancelarRestantes', emergencia: d })">Cancelar ações restantes</button> }
+              @if (pode('EMERGENCIA.ATIVAR')) { <button type="button" class="btn btn--sm" (click)="abrirEncerrar(d)" [disabled]="acoesAbertas(d) > 0">Encerrar</button> }
+            </div>
+          }
         </div>
+        @if (d.desmobilizacao; as dm) {
+          <div class="box box--info em-desmob" aria-label="Desmobilização">
+            <div><strong>Desmobilização iniciada em {{ dataHora(dm.iniciadaEm) }} por {{ dm.responsavel }}.</strong> {{ dm.justificativa }}.
+              Liberados: {{ dm.mobilizacoesConcluidas }} mobilização(ões) ({{ dm.profissionaisLiberados }} profissional(is)), {{ dm.capacidadesDesativadas }} capacidade(s), {{ dm.planosDesativados }} plano(s).</div>
+          </div>
+        }
+        @if (d.pendencias.length && d.situacao === 'EM_DESMOBILIZACAO') {
+          <ul class="eq-prof em-pendencias" aria-label="Pendências da desmobilização">
+            @for (p of d.pendencias; track $index) { <li><span class="cell-main">{{ p }}</span></li> }
+          </ul>
+        }
         @if (d.motivoEncerramento) { <div class="box box--info"><div>Encerrada: {{ d.motivoEncerramento }}</div></div> }
 
         <div class="em-planos">
@@ -172,6 +193,9 @@ type Gaveta =
         </div>
 
         <app-coordenacao-emergencia [emergencia]="d" [podeCoordenar]="pode('EMERGENCIA.COORDENAR')" (alterada)="aposCoordenacao($event)" />
+        @if (d.situacao !== 'ATIVA') {
+          <app-relatorio-pos-evento [emergencia]="d" [podeEscrever]="pode('EMERGENCIA.COORDENAR', 'EMERGENCIA.ATIVAR')" [podeFinalizar]="pode('EMERGENCIA.ATIVAR')" [podeRevisarPlano]="pode('CONTINGENCIA.GERENCIAR')" />
+        }
 
         <div class="em-grade">
           <div>
@@ -342,7 +366,15 @@ type Gaveta =
               }
               @case ('encerrar') {
                 <div class="dw-field"><label for="f-em-motivo">Motivo do encerramento <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-motivo" rows="3" maxlength="1000" [value]="campo()['motivo'] ?? ''" (input)="set('motivo', $event)"></textarea></div>
-                <div class="box box--info"><div>A desmobilização dos recursos e o relatório pós-evento chegam na fatia E5.</div></div>
+                @if (g.emergencia.situacao === 'ATIVA') { <div class="box box--info"><div>Encerrar direto conclui as mobilizações e desativa a capacidade e os planos. Para controlar o retorno passo a passo, use "Iniciar desmobilização".</div></div> }
+              }
+              @case ('desmobilizar') {
+                <div class="box box--info"><div>Conclui as mobilizações em aberto (a Escala deixa de aceitar turnos novos sem lotação), desativa a capacidade emergencial e os planos. Depois, só se conclui o que ficou aberto e se escreve o relatório pós-evento.</div></div>
+                <div class="dw-field"><label for="f-em-responsavel-desmob">Responsável <span class="req" aria-hidden="true">*</span></label><input id="f-em-responsavel-desmob" type="text" maxlength="200" [value]="campo()['responsavel'] ?? ''" (input)="set('responsavel', $event)" placeholder="Ex.: Secretário de Saúde" /></div>
+                <div class="dw-field"><label for="f-em-justificativa">Justificativa <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-justificativa" rows="3" maxlength="1000" [value]="campo()['justificativa'] ?? ''" (input)="set('justificativa', $event)"></textarea></div>
+              }
+              @case ('cancelarRestantes') {
+                <div class="dw-field"><label for="f-em-motivo">Motivo <span class="req" aria-hidden="true">*</span></label><input id="f-em-motivo" type="text" maxlength="500" [value]="campo()['motivo'] ?? ''" (input)="set('motivo', $event)" /></div>
               }
             }
           </div>
@@ -360,6 +392,8 @@ type Gaveta =
     .dw-field .em-check input { width: auto; min-height: 0; padding: 0; }
     .em-planos { margin-bottom: var(--s-4); }
     .em-acoes { margin: var(--s-1) 0; padding-left: var(--s-4); }
+    .em-desmob { margin-bottom: var(--s-3); }
+    .em-pendencias { margin-bottom: var(--s-3); }
   `,
 })
 export class Emergencias {
@@ -395,6 +429,8 @@ export class Emergencias {
   protected readonly unidadesMarcadas = signal<Set<string>>(new Set());
 
   protected readonly ativas = computed(() => this.emergencias().filter((e) => e.situacao === 'ATIVA'));
+  protected readonly emDesmobilizacao = computed(() => this.emergencias().filter((e) => e.situacao === 'EM_DESMOBILIZACAO'));
+  protected readonly situacoesEmergencia = SITUACOES_EMERGENCIA;
   protected readonly encerradas = computed(() => this.emergencias().filter((e) => e.situacao === 'ENCERRADA'));
   protected readonly eventosAbertos = computed(() => this.eventos().filter((e) => e.situacao === 'REGISTRADO' || e.situacao === 'MONITORADO').length);
   protected readonly tiposAtivos = computed(() => this.tipos().filter((t) => t.ativo));
@@ -424,6 +460,15 @@ export class Emergencias {
   protected pode(...permissoes: string[]): boolean {
     const a = this.acesso();
     return !a.restrito || permissoes.some((p) => a.permissoes.has(p));
+  }
+
+  /** A aba da lista em que a emergência aparece. */
+  private abaDa(d: EmergenciaDto): Aba {
+    return d.situacao === 'ATIVA' ? 'ativas' : d.situacao === 'EM_DESMOBILIZACAO' ? 'desmobilizacao' : 'encerradas';
+  }
+
+  protected acoesAbertas(d: EmergenciaDto): number {
+    return d.acoes.filter((a) => a.situacao === 'PENDENTE' || a.situacao === 'EM_EXECUCAO').length;
   }
 
   protected aposCoordenacao(d: EmergenciaDto): void {
@@ -472,6 +517,8 @@ export class Emergencias {
       case 'referencias': return 'ESPIN e decreto';
       case 'avaliacao': return 'Avaliação de impacto';
       case 'ativarPlano': return 'Ativar plano de contingência';
+      case 'desmobilizar': return 'Iniciar a desmobilização';
+      case 'cancelarRestantes': return 'Cancelar as ações restantes';
       case 'desativarPlano': return 'Desativar o plano';
       default: return 'Encerrar a emergência';
     }
@@ -543,7 +590,7 @@ export class Emergencias {
     this.service.emergencia(uuid).subscribe({
       next: (d) => {
         this.detalhe.set(d);
-        if (d.situacao === 'ENCERRADA' && this.aba() === 'ativas') this.aba.set('encerradas');
+        if (['ativas', 'desmobilizacao', 'encerradas'].includes(this.aba())) this.aba.set(this.abaDa(d));
       },
       error: (x: HttpErrorResponse) => this.erro.set(mensagem(x)),
     });
@@ -585,6 +632,14 @@ export class Emergencias {
           decretoNumero: t('decretoNumero'), decretoData: t('decretoData'),
         });
         break;
+      case 'desmobilizar':
+        if (!t('responsavel') || !t('justificativa')) falta = 'Informe o responsável e a justificativa.';
+        req = this.service.desmobilizar(g.emergencia.uuid, t('responsavel') ?? '', t('justificativa') ?? '');
+        break;
+      case 'cancelarRestantes':
+        if (!t('motivo')) falta = 'Informe o motivo.';
+        req = this.service.cancelarAcoesRestantes(g.emergencia.uuid, t('motivo') ?? '');
+        break;
       case 'ativarPlano':
         if (!t('planoId') || !t('autoridade') || !t('justificativa')) falta = 'Escolha o plano e informe a autoridade e a justificativa.';
         req = this.service.ativarPlano(g.emergencia.uuid, c['planoId'], t('autoridade') ?? '', t('justificativa') ?? '');
@@ -617,7 +672,7 @@ export class Emergencias {
         const d = r as EmergenciaDto;
         if (d && 'nivelOrdem' in d) {
           this.detalhe.set(d);
-          this.aba.set(d.situacao === 'ATIVA' ? 'ativas' : 'encerradas');
+          this.aba.set(this.abaDa(d));
         }
         this.carregar();
       },

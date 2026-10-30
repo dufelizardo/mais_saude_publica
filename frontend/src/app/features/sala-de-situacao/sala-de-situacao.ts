@@ -320,7 +320,7 @@ export class SalaDeSituacao {
     this.service.situacao(u).pipe(catchError(() => of(null))).subscribe((s) => this.situacao.set(s));
     this.service.ocupacao(u).pipe(catchError(() => of(null))).subscribe((o) => this.ocupacao.set(o));
     this.service.escala(u).pipe(catchError(() => of([]))).subscribe((l) => this.escala.set(l));
-    this.emergenciaService.emergencias('ATIVA').pipe(catchError(() => of([]))).subscribe((l) => this.emergencias.set(l));
+    this.emergenciaService.emergencias().pipe(catchError(() => of([]))).subscribe((l) => this.emergencias.set(l.filter((e) => e.situacao !== 'ENCERRADA')));
   }
 }
 

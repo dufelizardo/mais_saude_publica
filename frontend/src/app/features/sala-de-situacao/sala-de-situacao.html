@@ -27,9 +27,9 @@
 @if (emergencias().length) {
   <section class="ss-alertas" aria-label="Emergências ativas">
     @for (e of emergencias().slice(0, 3); track e.uuid) {
-      <article class="ss-alerta ss-alerta--alta" [attr.aria-label]="'Emergência ativa: ' + e.nome">
+      <article [class]="'ss-alerta ss-alerta--' + (e.situacao === 'EM_DESMOBILIZACAO' ? 'media' : 'alta')" [attr.aria-label]="(e.situacao === 'EM_DESMOBILIZACAO' ? 'Emergência em desmobilização: ' : 'Emergência ativa: ') + e.nome">
         <div>
-          <div class="ss-alerta__titulo">Emergência ativa: {{ e.nome }} <span [class]="'tag tag--' + classeDoNivel(e.nivelOrdem)">{{ e.nivelNome }}</span></div>
+          <div class="ss-alerta__titulo">{{ e.situacao === 'EM_DESMOBILIZACAO' ? 'Emergência em desmobilização' : 'Emergência ativa' }}: {{ e.nome }} <span [class]="'tag tag--' + classeDoNivel(e.nivelOrdem)">{{ e.nivelNome }}</span></div>
           <div class="ss-alerta__detalhe">{{ e.tipoNome }} · desde {{ desde(e.inicio) }}@if (e.acoesAtrasadas) { · {{ e.acoesAtrasadas }} ação(ões) atrasada(s) }</div>
         </div>
         <a class="btn btn--ghost btn--sm" routerLink="/vigilancia/emergencias" [queryParams]="{ emergencia: e.uuid }">Ver emergência</a>

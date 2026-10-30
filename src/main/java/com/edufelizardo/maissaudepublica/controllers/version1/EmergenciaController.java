@@ -27,6 +27,12 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Territorio
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.TipoEmergenciaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CapacidadeEmergencialDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EmergenciaDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.RelatorioPosEventoDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CancelamentoAcoesRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.DesmobilizacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RelatorioPosEventoRequestDto;
+import org.springframework.http.HttpHeaders;
+import java.nio.charset.StandardCharsets;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EventoEmergencialDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NivelEmergenciaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PlanoContingenciaDto;
@@ -36,6 +42,7 @@ import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoEventoEmergencial;
 import com.edufelizardo.maissaudepublica.services.version1.CapacidadeEmergencialService;
 import com.edufelizardo.maissaudepublica.services.version1.EmergenciaService;
+import com.edufelizardo.maissaudepublica.services.version1.RelatorioPosEventoService;
 import com.edufelizardo.maissaudepublica.services.version1.PlanoContingenciaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -52,7 +59,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping(value = "/api/v1/")
 @Tag(name = "Emergências e Desastres", description = "Evento emergencial, emergência com nível e território, avaliação de impacto "
-        + "plano de contingência, ações, mobilização e capacidade (ver as ADRs 0156 a 0158).")
+        + "plano de contingência, coordenação, desmobilização e relatório pós-evento (ver as ADRs 0156 a 0159).")
 public class EmergenciaController {
 
     private static final String TAG = "Emergências e Desastres";
@@ -65,6 +72,9 @@ public class EmergenciaController {
 
     @Autowired
     private CapacidadeEmergencialService capacidadeService;
+
+    @Autowired
+    private RelatorioPosEventoService relatorioService;
 
     // ── Catálogos ──
 
@@ -391,5 +401,70 @@ public class EmergenciaController {
     @ApiErrorResponsesMutacao
     public ResponseEntity<CapacidadeEmergencialDto> atualizarCapacidade(@PathVariable UUID uuid, @Valid @RequestBody CapacidadeEmergencialRequestDto dto) {
         return ResponseEntity.ok(capacidadeService.atualizar(uuid, dto));
+    }
+
+    // ── Desmobilização e relatório pós-evento (E5, ADR-0159) ──
+
+    @RequerPermissao({"EMERGENCIA.ATIVAR"})
+    @PostMapping(value = "emergencia/{uuid}/desmobilizacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Inicia a desmobilização", description = "Da ativa (422): conclui as mobilizações, desativa capacidade e planos e registra o que "
+            + "foi liberado; daí em diante não entra ação, mobilização nem capacidade nova.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> desmobilizar(@PathVariable UUID uuid, @Valid @RequestBody DesmobilizacaoRequestDto dto) {
+        return ResponseEntity.ok(service.iniciarDesmobilizacao(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR", "EMERGENCIA.ATIVAR"})
+    @PostMapping(value = "emergencia/{uuid}/acoes-restantes/cancelamento", produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Cancela as ações restantes", description = "Na desmobilização, com o motivo; nenhuma aberta ou fora dela, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> cancelarRestantes(@PathVariable UUID uuid, @Valid @RequestBody CancelamentoAcoesRequestDto dto) {
+        return ResponseEntity.ok(service.cancelarAcoesRestantes(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @GetMapping(value = "emergencia/{uuid}/relatorio", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Relatório pós-evento", description = "O texto (sem rascunho, vazio) e os números calculados do evento.", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<RelatorioPosEventoDto> relatorio(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(relatorioService.buscar(uuid));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR", "EMERGENCIA.ATIVAR"})
+    @PutMapping(value = "emergencia/{uuid}/relatorio", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Rascunho do relatório", description = "Na desmobilização ou encerrada (422); finalizado, 422; plano não usado, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<RelatorioPosEventoDto> salvarRelatorio(@PathVariable UUID uuid, @Valid @RequestBody RelatorioPosEventoRequestDto dto) {
+        return ResponseEntity.ok(relatorioService.salvar(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.ATIVAR"})
+    @PostMapping(value = "emergencia/{uuid}/relatorio/finalizacao", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Finaliza o relatório", description = "Com a emergência encerrada e o resumo (422); finalizado não muda.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<RelatorioPosEventoDto> finalizarRelatorio(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(relatorioService.finalizar(uuid));
+    }
+
+    @RequerPermissao({"CONTINGENCIA.GERENCIAR"})
+    @PostMapping(value = "emergencia/{uuid}/relatorio/recomendacao/{recomendacaoId}/revisao-plano", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Revisa o plano da recomendação", description = "A versão vigente vira rascunho novo, ligado à recomendação; já gerada, 409.",
+            tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<RelatorioPosEventoDto> revisarPlanoDaRecomendacao(@PathVariable UUID uuid, @PathVariable UUID recomendacaoId) {
+        return ResponseEntity.ok(relatorioService.revisarPlano(uuid, recomendacaoId));
+    }
+
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @GetMapping(value = "emergencia/{uuid}/relatorio.csv", produces = "text/csv")
+    @Operation(summary = "Números do relatório em CSV", description = "Separado por ponto e vírgula, para a planilha.", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<byte[]> relatorioCsv(@PathVariable UUID uuid) {
+        byte[] corpo = ("\uFEFF" + relatorioService.csv(uuid)).getBytes(StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"relatorio-pos-evento.csv\"")
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .body(corpo);
     }
 }

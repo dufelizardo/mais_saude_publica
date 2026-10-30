@@ -64,7 +64,7 @@ type Gaveta =
                 <td class="mono">{{ a.prazo ? dataHora(a.prazo) : '—' }}@if (a.atrasada) { <span class="tag tag--alert">Atrasada</span> }</td>
                 <td><span [class]="'tag tag--' + situacoesAcao[a.situacao].classe">{{ situacoesAcao[a.situacao].rotulo }}</span></td>
                 <td class="row-actions">
-                  @if (ativa() && podeCoordenar() && (a.situacao === 'PENDENTE' || a.situacao === 'EM_EXECUCAO')) {
+                  @if (aberta() && podeCoordenar() && (a.situacao === 'PENDENTE' || a.situacao === 'EM_EXECUCAO')) {
                     @if (a.situacao === 'PENDENTE') { <button type="button" class="link-btn" (click)="abrir({ tipo: 'situacaoAcao', acao: a, situacao: 'EM_EXECUCAO' })" [attr.aria-label]="'Iniciar: ' + a.descricao">Iniciar</button> }
                     <button type="button" class="link-btn" (click)="abrir({ tipo: 'situacaoAcao', acao: a, situacao: 'CONCLUIDA' })" [attr.aria-label]="'Concluir: ' + a.descricao">Concluir</button>
                     <button type="button" class="link-btn" (click)="abrir({ tipo: 'situacaoAcao', acao: a, situacao: 'CANCELADA' })" [attr.aria-label]="'Cancelar: ' + a.descricao">Cancelar</button>
@@ -90,7 +90,7 @@ type Gaveta =
                 <span class="cell-main">{{ tipos[m.tipo] }}: {{ m.recurso }}@if (m.quantidade) { · {{ m.quantidade }} } <span [class]="'tag tag--' + situacoesMob[m.situacao].classe">{{ situacoesMob[m.situacao].rotulo }}</span>@if (m.autorizaEscala) { <span class="tag tag--ok">Autoriza turno na Escala</span> }</span>
                 <span class="cell-sub">@if (m.origemNome) { {{ m.origemNome }} → }{{ m.destinoNome }} · desde {{ data(m.inicio) }}@if (m.fim) { até {{ data(m.fim) }} }@if (m.responsavel) { · {{ m.responsavel }} }@if (m.transferenciaId) { · transferência da Farmácia ({{ m.transferenciaStatus }}) }@if (m.motivoCancelamento) { · {{ m.motivoCancelamento }} }</span>
               </span>
-              @if (ativa() && podeCoordenar() && !m.transferenciaId && (m.situacao === 'SOLICITADA' || m.situacao === 'EM_ANDAMENTO')) {
+              @if (aberta() && podeCoordenar() && !m.transferenciaId && (m.situacao === 'SOLICITADA' || m.situacao === 'EM_ANDAMENTO')) {
                 <span class="row-actions">
                   @if (m.situacao === 'SOLICITADA') { <button type="button" class="link-btn" (click)="abrir({ tipo: 'situacaoMobilizacao', mob: m, situacao: 'EM_ANDAMENTO' })" [attr.aria-label]="'Andamento: ' + m.recurso">Em andamento</button> }
                   @if (m.tipo === 'MEDICAMENTO') { <button type="button" class="link-btn" (click)="abrir({ tipo: 'transferencia', mob: m })" [attr.aria-label]="'Ligar transferência: ' + m.recurso">Ligar transferência</button> }
@@ -254,6 +254,8 @@ export class CoordenacaoEmergencia {
   protected readonly recursos = RECURSOS_CAPACIDADE;
 
   protected readonly ativa = computed(() => this.emergencia().situacao === 'ATIVA');
+  /** Ativa ou em desmobilização: o que ficou aberto ainda se conclui (ADR-0159). */
+  protected readonly aberta = computed(() => this.emergencia().situacao !== 'ENCERRADA');
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly capacidades = signal<CapacidadeEmergencialDto[]>([]);
   protected readonly capacidadesDisponiveis = computed(() => this.capacidades().filter((c) => c.ativa && c.emergencial - c.ativadaAgora > 0));
