@@ -117,5 +117,11 @@ public class RelatorioPosEventoDto implements Serializable {
         private int casosGravesEstruturas;
         private int obitosEstruturas;
         private Integer publicoEstimado;
+        /** Na epidemia, as notificações do agravo; no desastre ambiental, as exposições e a maior população exposta (ADR-0161). */
+        private Integer casosNotificados;
+        private Integer casosConfirmados;
+        private Integer obitosAgravo;
+        private int exposicoes;
+        private Integer populacaoExpostaMaxima;
     }
 }

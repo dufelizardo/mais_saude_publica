@@ -141,6 +141,10 @@ export interface EmergenciaDto {
   perfil: PerfilTipoEmergencia;
   eventoMassa: EventoMassaDto | null;
   estruturas: EstruturaTemporariaDto[];
+  /** O agravo da epidemia e as exposições ambientais (ADR-0161). */
+  agravoId: string | null;
+  agravoNome: string | null;
+  exposicoes: ExposicaoAmbientalDto[];
 }
 
 // ── Coordenação (E3, ADR-0158) ──
@@ -386,6 +390,11 @@ export interface RelatorioPosEventoDto {
     casosGravesEstruturas: number;
     obitosEstruturas: number;
     publicoEstimado: number | null;
+    casosNotificados: number | null;
+    casosConfirmados: number | null;
+    obitosAgravo: number | null;
+    exposicoes: number;
+    populacaoExpostaMaxima: number | null;
   };
   criadoEm: string | null;
   atualizadoEm: string | null;
@@ -495,4 +504,55 @@ export interface BoletimEstruturaRequestDto {
   casosGraves: number | null;
   obitos: number | null;
   observacao: string | null;
+}
+
+// ── Epidemia e desastre ambiental (E6b, ADR-0161) ──
+
+export type MeioExposicaoAmbiental = 'AGUA' | 'AR' | 'SOLO' | 'PRODUTO_QUIMICO' | 'OUTRO';
+
+export const MEIOS_EXPOSICAO: Record<MeioExposicaoAmbiental, string> = {
+  AGUA: 'Água',
+  AR: 'Ar',
+  SOLO: 'Solo',
+  PRODUTO_QUIMICO: 'Produto químico',
+  OUTRO: 'Outro',
+};
+
+export interface ExposicaoAmbientalDto {
+  uuid: string;
+  avaliadaEm: string;
+  meio: MeioExposicaoAmbiental;
+  agente: string;
+  fonte: string | null;
+  populacaoExposta: number | null;
+  unidades: string[];
+  medidas: string | null;
+  recomendacao: string | null;
+}
+
+export interface ExposicaoAmbientalRequestDto {
+  meio: MeioExposicaoAmbiental;
+  agente: string;
+  fonte: string | null;
+  populacaoExposta: number | null;
+  unidadeIds: string[];
+  medidas: string | null;
+  recomendacao: string | null;
+}
+
+export interface PainelEpidemiaDto {
+  agravoId: string;
+  agravoNome: string;
+  doSurto: boolean;
+  desde: string;
+  ate: string;
+  naAreaAfetada: boolean;
+  notificados: number;
+  confirmados: number;
+  descartados: number;
+  emInvestigacao: number;
+  obitos: number;
+  semanaAtual: number;
+  semanaAnterior: number;
+  curva: { ano: number; semana: number; inicio: string; casos: number }[];
 }

@@ -92,4 +92,11 @@ public class Emergencia implements Serializable {
 
     @Column(updatable = false)
     private String registradoPorCpf;
+
+    /** O agravo da epidemia (ADR-0161); sem ele, o do surto de origem. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "agravo_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Agravo agravo;
 }
