@@ -34,7 +34,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 /**
  * Emergências com login e autorização ligados (ADR-0156): a vigilância registra o evento e o impacto; ativar e mudar o
- * nível é do gestor; a recepção e a administração da plataforma não leem.
+ * nível é do gestor; a recepção e a administração da plataforma não leem. Nos eventos especializados (ADR-0160), planejar
+ * e iniciar a operação é do gestor; a coordenação cuida dos dados do evento e das estruturas; o boletim é registro.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -81,6 +82,10 @@ class EmergenciaAutorizacaoControllerTest {
         jdbc.update("delete from tb_registro_ativacao_plano where ativacao_id in (select uuid from tb_ativacao_plano where emergencia_id in "
                 + emergencias + ")");
         jdbc.update("delete from tb_ativacao_plano where emergencia_id in " + emergencias);
+        jdbc.update("delete from tb_boletim_estrutura where estrutura_id in (select uuid from tb_estrutura_temporaria where emergencia_id in "
+                + emergencias + ")");
+        jdbc.update("delete from tb_estrutura_temporaria where emergencia_id in " + emergencias);
+        jdbc.update("delete from tb_evento_massa where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_relatorio_pos_evento where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_desmobilizacao where emergencia_id in " + emergencias);
         jdbc.update("delete from tb_acao_emergencial where emergencia_id in " + emergencias);
@@ -219,5 +224,42 @@ class EmergenciaAutorizacaoControllerTest {
         assertThat(status(GESTOR, json(post("/api/v1/emergencia/" + em + "/encerramento"), "{\"motivo\": \"Fim\"}"))).isEqualTo(200);
         assertThat(status(COORDENADOR, post("/api/v1/emergencia/" + em + "/relatorio/finalizacao"))).isEqualTo(403);
         assertThat(status(GESTOR, post("/api/v1/emergencia/" + em + "/relatorio/finalizacao"))).isEqualTo(200);
+    }
+
+    @Test
+    void eventosEspecializadosPorPapel() throws Exception {
+        String tipo = jdbc.queryForObject("select cast(uuid as varchar) from tb_tipo_emergencia where codigo = 'EVENTO_DE_MASSA'", String.class);
+        String nivel = jdbc.queryForObject("select cast(uuid as varchar) from tb_nivel_emergencia where ordem = 1", String.class);
+        String evento = JsonPath.read(mockMvc.perform(como(VIGILANCIA, json(post("/api/v1/evento-emergencial"), "{\"tipoId\": \"" + tipo
+                + "\", \"fonte\": \"GESTOR\", \"descricao\": \"" + PREFIXO + "Evento de massa\"}"))).andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8), "$.uuid");
+        String conversao = "{\"nome\": \"Réveillon\", \"nivelId\": \"" + nivel + "\", \"justificativa\": \"Público grande\", \"planejada\": true}";
+        String url = "/api/v1/evento-emergencial/" + evento + "/emergencia";
+        // Planejar é da autoridade; a vigilância não.
+        assertThat(status(VIGILANCIA, json(post(url), conversao))).isEqualTo(403);
+        String em = JsonPath.read(mockMvc.perform(como(GESTOR, json(post(url), conversao))).andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8), "$.uuid");
+        String base = "/api/v1/emergencia/" + em;
+        // Os dados do evento e as estruturas: a coordenação; a vigilância não.
+        Instant inicio = Instant.now().plusSeconds(86400).truncatedTo(java.time.temporal.ChronoUnit.SECONDS);
+        String dados = "{\"natureza\": \"FESTA_POPULAR\", \"local\": \"Orla\", \"inicioPrevisto\": \"" + inicio + "\", \"fimPrevisto\": \""
+                + inicio.plusSeconds(21600) + "\", \"publicoEstimado\": 50000, \"risco\": \"MEDIO\"}";
+        assertThat(status(VIGILANCIA, json(put(base + "/evento-massa"), dados))).isEqualTo(403);
+        assertThat(status(COORDENADOR, json(put(base + "/evento-massa"), dados))).isEqualTo(200);
+        String estrutura = "{\"tipo\": \"POSTO_MEDICO\", \"nome\": \"Posto da orla\", \"local\": \"Orla\", \"unidadeReferenciaId\": \""
+                + unidade.getUuid() + "\"}";
+        assertThat(status(VIGILANCIA, json(post(base + "/estrutura"), estrutura))).isEqualTo(403);
+        String r = mockMvc.perform(como(COORDENADOR, json(post(base + "/estrutura"), estrutura))).andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+        String posto = base + "/estrutura/" + JsonPath.read(r, "$.estruturas[0].uuid");
+        // Iniciar a operação é da autoridade.
+        String operacao = "{\"justificativa\": \"Abertura\"}";
+        assertThat(status(COORDENADOR, json(post(base + "/operacao"), operacao))).isEqualTo(403);
+        assertThat(status(GESTOR, json(post(base + "/operacao"), operacao))).isEqualTo(200);
+        assertThat(status(COORDENADOR, json(post(posto + "/situacao"), "{\"situacao\": \"EM_OPERACAO\"}"))).isEqualTo(200);
+        // O boletim é registro: a vigilância sim; a recepção não.
+        String boletim = "{\"data\": \"" + java.time.LocalDate.now() + "\", \"atendimentos\": 40}";
+        assertThat(status(RECEPCAO, json(post(posto + "/boletim"), boletim))).isEqualTo(403);
+        assertThat(status(VIGILANCIA, json(post(posto + "/boletim"), boletim))).isEqualTo(201);
     }
 }

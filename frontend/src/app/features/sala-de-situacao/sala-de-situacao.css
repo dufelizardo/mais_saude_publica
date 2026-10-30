@@ -21,6 +21,7 @@
   border: 1px solid var(--ink-200); border-left-width: 4px; background: var(--white); }
 .ss-alerta--alta { border-left-color: var(--alert); background: var(--alert-bg); }
 .ss-alerta--media { border-left-color: var(--warn); background: var(--warn-bg); }
+.ss-alerta--baixa { border-left-color: var(--blue-500); background: var(--blue-50); }
 .ss-alerta__titulo { font-weight: 600; font-size: 0.9375rem; }
 .ss-alerta__detalhe { color: var(--ink-700); font-size: 0.8125rem; margin-top: 2px; }
 .ss-ao-vivo { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--ok); font-weight: 600; white-space: nowrap; }

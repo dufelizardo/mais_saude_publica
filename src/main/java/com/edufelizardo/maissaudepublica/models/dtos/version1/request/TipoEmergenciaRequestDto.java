@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.request;
 
 import com.edufelizardo.maissaudepublica.models.enuns.CategoriaTipoEmergencia;
+import com.edufelizardo.maissaudepublica.models.enuns.PerfilTipoEmergencia;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -28,5 +29,7 @@ public class TipoEmergenciaRequestDto implements Serializable {
     private CategoriaTipoEmergencia categoria;
     @Size(max = 20, message = "O código COBRADE vai até 20 caracteres.")
     private String cobrade;
+    /** Sem o perfil, nasce geral e, no ajuste, mantém (ADR-0160). */
+    private PerfilTipoEmergencia perfil;
     private Boolean ativo;
 }

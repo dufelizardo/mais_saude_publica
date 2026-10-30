@@ -110,5 +110,12 @@ public class RelatorioPosEventoDto implements Serializable {
         private Integer populacaoAfetada;
         private int unidadesAfetadas;
         private Integer leitosIndisponiveis;
+        /** As estruturas temporárias usadas e a soma dos boletins; no evento de massa, o público estimado (ADR-0160). */
+        private int estruturas;
+        private int atendimentosEstruturas;
+        private int remocoesEstruturas;
+        private int casosGravesEstruturas;
+        private int obitosEstruturas;
+        private Integer publicoEstimado;
     }
 }

@@ -3,6 +3,11 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   AvaliacaoImpactoRequestDto,
+  BoletimEstruturaRequestDto,
+  EstruturaTemporariaRequestDto,
+  EventoMassaRequestDto,
+  PerfilTipoEmergencia,
+  SituacaoEstruturaTemporaria,
   CapacidadeEmergencialDto,
   PrioridadeAcaoEmergencial,
   RelatorioPosEventoDto,
@@ -50,7 +55,7 @@ export class EmergenciaService {
     return this.http.post<EventoEmergencialDto>(`${this.api}/evento-emergencial/${uuid}/situacao`, { situacao, motivo });
   }
 
-  converter(eventoId: string, dto: { nome: string; nivelId: string; justificativa: string; responsavelMatricula?: string | null }): Observable<EmergenciaDto> {
+  converter(eventoId: string, dto: { nome: string; nivelId: string; justificativa: string; responsavelMatricula?: string | null; planejada?: boolean }): Observable<EmergenciaDto> {
     return this.http.post<EmergenciaDto>(`${this.api}/evento-emergencial/${eventoId}/emergencia`, dto);
   }
 
@@ -89,7 +94,7 @@ export class EmergenciaService {
 
   // ── Catálogos e planos (E2, ADR-0157) ──
 
-  salvarTipo(uuid: string | null, dto: { codigo: string; nome: string; categoria: 'DESASTRE' | 'SAUDE'; cobrade: string | null; ativo: boolean | null }): Observable<TipoEmergenciaDto> {
+  salvarTipo(uuid: string | null, dto: { codigo: string; nome: string; categoria: 'DESASTRE' | 'SAUDE'; cobrade: string | null; perfil: PerfilTipoEmergencia; ativo: boolean | null }): Observable<TipoEmergenciaDto> {
     return uuid ? this.http.put<TipoEmergenciaDto>(`${this.api}/emergencias/tipo/${uuid}`, dto) : this.http.post<TipoEmergenciaDto>(`${this.api}/emergencias/tipo`, dto);
   }
 
@@ -204,5 +209,29 @@ export class EmergenciaService {
 
   relatorioCsv(uuid: string): Observable<HttpResponse<Blob>> {
     return this.http.get(`${this.api}/emergencia/${uuid}/relatorio.csv`, { responseType: 'blob', observe: 'response' });
+  }
+
+  // ── Eventos especializados (E6a, ADR-0160) ──
+
+  salvarEventoMassa(uuid: string, dto: EventoMassaRequestDto): Observable<EmergenciaDto> {
+    return this.http.put<EmergenciaDto>(`${this.api}/emergencia/${uuid}/evento-massa`, dto);
+  }
+
+  iniciarOperacao(uuid: string, justificativa: string): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/operacao`, { justificativa });
+  }
+
+  salvarEstrutura(uuid: string, estruturaId: string | null, dto: EstruturaTemporariaRequestDto): Observable<EmergenciaDto> {
+    return estruturaId
+      ? this.http.put<EmergenciaDto>(`${this.api}/emergencia/${uuid}/estrutura/${estruturaId}`, dto)
+      : this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/estrutura`, dto);
+  }
+
+  situacaoDaEstrutura(uuid: string, estruturaId: string, situacao: Exclude<SituacaoEstruturaTemporaria, 'PLANEJADA'>, motivo: string | null): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/estrutura/${estruturaId}/situacao`, { situacao, motivo });
+  }
+
+  boletim(uuid: string, estruturaId: string, dto: BoletimEstruturaRequestDto): Observable<EmergenciaDto> {
+    return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/estrutura/${estruturaId}/boletim`, dto);
   }
 }

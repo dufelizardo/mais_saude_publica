@@ -50,6 +50,10 @@ public class Desmobilizacao implements Serializable {
     @Column(nullable = false, updatable = false)
     private int planosDesativados;
 
+    /** As estruturas temporárias desativadas (ADR-0160). */
+    @Column(nullable = false, updatable = false)
+    private int estruturasDesativadas;
+
     @Column(updatable = false)
     private String registradoPorCpf;
 }

@@ -3,7 +3,7 @@
 export type CategoriaTipoEmergencia = 'DESASTRE' | 'SAUDE';
 export type FonteEventoEmergencial = 'VIGILANCIA' | 'UNIDADE' | 'DEFESA_CIVIL' | 'GESTOR' | 'PROFISSIONAL' | 'SISTEMA_EXTERNO';
 export type SituacaoEventoEmergencial = 'REGISTRADO' | 'MONITORADO' | 'DESCARTADO' | 'CONVERTIDO';
-export type SituacaoEmergencia = 'ATIVA' | 'EM_DESMOBILIZACAO' | 'ENCERRADA';
+export type SituacaoEmergencia = 'PLANEJADA' | 'ATIVA' | 'EM_DESMOBILIZACAO' | 'ENCERRADA';
 export type NivelImpacto = 'BAIXO' | 'MODERADO' | 'ALTO' | 'CRITICO';
 export type TipoDecretoEmergencia = 'SITUACAO_DE_EMERGENCIA' | 'CALAMIDADE_PUBLICA';
 
@@ -46,6 +46,7 @@ export interface TipoEmergenciaDto {
   nome: string;
   categoria: CategoriaTipoEmergencia;
   cobrade: string | null;
+  perfil: PerfilTipoEmergencia;
   ativo: boolean;
 }
 
@@ -133,8 +134,13 @@ export interface EmergenciaDto {
     profissionaisLiberados: number;
     capacidadesDesativadas: number;
     planosDesativados: number;
+    estruturasDesativadas: number;
   } | null;
   pendencias: string[];
+  /** O perfil do tipo, os dados do evento de massa (também na lista) e as estruturas temporárias (ADR-0160). */
+  perfil: PerfilTipoEmergencia;
+  eventoMassa: EventoMassaDto | null;
+  estruturas: EstruturaTemporariaDto[];
 }
 
 // ── Coordenação (E3, ADR-0158) ──
@@ -341,6 +347,7 @@ export interface AvaliacaoImpactoRequestDto {
 // ── Relatório pós-evento (E5, ADR-0159) ──
 
 export const SITUACOES_EMERGENCIA: Record<SituacaoEmergencia, { rotulo: string; classe: string }> = {
+  PLANEJADA: { rotulo: 'Planejada', classe: 'info' },
   ATIVA: { rotulo: 'Ativa', classe: 'alert' },
   EM_DESMOBILIZACAO: { rotulo: 'Em desmobilização', classe: 'warn' },
   ENCERRADA: { rotulo: 'Encerrada', classe: 'muted' },
@@ -373,8 +380,119 @@ export interface RelatorioPosEventoDto {
     populacaoAfetada: number | null;
     unidadesAfetadas: number;
     leitosIndisponiveis: number | null;
+    estruturas: number;
+    atendimentosEstruturas: number;
+    remocoesEstruturas: number;
+    casosGravesEstruturas: number;
+    obitosEstruturas: number;
+    publicoEstimado: number | null;
   };
   criadoEm: string | null;
   atualizadoEm: string | null;
   finalizadoEm: string | null;
+}
+
+// ── Eventos especializados (E6a, ADR-0160) ──
+
+export type PerfilTipoEmergencia = 'GERAL' | 'EVENTO_DE_MASSA' | 'EPIDEMIA' | 'DESASTRE_AMBIENTAL';
+export type NaturezaEventoMassa = 'ESPORTIVO' | 'SHOW' | 'FESTA_POPULAR' | 'RELIGIOSO' | 'MANIFESTACAO' | 'OUTRO';
+export type RiscoEventoMassa = 'BAIXO' | 'MEDIO' | 'ALTO';
+export type TipoEstruturaTemporaria = 'POSTO_MEDICO' | 'TENDA_HIDRATACAO' | 'HOSPITAL_DE_CAMPANHA' | 'OUTRO';
+export type SituacaoEstruturaTemporaria = 'PLANEJADA' | 'EM_OPERACAO' | 'DESATIVADA';
+
+export const PERFIS_TIPO: Record<PerfilTipoEmergencia, string> = {
+  GERAL: 'Geral',
+  EVENTO_DE_MASSA: 'Evento de massa',
+  EPIDEMIA: 'Epidemia',
+  DESASTRE_AMBIENTAL: 'Desastre ambiental',
+};
+
+export const NATUREZAS_EVENTO_MASSA: Record<NaturezaEventoMassa, string> = {
+  ESPORTIVO: 'Esportivo',
+  SHOW: 'Show',
+  FESTA_POPULAR: 'Festa popular ou carnaval',
+  RELIGIOSO: 'Religioso',
+  MANIFESTACAO: 'Manifestação',
+  OUTRO: 'Outro',
+};
+
+export const RISCOS_EVENTO_MASSA: Record<RiscoEventoMassa, { rotulo: string; classe: string }> = {
+  BAIXO: { rotulo: 'Risco baixo', classe: 'ok' },
+  MEDIO: { rotulo: 'Risco médio', classe: 'warn' },
+  ALTO: { rotulo: 'Risco alto', classe: 'alert' },
+};
+
+export const TIPOS_ESTRUTURA: Record<TipoEstruturaTemporaria, string> = {
+  POSTO_MEDICO: 'Posto médico',
+  TENDA_HIDRATACAO: 'Tenda de hidratação',
+  HOSPITAL_DE_CAMPANHA: 'Hospital de campanha',
+  OUTRO: 'Outra estrutura',
+};
+
+export const SITUACOES_ESTRUTURA: Record<SituacaoEstruturaTemporaria, { rotulo: string; classe: string }> = {
+  PLANEJADA: { rotulo: 'Planejada', classe: 'info' },
+  EM_OPERACAO: { rotulo: 'Em operação', classe: 'ok' },
+  DESATIVADA: { rotulo: 'Desativada', classe: 'muted' },
+};
+
+export interface EventoMassaDto {
+  natureza: NaturezaEventoMassa;
+  local: string;
+  inicioPrevisto: string;
+  fimPrevisto: string;
+  publicoEstimado: number;
+  publicoMaximo: number | null;
+  organizador: string | null;
+  contato: string | null;
+  risco: RiscoEventoMassa;
+  observacao: string | null;
+  atualizadoEm: string;
+}
+
+export type EventoMassaRequestDto = Omit<EventoMassaDto, 'atualizadoEm'>;
+
+export interface EstruturaTemporariaDto {
+  uuid: string;
+  tipo: TipoEstruturaTemporaria;
+  nome: string;
+  local: string;
+  latitude: number | null;
+  longitude: number | null;
+  unidadeReferenciaId: string;
+  unidadeReferenciaNome: string;
+  leitos: number;
+  atendimentosDia: number | null;
+  ambulancias: number;
+  horario: string | null;
+  situacao: SituacaoEstruturaTemporaria;
+  ativadaEm: string | null;
+  desativadaEm: string | null;
+  motivoDesativacao: string | null;
+  atendimentos: number;
+  remocoes: number;
+  casosGraves: number;
+  obitos: number;
+  boletins: { uuid: string; data: string; atendimentos: number; remocoes: number; casosGraves: number; obitos: number; observacao: string | null; registradoEm: string }[];
+}
+
+export interface EstruturaTemporariaRequestDto {
+  tipo: TipoEstruturaTemporaria;
+  nome: string;
+  local: string;
+  latitude: number | null;
+  longitude: number | null;
+  unidadeReferenciaId: string;
+  leitos: number | null;
+  atendimentosDia: number | null;
+  ambulancias: number | null;
+  horario: string | null;
+}
+
+export interface BoletimEstruturaRequestDto {
+  data: string;
+  atendimentos: number;
+  remocoes: number | null;
+  casosGraves: number | null;
+  obitos: number | null;
+  observacao: string | null;
 }

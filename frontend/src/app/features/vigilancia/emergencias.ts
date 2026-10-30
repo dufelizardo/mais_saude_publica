@@ -13,6 +13,7 @@ import {
   NivelEmergenciaDto,
   NivelImpacto,
   SITUACOES_EMERGENCIA,
+  TIPOS_ESTRUTURA,
   PlanoAtivoDto,
   PlanoContingenciaDto,
   TIPOS_REGISTRO_ATIVACAO,
@@ -30,25 +31,27 @@ import { EdicaoMapa, Mapa, PinoMapa, PoligonoMapa } from '../../shared/mapa/mapa
 import { CapacidadeEmergencial } from './capacidade-emergencial';
 import { CatalogosEmergencia } from './catalogos-emergencia';
 import { CoordenacaoEmergencia } from './coordenacao-emergencia';
+import { EventoEspecializado } from './evento-especializado';
 import { PlanosContingencia } from './planos-contingencia';
 import { RelatorioPosEvento } from './relatorio-pos-evento';
 
-type Aba = 'ativas' | 'desmobilizacao' | 'eventos' | 'encerradas' | 'planos' | 'capacidade' | 'catalogos';
+type Aba = 'ativas' | 'planejadas' | 'desmobilizacao' | 'eventos' | 'encerradas' | 'planos' | 'capacidade' | 'catalogos';
 type Gaveta =
   | { tipo: 'evento' }
   | { tipo: 'descartar'; evento: EventoEmergencialDto }
   | { tipo: 'converter'; evento: EventoEmergencialDto }
-  | { tipo: 'nivel' | 'territorio' | 'referencias' | 'avaliacao' | 'encerrar' | 'ativarPlano' | 'desmobilizar' | 'cancelarRestantes'; emergencia: EmergenciaDto }
+  | { tipo: 'nivel' | 'territorio' | 'referencias' | 'avaliacao' | 'encerrar' | 'ativarPlano' | 'desmobilizar' | 'cancelarRestantes' | 'operacao'; emergencia: EmergenciaDto }
   | { tipo: 'desativarPlano'; emergencia: EmergenciaDto; plano: PlanoAtivoDto };
 
 /**
  * Emergências e Desastres, fatia E1 (ADR-0156): os eventos (registrar, monitorar, descartar, converter) e as emergências
  * (nível com histórico, território no mapa, ESPIN e decreto, avaliações de impacto com as sugestões dos donos,
- * encerramento). Coordenação, não posse: nada aqui mexe em leito, escala ou estoque.
+ * encerramento). Coordenação, não posse: nada aqui mexe em leito, escala ou estoque. O evento de massa é planejado antes
+ * de acontecer e a operação começa depois (ADR-0160).
  */
 @Component({
   selector: 'app-emergencias',
-  imports: [Drawer, Mapa, PlanosContingencia, CatalogosEmergencia, CapacidadeEmergencial, CoordenacaoEmergencia, RelatorioPosEvento],
+  imports: [Drawer, Mapa, PlanosContingencia, CatalogosEmergencia, CapacidadeEmergencial, CoordenacaoEmergencia, EventoEspecializado, RelatorioPosEvento],
   template: `
     <header class="page-head">
       <div>
@@ -64,6 +67,7 @@ type Gaveta =
 
     <div class="tabs" role="tablist" aria-label="Seções das emergências">
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'ativas'" (click)="aba.set('ativas')">Emergências ativas <span class="cnt">{{ ativas().length }}</span></button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'planejadas'" (click)="aba.set('planejadas')">Planejadas@if (planejadas().length) { <span class="cnt">{{ planejadas().length }}</span> }</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'eventos'" (click)="aba.set('eventos')">Eventos <span class="cnt">{{ eventosAbertos() }}</span></button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'desmobilizacao'" (click)="aba.set('desmobilizacao')">Em desmobilização@if (emDesmobilizacao().length) { <span class="cnt">{{ emDesmobilizacao().length }}</span> }</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'encerradas'" (click)="aba.set('encerradas')">Encerradas</button>
@@ -104,18 +108,18 @@ type Gaveta =
       </div>
     } @else {
       <div class="tbl-wrap card">
-        <table [attr.aria-label]="aba() === 'ativas' ? 'Emergências ativas' : aba() === 'desmobilizacao' ? 'Emergências em desmobilização' : 'Emergências encerradas'">
+        <table [attr.aria-label]="rotuloDaLista()">
           <thead><tr><th scope="col">Emergência</th><th scope="col">Nível</th><th scope="col">Início</th><th scope="col">Último impacto</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
           <tbody>
-            @for (e of (aba() === 'ativas' ? ativas() : aba() === 'desmobilizacao' ? emDesmobilizacao() : encerradas()); track e.uuid) {
+            @for (e of lista(); track e.uuid) {
               <tr [class.is-selected]="detalhe()?.uuid === e.uuid">
                 <td><span class="cell-main">{{ e.nome }}</span><span class="cell-sub">{{ e.tipoNome }}@if (e.cobrade) { · COBRADE {{ e.cobrade }} }</span></td>
                 <td><span [class]="'tag tag--' + classe(e.nivelOrdem)">{{ e.nivelNome }}</span></td>
-                <td class="mono">{{ dataHora(e.inicio) }}@if (e.fim) { <span class="cell-sub">até {{ dataHora(e.fim) }}</span> }</td>
+                <td class="mono">@if (e.situacao === 'PLANEJADA' && e.eventoMassa) { {{ dataHora(e.eventoMassa.inicioPrevisto) }} <span class="cell-sub">previsto</span> } @else { {{ dataHora(e.inicio) }} }@if (e.fim) { <span class="cell-sub">até {{ dataHora(e.fim) }}</span> }</td>
                 <td>@if (e.acoesAtrasadas) { <span class="tag tag--alert">{{ e.acoesAtrasadas }} ação(ões) atrasada(s)</span> }@if (e.ultimoImpacto) { <span [class]="'tag tag--' + impactos[e.ultimoImpacto].classe">{{ impactos[e.ultimoImpacto].rotulo }}</span> } @else { <span class="cell-sub">sem avaliação</span> }</td>
                 <td class="row-actions"><button type="button" class="btn btn--ghost btn--sm" (click)="selecionar(e.uuid)" [attr.aria-label]="'Abrir ' + e.nome">Abrir</button></td>
               </tr>
-            } @empty { <tr><td colspan="5" class="cell-sub">{{ aba() === 'ativas' ? 'Nenhuma emergência ativa.' : aba() === 'desmobilizacao' ? 'Nenhuma emergência em desmobilização.' : 'Nenhuma emergência encerrada.' }}</td></tr> }
+            } @empty { <tr><td colspan="5" class="cell-sub">{{ vazioDaLista() }}</td></tr> }
           </tbody>
         </table>
       </div>
@@ -126,7 +130,7 @@ type Gaveta =
         <div class="em-cab">
           <div>
             <h2 class="em-titulo">{{ d.nome }}</h2>
-            <p class="cell-sub">{{ d.tipoNome }}@if (d.cobrade) { · COBRADE {{ d.cobrade }} } · desde {{ dataHora(d.inicio) }}@if (d.responsavelNome) { · responsável {{ d.responsavelNome }} }</p>
+            <p class="cell-sub">{{ d.tipoNome }}@if (d.cobrade) { · COBRADE {{ d.cobrade }} } · {{ d.situacao === 'PLANEJADA' ? 'planejada em' : 'desde' }} {{ dataHora(d.inicio) }}@if (d.responsavelNome) { · responsável {{ d.responsavelNome }} }</p>
             <span [class]="'tag tag--' + classe(d.nivelOrdem)">{{ d.nivelNome }}</span>
             <span [class]="'tag tag--' + situacoesEmergencia[d.situacao].classe">{{ situacoesEmergencia[d.situacao].rotulo }}</span>
             @if (d.ultimoImpacto) { <span [class]="'tag tag--' + impactos[d.ultimoImpacto].classe">Impacto {{ impactos[d.ultimoImpacto].rotulo.toLowerCase() }}</span> }
@@ -143,6 +147,15 @@ type Gaveta =
               }
             </div>
           }
+          @if (d.situacao === 'PLANEJADA') {
+            <div class="row-actions" style="flex-wrap: wrap;">
+              @if (pode('EMERGENCIA.REGISTRAR', 'EMERGENCIA.ATIVAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirTerritorio(d)">Território</button> }
+              @if (pode('EMERGENCIA.ATIVAR')) {
+                <button type="button" class="btn btn--sm" (click)="abrir({ tipo: 'operacao', emergencia: d })" [disabled]="!d.eventoMassa">Iniciar operação</button>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEncerrar(d)">Cancelar evento</button>
+              }
+            </div>
+          }
           @if (d.situacao === 'EM_DESMOBILIZACAO') {
             <div class="row-actions" style="flex-wrap: wrap;">
               @if (pode('EMERGENCIA.COORDENAR', 'EMERGENCIA.ATIVAR') && acoesAbertas(d)) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrir({ tipo: 'cancelarRestantes', emergencia: d })">Cancelar ações restantes</button> }
@@ -153,7 +166,7 @@ type Gaveta =
         @if (d.desmobilizacao; as dm) {
           <div class="box box--info em-desmob" aria-label="Desmobilização">
             <div><strong>Desmobilização iniciada em {{ dataHora(dm.iniciadaEm) }} por {{ dm.responsavel }}.</strong> {{ dm.justificativa }}.
-              Liberados: {{ dm.mobilizacoesConcluidas }} mobilização(ões) ({{ dm.profissionaisLiberados }} profissional(is)), {{ dm.capacidadesDesativadas }} capacidade(s), {{ dm.planosDesativados }} plano(s).</div>
+              Liberados: {{ dm.mobilizacoesConcluidas }} mobilização(ões) ({{ dm.profissionaisLiberados }} profissional(is)), {{ dm.capacidadesDesativadas }} capacidade(s), {{ dm.planosDesativados }} plano(s)@if (dm.estruturasDesativadas) {, {{ dm.estruturasDesativadas }} estrutura(s) temporária(s) }.</div>
           </div>
         }
         @if (d.pendencias.length && d.situacao === 'EM_DESMOBILIZACAO') {
@@ -192,15 +205,18 @@ type Gaveta =
           } @else { <p class="cell-sub">Nenhum plano ativado nesta emergência.</p> }
         </div>
 
-        <app-coordenacao-emergencia [emergencia]="d" [podeCoordenar]="pode('EMERGENCIA.COORDENAR')" (alterada)="aposCoordenacao($event)" />
-        @if (d.situacao !== 'ATIVA') {
+        <app-evento-especializado [emergencia]="d" [podeCoordenar]="pode('EMERGENCIA.COORDENAR', 'EMERGENCIA.ATIVAR')" [podeRegistrar]="pode('EMERGENCIA.REGISTRAR')" (alterada)="aposCoordenacao($event)" />
+        @if (d.situacao !== 'PLANEJADA') {
+          <app-coordenacao-emergencia [emergencia]="d" [podeCoordenar]="pode('EMERGENCIA.COORDENAR')" (alterada)="aposCoordenacao($event)" />
+        }
+        @if (d.situacao === 'EM_DESMOBILIZACAO' || d.situacao === 'ENCERRADA') {
           <app-relatorio-pos-evento [emergencia]="d" [podeEscrever]="pode('EMERGENCIA.COORDENAR', 'EMERGENCIA.ATIVAR')" [podeFinalizar]="pode('EMERGENCIA.ATIVAR')" [podeRevisarPlano]="pode('CONTINGENCIA.GERENCIAR')" />
         }
 
         <div class="em-grade">
           <div>
             <h3 class="mo-grupo">Território afetado</h3>
-            @if (d.geometria || d.microareas.length) {
+            @if (d.geometria || d.microareas.length || pinos().length) {
               <app-mapa [poligonos]="poligonos()" [pinos]="pinos()" [altura]="300" rotulo="Território afetado" />
               <p class="cell-sub">@if (d.microareas.length) { Microáreas: @for (m of d.microareas; track m.uuid; let ultimo = $last) { {{ m.areaNome }} {{ m.codigo }}@if (m.nome) { ({{ m.nome }}) }@if (!ultimo) { · } } } @else { Nenhuma microárea do Território dentro da área. }</p>
             } @else { <p class="cell-sub">Sem área desenhada. Use "Território" para marcar no mapa.</p> }
@@ -284,6 +300,10 @@ type Gaveta =
                 </div>
                 <div class="dw-field"><label for="f-em-justificativa">Justificativa <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-justificativa" rows="3" maxlength="1000" [value]="campo()['justificativa'] ?? ''" (input)="set('justificativa', $event)"></textarea></div>
                 <div class="box box--info"><div>O território afetado começa pela área do evento e pelas microáreas que ela atinge.</div></div>
+                @if (perfilDoEvento(g.evento) === 'EVENTO_DE_MASSA') {
+                  <div class="dw-field"><label class="em-check" for="f-em-planejada"><input type="checkbox" id="f-em-planejada" [checked]="campo()['planejada'] !== 'nao'" (change)="campo.set({ ...campo(), planejada: $any($event.target).checked ? 'sim' : 'nao' })" /> Planejar: o evento ainda não começou</label>
+                    <span class="cell-sub">A emergência fica planejada: preencha os dados do evento e as estruturas, e inicie a operação na hora.</span></div>
+                }
                 @if (planosSugeridos().length) {
                   <div class="box box--info"><div>Planos vigentes de {{ g.evento.tipoNome }}: @for (p of planosSugeridos(); track p.uuid; let ultimo = $last) { {{ p.nome }}@if (!ultimo) { · } }. Ative depois de converter.</div></div>
                 }
@@ -366,11 +386,17 @@ type Gaveta =
               }
               @case ('encerrar') {
                 <div class="dw-field"><label for="f-em-motivo">Motivo do encerramento <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-motivo" rows="3" maxlength="1000" [value]="campo()['motivo'] ?? ''" (input)="set('motivo', $event)"></textarea></div>
+                @if (g.emergencia.situacao === 'PLANEJADA') { <div class="box box--info"><div>O evento é cancelado antes da operação; as estruturas planejadas são desativadas.</div></div> }
                 @if (g.emergencia.situacao === 'ATIVA') { <div class="box box--info"><div>Encerrar direto conclui as mobilizações e desativa a capacidade e os planos. Para controlar o retorno passo a passo, use "Iniciar desmobilização".</div></div> }
               }
               @case ('desmobilizar') {
                 <div class="box box--info"><div>Conclui as mobilizações em aberto (a Escala deixa de aceitar turnos novos sem lotação), desativa a capacidade emergencial e os planos. Depois, só se conclui o que ficou aberto e se escreve o relatório pós-evento.</div></div>
                 <div class="dw-field"><label for="f-em-responsavel-desmob">Responsável <span class="req" aria-hidden="true">*</span></label><input id="f-em-responsavel-desmob" type="text" maxlength="200" [value]="campo()['responsavel'] ?? ''" (input)="set('responsavel', $event)" placeholder="Ex.: Secretário de Saúde" /></div>
+                <div class="dw-field"><label for="f-em-justificativa">Justificativa <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-justificativa" rows="3" maxlength="1000" [value]="campo()['justificativa'] ?? ''" (input)="set('justificativa', $event)"></textarea></div>
+              }
+              @case ('operacao') {
+                @if (g.emergencia.eventoMassa; as m) { <dl class="ro"><div><dt>Evento</dt><dd>{{ m.local }} · previsto para {{ dataHora(m.inicioPrevisto) }}</dd></div></dl> }
+                <div class="box box--info"><div>A emergência passa a ativa a partir de agora: entram as ações, as mobilizações, os planos e a abertura das estruturas.</div></div>
                 <div class="dw-field"><label for="f-em-justificativa">Justificativa <span class="req" aria-hidden="true">*</span></label><textarea id="f-em-justificativa" rows="3" maxlength="1000" [value]="campo()['justificativa'] ?? ''" (input)="set('justificativa', $event)"></textarea></div>
               }
               @case ('cancelarRestantes') {
@@ -430,6 +456,17 @@ export class Emergencias {
 
   protected readonly ativas = computed(() => this.emergencias().filter((e) => e.situacao === 'ATIVA'));
   protected readonly emDesmobilizacao = computed(() => this.emergencias().filter((e) => e.situacao === 'EM_DESMOBILIZACAO'));
+  protected readonly planejadas = computed(() => this.emergencias().filter((e) => e.situacao === 'PLANEJADA'));
+  protected readonly lista = computed(() => {
+    switch (this.aba()) {
+      case 'ativas': return this.ativas();
+      case 'planejadas': return this.planejadas();
+      case 'desmobilizacao': return this.emDesmobilizacao();
+      default: return this.encerradas();
+    }
+  });
+  protected readonly vazioDaLista = computed(() => ({ ativas: 'Nenhuma emergência ativa.', planejadas: 'Nenhuma emergência planejada.', desmobilizacao: 'Nenhuma emergência em desmobilização.' } as Record<string, string>)[this.aba()] ?? 'Nenhuma emergência encerrada.');
+  protected readonly rotuloDaLista = computed(() => ({ ativas: 'Emergências ativas', planejadas: 'Emergências planejadas', desmobilizacao: 'Emergências em desmobilização' } as Record<string, string>)[this.aba()] ?? 'Emergências encerradas');
   protected readonly situacoesEmergencia = SITUACOES_EMERGENCIA;
   protected readonly encerradas = computed(() => this.emergencias().filter((e) => e.situacao === 'ENCERRADA'));
   protected readonly eventosAbertos = computed(() => this.eventos().filter((e) => e.situacao === 'REGISTRADO' || e.situacao === 'MONITORADO').length);
@@ -443,7 +480,10 @@ export class Emergencias {
     if (d.geometria) lista.unshift({ id: 'area', geometria: d.geometria, descricao: 'Área afetada', tipo: 'area', cor: '#dc2626' });
     return lista;
   });
-  protected readonly pinos = computed<PinoMapa[]>(() => []);
+  /** As estruturas temporárias com localização (ADR-0160). */
+  protected readonly pinos = computed<PinoMapa[]>(() => (this.detalhe()?.estruturas ?? []).flatMap((s) => s.latitude != null && s.longitude != null
+    ? [{ id: s.uuid, lat: s.latitude, lng: s.longitude, sigla: SIGLAS_ESTRUTURA[s.tipo], classe: 'unit-pin t-closed', descricao: `${TIPOS_ESTRUTURA[s.tipo]}: ${s.nome}` }]
+    : []));
 
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
@@ -464,7 +504,11 @@ export class Emergencias {
 
   /** A aba da lista em que a emergência aparece. */
   private abaDa(d: EmergenciaDto): Aba {
-    return d.situacao === 'ATIVA' ? 'ativas' : d.situacao === 'EM_DESMOBILIZACAO' ? 'desmobilizacao' : 'encerradas';
+    return d.situacao === 'ATIVA' ? 'ativas' : d.situacao === 'PLANEJADA' ? 'planejadas' : d.situacao === 'EM_DESMOBILIZACAO' ? 'desmobilizacao' : 'encerradas';
+  }
+
+  protected perfilDoEvento(e: EventoEmergencialDto): string | null {
+    return this.tipos().find((t) => t.uuid === e.tipoId)?.perfil ?? null;
   }
 
   protected acoesAbertas(d: EmergenciaDto): number {
@@ -518,9 +562,10 @@ export class Emergencias {
       case 'avaliacao': return 'Avaliação de impacto';
       case 'ativarPlano': return 'Ativar plano de contingência';
       case 'desmobilizar': return 'Iniciar a desmobilização';
+      case 'operacao': return 'Iniciar a operação';
       case 'cancelarRestantes': return 'Cancelar as ações restantes';
       case 'desativarPlano': return 'Desativar o plano';
-      default: return 'Encerrar a emergência';
+      default: return g.emergencia.situacao === 'PLANEJADA' ? 'Cancelar o evento' : 'Encerrar a emergência';
     }
   }
 
@@ -590,7 +635,7 @@ export class Emergencias {
     this.service.emergencia(uuid).subscribe({
       next: (d) => {
         this.detalhe.set(d);
-        if (['ativas', 'desmobilizacao', 'encerradas'].includes(this.aba())) this.aba.set(this.abaDa(d));
+        if (['ativas', 'planejadas', 'desmobilizacao', 'encerradas'].includes(this.aba())) this.aba.set(this.abaDa(d));
       },
       error: (x: HttpErrorResponse) => this.erro.set(mensagem(x)),
     });
@@ -617,7 +662,10 @@ export class Emergencias {
         break;
       case 'converter':
         if (!t('nome') || !t('nivelId') || !t('justificativa')) falta = 'Informe o nome, o nível e a justificativa.';
-        req = this.service.converter(g.evento.uuid, { nome: t('nome') ?? '', nivelId: c['nivelId'], justificativa: t('justificativa') ?? '', responsavelMatricula: t('responsavel') });
+        req = this.service.converter(g.evento.uuid, {
+          nome: t('nome') ?? '', nivelId: c['nivelId'], justificativa: t('justificativa') ?? '', responsavelMatricula: t('responsavel'),
+          planejada: this.perfilDoEvento(g.evento) === 'EVENTO_DE_MASSA' && c['planejada'] !== 'nao',
+        });
         break;
       case 'nivel':
         if (!t('nivelId') || !t('justificativa')) falta = 'Escolha o nível e justifique.';
@@ -635,6 +683,10 @@ export class Emergencias {
       case 'desmobilizar':
         if (!t('responsavel') || !t('justificativa')) falta = 'Informe o responsável e a justificativa.';
         req = this.service.desmobilizar(g.emergencia.uuid, t('responsavel') ?? '', t('justificativa') ?? '');
+        break;
+      case 'operacao':
+        if (!t('justificativa')) falta = 'Justifique o início da operação.';
+        req = this.service.iniciarOperacao(g.emergencia.uuid, t('justificativa') ?? '');
         break;
       case 'cancelarRestantes':
         if (!t('motivo')) falta = 'Informe o motivo.';
@@ -698,6 +750,8 @@ export class Emergencias {
     this.service.eventos().pipe(catchError(() => of([]))).subscribe((l) => this.eventos.set(l));
   }
 }
+
+const SIGLAS_ESTRUTURA: Record<string, string> = { POSTO_MEDICO: 'PM', TENDA_HIDRATACAO: 'TH', HOSPITAL_DE_CAMPANHA: 'HC', OUTRO: 'EST' };
 
 function mensagem(e: HttpErrorResponse): string {
   if (e.status === 400 && (e.error as { errors?: unknown } | undefined)?.errors) return 'Confira os campos.';

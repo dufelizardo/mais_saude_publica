@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, input, output, signal } from '@angular/core';
 import { inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CategoriaTipoEmergencia, NivelEmergenciaDto, TipoEmergenciaDto } from '../../core/models/emergencia';
+import { CategoriaTipoEmergencia, NivelEmergenciaDto, PERFIS_TIPO, PerfilTipoEmergencia, TipoEmergenciaDto } from '../../core/models/emergencia';
 import { ErrorResponseDto } from '../../core/models/profissional';
 import { EmergenciaService } from '../../core/services/emergencia';
 import { Drawer } from '../../shared/drawer/drawer';
@@ -11,7 +11,8 @@ type Gaveta = { tipo: 'tipo'; item: TipoEmergenciaDto | null } | { tipo: 'nivel'
 
 /**
  * Catálogos das emergências (ADR-0157, pendência da ADR-0156): os tipos (com o COBRADE) e os níveis de resposta. O
- * código do tipo e a ordem do nível não mudam; inativar tira do uso sem apagar.
+ * código do tipo e a ordem do nível não mudam; inativar tira do uso sem apagar. O perfil do tipo (ADR-0160) diz o que a
+ * emergência ganha de próprio: o evento de massa é planejado e tem os dados do evento.
  */
 @Component({
   selector: 'app-catalogos-emergencia',
@@ -26,7 +27,7 @@ type Gaveta = { tipo: 'tipo'; item: TipoEmergenciaDto | null } | { tipo: 'nivel'
             <tbody>
               @for (t of tipos(); track t.uuid) {
                 <tr>
-                  <td><span class="cell-main">{{ t.nome }}@if (!t.ativo) { <span class="tag tag--muted">Inativo</span> }</span><span class="cell-sub mono">{{ t.codigo }} · {{ t.categoria === 'DESASTRE' ? 'Desastre' : 'Saúde' }}</span></td>
+                  <td><span class="cell-main">{{ t.nome }}@if (!t.ativo) { <span class="tag tag--muted">Inativo</span> }</span><span class="cell-sub mono">{{ t.codigo }} · {{ t.categoria === 'DESASTRE' ? 'Desastre' : 'Saúde' }}@if (t.perfil !== 'GERAL') { · {{ perfis[t.perfil] }} }</span></td>
                   <td class="mono">{{ t.cobrade ?? '—' }}</td>
                   <td class="row-actions">@if (podeGerenciar()) { <button type="button" class="link-btn" (click)="abrir({ tipo: 'tipo', item: t })" [attr.aria-label]="'Editar tipo ' + t.nome">Editar</button> }</td>
                 </tr>
@@ -72,6 +73,11 @@ type Gaveta = { tipo: 'tipo'; item: TipoEmergenciaDto | null } | { tipo: 'nivel'
                 <div class="dw-field"><label for="f-ce-nome">Nome <span class="req" aria-hidden="true">*</span></label><input id="f-ce-nome" type="text" maxlength="120" [value]="f()['nome'] ?? ''" (input)="set('nome', $event)" /></div>
                 <div class="dw-field"><label for="f-ce-cobrade">COBRADE<span class="opt">opcional</span></label><input id="f-ce-cobrade" type="text" maxlength="20" [value]="f()['cobrade'] ?? ''" (input)="set('cobrade', $event)" placeholder="Ex.: 1.2.1.0.0" /></div>
               </div>
+              <div class="dw-field"><label for="f-ce-perfil">Perfil</label>
+                <select id="f-ce-perfil" (change)="f.set({ ...f(), perfil: $any($event.target).value })">
+                  @for (p of perfilChaves; track p) { <option [value]="p" [selected]="f()['perfil'] === p">{{ perfis[p] }}</option> }
+                </select>
+                <span class="cell-sub">O evento de massa é planejado antes de acontecer e tem os dados do evento.</span></div>
             } @else {
               <div class="dw-row">
                 <div class="dw-field"><label for="f-ce-ordem">Ordem <span class="req" aria-hidden="true">*</span></label><input id="f-ce-ordem" type="number" min="0" [disabled]="!!g.item" [value]="f()['ordem'] ?? ''" (input)="set('ordem', $event)" /></div>
@@ -106,12 +112,14 @@ export class CatalogosEmergencia {
   protected readonly erro = signal<string | null>(null);
   protected readonly f = signal<Record<string, string>>({});
   protected readonly ativo = signal(true);
+  protected readonly perfis = PERFIS_TIPO;
+  protected readonly perfilChaves = Object.keys(PERFIS_TIPO) as PerfilTipoEmergencia[];
 
   protected abrir(g: Gaveta): void {
     this.erro.set(null);
     if (g.tipo === 'tipo') {
       const t = g.item;
-      this.f.set({ codigo: t?.codigo ?? '', nome: t?.nome ?? '', categoria: t?.categoria ?? 'DESASTRE', cobrade: t?.cobrade ?? '' });
+      this.f.set({ codigo: t?.codigo ?? '', nome: t?.nome ?? '', categoria: t?.categoria ?? 'DESASTRE', cobrade: t?.cobrade ?? '', perfil: t?.perfil ?? 'GERAL' });
       this.ativo.set(t?.ativo ?? true);
     } else {
       const n = g.item;
@@ -136,7 +144,7 @@ export class CatalogosEmergencia {
       }
       req = this.service.salvarTipo(g.item?.uuid ?? null, {
         codigo: t('codigo'), nome: t('nome'), categoria: (t('categoria') || 'DESASTRE') as CategoriaTipoEmergencia, cobrade: t('cobrade') || null,
-        ativo: g.item ? this.ativo() : null,
+        perfil: (t('perfil') || 'GERAL') as PerfilTipoEmergencia, ativo: g.item ? this.ativo() : null,
       });
     } else {
       if (t('ordem') === '' || !t('nome')) {

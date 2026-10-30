@@ -45,11 +45,17 @@ export class SalaDeSituacao {
   private readonly emergenciaService = inject(EmergenciaService);
   /** As emergências ativas (ADR-0156), no alto da tela; sem acesso, nada. */
   protected readonly emergencias = signal<EmergenciaDto[]>([]);
+  /** Os eventos de massa planejados para os próximos 7 dias, ou já previstos e ainda sem operação (ADR-0160). */
+  protected readonly eventosPlanejados = signal<EmergenciaDto[]>([]);
   protected readonly classeDoNivel = classeDoNivel;
 
   /** A data local do início da emergência (o instante vem em UTC). */
   protected desde(instante: string): string {
     return new Date(instante).toLocaleDateString('pt-BR');
+  }
+
+  protected quando(instante: string): string {
+    return new Date(instante).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   }
   private readonly unidadeService = inject(UnidadeSaudeService);
   private readonly destroyRef = inject(DestroyRef);
@@ -320,7 +326,12 @@ export class SalaDeSituacao {
     this.service.situacao(u).pipe(catchError(() => of(null))).subscribe((s) => this.situacao.set(s));
     this.service.ocupacao(u).pipe(catchError(() => of(null))).subscribe((o) => this.ocupacao.set(o));
     this.service.escala(u).pipe(catchError(() => of([]))).subscribe((l) => this.escala.set(l));
-    this.emergenciaService.emergencias().pipe(catchError(() => of([]))).subscribe((l) => this.emergencias.set(l.filter((e) => e.situacao !== 'ENCERRADA')));
+    this.emergenciaService.emergencias().pipe(catchError(() => of([]))).subscribe((l) => {
+      this.emergencias.set(l.filter((e) => e.situacao === 'ATIVA' || e.situacao === 'EM_DESMOBILIZACAO'));
+      const limite = Date.now() + 7 * 24 * 3600 * 1000;
+      this.eventosPlanejados.set(l.filter((e) => e.situacao === 'PLANEJADA' && e.eventoMassa && new Date(e.eventoMassa.inicioPrevisto).getTime() <= limite)
+        .sort((a, b) => a.eventoMassa!.inicioPrevisto.localeCompare(b.eventoMassa!.inicioPrevisto)));
+    });
   }
 }
 

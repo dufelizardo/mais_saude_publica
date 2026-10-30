@@ -4,6 +4,11 @@ import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AcaoEmergencialRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.BoletimEstruturaRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EstruturaTemporariaRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EventoMassaRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.InicioOperacaoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoEstruturaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoAcaoEmergencialRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MobilizacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.SituacaoMobilizacaoRequestDto;
@@ -466,5 +471,63 @@ public class EmergenciaController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"relatorio-pos-evento.csv\"")
                 .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
                 .body(corpo);
+    }
+
+    // ── Eventos especializados (E6a, ADR-0160) ──
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR", "EMERGENCIA.ATIVAR"})
+    @PutMapping(value = "emergencia/{uuid}/evento-massa", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Dados do evento de massa", description = "Natureza, local, período previsto, público, organizador e risco; só no perfil evento "
+            + "de massa e na emergência planejada ou ativa (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> salvarEventoMassa(@PathVariable UUID uuid, @Valid @RequestBody EventoMassaRequestDto dto) {
+        return ResponseEntity.ok(service.salvarEventoMassa(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.ATIVAR"})
+    @PostMapping(value = "emergencia/{uuid}/operacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Inicia a operação da emergência planejada", description = "Da planejada, com os dados do evento (422): passa a ativa.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> iniciarOperacao(@PathVariable UUID uuid, @Valid @RequestBody InicioOperacaoRequestDto dto) {
+        return ResponseEntity.ok(service.iniciarOperacao(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR", "EMERGENCIA.ATIVAR"})
+    @PostMapping(value = "emergencia/{uuid}/estrutura", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Nova estrutura temporária", description = "Posto médico, tenda de hidratação ou hospital de campanha, com a unidade de "
+            + "referência; nasce planejada. Na emergência planejada ou ativa (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> novaEstrutura(@PathVariable UUID uuid, @Valid @RequestBody EstruturaTemporariaRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.novaEstrutura(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR", "EMERGENCIA.ATIVAR"})
+    @PutMapping(value = "emergencia/{uuid}/estrutura/{estruturaId}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Ajusta a estrutura temporária", description = "Desativada não muda (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> atualizarEstrutura(@PathVariable UUID uuid, @PathVariable UUID estruturaId,
+                                                            @Valid @RequestBody EstruturaTemporariaRequestDto dto) {
+        return ResponseEntity.ok(service.atualizarEstrutura(uuid, estruturaId, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.COORDENAR", "EMERGENCIA.ATIVAR"})
+    @PostMapping(value = "emergencia/{uuid}/estrutura/{estruturaId}/situacao", produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Abre ou desativa a estrutura", description = "Em operação só da planejada e com a emergência ativa (422); desativar pede o "
+            + "motivo (400).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> situacaoDaEstrutura(@PathVariable UUID uuid, @PathVariable UUID estruturaId,
+                                                             @Valid @RequestBody SituacaoEstruturaRequestDto dto) {
+        return ResponseEntity.ok(service.situacaoDaEstrutura(uuid, estruturaId, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.REGISTRAR"})
+    @PostMapping(value = "emergencia/{uuid}/estrutura/{estruturaId}/boletim", produces = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Boletim da estrutura", description = "Atendimentos, remoções, casos graves e óbitos de um dia ou turno; só da estrutura que "
+            + "já operou (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> boletim(@PathVariable UUID uuid, @PathVariable UUID estruturaId, @Valid @RequestBody BoletimEstruturaRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.boletim(uuid, estruturaId, dto));
     }
 }

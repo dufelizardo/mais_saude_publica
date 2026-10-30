@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.models;
 
 import com.edufelizardo.maissaudepublica.models.enuns.CategoriaTipoEmergencia;
+import com.edufelizardo.maissaudepublica.models.enuns.PerfilTipoEmergencia;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -38,6 +39,11 @@ public class TipoEmergencia implements Serializable {
     /** Classificação e Codificação Brasileira de Desastres (ex.: 1.2.1.0.0). */
     @Column(length = 20)
     private String cobrade;
+
+    /** O que a emergência deste tipo ganha de próprio (ADR-0160). */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PerfilTipoEmergencia perfil;
 
     @Column(nullable = false)
     private boolean ativo;
