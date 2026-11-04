@@ -1,0 +1,6 @@
+*** Comments ***
+    Mais Saúde Pública API - controle de vetores, fatia V4a da Vigilância (ADR-0162).
+*** Variables ***
+${IMOVEL_VETORIAL_SCHEMA}    ${{{'required': ['uuid', 'tipo', 'endereco', 'microareaId', 'microareaCodigo', 'areaId', 'areaNome', 'pendente'], 'types': {'uuid': str, 'tipo': str, 'endereco': str, 'microareaId': str, 'microareaCodigo': str, 'areaId': str, 'areaNome': str, 'latitude': float, 'longitude': float, 'ultimaVistoria': str, 'ultimoResultado': str, 'pendente': bool}}}}
+${VISTORIA_VETORIAL_SCHEMA}    ${{{'required': ['uuid', 'imovelId', 'data', 'cicloAno', 'cicloNumero', 'agenteMatricula', 'tipo', 'resultado', 'depositosInspecionados', 'focos'], 'types': {'uuid': str, 'imovelId': str, 'endereco': str, 'data': str, 'cicloAno': int, 'cicloNumero': int, 'agenteMatricula': str, 'agenteNome': str, 'tipo': str, 'resultado': str, 'depositosInspecionados': int, 'depositosEliminados': int, 'depositosTratados': int, 'larvicida': str, 'larvicidaGramas': float, 'focos': list}, 'enums': {'resultado': ['INSPECIONADA', 'FECHADA', 'RECUSADA'], 'tipo': ['ROTINA', 'LIRAA', 'BLOQUEIO', 'PONTO_ESTRATEGICO', 'DENUNCIA']}}}}
+${INDICES_VETORIAIS_SCHEMA}    ${{{'required': ['ano', 'ciclo', 'inicio', 'fim', 'municipio', 'areas'], 'types': {'ano': int, 'ciclo': int, 'inicio': str, 'fim': str, 'municipio': dict, 'areas': list}}}}

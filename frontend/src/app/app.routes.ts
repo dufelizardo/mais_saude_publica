@@ -179,6 +179,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/vigilancia/emergencias').then((m) => m.Emergencias),
         data: { breadcrumb: 'Emergências e desastres', area: 'Vigilância' },
       },
+      // Zoonoses e vetores (ADR-0162).
+      {
+        path: 'vigilancia/vetores',
+        loadComponent: () => import('./features/vigilancia/controle-vetorial').then((m) => m.ControleVetorial),
+        data: { breadcrumb: 'Zoonoses e vetores', area: 'Vigilância' },
+      },
       {
         path: 'vigilancia',
         loadComponent: () => import('./features/vigilancia/vigilancia').then((m) => m.Vigilancia),
