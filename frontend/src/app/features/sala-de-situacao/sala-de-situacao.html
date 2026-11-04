@@ -41,6 +41,20 @@
   </section>
 }
 
+@if (areasEmRisco().length) {
+  <section class="ss-alertas" aria-label="Infestação pelo Aedes">
+    @for (a of areasEmRisco().slice(0, 3); track a.areaId) {
+      <article class="ss-alerta ss-alerta--alta" [attr.aria-label]="'Infestação de risco: ' + a.areaNome">
+        <div>
+          <div class="ss-alerta__titulo">Infestação de risco pelo Aedes: {{ a.areaNome }}</div>
+          <div class="ss-alerta__detalhe">IIP {{ a.iip?.toLocaleString('pt-BR') }}% · Breteau {{ a.ib?.toLocaleString('pt-BR') }} · ciclo {{ cicloVetorial() }} · {{ a.imoveisInspecionados }} imóveis inspecionados</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/vigilancia/vetores">Ver índices</a>
+      </article>
+    }
+  </section>
+}
+
 @if (eventosPlanejados().length) {
   <section class="ss-alertas" aria-label="Eventos de massa planejados">
     @for (e of eventosPlanejados().slice(0, 3); track e.uuid) {

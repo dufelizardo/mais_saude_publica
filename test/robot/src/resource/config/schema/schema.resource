@@ -87,6 +87,7 @@ Resource    ../../schema/saude_mental/saude_mental_schema.resource
 Resource    ../../schema/vigilancia/vigilancia_schema.resource
 Resource    ../../schema/vigilancia/vigilancia_contatos_schema.resource
 Resource    ../../schema/vigilancia/vigilancia_surto_schema.resource
+Resource    ../../schema/vigilancia/controle_vetorial_schema.resource
 Resource    ../../schema/territorio/territorio_schema.resource
 Resource    ../../schema/territorio/cadastro_territorial_schema.resource
 Resource    ../../schema/territorio/adscricao_schema.resource
