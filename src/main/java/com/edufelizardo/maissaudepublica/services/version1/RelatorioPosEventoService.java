@@ -206,6 +206,11 @@ public class RelatorioPosEventoService {
         linha(sb, "Casos graves nas estruturas", i.getCasosGravesEstruturas());
         linha(sb, "Óbitos nas estruturas", i.getObitosEstruturas());
         linha(sb, "Público estimado", i.getPublicoEstimado());
+        linha(sb, "Casos notificados do agravo", i.getCasosNotificados());
+        linha(sb, "Casos confirmados do agravo", i.getCasosConfirmados());
+        linha(sb, "Óbitos pelo agravo", i.getObitosAgravo());
+        linha(sb, "Exposições ambientais", i.getExposicoes());
+        linha(sb, "Maior população exposta", i.getPopulacaoExpostaMaxima());
         return sb.toString();
     }
 
@@ -230,6 +235,9 @@ public class RelatorioPosEventoService {
         AvaliacaoImpacto ultima = avaliacaoRepository.findDaEmergencia(em.getUuid()).stream().findFirst().orElse(null);
         int[] estruturas = especializado.totais(em);
         var massa = especializado.eventoMassa(em);
+        var epidemia = em.getTipo().getPerfil() == com.edufelizardo.maissaudepublica.models.enuns.PerfilTipoEmergencia.EPIDEMIA
+                && especializado.agravo(em) != null && !especializado.agravo(em).isSensivel() ? especializado.painel(em) : null;
+        Integer[] exposicao = especializado.totaisDeExposicao(em);
         return new RelatorioPosEventoDto.Indicadores(horas(em.getInicio(), fim), horas(em.getEvento().getOcorridoEm(), em.getInicio()), maximo,
                 Math.max(0, niveis.size() - 1), acoes.size(), concluidas, canceladas, comPrazo.size(), noPrazo,
                 comPrazo.isEmpty() ? null : BigDecimal.valueOf(noPrazo * 100.0 / comPrazo.size()).setScale(1, RoundingMode.HALF_UP).doubleValue(),
@@ -237,7 +245,8 @@ public class RelatorioPosEventoService {
                 porTipo.entrySet().stream().map(e -> new RelatorioPosEventoDto.Contagem(e.getKey().name(), e.getValue())).toList(), capacidade,
                 ultima != null ? ultima.getPopulacaoAfetada() : null, ultima != null ? ultima.getUnidadesAfetadas().size() : 0,
                 ultima != null ? ultima.getLeitosIndisponiveis() : null, estruturas[0], estruturas[1], estruturas[2], estruturas[3], estruturas[4],
-                massa != null ? massa.getPublicoEstimado() : null);
+                massa != null ? massa.getPublicoEstimado() : null, epidemia != null ? epidemia.getNotificados() : null,
+                epidemia != null ? epidemia.getConfirmados() : null, epidemia != null ? epidemia.getObitos() : null, exposicao[0], exposicao[1]);
     }
 
     private static double horas(Instant de, Instant ate) {

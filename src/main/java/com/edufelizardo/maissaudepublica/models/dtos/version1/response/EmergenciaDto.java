@@ -1,6 +1,7 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.enuns.CategoriaTipoEmergencia;
+import com.edufelizardo.maissaudepublica.models.enuns.MeioExposicaoAmbiental;
 import com.edufelizardo.maissaudepublica.models.enuns.NaturezaEventoMassa;
 import com.edufelizardo.maissaudepublica.models.enuns.PerfilTipoEmergencia;
 import com.edufelizardo.maissaudepublica.models.enuns.RiscoEventoMassa;
@@ -81,6 +82,10 @@ public class EmergenciaDto implements Serializable {
     private PerfilTipoEmergencia perfil;
     private EventoMassaItem eventoMassa;
     private List<EstruturaItem> estruturas;
+    /** O agravo escolhido na epidemia e as exposições ambientais do desastre (ADR-0161; na lista, vazio). */
+    private UUID agravoId;
+    private String agravoNome;
+    private List<ExposicaoItem> exposicoes;
 
     /** Microárea do território afetado. */
     @Getter
@@ -402,5 +407,27 @@ public class EmergenciaDto implements Serializable {
         private int obitos;
         private String observacao;
         private Instant registradoEm;
+    }
+
+    /** Uma exposição ambiental. */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class ExposicaoItem implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private UUID uuid;
+        private Instant avaliadaEm;
+        private MeioExposicaoAmbiental meio;
+        private String agente;
+        private String fonte;
+        private Integer populacaoExposta;
+        private List<String> unidades;
+        private String medidas;
+        private String recomendacao;
     }
 }

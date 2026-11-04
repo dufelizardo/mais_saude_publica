@@ -512,6 +512,34 @@ public class EmergenciaService {
         return detalhe(em);
     }
 
+    /** O agravo da epidemia: a emergência ativa (422), do perfil epidemia (422). */
+    @Transactional
+    public EmergenciaDto definirAgravo(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.AgravoEmergenciaRequestDto dto) {
+        controleDeAcesso.exigirAlguma(REGISTRAR, ATIVAR);
+        Emergencia em = ativa(uuid);
+        especializado.definirAgravo(em, dto.getAgravoId());
+        emergenciaRepository.save(em);
+        ContextoAuditoria.registro(em.getUuid());
+        return detalhe(em);
+    }
+
+    /** O painel da epidemia, lido da Vigilância (ADR-0161). */
+    @Transactional(readOnly = true)
+    public com.edufelizardo.maissaudepublica.models.dtos.version1.response.PainelEpidemiaDto painelEpidemia(UUID uuid) {
+        return especializado.painel(buscarEmergencia(uuid));
+    }
+
+    /** Exposição ambiental nova (as anteriores ficam): a emergência ativa (422), do perfil desastre ambiental (422). */
+    @Transactional
+    public EmergenciaDto registrarExposicao(UUID uuid, com.edufelizardo.maissaudepublica.models.dtos.version1.request.ExposicaoAmbientalRequestDto dto) {
+        controleDeAcesso.exigirAlguma(REGISTRAR);
+        Emergencia em = ativa(uuid);
+        especializado.registrarExposicao(em, dto);
+        ContextoAuditoria.registro(em.getUuid());
+        ContextoAuditoria.detalhe("Exposição ambiental: " + dto.getMeio() + ".");
+        return detalhe(em);
+    }
+
     // ── Planos de contingência na emergência (E2, ADR-0157) ─────────────────────────────────────────
 
     /** Ativa o plano vigente do tipo da emergência que cobre o nível atual (422); já ativo, 409. */
@@ -788,6 +816,10 @@ public class EmergenciaService {
                 : coordenacao.pendencias(em, avaliacoes.isEmpty() ? null : avaliacoes.get(0)));
         d.setEventoMassa(especializado.eventoMassa(em));
         d.setEstruturas(especializado.estruturas(em));
+        var agravo = especializado.agravo(em);
+        d.setAgravoId(agravo != null ? agravo.getUuid() : null);
+        d.setAgravoNome(agravo != null ? agravo.getNome() : null);
+        d.setExposicoes(especializado.exposicoes(em));
         return d;
     }
 
@@ -800,7 +832,7 @@ public class EmergenciaService {
                 r != null ? r.getMatricula() : null, r != null ? r.getNome() : null, ultima != null ? ultima.getNivelImpacto() : null,
                 ultima != null ? ultima.getAvaliadaEm() : null, null, List.of(), em.getEspinNumero(), em.getEspinData(), em.getDecretoTipo(),
                 em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of(), List.of(), 0, List.of(), List.of(), List.of(), null, List.of(),
-                t.getPerfil(), null, List.of());
+                t.getPerfil(), null, List.of(), null, null, List.of());
     }
 
     private static EventoEmergencialDto dto(EventoEmergencial e, UUID emergenciaId) {

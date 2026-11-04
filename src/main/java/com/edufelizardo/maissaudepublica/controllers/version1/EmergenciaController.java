@@ -4,6 +4,9 @@ import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesBusca;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AcaoEmergencialRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AgravoEmergenciaRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ExposicaoAmbientalRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PainelEpidemiaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.BoletimEstruturaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EstruturaTemporariaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EventoMassaRequestDto;
@@ -529,5 +532,34 @@ public class EmergenciaController {
     @ApiErrorResponsesMutacao
     public ResponseEntity<EmergenciaDto> boletim(@PathVariable UUID uuid, @PathVariable UUID estruturaId, @Valid @RequestBody BoletimEstruturaRequestDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.boletim(uuid, estruturaId, dto));
+    }
+
+    // ── Epidemia e desastre ambiental (E6b, ADR-0161) ──
+
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR"})
+    @PutMapping(value = "emergencia/{uuid}/agravo", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Agravo da epidemia", description = "Na emergência ativa de perfil epidemia (422); agravo sensível, 422. Sem ele, vale o do "
+            + "surto de origem.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> definirAgravo(@PathVariable UUID uuid, @Valid @RequestBody AgravoEmergenciaRequestDto dto) {
+        return ResponseEntity.ok(service.definirAgravo(uuid, dto));
+    }
+
+    @RequerPermissao({"EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR", "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "INDICADOR.CONSULTAR"})
+    @GetMapping(value = "emergencia/{uuid}/painel-epidemia", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Painel da epidemia", description = "As notificações do agravo por semana epidemiológica, desde 4 semanas antes do início, na "
+            + "área afetada; confirmados, descartados e óbitos. Só no perfil epidemia e com agravo (422).", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<PainelEpidemiaDto> painelEpidemia(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(service.painelEpidemia(uuid));
+    }
+
+    @RequerPermissao({"EMERGENCIA.REGISTRAR"})
+    @PostMapping(value = "emergencia/{uuid}/exposicao-ambiental", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Exposição ambiental", description = "Meio, agente, população exposta, unidades e medidas; datada e repetível. Na emergência "
+            + "ativa de perfil desastre ambiental (422).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<EmergenciaDto> registrarExposicao(@PathVariable UUID uuid, @Valid @RequestBody ExposicaoAmbientalRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.registrarExposicao(uuid, dto));
     }
 }

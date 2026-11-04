@@ -38,6 +38,12 @@ interface Recomendacao { descricao: string; planoCodigo: string }
             <div class="rp-num"><b>{{ i.atendimentosEstruturas }}</b><span>atendimento(s) em {{ i.estruturas }} estrutura(s) temporária(s)</span></div>
             <div class="rp-num"><b>{{ i.remocoesEstruturas }}</b><span>remoção(ões) para a rede · {{ i.casosGravesEstruturas }} grave(s) · {{ i.obitosEstruturas }} óbito(s)</span></div>
           }
+          @if (i.casosNotificados != null) {
+            <div class="rp-num"><b>{{ i.casosNotificados }}</b><span>caso(s) notificado(s) · {{ i.casosConfirmados }} confirmado(s) · {{ i.obitosAgravo }} óbito(s)</span></div>
+          }
+          @if (i.exposicoes) {
+            <div class="rp-num"><b>{{ i.exposicoes }}</b><span>exposição(ões) ambiental(is)@if (i.populacaoExpostaMaxima != null) { · até {{ i.populacaoExpostaMaxima.toLocaleString('pt-BR') }} pessoas expostas }</span></div>
+          }
         </div>
         @if (i.mobilizacoesPorTipo.length) {
           <p class="cell-sub">Mobilizações: @for (c of i.mobilizacoesPorTipo; track c.chave; let ultimo = $last) { {{ rotuloTipo(c.chave) }} {{ c.quantidade }}@if (!ultimo) { · } }</p>
