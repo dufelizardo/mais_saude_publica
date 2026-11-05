@@ -23,6 +23,8 @@ import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import { ProducaoService } from '../../core/services/producao';
 import { EmergenciaService } from '../../core/services/emergencia';
 import { ControleVetorialService } from '../../core/services/controle-vetorial';
+import { VigilanciaAmbientalService } from '../../core/services/vigilancia-ambiental';
+import { AmostraAguaDto } from '../../core/models/vigilancia-ambiental';
 import { LinhaIndiceVetorial } from '../../core/models/controle-vetorial';
 import { EmergenciaDto, classeDoNivel } from '../../core/models/emergencia';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
@@ -49,6 +51,9 @@ export class SalaDeSituacao {
   /** As áreas com IIP de risco (4% ou mais) no ciclo atual do controle do Aedes (ADR-0162). */
   protected readonly areasEmRisco = signal<LinhaIndiceVetorial[]>([]);
   protected readonly cicloVetorial = signal<number | null>(null);
+  private readonly ambientalService = inject(VigilanciaAmbientalService);
+  /** As amostras de água fora do padrão do mês, ainda sem medida (ADR-0164). */
+  protected readonly aguaForaDoPadrao = signal<AmostraAguaDto[]>([]);
   /** As emergências ativas (ADR-0156), no alto da tela; sem acesso, nada. */
   protected readonly emergencias = signal<EmergenciaDto[]>([]);
   /** Os eventos de massa planejados para os próximos 7 dias, ou já previstos e ainda sem operação (ADR-0160). */
@@ -332,6 +337,10 @@ export class SalaDeSituacao {
     this.service.situacao(u).pipe(catchError(() => of(null))).subscribe((s) => this.situacao.set(s));
     this.service.ocupacao(u).pipe(catchError(() => of(null))).subscribe((o) => this.ocupacao.set(o));
     this.service.escala(u).pipe(catchError(() => of([]))).subscribe((l) => this.escala.set(l));
+    const mes = new Date();
+    const desde = `${mes.getFullYear()}-${String(mes.getMonth() + 1).padStart(2, '0')}-01`;
+    this.ambientalService.amostras({ naoConformes: true, desde }).pipe(catchError(() => of([])))
+      .subscribe((l) => this.aguaForaDoPadrao.set(l.filter((a) => !a.medida)));
     this.vetorialService.indices().pipe(catchError(() => of(null))).subscribe((ix) => {
       this.cicloVetorial.set(ix?.ciclo ?? null);
       this.areasEmRisco.set((ix?.areas ?? []).filter((a) => a.classificacao === 'RISCO').sort((a, b) => (b.iip ?? 0) - (a.iip ?? 0)));

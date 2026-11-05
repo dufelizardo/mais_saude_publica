@@ -5,7 +5,7 @@
 a V2 (contatos, local e mapa; surto e medidas) estão implementadas** nas ADRs
 [0124](../adr/0124-vigilancia-epidemiologica-fundacao.md), [0130](../adr/0130-vigilancia-contatos-local-e-mapa.md) e
 [0131](../adr/0131-vigilancia-surto-e-medidas.md); o controle de vetores (V4a), na
-[ADR-0162](../adr/0162-vigilancia-controle-de-vetores.md), e os animais (V4b), na [ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md). V3, V4c e V5 vêm depois (seção 14).
+[ADR-0162](../adr/0162-vigilancia-controle-de-vetores.md), os animais (V4b), na [ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md), e a ambiental (V4c), na [ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md). V3 e V5 vêm depois (seção 14).
 
 A vigilância **não é mais um módulo assistencial**: é uma camada de inteligência e intervenção sobre riscos,
 doenças, agravos e eventos de saúde pública, ligada a território, população e rede. Este documento detalha os
@@ -169,7 +169,9 @@ Estabelecimento regulado → Inspeção → Achados → Irregularidade → Medid
 
 Riscos ligados ao ambiente: água, ar, solo, contaminantes, desastres, fatores ambientais, vetores e animais. Liga-se
 fortemente com Território, Zoonoses e Epidemiologia. Entidades previstas: `EventoAmbiental`, `RiscoAmbiental` e
-`MonitoramentoAmbiental` (por exemplo, a qualidade da água, que hoje é do SISAGUA).
+`MonitoramentoAmbiental` (por exemplo, a qualidade da água, que hoje é do SISAGUA). **Feito na V4c**
+([ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md)): o ponto de coleta e a amostra da água com a conformidade
+da Portaria GM/MS 888/2021 (o monitoramento) e o risco ambiental permanente.
 
 ## 6. Zoonoses e Controle de Vetores
 
@@ -188,7 +190,7 @@ A1 a E, tratamento focal, ciclo bimestral, pendência de revisita), o foco com o
 Breteau) e as ações de controle ligadas ao caso de arbovirose ou ao surto. **Na V4b**
 ([ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md)), os animais: a observação do agressor por 10 dias ligada ao
 atendimento antirrábico, os exames de raiva e de leishmaniose canina e a vacinação antirrábica por posto. A vigilância
-ambiental (água e risco) fica na V4c.
+ambiental (água e risco) ficou na V4c.
 
 ## 7. Saúde do Trabalhador
 
@@ -340,7 +342,7 @@ Assim o modelo dos sistemas externos não contamina o domínio interno.
 | **V3** · sanitária | estabelecimento regulado, inspeção, irregularidade, medida, licença | Documentos (autos) |
 | **V4a** · controle de vetores ✅ ([ADR-0162](../adr/0162-vigilancia-controle-de-vetores.md)) | vistoria, foco, índices do ciclo, ação de controle | Território F3 (imóvel) |
 | **V4b** · animais ✅ ([ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md)) | animal, observação do agressor, exames, vacinação antirrábica | V4a |
-| **V4c** · ambiental | qualidade da água, risco ambiental | V4a |
+| **V4c** · ambiental ✅ ([ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md)) | qualidade da água, risco ambiental | V4a |
 | **V5** · trabalhador e integrações | evento do trabalho, risco ocupacional, investigação; adaptadores (SINAN primeiro) | V1; Integrações (#20) |
 
 **Fora do escopo agora:**
