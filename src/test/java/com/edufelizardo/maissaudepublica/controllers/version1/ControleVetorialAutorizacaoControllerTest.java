@@ -109,6 +109,7 @@ class ControleVetorialAutorizacaoControllerTest {
             jdbc.update("delete from tb_acao_controle_vetorial_microarea where acao_id = ?", a);
             jdbc.update("delete from tb_acao_controle_vetorial where uuid = ?", a);
         }
+        jdbc.update("delete from tb_animal_zoonoses where nome = 'Totó' and endereco = 'Rua B, 10'");
         TerritorioControllerTest.limparDados(jdbc, PREFIXO, CODIGO);
         for (String cpf : CPFS) {
             atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
@@ -156,5 +157,18 @@ class ControleVetorialAutorizacaoControllerTest {
         assertThat(status(AMBIENTAL, get("/api/v1/vetores/bloqueios-pendentes"))).isEqualTo(200);
         assertThat(status(EPIDEMIOLOGICA, get("/api/v1/vetores/bloqueios-pendentes"))).isEqualTo(200);
         assertThat(status(AGENTE, get("/api/v1/vetores/bloqueios-pendentes"))).isEqualTo(403);
+    }
+
+    @Test
+    void zoonosesPorPapel() throws Exception {
+        String animal = "{\"especie\": \"CAO\", \"nome\": \"Totó\", \"endereco\": \"Rua B, 10\"}";
+        // O animal é registro do agente; a recepção não registra nem lê (o tutor é dado pessoal).
+        assertThat(status(RECEPCAO, json(post("/api/v1/zoonoses/animal"), animal))).isEqualTo(403);
+        assertThat(status(AGENTE, json(post("/api/v1/zoonoses/animal"), animal))).isEqualTo(201);
+        assertThat(status(RECEPCAO, get("/api/v1/zoonoses/animais"))).isEqualTo(403);
+        assertThat(status(EPIDEMIOLOGICA, get("/api/v1/zoonoses/observacoes"))).isEqualTo(200);
+        // A vacinação antirrábica agregada: o gestor lê; a recepção, não.
+        assertThat(status(GESTOR, get("/api/v1/zoonoses/vacinacao-antirrabica"))).isEqualTo(200);
+        assertThat(status(RECEPCAO, get("/api/v1/zoonoses/vacinacao-antirrabica"))).isEqualTo(403);
     }
 }

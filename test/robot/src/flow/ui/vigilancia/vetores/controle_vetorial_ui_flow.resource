@@ -1,7 +1,7 @@
 *** Settings ***
 Library     String
 Resource    ../../../../pom/ui/vigilancia/vetores/controle_vetorial_ui_pom.resource
-Resource    ../../../vigilancia/controle_vetorial_flow.resource
+Resource    ../../../vigilancia/zoonoses_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Zoonoses e vetores (ADR-0162); as bases vêm pela API.
@@ -58,5 +58,61 @@ UI Controle Vetorial - Acao De Controle
     Fill Text    id=f-cv-r-imoveis    35
     Enviar Gaveta
     Wait For Elements State    css=[aria-label="Ações de controle"] tr:has-text("Equipe Robot de endemias") >> text=Realizada    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Controle Vetorial - Animal E Observacao
+    [Documentation]    Pela tela: registra o cão e abre a observação do agressor (ADR-0163).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [NUMBERS]
+    UI Controle Vetorial - Abrir Tela
+    Wait For Elements State    css=h1 >> text=Zoonoses e vetores    visible
+    Click    role=tab[name="Animais"]
+    Clicar Botao    Registrar animal
+    Fill Text    id=f-za-nome    Totó ${sufixo}
+    Fill Text    id=f-za-tutor    Dona Rita
+    Fill Text    id=f-za-endereco    Rua Robot ${sufixo}
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Animais"] >> text=Totó ${sufixo}    visible
+    Click    role=button[name="Abrir observação: Totó ${sufixo}"]
+    Enviar Gaveta
+    Click    role=tab[name="Observação de agressores"]
+    Wait For Elements State    css=[aria-label="Observações de agressores"] tr:has-text("Totó ${sufixo}") >> text=Em observação    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Controle Vetorial - Exame De Leishmaniose
+    [Documentation]    Pela tela: coleta do teste rápido e resultado reagente com o desfecho do cão (ADR-0163).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${animal}=    Seed Cao Zoonoses
+    ${payload}=    Create Dictionary    animalId=${animal}    tipo=LEISHMANIOSE_TR_DPP
+    ${e}=    POST Exame Animal    ${payload}
+    ${nome}=    Set Variable    ${e.json()}[animalNome]
+    UI Controle Vetorial - Abrir Tela
+    Wait For Elements State    css=h1 >> text=Zoonoses e vetores    visible
+    Click    role=tab[name="Animais"]
+    Click    css=[aria-label="Exames de animais"] tr:has-text("${nome}") >> role=button[name^="Resultado"]
+    Select Options By    id=f-za-resultado    value    REAGENTE
+    Select Options By    id=f-za-leish    value    ACOMPANHAMENTO
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Exames de animais"] tr:has-text("${nome}") >> text=Acompanhamento    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Controle Vetorial - Vacinacao Antirrabica
+    [Documentation]    Pela tela: registra o posto de vacinação antirrábica (ADR-0163).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${area}    ${micro}    ${imovel}=    Seed Imovel Vetorial
+    UI Controle Vetorial - Abrir Tela
+    Wait For Elements State    css=h1 >> text=Zoonoses e vetores    visible
+    Click    role=tab[name="Vacinação antirrábica"]
+    Clicar Botao    Registrar posto
+    Select Options By    id=f-za-v-area    value    ${area}
+    Select Options By    id=f-za-v-micro    value    ${micro}
+    Fill Text    id=f-za-v-posto    Posto Robot Praça
+    Fill Text    id=f-za-v-caes    18
+    Fill Text    id=f-za-v-resp    Equipe Robot
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Vacinação por posto"] >> text=Posto Robot Praça >> nth=0    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

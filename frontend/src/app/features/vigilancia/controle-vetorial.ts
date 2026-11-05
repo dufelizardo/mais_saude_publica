@@ -34,8 +34,9 @@ import { ControleVetorialService } from '../../core/services/controle-vetorial';
 import { TerritorioService } from '../../core/services/territorio';
 import { Drawer } from '../../shared/drawer/drawer';
 import { Mapa, PinoMapa } from '../../shared/mapa/mapa';
+import { ZoonosesAnimais } from './zoonoses-animais';
 
-type Aba = 'vistorias' | 'focos' | 'indices' | 'acoes';
+type Aba = 'vistorias' | 'focos' | 'indices' | 'acoes' | 'animais' | 'agressores' | 'vacinacao';
 type Gaveta =
   | { tipo: 'vistoria'; imovel: ImovelVetorialDto | null }
   | { tipo: 'laboratorio'; foco: FocoVetorialDto }
@@ -47,11 +48,12 @@ type FocoNovo = { tipoDeposito: TipoDeposito; fase: FaseFoco; especieSuspeita: E
 /**
  * Zoonoses e vetores, fatia V4a da Vigilância (ADR-0162): a vistoria do agente de endemias com os depósitos do PNCD e os
  * focos, as pendências de revisita, os focos no mapa com o laboratório e o tratamento, os índices do ciclo (IIP e Breteau)
- * e as ações de controle, com os casos de arbovirose ainda sem bloqueio.
+ * e as ações de controle, com os casos de arbovirose ainda sem bloqueio. Os animais (ADR-0163): cadastro e exames,
+ * observação do agressor e vacinação antirrábica.
  */
 @Component({
   selector: 'app-controle-vetorial',
-  imports: [Drawer, Mapa],
+  imports: [Drawer, Mapa, ZoonosesAnimais],
   template: `
     <header class="page-head">
       <div>
@@ -75,9 +77,17 @@ type FocoNovo = { tipoDeposito: TipoDeposito; fase: FaseFoco; especieSuspeita: E
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'focos'" (click)="aba.set('focos')">Focos <span class="cnt">{{ focosAtivos().length }}</span></button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'indices'" (click)="aba.set('indices')">Índices do ciclo</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'acoes'" (click)="aba.set('acoes')">Ações de controle @if (bloqueios().length) { <span class="cnt">{{ bloqueios().length }}</span> }</button>
+      @if (podeAlguma('ZOONOSES.VISTORIAR', 'ZOONOSES.GERENCIAR', 'VIGILANCIA.INVESTIGAR')) {
+        <button type="button" role="tab" [attr.aria-selected]="aba() === 'animais'" (click)="aba.set('animais')">Animais</button>
+        <button type="button" role="tab" [attr.aria-selected]="aba() === 'agressores'" (click)="aba.set('agressores')">Observação de agressores</button>
+      }
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'vacinacao'" (click)="aba.set('vacinacao')">Vacinação antirrábica</button>
     </div>
 
     @switch (aba()) {
+      @case ('animais') { <app-zoonoses-animais secao="animais" [areas]="areas()" [podeRegistrar]="pode('ZOONOSES.VISTORIAR')" [podeResultado]="podeAlguma('ZOONOSES.VISTORIAR', 'ZOONOSES.GERENCIAR')" /> }
+      @case ('agressores') { <app-zoonoses-animais secao="agressores" [areas]="areas()" [podeRegistrar]="pode('ZOONOSES.VISTORIAR')" [podeResultado]="podeAlguma('ZOONOSES.VISTORIAR', 'ZOONOSES.GERENCIAR')" /> }
+      @case ('vacinacao') { <app-zoonoses-animais secao="vacinacao" [areas]="areas()" [podeRegistrar]="pode('ZOONOSES.VISTORIAR')" [podeResultado]="false" /> }
       @case ('vistorias') {
         @if (pendencias().length) {
           <section class="card cv-bloco" aria-label="Pendências de revisita">

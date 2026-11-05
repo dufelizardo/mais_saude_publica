@@ -336,6 +336,7 @@
                 </ul>
               }
               <app-local-do-caso [notificacao]="n" [podeInvestigar]="podeInvestigar()" (atualizada)="notificacaoAtualizada($event)" />
+              @if (n.agravoCodigo === 'ATENDIMENTO_ANTIRRABICO' && podeInvestigar()) { <app-animal-agressor [notificacaoId]="n.uuid" /> }
               @if (n.contatos.length || podeInvestigar()) {
                 <app-contatos-da-notificacao [notificacao]="n" [podeInvestigar]="podeInvestigar() && n.situacao !== 'ENCERRADA'"
                   (atualizada)="notificacaoAtualizada($event)" (notificar)="notificarContato(n, $event)" />

@@ -43,6 +43,7 @@ import { PacienteService } from '../../core/services/paciente';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 import { VigilanciaService } from '../../core/services/vigilancia';
 import { Drawer } from '../../shared/drawer/drawer';
+import { AnimalAgressor } from './animal-agressor';
 import { ContatosDaNotificacao } from './contatos-da-notificacao';
 import { LocalDoCaso } from './local-do-caso';
 import { LinhaDoTempo } from './linha-do-tempo';
@@ -73,7 +74,7 @@ interface CampoEdicao {
  */
 @Component({
   selector: 'app-vigilancia',
-  imports: [ReactiveFormsModule, Drawer, MapaVigilancia, ContatosDaNotificacao, LocalDoCaso, Surtos, MedidasDeControle, LinhaDoTempo],
+  imports: [ReactiveFormsModule, Drawer, MapaVigilancia, ContatosDaNotificacao, LocalDoCaso, Surtos, MedidasDeControle, LinhaDoTempo, AnimalAgressor],
   templateUrl: './vigilancia.html',
 })
 export class Vigilancia {
