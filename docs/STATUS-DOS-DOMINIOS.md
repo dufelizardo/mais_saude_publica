@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-04 (Vigilância V4a)
+- **Atualizado em:** 2026-11-05 (Vigilância V4b)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -49,7 +49,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
-| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1, V2 e V4a (controle de vetores) feitas; sanitária, animais e ambiental, trabalhador (V3, V4b, V5) |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1, V2, V4a (vetores) e V4b (animais) feitas; sanitária, ambiental e trabalhador (V3, V4c, V5) |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
@@ -69,7 +69,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
-| V4b | 23 Vigilância | animais (raiva e leishmaniose) e vigilância ambiental (água, risco e monitoramento) |
+| V4c | 23 Vigilância | vigilância ambiental: qualidade da água (VIGIAGUA) e risco ambiental |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
 | BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
@@ -86,7 +86,7 @@ P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 ✅ (área afetada) · Equipamentos com mapa real ✅
-F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4a ✅ (vetores) ──► V4b · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
+F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4a ✅ (vetores) ──► V4b ✅ (animais) ──► V4c · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergencial)
@@ -532,13 +532,17 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   tratamento; índices do ciclo (IIP e Breteau, com a classificação do Ministério da Saúde) por área; ações de controle
   (bloqueio, nebulização, mutirão, educativa) ligadas ao caso de arbovirose ou ao surto, com os casos sem bloqueio sem
   expor o paciente; tela Zoonoses e vetores; a área em risco na Sala de Situação.
+- [x] **V4b · Animais** ([ADR-0163](./adr/0163-vigilancia-zoonoses-animais.md)): animal de interesse (o tutor só com
+  nome e telefone); observação do cão ou gato agressor por 10 dias ligada ao atendimento antirrábico notificado, com o
+  desfecho visto por quem investiga; exames de raiva e de leishmaniose visceral canina, com o desfecho do cão reagente;
+  vacinação antirrábica animal por posto, com os totais do ano.
 
 **Falta:**
 - [ ] Sugestão de notificação por exame positivo (o catálogo de exames não liga exame a agravo).
 - [ ] **V3 · Sanitária:** estabelecimento regulado, inspeção, irregularidade, medida, licença (os autos dependem
   do domínio Documentos).
-- [ ] **V4b · Animais e Ambiental:** animal (observação do agressor na raiva, leishmaniose canina, vacinação
-  antirrábica animal) e vigilância ambiental (evento e risco ambiental, monitoramento da água).
+- [ ] **V4c · Ambiental:** qualidade da água (VIGIAGUA, conformidade pela Portaria GM/MS 888/2021) e risco ambiental.
+- [ ] A cobertura da vacinação antirrábica animal (precisa da população animal estimada).
 - [ ] O quarteirão como unidade de trabalho do agente de endemias.
 - [ ] **V5 · Saúde do Trabalhador e integrações:** evento do trabalho, risco ocupacional, investigação;
   adaptadores, com o SINAN primeiro (depende do domínio 20, Integrações).
