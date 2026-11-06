@@ -43,4 +43,6 @@ public class TurnoEscalaDto implements Serializable {
     private boolean vaga;
     /** Avisos que não impedem: jornada semanal acima da contratada, descanso menor que 11 horas, fora da equipe. */
     private List<String> alertas;
+    /** A emergência cuja mobilização autorizou o turno sem lotação na unidade (ADR-0158). */
+    private String mobilizacaoEmergencia;
 }

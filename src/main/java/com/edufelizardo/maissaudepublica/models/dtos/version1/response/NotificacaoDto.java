@@ -1,6 +1,9 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
+import com.edufelizardo.maissaudepublica.models.enuns.CausalidadeEsavi;
 import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoCasoEpidemiologico;
+import com.edufelizardo.maissaudepublica.models.enuns.CondutaEsquemaEsavi;
+import com.edufelizardo.maissaudepublica.models.enuns.GravidadeEsavi;
 import com.edufelizardo.maissaudepublica.models.enuns.CriterioClassificacao;
 import com.edufelizardo.maissaudepublica.models.enuns.EvolucaoCaso;
 import com.edufelizardo.maissaudepublica.models.enuns.OrigemLocalCaso;
@@ -16,6 +19,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,6 +78,30 @@ public class NotificacaoDto implements Serializable {
     private String surtoNome;
     private List<MedidaControleDto> medidas;
     private List<EventoLinhaDoTempoDto> linhaDoTempo;
+    /** ESAVI e erro de imunização (ADR-0150). */
+    private GravidadeEsavi gravidadeEsavi;
+    private CausalidadeEsavi causalidadeEsavi;
+    private CondutaEsquemaEsavi condutaEsavi;
+    private List<Dose> doses;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class Dose implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 1L;
+
+        private UUID uuid;
+        private UUID imunobiologicoId;
+        private String sigla;
+        private String doseRotulo;
+        private LocalDateTime aplicadaEm;
+        private String lote;
+        private String unidadeNome;
+    }
 
     @Getter
     @Setter

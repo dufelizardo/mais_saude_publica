@@ -65,7 +65,9 @@ programáticas da [ADR-0132](./0132-programas-acoes-programaticas.md)).
 ## Consequências
 
 - **O município cadastra e publica as campanhas,** e o cidadão vê na landing onde e para quem são.
-- **A meta tem andamento** pelas ações registradas, sem esperar a Imunização.
+- **A meta tem andamento** pelas ações registradas, sem esperar a Imunização. Na campanha de vacinação, desde a I3
+  ([ADR-0149](./0149-imunizacao-cobertura-e-campanhas.md)), o andamento conta as pessoas vacinadas com a campanha na
+  dose, e as ações dela não somam mais.
 - **A Comunicação (C2) e a Imunização (#24) se ligam à campanha:** a divulgação será uma `CampanhaComunicacao` dela, e
   as doses aplicadas virão do registro de vacinação.
 - **Fora do escopo:**

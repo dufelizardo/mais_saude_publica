@@ -145,10 +145,12 @@
                     @if (podeMexer(t)) {
                       <button type="button" [class]="'shift ' + tipos[t.tipo].classe" [attr.aria-label]="tipos[t.tipo].rotulo + ' ' + faixa(t) + ' de ' + l.nome + ', editar'" (click)="abrirTurno(t)">
                         <strong>{{ faixa(t) }}</strong><small>{{ t.descricao || tipos[t.tipo].rotulo }} · {{ rotuloHoras(t.horas) }}@if (t.intervaloMinutos) { ({{ rotuloIntervalo(t.intervaloMinutos) }} int.) }</small>
+                        @if (t.mobilizacaoEmergencia) { <small class="shift__mob" [title]="'Mobilização: ' + t.mobilizacaoEmergencia">Mobilização</small> }
                       </button>
                     } @else {
                       <div [class]="'shift ' + tipos[t.tipo].classe" [class.shift--fora]="outraUnidade(t)">
                         <strong>{{ faixa(t) }}</strong><small>{{ outraUnidade(t) ? t.unidadeNome : (t.descricao || tipos[t.tipo].rotulo) }}</small>
+                        @if (t.mobilizacaoEmergencia) { <small class="shift__mob" [title]="'Mobilização: ' + t.mobilizacaoEmergencia">Mobilização</small> }
                       </div>
                     }
                   } @empty {

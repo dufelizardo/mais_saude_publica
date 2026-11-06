@@ -18,13 +18,13 @@ UI Sala - Atendimentos Devem Ser
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 UI Sala - Abrir Pelo Menu
-    [Documentation]    O item Sala de Situação do menu abre a tela com os indicadores e os blocos Em breve.
+    [Documentation]    O item Sala de Situação do menu abre a tela com os indicadores e o bloco de vacinação (ADR-0149).
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Ir Para Rota Do Frontend    /assistencia/pacientes
     Click    css=a.nav-item >> text=Sala de Situação
     Wait For Elements State    css=h1 >> text=Sala de Situação da Saúde    visible
     Wait For Elements State    css=[aria-label="Indicadores do período"]    visible
-    Wait For Elements State    css=[aria-label="Em breve na Sala de Situação"] >> text=Cobertura vacinal e doses aplicadas    visible
+    Wait For Elements State    css=section[aria-label="Vacinação"] >> text=doses aplicadas    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

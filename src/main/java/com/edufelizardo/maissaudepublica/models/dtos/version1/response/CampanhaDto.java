@@ -42,7 +42,7 @@ public class CampanhaDto implements Serializable {
     private String publicoDescricao;
     private String metaDescricao;
     private Integer metaQuantidade;
-    /** Soma do atendido nas ações realizadas. */
+    /** Soma do atendido nas ações realizadas; na de vacinação, as pessoas vacinadas na campanha (ADR-0149). */
     private int realizado;
     private boolean publicada;
     private Instant canceladaEm;
@@ -50,6 +50,9 @@ public class CampanhaDto implements Serializable {
     private int acoesPendentes;
     private int acoesRealizadas;
     private List<Local> locais;
+    /** As vacinas da campanha de vacinação (vazio = qualquer uma), em ordem de sigla. */
+    private List<UUID> imunobiologicoIds;
+    private List<String> imunobiologicoSiglas;
 
     @Getter
     @Setter

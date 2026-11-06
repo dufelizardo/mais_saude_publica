@@ -4,7 +4,8 @@
 **Status:** desenho aprovado na [ADR-0110](../adr/0110-vigilancia-em-saude.md). **A V1 (vigilância epidemiológica) e
 a V2 (contatos, local e mapa; surto e medidas) estão implementadas** nas ADRs
 [0124](../adr/0124-vigilancia-epidemiologica-fundacao.md), [0130](../adr/0130-vigilancia-contatos-local-e-mapa.md) e
-[0131](../adr/0131-vigilancia-surto-e-medidas.md); V3 a V5 vêm depois (seção 14).
+[0131](../adr/0131-vigilancia-surto-e-medidas.md); o controle de vetores (V4a), na
+[ADR-0162](../adr/0162-vigilancia-controle-de-vetores.md), os animais (V4b), na [ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md), e a ambiental (V4c), na [ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md). V3 e V5 vêm depois (seção 14).
 
 A vigilância **não é mais um módulo assistencial**: é uma camada de inteligência e intervenção sobre riscos,
 doenças, agravos e eventos de saúde pública, ligada a território, população e rede. Este documento detalha os
@@ -168,7 +169,9 @@ Estabelecimento regulado → Inspeção → Achados → Irregularidade → Medid
 
 Riscos ligados ao ambiente: água, ar, solo, contaminantes, desastres, fatores ambientais, vetores e animais. Liga-se
 fortemente com Território, Zoonoses e Epidemiologia. Entidades previstas: `EventoAmbiental`, `RiscoAmbiental` e
-`MonitoramentoAmbiental` (por exemplo, a qualidade da água, que hoje é do SISAGUA).
+`MonitoramentoAmbiental` (por exemplo, a qualidade da água, que hoje é do SISAGUA). **Feito na V4c**
+([ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md)): o ponto de coleta e a amostra da água com a conformidade
+da Portaria GM/MS 888/2021 (o monitoramento) e o risco ambiental permanente.
 
 ## 6. Zoonoses e Controle de Vetores
 
@@ -181,6 +184,13 @@ Território → Imóvel → Vistoria → Foco → Ação de controle
 
 Usa o **imóvel** do domínio Território (ADR-0108, fatia F3), ligado à microárea, mas **não fica preso a ela**: o
 agente de endemias percorre quarteirões e áreas que não coincidem com a microárea do ACS.
+
+**Feito na V4a** ([ADR-0162](../adr/0162-vigilancia-controle-de-vetores.md)): a vistoria no modelo do PNCD (depósitos
+A1 a E, tratamento focal, ciclo bimestral, pendência de revisita), o foco com o laboratório, os índices do ciclo (IIP e
+Breteau) e as ações de controle ligadas ao caso de arbovirose ou ao surto. **Na V4b**
+([ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md)), os animais: a observação do agressor por 10 dias ligada ao
+atendimento antirrábico, os exames de raiva e de leishmaniose canina e a vacinação antirrábica por posto. A vigilância
+ambiental (água e risco) ficou na V4c.
 
 ## 7. Saúde do Trabalhador
 
@@ -277,7 +287,9 @@ Vacinação de Pacientes depende dele.
 | `VIGILANCIA.INVESTIGAR` | equipe de vigilância epidemiológica |
 | `VIGILANCIA.GERENCIAR` | catálogo de agravos, surtos |
 | `VISA.FISCALIZAR` | autoridade sanitária |
-| as dos demais subdomínios | definidas nas fatias V4 e V5 |
+| `ZOONOSES.VISTORIAR` | agente de endemias (V4a) |
+| `ZOONOSES.GERENCIAR` | coordenação de zoonoses e vigilância ambiental (V4a) |
+| as dos demais subdomínios | definidas nas fatias V4c e V5 |
 
 ## 12. Entidades previstas
 
@@ -328,7 +340,9 @@ Assim o modelo dos sistemas externos não contamina o domínio interno.
 | **V2a** · contatos, local e mapa ✅ ([ADR-0130](../adr/0130-vigilancia-contatos-local-e-mapa.md)) | contato e monitoramento, contato que vira caso, local do caso, mapa e curva | V1; Território F1 a F3 |
 | **V2b** · surto e medidas ✅ ([ADR-0131](../adr/0131-vigilancia-surto-e-medidas.md)) | surto, medida de controle e linha do tempo dos casos | V2a |
 | **V3** · sanitária | estabelecimento regulado, inspeção, irregularidade, medida, licença | Documentos (autos) |
-| **V4** · ambiental e zoonoses | evento e risco ambiental, monitoramento, vistoria, foco, animal, ação de controle | Território F3 (imóvel) |
+| **V4a** · controle de vetores ✅ ([ADR-0162](../adr/0162-vigilancia-controle-de-vetores.md)) | vistoria, foco, índices do ciclo, ação de controle | Território F3 (imóvel) |
+| **V4b** · animais ✅ ([ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md)) | animal, observação do agressor, exames, vacinação antirrábica | V4a |
+| **V4c** · ambiental ✅ ([ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md)) | qualidade da água, risco ambiental | V4a |
 | **V5** · trabalhador e integrações | evento do trabalho, risco ocupacional, investigação; adaptadores (SINAN primeiro) | V1; Integrações (#20) |
 
 **Fora do escopo agora:**

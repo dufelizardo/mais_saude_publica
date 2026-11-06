@@ -5,7 +5,8 @@
 a P2 (acompanhamento), a P3 (campanhas), a P4 (ações programáticas) e a P6 (metas e indicadores) estão implementadas**
 nas ADRs [0118](../adr/0118-programas-catalogo.md), [0119](../adr/0119-programas-acompanhamento.md),
 [0133](../adr/0133-programas-campanhas.md), [0132](../adr/0132-programas-acoes-programaticas.md) e
-[0141](../adr/0141-programas-metas-e-indicadores.md); a P5 vem depois (seção 12).
+[0141](../adr/0141-programas-metas-e-indicadores.md); a P5 (linhas de cuidado) está na
+[0152](../adr/0152-programas-linhas-de-cuidado.md), e o domínio está completo.
 
 Este documento detalha o domínio: os conceitos e por que ficam separados, as entidades, o acompanhamento do cidadão,
 o dado sensível, como o protótipo `Programas.html` se encaixa nas fatias e onde o domínio liga com o que já existe.
@@ -247,7 +248,7 @@ Editável pelo município. Inclui os programas do protótipo e os nacionais comu
 | **P2** · acompanhamento | inscrever, mudar a situação e encerrar; aba Programas e filtro em Pacientes; inscritos e faltosos no programa; programas na seção da equipe | P1, ADR-0076 |
 | **P3** · campanhas ✅ ([ADR-0133](../adr/0133-programas-campanhas.md)) | cadastro com período, público, meta e locais; tela e consulta pública na landing page | P1 |
 | **P4** · ações programáticas ✅ ([ADR-0132](../adr/0132-programas-acoes-programaticas.md)) | ação prevista ligada ao registro assistencial; ações pendentes e busca ativa; programa na marcação da Agenda | P2 |
-| **P5** · linhas de cuidado | percurso com etapas, serviços e unidades de referência | Atendimento, Regulação e Prontuário maduros |
+| **P5** · linhas de cuidado ✅ ([ADR-0152](../adr/0152-programas-linhas-de-cuidado.md)) | percurso com etapas cumpridas pelos registros dos domínios (atendimento, exame, regulação, vacina, internação ou manual), prazos e painel | Atendimento, Regulação e Prontuário maduros |
 | **P6** · metas e indicadores ✅ ([ADR-0141](../adr/0141-programas-metas-e-indicadores.md)) | indicadores calculados (em dia, cobertura, ações, PA controlada, exame no alvo, pré-natal com 6 consultas, tratamento odontológico, próteses, escovação), metas por unidade ou rede com situação, evolução de 12 meses e relatório CSV; alimenta o #19 Indicadores e BI | P2, P4 |
 
 As ondas são as da análise original, com uma troca: **campanhas sobem para a P3**. São catálogo simples e foram

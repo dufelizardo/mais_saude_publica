@@ -19,6 +19,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/assistencia/laboratorio/laudo/laudo-exame').then((m) => m.LaudoExame),
   },
+  // Lista de busca ativa de vacinação (ADR-0149): fora do AppShell, para imprimir limpo.
+  {
+    path: 'busca-ativa/vacinacao',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/assistencia/sala-de-vacina/busca-ativa-vacinacao').then((m) => m.BuscaAtivaVacinacao),
+  },
   {
     path: '',
     component: AppShell,
@@ -98,6 +104,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/modelo-operacional/modelo-operacional').then((m) => m.ModeloOperacional),
         data: { breadcrumb: 'Modelo operacional', area: 'Administrativo' },
       },
+      // Instituições da rede intersetorial (ADR-0154): o catálogo é aberto a quem está logado.
+      {
+        path: 'administrativo/instituicoes-externas',
+        loadComponent: () => import('./features/administrativo/instituicoes-externas/instituicoes-externas').then((m) => m.InstituicoesExternas),
+        data: { breadcrumb: 'Instituições da rede intersetorial', area: 'Administrativo' },
+      },
       // Território (ADR-0125), carregado sob demanda.
       {
         path: 'administrativo/territorio',
@@ -147,6 +159,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/assistencia/programas/programas').then((m) => m.Programas),
         data: { breadcrumb: 'Programas de Saúde', area: 'Assistência' },
       },
+      // Sala de Vacina (ADR-0147), carregada sob demanda.
+      {
+        path: 'assistencia/sala-de-vacina',
+        loadComponent: () => import('./features/assistencia/sala-de-vacina/sala-de-vacina').then((m) => m.SalaDeVacina),
+        data: { breadcrumb: 'Sala de Vacina', area: 'Assistência' },
+      },
       // Saúde Mental (ADR-0120), carregada sob demanda.
       // Sala de Situação (BI1, ADR-0143), carregada sob demanda.
       {
@@ -155,6 +173,18 @@ export const routes: Routes = [
         data: { breadcrumb: 'Sala de Situação', area: 'Indicadores' },
       },
       // Vigilância epidemiológica (ADR-0124), carregada sob demanda.
+      // Emergências e Desastres (ADR-0156).
+      {
+        path: 'vigilancia/emergencias',
+        loadComponent: () => import('./features/vigilancia/emergencias').then((m) => m.Emergencias),
+        data: { breadcrumb: 'Emergências e desastres', area: 'Vigilância' },
+      },
+      // Zoonoses e vetores (ADR-0162).
+      {
+        path: 'vigilancia/vetores',
+        loadComponent: () => import('./features/vigilancia/controle-vetorial').then((m) => m.ControleVetorial),
+        data: { breadcrumb: 'Zoonoses e vetores', area: 'Vigilância' },
+      },
       {
         path: 'vigilancia',
         loadComponent: () => import('./features/vigilancia/vigilancia').then((m) => m.Vigilancia),
@@ -164,6 +194,17 @@ export const routes: Routes = [
         path: 'assistencia/saude-mental',
         loadComponent: () => import('./features/assistencia/saude-mental/saude-mental').then((m) => m.SaudeMental),
         data: { breadcrumb: 'Saúde Mental', area: 'Assistência' },
+      },
+      // A RAPS e o acolhimento noturno do CAPS (ADR-0153).
+      {
+        path: 'assistencia/saude-mental/raps',
+        loadComponent: () => import('./features/assistencia/saude-mental/rede-raps').then((m) => m.RedeRaps),
+        data: { breadcrumb: 'Rede de Atenção Psicossocial', area: 'Assistência' },
+      },
+      {
+        path: 'assistencia/saude-mental/acolhimento-noturno',
+        loadComponent: () => import('./features/assistencia/saude-mental/acolhimento-noturno').then((m) => m.AcolhimentoNoturno),
+        data: { breadcrumb: 'Acolhimento noturno', area: 'Assistência' },
       },
       {
         path: 'assistencia/leitos',

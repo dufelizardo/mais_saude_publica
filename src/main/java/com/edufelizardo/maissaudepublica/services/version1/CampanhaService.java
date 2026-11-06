@@ -8,6 +8,7 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.AcaoProgramatica;
 import com.edufelizardo.maissaudepublica.models.Campanha;
+import com.edufelizardo.maissaudepublica.models.Imunobiologico;
 import com.edufelizardo.maissaudepublica.models.LocalCampanha;
 import com.edufelizardo.maissaudepublica.models.Programa;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
@@ -18,8 +19,11 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CampanhaP
 import com.edufelizardo.maissaudepublica.models.enuns.Sexo;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoAcaoProgramatica;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoCampanha;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoCampanha;
 import com.edufelizardo.maissaudepublica.repositories.AcaoProgramaticaRepository;
 import com.edufelizardo.maissaudepublica.repositories.CampanhaRepository;
+import com.edufelizardo.maissaudepublica.repositories.ImunobiologicoRepository;
+import com.edufelizardo.maissaudepublica.repositories.RegistroVacinacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.LocalCampanhaRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProgramaRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
@@ -30,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,6 +65,12 @@ public class CampanhaService {
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
+    private ImunobiologicoRepository imunobiologicoRepository;
+
+    @Autowired
+    private RegistroVacinacaoRepository vacinacaoRepository;
 
     // ── Leitura ────────────────────────────────────────────────────────────────────────────────────
 
@@ -243,6 +254,21 @@ public class CampanhaService {
         c.setPublicoDescricao(texto(dto.getPublicoDescricao()));
         c.setMetaDescricao(texto(dto.getMetaDescricao()));
         c.setMetaQuantidade(dto.getMetaQuantidade());
+        // As vacinas (ADR-0149): vazio mantém as que estão; a lista vazia limpa; fora da vacinação, não há.
+        if (dto.getTipo() != TipoCampanha.VACINACAO) {
+            if (dto.getImunobiologicoIds() != null && !dto.getImunobiologicoIds().isEmpty()) {
+                throw new ResourceBadRequestException("Só a campanha de vacinação tem vacinas.");
+            }
+            c.getImunobiologicos().clear();
+            return;
+        }
+        if (dto.getImunobiologicoIds() == null) {
+            return;
+        }
+        List<UUID> vacinas = dto.getImunobiologicoIds();
+        c.getImunobiologicos().clear();
+        c.getImunobiologicos().addAll(new HashSet<>(vacinas.stream().map(id -> imunobiologicoRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Não foi possível encontrar o imunobiológico " + id + " em nossos registros."))).toList()));
     }
 
     private Campanha campanha(UUID uuid) {
@@ -266,8 +292,14 @@ public class CampanhaService {
                 : ProgramaService.publico(c.getIdadeMinima(), c.getIdadeMaxima(), c.getPublicoSexo(), c.isGestante(), c.getCondicoes(), false);
     }
 
-    /** O atendido nas ações realizadas da campanha. */
+    /**
+     * O atendido nas ações realizadas da campanha. Na de vacinação, as pessoas vacinadas com a campanha na dose
+     * (ADR-0149): as ações dela não somam, para a mesma vacinação não contar duas vezes.
+     */
     private int realizado(Campanha c) {
+        if (c.getTipo() == TipoCampanha.VACINACAO) {
+            return (int) vacinacaoRepository.countPessoasDaCampanha(c.getUuid());
+        }
         return acaoRepository.findByCampanha_Uuid(c.getUuid()).stream()
                 .filter(a -> a.getSituacao() == SituacaoAcaoProgramatica.REALIZADA && a.getQuantidadeAtendida() != null)
                 .mapToInt(AcaoProgramatica::getQuantidadeAtendida).sum();
@@ -301,7 +333,9 @@ public class CampanhaService {
                 c.getIdadeMinima(), c.getIdadeMaxima(), c.getPublicoSexo(), c.isGestante(), List.copyOf(c.getCondicoes()), c.getPublicoDescricao(),
                 c.getMetaDescricao(), c.getMetaQuantidade(), realizado(c), c.isPublicada(), c.getCanceladaEm(), c.getMotivoCancelamento(),
                 (int) acoes.stream().filter(a -> a.getSituacao() == SituacaoAcaoProgramatica.PENDENTE).count(),
-                (int) acoes.stream().filter(a -> a.getSituacao() == SituacaoAcaoProgramatica.REALIZADA).count(), locais);
+                (int) acoes.stream().filter(a -> a.getSituacao() == SituacaoAcaoProgramatica.REALIZADA).count(), locais,
+                c.getImunobiologicos().stream().sorted(Comparator.comparing(Imunobiologico::getSigla)).map(Imunobiologico::getUuid).toList(),
+                c.getImunobiologicos().stream().map(Imunobiologico::getSigla).sorted().toList());
     }
 
     private static String texto(String s) {

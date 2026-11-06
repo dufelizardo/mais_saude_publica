@@ -1,3 +1,5 @@
+import { CoberturaVacinaDto } from './imunizacao';
+
 /** Produção assistencial (BI1, ADR-0143): só agregados, nunca o paciente. */
 
 export interface ContagemProducaoDto {
@@ -176,6 +178,33 @@ export interface ProgramaPorUnidadeDto {
       situacao?: 'ATINGIDA' | 'EM_RISCO' | 'ABAIXO' | 'SEM_DADOS' | null;
     }[];
   }[];
+}
+
+/** A vacinação na Sala de Situação (ADR-0149). */
+export interface VacinacaoNaRedeDto {
+  abrangencia: string;
+  de: string;
+  ate: string;
+  dosesAplicadas: number;
+  porEstrategia: ContagemProducaoDto[];
+  porVacina: ContagemProducaoDto[];
+  homogeneidade?: number | null;
+  vacinasNaMeta: number;
+  vacinasAvaliadas: number;
+  abandonoAlto: number;
+  cobertura: CoberturaVacinaDto[];
+  campanhas: {
+    uuid: string;
+    nome: string;
+    inicio: string;
+    fim: string;
+    situacao: string;
+    metaQuantidade?: number | null;
+    realizado: number;
+  }[];
+  /** Os ESAVI notificados no período, e os graves (ADR-0150). */
+  esaviNotificados: number;
+  esaviGraves: number;
 }
 
 export interface VigilanciaNaRedeDto {

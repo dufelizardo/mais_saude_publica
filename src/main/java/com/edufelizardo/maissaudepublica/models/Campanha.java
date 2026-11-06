@@ -11,7 +11,9 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -82,8 +84,19 @@ public class Campanha implements Serializable {
     @Column(length = 300)
     private String metaDescricao;
 
-    /** Quantas pessoas a campanha quer alcançar; o andamento soma o atendido nas ações realizadas. */
+    /**
+     * Quantas pessoas a campanha quer alcançar. O andamento soma o atendido nas ações realizadas; na de vacinação, conta
+     * as pessoas vacinadas com a campanha registrada na dose (ADR-0149).
+     */
     private Integer metaQuantidade;
+
+    /** Vacinação: as vacinas da campanha (opcional); com elas, a dose de outra vacina não entra na campanha (ADR-0149). */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "TB_CAMPANHA_IMUNOBIOLOGICO", joinColumns = @JoinColumn(name = "campanha_id"),
+            inverseJoinColumns = @JoinColumn(name = "imunobiologico_id"))
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<Imunobiologico> imunobiologicos = new HashSet<>();
 
     /** Só a publicada aparece na consulta pública. */
     private boolean publicada;

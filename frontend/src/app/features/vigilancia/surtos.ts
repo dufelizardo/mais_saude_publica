@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ErrorResponseDto } from '../../core/models/profissional';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import {
@@ -171,6 +172,9 @@ export interface NovoSurto {
                 </dl>
                 <div class="row-actions" style="justify-content: flex-start; flex-wrap: wrap; margin: var(--s-2) 0;">
                   <button type="button" class="btn btn--ghost btn--sm" (click)="verNoMapa.emit(s.uuid); fechar()">Ver no mapa</button>
+                  @if (podeRegistrarEmergencia() && s.situacao !== 'ENCERRADO' && s.situacao !== 'DESCARTADO') {
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="router.navigate(['/vigilancia/emergencias'], { queryParams: { surtoId: s.uuid } })">Registrar evento emergencial</button>
+                  }
                   @if (podeInvestigar() && s.situacao !== 'ENCERRADO') {
                     @for (p of proximas(s.situacao); track p.situacao) {
                       <button type="button" class="btn btn--ghost btn--sm" (click)="mudar(s, p.situacao)">{{ p.rotulo }}</button>
@@ -249,6 +253,9 @@ export class Surtos {
   readonly unidadePadrao = input('');
   readonly podeInvestigar = input(false);
   readonly novo = input<NovoSurto | null>(null);
+  /** Quem registra evento emergencial (ADR-0156) leva o surto para Emergências. */
+  readonly podeRegistrarEmergencia = input(false);
+  protected readonly router = inject(Router);
   readonly abrirNotificacao = output<string>();
   readonly verNoMapa = output<string>();
   readonly alterado = output<void>();

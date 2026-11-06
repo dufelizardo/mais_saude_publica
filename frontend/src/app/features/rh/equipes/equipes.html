@@ -241,7 +241,27 @@
         } @else {
           <p class="cell-sub">Carregando os programas…</p>
         }
-        <p class="cell-sub" style="margin-top: 6px;">Famílias adscritas, cobertura vacinal e visitas domiciliares: em breve, com o cadastro do território.</p>
+        <h3 class="section-h" style="margin-top: var(--s-4);">Cobertura vacinal</h3>
+        @if (coberturaVacinal(); as cv) {
+          <div class="ind-row">
+            <span class="ic" aria-hidden="true">✚</span>
+            <div><div class="lbl">Homogeneidade entre vacinas</div><div class="sub">{{ cv.vacinasNaMeta }} de {{ cv.vacinasAvaliadas }} vacina(s) na meta@if (cv.abandonoAlto) { · {{ cv.abandonoAlto }} com abandono alto }</div></div>
+            <span class="v">{{ pct(cv.homogeneidade) }}</span>
+          </div>
+          <ul class="eq-prof" aria-label="Cobertura vacinal da equipe">
+            @for (v of cv.vacinas; track v.esquemaId) {
+              @if (v.coorte) {
+                <li class="mo-row"><span><span class="cell-main">{{ v.sigla }} · {{ v.doseRotulo }}</span><span class="cell-sub">{{ v.vacinados }} de {{ v.coorte }}</span></span>
+                  <span [class]="classeVacina(v.cobertura, v.meta)">{{ pct(v.cobertura) }}</span></li>
+              }
+            }
+          </ul>
+          @if (!cv.vacinasAvaliadas) { <p class="cell-sub">Nenhuma criança adscrita na idade das coortes.</p> }
+          <a class="link-btn" routerLink="/assistencia/sala-de-vacina">Ver por microárea na Sala de Vacina</a>
+        } @else {
+          <p class="cell-sub">A cobertura vacinal aparece para quem vacina ou consulta indicadores na unidade.</p>
+        }
+        <p class="cell-sub" style="margin-top: 6px;">Visitas domiciliares: em breve.</p>
       </aside>
     </div>
   </section>

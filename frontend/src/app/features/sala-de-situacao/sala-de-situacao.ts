@@ -15,10 +15,18 @@ import {
   ProducaoUnidadeDto,
   SerieProducaoDto,
   SituacaoAgoraDto,
+  VacinacaoNaRedeDto,
   VigilanciaNaRedeDto,
 } from '../../core/models/producao';
+import { classeCobertura, percentual } from '../../core/models/imunizacao';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import { ProducaoService } from '../../core/services/producao';
+import { EmergenciaService } from '../../core/services/emergencia';
+import { ControleVetorialService } from '../../core/services/controle-vetorial';
+import { VigilanciaAmbientalService } from '../../core/services/vigilancia-ambiental';
+import { AmostraAguaDto } from '../../core/models/vigilancia-ambiental';
+import { LinhaIndiceVetorial } from '../../core/models/controle-vetorial';
+import { EmergenciaDto, classeDoNivel } from '../../core/models/emergencia';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 
 type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
@@ -27,7 +35,8 @@ type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
  * Sala de Situação, pelo protótipo Painel.html: a produção assistencial da rede ou da unidade no período (BI1,
  * ADR-0143) e a situação operacional (BI2, ADR-0144) — alertas, fila agora, tempo de espera, ocupação das agendas e
  * ocorrências da escala, atualizados a cada minuto — e os indicadores da rede (BI3, ADR-0146): programas de saúde e
- * vigilância por unidade e território. Só números. A vacinação fica "Em breve".
+ * vigilância por unidade e território; a vacinação, com as doses do período, a cobertura pelo cadastro e as campanhas
+ * (ADR-0149). Só números.
  */
 @Component({
   selector: 'app-sala-de-situacao',
@@ -37,6 +46,28 @@ type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
 })
 export class SalaDeSituacao {
   private readonly service = inject(ProducaoService);
+  private readonly emergenciaService = inject(EmergenciaService);
+  private readonly vetorialService = inject(ControleVetorialService);
+  /** As áreas com IIP de risco (4% ou mais) no ciclo atual do controle do Aedes (ADR-0162). */
+  protected readonly areasEmRisco = signal<LinhaIndiceVetorial[]>([]);
+  protected readonly cicloVetorial = signal<number | null>(null);
+  private readonly ambientalService = inject(VigilanciaAmbientalService);
+  /** As amostras de água fora do padrão do mês, ainda sem medida (ADR-0164). */
+  protected readonly aguaForaDoPadrao = signal<AmostraAguaDto[]>([]);
+  /** As emergências ativas (ADR-0156), no alto da tela; sem acesso, nada. */
+  protected readonly emergencias = signal<EmergenciaDto[]>([]);
+  /** Os eventos de massa planejados para os próximos 7 dias, ou já previstos e ainda sem operação (ADR-0160). */
+  protected readonly eventosPlanejados = signal<EmergenciaDto[]>([]);
+  protected readonly classeDoNivel = classeDoNivel;
+
+  /** A data local do início da emergência (o instante vem em UTC). */
+  protected desde(instante: string): string {
+    return new Date(instante).toLocaleDateString('pt-BR');
+  }
+
+  protected quando(instante: string): string {
+    return new Date(instante).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
   private readonly unidadeService = inject(UnidadeSaudeService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -65,6 +96,7 @@ export class SalaDeSituacao {
   protected readonly escala = signal<OcorrenciaEscalaDto[]>([]);
   protected readonly programasRede = signal<ProgramasNaRedeDto | null>(null);
   protected readonly vigilanciaRede = signal<VigilanciaNaRedeDto | null>(null);
+  protected readonly vacinacaoRede = signal<VacinacaoNaRedeDto | null>(null);
   protected readonly programaAberto = signal<string | null>(null);
   protected readonly porUnidade = signal<ProgramaPorUnidadeDto | null>(null);
   protected readonly todosOsProgramas = signal(false);
@@ -251,8 +283,16 @@ export class SalaDeSituacao {
     return i.tipo === 'PERCENTUAL' ? `${Number(i.valor).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%` : this.numero(i.valor);
   }
 
+  protected pct(v: number | null | undefined): string {
+    return percentual(v);
+  }
+
+  protected classeVacina(cobertura: number | null | undefined, meta: number): string {
+    return classeCobertura(cobertura, meta);
+  }
+
   protected classeSituacao(s: string | null | undefined): string {
-    return s === 'ATINGIDA' ? 'tag tag--ok' : s === 'EM_RISCO' ? 'tag tag--warn' : s === 'ABAIXO' ? 'tag tag--err' : 'tag tag--info';
+    return s === 'ATINGIDA' ? 'tag tag--ok' : s === 'EM_RISCO' ? 'tag tag--warn' : s === 'ABAIXO' ? 'tag tag--alert' : 'tag tag--info';
   }
 
   protected rotuloDaRota(tipo: string): string {
@@ -286,6 +326,8 @@ export class SalaDeSituacao {
     this.service.espera(filtro).pipe(catchError(() => of(null))).subscribe((e) => this.espera.set(e));
     this.service.programasNaRede(filtro).pipe(catchError(() => of(null))).subscribe((p) => this.programasRede.set(p));
     this.service.vigilanciaNaRede(filtro).pipe(catchError(() => of(null))).subscribe((v) => this.vigilanciaRede.set(v));
+    this.vacinacaoRede.set(null);
+    this.service.vacinacaoNaRede(filtro).pipe(catchError(() => of(null))).subscribe((v) => this.vacinacaoRede.set(v));
     this.programaAberto.set(null);
     this.porUnidade.set(null);
   }
@@ -295,6 +337,20 @@ export class SalaDeSituacao {
     this.service.situacao(u).pipe(catchError(() => of(null))).subscribe((s) => this.situacao.set(s));
     this.service.ocupacao(u).pipe(catchError(() => of(null))).subscribe((o) => this.ocupacao.set(o));
     this.service.escala(u).pipe(catchError(() => of([]))).subscribe((l) => this.escala.set(l));
+    const mes = new Date();
+    const desde = `${mes.getFullYear()}-${String(mes.getMonth() + 1).padStart(2, '0')}-01`;
+    this.ambientalService.amostras({ naoConformes: true, desde }).pipe(catchError(() => of([])))
+      .subscribe((l) => this.aguaForaDoPadrao.set(l.filter((a) => !a.medida)));
+    this.vetorialService.indices().pipe(catchError(() => of(null))).subscribe((ix) => {
+      this.cicloVetorial.set(ix?.ciclo ?? null);
+      this.areasEmRisco.set((ix?.areas ?? []).filter((a) => a.classificacao === 'RISCO').sort((a, b) => (b.iip ?? 0) - (a.iip ?? 0)));
+    });
+    this.emergenciaService.emergencias().pipe(catchError(() => of([]))).subscribe((l) => {
+      this.emergencias.set(l.filter((e) => e.situacao === 'ATIVA' || e.situacao === 'EM_DESMOBILIZACAO'));
+      const limite = Date.now() + 7 * 24 * 3600 * 1000;
+      this.eventosPlanejados.set(l.filter((e) => e.situacao === 'PLANEJADA' && e.eventoMassa && new Date(e.eventoMassa.inicioPrevisto).getTime() <= limite)
+        .sort((a, b) => a.eventoMassa!.inicioPrevisto.localeCompare(b.eventoMassa!.inicioPrevisto)));
+    });
   }
 }
 

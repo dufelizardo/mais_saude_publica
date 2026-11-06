@@ -32,6 +32,8 @@ const MENU: Record<string, string[]> = {
   '/administrativo/necessidades-de-pessoal': [...ADMINISTRATIVO, ...RH],
   // Território (ADR-0125): o recorte geográfico é aberto a quem está logado.
   '/administrativo/territorio': [],
+  // Instituições da rede intersetorial (ADR-0154): o catálogo é aberto a quem está logado.
+  '/administrativo/instituicoes-externas': [],
   '/assistencia/pacientes': ['PACIENTE.CONSULTAR'],
   '/assistencia/agenda': ['AGENDAMENTO.GERENCIAR', 'ATENDIMENTO.GERENCIAR', 'REGULACAO.REGULAR'],
   '/assistencia/atendimentos': ['ATENDIMENTO.GERENCIAR', 'PRONTUARIO.CONSULTAR', 'AGENDAMENTO.GERENCIAR'],
@@ -41,10 +43,16 @@ const MENU: Record<string, string[]> = {
   '/assistencia/leitos': ['INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'LEITO.GERENCIAR'],
   // Catálogo de programas (ADR-0118): aberto a quem está logado.
   '/assistencia/programas': [],
+  // Sala de Vacina (ADR-0147): de quem vacina.
+  '/assistencia/sala-de-vacina': ['VACINACAO.REGISTRAR'],
   // Saúde Mental (ADR-0120): só quem acolhe ou acompanha.
   '/assistencia/saude-mental': ['SAUDE_MENTAL.ACOLHER', 'SAUDE_MENTAL.ACOMPANHAR'],
   // Vigilância epidemiológica (ADR-0124).
   '/vigilancia': ['VIGILANCIA.NOTIFICAR', 'VIGILANCIA.INVESTIGAR', 'VIGILANCIA.GERENCIAR'],
+  // Emergências e Desastres (ADR-0156): quem registra, ativa, mantém os catálogos ou consulta indicadores.
+  '/vigilancia/emergencias': ['EMERGENCIA.REGISTRAR', 'EMERGENCIA.ATIVAR', 'CONTINGENCIA.GERENCIAR', 'INDICADOR.CONSULTAR'],
+  // Zoonoses e vetores (ADR-0162): o agente de endemias, a coordenação de zoonoses e quem lê os índices.
+  '/vigilancia/vetores': ['ZOONOSES.VISTORIAR', 'ZOONOSES.GERENCIAR', 'VIGILANCIA.INVESTIGAR', 'INDICADOR.CONSULTAR'],
   // Sala de Situação (ADR-0143): só agregados, para quem consulta indicadores.
   '/sala-de-situacao': ['INDICADOR.CONSULTAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],
@@ -53,8 +61,8 @@ const MENU: Record<string, string[]> = {
 
 /** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
 const GRUPOS: Record<string, string[]> = {
-  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas', '/assistencia/saude-mental'],
-  Vigilância: ['/vigilancia'],
+  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas', '/assistencia/sala-de-vacina', '/assistencia/saude-mental'],
+  Vigilância: ['/vigilancia', '/vigilancia/vetores', '/vigilancia/emergencias'],
   Administração: ['/administracao/usuarios', '/administracao/auditoria'],
 };
 
