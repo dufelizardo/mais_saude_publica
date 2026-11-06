@@ -13,6 +13,7 @@ import {
   ProducaoUnidadeDto,
   SerieProducaoDto,
   SituacaoAgoraDto,
+  VacinacaoNaRedeDto,
   VigilanciaNaRedeDto,
 } from '../models/producao';
 
@@ -64,6 +65,11 @@ export class ProducaoService {
 
   programaPorUnidade(programaId: string, filtro: FiltroProducao = {}): Observable<ProgramaPorUnidadeDto> {
     return this.http.get<ProgramaPorUnidadeDto>(`/api/v1/indicadores-rede/programa/${programaId}/unidades`, { params: params({ de: filtro.de, ate: filtro.ate }) });
+  }
+
+  /** A vacinação na rede (ADR-0149). */
+  vacinacaoNaRede(filtro: FiltroProducao = {}): Observable<VacinacaoNaRedeDto> {
+    return this.http.get<VacinacaoNaRedeDto>('/api/v1/indicadores-rede/vacinacao', { params: params(filtro) });
   }
 
   vigilanciaNaRede(filtro: FiltroProducao = {}): Observable<VigilanciaNaRedeDto> {

@@ -2,12 +2,14 @@ package com.edufelizardo.maissaudepublica.models.dtos.version1.request;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import com.edufelizardo.maissaudepublica.models.enuns.GravidadeEsavi;
 import com.edufelizardo.maissaudepublica.models.enuns.OrigemNotificacao;
 import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -68,4 +70,10 @@ public class NotificacaoRequestDto implements Serializable {
 
     /** O contato que virou caso (ADR-0130): a notificação fica ligada a ele. */
     private UUID contatoId;
+
+    /** ESAVI e erro de imunização (ADR-0150): as doses suspeitas, do paciente. */
+    private List<UUID> doseIds;
+
+    /** Só no ESAVI, e obrigatória nele. */
+    private GravidadeEsavi gravidade;
 }

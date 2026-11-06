@@ -91,6 +91,7 @@ public class IndicadorProgramaticoService {
     @Autowired private EquipeRepository equipeRepository;
     @Autowired private AdscricaoService adscricaoService;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private IndicadoresSaudeMental saudeMental;
 
     // ── Indicadores ────────────────────────────────────────────────────────────────────────────────
 
@@ -304,7 +305,16 @@ public class IndicadorProgramaticoService {
             case PROTESES_ENTREGUES -> Apuracao.contagem(proteseRepository.findEntreguesNoIntervalo(de, ate).stream()
                     .filter(t -> u == null || t.getUnidade().getUuid().equals(u.getUuid())).count());
             case ESCOVACAO_SUPERVISIONADA -> escovacao(p, u, de, ate);
+            case PTS_EM_DIA -> fracao(saudeMental.ptsEmDia(u, ate));
+            case AVALIACAO_EM_30_DIAS -> fracao(saudeMental.avaliacaoEm30Dias(u, de, ate));
+            case POS_CRISE_EM_7_DIAS -> fracao(saudeMental.posCriseEm7Dias(u, de, ate));
+            case COMUNICACAO_MP_NO_PRAZO -> fracao(saudeMental.comunicacaoMpNoPrazo(u, de, ate));
+            case RETORNO_INTERSETORIAL -> fracao(saudeMental.retornoIntersetorial(u, de, ate));
         };
+    }
+
+    private static Apuracao fracao(long[] x) {
+        return Apuracao.de(x[0], x[1]);
     }
 
     /** Os acompanhamentos vigentes na data (começaram até ela e não tinham terminado), na unidade responsável. */

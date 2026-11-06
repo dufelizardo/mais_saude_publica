@@ -56,6 +56,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Catálogo de programas de saúde (ADR-0118); o acompanhamento de pacientes (PROGRAMA.ACOMPANHAR) vem na P2.
         // Indicadores e BI (ADRs 0142 e 0143): só agregados, na unidade do escopo ou na rede.
         PERMISSOES.put("INDICADOR.CONSULTAR", new Def("Consultar indicadores de produção e gestão (só agregados, sem paciente)", OPERACAO));
+        // Imunização (ADR-0147): registrar a dose é da enfermagem (técnico e enfermeiro); o catálogo e o calendário, da gestão.
+        PERMISSOES.put("VACINACAO.REGISTRAR", new Def("Registrar, retificar e anular doses de vacina e ver a sala de vacina", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("IMUNIZACAO.GERENCIAR", new Def("Manter o catálogo de imunobiológicos e o calendário vacinal", OPERACAO));
         PERMISSOES.put("PROGRAMA.GERENCIAR", new Def("Cadastrar programas de saúde, categorias e as unidades que os oferecem", OPERACAO));
         // Acompanhamento programático (ADR-0119): estar num programa revela diagnóstico.
         PERMISSOES.put("PROGRAMA.ACOMPANHAR", new Def("Inscrever pacientes em programas de saúde e acompanhar a situação", ACESSO_AO_DADO_DE_SAUDE));
@@ -70,6 +73,19 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("VIGILANCIA.INVESTIGAR", new Def("Investigar, classificar e encerrar notificações, inclusive de agravo sensível",
                 ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("VIGILANCIA.GERENCIAR", new Def("Manter o catálogo de agravos e as fichas específicas", OPERACAO));
+        // Controle de vetores (ADR-0162): a vistoria é do agente de endemias; as ações e os bloqueios, da coordenação de zoonoses.
+        PERMISSOES.put("ZOONOSES.VISTORIAR", new Def("Registrar vistorias de controle vetorial, focos e o tratamento", OPERACAO));
+        PERMISSOES.put("ZOONOSES.GERENCIAR", new Def("Planejar e registrar ações de controle vetorial e ver os casos sem bloqueio", OPERACAO));
+        // Intersetorialidade (ADR-0154): o catálogo de instituições externas é cadastro, sem paciente.
+        PERMISSOES.put("INTERSETORIAL.GERENCIAR", new Def("Manter o catálogo de instituições externas (CRAS, CREAS, escolas, Conselho Tutelar...)",
+                OPERACAO));
+        // Emergências e Desastres (ADR-0156): registrar o evento e o impacto; ativar é da autoridade sanitária ou do gestor.
+        PERMISSOES.put("EMERGENCIA.REGISTRAR", new Def("Registrar evento emergencial, território e avaliação de impacto", OPERACAO));
+        PERMISSOES.put("EMERGENCIA.ATIVAR", new Def("Converter o evento em emergência, mudar o nível, registrar ESPIN e decreto e encerrar",
+                OPERACAO));
+        // A coordenação da resposta (ADR-0158): ações, mobilização e capacidade emergencial ativada.
+        PERMISSOES.put("EMERGENCIA.COORDENAR", new Def("Coordenar a resposta: ações emergenciais, mobilização e capacidade emergencial", OPERACAO));
+        PERMISSOES.put("CONTINGENCIA.GERENCIAR", new Def("Manter os tipos e níveis de emergência e, depois, os planos de contingência", OPERACAO));
         // Saúde Bucal (ADR-0134): a avaliação e o diagnóstico são do cirurgião-dentista (Lei 5.081/1966).
         PERMISSOES.put("ODONTOLOGIA.REGISTRAR", new Def("Registrar a avaliação odontológica (cirurgião-dentista)", ACESSO_AO_DADO_DE_SAUDE));
         // Plano de tratamento odontológico (ADR-0137): abrir, conduzir e concluir é do cirurgião-dentista.
@@ -132,7 +148,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 List.of("ACESSO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR", "ADMINISTRATIVO.CONSULTAR",
                         "ADMINISTRATIVO.GERENCIAR", "PACIENTE.CONSULTAR", "FARMACIA.CONSULTAR", "EQUIPE.GERENCIAR",
                         "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
-                        "INDICADOR.CONSULTAR")));
+                        "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR",
+                        "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -159,8 +176,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
                         "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
-                        // Cadastro domiciliar e familiar (ADR-0127).
-                        "TERRITORIO.CADASTRAR")));
+                        // Cadastro domiciliar e familiar (ADR-0127) e vacinação (ADR-0147).
+                        "TERRITORIO.CADASTRAR", "VACINACAO.REGISTRAR")));
         PAPEIS.put("COORDENADOR_DE_ENFERMAGEM", new PapelPadrao("Coordenador de enfermagem",
                 "O que o enfermeiro faz, mais retificar registro clínico de outro profissional.",
                 List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
@@ -168,7 +185,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "REGISTRO_CLINICO.RETIFICAR_DE_OUTROS", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR",
                         "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
-                        "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR")));
+                        "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
+                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR")));
         // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
                 "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",
@@ -176,7 +194,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("TECNICO_DE_ENFERMAGEM", new PapelPadrao("Técnico de enfermagem",
                 "Procedimentos e medicação. Sem classificação de risco nem evolução (COFEN 661/2021).",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
-                        "LABORATORIO.COLETAR", "INTERNACAO.CONSULTAR", "VIGILANCIA.NOTIFICAR")));
+                        "LABORATORIO.COLETAR", "INTERNACAO.CONSULTAR", "VIGILANCIA.NOTIFICAR", "VACINACAO.REGISTRAR")));
         PAPEIS.put("TECNICO_DE_LABORATORIO", new PapelPadrao("Técnico de laboratório",
                 "Coleta, recebe e analisa amostras; registra resultados (ADR-0093).",
                 List.of("PACIENTE.CONSULTAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR")));
@@ -193,13 +211,21 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
                         "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
         PAPEIS.put("ASSISTENTE_SOCIAL", new PapelPadrao("Assistente social",
-                "Acolhimento e acompanhamento psicossocial; lê o prontuário com vínculo.",
+                "Acolhimento e acompanhamento psicossocial; lê o prontuário com vínculo e mantém o catálogo intersetorial.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
-                        "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
+                        "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR", "INTERSETORIAL.GERENCIAR")));
         // Vigilância epidemiológica (ADR-0124): investiga com acesso ao prontuário; o detalhe dos agravos sensíveis é dela.
         PAPEIS.put("VIGILANCIA_EPIDEMIOLOGICA", new PapelPadrao("Vigilância epidemiológica",
                 "Investiga, classifica e encerra notificações e mantém o catálogo de agravos.",
-                List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "VIGILANCIA.NOTIFICAR", "VIGILANCIA.INVESTIGAR", "VIGILANCIA.GERENCIAR")));
+                List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "VIGILANCIA.NOTIFICAR", "VIGILANCIA.INVESTIGAR", "VIGILANCIA.GERENCIAR",
+                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR")));
+        // Controle de vetores (ADR-0162): o agente de endemias vistoria; a vigilância ambiental coordena o controle de zoonoses.
+        PAPEIS.put("AGENTE_DE_ENDEMIAS", new PapelPadrao("Agente de endemias",
+                "Vistoria de imóveis no controle vetorial: depósitos, focos e tratamento focal (Lei 11.350/2006).",
+                List.of("ZOONOSES.VISTORIAR")));
+        PAPEIS.put("VIGILANCIA_AMBIENTAL", new PapelPadrao("Vigilância ambiental",
+                "Coordenação de zoonoses e vetores: vistorias, índices do ciclo, ações de controle e bloqueios.",
+                List.of("ZOONOSES.VISTORIAR", "ZOONOSES.GERENCIAR", "EMERGENCIA.REGISTRAR")));
         // Saúde Bucal (ADR-0134): as funções já existiam na eSB (ADR-0103); faltavam os papéis de acesso.
         PAPEIS.put("CIRURGIAO_DENTISTA", new PapelPadrao("Cirurgião-dentista",
                 "Avaliação, diagnóstico e procedimentos odontológicos (Lei 5.081/1966); lê o prontuário com vínculo.",

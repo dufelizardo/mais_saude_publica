@@ -104,6 +104,13 @@
               </a>
             }
 
+            @if (podeVer('/administrativo/instituicoes-externas')) {
+              <a routerLink="/administrativo/instituicoes-externas" routerLinkActive #rlaInstituicoes="routerLinkActive" [attr.aria-current]="rlaInstituicoes.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2.5"></circle><circle cx="19" cy="5" r="2.5"></circle><circle cx="19" cy="19" r="2.5"></circle><line x1="7.3" y1="10.9" x2="16.7" y2="6.1"></line><line x1="7.3" y1="13.1" x2="16.7" y2="17.9"></line></svg>
+                <span class="nav-item__label">Rede intersetorial</span>
+              </a>
+            }
+
             @if (podeVer('/administrativo/modelo-operacional')) {
               <a routerLink="/administrativo/modelo-operacional" routerLinkActive #rlaModeloOperacional="routerLinkActive" [attr.aria-current]="rlaModeloOperacional.isActive ? 'page' : null" class="nav-item">
                 <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"></path></svg>
@@ -189,6 +196,13 @@
                 </a>
               }
 
+              @if (podeVer('/assistencia/sala-de-vacina')) {
+                <a routerLink="/assistencia/sala-de-vacina" routerLinkActive #rlaSalaVacina="routerLinkActive" [attr.aria-current]="rlaSalaVacina.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 2 4 4"></path><path d="m17 7 3-3"></path><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"></path><path d="m9 11 4 4"></path><path d="m5 19-3 3"></path><path d="m14 4 6 6"></path></svg>
+                  <span class="nav-item__label">Sala de Vacina</span>
+                </a>
+              }
+
               @if (podeVer('/assistencia/saude-mental')) {
                 <a routerLink="/assistencia/saude-mental" routerLinkActive #rlaSaudeMental="routerLinkActive" [attr.aria-current]="rlaSaudeMental.isActive ? 'page' : null" class="nav-item">
                   <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"></path><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"></path><path d="M12 5v13"></path></svg>
@@ -216,9 +230,21 @@
           @if (estaExpandido('Vigilância')) {
             <div class="nav-group__items">
               @if (podeVer('/vigilancia')) {
-                <a routerLink="/vigilancia" routerLinkActive #rlaVigilancia="routerLinkActive" [attr.aria-current]="rlaVigilancia.isActive ? 'page' : null" class="nav-item">
+                <a routerLink="/vigilancia" routerLinkActive [routerLinkActiveOptions]="{ exact: true }" #rlaVigilancia="routerLinkActive" [attr.aria-current]="rlaVigilancia.isActive ? 'page' : null" class="nav-item">
                   <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
                   <span class="nav-item__label">Vigilância epidemiológica</span>
+                </a>
+              }
+              @if (podeVer('/vigilancia/vetores')) {
+                <a routerLink="/vigilancia/vetores" routerLinkActive #rlaVetores="routerLinkActive" [attr.aria-current]="rlaVetores.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="4"></circle><path d="M12 9V5"></path><path d="M8 11 4 8"></path><path d="m16 11 4-3"></path><path d="M8 15l-4 3"></path><path d="m16 15 4 3"></path></svg>
+                  <span class="nav-item__label">Zoonoses e vetores</span>
+                </a>
+              }
+              @if (podeVer('/vigilancia/emergencias')) {
+                <a routerLink="/vigilancia/emergencias" routerLinkActive #rlaEmergencias="routerLinkActive" [attr.aria-current]="rlaEmergencias.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                  <span class="nav-item__label">Emergências</span>
                 </a>
               }
             </div>

@@ -5,7 +5,7 @@ para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou ab
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.8.0, promovida em 2026-10-26). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.9.0, promovida em 2026-11-06). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -173,23 +173,30 @@ real":
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —
   perfis e capacidades, ADR-0117. Faltam MO2 (serviços), MO3 (ponto operacional) e MO4 (domínios consultam
   capacidades).
-- **#30 Gestão da Rede de Atenção** e **#31 Intersetorialidade e Proteção Social** — reservados pela ADR-0115; a
-  desenhar em ADRs próprias.
+- **#30 Gestão da Rede de Atenção** — reservado pela ADR-0115; a desenhar em ADR própria.
+- **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
+  ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir
+  (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
 - **#28 Comunicação e Educação em Saúde** (futuro) — desenhado na ADR-0114; fatias C1 (comunicação básica) a C6
   (avaliação).
-- **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; fatias E1 (núcleo) a E6 (eventos
-  especializados).
+- **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; ~~E1 (núcleo)~~ — ADR-0156 (sem a escolha
+  manual das microáreas na tela); ~~E2 (contingência)~~ — ADR-0157; ~~E3 (coordenação)~~ — ADR-0158 (insumo, equipamento e veículo como necessidade até Estoque e Transporte); ~~E5 (pós-evento)~~ — ADR-0159 (sem o relatório em PDF, que depende de Documentos); ~~E6a (evento de massa e estruturas temporárias)~~ — ADR-0160 (ambulâncias como número até Transporte); ~~E6b (painel da epidemia e exposição ambiental)~~ — ADR-0161 (sem incidência por população); falta a E4 (integração da rede, depende de Estoque e Transporte).
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (sem a notificação no sistema, V1, e sem o SAMU, regulação
-  de urgência); faltam SM5 e SM6
-  (intersetorialidade e indicadores).
+  de urgência); ~~SM5 (CAPS e RAPS)~~ — ADR-0153 (sem o CAPS de referência por território e a RAAS); ~~SM6
+  (intersetorialidade e indicadores)~~ — ADR-0155. Domínio completo; o SAMU na crise segue com a regulação de urgência.
 - **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134, ~~SB2 (odontograma)~~ — ADR-0135, ~~SB3a (catálogo e procedimento odontológico)~~ — ADR-0136, ~~SB3b (plano de tratamento)~~ — ADR-0137; ~~SB4a (encaminhamento pela Regulação)~~ — ADR-0138; ~~SB4b (prótese)~~ — ADR-0139; ~~SB5 (coletiva)~~ — ADR-0140. Domínio completo; CPO-D e indicadores ficam para a P6 e o BI.
 - **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias ~~V1 (fundação)~~ — ADR-0124,
-  ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131; faltam V3 (sanitária) a V5
-  (trabalhador e integrações).
-- **#24 Imunização** — reservado pela ADR-0110; a desenhar em ADR própria.
+  ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131, ~~V4a (controle de vetores)~~ —
+  ADR-0162 (sem o quarteirão), ~~V4b (animais)~~ — ADR-0163 (sem a cobertura antirrábica), ~~V4c (água e risco)~~ — ADR-0164 (sem o plano de amostragem); faltam V3 (sanitária) e V5 (trabalhador e integrações).
+- **#24 Imunização** — desenhado na ADR-0147; ~~I1 (fundação: catálogo, calendário, dose, caderneta e Sala de Vacina)~~
+  — ADR-0147; ~~I2 (sala de vacina e cadeia de frio)~~ — ADR-0148 (sem o remanejamento entre unidades, o pedido à rede
+  de frio e o termômetro automático); ~~I3 (cobertura e campanhas)~~ — ADR-0149 (sem o SINASC e sem a cobertura de
+  adolescentes, adultos e gestantes); ~~I4 (ESAVI)~~ — ADR-0150 (sem o alerta por lote e a revogação da
+  contraindicação); falta I5 (SI-PNI).
 - **#22 Programas, Ações e Linhas de Cuidado** — desenhado na ADR-0109; programas e campanhas cadastráveis.
   Fatias: ~~P1 (catálogo)~~ — ADR-0118; ~~P2 (acompanhamento)~~ — ADR-0119 (elegíveis por idade e sexo na
-  ADR-0128; os critérios clínicos ficam para depois); ~~P4 (ações e programa na Agenda)~~ — ADR-0132; ~~P3 (campanhas e consulta pública)~~ — ADR-0133; ~~P6 (metas e indicadores)~~ — ADR-0141; falta P5 (linhas de cuidado).
+  ADR-0128; os critérios clínicos ficam para depois); ~~P4 (ações e programa na Agenda)~~ — ADR-0132; ~~P3 (campanhas e consulta pública)~~ — ADR-0133; ~~P6 (metas e indicadores)~~ — ADR-0141; ~~P5 (linhas de cuidado)~~ — ADR-0152 (sem linhas recorrentes e
+  indicadores de linha). Domínio completo.
 - **#21 Território e Adscrição** — desenhado na ADR-0108; ~~F1 (fundação)~~ — ADR-0125; ~~F2 (mapa)~~ — ADR-0126;
   ~~F3a (imóvel, domicílio e família)~~ — ADR-0127; ~~F3b (adscrição e cobertura)~~ — ADR-0128; ~~F4
   (escopo de acesso e fim do texto das microáreas)~~ — ADR-0129. Falta ligar o escopo territorial quando a rede tiver o

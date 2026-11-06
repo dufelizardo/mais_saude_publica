@@ -124,11 +124,11 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0106](./0106-escalas-tela.md) | Escalas: tela | Aceita e implementada (parte 4 de 4) |
 | [0107](./0107-escalas-intervalo-e-modelos-de-jornada.md) | Escalas: intervalo no turno e modelos de jornada | Aceita e implementada |
 | [0108](./0108-territorio-e-adscricao.md) | Território e Adscrição: domínio próprio | Aceita e implementada (F1 a F4 nas ADRs 0125 a 0129) |
-| [0109](./0109-programas-acoes-e-linhas-de-cuidado.md) | Programas, Ações e Linhas de Cuidado: domínio próprio | Aceita (desenho; P1 a P4 e P6 nas ADRs 0118, 0119, 0133, 0132 e 0141; P5 a fazer) |
-| [0110](./0110-vigilancia-em-saude.md) | Vigilância em Saúde: domínio próprio (e Imunização reservada como #24) | Aceita (desenho; V1 na ADR-0124, V2 nas ADRs 0130 e 0131, V3 a V5 a fazer) |
+| [0109](./0109-programas-acoes-e-linhas-de-cuidado.md) | Programas, Ações e Linhas de Cuidado: domínio próprio | Aceita (desenho; P1 a P6 nas ADRs 0118, 0119, 0133, 0132, 0152 e 0141; domínio completo) |
+| [0110](./0110-vigilancia-em-saude.md) | Vigilância em Saúde: domínio próprio (e Imunização reservada como #24) | Aceita (desenho; V1 na ADR-0124, V2 nas ADRs 0130 e 0131, V4 nas 0162 a 0164; V3 e V5 a fazer) |
 | [0111](./0111-saude-bucal.md) | Saúde Bucal: domínio assistencial especializado | Aceita e implementada (SB1 a SB5 nas ADRs 0134 a 0140) |
-| [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; SM1 a SM4 nas ADRs 0120 a 0123; SM5 e SM6 a fazer) |
-| [0113](./0113-emergencias-e-desastres.md) | Gestão de Emergências e Desastres: coordenação extraordinária | Aceita (desenho; implementação nas fatias E1 a E6) |
+| [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; SM1 a SM4 nas ADRs 0120 a 0123, SM5 na 0153 e SM6 na 0155; domínio completo) |
+| [0113](./0113-emergencias-e-desastres.md) | Gestão de Emergências e Desastres: coordenação extraordinária | Aceita (desenho; E1 a E3 nas ADRs 0156 a 0158, E5 na 0159 e E6 nas 0160 e 0161; E4 a fazer) |
 | [0114](./0114-comunicacao-e-educacao-em-saude.md) | Comunicação e Educação em Saúde: domínio futuro | Aceita (desenho; implementação nas fatias C1 a C6) |
 | [0115](./0115-modelo-operacional-dos-equipamentos.md) | Modelo Operacional dos Equipamentos e reconciliação do mapa (#29 a #31) | Aceita (desenho; MO1 na ADR-0117, MO2 a MO4 a fazer) |
 | [0116](./0116-marco-mapa-de-dominios-fechado.md) | Marco: mapa de domínios fechado e regra para novos domínios | Aceita |
@@ -162,6 +162,23 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0144](./0144-bi-situacao-operacional.md) | Indicadores e BI: situação operacional (BI2) | Aceita e implementada |
 | [0145](./0145-saude-da-aplicacao-para-o-kubernetes.md) | Saúde da aplicação para as verificações do Kubernetes | Aceita e implementada |
 | [0146](./0146-bi-indicadores-da-rede.md) | Indicadores e BI: indicadores da rede (BI3) | Aceita e implementada |
+| [0147](./0147-imunizacao.md) | Imunização: domínio próprio e fundação (I1) | Aceita (desenho; I1 implementada; I2 na ADR-0148; I3 na ADR-0149; I4 na ADR-0150; I5 a fazer) |
+| [0148](./0148-imunizacao-sala-de-vacina.md) | Imunização: sala de vacina e cadeia de frio (I2) | Aceita e implementada |
+| [0149](./0149-imunizacao-cobertura-e-campanhas.md) | Imunização: cobertura vacinal e campanhas (I3) | Aceita e implementada |
+| [0150](./0150-imunizacao-esavi.md) | Imunização: ESAVI e erro de imunização (I4) | Aceita e implementada |
+| [0152](./0152-programas-linhas-de-cuidado.md) | Programas: linhas de cuidado (P5) | Aceita e implementada |
+| [0153](./0153-saude-mental-caps-e-raps.md) | Saúde Mental: CAPS e RAPS (SM5) | Aceita e implementada |
+| [0154](./0154-intersetorialidade.md) | Intersetorialidade e Proteção Social: domínio e IS1 (catálogo e encaminhamento) | Aceita e implementada (IS1) |
+| [0155](./0155-saude-mental-intersetorialidade-e-indicadores.md) | Saúde Mental: intersetorialidade e indicadores (SM6) | Aceita e implementada |
+| [0156](./0156-emergencias-nucleo.md) | Emergências e Desastres: núcleo (E1) | Aceita e implementada |
+| [0157](./0157-emergencias-contingencia.md) | Emergências e Desastres: plano de contingência e ativação (E2) | Aceita e implementada |
+| [0158](./0158-emergencias-coordenacao.md) | Emergências e Desastres: ações, mobilização e capacidade emergencial (E3) | Aceita e implementada |
+| [0159](./0159-emergencias-desmobilizacao-e-relatorio.md) | Emergências e Desastres: desmobilização e relatório pós-evento (E5) | Aceita e implementada |
+| [0160](./0160-emergencias-evento-de-massa-e-estruturas-temporarias.md) | Emergências e Desastres: evento de massa e estruturas temporárias (E6a) | Aceita e implementada |
+| [0161](./0161-emergencias-epidemia-e-exposicao-ambiental.md) | Emergências e Desastres: painel da epidemia e exposição ambiental (E6b) | Aceita e implementada |
+| [0162](./0162-vigilancia-controle-de-vetores.md) | Vigilância em Saúde: controle de vetores (V4a) | Aceita e implementada |
+| [0163](./0163-vigilancia-zoonoses-animais.md) | Vigilância em Saúde: animais das zoonoses (V4b) | Aceita e implementada |
+| [0164](./0164-vigilancia-ambiental-agua-e-risco.md) | Vigilância em Saúde: vigilância ambiental, água e risco (V4c) | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

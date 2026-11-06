@@ -24,4 +24,5 @@ public class PerfilOperacionalResponseDto implements Serializable {
     private boolean ativo;
     private long capacidades;
     private long unidades;
+    private com.edufelizardo.maissaudepublica.models.enuns.ComponenteRaps componenteRaps;
 }

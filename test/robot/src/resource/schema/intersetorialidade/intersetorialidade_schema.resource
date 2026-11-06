@@ -1,0 +1,5 @@
+*** Comments ***
+    Mais Saúde Pública API - Intersetorialidade (ADR-0154) e Saúde Mental, fatia SM6 (ADR-0155).
+*** Variables ***
+${INSTITUICAO_EXTERNA_SCHEMA}    ${{{'required': ['uuid', 'nome', 'setor', 'tipo', 'ativa', 'atualizadaEm'], 'types': {'uuid': str, 'nome': str, 'setor': str, 'tipo': str, 'endereco': str, 'telefone': str, 'email': str, 'responsavel': str, 'observacao': str, 'ativa': bool, 'atualizadaEm': str}, 'enums': {'setor': ['ASSISTENCIA_SOCIAL', 'EDUCACAO', 'GARANTIA_DE_DIREITOS', 'TRABALHO_E_RENDA', 'HABITACAO', 'SEGURANCA_PUBLICA', 'OUTRO']}}}}
+${ENCAMINHAMENTO_INTERSETORIAL_SCHEMA}    ${{{'required': ['uuid', 'instituicaoId', 'instituicaoNome', 'setor', 'tipo', 'motivo', 'enviadoEm', 'retornoEsperadoEm', 'situacao', 'semRetorno'], 'types': {'uuid': str, 'instituicaoId': str, 'instituicaoNome': str, 'setor': str, 'tipo': str, 'instituicaoTelefone': str, 'motivo': str, 'enviadoEm': str, 'retornoEsperadoEm': str, 'situacao': str, 'semRetorno': bool, 'recebidoEm': str, 'retornoEm': str, 'retorno': str, 'motivoCancelamento': str, 'profissionalNome': str}, 'enums': {'situacao': ['ENVIADO', 'RECEBIDO', 'CONCLUIDO', 'RECUSADO', 'CANCELADO']}}}}

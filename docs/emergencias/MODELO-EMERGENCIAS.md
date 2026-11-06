@@ -1,8 +1,12 @@
 # Modelo do domínio Gestão de Emergências e Desastres
 
 **Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0113](../adr/0113-emergencias-e-desastres.md). **Nada implementado ainda.** A
-implementação vem nas fatias E1 a E6 (seção 17), cada uma com ADR própria.
+**Status:** desenho aprovado na [ADR-0113](../adr/0113-emergencias-e-desastres.md). **As E1 (núcleo), E2 (contingência),
+E3 (coordenação), E5 (desmobilização e relatório) e E6 (eventos especializados) estão implementadas** nas
+[ADR-0156](../adr/0156-emergencias-nucleo.md), [ADR-0157](../adr/0157-emergencias-contingencia.md),
+[ADR-0158](../adr/0158-emergencias-coordenacao.md), [ADR-0159](../adr/0159-emergencias-desmobilizacao-e-relatorio.md),
+[ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md) e
+[ADR-0161](../adr/0161-emergencias-epidemia-e-exposicao-ambiental.md); falta a E4 (seção 17).
 
 O domínio é uma **camada de coordenação extraordinária**, ativada quando um evento ultrapassa a operação normal da
 rede. Não substitui Vigilância, Regulação, Estoque, Transporte nem a capacidade da rede.
@@ -248,13 +252,18 @@ Vigilância: surto identificado → Emergências: emergência ativada → plano 
    → mobilização de profissionais → redistribuição de insumos → monitoramento
 ```
 
-O surto pode ser a origem do evento emergencial.
+O surto pode ser a origem do evento emergencial. **Na E6b** ([ADR-0161](../adr/0161-emergencias-epidemia-e-exposicao-ambiental.md)),
+a emergência de perfil epidemia lê o painel da Vigilância (as notificações do agravo por semana epidemiológica, na área
+afetada), sem guardar número próprio; o desastre ambiental registra a exposição (meio, agente, população exposta).
 
 ## 15. Eventos de massa, COE e Defesa Civil
 
 - **Eventos de massa** (carnaval, show, jogo, festival, manifestação, evento religioso) são um **tipo de emergência
   planejada**, com público estimado, local, período, postos de atendimento, ambulâncias e plano de contingência. Ficam
-  para a fatia E6, não como domínio separado.
+  para a fatia E6, não como domínio separado. **Feito na E6a** ([ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md)):
+  o perfil do tipo diz o que é próprio; a emergência do evento de massa nasce **planejada** e a operação começa depois;
+  postos, tendas de hidratação e hospital de campanha são **estruturas temporárias** ligadas a uma unidade de referência
+  (capacidade, não unidade), com boletins.
 - **COE:** o domínio dá suporte ao Centro de Operações de Emergências, com quem coordena e as decisões e ações
   registradas. **Não é** um sistema de comando e controle militarizado.
 - **Defesa Civil:** o Mais Saúde Pública não a substitui. É o sistema da **resposta em saúde**.
@@ -310,12 +319,13 @@ EVENTO → DETECÇÃO E REGISTRO → AVALIAÇÃO PRELIMINAR ─┬─ NORMAL ─
 
 | Fatia | Entrega | Depende de |
 |---|---|---|
-| **E1** · núcleo | evento, emergência, tipo (COBRADE), nível, situação, avaliação de impacto, território afetado | Território (opcional) |
-| **E2** · contingência | plano versionado, critérios, ações previstas, ativação com histórico | E1 |
-| **E3** · mobilização | mobilização (com a exceção da Escala), capacidade emergencial, ações, unidade afetada pela situação operacional | E2 |
+| **E1** · núcleo ✅ ([ADR-0156](../adr/0156-emergencias-nucleo.md)) | evento, emergência, tipo (COBRADE), nível, situação, avaliação de impacto, território afetado | Território (opcional) |
+| **E2** · contingência ✅ ([ADR-0157](../adr/0157-emergencias-contingencia.md)) | plano versionado, critérios, ações previstas, ativação com histórico | E1 |
+| **E3** · mobilização ✅ ([ADR-0158](../adr/0158-emergencias-coordenacao.md)) | mobilização (com a exceção da Escala), capacidade emergencial, ações, unidade afetada pela situação operacional | E2 |
 | **E4** · integração da rede | redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas, pacientes deslocados; Estoque e Transporte quando existirem | E3 |
-| **E5** · pós-evento | desmobilização, relatório, lições, revisão do plano, indicadores | E3 |
-| **E6** · especializados | eventos de massa, epidemias, desastres ambientais, hospital de campanha como capacidade | E5 |
+| **E5** · pós-evento ✅ ([ADR-0159](../adr/0159-emergencias-desmobilizacao-e-relatorio.md)) | desmobilização, relatório, lições, revisão do plano, indicadores | E3 |
+| **E6a** · evento de massa e estruturas ✅ ([ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md)) | perfil do tipo, emergência planejada, dados do evento de massa, estruturas temporárias (hospital de campanha como capacidade) e boletins | E5 |
+| **E6b** · epidemia e desastre ambiental ✅ ([ADR-0161](../adr/0161-emergencias-epidemia-e-exposicao-ambiental.md)) | painel da epidemia a partir da Vigilância e exposição ambiental | E6a |
 
 **Fora do escopo agora:**
 - sistema da Defesa Civil;

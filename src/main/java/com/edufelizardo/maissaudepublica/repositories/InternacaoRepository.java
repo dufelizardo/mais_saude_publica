@@ -28,4 +28,9 @@ public interface InternacaoRepository extends JpaRepository<Internacao, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from Internacao i where i.uuid = :uuid")
     Optional<Internacao> findByIdParaAtualizar(@Param("uuid") UUID uuid);
+
+    /** As internações da modalidade admitidas no intervalo (comunicação ao Ministério Público, ADR-0155). */
+    @Query("select i from Internacao i join fetch i.unidade where i.modalidade = ?1 and i.admitidaEm >= ?2 and i.admitidaEm < ?3")
+    List<Internacao> findDaModalidadeAdmitidasNoIntervalo(com.edufelizardo.maissaudepublica.models.enuns.ModalidadeInternacao modalidade,
+                                                          Instant de, Instant ate);
 }

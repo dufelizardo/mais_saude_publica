@@ -35,6 +35,7 @@ import { ProgramaService } from '../../../core/services/programa';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { AcoesProgramaticas } from './acoes-programaticas';
+import { LinhasDeCuidado } from './linhas-de-cuidado';
 import { Campanhas } from './campanhas';
 import { SaudeBucalAConvocar } from './saude-bucal-a-convocar';
 import { ElegiveisDoPrograma } from './elegiveis-do-programa';
@@ -57,7 +58,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-programas',
-  imports: [ReactiveFormsModule, Drawer, ElegiveisDoPrograma, AcoesProgramaticas, Campanhas, SaudeBucalAConvocar, IndicadoresDoPrograma],
+  imports: [ReactiveFormsModule, Drawer, ElegiveisDoPrograma, AcoesProgramaticas, Campanhas, SaudeBucalAConvocar, IndicadoresDoPrograma, LinhasDeCuidado],
   templateUrl: './programas.html',
 })
 export class Programas {
@@ -94,7 +95,7 @@ export class Programas {
   protected readonly unidadeFiltro = signal('');
   protected readonly selecionadoId = signal<string | null>(null);
   /** Os programas (catálogo) ou as ações programáticas do escopo (ADR-0132). */
-  protected readonly visao = signal<'programas' | 'acoes' | 'campanhas' | 'saude-bucal'>('programas');
+  protected readonly visao = signal<'programas' | 'acoes' | 'campanhas' | 'linhas' | 'saude-bucal'>('programas');
   protected readonly versaoAcoes = signal(0);
   protected readonly detalhe = signal<ProgramaDto | null>(null);
   protected readonly mostrarEncerradas = signal(false);

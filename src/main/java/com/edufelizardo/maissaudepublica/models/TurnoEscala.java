@@ -75,6 +75,13 @@ public class TurnoEscala implements Serializable {
 
     private String registradoPorCpf;
 
+    /** A mobilização que autorizou o turno sem lotação na unidade (ADR-0158); nula no turno normal. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mobilizacao_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Mobilizacao mobilizacao;
+
     public boolean vaga() {
         return profissional == null;
     }

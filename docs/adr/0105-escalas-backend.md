@@ -2,7 +2,9 @@
 
 ## Status
 
-Aceita e implementada (parte 3 de 4 de Equipes e Escalas). A tela vem na ADR-0106.
+Aceita e implementada (parte 3 de 4 de Equipes e Escalas). A tela vem na ADR-0106. A [ADR-0158](./0158-emergencias-coordenacao.md)
+acrescenta uma exceção à regra da lotação: o profissional mobilizado numa emergência ativa pode ter turno na unidade de
+destino sem lotação lá.
 
 ## Contexto
 
