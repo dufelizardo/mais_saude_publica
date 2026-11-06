@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../../pom/ui/vigilancia/vetores/controle_vetorial_ui_pom.resource
 Resource    ../../../vigilancia/zoonoses_flow.resource
+Resource    ../../../vigilancia/vigilancia_ambiental_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Zoonoses e vetores (ADR-0162); as bases vêm pela API.
@@ -114,5 +115,44 @@ UI Controle Vetorial - Vacinacao Antirrabica
     Fill Text    id=f-za-v-resp    Equipe Robot
     Enviar Gaveta
     Wait For Elements State    css=[aria-label="Vacinação por posto"] >> text=Posto Robot Praça >> nth=0    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Controle Vetorial - Amostra De Agua
+    [Documentation]    Pela tela: a amostra fora do padrão e a medida (ADR-0164).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${ponto}=    Seed Ponto Agua
+    ${pontos}=    GET Pontos Agua
+    ${nome}=    Evaluate    [p['nome'] for p in $pontos.json() if p['uuid'] == $ponto][0]
+    UI Controle Vetorial - Abrir Tela
+    Wait For Elements State    css=h1 >> text=Zoonoses e vetores    visible
+    Click    role=tab[name="Qualidade da água"]
+    Click    role=button[name="Amostra em ${nome}"]
+    Select Options By    id=f-va-ecoli    value    sim
+    Fill Text    id=f-va-cloro    0.1
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Amostras de água"] tr:has-text("${nome}") >> text=Fora do padrão    visible
+    Click    role=button[name="Medida da amostra de ${nome}"]
+    Fill Text    id=f-va-medida    Comunicada a concessionária
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Amostras de água"] tr:has-text("${nome}") >> text=Medida: Comunicada a concessionária    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Controle Vetorial - Risco Ambiental
+    [Documentation]    Pela tela: registra o risco e o marca como controlado (ADR-0164).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [NUMBERS]
+    UI Controle Vetorial - Abrir Tela
+    Wait For Elements State    css=h1 >> text=Zoonoses e vetores    visible
+    Click    role=tab[name="Riscos ambientais"]
+    Clicar Botao    Registrar risco
+    Fill Text    id=f-va-r-desc    Lixo às margens do córrego
+    Fill Text    id=f-va-r-local    Córrego UI ${sufixo}
+    Enviar Gaveta
+    Click    role=button[name="Controlar: Córrego UI ${sufixo}"]
+    Fill Text    id=f-va-motivo    Limpeza e cerca
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Riscos ambientais"] tr:has-text("Córrego UI ${sufixo}") >> text=Controlado >> nth=0    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

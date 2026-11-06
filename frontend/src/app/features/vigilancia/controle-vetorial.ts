@@ -34,9 +34,10 @@ import { ControleVetorialService } from '../../core/services/controle-vetorial';
 import { TerritorioService } from '../../core/services/territorio';
 import { Drawer } from '../../shared/drawer/drawer';
 import { Mapa, PinoMapa } from '../../shared/mapa/mapa';
+import { VigilanciaAmbiental } from './vigilancia-ambiental';
 import { ZoonosesAnimais } from './zoonoses-animais';
 
-type Aba = 'vistorias' | 'focos' | 'indices' | 'acoes' | 'animais' | 'agressores' | 'vacinacao';
+type Aba = 'vistorias' | 'focos' | 'indices' | 'acoes' | 'animais' | 'agressores' | 'vacinacao' | 'agua' | 'riscos';
 type Gaveta =
   | { tipo: 'vistoria'; imovel: ImovelVetorialDto | null }
   | { tipo: 'laboratorio'; foco: FocoVetorialDto }
@@ -49,16 +50,16 @@ type FocoNovo = { tipoDeposito: TipoDeposito; fase: FaseFoco; especieSuspeita: E
  * Zoonoses e vetores, fatia V4a da Vigilância (ADR-0162): a vistoria do agente de endemias com os depósitos do PNCD e os
  * focos, as pendências de revisita, os focos no mapa com o laboratório e o tratamento, os índices do ciclo (IIP e Breteau)
  * e as ações de controle, com os casos de arbovirose ainda sem bloqueio. Os animais (ADR-0163): cadastro e exames,
- * observação do agressor e vacinação antirrábica.
+ * observação do agressor e vacinação antirrábica. A vigilância ambiental (ADR-0164): qualidade da água e riscos.
  */
 @Component({
   selector: 'app-controle-vetorial',
-  imports: [Drawer, Mapa, ZoonosesAnimais],
+  imports: [Drawer, Mapa, ZoonosesAnimais, VigilanciaAmbiental],
   template: `
     <header class="page-head">
       <div>
         <h1>Zoonoses e vetores</h1>
-        <p>Vistorias do agente de endemias, focos, índices do ciclo e ações de controle do Aedes</p>
+        <p>Controle do Aedes, animais das zoonoses, qualidade da água e riscos ambientais</p>
       </div>
       <div class="page-actions">
         <div class="dw-field" style="margin: 0;"><label for="f-cv-area">Área</label>
@@ -82,12 +83,16 @@ type FocoNovo = { tipoDeposito: TipoDeposito; fase: FaseFoco; especieSuspeita: E
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'agressores'" (click)="aba.set('agressores')">Observação de agressores</button>
       }
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'vacinacao'" (click)="aba.set('vacinacao')">Vacinação antirrábica</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'agua'" (click)="aba.set('agua')">Qualidade da água</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'riscos'" (click)="aba.set('riscos')">Riscos ambientais</button>
     </div>
 
     @switch (aba()) {
       @case ('animais') { <app-zoonoses-animais secao="animais" [areas]="areas()" [podeRegistrar]="pode('ZOONOSES.VISTORIAR')" [podeResultado]="podeAlguma('ZOONOSES.VISTORIAR', 'ZOONOSES.GERENCIAR')" /> }
       @case ('agressores') { <app-zoonoses-animais secao="agressores" [areas]="areas()" [podeRegistrar]="pode('ZOONOSES.VISTORIAR')" [podeResultado]="podeAlguma('ZOONOSES.VISTORIAR', 'ZOONOSES.GERENCIAR')" /> }
       @case ('vacinacao') { <app-zoonoses-animais secao="vacinacao" [areas]="areas()" [podeRegistrar]="pode('ZOONOSES.VISTORIAR')" [podeResultado]="false" /> }
+      @case ('agua') { <app-vigilancia-ambiental secao="agua" [podeRegistrar]="pode('ZOONOSES.VISTORIAR')" [podeGerenciar]="pode('ZOONOSES.GERENCIAR')" /> }
+      @case ('riscos') { <app-vigilancia-ambiental secao="riscos" [podeRegistrar]="pode('ZOONOSES.VISTORIAR')" [podeGerenciar]="pode('ZOONOSES.GERENCIAR')" /> }
       @case ('vistorias') {
         @if (pendencias().length) {
           <section class="card cv-bloco" aria-label="Pendências de revisita">
@@ -366,6 +371,8 @@ type FocoNovo = { tipoDeposito: TipoDeposito; fase: FaseFoco; especieSuspeita: E
     }
   `,
   styles: `
+    /* Dez abas: quebram linha em vez de esconder as últimas na rolagem. */
+    .tabs { flex-wrap: wrap; overflow-x: visible; }
     .cv-bloco { padding: var(--s-4); margin-bottom: var(--s-4); }
     .cv-cab { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-2); }
     .cv-tabela { min-width: 0; width: 100%; }

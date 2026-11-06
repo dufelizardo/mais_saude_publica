@@ -55,6 +55,20 @@
   </section>
 }
 
+@if (aguaForaDoPadrao().length) {
+  <section class="ss-alertas" aria-label="Água fora do padrão">
+    @for (a of aguaForaDoPadrao().slice(0, 3); track a.uuid) {
+      <article class="ss-alerta ss-alerta--media" [attr.aria-label]="'Água fora do padrão: ' + a.pontoNome">
+        <div>
+          <div class="ss-alerta__titulo">Água fora do padrão: {{ a.pontoNome }}</div>
+          <div class="ss-alerta__detalhe">{{ a.naoConformidades.join('; ') }} · coleta em {{ desde(a.dataColeta + 'T12:00:00') }} · sem medida registrada</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/vigilancia/vetores">Ver amostras</a>
+      </article>
+    }
+  </section>
+}
+
 @if (eventosPlanejados().length) {
   <section class="ss-alertas" aria-label="Eventos de massa planejados">
     @for (e of eventosPlanejados().slice(0, 3); track e.uuid) {

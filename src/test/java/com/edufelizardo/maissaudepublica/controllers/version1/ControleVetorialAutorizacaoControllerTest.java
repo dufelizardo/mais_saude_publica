@@ -110,6 +110,8 @@ class ControleVetorialAutorizacaoControllerTest {
             jdbc.update("delete from tb_acao_controle_vetorial where uuid = ?", a);
         }
         jdbc.update("delete from tb_animal_zoonoses where nome = 'Totó' and endereco = 'Rua B, 10'");
+        jdbc.update("delete from tb_amostra_agua where ponto_id in (select uuid from tb_ponto_coleta_agua where nome = 'VetorAut Poço')");
+        jdbc.update("delete from tb_ponto_coleta_agua where nome = 'VetorAut Poço'");
         TerritorioControllerTest.limparDados(jdbc, PREFIXO, CODIGO);
         for (String cpf : CPFS) {
             atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
@@ -128,6 +130,10 @@ class ControleVetorialAutorizacaoControllerTest {
         a.setUnidade(unidade);
         a.setConcedidoEm(Instant.now());
         atribuicaoRepository.save(a);
+    }
+
+    private MockHttpServletRequestBuilder como(String cpf, MockHttpServletRequestBuilder r) {
+        return r.header("Authorization", "Bearer " + jwtService.gerarToken(cpf, PREFIXO + cpf, false));
     }
 
     private int status(String cpf, MockHttpServletRequestBuilder r) throws Exception {
@@ -170,5 +176,22 @@ class ControleVetorialAutorizacaoControllerTest {
         // A vacinação antirrábica agregada: o gestor lê; a recepção, não.
         assertThat(status(GESTOR, get("/api/v1/zoonoses/vacinacao-antirrabica"))).isEqualTo(200);
         assertThat(status(RECEPCAO, get("/api/v1/zoonoses/vacinacao-antirrabica"))).isEqualTo(403);
+    }
+
+    @Test
+    void vigilanciaAmbientalPorPapel() throws Exception {
+        String ponto = "{\"nome\": \"VetorAut Poço\", \"tipo\": \"REDE\", \"local\": \"Praça\"}";
+        // O ponto é da coordenação; o agente não cadastra, mas registra a amostra (ADR-0164).
+        assertThat(status(AGENTE, json(post("/api/v1/ambiental/ponto-agua"), ponto))).isEqualTo(403);
+        String r = mockMvc.perform(como(AMBIENTAL, json(post("/api/v1/ambiental/ponto-agua"), ponto))).andReturn().getResponse()
+                .getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        String id = com.jayway.jsonpath.JsonPath.read(r, "$.uuid");
+        String amostra = "{\"pontoId\": \"" + id + "\", \"turbidez\": 1}";
+        assertThat(status(RECEPCAO, json(post("/api/v1/ambiental/amostra-agua"), amostra))).isEqualTo(403);
+        assertThat(status(AGENTE, json(post("/api/v1/ambiental/amostra-agua"), amostra))).isEqualTo(201);
+        // A leitura agregada: o gestor e a vigilância epidemiológica; a recepção, não.
+        assertThat(status(GESTOR, get("/api/v1/ambiental/amostras-agua"))).isEqualTo(200);
+        assertThat(status(EPIDEMIOLOGICA, get("/api/v1/ambiental/riscos"))).isEqualTo(200);
+        assertThat(status(RECEPCAO, get("/api/v1/ambiental/riscos"))).isEqualTo(403);
     }
 }
