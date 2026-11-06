@@ -1824,3 +1824,10 @@ button.shift--off { text-align: center; }
 .ss-bar__val { text-align: right; font-weight: 600; font-size: 0.8125rem; }
 .ss-bar__fill--warn { background: var(--warn); }
 .ss-bar__fill--alert { background: var(--alert); }
+
+/* Impressão de Relatórios (ADR-0167): só o relatório, sem a moldura do sistema. */
+@media print {
+  body:has(app-relatorios) .sidebar, body:has(app-relatorios) .topbar { display: none; }
+  body:has(app-relatorios) .app { display: block; }
+  body:has(app-relatorios) .content { margin: 0; padding: 0; background: #ffffff; }
+}

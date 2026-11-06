@@ -172,6 +172,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/sala-de-situacao/sala-de-situacao').then((m) => m.SalaDeSituacao),
         data: { breadcrumb: 'Sala de Situação', area: 'Indicadores' },
       },
+      // Relatórios (BI4, ADR-0167), carregados sob demanda.
+      {
+        path: 'relatorios',
+        loadComponent: () => import('./features/relatorios/relatorios').then((m) => m.Relatorios),
+        data: { breadcrumb: 'Relatórios', area: 'Indicadores' },
+      },
       // Vigilância epidemiológica (ADR-0124), carregada sob demanda.
       // Emergências e Desastres (ADR-0156).
       {

@@ -45,7 +45,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
-| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI3 feitas (Sala de Situação: produção, situação operacional e indicadores da rede); BI4 e BI5 |
+| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI4 feitas (Sala de Situação e relatórios); falta a BI5 |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
@@ -69,7 +69,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
-| BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -78,7 +77,7 @@ MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade 
 MO3 ✅ ──► SAMU (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
-BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 (relatórios) · BI5 (coordenações)
+BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 ✅ (relatórios) · BI5 (coordenações)
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
@@ -403,7 +402,8 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   referência, homogeneidade, abandono e campanhas de vacinação com o andamento, no lugar do bloco "Em breve".
 
 **Falta:**
-- [ ] **BI4 · Relatórios** (protótipo `Relatorios.html`).
+- [x] **BI4 · Relatórios** ([ADR-0167](./adr/0167-bi-relatorios.md)): catálogo de cinco relatórios sobre os números dos
+  domínios, com período e unidade, prévia na tela, CSV na trilha de auditoria e impressão. Sem envio agendado.
 - [ ] **BI5 · Coordenações & Gerência** (protótipo `Coordenacoes.html`).
 
 ### 20. Integrações / Identidade / Segurança / Governo
