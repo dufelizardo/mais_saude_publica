@@ -86,6 +86,9 @@ public class AtendimentoService {
     @Autowired
     private AdministracaoMedicamentoRepository administracaoMedicamentoRepository;
 
+    @Autowired
+    private PontoOperacionalService pontoOperacionalService;
+
     /**
      * Um atendimento aberto a partir de um agendamento marca o agendamento como REALIZADO na mesma
      * transação (ADR-0062) — não há mais duas chamadas que possam falhar pela metade.
@@ -104,6 +107,7 @@ public class AtendimentoService {
         Atendimento atendimento = new Atendimento(paciente, profissional, unidade, setor, agendamento,
                 dto.getTipo(), dto.getStatus(), dto.getDataHora());
         atendimento.setEspecialidade(especialidade(dto, agendamento, null));
+        pontoOperacionalService.aplicarLocal(atendimento, dto);
         registrarChegada(atendimento);
         atendimento = atendimentoRepository.save(atendimento);
         ContextoAuditoria.registro(atendimento.getUuid());
@@ -144,6 +148,7 @@ public class AtendimentoService {
         atendimento.setStatus(dto.getStatus());
         atendimento.setDataHora(dto.getDataHora());
         atendimento.setEspecialidade(especialidade(dto, agendamento, atendimento.getEspecialidade()));
+        pontoOperacionalService.aplicarLocal(atendimento, dto);
         registrarChegada(atendimento);
         atendimento = atendimentoRepository.save(atendimento);
         ContextoAuditoria.registro(atendimento.getUuid());

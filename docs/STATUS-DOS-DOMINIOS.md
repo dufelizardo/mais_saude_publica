@@ -55,7 +55,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
-| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | MO1 e MO2 feitas; fatias MO3 e MO4 |
+| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | MO1 a MO3 feitas; falta a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
@@ -69,14 +69,13 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
-| MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
 | BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
 MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade emergencial) · MO2 ✅ → MO4
-MO3 ──► SAMU e unidade móvel (com Transporte, 16)
+MO3 ✅ ──► SAMU (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
 BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 (relatórios) · BI5 (coordenações)
@@ -130,7 +129,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   [ADR-0153](./adr/0153-saude-mental-caps-e-raps.md)).
 - [x] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1, [ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
 - [x] Serviços da unidade, com setores e leitos por serviço (item 29, MO2, [ADR-0165](./adr/0165-modelo-operacional-servicos-da-unidade.md)).
-- [ ] Coordenadas e pontos operacionais (MO3).
+- [x] Pontos operacionais, base, rotas e localização da unidade móvel (item 29, MO3, [ADR-0166](./adr/0166-modelo-operacional-ponto-operacional.md)).
 - [x] Tipo de unidade do CEO: sem tipo próprio; é a unidade de especialidades com as capacidades odontológicas (ADR-0138).
 
 ### 2. RH
@@ -750,8 +749,12 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   pelos setores, aba Serviços em Equipamentos e aba Tipos de serviço em Modelo operacional. A capacidade não encerra com
   serviço vigente que a exige.
 
+- [x] **MO3 · Ponto operacional** ([ADR-0166](./adr/0166-modelo-operacional-ponto-operacional.md)): local de realização opcional no Atendimento
+  (domicílio do cadastro ou descrito, via pública, evento, escola, ponto da unidade); pontos da unidade como histórico; base,
+  rotas programadas e localização informada da unidade móvel, que é a unidade com o perfil Atenção móvel. Aba Pontos em
+  Equipamentos e campo na gaveta do Atendimento. Sem GPS.
+
 **Falta:**
-- [ ] **MO3 · Ponto operacional:** local de realização no Atendimento; base, localização e rota da unidade móvel.
 - [ ] **MO4 · Domínios consultam capacidades:** Leitos, Agenda, Saúde Mental, Saúde Bucal, Emergências.
 
 ### 30. Gestão da Rede de Atenção

@@ -17,7 +17,8 @@ import {
   ViaAdministracao,
 } from '../../../core/models/administracao-medicamento';
 import { AgendamentoResponseDto, StatusAgendamento, TipoAgendamento } from '../../../core/models/agendamento';
-import { AtendimentoResponseDto, StatusAtendimento, TipoAtendimento } from '../../../core/models/atendimento';
+import { AtendimentoRequestDto, AtendimentoResponseDto, LOCAIS_DE_REALIZACAO, LocalRealizacao, StatusAtendimento, TipoAtendimento } from '../../../core/models/atendimento';
+import { LocaisDeRealizacaoDto } from '../../../core/models/modelo-operacional';
 import { ConsultaResponseDto, TipoConsulta } from '../../../core/models/consulta';
 import { EvolucaoEnfermagemResponseDto } from '../../../core/models/evolucao-enfermagem';
 import { LoteResponseDto } from '../../../core/models/lote';
@@ -43,6 +44,7 @@ import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { AdministracaoMedicamentoService } from '../../../core/services/administracao-medicamento';
 import { AgendamentoService } from '../../../core/services/agendamento';
 import { AtendimentoService } from '../../../core/services/atendimento';
+import { ModeloOperacionalService } from '../../../core/services/modelo-operacional';
 import { ConsultaService } from '../../../core/services/consulta';
 import { EvolucaoEnfermagemService } from '../../../core/services/evolucao-enfermagem';
 import { LoteService } from '../../../core/services/lote';
@@ -151,6 +153,7 @@ export class Atendimentos {
   /** Matrícula do profissional logado (ADR-0065): valor inicial do profissional nos registros novos. */
   protected readonly matriculaPadrao = signal('');
   private readonly atendimentoService = inject(AtendimentoService);
+  private readonly modeloOperacionalService = inject(ModeloOperacionalService);
   private readonly agendamentoService = inject(AgendamentoService);
   private readonly pacienteService = inject(PacienteService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
@@ -293,7 +296,16 @@ export class Atendimentos {
     tipo: ['CONSULTA' as TipoAtendimento],
     status: ['EM_ANDAMENTO' as StatusAtendimento],
     especialidadeId: [''],
+    localRealizacao: ['' as LocalRealizacao | ''],
+    localDescricao: [''],
+    localLatitude: [''],
+    localLongitude: [''],
+    domicilioId: [''],
+    pontoOperacionalId: [''],
   });
+  protected readonly locaisDeRealizacao = LOCAIS_DE_REALIZACAO;
+  /** Pontos da unidade e domicílio do paciente escolhidos na gaveta do atendimento (ADR-0166). */
+  protected readonly locais = signal<LocaisDeRealizacaoDto | null>(null);
 
   protected readonly triForm = this.fb.nonNullable.group({
     dataHora: [''],
@@ -881,7 +893,14 @@ export class Atendimentos {
       tipo: 'CONSULTA',
       status: 'EM_ANDAMENTO',
       especialidadeId: ag?.especialidadeId ?? '',
+      localRealizacao: '',
+      localDescricao: '',
+      localLatitude: '',
+      localLongitude: '',
+      domicilioId: '',
+      pontoOperacionalId: '',
     });
+    this.carregarLocais();
     this.abrir({ tipo: 'at', at: null, voltar: false });
   }
 
@@ -897,8 +916,63 @@ export class Atendimentos {
       tipo: at.tipo,
       status: at.status,
       especialidadeId: at.especialidadeId ?? '',
+      localRealizacao: at.localRealizacao ?? '',
+      localDescricao: at.localDescricao ?? '',
+      localLatitude: at.localLatitude != null ? String(at.localLatitude) : '',
+      localLongitude: at.localLongitude != null ? String(at.localLongitude) : '',
+      domicilioId: at.domicilioId ?? '',
+      pontoOperacionalId: at.pontoOperacionalId ?? '',
     });
+    this.carregarLocais();
     this.abrir({ tipo: 'at', at, voltar: true });
+  }
+
+  protected carregarLocais(): void {
+    const { unidadeId, pacienteId } = this.atForm.getRawValue();
+    if (!unidadeId) {
+      this.locais.set(null);
+      return;
+    }
+    this.modeloOperacionalService.locaisDeRealizacao(unidadeId, pacienteId).subscribe({
+      next: (l) => this.locais.set(l),
+      error: () => this.locais.set(null),
+    });
+  }
+
+  protected pontoNaLista(id: string): boolean {
+    return !!this.locais()?.pontos.some((p) => p.uuid === id);
+  }
+
+  /** No domicílio, já sugere o do cadastro do paciente. */
+  protected mudarLocal(): void {
+    const { localRealizacao } = this.atForm.getRawValue();
+    if (localRealizacao === 'DOMICILIO') this.atForm.controls.domicilioId.setValue(this.locais()?.domicilioId ?? '');
+  }
+
+  protected localDoAtendimento(a: AtendimentoResponseDto): string {
+    if (!a.localRealizacao) return 'Na unidade';
+    const rotulo = this.locaisDeRealizacao.find((l) => l.valor === a.localRealizacao)?.rotulo ?? '';
+    const detalhe = a.pontoOperacionalNome || a.localDescricao || (a.domicilioId ? 'cadastrado' : '');
+    return detalhe ? `${rotulo} · ${detalhe}` : rotulo;
+  }
+
+  /** A posição digitada, com vírgula ou ponto; `null` se vazia, `NaN` se inválida. */
+  private coordenada(valor: string): number | null {
+    const v = valor.trim().replace(',', '.');
+    return v ? Number(v) : null;
+  }
+
+  /** Os campos do local no corpo do atendimento, sem o que não vale para o tipo escolhido. */
+  private corpoDoLocal(): Pick<AtendimentoRequestDto, 'localRealizacao' | 'localDescricao' | 'localLatitude' | 'localLongitude' | 'domicilioId' | 'pontoOperacionalId'> {
+    const v = this.atForm.getRawValue();
+    return {
+      localRealizacao: v.localRealizacao || null,
+      localDescricao: v.localRealizacao ? v.localDescricao.trim() || null : null,
+      localLatitude: v.localRealizacao ? this.coordenada(v.localLatitude) : null,
+      localLongitude: v.localRealizacao ? this.coordenada(v.localLongitude) : null,
+      domicilioId: v.localRealizacao === 'DOMICILIO' ? v.domicilioId || null : null,
+      pontoOperacionalId: v.localRealizacao === 'PONTO_DA_UNIDADE' ? v.pontoOperacionalId || null : null,
+    };
   }
 
   /** Abre o atendimento na gaveta larga, com os registros vindos do prontuário do paciente. */
@@ -1044,6 +1118,13 @@ export class Atendimentos {
         tipo: at.tipo,
         status: 'CONCLUIDO',
         dataHora: at.dataHora,
+        especialidadeId: at.especialidadeId ?? null,
+        localRealizacao: at.localRealizacao ?? null,
+        localDescricao: at.localDescricao ?? null,
+        localLatitude: at.localLatitude ?? null,
+        localLongitude: at.localLongitude ?? null,
+        domicilioId: at.domicilioId ?? null,
+        pontoOperacionalId: at.pontoOperacionalId ?? null,
       })
       .subscribe({
         next: () => {
@@ -1168,6 +1249,16 @@ export class Atendimentos {
       dataHora: 'Informe data e hora.',
       profissionalMatricula: 'Informe a matrícula.',
     });
+    if (v.localRealizacao === 'PONTO_DA_UNIDADE') {
+      if (!v.pontoOperacionalId) erros['pontoOperacionalId'] = 'Escolha o ponto.';
+    } else if (v.localRealizacao && !v.localDescricao.trim() && !(v.localRealizacao === 'DOMICILIO' && v.domicilioId)) {
+      erros['localDescricao'] = 'Descreva o local.';
+    }
+    if (v.localRealizacao) {
+      const lat = this.coordenada(v.localLatitude);
+      const lng = this.coordenada(v.localLongitude);
+      if ((lat === null) !== (lng === null) || Number.isNaN(lat) || Number.isNaN(lng)) erros['localLatitude'] = 'Informe a latitude e a longitude juntas, em números.';
+    }
     if (!this.validar(erros)) return;
     const dto = {
       pacienteId: v.pacienteId,
@@ -1179,6 +1270,7 @@ export class Atendimentos {
       status: v.status,
       dataHora: v.dataHora,
       especialidadeId: v.especialidadeId || null,
+      ...this.corpoDoLocal(),
     };
     const paciente = this.pacientes().find((p) => p.uuid === v.pacienteId);
     if (at) {
