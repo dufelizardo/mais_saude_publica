@@ -83,5 +83,5 @@ seção 6. Usa o controle de vetores ([ADR-0162](./0162-vigilancia-controle-de-v
   - `ControleVetorialAutorizacaoControllerTest.zoonosesPorPapel`, com segurança ligada: o agente registra; a recepção não
     registra nem lê; a vigilância epidemiológica lê as observações; o gestor lê a vacinação.
 - **Robot de API:** `test/vigilancia/Zoonoses.robot`, CT-001 a CT-011.
-- **Robot de tela:** `UI_controle_vetorial.robot`, CT-004 (animal e observação), CT-005 (exame de leishmaniose) e CT-006
-  (vacinação antirrábica).
+- **Robot de tela:** `UI_controle_vetorial.robot`, CT-004 (animal e observação), CT-005 (exame de leishmaniose), CT-006
+  (vacinação antirrábica) e CT-009 (o animal agressor na notificação).

@@ -156,3 +156,20 @@ UI Controle Vetorial - Risco Ambiental
     Wait For Elements State    css=[aria-label="Riscos ambientais"] tr:has-text("Córrego UI ${sufixo}") >> text=Controlado >> nth=0    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Controle Vetorial - Animal Agressor No Caso
+    [Documentation]    Na notificação de atendimento antirrábico, quem investiga vê o animal e o prazo (ADR-0163).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nomePaciente}=    Seed A Paciente
+    ${agravo}=    Id Do Agravo    ATENDIMENTO_ANTIRRABICO
+    ${payload}=    Create Dictionary    pacienteId=${paciente}    agravoId=${agravo}    unidadeId=${unidade}    origem=ATENDIMENTO
+    ${n}=    POST Notificacao    ${payload}
+    Should Be Equal As Integers    ${n.status_code}    201
+    ${animal}=    Seed Cao Zoonoses
+    Observar Cao    ${animal}    3    ${n.json()}[uuid]
+    Ir Para Rota Do Frontend    /vigilancia
+    Clicar Botao    Abrir notificação: ${nomePaciente} Atendimento antirrábico humano
+    Wait For Elements State    css=[aria-label="Observação do animal agressor"] >> text=Em observação    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
