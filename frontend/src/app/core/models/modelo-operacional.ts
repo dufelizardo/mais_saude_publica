@@ -76,5 +76,68 @@ export interface ModeloOperacionalUnidadeDto {
   capacidadesEncerradas: CapacidadeDaUnidadeDto[];
 }
 
+/** Tipo de serviço do catálogo (ADR-0165). */
+export interface TipoServicoDto {
+  uuid: string;
+  codigo: string;
+  nome: string;
+  descricao?: string | null;
+  capacidadeExigidaId?: string | null;
+  capacidadeExigidaNome?: string | null;
+  ativo: boolean;
+  /** Serviços vigentes deste tipo. */
+  servicos: number;
+}
+
+export interface TipoServicoRequestDto {
+  codigo: string;
+  nome: string;
+  descricao?: string | null;
+  capacidadeExigidaId?: string | null;
+  ativo: boolean;
+}
+
+export interface SetorRefDto {
+  uuid: string;
+  nome: string;
+}
+
+/** Serviço da unidade (ADR-0165); os leitos vêm dos setores. */
+export interface ServicoDaUnidadeDto {
+  uuid: string;
+  tipoId: string;
+  tipoCodigo: string;
+  tipoNome: string;
+  nome: string;
+  responsavelMatricula?: string | null;
+  responsavelNome?: string | null;
+  vinteQuatroHoras: boolean;
+  horario?: string | null;
+  setores: SetorRefDto[];
+  leitos: number;
+  leitosLivres: number;
+  leitosOcupados: number;
+  inicio: string;
+  fim?: string | null;
+  motivoFim?: string | null;
+}
+
+export interface ServicosDaUnidadeDto {
+  unidadeId: string;
+  servicos: ServicoDaUnidadeDto[];
+  encerrados: ServicoDaUnidadeDto[];
+  setoresLivres: SetorRefDto[];
+}
+
+export interface ServicoUnidadeRequestDto {
+  tipoId?: string | null;
+  nome: string;
+  responsavelMatricula?: string | null;
+  vinteQuatroHoras: boolean;
+  horario?: string | null;
+  setorIds: string[];
+  inicio?: string | null;
+}
+
 /** Rótulo do grupo das capacidades sem perfil. */
 export const GRUPO_TRANSVERSAL = 'Transversais';

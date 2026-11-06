@@ -183,10 +183,11 @@
         </div></div>
       }
 
-      <div class="tabs" role="tablist" aria-label="Seções da unidade">
+      <div class="tabs" role="tablist" aria-label="Seções da unidade" style="flex-wrap: wrap; overflow-x: visible;">
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'dados'" (click)="abaFicha.set('dados')">Dados gerais</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'operacional'" (click)="abaFicha.set('operacional')">Operacional</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'capacidades'" (click)="abaFicha.set('capacidades')">Capacidades</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'servicos'" (click)="abaFicha.set('servicos')">Serviços</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'equipes'" (click)="abaFicha.set('equipes')">Equipes</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'vinculacoes'" (click)="abaFicha.set('vinculacoes')">Vinculações</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'historico'" (click)="abaFicha.set('historico')">Histórico</button>
@@ -295,6 +296,66 @@
               </dl>
             </div>
           </div>
+        }
+        @case ('servicos') {
+          @if (modelo(); as m) {
+            @if (m.nivelDeGestao) {
+              <div class="empty-state" style="padding: var(--s-5);">
+                <div class="empty-state__title">Nível de gestão</div>
+                <p class="empty-state__desc">Serviços são das unidades de atendimento; {{ tipos[m.tipo].rotulo.toLowerCase() }} não opera assistência.</p>
+              </div>
+            } @else if (servicos(); as s) {
+              <div class="info-grid info-grid--1">
+                <div class="info-block">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Serviços</h3>
+                    @if (podeEditar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirServico(m, s, null)">Adicionar serviço</button> }
+                  </div>
+                  @if (s.servicos.length) {
+                    <ul class="eq-prof" aria-label="Serviços vigentes">
+                      @for (x of s.servicos; track x.uuid) {
+                        <li class="mo-row">
+                          <span>
+                            <span class="cell-main">{{ x.nome }} <span class="tag tag--info">{{ x.tipoNome }}</span></span>
+                            <span class="cell-sub">{{ x.vinteQuatroHoras ? '24 horas' : (x.horario || 'Horário da unidade') }} · {{ x.responsavelNome || 'Sem responsável' }}</span>
+                            <span class="cell-sub">
+                              @if (x.setores.length) {
+                                @for (t of x.setores; track t.uuid) { {{ t.nome }}@if (!$last) { , } } · {{ x.leitos }} leito(s): {{ x.leitosLivres }} livre(s), {{ x.leitosOcupados }} ocupado(s)
+                              } @else { Sem setor ligado }
+                            </span>
+                          </span>
+                          @if (podeEditar()) {
+                            <div class="row-actions" style="flex: none;">
+                              <button type="button" class="link-btn" (click)="abrirServico(m, s, x)" [attr.aria-label]="'Editar ' + x.nome">Editar</button>
+                              <button type="button" class="link-btn" (click)="abrirEncerrar(m, 'servico', x.uuid, x.nome)" [attr.aria-label]="'Encerrar ' + x.nome">Encerrar</button>
+                            </div>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="cell-sub">Nenhum serviço: diga como esta unidade se organiza (UTI Adulto, Sala de vacina, Pronto-socorro…).</p>
+                  }
+                </div>
+                @if (s.encerrados.length) {
+                  <div class="info-block">
+                    <h3>Serviços encerrados</h3>
+                    <ul class="eq-prof" aria-label="Serviços encerrados">
+                      @for (x of s.encerrados; track x.uuid) {
+                        <li><span class="cell-main">{{ x.nome }}</span><span class="cell-sub">{{ data(x.inicio) }} a {{ data(x.fim!) }} · {{ x.motivoFim }}</span></li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            } @else if (servicos() === null) {
+              <div class="empty-state" style="padding: var(--s-5);"><p class="empty-state__desc">Não foi possível carregar os serviços.</p></div>
+            } @else {
+              <p class="cell-sub" style="padding: var(--s-5);">Carregando…</p>
+            }
+          } @else {
+            <p class="cell-sub" style="padding: var(--s-5);">Carregando…</p>
+          }
         }
         @case ('capacidades') {
           @if (modelo(); as m) {
@@ -691,13 +752,87 @@
         </form>
       }
 
+      @case ('servico') {
+        <form class="dw-form" [formGroup]="servicoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Unidade</dt><dd>{{ g.modelo.unidadeNome }}</dd></div>
+              @if (g.item) { <div><dt>Tipo</dt><dd>{{ g.item.tipoNome }}</dd></div> }
+            </dl>
+            @if (!g.item) {
+              <div class="dw-field">
+                <label for="f-tipoId">Tipo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoId" formControlName="tipoId" [attr.aria-invalid]="!!erroCampo('tipoId')" aria-describedby="h-tipoId e-tipoId">
+                  <option value="">Escolha…</option>
+                  @for (t of tiposDisponiveis(g.modelo); track t.tipo.uuid) {
+                    <option [value]="t.tipo.uuid" [disabled]="t.bloqueado">{{ t.tipo.nome }}@if (t.bloqueado) { · exige {{ t.tipo.capacidadeExigidaNome }} }</option>
+                  }
+                </select>
+                <p class="dw-hint" id="h-tipoId">Tipo que exige capacidade só entra se a unidade tiver essa capacidade.</p>
+                @if (erroCampo('tipoId')) { <p class="dw-err" id="e-tipoId">{{ erroCampo('tipoId') }}</p> }
+              </div>
+            }
+            <div class="dw-field">
+              <label for="f-nomeServico">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nomeServico" type="text" maxlength="150" formControlName="nome" placeholder="Ex.: UTI Adulto" [attr.aria-invalid]="!!erroCampo('nomeServico')" aria-describedby="e-nomeServico" />
+              @if (erroCampo('nomeServico')) { <p class="dw-err" id="e-nomeServico">{{ erroCampo('nomeServico') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-responsavelServico">Matrícula do responsável<span class="opt">opcional</span></label>
+                <input id="f-responsavelServico" type="text" formControlName="responsavelMatricula" autocomplete="off" />
+              </div>
+              @if (!g.item) {
+                <div class="dw-field">
+                  <label for="f-inicioServico">Desde<span class="opt">opcional</span></label>
+                  <input id="f-inicioServico" type="date" formControlName="inicio" [attr.aria-invalid]="!!erroCampo('inicioServico')" aria-describedby="e-inicioServico" />
+                  @if (erroCampo('inicioServico')) { <p class="dw-err" id="e-inicioServico">{{ erroCampo('inicioServico') }}</p> }
+                </div>
+              }
+            </div>
+            <div class="dw-field">
+              <label class="switch" for="f-vinteQuatroHoras">
+                <span><b style="font-weight: 500;">Funciona 24 horas</b></span>
+                <input type="checkbox" role="switch" id="f-vinteQuatroHoras" formControlName="vinteQuatroHoras" />
+              </label>
+            </div>
+            @if (!servicoForm.controls.vinteQuatroHoras.value) {
+              <div class="dw-field">
+                <label for="f-horarioServico">Horário<span class="opt">opcional</span></label>
+                <input id="f-horarioServico" type="text" maxlength="200" formControlName="horario" placeholder="Ex.: seg a sex, 7h às 19h" aria-describedby="h-horarioServico" />
+                <p class="dw-hint" id="h-horarioServico">Sem horário, vale o da unidade.</p>
+              </div>
+            }
+            <fieldset class="perm-groups">
+              <legend>Setores</legend>
+              @if (setoresParaServico(g).length) {
+                <div class="perm-group">
+                  @for (x of setoresParaServico(g); track x.uuid) {
+                    <label class="perm-check">
+                      <input type="checkbox" [checked]="setoresDoServico().has(x.uuid)" (change)="alternarSetor(x.uuid)" />
+                      <span><span class="perm-check__txt">{{ x.nome }}</span></span>
+                    </label>
+                  }
+                </div>
+              }
+              <p class="dw-hint">{{ setoresParaServico(g).length ? 'Cada setor fica em um serviço vigente por vez; os leitos do serviço vêm dos setores.' : 'Nenhum setor livre nesta unidade.' }}</p>
+            </fieldset>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.item ? 'Salvar alterações' : 'Incluir serviço') }}</button>
+          </footer>
+        </form>
+      }
+
       @case ('encerrar') {
         <form class="dw-form" [formGroup]="encerrarForm" (ngSubmit)="salvar()" novalidate>
           <div class="dw-body">
             @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
             <dl class="ro">
               <div><dt>Unidade</dt><dd>{{ g.modelo.unidadeNome }}</dd></div>
-              <div><dt>{{ g.alvo === 'perfil' ? 'Perfil' : 'Capacidade' }}</dt><dd>{{ g.nome }}</dd></div>
+              <div><dt>{{ rotuloAlvo(g.alvo) }}</dt><dd>{{ g.nome }}</dd></div>
             </dl>
             @if (g.alvo === 'perfil') {
               <div class="box box--info"><div>O perfil só encerra depois das capacidades do grupo dele. O registro fica no histórico.</div></div>

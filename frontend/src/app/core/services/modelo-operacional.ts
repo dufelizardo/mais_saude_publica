@@ -7,9 +7,13 @@ import {
   ModeloOperacionalUnidadeDto,
   PerfilOperacionalDto,
   PerfilOperacionalRequestDto,
+  ServicoUnidadeRequestDto,
+  ServicosDaUnidadeDto,
+  TipoServicoDto,
+  TipoServicoRequestDto,
 } from '../models/modelo-operacional';
 
-/** Modelo operacional (ADR-0117): catálogos de perfil e de capacidade, e perfis e capacidades da unidade. */
+/** Modelo operacional (ADR-0117, ADR-0165): catálogos de perfil, capacidade e tipo de serviço, e o que cada unidade tem. */
 @Injectable({ providedIn: 'root' })
 export class ModeloOperacionalService {
   private readonly http = inject(HttpClient);
@@ -37,6 +41,34 @@ export class ModeloOperacionalService {
 
   atualizarCapacidade(uuid: string, dto: CapacidadeAssistencialRequestDto): Observable<CapacidadeAssistencialDto> {
     return this.http.patch<CapacidadeAssistencialDto>(`${this.api}/capacidade-assistencial/${uuid}`, dto);
+  }
+
+  tiposServico(): Observable<TipoServicoDto[]> {
+    return this.http.get<TipoServicoDto[]>(`${this.api}/tipo-servico/`);
+  }
+
+  criarTipoServico(dto: TipoServicoRequestDto): Observable<TipoServicoDto> {
+    return this.http.post<TipoServicoDto>(`${this.api}/tipo-servico/`, dto);
+  }
+
+  atualizarTipoServico(uuid: string, dto: TipoServicoRequestDto): Observable<TipoServicoDto> {
+    return this.http.patch<TipoServicoDto>(`${this.api}/tipo-servico/${uuid}`, dto);
+  }
+
+  servicosDaUnidade(unidadeId: string): Observable<ServicosDaUnidadeDto> {
+    return this.http.get<ServicosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/servicos`);
+  }
+
+  incluirServico(unidadeId: string, dto: ServicoUnidadeRequestDto): Observable<ServicosDaUnidadeDto> {
+    return this.http.post<ServicosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/servico`, dto);
+  }
+
+  atualizarServico(unidadeId: string, servicoId: string, dto: ServicoUnidadeRequestDto): Observable<ServicosDaUnidadeDto> {
+    return this.http.patch<ServicosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/servico/${servicoId}`, dto);
+  }
+
+  encerrarServico(unidadeId: string, servicoId: string, motivo: string, fim?: string | null): Observable<ServicosDaUnidadeDto> {
+    return this.http.post<ServicosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/servico/${servicoId}/encerramento`, { motivo, fim: fim || null });
   }
 
   daUnidade(unidadeId: string): Observable<ModeloOperacionalUnidadeDto> {
