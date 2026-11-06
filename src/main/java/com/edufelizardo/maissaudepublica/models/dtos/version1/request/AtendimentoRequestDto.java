@@ -1,9 +1,13 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.request;
 
+import com.edufelizardo.maissaudepublica.models.enuns.LocalRealizacao;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoAtendimento;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -55,4 +59,22 @@ public class AtendimentoRequestDto implements Serializable {
 
     /** A especialidade (ADR-0134); sem ela, a da marcação, se houver. */
     private UUID especialidadeId;
+
+    /** O local de realização (ADR-0166); sem ele, na unidade. */
+    private LocalRealizacao localRealizacao;
+
+    @Size(max = 300, message = "A descrição do local vai até 300 caracteres.")
+    private String localDescricao;
+
+    @DecimalMin(value = "-90", message = "A latitude fica entre -90 e 90.")
+    @DecimalMax(value = "90", message = "A latitude fica entre -90 e 90.")
+    private Double localLatitude;
+
+    @DecimalMin(value = "-180", message = "A longitude fica entre -180 e 180.")
+    @DecimalMax(value = "180", message = "A longitude fica entre -180 e 180.")
+    private Double localLongitude;
+
+    private UUID domicilioId;
+
+    private UUID pontoOperacionalId;
 }

@@ -188,6 +188,7 @@
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'operacional'" (click)="abaFicha.set('operacional')">Operacional</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'capacidades'" (click)="abaFicha.set('capacidades')">Capacidades</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'servicos'" (click)="abaFicha.set('servicos')">Serviços</button>
+        <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'pontos'" (click)="abaFicha.set('pontos')">Pontos</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'equipes'" (click)="abaFicha.set('equipes')">Equipes</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'vinculacoes'" (click)="abaFicha.set('vinculacoes')">Vinculações</button>
         <button type="button" role="tab" [attr.aria-selected]="abaFicha() === 'historico'" (click)="abaFicha.set('historico')">Histórico</button>
@@ -296,6 +297,114 @@
               </dl>
             </div>
           </div>
+        }
+        @case ('pontos') {
+          @if (modelo(); as m) {
+            @if (m.nivelDeGestao) {
+              <div class="empty-state" style="padding: var(--s-5);">
+                <div class="empty-state__title">Nível de gestão</div>
+                <p class="empty-state__desc">Pontos operacionais são das unidades de atendimento; {{ tipos[m.tipo].rotulo.toLowerCase() }} não opera assistência.</p>
+              </div>
+            } @else if (pontos(); as p) {
+              <div class="info-grid info-grid--1">
+                @if (p.movel) {
+                  <div class="info-block">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <h3>Onde está agora</h3>
+                      @if (podeEditar() && p.pontos.length) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirPosicao(m.unidadeNome, p)">Registrar posição</button> }
+                    </div>
+                    @if (p.posicoes.length) {
+                      <ul class="eq-prof" aria-label="Passagens da unidade móvel">
+                        @for (x of p.posicoes; track x.uuid; let primeira = $first) {
+                          <li>
+                            <span class="cell-main">{{ x.pontoNome }}@if (primeira) { <span class="tag tag--info">Atual</span> }</span>
+                            <span class="cell-sub">desde {{ dataHora(x.desde) }}@if (x.observacao) { · {{ x.observacao }} }</span>
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <p class="cell-sub">Nenhuma posição registrada. A posição é informada por quem opera; não há rastreamento.</p>
+                    }
+                  </div>
+                }
+                <div class="info-block">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Pontos operacionais</h3>
+                    @if (podeEditar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirPonto(m.unidadeNome, p, null)">Adicionar ponto</button> }
+                  </div>
+                  @if (pinosDosPontos(p).length) { <app-mapa [pinos]="pinosDosPontos(p)" [altura]="220" [rotulo]="'Pontos de ' + m.unidadeNome" /> }
+                  @if (p.pontos.length) {
+                    <ul class="eq-prof" aria-label="Pontos vigentes">
+                      @for (x of p.pontos; track x.uuid) {
+                        <li class="mo-row">
+                          <span>
+                            <span class="cell-main">{{ x.nome }} <span class="tag tag--info">{{ rotuloDoPonto(x.tipo) }}</span></span>
+                            <span class="cell-sub">desde {{ data(x.inicio) }}@if (x.referencia) { · {{ x.referencia }} }</span>
+                          </span>
+                          @if (podeEditar()) {
+                            <div class="row-actions" style="flex: none;">
+                              <button type="button" class="link-btn" (click)="abrirPonto(m.unidadeNome, p, x)" [attr.aria-label]="'Editar ' + x.nome">Editar</button>
+                              <button type="button" class="link-btn" (click)="abrirEncerrar(m, 'ponto', x.uuid, x.nome)" [attr.aria-label]="'Encerrar ' + x.nome">Encerrar</button>
+                            </div>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="cell-sub">Nenhum ponto: diga onde a unidade atua fora do endereço dela (escola, praça, ponto da rota…).</p>
+                  }
+                </div>
+                @if (p.movel) {
+                  <div class="info-block">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <h3>Rotas programadas</h3>
+                      @if (podeEditar() && p.pontos.length) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirRota(m.unidadeNome, p, null)">Adicionar rota</button> }
+                    </div>
+                    @if (p.rotas.length) {
+                      <ul class="eq-prof" aria-label="Rotas vigentes">
+                        @for (r of p.rotas; track r.uuid) {
+                          <li class="mo-row">
+                            <span>
+                              <span class="cell-main">{{ r.nome }}</span>
+                              <span class="cell-sub">{{ rotuloDosDias(r) }}@if (r.horaInicio) { · {{ r.horaInicio.slice(0, 5) }}@if (r.horaFim) { às {{ r.horaFim.slice(0, 5) }} } }</span>
+                              <span class="cell-sub">@for (t of r.pontos; track t.uuid) { {{ t.nome }}@if (!$last) { → } }</span>
+                            </span>
+                            @if (podeEditar()) {
+                              <div class="row-actions" style="flex: none;">
+                                <button type="button" class="link-btn" (click)="abrirRota(m.unidadeNome, p, r)" [attr.aria-label]="'Editar ' + r.nome">Editar</button>
+                                <button type="button" class="link-btn" (click)="abrirEncerrar(m, 'rota', r.uuid, r.nome)" [attr.aria-label]="'Encerrar ' + r.nome">Encerrar</button>
+                              </div>
+                            }
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <p class="cell-sub">Nenhuma rota programada.</p>
+                    }
+                  </div>
+                }
+                @if (p.pontosEncerrados.length || p.rotasEncerradas.length) {
+                  <div class="info-block">
+                    <h3>Encerrados</h3>
+                    <ul class="eq-prof" aria-label="Pontos e rotas encerrados">
+                      @for (x of p.pontosEncerrados; track x.uuid) {
+                        <li><span class="cell-main">{{ x.nome }}</span><span class="cell-sub">{{ data(x.inicio) }} a {{ data(x.fim!) }} · {{ x.motivoFim }}</span></li>
+                      }
+                      @for (x of p.rotasEncerradas; track x.uuid) {
+                        <li><span class="cell-main">{{ x.nome }}</span><span class="cell-sub">{{ data(x.inicio) }} a {{ data(x.fim!) }} · {{ x.motivoFim }}</span></li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            } @else if (pontos() === null) {
+              <div class="empty-state" style="padding: var(--s-5);"><p class="empty-state__desc">Não foi possível carregar os pontos.</p></div>
+            } @else {
+              <p class="cell-sub" style="padding: var(--s-5);">Carregando…</p>
+            }
+          } @else {
+            <p class="cell-sub" style="padding: var(--s-5);">Carregando…</p>
+          }
         }
         @case ('servicos') {
           @if (modelo(); as m) {
@@ -748,6 +857,147 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Incluir capacidade' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('ponto') {
+        <form class="dw-form" [formGroup]="pontoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Unidade</dt><dd>{{ g.unidade }}</dd></div>
+              @if (g.item) { <div><dt>Tipo</dt><dd>{{ rotuloDoPonto(g.item.tipo) }}</dd></div> }
+            </dl>
+            @if (!g.item) {
+              <div class="dw-field">
+                <label for="f-tipoPonto">Tipo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-tipoPonto" formControlName="tipo" aria-describedby="h-tipoPonto">
+                  @for (t of tiposDisponiveisDePonto(g.pontos); track t.valor) { <option [value]="t.valor">{{ t.rotulo }}</option> }
+                </select>
+                <p class="dw-hint" id="h-tipoPonto">A base é da unidade com o perfil Atenção móvel, uma por vez.</p>
+              </div>
+            }
+            <div class="dw-field">
+              <label for="f-nomePonto">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nomePonto" type="text" maxlength="150" formControlName="nome" placeholder="Ex.: Escola Rui Barbosa" [attr.aria-invalid]="!!erroCampo('nomePonto')" aria-describedby="e-nomePonto" />
+              @if (erroCampo('nomePonto')) { <p class="dw-err" id="e-nomePonto">{{ erroCampo('nomePonto') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-referenciaPonto">Referência<span class="opt">opcional</span></label>
+              <input id="f-referenciaPonto" type="text" maxlength="300" formControlName="referencia" placeholder="Ex.: em frente à igreja" />
+            </div>
+            <div class="dw-field">
+              <span class="cell-sub">Clique no mapa onde fica o ponto (opcional).</span>
+              <app-mapa [pinos]="pinoDaGaveta()" [marcarPonto]="true" [altura]="200" rotulo="Marcar o ponto" (ponto)="marcarPontoNoMapa($event)" />
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-latitudePonto">Latitude<span class="opt">opcional</span></label>
+                <input id="f-latitudePonto" type="text" inputmode="decimal" formControlName="latitude" autocomplete="off" [attr.aria-invalid]="!!erroCampo('latitudePonto')" aria-describedby="e-latitudePonto" />
+                @if (erroCampo('latitudePonto')) { <p class="dw-err" id="e-latitudePonto">{{ erroCampo('latitudePonto') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-longitudePonto">Longitude<span class="opt">opcional</span></label>
+                <input id="f-longitudePonto" type="text" inputmode="decimal" formControlName="longitude" autocomplete="off" />
+              </div>
+            </div>
+            @if (!g.item) {
+              <div class="dw-field">
+                <label for="f-inicioPonto">Desde<span class="opt">opcional</span></label>
+                <input id="f-inicioPonto" type="date" formControlName="inicio" [attr.aria-invalid]="!!erroCampo('inicioPonto')" aria-describedby="e-inicioPonto" />
+                @if (erroCampo('inicioPonto')) { <p class="dw-err" id="e-inicioPonto">{{ erroCampo('inicioPonto') }}</p> }
+              </div>
+            }
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.item ? 'Salvar alterações' : 'Incluir ponto') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('rota') {
+        <form class="dw-form" [formGroup]="rotaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Unidade</dt><dd>{{ g.unidade }}</dd></div></dl>
+            <div class="dw-field">
+              <label for="f-nomeRota">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nomeRota" type="text" maxlength="150" formControlName="nome" placeholder="Ex.: Rota rural" [attr.aria-invalid]="!!erroCampo('nomeRota')" aria-describedby="e-nomeRota" />
+              @if (erroCampo('nomeRota')) { <p class="dw-err" id="e-nomeRota">{{ erroCampo('nomeRota') }}</p> }
+            </div>
+            <fieldset class="dw-field">
+              <legend>Dias <span class="req" aria-hidden="true">*</span></legend>
+              <div class="radios" aria-describedby="e-diasRota">
+                @for (d of diasDaSemana; track d.valor) { <label><input type="checkbox" [checked]="diasDaRota().has(d.valor)" (change)="alternarDia(d.valor)" />{{ d.rotulo }}</label> }
+              </div>
+              @if (erroCampo('diasRota')) { <p class="dw-err" id="e-diasRota">{{ erroCampo('diasRota') }}</p> }
+            </fieldset>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-horaInicio">Início<span class="opt">opcional</span></label>
+                <input id="f-horaInicio" type="time" formControlName="horaInicio" />
+              </div>
+              <div class="dw-field">
+                <label for="f-horaFim">Fim<span class="opt">opcional</span></label>
+                <input id="f-horaFim" type="time" formControlName="horaFim" [attr.aria-invalid]="!!erroCampo('horaFim')" aria-describedby="e-horaFim" />
+                @if (erroCampo('horaFim')) { <p class="dw-err" id="e-horaFim">{{ erroCampo('horaFim') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-rotaPonto">Pontos, na ordem <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-rotaPonto" [attr.aria-invalid]="!!erroCampo('rotaPonto')" aria-describedby="e-rotaPonto" (change)="adicionarPontoNaRota($event)">
+                <option value="">Adicionar ponto…</option>
+                @for (x of pontosForaDaRota(g); track x.uuid) { <option [value]="x.uuid">{{ x.nome }}</option> }
+              </select>
+              @if (erroCampo('rotaPonto')) { <p class="dw-err" id="e-rotaPonto">{{ erroCampo('rotaPonto') }}</p> }
+            </div>
+            <ol class="eq-prof" aria-label="Pontos da rota">
+              @for (id of pontosDaRota(); track id; let i = $index, primeiro = $first, ultimo = $last) {
+                <li class="mo-row">
+                  <span>{{ i + 1 }}. {{ nomeDoPonto(g, id) }}</span>
+                  <div class="row-actions" style="flex: none;">
+                    @if (!primeiro) { <button type="button" class="link-btn" (click)="moverPontoNaRota(i, -1)" [attr.aria-label]="'Subir ' + nomeDoPonto(g, id)">Subir</button> }
+                    @if (!ultimo) { <button type="button" class="link-btn" (click)="moverPontoNaRota(i, 1)" [attr.aria-label]="'Descer ' + nomeDoPonto(g, id)">Descer</button> }
+                    <button type="button" class="link-btn" (click)="tirarPontoDaRota(id)" [attr.aria-label]="'Tirar ' + nomeDoPonto(g, id)">Tirar</button>
+                  </div>
+                </li>
+              }
+            </ol>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : (g.item ? 'Salvar alterações' : 'Incluir rota') }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('posicao') {
+        <form class="dw-form" [formGroup]="posicaoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro"><div><dt>Unidade</dt><dd>{{ g.unidade }}</dd></div></dl>
+            <div class="dw-field">
+              <label for="f-pontoPosicao">Ponto <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-pontoPosicao" formControlName="pontoId" [attr.aria-invalid]="!!erroCampo('pontoPosicao')" aria-describedby="e-pontoPosicao">
+                <option value="">Escolha…</option>
+                @for (x of g.pontos.pontos; track x.uuid) { <option [value]="x.uuid">{{ x.nome }}</option> }
+              </select>
+              @if (erroCampo('pontoPosicao')) { <p class="dw-err" id="e-pontoPosicao">{{ erroCampo('pontoPosicao') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-desdePosicao">Desde<span class="opt">opcional · sem data, agora</span></label>
+              <input id="f-desdePosicao" type="datetime-local" formControlName="desde" />
+            </div>
+            <div class="dw-field">
+              <label for="f-observacaoPosicao">Observação<span class="opt">opcional</span></label>
+              <input id="f-observacaoPosicao" type="text" maxlength="300" formControlName="observacao" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar' }}</button>
           </footer>
         </form>
       }

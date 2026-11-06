@@ -66,6 +66,12 @@ public class ModeloOperacionalService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.PontoOperacionalRepository pontoRepository;
+
+    @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.RotaProgramadaRepository rotaRepository;
+
     // ── Catálogo de perfis ─────────────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
@@ -221,6 +227,9 @@ public class ModeloOperacionalService {
         if (!doGrupo.isEmpty()) {
             throw new ResourceUnprocessableEntityException("Encerre antes as capacidades de " + a.getPerfil().getNome() + ": "
                     + String.join(", ", doGrupo) + ".");
+        }
+        if (PontoOperacionalService.PERFIL_MOVEL.equals(a.getPerfil().getCodigo()) && temBaseOuRota(u)) {
+            throw new ResourceUnprocessableEntityException("Encerre antes a base e as rotas de " + u.getNome() + ".");
         }
         a.setFim(fim(dto.getFim(), a.getInicio()));
         a.setMotivoFim(dto.getMotivo().trim());
@@ -387,5 +396,11 @@ public class ModeloOperacionalService {
     private UnidadeDeSaude unidade(UUID uuid) {
         return unidadeDeSaudeRepository.findById(uuid).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar uma unidade de saúde com o id " + uuid + " em nossos registros."));
+    }
+
+    private boolean temBaseOuRota(UnidadeDeSaude u) {
+        return pontoRepository.findByUnidade_UuidOrderByNomeAsc(u.getUuid()).stream()
+                .anyMatch(p -> p.vigente() && p.getTipo() == com.edufelizardo.maissaudepublica.models.enuns.TipoPontoOperacional.BASE)
+                || rotaRepository.findByUnidade_UuidOrderByNomeAsc(u.getUuid()).stream().anyMatch(com.edufelizardo.maissaudepublica.models.RotaProgramada::vigente);
     }
 }

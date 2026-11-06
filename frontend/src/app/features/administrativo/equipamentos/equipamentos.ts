@@ -26,9 +26,16 @@ import { Drawer } from '../../../shared/drawer/drawer';
 import {
   CapacidadeAssistencialDto,
   CapacidadeDaUnidadeDto,
+  DIAS_DA_SEMANA,
+  DiaDaSemana,
+  PontoDaUnidadeDto,
+  PontosDaUnidadeDto,
+  RotaDaUnidadeDto,
   ServicoDaUnidadeDto,
   ServicosDaUnidadeDto,
   SetorRefDto,
+  TIPOS_DE_PONTO,
+  TipoPontoOperacional,
   TipoServicoDto,
   GRUPO_TRANSVERSAL,
   ModeloOperacionalUnidadeDto,
@@ -39,7 +46,8 @@ import { UnidadeNoMapaDto } from '../../../core/models/territorio';
 import { TerritorioService } from '../../../core/services/territorio';
 import { Mapa, PinoMapa } from '../../../shared/mapa/mapa';
 
-type AbaFicha = 'dados' | 'operacional' | 'capacidades' | 'servicos' | 'equipes' | 'vinculacoes' | 'historico';
+type AbaFicha = 'dados' | 'operacional' | 'capacidades' | 'servicos' | 'pontos' | 'equipes' | 'vinculacoes' | 'historico';
+type AlvoEncerramento = 'perfil' | 'capacidade' | 'servico' | 'ponto' | 'rota';
 type Gaveta =
   | { tipo: 'unidade'; ficha: FichaUnidadeDto | null }
   | { tipo: 'horario'; ficha: FichaUnidadeDto }
@@ -47,7 +55,10 @@ type Gaveta =
   | { tipo: 'perfil'; modelo: ModeloOperacionalUnidadeDto }
   | { tipo: 'capacidade'; modelo: ModeloOperacionalUnidadeDto }
   | { tipo: 'servico'; modelo: ModeloOperacionalUnidadeDto; servicos: ServicosDaUnidadeDto; item: ServicoDaUnidadeDto | null }
-  | { tipo: 'encerrar'; modelo: ModeloOperacionalUnidadeDto; alvo: 'perfil' | 'capacidade' | 'servico'; associacaoId: string; nome: string };
+  | { tipo: 'ponto'; unidade: string; pontos: PontosDaUnidadeDto; item: PontoDaUnidadeDto | null }
+  | { tipo: 'rota'; unidade: string; pontos: PontosDaUnidadeDto; item: RotaDaUnidadeDto | null }
+  | { tipo: 'posicao'; unidade: string; pontos: PontosDaUnidadeDto }
+  | { tipo: 'encerrar'; modelo: ModeloOperacionalUnidadeDto; alvo: AlvoEncerramento; associacaoId: string; nome: string };
 
 interface GrupoDeCapacidades {
   nome: string;
@@ -71,7 +82,7 @@ const ESPECIALIZADAS: TipoUnidadeDeSaude[] = ['HOSPITAL', 'UPA', 'CAPS', 'CENTRO
  * Equipamentos de Saúde (ADR-0102), pelo protótipo `Equipamentos.html`: indicadores, filtros, a lista de unidades e o
  * painel da unidade selecionada (dados gerais, operacional, equipes, vinculações e histórico), com as gavetas de
  * cadastro, horário e situação. O backend é a ADR-0101. A aba Capacidades mostra o modelo operacional da unidade
- * (perfis e capacidades, ADR-0117); a aba Serviços, como isso se organiza ali (ADR-0165). A visão Mapa e a localização da unidade são da ADR-0126.
+ * (perfis e capacidades, ADR-0117); a aba Serviços, como isso se organiza ali (ADR-0165); a aba Pontos, onde a unidade atua fora do endereço dela (ADR-0166). A visão Mapa e a localização da unidade são da ADR-0126.
  */
 @Component({
   selector: 'app-equipamentos',
@@ -115,6 +126,13 @@ export class Equipamentos {
   /** undefined enquanto carrega; null se a API falhar. */
   protected readonly servicos = signal<ServicosDaUnidadeDto | null | undefined>(undefined);
   protected readonly setoresDoServico = signal<Set<string>>(new Set());
+  protected readonly tiposDePonto = TIPOS_DE_PONTO;
+  protected readonly diasDaSemana = DIAS_DA_SEMANA;
+  /** undefined enquanto carrega; null se a API falhar. */
+  protected readonly pontos = signal<PontosDaUnidadeDto | null | undefined>(undefined);
+  protected readonly posicaoNoMapa = signal<{ lat: number; lng: number } | null>(null);
+  protected readonly diasDaRota = signal<Set<DiaDaSemana>>(new Set());
+  protected readonly pontosDaRota = signal<string[]>([]);
   protected readonly mostrarEncerradas = signal(false);
 
   protected readonly busca = signal('');
@@ -163,6 +181,9 @@ export class Equipamentos {
   protected readonly perfilForm = this.fb.nonNullable.group({ perfilId: [''], inicio: [''] });
   protected readonly capacidadeForm = this.fb.nonNullable.group({ capacidadeId: [''], inicio: [''], observacao: [''] });
   protected readonly encerrarForm = this.fb.nonNullable.group({ motivo: [''], fim: [''] });
+  protected readonly pontoForm = this.fb.nonNullable.group({ tipo: ['PONTO_FIXO' as TipoPontoOperacional], nome: [''], referencia: [''], latitude: [''], longitude: [''], inicio: [''] });
+  protected readonly rotaForm = this.fb.nonNullable.group({ nome: [''], horaInicio: [''], horaFim: [''] });
+  protected readonly posicaoForm = this.fb.nonNullable.group({ pontoId: [''], desde: [''], observacao: [''] });
   protected readonly servicoForm = this.fb.nonNullable.group({ tipoId: [''], nome: [''], responsavelMatricula: [''], vinteQuatroHoras: [false], horario: [''], inicio: [''] });
   protected readonly situacaoForm = this.fb.nonNullable.group({
     situacao: ['EM_OPERACAO' as SituacaoOperacional],
@@ -344,6 +365,11 @@ export class Equipamentos {
       next: (s) => this.servicos.set(s),
       error: () => this.servicos.set(null),
     });
+    this.pontos.set(undefined);
+    this.modeloService.pontosDaUnidade(uuid).subscribe({
+      next: (p) => this.pontos.set(p),
+      error: () => this.pontos.set(null),
+    });
     this.redeService.ficha(uuid).subscribe({
       next: (f) => {
         this.ficha.set(f);
@@ -403,6 +429,10 @@ export class Equipamentos {
       .slice(0, 2)
       .map((p) => p[0].toUpperCase())
       .join('');
+  }
+
+  protected dataHora(iso: string): string {
+    return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   }
 
   protected data(iso: string | null | undefined): string {
@@ -500,7 +530,163 @@ export class Equipamentos {
     });
   }
 
-  protected abrirEncerrar(m: ModeloOperacionalUnidadeDto, alvo: 'perfil' | 'capacidade' | 'servico', associacaoId: string, nome: string): void {
+  // ── Pontos operacionais (ADR-0166) ─────────────────────────────────────────────────────────
+
+  protected rotuloDoPonto(tipo: TipoPontoOperacional): string {
+    return this.tiposDePonto.find((t) => t.valor === tipo)?.rotulo ?? tipo;
+  }
+
+  protected pinosDosPontos(p: PontosDaUnidadeDto): PinoMapa[] {
+    return p.pontos.filter((x) => x.latitude != null && x.longitude != null).map((x) => ({
+      id: x.uuid,
+      lat: x.latitude!,
+      lng: x.longitude!,
+      sigla: this.tiposDePonto.find((t) => t.valor === x.tipo)?.sigla ?? 'P',
+      classe: 'unit-pin t-caps',
+      descricao: x.nome,
+    }));
+  }
+
+  protected pinoDaGaveta(): PinoMapa[] {
+    const p = this.posicaoNoMapa();
+    return p ? [{ id: 'novo', lat: p.lat, lng: p.lng, sigla: 'P', classe: 'unit-pin t-caps', descricao: 'Posição do ponto' }] : [];
+  }
+
+  protected marcarPontoNoMapa(p: { lat: number; lng: number }): void {
+    this.posicaoNoMapa.set(p);
+    this.pontoForm.patchValue({ latitude: String(p.lat), longitude: String(p.lng) });
+  }
+
+  /** A base só na unidade móvel e sem outra vigente. */
+  protected tiposDisponiveisDePonto(p: PontosDaUnidadeDto): { valor: TipoPontoOperacional; rotulo: string }[] {
+    return this.tiposDePonto.filter((t) => t.valor !== 'BASE' || (p.movel && !p.pontos.some((x) => x.tipo === 'BASE')));
+  }
+
+  protected abrirPonto(unidade: string, pontos: PontosDaUnidadeDto, item: PontoDaUnidadeDto | null): void {
+    this.pontoForm.reset({
+      tipo: item?.tipo ?? 'PONTO_FIXO',
+      nome: item?.nome ?? '',
+      referencia: item?.referencia ?? '',
+      latitude: item?.latitude != null ? String(item.latitude) : '',
+      longitude: item?.longitude != null ? String(item.longitude) : '',
+      inicio: '',
+    });
+    this.posicaoNoMapa.set(item?.latitude != null && item.longitude != null ? { lat: item.latitude, lng: item.longitude } : null);
+    this.abrir({ tipo: 'ponto', unidade, pontos, item });
+  }
+
+  protected abrirRota(unidade: string, pontos: PontosDaUnidadeDto, item: RotaDaUnidadeDto | null): void {
+    this.rotaForm.reset({ nome: item?.nome ?? '', horaInicio: item?.horaInicio?.slice(0, 5) ?? '', horaFim: item?.horaFim?.slice(0, 5) ?? '' });
+    this.diasDaRota.set(new Set(item?.dias ?? []));
+    this.pontosDaRota.set(item?.pontos.map((p) => p.uuid) ?? []);
+    this.abrir({ tipo: 'rota', unidade, pontos, item });
+  }
+
+  protected abrirPosicao(unidade: string, pontos: PontosDaUnidadeDto): void {
+    this.posicaoForm.reset({ pontoId: '', desde: '', observacao: '' });
+    this.abrir({ tipo: 'posicao', unidade, pontos });
+  }
+
+  protected alternarDia(dia: DiaDaSemana): void {
+    this.diasDaRota.update((atual) => {
+      const novo = new Set(atual);
+      if (!novo.delete(dia)) novo.add(dia);
+      return novo;
+    });
+  }
+
+  protected rotuloDosDias(r: RotaDaUnidadeDto): string {
+    return r.dias.map((d) => this.diasDaSemana.find((x) => x.valor === d)?.rotulo).join(', ');
+  }
+
+  protected nomeDoPonto(g: Extract<Gaveta, { tipo: 'rota' }>, id: string): string {
+    return g.pontos.pontos.find((p) => p.uuid === id)?.nome ?? '';
+  }
+
+  protected pontosForaDaRota(g: Extract<Gaveta, { tipo: 'rota' }>): PontoDaUnidadeDto[] {
+    const usados = new Set(this.pontosDaRota());
+    return g.pontos.pontos.filter((p) => !usados.has(p.uuid));
+  }
+
+  protected adicionarPontoNaRota(evento: Event): void {
+    const select = evento.target as HTMLSelectElement;
+    if (select.value) this.pontosDaRota.update((l) => [...l, select.value]);
+    select.value = '';
+  }
+
+  protected tirarPontoDaRota(id: string): void {
+    this.pontosDaRota.update((l) => l.filter((p) => p !== id));
+  }
+
+  protected moverPontoNaRota(indice: number, passo: number): void {
+    this.pontosDaRota.update((l) => {
+      const novo = [...l];
+      [novo[indice], novo[indice + passo]] = [novo[indice + passo], novo[indice]];
+      return novo;
+    });
+  }
+
+  /** A posição digitada, com vírgula ou ponto; `null` se vazia, `NaN` se inválida. */
+  private coordenadaDigitada(valor: string): number | null {
+    const v = valor.trim().replace(',', '.');
+    return v ? Number(v) : null;
+  }
+
+  private salvarPonto(g: Extract<Gaveta, { tipo: 'ponto' }>): void {
+    const v = this.pontoForm.getRawValue();
+    const lat = this.coordenadaDigitada(v.latitude);
+    const lng = this.coordenadaDigitada(v.longitude);
+    const erros: Record<string, string> = {};
+    if (!v.nome.trim()) erros['nomePonto'] = 'Informe o nome do ponto.';
+    if ((lat === null) !== (lng === null) || Number.isNaN(lat) || Number.isNaN(lng)) erros['latitudePonto'] = 'Informe a latitude e a longitude juntas, em números.';
+    if (v.inicio && v.inicio > this.hojeIso()) erros['inicioPonto'] = 'O início não pode ser no futuro.';
+    if (!this.validar(erros)) return;
+    const dto = { tipo: v.tipo, nome: v.nome.trim(), referencia: v.referencia.trim() || null, latitude: lat, longitude: lng, inicio: v.inicio || null };
+    const id = g.pontos.unidadeId;
+    this.enviarPontos(g.item ? this.modeloService.atualizarPonto(id, g.item.uuid, dto) : this.modeloService.incluirPonto(id, dto),
+      g.item ? 'Ponto atualizado' : 'Ponto incluído', `${g.unidade} · ${dto.nome}`);
+  }
+
+  private salvarRota(g: Extract<Gaveta, { tipo: 'rota' }>): void {
+    const v = this.rotaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.nome.trim()) erros['nomeRota'] = 'Informe o nome da rota.';
+    if (!this.diasDaRota().size) erros['diasRota'] = 'Escolha ao menos um dia.';
+    if (v.horaInicio && v.horaFim && v.horaInicio >= v.horaFim) erros['horaFim'] = 'O fim vem depois do início.';
+    if (!this.pontosDaRota().length) erros['rotaPonto'] = 'Inclua ao menos um ponto.';
+    if (!this.validar(erros)) return;
+    const dto = { nome: v.nome.trim(), dias: [...this.diasDaRota()], horaInicio: v.horaInicio || null, horaFim: v.horaFim || null, pontoIds: this.pontosDaRota() };
+    const id = g.pontos.unidadeId;
+    this.enviarPontos(g.item ? this.modeloService.atualizarRota(id, g.item.uuid, dto) : this.modeloService.incluirRota(id, dto),
+      g.item ? 'Rota atualizada' : 'Rota incluída', `${g.unidade} · ${dto.nome}`);
+  }
+
+  private salvarPosicao(g: Extract<Gaveta, { tipo: 'posicao' }>): void {
+    const v = this.posicaoForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.pontoId) erros['pontoPosicao'] = 'Escolha o ponto.';
+    if (!this.validar(erros)) return;
+    const nome = g.pontos.pontos.find((p) => p.uuid === v.pontoId)?.nome ?? '';
+    this.enviarPontos(this.modeloService.registrarPosicao(g.pontos.unidadeId, v.pontoId, v.desde, v.observacao.trim()), 'Posição registrada', `${g.unidade} · ${nome}`);
+  }
+
+  private enviarPontos(req: Observable<PontosDaUnidadeDto>, titulo: string, detalhe: string): void {
+    this.submitting.set(true);
+    req.subscribe({
+      next: (p) => {
+        this.submitting.set(false);
+        this.fecharGaveta();
+        this.mostrarToast(titulo, detalhe);
+        this.pontos.set(p);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.erroApi.set((error.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar. Tente novamente.');
+      },
+    });
+  }
+
+  protected abrirEncerrar(m: ModeloOperacionalUnidadeDto, alvo: AlvoEncerramento, associacaoId: string, nome: string): void {
     this.encerrarForm.reset({ motivo: '', fim: '' });
     this.abrir({ tipo: 'encerrar', modelo: m, alvo, associacaoId, nome });
   }
@@ -558,6 +744,11 @@ export class Equipamentos {
     if (!v.motivo.trim()) erros['motivoFim'] = 'Informe o motivo.';
     if (v.fim && v.fim > this.hojeIso()) erros['fim'] = 'O fim não pode ser no futuro.';
     if (!this.validar(erros)) return;
+    if (g.alvo === 'ponto' || g.alvo === 'rota') {
+      this.enviarPontos(this.modeloService.encerrarPontoOuRota(g.modelo.unidadeId, g.alvo, g.associacaoId, v.motivo.trim(), v.fim),
+        g.alvo === 'ponto' ? 'Ponto encerrado' : 'Rota encerrada', `${g.modelo.unidadeNome} · ${g.nome}`);
+      return;
+    }
     if (g.alvo === 'servico') {
       this.enviarServicos(this.modeloService.encerrarServico(g.modelo.unidadeId, g.associacaoId, v.motivo.trim(), v.fim), 'Serviço encerrado', `${g.modelo.unidadeNome} · ${g.nome}`);
       return;
@@ -614,12 +805,15 @@ export class Equipamentos {
     if (g.tipo === 'perfil') return 'Incluir perfil operacional';
     if (g.tipo === 'capacidade') return 'Incluir capacidade';
     if (g.tipo === 'servico') return g.item ? 'Editar serviço' : 'Incluir serviço';
+    if (g.tipo === 'ponto') return g.item ? 'Editar ponto' : 'Incluir ponto';
+    if (g.tipo === 'rota') return g.item ? 'Editar rota' : 'Incluir rota';
+    if (g.tipo === 'posicao') return 'Registrar posição';
     if (g.tipo === 'encerrar') return `Encerrar ${this.rotuloAlvo(g.alvo).toLowerCase()}`;
     return 'Situação operacional';
   }
 
-  protected rotuloAlvo(alvo: 'perfil' | 'capacidade' | 'servico'): string {
-    return alvo === 'perfil' ? 'Perfil' : alvo === 'capacidade' ? 'Capacidade' : 'Serviço';
+  protected rotuloAlvo(alvo: AlvoEncerramento): string {
+    return { perfil: 'Perfil', capacidade: 'Capacidade', servico: 'Serviço', ponto: 'Ponto', rota: 'Rota' }[alvo];
   }
 
   private abrir(g: Gaveta): void {
@@ -698,6 +892,9 @@ export class Equipamentos {
     else if (g.tipo === 'perfil') this.salvarPerfil(g.modelo);
     else if (g.tipo === 'capacidade') this.salvarCapacidade(g.modelo);
     else if (g.tipo === 'servico') this.salvarServico(g);
+    else if (g.tipo === 'ponto') this.salvarPonto(g);
+    else if (g.tipo === 'rota') this.salvarRota(g);
+    else if (g.tipo === 'posicao') this.salvarPosicao(g);
     else if (g.tipo === 'encerrar') this.salvarEncerramento(g);
     else this.salvarSituacao(g.ficha);
   }

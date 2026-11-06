@@ -1,12 +1,16 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   CapacidadeAssistencialDto,
   CapacidadeAssistencialRequestDto,
+  LocaisDeRealizacaoDto,
   ModeloOperacionalUnidadeDto,
   PerfilOperacionalDto,
   PerfilOperacionalRequestDto,
+  PontoRequestDto,
+  PontosDaUnidadeDto,
+  RotaRequestDto,
   ServicoUnidadeRequestDto,
   ServicosDaUnidadeDto,
   TipoServicoDto,
@@ -69,6 +73,40 @@ export class ModeloOperacionalService {
 
   encerrarServico(unidadeId: string, servicoId: string, motivo: string, fim?: string | null): Observable<ServicosDaUnidadeDto> {
     return this.http.post<ServicosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/servico/${servicoId}/encerramento`, { motivo, fim: fim || null });
+  }
+
+  pontosDaUnidade(unidadeId: string): Observable<PontosDaUnidadeDto> {
+    return this.http.get<PontosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/pontos`);
+  }
+
+  /** Os pontos ativos da unidade e o domicílio do paciente, para o local de realização do atendimento (ADR-0166). */
+  locaisDeRealizacao(unidadeId: string, pacienteId?: string | null): Observable<LocaisDeRealizacaoDto> {
+    const params = pacienteId ? new HttpParams().set('pacienteId', pacienteId) : undefined;
+    return this.http.get<LocaisDeRealizacaoDto>(`${this.api}/unidade-saude/id/${unidadeId}/locais-de-realizacao`, { params });
+  }
+
+  incluirPonto(unidadeId: string, dto: PontoRequestDto): Observable<PontosDaUnidadeDto> {
+    return this.http.post<PontosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/ponto`, dto);
+  }
+
+  atualizarPonto(unidadeId: string, pontoId: string, dto: PontoRequestDto): Observable<PontosDaUnidadeDto> {
+    return this.http.patch<PontosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/ponto/${pontoId}`, dto);
+  }
+
+  incluirRota(unidadeId: string, dto: RotaRequestDto): Observable<PontosDaUnidadeDto> {
+    return this.http.post<PontosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/rota`, dto);
+  }
+
+  atualizarRota(unidadeId: string, rotaId: string, dto: RotaRequestDto): Observable<PontosDaUnidadeDto> {
+    return this.http.patch<PontosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/rota/${rotaId}`, dto);
+  }
+
+  encerrarPontoOuRota(unidadeId: string, alvo: 'ponto' | 'rota', id: string, motivo: string, fim?: string | null): Observable<PontosDaUnidadeDto> {
+    return this.http.post<PontosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/${alvo}/${id}/encerramento`, { motivo, fim: fim || null });
+  }
+
+  registrarPosicao(unidadeId: string, pontoId: string, desde?: string | null, observacao?: string | null): Observable<PontosDaUnidadeDto> {
+    return this.http.post<PontosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/posicao`, { pontoId, desde: desde || null, observacao: observacao || null });
   }
 
   daUnidade(unidadeId: string): Observable<ModeloOperacionalUnidadeDto> {

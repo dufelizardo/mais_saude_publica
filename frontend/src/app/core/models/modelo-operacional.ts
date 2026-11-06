@@ -139,5 +139,93 @@ export interface ServicoUnidadeRequestDto {
   inicio?: string | null;
 }
 
+export type TipoPontoOperacional = 'BASE' | 'PONTO_FIXO' | 'PONTO_PROGRAMADO';
+
+export const TIPOS_DE_PONTO: { valor: TipoPontoOperacional; rotulo: string; sigla: string }[] = [
+  { valor: 'BASE', rotulo: 'Base', sigla: 'B' },
+  { valor: 'PONTO_FIXO', rotulo: 'Ponto fixo', sigla: 'F' },
+  { valor: 'PONTO_PROGRAMADO', rotulo: 'Ponto programado', sigla: 'P' },
+];
+
+export type DiaDaSemana = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+
+export const DIAS_DA_SEMANA: { valor: DiaDaSemana; rotulo: string }[] = [
+  { valor: 'MONDAY', rotulo: 'Seg' },
+  { valor: 'TUESDAY', rotulo: 'Ter' },
+  { valor: 'WEDNESDAY', rotulo: 'Qua' },
+  { valor: 'THURSDAY', rotulo: 'Qui' },
+  { valor: 'FRIDAY', rotulo: 'Sex' },
+  { valor: 'SATURDAY', rotulo: 'Sáb' },
+  { valor: 'SUNDAY', rotulo: 'Dom' },
+];
+
+/** Ponto operacional da unidade (ADR-0166). */
+export interface PontoDaUnidadeDto {
+  uuid: string;
+  tipo: TipoPontoOperacional;
+  nome: string;
+  referencia?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  inicio: string;
+  fim?: string | null;
+  motivoFim?: string | null;
+}
+
+export interface RotaDaUnidadeDto {
+  uuid: string;
+  nome: string;
+  dias: DiaDaSemana[];
+  horaInicio?: string | null;
+  horaFim?: string | null;
+  pontos: { uuid: string; nome: string }[];
+  inicio: string;
+  fim?: string | null;
+  motivoFim?: string | null;
+}
+
+export interface PosicaoDaUnidadeDto {
+  uuid: string;
+  pontoId: string;
+  pontoNome: string;
+  desde: string;
+  observacao?: string | null;
+}
+
+export interface PontosDaUnidadeDto {
+  unidadeId: string;
+  /** Tem o perfil Atenção móvel vigente. */
+  movel: boolean;
+  pontos: PontoDaUnidadeDto[];
+  pontosEncerrados: PontoDaUnidadeDto[];
+  rotas: RotaDaUnidadeDto[];
+  rotasEncerradas: RotaDaUnidadeDto[];
+  /** A mais recente primeiro; a primeira é a localização atual. */
+  posicoes: PosicaoDaUnidadeDto[];
+}
+
+export interface PontoRequestDto {
+  tipo?: TipoPontoOperacional | null;
+  nome: string;
+  referencia?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  inicio?: string | null;
+}
+
+export interface RotaRequestDto {
+  nome: string;
+  dias: DiaDaSemana[];
+  horaInicio?: string | null;
+  horaFim?: string | null;
+  pontoIds: string[];
+}
+
+export interface LocaisDeRealizacaoDto {
+  pontos: { uuid: string; nome: string; tipo: TipoPontoOperacional }[];
+  domicilioId?: string | null;
+  domicilioDescricao?: string | null;
+}
+
 /** Rótulo do grupo das capacidades sem perfil. */
 export const GRUPO_TRANSVERSAL = 'Transversais';
