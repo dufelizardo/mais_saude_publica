@@ -58,6 +58,7 @@
   @if (podeGerenciar() || podeAcompanhar()) {
     <button type="button" role="tab" [attr.aria-selected]="visao() === 'campanhas'" (click)="visao.set('campanhas')">Campanhas</button>
   }
+  <button type="button" role="tab" [attr.aria-selected]="visao() === 'linhas'" (click)="visao.set('linhas')">Linhas de cuidado</button>
   @if (podeAcompanhar() || podeAvaliarBucal()) {
     <button type="button" role="tab" [attr.aria-selected]="visao() === 'saude-bucal'" (click)="visao.set('saude-bucal')">A convocar (saúde bucal)</button>
   }
@@ -71,6 +72,11 @@
 } @else if (visao() === 'saude-bucal') {
   <section class="card" style="padding: var(--s-5);" aria-label="A convocar em saúde bucal">
     <app-saude-bucal-a-convocar [unidadeId]="unidadeFiltro()" />
+  </section>
+} @else if (visao() === 'linhas') {
+  <section class="card" style="padding: var(--s-5);" aria-label="Linhas de cuidado">
+    <app-linhas-de-cuidado [programas]="programas()" [unidades]="unidades()" [unidadeId]="unidadeFiltro()" [podeGerenciar]="podeGerenciar()"
+      [podeAcompanhar]="podeAcompanhar()" />
   </section>
 } @else if (visao() === 'campanhas') {
   <section class="card" style="padding: var(--s-5);" aria-label="Campanhas de saúde">

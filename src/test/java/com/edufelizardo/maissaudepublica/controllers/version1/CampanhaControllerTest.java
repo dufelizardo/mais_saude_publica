@@ -73,8 +73,12 @@ class CampanhaControllerTest {
     }
 
     private String campanha(String nome, LocalDate inicio, LocalDate fim, String extra, int esperado) throws Exception {
-        return enviar(post(URL + "campanha"), "{\"nome\": \"%s\", \"tipo\": \"VACINACAO\", \"inicio\": \"%s\", \"fim\": \"%s\"%s}"
-                .formatted(PREFIXO + nome, inicio, fim, extra), esperado);
+        return campanha("VACINACAO", nome, inicio, fim, extra, esperado);
+    }
+
+    private String campanha(String tipo, String nome, LocalDate inicio, LocalDate fim, String extra, int esperado) throws Exception {
+        return enviar(post(URL + "campanha"), "{\"nome\": \"%s\", \"tipo\": \"%s\", \"inicio\": \"%s\", \"fim\": \"%s\"%s}"
+                .formatted(PREFIXO + nome, tipo, inicio, fim, extra), esperado);
     }
 
     @Test
@@ -114,7 +118,8 @@ class CampanhaControllerTest {
     @Test
     void acoesDaCampanhaAndamentoECancelamento() throws Exception {
         LocalDate hoje = LocalDate.now();
-        String id = JsonPath.read(campanha("Mutirão", hoje.minusDays(2), hoje.plusDays(10), ", \"metaQuantidade\": 300", 201), "$.uuid");
+        // O mutirão soma as ações no andamento; na de vacinação, o andamento vem das doses (ADR-0149).
+        String id = JsonPath.read(campanha("MUTIRAO", "Mutirão", hoje.minusDays(2), hoje.plusDays(10), ", \"metaQuantidade\": 300", 201), "$.uuid");
         enviar(post(URL + "campanha/" + id + "/publicacao"), "{\"publicada\": true}", 200);
         String r = enviar(post(URL + "campanha/" + id + "/local"), "{\"unidadeId\": \"%s\"}".formatted(ubs.getUuid()), 201);
         String local = JsonPath.read(r, "$.locais[0].uuid");

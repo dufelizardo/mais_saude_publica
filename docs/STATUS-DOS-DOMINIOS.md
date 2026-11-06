@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-10-26 (release 1.8.0)
+- **Atualizado em:** 2026-11-06 (release 1.9.0)
 - **Release em produção:** v1.7.0 (2026-10-22)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -48,18 +48,18 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI3 feitas (Sala de Situação: produção, situação operacional e indicadores da rede); BI4 e BI5 |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
-| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | 🟡 | P1 a P4 e P6 feitas; falta P5 |
-| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 e V2 feitas; sanitária, ambiental e trabalhador (V3 a V5) |
-| 24 | [Imunização](#24-imunização) | ⬜ | desenhar em ADR própria |
+| 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1, V2 e V4 (vetores, animais e ambiental) feitas; sanitária e trabalhador (V3, V5) |
+| 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
-| 26 | [Saúde Mental](#26-saúde-mental) | 🟡 | SM1 a SM4 feitas (SM3 sem notificação no sistema e SAMU); CAPS e indicadores (SM5, SM6) |
-| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 📐 | fatias E1 a E6 |
+| 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
+| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
-| 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ⬜ | desenhar em ADR própria |
+| 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 11 ✅ · 10 🟡 · 2 📐 · 8 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 13 ✅ · 11 🟡 · 1 📐 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -69,10 +69,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 | C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
-| SM5 | 26 Saúde Mental | componentes da RAPS e serviços do CAPS; as modalidades já estão no catálogo da MO1 |
-| P5 | 22 Programas | linhas de cuidado |
-| V4 | 23 Vigilância | ambiental e zoonoses: imóvel, foco, vistoria, animal (o imóvel veio na F3) |
-| E1 | 27 Emergências | núcleo do evento emergencial: tipo (COBRADE), nível, território afetado |
 | MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
 | MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
 | BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
@@ -80,7 +76,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
-MO1 ✅ ──► SB4a ✅ (CEO) · SM5 (CAPS) · E3 (capacidade emergencial) · MO2 → MO4
+MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade emergencial) · MO2 → MO4
 MO3 ──► SAMU e unidade móvel (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
@@ -88,15 +84,17 @@ BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 (rel
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
-F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 (área afetada) · Equipamentos com mapa real ✅
-F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4 (zoonoses) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
+F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 ✅ (área afetada) · Equipamentos com mapa real ✅
+F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4a ✅ (vetores) ──► V4b ✅ (animais) ──► V4c ✅ (ambiental) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
-V2a ✅ ──► V2b ✅ ──► E1 (surto como gatilho do evento emergencial)
+V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergencial)
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
-SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6
-E1 ──► E2 ──► E3 ──► E4 · E5 ──► E6
+SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
+IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
+E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6a ✅ ──► E6b ✅
 C1 ──► C2 · C4 · C5
+I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
 
 **Dependem de itens ainda não desenhados** (precisam de ADR de domínio antes):
@@ -108,8 +106,6 @@ C1 ──► C2 · C4 · C5
 | Estoque (13) e Transporte (16) | E4 (insumos e veículos), SAMU |
 | Regulação de urgência (11) | SM3 (acionar SAMU), E4 |
 | Gestão da Rede (30) | cotas PPI da Regulação |
-| Intersetorialidade (31) | SM6, encaminhamentos da Vigilância e das Emergências |
-| Imunização (24) | aba Vacinação de Pacientes, doses das campanhas |
 
 ## 2. Domínios
 
@@ -131,8 +127,8 @@ C1 ──► C2 · C4 · C5
 - [ ] Acessibilidade.
 - [ ] Exportação.
 - [ ] Inspeção sanitária.
-- [ ] Componentes da RAPS e serviços do CAPS (domínio 26, SM5). As modalidades de CAPS (I, II, III, i, AD, AD III) já
-  são capacidades no catálogo da MO1 ([ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
+- [x] Componentes da RAPS no catálogo do modelo operacional e o acolhimento noturno do CAPS (domínio 26, SM5,
+  [ADR-0153](./adr/0153-saude-mental-caps-e-raps.md)).
 - [x] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1, [ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
 - [ ] Serviços (MO2); coordenadas e pontos operacionais (MO3).
 - [x] Tipo de unidade do CEO: sem tipo próprio; é a unidade de especialidades com as capacidades odontológicas (ADR-0138).
@@ -403,6 +399,9 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   por unidade, com a meta da unidade ou da rede; a vigilância por agravo com a oportunidade de encerramento, as 12
   semanas epidemiológicas, a regularidade da notificação e o território; programa e agravo sensíveis escondidos sem a
   permissão; cartões na Sala de Situação.
+- [x] **Vacinação na Sala de Situação** (fatia I3 da Imunização,
+  [ADR-0149](./adr/0149-imunizacao-cobertura-e-campanhas.md)): doses do período por estratégia, cobertura das vacinas de
+  referência, homogeneidade, abandono e campanhas de vacinação com o andamento, no lugar do bloco "Em breve".
 
 **Falta:**
 - [ ] **BI4 · Relatórios** (protótipo `Relatorios.html`).
@@ -468,7 +467,7 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 
 ### 22. Programas, Ações e Linhas de Cuidado
 
-**Estado:** 🟡. Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md); detalhe em
+**Estado:** ✅. Desenhado na [ADR-0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), com as seis fatias feitas; detalhe em
 [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md).
 
 **Temos:**
@@ -495,10 +494,16 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   controlada, exame no alvo, pré-natal com 6 consultas, tratamento odontológico concluído, próteses entregues e
   escovação supervisionada); metas por indicador e unidade com a situação (atingida, em risco, abaixo); evolução de
   12 meses; relatório em CSV; só números, e o programa sensível só para quem acompanha.
+- [x] **P5 · Linhas de cuidado** ([ADR-0152](./adr/0152-programas-linhas-de-cuidado.md)): linha cadastrável com as
+  etapas como dado (cumpridas por atendimento, exame liberado, regulação realizada, vacina, alta de internação com CID
+  ou registro manual; quantidade e prazo do início ou da etapa anterior); percurso do paciente com a situação calculada
+  (cumprida, no prazo, atrasada, aguardando a anterior, dispensada), registro manual, dispensa e encerramento; painel
+  com atrasados e a sugestão de abrir a linha para quem está no programa; carga da gestante e da primeira semana da
+  criança; aba Linhas de cuidado em Programas e as linhas na aba Programas do paciente.
 
 **Falta:**
 - [x] Lista de elegíveis pelo público-alvo entre os adscritos da equipe (ADR-0128); faltam os critérios clínicos (gestação, condição).
-- [ ] **P5 · Linhas de cuidado.**
+- [ ] Linhas recorrentes e indicadores de linha (P6 e Sala de Situação), depois da P5 (ADR-0152).
 
 ### 23. Vigilância em Saúde
 
@@ -520,25 +525,68 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   aberta); um surto por caso, do mesmo agravo; medidas de controle do surto ou do caso, com responsável, prazo e
   resultado, e as vencidas nos indicadores; linha do tempo do caso e do surto (esta, pela trilha de auditoria); mapa
   filtrado pelo surto e "Abrir surto" pela microárea.
+- [x] **V4a · Controle de vetores** ([ADR-0162](./adr/0162-vigilancia-controle-de-vetores.md)): papéis Agente de
+  endemias e Vigilância ambiental; vistoria ao imóvel do Território no modelo do PNCD (resultado, depósitos por tipo A1 a
+  E, tratamento focal, ciclo bimestral) com a pendência de revisita; focos com o laboratório (negativo não conta) e o
+  tratamento; índices do ciclo (IIP e Breteau, com a classificação do Ministério da Saúde) por área; ações de controle
+  (bloqueio, nebulização, mutirão, educativa) ligadas ao caso de arbovirose ou ao surto, com os casos sem bloqueio sem
+  expor o paciente; tela Zoonoses e vetores; a área em risco na Sala de Situação.
+- [x] **V4b · Animais** ([ADR-0163](./adr/0163-vigilancia-zoonoses-animais.md)): animal de interesse (o tutor só com
+  nome e telefone); observação do cão ou gato agressor por 10 dias ligada ao atendimento antirrábico notificado, com o
+  desfecho visto por quem investiga; exames de raiva e de leishmaniose visceral canina, com o desfecho do cão reagente;
+  vacinação antirrábica animal por posto, com os totais do ano.
+- [x] **V4c · Ambiental** ([ADR-0164](./adr/0164-vigilancia-ambiental-agua-e-risco.md)): pontos de coleta e amostras da
+  qualidade da água com a conformidade calculada pela Portaria GM/MS 888/2021 (E. coli, coliformes, cloro residual,
+  turbidez, fluoreto) e a medida da fora do padrão; risco ambiental permanente, ativo ou controlado; a água fora do padrão
+  na Sala de Situação.
 
 **Falta:**
 - [ ] Sugestão de notificação por exame positivo (o catálogo de exames não liga exame a agravo).
 - [ ] **V3 · Sanitária:** estabelecimento regulado, inspeção, irregularidade, medida, licença (os autos dependem
   do domínio Documentos).
-- [ ] **V4 · Ambiental e Zoonoses:** evento e risco ambiental, monitoramento, vistoria, foco, animal, ação de
-  controle (depende do imóvel, fatia F3 do Território).
+- [ ] O plano de amostragem mínimo da água e os demais parâmetros da portaria (agrotóxicos, metais).
+- [ ] A cobertura da vacinação antirrábica animal (precisa da população animal estimada).
+- [ ] O quarteirão como unidade de trabalho do agente de endemias.
 - [ ] **V5 · Saúde do Trabalhador e integrações:** evento do trabalho, risco ocupacional, investigação;
   adaptadores, com o SINAN primeiro (depende do domínio 20, Integrações).
 
 ### 24. Imunização
 
-**Estado:** ⬜. Reservado pela [ADR-0110](./adr/0110-vigilancia-em-saude.md).
+**Estado:** 🟡. Desenhado na [ADR-0147](./adr/0147-imunizacao.md) (reservado pela
+[ADR-0110](./adr/0110-vigilancia-em-saude.md)): imunobiológico como catálogo próprio, calendário como dado, dose
+aplicada como registro clínico com retificação, estoque de vacinas da própria Imunização.
+
+**Temos:**
+- [x] **I1 · Fundação** ([ADR-0147](./adr/0147-imunizacao.md)): catálogo de 20 imunobiológicos e o calendário do PNI
+  (criança, adolescente, adulto, idoso e gestante) como dado editável; registro da dose aplicada (quem aplicou, lote)
+  ou transcrita da caderneta (data); dose repetida 409, fora da idade ou do intervalo só com justificativa;
+  retificação e anulação; situação vacinal calculada (aplicada, atrasada, próxima, futura, fora da idade);
+  caderneta na aba Vacinação do paciente; tela Sala de Vacina com as doses do dia e os adscritos com dose atrasada.
+- [x] **I2 · Sala de vacina e cadeia de frio** ([ADR-0148](./adr/0148-imunizacao-sala-de-vacina.md)): capacidade
+  "Sala de vacina" (transversal) no modelo operacional; na unidade com ela, lote de imunobiológico com livro de
+  movimentação em doses (entrada, aplicação, estorno, perdas física e técnica, ajuste) e a dose aplicada saindo do
+  lote com baixa automática; frasco multidose aberto com prazo e perda técnica no vencimento; câmara de refrigeração
+  com duas leituras por dia, pendência do turno sem leitura e excursão que põe os lotes sob suspeita até a coordenação
+  liberar ou inutilizar; abas Estoque e Cadeia de frio na Sala de Vacina.
+- [x] **I3 · Cobertura e campanhas** ([ADR-0149](./adr/0149-imunizacao-cobertura-e-campanhas.md)): a dose de
+  referência e a meta no calendário (dado editável); cobertura pelo cadastro (coorte de crianças adscritas de 1 a 12
+  meses depois da idade recomendada), homogeneidade entre vacinas e entre territórios e taxa de abandono, por unidade,
+  equipe e microárea; busca ativa filtrada por equipe e microárea, com o agente comunitário, onde mora e a lista para
+  imprimir; andamento da campanha de vacinação pelas pessoas vacinadas, com as vacinas da campanha; aba Cobertura na
+  Sala de Vacina, bloco Vacinação na Sala de Situação e cobertura no detalhe da equipe.
+- [x] **I4 · ESAVI e erro de imunização** ([ADR-0150](./adr/0150-imunizacao-esavi.md)): os dois agravos no catálogo da
+  Vigilância, com ficha; a notificação ligada às doses (origem Vacinação), com a gravidade do ESAVI; o encerramento do
+  ESAVI pela causalidade da OMS e pela conduta sobre o esquema; a contraindicação vacinal na caderneta e no registro da
+  dose (só com justificativa); a dose fora do calendário como sugestão de erro de imunização; "Notificar ESAVI" na
+  caderneta e o ESAVI no bloco Vacinação da Sala de Situação.
 
 **Falta:**
-- [ ] Desenho (ADR): imunobiológico, calendário, dose aplicada, cobertura, eventos adversos, cadeia de frio.
-  Integra com Vigilância (23), Programas (22, campanha de vacinação), Estoque (13) e Paciente (aba Vacinação).
-- [ ] Implementação.
-- [ ] Integração com o SI-PNI (depende do domínio 20).
+- [ ] **Remanejamento de lote entre unidades,** pedido à rede de frio e termômetro automático (depois da I2;
+  ADR-0148).
+- [ ] **Cobertura sobre os nascidos vivos (SINASC)** e de adolescentes, adultos e gestantes; cobertura vacinal nas
+  metas programáticas (depois da I3; ADR-0149).
+- [ ] **Alerta de ESAVI por lote** e revogação da contraindicação pelo CRIE (depois da I4; ADR-0150).
+- [ ] **I5 · Integração com o SI-PNI/RNDS** (depende do domínio 20).
 
 ### 25. Saúde Bucal
 
@@ -585,7 +633,7 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 
 ### 26. Saúde Mental
 
-**Estado:** 🟡. Desenhado na [ADR-0112](./adr/0112-saude-mental.md); detalhe em
+**Estado:** ✅ (SM1 a SM6). Desenhado na [ADR-0112](./adr/0112-saude-mental.md); detalhe em
 [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md).
 
 **Temos:**
@@ -607,28 +655,66 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   tipo, medidas e reavaliação com prazo, indicadores; evento de crise com ou sem caso, etapas, pós-crise e desfecho,
   notificação de violência autoprovocada sugerida e registrada como feita; na Internação, a modalidade (Lei
   10.216/2001) e a comunicação da involuntária ao Ministério Público em 72 horas, com a pendência à vista.
+- [x] **SM5 · CAPS e RAPS** ([ADR-0153](./adr/0153-saude-mental-caps-e-raps.md)): o componente da RAPS como dado do
+  modelo operacional (perfis e capacidades, com as capacidades novas de Consultório na Rua, Centro de convivência,
+  Unidade de acolhimento, Serviço residencial terapêutico e Geração de trabalho e renda); painel da RAPS por componente
+  com os casos, as intervenções dos últimos 90 dias e as lacunas da rede; acolhimento noturno do CAPS com vagas,
+  permanência máxima, entrada, prorrogação e saída; telas Rede (RAPS) e Acolhimento noturno.
+- [x] **SM6 · Intersetorialidade e indicadores** ([ADR-0155](./adr/0155-saude-mental-intersetorialidade-e-indicadores.md)):
+  encaminhamento do caso a instituições de outros setores (pelo catálogo da IS1, ADR-0154), com recebimento, retorno
+  (concluído ou recusado) e cancelamento; o sem retorno no prazo como pendência do caso e filtro da lista; cinco
+  indicadores no conjunto da P6 (PTS em dia, avaliação em até 30 dias, pós-crise em até 7 dias, comunicação ao MP no
+  prazo e retorno intersetorial), com metas, série e Sala de Situação.
 
 **Falta:**
 - [ ] **SM3 · o que ficou:** a notificação de violência autoprovocada no sistema (depende da Vigilância V1) e o
   acionamento do SAMU (depende da regulação de urgência).
-- [ ] **SM5 · CAPS e RAPS:** modalidades de CAPS e componentes da RAPS como capacidades da unidade (ADR-0053).
-- [ ] **SM6 · Intersetorialidade e indicadores:** instituições externas e encaminhamento intersetorial (pelo item 31),
-  indicadores.
+- [ ] CAPS de referência por território e a produção do CAPS para o faturamento (RAAS, depende do domínio 20), depois da
+  SM5 (ADR-0153).
+- [ ] A guia de encaminhamento intersetorial para imprimir (depende de Documentos).
 
 ### 27. Gestão de Emergências e Desastres
 
-**Estado:** 📐. Desenhado na [ADR-0113](./adr/0113-emergencias-e-desastres.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0113](./adr/0113-emergencias-e-desastres.md); detalhe em
 [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md).
 
+**Temos:**
+- [x] **E1 · Núcleo** ([ADR-0156](./adr/0156-emergencias-nucleo.md)): catálogos de tipo (COBRADE) e nível (0 a 3);
+  evento emergencial com fonte, área e o surto de origem (registrado, monitorado, descartado, convertido); emergência
+  com nível em histórico, território afetado (polígono e microáreas atingidas), ESPIN e decreto registrados e
+  encerramento; avaliação de impacto datada com sugestões dos donos (pessoas das microáreas, unidades na área, leitos
+  fora de uso); permissões `EMERGENCIA.REGISTRAR`, `EMERGENCIA.ATIVAR` e `CONTINGENCIA.GERENCIAR`; tela Emergências,
+  aviso na Sala de Situação e atalho no surto.
+- [x] **E2 · Contingência** ([ADR-0157](./adr/0157-emergencias-contingencia.md)): plano versionado (rascunho,
+  vigente, substituída, revogada) com níveis, critérios e ações previstas por nível, recursos, contatos e unidades;
+  ativação na emergência pela autoridade, com passos (ativado, nível alterado automático, desativado) e as ações
+  previstas do nível atual com prazo; encerramento desativa os planos; telas de planos e de catálogos.
+- [x] **E3 · Coordenação** ([ADR-0158](./adr/0158-emergencias-coordenacao.md)): quadro de ações (geradas das ações
+  previstas do plano ou avulsas; atrasadas no alto, também na Sala de Situação); mobilização registrada e executada pelo
+  dono (o profissional mobilizado ganha turno na Escala sem lotação na unidade de destino, rastreável; o medicamento segue
+  a transferência da Farmácia; insumo, equipamento e veículo como necessidade); capacidade emergencial cadastrada por
+  unidade e ativada na emergência até o limite; unidades afetadas com a situação operacional.
+- [x] **E5 · Pós-evento** ([ADR-0159](./adr/0159-emergencias-desmobilizacao-e-relatorio.md)): situação "em
+  desmobilização" (libera de uma vez mobilizações, capacidade e planos, bloqueia o que é novo, mostra as pendências);
+  encerramento sem ação aberta; relatório pós-evento com os números calculados, o texto da equipe, as recomendações que
+  abrem a revisão do plano (E2), finalização e CSV.
+- [x] **E6a · Evento de massa e estruturas temporárias** ([ADR-0160](./adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md)):
+  perfil do tipo (geral, evento de massa, epidemia, desastre ambiental); emergência planejada para o evento de massa,
+  com os dados do evento (natureza, local, período, público, organizador, risco) e o início da operação; estruturas
+  temporárias (posto médico, tenda de hidratação, hospital de campanha como capacidade, ligadas a uma unidade de
+  referência) com os boletins; desativadas na desmobilização; os números no relatório; o evento planejado na Sala de
+  Situação.
+- [x] **E6b · Epidemia e desastre ambiental** ([ADR-0161](./adr/0161-emergencias-epidemia-e-exposicao-ambiental.md)):
+  agravo da epidemia (o escolhido ou o do surto; sensível não entra) e painel lido da Vigilância (notificados,
+  confirmados, em investigação, óbitos, semana atual e anterior, curva por semana epidemiológica, na área afetada);
+  exposição ambiental datada (meio, agente, população exposta, unidades na área, medidas, recomendação); os números no
+  relatório.
+
 **Falta:**
-- [ ] **E1 · Núcleo:** evento, emergência, tipo (COBRADE), nível, situação, avaliação de impacto, território afetado.
-- [ ] **E2 · Contingência:** plano versionado, critérios de ativação, ações previstas, ativação com histórico.
-- [ ] **E3 · Mobilização:** mobilização (com a exceção de turnos fora da lotação na Escala), capacidade emergencial,
-  ações emergenciais, unidade afetada pela situação operacional.
+- [ ] A escolha manual das microáreas na tela (a API aceita a lista).
 - [ ] **E4 · Integração da rede:** redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas,
   pacientes deslocados; Estoque e Transporte quando existirem.
-- [ ] **E5 · Pós-evento:** desmobilização, relatório, lições aprendidas, revisão do plano, indicadores.
-- [ ] **E6 · Especializados:** eventos de massa, epidemias, desastres ambientais, hospital de campanha como capacidade.
+- [ ] Ambulâncias da estrutura como veículos (depende de Transporte) e hospital de campanha com leitos próprios.
 - [ ] Comunicação de risco à população: feita pelo domínio 28 (comunicado emergencial).
 
 ### 28. Comunicação e Educação em Saúde
@@ -676,13 +762,22 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 
 ### 31. Intersetorialidade e Proteção Social
 
-**Estado:** ⬜. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md).
+**Estado:** 🟡. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md); desenhado na
+[ADR-0154](./adr/0154-intersetorialidade.md).
+
+**Temos:**
+- [x] **IS1 · Catálogo e encaminhamento** ([ADR-0154](./adr/0154-intersetorialidade.md)): catálogo único de
+  instituições externas (setor e tipo, contato, ativa), lido por quem está logado e mantido com
+  `INTERSETORIAL.GERENCIAR` (Gestor e Assistente social); encaminhamento com origem em qualquer domínio (enviado,
+  recebido, concluído, recusado, cancelado; sem retorno derivado do prazo); tela Instituições da rede intersetorial.
+  Primeiro uso: a Saúde Mental (SM6).
 
 **Falta:**
-- [ ] Desenho (ADR): catálogo único de instituições externas (CRAS, CREAS, escolas, Conselho Tutelar, Defensoria,
-  Ministério Público, abrigos) e encaminhamento intersetorial com retorno.
-- [ ] Implementação, reaproveitada por Saúde Mental (SM6), Vigilância (violência), Emergências (abrigos) e
-  Comunicação.
+- [ ] O encaminhamento pela Vigilância (violência: Conselho Tutelar, CREAS) e pelas Emergências (abrigos), com as
+  próprias fatias.
+- [ ] O painel de encaminhamentos por instituição, para a gestão da rede intersetorial.
+- [ ] A guia de encaminhamento para imprimir (Documentos) e a integração com o CadÚnico e o prontuário SUAS
+  (domínio 20, adiado).
 
 ## 3. Pendências transversais
 

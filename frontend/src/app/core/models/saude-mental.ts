@@ -1,5 +1,6 @@
 import { MotivoSaidaAcompanhamento, PeriodicidadeAcompanhamento, SituacaoAcompanhamento } from './programa';
 import { AcessoProntuarioDto } from './prontuario';
+import { EncaminhamentoIntersetorialDto } from './intersetorialidade';
 
 // ── Saúde Mental, fatia SM1 (ADR-0120) ─────────────────────────────────────────────────────────
 
@@ -109,6 +110,9 @@ export interface AcompanhamentoSaudeMentalDto {
   riscos: AvaliacaoRiscoDto[];
   crises: EventoCriseDto[];
   internacoes: InternacaoResumoSaudeMentalDto[];
+  /** Encaminhamentos a instituições de outros setores (ADR-0155). */
+  encaminhamentosIntersetoriais: EncaminhamentoIntersetorialDto[];
+  retornoIntersetorialVencido: boolean;
 }
 
 export interface CasosSaudeMentalDto {
@@ -119,6 +123,7 @@ export interface CasosSaudeMentalDto {
   ptsARevisar: number;
   riscoAlto: number;
   reavaliacaoRiscoVencida: number;
+  retornoIntersetorialVencido: number;
   lista: AcompanhamentoSaudeMentalDto[];
 }
 
@@ -149,7 +154,7 @@ export interface AvaliacaoSaudeMentalRequestDto {
 export type SituacaoObjetivoTerapeutico = 'EM_ANDAMENTO' | 'ALCANCADO' | 'NAO_ALCANCADO' | 'SUSPENSO';
 export type SituacaoIntervencaoSaudeMental = 'REALIZADA' | 'NAO_COMPARECEU';
 export type PapelRedeApoio = 'FAMILIAR' | 'CUIDADOR' | 'PESSOA_DE_REFERENCIA' | 'SERVICO' | 'OUTRO';
-export type PendenciaSaudeMental = '' | 'SEM_AVALIACAO' | 'SEM_PTS' | 'PTS_A_REVISAR' | 'RISCO_ALTO' | 'REAVALIACAO_VENCIDA';
+export type PendenciaSaudeMental = '' | 'SEM_AVALIACAO' | 'SEM_PTS' | 'PTS_A_REVISAR' | 'RISCO_ALTO' | 'REAVALIACAO_VENCIDA' | 'RETORNO_INTERSETORIAL';
 
 export const SITUACOES_OBJETIVO: Record<SituacaoObjetivoTerapeutico, { rotulo: string; classe: string }> = {
   EM_ANDAMENTO: { rotulo: 'Em andamento', classe: 'info' },
@@ -405,4 +410,51 @@ export interface InternacaoResumoSaudeMentalDto {
   altaEm?: string | null;
   status: string;
   modalidade?: string | null;
+}
+
+// ── CAPS e RAPS (ADR-0153) ──
+
+export type ComponenteRaps = 'ATENCAO_BASICA' | 'ATENCAO_PSICOSSOCIAL_ESPECIALIZADA' | 'URGENCIA_EMERGENCIA' | 'RESIDENCIAL_TRANSITORIO' | 'HOSPITALAR'
+  | 'DESINSTITUCIONALIZACAO' | 'REABILITACAO_PSICOSSOCIAL';
+
+export interface PontoRapsDto {
+  unidadeId: string;
+  unidadeNome: string;
+  tipo?: string | null;
+  capacidades: string[];
+  casosEmAcompanhamento: number;
+  intervencoes90Dias: { chave: string; rotulo: string; quantidade: number }[];
+}
+
+export interface PainelRapsDto {
+  abrangencia: string;
+  componentes: { componente: ComponenteRaps; rotulo: string; unidades: PontoRapsDto[] }[];
+  lacunas: string[];
+}
+
+export interface PermanenciaAcolhimentoDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  entrada: string;
+  saidaPrevista: string;
+  saida?: string | null;
+  dias: number;
+  passouDaSaidaPrevista: boolean;
+  alemDoMaximo: boolean;
+  justificativaPrazo?: string | null;
+  motivoSaida?: string | null;
+}
+
+export interface AcolhimentoNoturnoDto {
+  unidadeId: string;
+  unidadeNome: string;
+  temAcolhimentoNoturno: boolean;
+  vagas?: number | null;
+  permanenciaMaximaDias?: number | null;
+  ocupadas: number;
+  acolhidos: PermanenciaAcolhimentoDto[];
+  saidasRecentes: PermanenciaAcolhimentoDto[];
 }

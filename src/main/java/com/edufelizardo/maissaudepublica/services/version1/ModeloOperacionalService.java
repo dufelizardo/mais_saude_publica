@@ -89,7 +89,7 @@ public class ModeloOperacionalService {
             throw new ResourceConflictException("Já existe o perfil operacional " + codigo + ".");
         }
         PerfilOperacional p = new PerfilOperacional(null, codigo, dto.getNome().trim(), texto(dto.getDescricao()),
-                dto.getAtivo() == null || dto.getAtivo());
+                dto.getAtivo() == null || dto.getAtivo(), dto.getComponenteRaps());
         p = perfilRepository.save(p);
         ContextoAuditoria.registro(p.getUuid());
         return perfil(p, 0, 0);
@@ -107,6 +107,10 @@ public class ModeloOperacionalService {
         p.setNome(dto.getNome().trim());
         p.setDescricao(texto(dto.getDescricao()));
         p.setAtivo(dto.getAtivo() == null || dto.getAtivo());
+        // O componente da RAPS (ADR-0153): vazio mantém o que está.
+        if (dto.getComponenteRaps() != null) {
+            p.setComponenteRaps(dto.getComponenteRaps());
+        }
         perfilRepository.save(p);
         return buscarPerfil(uuid);
     }
@@ -134,7 +138,7 @@ public class ModeloOperacionalService {
         }
         PerfilOperacional perfil = grupo(dto.getPerfilId());
         CapacidadeAssistencial c = new CapacidadeAssistencial(null, codigo, dto.getNome().trim(), texto(dto.getDescricao()),
-                dto.getAtivo() == null || dto.getAtivo(), perfil);
+                dto.getAtivo() == null || dto.getAtivo(), perfil, dto.getComponenteRaps());
         c = capacidadeRepository.save(c);
         ContextoAuditoria.registro(c.getUuid());
         return capacidade(c, 0);
@@ -163,6 +167,9 @@ public class ModeloOperacionalService {
         c.setNome(dto.getNome().trim());
         c.setDescricao(texto(dto.getDescricao()));
         c.setAtivo(dto.getAtivo() == null || dto.getAtivo());
+        if (dto.getComponenteRaps() != null) {
+            c.setComponenteRaps(dto.getComponenteRaps());
+        }
         capacidadeRepository.save(c);
         return buscarCapacidade(uuid);
     }
@@ -305,13 +312,13 @@ public class ModeloOperacionalService {
     }
 
     private PerfilOperacionalResponseDto perfil(PerfilOperacional p, long capacidades, long unidades) {
-        return new PerfilOperacionalResponseDto(p.getUuid(), p.getCodigo(), p.getNome(), p.getDescricao(), p.isAtivo(), capacidades, unidades);
+        return new PerfilOperacionalResponseDto(p.getUuid(), p.getCodigo(), p.getNome(), p.getDescricao(), p.isAtivo(), capacidades, unidades, p.getComponenteRaps());
     }
 
     private CapacidadeAssistencialResponseDto capacidade(CapacidadeAssistencial c, long unidades) {
         PerfilOperacional g = c.getPerfil();
         return new CapacidadeAssistencialResponseDto(c.getUuid(), c.getCodigo(), c.getNome(), c.getDescricao(), c.isAtivo(),
-                g != null ? g.getUuid() : null, g != null ? g.getCodigo() : null, g != null ? g.getNome() : null, unidades);
+                g != null ? g.getUuid() : null, g != null ? g.getCodigo() : null, g != null ? g.getNome() : null, unidades, c.getComponenteRaps());
     }
 
     private Map<UUID, Long> unidadesPorPerfil() {

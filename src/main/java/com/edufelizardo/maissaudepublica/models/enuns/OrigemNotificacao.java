@@ -6,6 +6,8 @@ public enum OrigemNotificacao {
     INTERNACAO,
     EXAME,
     SAUDE_MENTAL,
+    /** Da dose de vacina: ESAVI e erro de imunização (ADR-0150). */
+    VACINACAO,
     BUSCA_ATIVA,
     COMUNIDADE,
     OUTRA
