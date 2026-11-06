@@ -54,7 +54,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
-| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
+| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 feita (comunicado, conteúdo, portal e e-mail); fatias C2 a C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | MO1 a MO3 feitas; falta a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
@@ -68,7 +68,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -90,7 +89,7 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6a ✅ ──► E6b ✅
-C1 ──► C2 · C4 · C5
+C1 ✅ ──► C2 · C4 · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
 
@@ -718,12 +717,14 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 28. Comunicação e Educação em Saúde
 
-**Estado:** 📐 **futuro**. Desenhado na [ADR-0114](./adr/0114-comunicacao-e-educacao-em-saude.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0114](./adr/0114-comunicacao-e-educacao-em-saude.md); detalhe em
 [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md).
 
+**Temos:**
+- [x] **C1 · Comunicação básica** ([ADR-0168](./adr/0168-comunicacao-basica.md)): comunicado com prioridade e período, conteúdo educativo com revisão
+  técnica, validade e versão, canais e publicação com resultado; avisos e orientações na página pública; e-mail só a profissionais.
+
 **Falta:**
-- [ ] **C1 · Comunicação básica:** comunicado, conteúdo educativo com validação técnica, publicação, canal; portal
-  (landing page) e e-mail.
 - [ ] **C2 · Campanhas de comunicação:** `CampanhaComunicacao` ligada a programa ou campanha operacional, público-alvo,
   material educativo (os arquivos dependem do domínio Documentos).
 - [ ] **C3 · Educação em saúde:** conteúdo e material nas ações educativas de Programas (P4).

@@ -178,8 +178,8 @@ real":
 - **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
   ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir
   (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
-- **#28 Comunicação e Educação em Saúde** (futuro) — desenhado na ADR-0114; fatias C1 (comunicação básica) a C6
-  (avaliação).
+- **#28 Comunicação e Educação em Saúde** — desenhado na ADR-0114; ~~C1 (comunicação básica)~~ — ADR-0168 (e-mail só a
+  profissionais, sem consentimento para a população); faltam C2 a C6 (avaliação).
 - **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; ~~E1 (núcleo)~~ — ADR-0156 (sem a escolha
   manual das microáreas na tela); ~~E2 (contingência)~~ — ADR-0157; ~~E3 (coordenação)~~ — ADR-0158 (insumo, equipamento e veículo como necessidade até Estoque e Transporte); ~~E5 (pós-evento)~~ — ADR-0159 (sem o relatório em PDF, que depende de Documentos); ~~E6a (evento de massa e estruturas temporárias)~~ — ADR-0160 (ambulâncias como número até Transporte); ~~E6b (painel da epidemia e exposição ambiental)~~ — ADR-0161 (sem incidência por população); falta a E4 (integração da rede, depende de Estoque e Transporte).
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (sem a notificação no sistema, V1, e sem o SAMU, regulação

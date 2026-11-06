@@ -1,8 +1,8 @@
 # Modelo do domínio Comunicação e Educação em Saúde
 
 **Data:** 2026-10-07 (criado)
-**Status:** desenho aprovado na [ADR-0114](../adr/0114-comunicacao-e-educacao-em-saude.md). **Domínio futuro, nada
-implementado.** A implementação vem nas fatias C1 a C6 (seção 15), cada uma com ADR própria.
+**Status:** desenho aprovado na [ADR-0114](../adr/0114-comunicacao-e-educacao-em-saude.md). **C1 implementada**
+([ADR-0168](../adr/0168-comunicacao-basica.md)); as fatias C2 a C6 (seção 15) virão, cada uma com ADR própria.
 
 O valor do domínio está em **conectar comunicação, educação, campanhas e públicos da saúde**. Não é um "CMS de
 notícias": o portal é só um canal.
@@ -295,7 +295,7 @@ RH → profissionais e treinamentos → EDUCAÇÃO PERMANENTE (conteúdo e mater
 
 | Fatia | Entrega | Depende de |
 |---|---|---|
-| **C1** · comunicação básica | comunicado, conteúdo com validação técnica, publicação, canal; portal (landing page) e e-mail | — |
+| **C1** · comunicação básica ✅ ([ADR-0168](../adr/0168-comunicacao-basica.md)) | comunicado, conteúdo com validação técnica, publicação, canal; portal (landing page) e e-mail | — |
 | **C2** · campanhas de comunicação | `CampanhaComunicacao`, público-alvo, material educativo | C1; Programas P3; Documentos para os arquivos |
 | **C3** · educação em saúde | conteúdo e material nas ações educativas de Programas | C2; Programas P4; Território |
 | **C4** · educação permanente | conteúdo e material ligados ao `Treinamento` do RH; competências | C1 |

@@ -65,6 +65,7 @@ Resource    ../../schema/agenda/agenda_schema.resource
 Resource    ../../schema/laboratorio/laboratorio_schema.resource
 Resource    ../../schema/internacao/internacao_schema.resource
 Resource    ../../schema/equipamentos/equipamentos_schema.resource
+Resource    ../../schema/comunicacao/comunicacao_schema.resource
 Resource    ../../schema/indicadores/relatorios_schema.resource
 Resource    ../../schema/equipes/equipes_schema.resource
 Resource    ../../schema/escalas/escalas_schema.resource
