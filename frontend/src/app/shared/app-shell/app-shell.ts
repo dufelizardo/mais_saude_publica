@@ -55,6 +55,7 @@ const MENU: Record<string, string[]> = {
   '/vigilancia/vetores': ['ZOONOSES.VISTORIAR', 'ZOONOSES.GERENCIAR', 'VIGILANCIA.INVESTIGAR', 'INDICADOR.CONSULTAR'],
   // Sala de Situação (ADR-0143): só agregados, para quem consulta indicadores.
   '/sala-de-situacao': ['INDICADOR.CONSULTAR'],
+  '/relatorios': ['INDICADOR.CONSULTAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],
   '/administracao/auditoria': ['AUDITORIA.CONSULTAR'],
 };

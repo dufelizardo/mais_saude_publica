@@ -1,0 +1,93 @@
+<header class="page-head rel-tela">
+  <div>
+    <h1>Relatórios</h1>
+    <p>{{ catalogo().length }} relatórios com os números de cada domínio · só agregados · exportação registrada na auditoria</p>
+  </div>
+</header>
+
+<section class="rel-filtros rel-tela" aria-label="Filtros do relatório">
+  <div class="dw-field">
+    <label for="f-rel-unidade">Unidade</label>
+    <select id="f-rel-unidade" [value]="unidadeId()" (change)="unidadeId.set($any($event.target).value)">
+      <option value="">Todas do meu acesso</option>
+      @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+    </select>
+  </div>
+  <div class="dw-field"><label for="f-rel-de">De</label><input id="f-rel-de" type="date" [value]="de()" (change)="de.set($any($event.target).value)" /></div>
+  <div class="dw-field"><label for="f-rel-ate">Até</label><input id="f-rel-ate" type="date" [value]="ate()" (change)="ate.set($any($event.target).value)" /></div>
+</section>
+
+<div class="rel-grade">
+  <section class="card rel-lista rel-tela" aria-label="Catálogo de relatórios">
+    <div class="rel-categorias" role="group" aria-label="Categorias">
+      @for (c of categorias(); track c.nome) {
+        <button type="button" class="rel-chip" [attr.aria-pressed]="categoria() === c.nome" (click)="categoria.set(c.nome)">{{ c.nome }} <span class="cnt">{{ c.total }}</span></button>
+      }
+    </div>
+    <label class="search rel-busca">
+      <span class="sr-only">Buscar relatório</span>
+      <input type="search" placeholder="Buscar relatório…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+    </label>
+    <ul class="rel-itens">
+      @for (r of filtrados(); track r.codigo) {
+        <li>
+          <button type="button" class="rel-item" [attr.aria-current]="selecionado() === r.codigo ? 'true' : null" (click)="selecionado.set(r.codigo)">
+            <span class="cell-main">{{ r.nome }}</span>
+            <span class="cell-sub">{{ r.descricao }}</span>
+            <span class="tag tag--info">{{ r.categoria }}</span>
+          </button>
+        </li>
+      } @empty {
+        <li class="cell-sub" style="padding: var(--s-4);">Nenhum relatório com essa busca.</li>
+      }
+    </ul>
+  </section>
+
+  <section class="card rel-detalhe" aria-label="Relatório">
+    @if (erro()) { <div class="box box--err" role="alert" style="margin: var(--s-4);"><strong>{{ erro() }}</strong></div> }
+    @if (relatorio(); as r) {
+      <div class="card__head">
+        <div>
+          <h2>{{ r.nome }}</h2>
+          <p class="sub">{{ r.abrangencia }} · {{ dataBr(r.de) }} a {{ dataBr(r.ate) }}</p>
+        </div>
+        <div class="page-actions rel-tela">
+          <button type="button" class="btn btn--ghost" (click)="imprimir()">Imprimir</button>
+          <button type="button" class="btn" [disabled]="exportando()" (click)="exportar()">{{ exportando() ? 'Exportando…' : 'Exportar CSV' }}</button>
+        </div>
+      </div>
+      <dl class="rel-resumo" aria-label="Indicadores resumidos">
+        @for (i of r.resumo; track i.rotulo) {
+          <div><dt>{{ i.rotulo }}</dt><dd class="mono">{{ i.valor || '—' }}</dd></div>
+        }
+      </dl>
+      @for (s of r.secoes; track s.titulo) {
+        <h3 class="rel-secao">{{ s.titulo }}</h3>
+        @if (s.linhas.length) {
+          <div class="tbl-wrap">
+            <table [attr.aria-label]="s.titulo">
+              <thead><tr>@for (c of s.colunas; track c; let primeira = $first) { <th scope="col" [class.num]="!primeira">{{ c }}</th> }</tr></thead>
+              <tbody>
+                @for (l of s.linhas; track $index) {
+                  <tr>@for (v of l; track $index; let primeira = $first) { <td [class.num]="!primeira">{{ v || '—' }}</td> }</tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="cell-sub rel-vazio">Sem dados no período.</p>
+        }
+      }
+      @for (n of r.notas; track n) { <p class="cell-sub rel-vazio">{{ n }}</p> }
+    } @else if (carregando()) {
+      <p class="cell-sub" style="padding: var(--s-5);">Carregando…</p>
+    }
+  </section>
+</div>
+
+@if (toast(); as t) {
+  <div class="toast rel-tela" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t }}</div>
+  </div>
+}
