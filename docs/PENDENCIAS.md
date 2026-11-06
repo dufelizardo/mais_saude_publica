@@ -171,8 +171,8 @@ real":
     ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; faltam BI4 (relatórios) e BI5
     (coordenações).
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —
-  perfis e capacidades, ADR-0117. Faltam MO2 (serviços), MO3 (ponto operacional) e MO4 (domínios consultam
-  capacidades).
+  perfis e capacidades, ADR-0117; ~~MO2~~ — serviços da unidade, ADR-0165 (sem o leito apontar direto para o serviço e
+  sem capacidade de vacinação no catálogo). Faltam MO3 (ponto operacional) e MO4 (domínios consultam capacidades).
 - **#30 Gestão da Rede de Atenção** — reservado pela ADR-0115; a desenhar em ADR própria.
 - **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
   ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir

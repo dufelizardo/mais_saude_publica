@@ -61,6 +61,9 @@ public class ModeloOperacionalService {
     private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
 
     @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.ServicoUnidadeRepository servicoRepository;
+
+    @Autowired
     private ControleDeAcesso controleDeAcesso;
 
     // ── Catálogo de perfis ─────────────────────────────────────────────────────────────────────────
@@ -260,6 +263,11 @@ public class ModeloOperacionalService {
                 .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar a capacidade " + associacaoId + " nesta unidade."));
         if (!a.vigente()) {
             throw new ResourceUnprocessableEntityException("Esta capacidade já foi encerrada.");
+        }
+        List<String> servicos = servicoRepository.findVigentesQueExigem(u.getUuid(), a.getCapacidade().getUuid());
+        if (!servicos.isEmpty()) {
+            throw new ResourceUnprocessableEntityException("Encerre antes os serviços que dependem de " + a.getCapacidade().getNome() + ": "
+                    + String.join(", ", servicos) + ".");
         }
         a.setFim(fim(dto.getFim(), a.getInicio()));
         a.setMotivoFim(dto.getMotivo().trim());
