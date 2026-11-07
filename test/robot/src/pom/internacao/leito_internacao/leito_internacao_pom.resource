@@ -78,3 +78,24 @@ GET Internacao By Id
     RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+GET Limites De Leitos
+    [Documentation]    The authorized beds of the unit.
+    [Arguments]    ${uuid}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    GET On Session    msp_session    ${BASE_URL}/unidade-saude/id/${uuid}/limites-de-leitos    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Alterar Limite De Leitos
+    [Documentation]    Changes the authorized beds of a capability.
+    [Arguments]    ${uuid}    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/unidade-saude/id/${uuid}/limites-de-leitos    json=${payload}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+

@@ -93,6 +93,38 @@ Leito - Criar - Status Code 422 - Sem Capacidade
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+Leito - Limite - Status Code 422 E 200
+    [Documentation]    The authorized beds stop a new bed; below the active beds, the limit is refused.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${setorId}    ${codigo}    ${unidadeId}=    Seed A Setor    ASSISTENCIAL
+    Incluir Perfil Por Codigo    ${unidadeId}    INTERNACAO
+    ${capacidade}=    Id Da Capacidade    UTI
+    Incluir Capacidade Por Codigo    ${unidadeId}    UTI
+    ${limite}=    Create Dictionary    capacidadeId=${capacidade}    quantidade=${1}    motivo=Habilitação
+    ${alterado}=    POST Alterar Limite De Leitos    ${unidadeId}    ${limite}
+    Should Be Equal As Integers    ${alterado.status_code}    200
+    Should Be Equal As Integers    ${alterado.json()}[0][autorizados]    1
+    ${payload}=    Create Dictionary    unidadeId=${unidadeId}    setorId=${setorId}    identificacao=UTI 01    tipo=UTI_ADULTO    sexo=MISTO
+    ${primeiro}=    POST Create Leito    ${payload}
+    Should Be Equal As Integers    ${primeiro.status_code}    201
+    Set To Dictionary    ${payload}    identificacao=UTI 02
+    ${segundo}=    POST Create Leito    ${payload}
+    Should Be Equal As Integers    ${segundo.status_code}    422
+    Should Contain    ${segundo.json()}[message]    1 de 1
+    Set To Dictionary    ${limite}    quantidade=${0}
+    ${abaixo}=    POST Alterar Limite De Leitos    ${unidadeId}    ${limite}
+    Should Be Equal As Integers    ${abaixo.status_code}    422
+    Set To Dictionary    ${limite}    quantidade=${2}
+    ${ampliado}=    POST Alterar Limite De Leitos    ${unidadeId}    ${limite}
+    Should Be Equal As Integers    ${ampliado.status_code}    200
+    ${terceiro}=    POST Create Leito    ${payload}
+    Should Be Equal As Integers    ${terceiro.status_code}    201
+    ${lista}=    GET Limites De Leitos    ${unidadeId}
+    Should Be Equal As Integers    ${lista.json()}[0][ativos]    2
+    Length Should Be    ${lista.json()}[0][historico]    2
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Leito - Criar - Status Code 422 - Setor Nao Assistencial
     [Documentation]    Creates a bed in an administrative sector.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -231,6 +263,7 @@ Leito Internacao - By HTTP Status Code
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Run Keyword If    '${meuHTTP}' == '201-leito'    Leito - Criar - Status Code 201
     ...    ELSE IF    '${meuHTTP}' == '422-capacidade'    Leito - Criar - Status Code 422 - Sem Capacidade
+    ...    ELSE IF    '${meuHTTP}' == '422-limite'    Leito - Limite - Status Code 422 E 200
     ...    ELSE IF    '${meuHTTP}' == '422-leito'    Leito - Criar - Status Code 422 - Setor Nao Assistencial
     ...    ELSE IF    '${meuHTTP}' == '201-internacao'    Internacao - Criar - Status Code 201
     ...    ELSE IF    '${meuHTTP}' == '422-sexo'    Internacao - Criar - Status Code 422 - Sexo Incompativel

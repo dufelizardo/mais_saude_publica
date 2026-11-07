@@ -128,6 +128,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("INTERNACAO.GERENCIAR", new Def("Internar e trocar paciente de leito", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.ALTA", new Def("Dar alta da internação (ato médico)", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LEITO.GERENCIAR", new Def("Cadastrar, bloquear e liberar leitos", OPERACAO));
+        // Quem cadastra leitos não muda o limite (ADR-0171): o número é da gestão.
+        PERMISSOES.put("LEITO.AUTORIZAR", new Def("Definir quantos leitos a unidade tem autorizados por capacidade", OPERACAO));
         PERMISSOES.put("EQUIPE.GERENCIAR", new Def("Cadastrar equipes e registrar a entrada e a saída de membros", OPERACAO));
         // Território (ADR-0125): o recorte e as associações; ler é de quem está logado.
         PERMISSOES.put("TERRITORIO.GERENCIAR", new Def("Cadastrar segmentos, territórios, áreas e microáreas e atribuir a equipe e o ACS", OPERACAO));
@@ -146,7 +148,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
     static {
         PAPEIS.put(ADMINISTRADOR_PLATAFORMA, new PapelPadrao("Administrador da plataforma",
                 "Usuários, acessos e estrutura. Não lê dado de saúde (ADR-0054).",
-                List.of("USUARIO.GERENCIAR", "ACESSO.GERENCIAR", "ORGANIZACAO.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR", "CONTEUDO.REVISAR")));
+                List.of("USUARIO.GERENCIAR", "ACESSO.GERENCIAR", "ORGANIZACAO.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR", "CONTEUDO.REVISAR",
+                        "LEITO.AUTORIZAR")));
         PAPEIS.put("GESTOR", new PapelPadrao("Gestor",
                 "Gestão de RH, setor administrativo, estoque e acessos no seu escopo.",
                 List.of("ACESSO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR", "ADMINISTRATIVO.CONSULTAR",
@@ -154,7 +157,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
                         "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR",
                         "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR",
-                        "CONTEUDO.REVISAR")));
+                        "CONTEUDO.REVISAR", "LEITO.AUTORIZAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",

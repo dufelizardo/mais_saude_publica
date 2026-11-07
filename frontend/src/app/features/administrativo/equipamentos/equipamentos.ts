@@ -28,6 +28,7 @@ import {
   CapacidadeDaUnidadeDto,
   DIAS_DA_SEMANA,
   DiaDaSemana,
+  LimiteLeitosDto,
   PontoDaUnidadeDto,
   PontosDaUnidadeDto,
   RotaDaUnidadeDto,
@@ -58,6 +59,7 @@ type Gaveta =
   | { tipo: 'ponto'; unidade: string; pontos: PontosDaUnidadeDto; item: PontoDaUnidadeDto | null }
   | { tipo: 'rota'; unidade: string; pontos: PontosDaUnidadeDto; item: RotaDaUnidadeDto | null }
   | { tipo: 'posicao'; unidade: string; pontos: PontosDaUnidadeDto }
+  | { tipo: 'limiteLeitos'; unidadeId: string; unidade: string; limite: LimiteLeitosDto }
   | { tipo: 'encerrar'; modelo: ModeloOperacionalUnidadeDto; alvo: AlvoEncerramento; associacaoId: string; nome: string };
 
 interface GrupoDeCapacidades {
@@ -130,6 +132,8 @@ export class Equipamentos {
   protected readonly diasDaSemana = DIAS_DA_SEMANA;
   /** undefined enquanto carrega; null se a API falhar. */
   protected readonly pontos = signal<PontosDaUnidadeDto | null | undefined>(undefined);
+  /** Leitos autorizados por capacidade (ADR-0171). */
+  protected readonly limites = signal<LimiteLeitosDto[]>([]);
   protected readonly posicaoNoMapa = signal<{ lat: number; lng: number } | null>(null);
   protected readonly diasDaRota = signal<Set<DiaDaSemana>>(new Set());
   protected readonly pontosDaRota = signal<string[]>([]);
@@ -183,6 +187,7 @@ export class Equipamentos {
   protected readonly encerrarForm = this.fb.nonNullable.group({ motivo: [''], fim: [''] });
   protected readonly pontoForm = this.fb.nonNullable.group({ tipo: ['PONTO_FIXO' as TipoPontoOperacional], nome: [''], referencia: [''], latitude: [''], longitude: [''], inicio: [''] });
   protected readonly rotaForm = this.fb.nonNullable.group({ nome: [''], horaInicio: [''], horaFim: [''] });
+  protected readonly limiteForm = this.fb.nonNullable.group({ quantidade: [''], motivo: [''] });
   protected readonly posicaoForm = this.fb.nonNullable.group({ pontoId: [''], desde: [''], observacao: [''] });
   protected readonly servicoForm = this.fb.nonNullable.group({ tipoId: [''], nome: [''], responsavelMatricula: [''], vinteQuatroHoras: [false], horario: [''], inicio: [''] });
   protected readonly situacaoForm = this.fb.nonNullable.group({
@@ -365,6 +370,8 @@ export class Equipamentos {
       next: (s) => this.servicos.set(s),
       error: () => this.servicos.set(null),
     });
+    this.limites.set([]);
+    this.modeloService.limitesDeLeitos(uuid).subscribe({ next: (l) => this.limites.set(l), error: () => this.limites.set([]) });
     this.pontos.set(undefined);
     this.modeloService.pontosDaUnidade(uuid).subscribe({
       next: (p) => this.pontos.set(p),
@@ -686,6 +693,34 @@ export class Equipamentos {
     });
   }
 
+  protected abrirLimite(m: ModeloOperacionalUnidadeDto, limite: LimiteLeitosDto): void {
+    this.limiteForm.reset({ quantidade: limite.autorizados != null ? String(limite.autorizados) : '', motivo: '' });
+    this.abrir({ tipo: 'limiteLeitos', unidadeId: m.unidadeId, unidade: m.unidadeNome, limite });
+  }
+
+  private salvarLimite(g: Extract<Gaveta, { tipo: 'limiteLeitos' }>): void {
+    const v = this.limiteForm.getRawValue();
+    const quantidade = Number(String(v.quantidade).trim());
+    const erros: Record<string, string> = {};
+    if (!String(v.quantidade).trim() || !Number.isInteger(quantidade) || quantidade < 0) erros['quantidadeLeitos'] = 'Informe um número inteiro, de zero em diante.';
+    else if (quantidade < g.limite.ativos) erros['quantidadeLeitos'] = `Há ${g.limite.ativos} leito(s) ativo(s): tire-os de uso antes de reduzir.`;
+    if (!v.motivo.trim()) erros['motivoLimite'] = 'Informe o motivo.';
+    if (!this.validar(erros)) return;
+    this.submitting.set(true);
+    this.modeloService.alterarLimiteDeLeitos(g.unidadeId, g.limite.capacidadeId, quantidade, v.motivo.trim()).subscribe({
+      next: (l) => {
+        this.submitting.set(false);
+        this.limites.set(l);
+        this.fecharGaveta();
+        this.mostrarToast('Limite alterado', `${g.limite.capacidadeNome} · ${quantidade} leito(s)`);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.erroApi.set((error.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar. Tente novamente.');
+      },
+    });
+  }
+
   protected abrirEncerrar(m: ModeloOperacionalUnidadeDto, alvo: AlvoEncerramento, associacaoId: string, nome: string): void {
     this.encerrarForm.reset({ motivo: '', fim: '' });
     this.abrir({ tipo: 'encerrar', modelo: m, alvo, associacaoId, nome });
@@ -808,6 +843,7 @@ export class Equipamentos {
     if (g.tipo === 'ponto') return g.item ? 'Editar ponto' : 'Incluir ponto';
     if (g.tipo === 'rota') return g.item ? 'Editar rota' : 'Incluir rota';
     if (g.tipo === 'posicao') return 'Registrar posição';
+    if (g.tipo === 'limiteLeitos') return 'Alterar limite de leitos';
     if (g.tipo === 'encerrar') return `Encerrar ${this.rotuloAlvo(g.alvo).toLowerCase()}`;
     return 'Situação operacional';
   }
@@ -895,6 +931,7 @@ export class Equipamentos {
     else if (g.tipo === 'ponto') this.salvarPonto(g);
     else if (g.tipo === 'rota') this.salvarRota(g);
     else if (g.tipo === 'posicao') this.salvarPosicao(g);
+    else if (g.tipo === 'limiteLeitos') this.salvarLimite(g);
     else if (g.tipo === 'encerrar') this.salvarEncerramento(g);
     else this.salvarSituacao(g.ficha);
   }

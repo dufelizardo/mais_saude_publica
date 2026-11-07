@@ -185,3 +185,34 @@ UI Leitos - Internacao No Prontuario
     Wait For Elements State    css=app-internacoes-paciente >> text=Pneumonia com hipoxemia.    visible    10s
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Leitos - Limite Pela Ficha Da Unidade
+    [Documentation]    Na aba Capacidades, define o limite e a gaveta do leito mostra os números; o cadastro acima dele mostra a mensagem.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${setorId}    ${codigo}    ${unidadeId}=    Seed A Setor    ASSISTENCIAL
+    Incluir Perfil Por Codigo    ${unidadeId}    INTERNACAO
+    Incluir Capacidade Por Codigo    ${unidadeId}    UTI
+    Ir Para Rota Do Frontend    /administrativo/equipamentos?unidade=${unidadeId}
+    Clicar Aba    Capacidades
+    Clicar Botao    Alterar limite de Terapia intensiva (UTI)
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    quantidadeLeitos
+    Should Contain    ${erro}    número
+    Preencher Campo Da Gaveta    quantidadeLeitos    0
+    Preencher Campo Da Gaveta    motivoLimite    Ainda sem habilitação
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Limite alterado
+    ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    UI Leitos - Abrir Aba    leitos
+    Clicar Botao    + Leito
+    Escolher Opcao Da Gaveta    unidadeLeito    ${unidadeId}
+    Escolher Opcao Da Gaveta    setorLeito    ${setorId}
+    Preencher Campo Da Gaveta    identificacao    UI Limite ${sufixo}
+    Escolher Opcao Da Gaveta    tipoLeito    UTI_ADULTO
+    Wait For Elements State    css=#h-tipoLeito >> text=0 de 0    visible
+    Enviar Gaveta
+    Wait For Elements State    css=app-drawer [role="alert"] >> text=/limite/    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
