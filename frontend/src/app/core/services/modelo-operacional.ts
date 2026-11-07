@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   CapacidadeAssistencialDto,
   CapacidadeAssistencialRequestDto,
+  LimiteLeitosDto,
   LocaisDeRealizacaoDto,
   ModeloOperacionalUnidadeDto,
   PerfilOperacionalDto,
@@ -107,6 +108,14 @@ export class ModeloOperacionalService {
 
   registrarPosicao(unidadeId: string, pontoId: string, desde?: string | null, observacao?: string | null): Observable<PontosDaUnidadeDto> {
     return this.http.post<PontosDaUnidadeDto>(`${this.api}/unidade-saude/id/${unidadeId}/posicao`, { pontoId, desde: desde || null, observacao: observacao || null });
+  }
+
+  limitesDeLeitos(unidadeId: string): Observable<LimiteLeitosDto[]> {
+    return this.http.get<LimiteLeitosDto[]>(`${this.api}/unidade-saude/id/${unidadeId}/limites-de-leitos`);
+  }
+
+  alterarLimiteDeLeitos(unidadeId: string, capacidadeId: string, quantidade: number, motivo: string): Observable<LimiteLeitosDto[]> {
+    return this.http.post<LimiteLeitosDto[]>(`${this.api}/unidade-saude/id/${unidadeId}/limites-de-leitos`, { capacidadeId, quantidade, motivo });
   }
 
   daUnidade(unidadeId: string): Observable<ModeloOperacionalUnidadeDto> {

@@ -314,6 +314,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - [ ] Censo diário formal.
 - [ ] Prescrição e dieta hospitalar.
 - [ ] Restrição de leito por idade (pediátrico, neonatal).
+- [x] Limite de leitos autorizados por capacidade, mantido pela gestão ([ADR-0171](./adr/0171-limite-de-leitos-por-capacidade.md)).
 - [x] Leitos extras ativáveis em emergência, como quantidade ativada (domínio 27, E3, [ADR-0158](./adr/0158-emergencias-coordenacao.md)).
 - [ ] Modalidade da internação (voluntária, involuntária, compulsória) e comunicação ao Ministério Público em 72h na
   involuntária, pela Lei 10.216/2001 (domínio 26, SM3).
