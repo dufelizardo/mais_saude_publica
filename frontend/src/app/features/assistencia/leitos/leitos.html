@@ -542,7 +542,7 @@
               <div class="dw-row">
                 <div class="dw-field">
                   <label for="f-unidadeLeito">Unidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
-                  <select id="f-unidadeLeito" formControlName="unidadeId" [attr.aria-invalid]="!!erro('unidadeLeito')" aria-describedby="e-unidadeLeito">
+                  <select id="f-unidadeLeito" formControlName="unidadeId" (change)="carregarLimites()" [attr.aria-invalid]="!!erro('unidadeLeito')" aria-describedby="e-unidadeLeito">
                     <option value="">Selecione…</option>
                     @for (u of unidadesComSetorAssistencial(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
                   </select>
@@ -571,9 +571,10 @@
             <div class="dw-row">
               <div class="dw-field">
                 <label for="f-tipoLeito">Tipo</label>
-                <select id="f-tipoLeito" formControlName="tipo">
+                <select id="f-tipoLeito" formControlName="tipo" aria-describedby="h-tipoLeito">
                   @for (t of listaTipos; track t) { <option [value]="t">{{ tiposLeito[t] }}</option> }
                 </select>
+                @if (avisoDoLimite()) { <p class="dw-hint" id="h-tipoLeito">{{ avisoDoLimite() }}</p> }
               </div>
               <div class="dw-field">
                 <label for="f-sexoLeito">Enfermaria</label>

@@ -31,7 +31,7 @@ correspondente está na ADR indicada.
 | Saúde Bucal | [`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md) | [0111](./adr/0111-saude-bucal.md), 0134 a 0140 | funcionando (SB1 a SB5) |
 | Saúde Mental | [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md) | [0112](./adr/0112-saude-mental.md), 0120 a 0123 | em parte (SM1 a SM4 funcionando) |
 | Gestão de Emergências e Desastres | [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md) | [0113](./adr/0113-emergencias-e-desastres.md) | desenhado |
-| Comunicação e Educação em Saúde (futuro) | [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md) | [0114](./adr/0114-comunicacao-e-educacao-em-saude.md) | desenhado |
+| Comunicação e Educação em Saúde | [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md) | [0114](./adr/0114-comunicacao-e-educacao-em-saude.md) | C1 implementada |
 
 Laboratório, Regulação e Leitos e Internação estão documentados nas próprias ADRs (0087 a 0089, 0093 a 0095, 0098 a
 0100).
