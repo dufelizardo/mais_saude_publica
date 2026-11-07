@@ -1,0 +1,33 @@
+.rel-filtros { display: flex; gap: var(--s-3); flex-wrap: wrap; align-items: flex-end; margin-bottom: var(--s-4); }
+.rel-filtros .dw-field { margin: 0; min-width: 180px; }
+.rel-grade { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: var(--s-4); align-items: start; }
+.rel-categorias { display: flex; flex-wrap: wrap; gap: 6px; padding: var(--s-4) var(--s-4) 0; }
+.rel-chip { border: 1px solid var(--ink-200); background: var(--white); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 0.8125rem; color: var(--ink-700); cursor: pointer; }
+.rel-chip[aria-pressed="true"] { background: var(--blue-700); border-color: var(--blue-700); color: var(--white); }
+.rel-chip .cnt { font-size: 0.7rem; opacity: 0.8; }
+.rel-busca { display: block; padding: var(--s-3) var(--s-4); }
+.rel-busca input { width: 100%; border: 1.5px solid var(--ink-200); border-radius: 10px; padding: 9px 12px; font: inherit; background: var(--white); color: var(--ink-900); }
+.rel-itens { list-style: none; margin: 0; padding: 0 var(--s-2) var(--s-3); display: grid; gap: 4px; }
+.rel-item { display: grid; gap: 4px; justify-items: start; width: 100%; text-align: left; border: 1px solid transparent; border-radius: 10px; padding: 10px 12px; background: none; font: inherit; cursor: pointer; }
+.rel-item:hover { background: var(--ink-50); }
+.rel-item[aria-current="true"] { border-color: var(--blue-700); background: var(--blue-50); }
+.rel-resumo { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s-3); margin: 0; padding: var(--s-4) var(--s-5); }
+.rel-resumo div { border: 1px solid var(--ink-100); border-radius: 10px; padding: 10px 12px; }
+.rel-resumo dt { font-size: 0.75rem; color: var(--ink-500); }
+.rel-resumo dd { margin: 4px 0 0; font-size: 1.25rem; font-weight: 600; color: var(--ink-900); }
+.rel-secao { margin: var(--s-4) var(--s-5) var(--s-2); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-500); }
+.rel-vazio { padding: 0 var(--s-5) var(--s-3); }
+.rel-detalhe table { min-width: 0; width: 100%; }
+
+@media (max-width: 900px) {
+  .rel-grade { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media print {
+  .rel-tela { display: none; }
+  .rel-grade { display: block; }
+  .rel-detalhe { border: 0; box-shadow: none; }
+  .tbl-wrap { overflow: visible; }
+  tr { break-inside: avoid; }
+  @page { size: A4; margin: 14mm; }
+}
