@@ -62,6 +62,7 @@ class DesmobilizacaoRelatorioControllerTest {
         ubs.setTipo(TipoUnidadeDeSaude.UBS);
         ubs.setAtivo(true);
         ubs = unidadeDeSaudeRepository.save(ubs);
+        CapacidadesDeTeste.habilitar(jdbc, ubs.getUuid(), "OBSERVACAO");
         Profissional p = new Profissional();
         p.setMatricula("DSM-ENF");
         p.setCpf("90066600001");
@@ -93,6 +94,7 @@ class DesmobilizacaoRelatorioControllerTest {
         jdbc.update("delete from tb_plano_contingencia_nivel where plano_id in " + planos);
         jdbc.update("delete from tb_plano_contingencia where codigo like 'DSM_%'");
         jdbc.update("delete from tb_profissional where matricula like 'DSM-%'");
+        CapacidadesDeTeste.limpar(jdbc, PREFIXO);
         jdbc.update("delete from tb_unidade_de_saude where nome like '" + PREFIXO + "%'");
     }
 

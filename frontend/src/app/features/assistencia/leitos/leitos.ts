@@ -21,6 +21,7 @@ import {
   TipoAlta,
   TipoLeito,
 } from '../../../core/models/internacao';
+import { LimiteLeitosDto } from '../../../core/models/modelo-operacional';
 import { PacienteResponseDto } from '../../../core/models/paciente';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { SetorResponseDto } from '../../../core/models/setor';
@@ -29,6 +30,7 @@ import { AuthService } from '../../../core/services/auth';
 import { InternacaoService } from '../../../core/services/internacao';
 import { PacienteService } from '../../../core/services/paciente';
 import { SetorService } from '../../../core/services/setor';
+import { ModeloOperacionalService } from '../../../core/services/modelo-operacional';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
@@ -70,6 +72,7 @@ export class Leitos {
   private readonly pacienteService = inject(PacienteService);
   private readonly setorService = inject(SetorService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
+  private readonly modeloOperacionalService = inject(ModeloOperacionalService);
 
   protected readonly formatCpf = formatCpf;
   protected readonly tiposLeito = TIPOS_LEITO;
@@ -417,6 +420,24 @@ export class Leitos {
     this.abrir({ tipo: 'bloquear', leito });
   }
 
+  /** O que ainda cabe no tipo escolhido, pelo limite da capacidade (ADR-0171). */
+  protected readonly limitesDaUnidade = signal<LimiteLeitosDto[]>([]);
+
+  protected carregarLimites(): void {
+    const unidade = this.leitoForm.controls.unidadeId.value;
+    if (!unidade) {
+      this.limitesDaUnidade.set([]);
+      return;
+    }
+    this.modeloOperacionalService.limitesDeLeitos(unidade).subscribe({ next: (l) => this.limitesDaUnidade.set(l), error: () => this.limitesDaUnidade.set([]) });
+  }
+
+  protected avisoDoLimite(): string {
+    const l = this.limitesDaUnidade().find((x) => x.tiposDeLeito.includes(this.leitoForm.controls.tipo.value));
+    if (!l || l.autorizados == null) return '';
+    return `${l.capacidadeNome}: ${l.ativos} de ${l.autorizados} leito(s) autorizado(s).`;
+  }
+
   protected abrirLeito(leito: LeitoMapaDto | null = null): void {
     this.leitoForm.reset({
       unidadeId: leito?.unidadeId ?? this.unidadeFiltro(),
@@ -426,6 +447,7 @@ export class Leitos {
       sexo: leito?.sexo ?? 'MISTO',
       ativo: leito?.ativo ?? true,
     });
+    this.carregarLimites();
     this.abrir({ tipo: 'leito', leito });
   }
 

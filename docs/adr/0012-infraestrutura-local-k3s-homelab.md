@@ -152,6 +152,9 @@ que já existe em vez de criar um processo de build paralelo na máquina domést
 
 ### Domínios locais
 
+> **Atualização 2026-11-07:** qualquer aparelho do Wi-Fi abre os ambientes por nomes anunciados por mDNS, sem o arquivo `hosts`
+> ([ADR-0169](./0169-nomes-amigaveis-na-rede-local.md)). Os nomes abaixo continuam valendo nas máquinas que já os têm.
+
 Solução via arquivo `hosts` (`/etc/hosts` no Linux/Mac, `C:\Windows\System32\drivers\etc\hosts` no
 Windows) nas poucas máquinas da rede de casa (a do usuário + a da filha). MetalLB continua
 necessário para dar um IP fixo ao Ingress dentro da rede local — sem ele, o IP do Ingress pode
