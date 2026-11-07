@@ -2,8 +2,8 @@
 
 ## Status
 
-Aceita. **Desenho de domínio futuro, sem implementação.** A implementação vem nas fatias C1 a C6, cada uma com ADR
-própria. O detalhe está em [`comunicacao/MODELO-COMUNICACAO.md`](../comunicacao/MODELO-COMUNICACAO.md).
+Aceita. **Desenho do domínio.** A C1 foi implementada na [ADR-0168](./0168-comunicacao-basica.md); as demais fatias, até a C6,
+terão ADR própria. O detalhe está em [`comunicacao/MODELO-COMUNICACAO.md`](../comunicacao/MODELO-COMUNICACAO.md).
 
 ## Contexto
 

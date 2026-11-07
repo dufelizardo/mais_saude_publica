@@ -79,7 +79,7 @@ ver "onde isso se encaixa", sem forçar a modelagem detalhada de tudo de uma vez
                   ├── Território e Adscrição
                   ├── Programas, Ações e Linhas de Cuidado
                   ├── Emergências e Desastres
-                  ├── Comunicação e Educação em Saúde (futuro)
+                  ├── Comunicação e Educação em Saúde
                   ├── Modelo Operacional dos Equipamentos (camada)
                   ├── Gestão da Rede de Atenção
                   ├── Intersetorialidade e Proteção Social
