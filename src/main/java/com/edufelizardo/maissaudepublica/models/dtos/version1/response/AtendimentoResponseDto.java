@@ -3,6 +3,7 @@ package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 import java.time.LocalDate;
 import com.edufelizardo.maissaudepublica.models.enuns.ClassificacaoRisco;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
+import com.edufelizardo.maissaudepublica.models.enuns.LocalRealizacao;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoAtendimento;
 import lombok.*;
@@ -52,6 +53,15 @@ public class AtendimentoResponseDto implements Serializable {
     private String especialidadeNome;
     private boolean especialidadeOdontologica;
 
+    /** O local de realização (ADR-0166); sem ele, na unidade. */
+    private LocalRealizacao localRealizacao;
+    private String localDescricao;
+    private Double localLatitude;
+    private Double localLongitude;
+    private UUID domicilioId;
+    private UUID pontoOperacionalId;
+    private String pontoOperacionalNome;
+
     public static AtendimentoResponseDto fromAtendimento(Atendimento atendimento) {
         UUID setorUuid = null;
         String setorNome = null;
@@ -82,7 +92,14 @@ public class AtendimentoResponseDto implements Serializable {
                 null, null, null, null, null, null,
                 atendimento.getEspecialidade() != null ? atendimento.getEspecialidade().getUuid() : null,
                 atendimento.getEspecialidade() != null ? atendimento.getEspecialidade().getNome() : null,
-                atendimento.getEspecialidade() != null && atendimento.getEspecialidade().isOdontologica()
+                atendimento.getEspecialidade() != null && atendimento.getEspecialidade().isOdontologica(),
+                atendimento.getLocalRealizacao(),
+                atendimento.getLocalDescricao(),
+                atendimento.getLocalLatitude(),
+                atendimento.getLocalLongitude(),
+                atendimento.getDomicilio() != null ? atendimento.getDomicilio().getUuid() : null,
+                atendimento.getPontoOperacional() != null ? atendimento.getPontoOperacional().getUuid() : null,
+                atendimento.getPontoOperacional() != null ? atendimento.getPontoOperacional().getNome() : null
         );
     }
 }

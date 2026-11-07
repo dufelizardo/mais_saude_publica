@@ -5,7 +5,7 @@ para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou ab
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.9.0, promovida em 2026-11-06). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.10.0, promovida em 2026-11-06). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -168,17 +168,18 @@ real":
   - #17 Financeiro;
   - #18 Qualidade;
   - #19 Indicadores e BI — desenhado na ADR-0142; ~~BI1 (produção assistencial e Sala de Situação)~~ — ADR-0143;
-    ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; faltam BI4 (relatórios) e BI5
+    ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; ~~BI4 (relatórios)~~ — ADR-0167 (sem envio agendado); falta a BI5
     (coordenações).
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —
-  perfis e capacidades, ADR-0117. Faltam MO2 (serviços), MO3 (ponto operacional) e MO4 (domínios consultam
-  capacidades).
+  perfis e capacidades, ADR-0117; ~~MO2~~ — serviços da unidade, ADR-0165 (sem o leito apontar direto para o serviço e
+  sem capacidade de vacinação no catálogo). ~~MO3~~ — ponto operacional, ADR-0166 (sem GPS, sem agendar pelo ponto ou pela rota e sem
+  indicadores por local). Falta a MO4 (domínios consultam capacidades).
 - **#30 Gestão da Rede de Atenção** — reservado pela ADR-0115; a desenhar em ADR própria.
 - **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
   ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir
   (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
-- **#28 Comunicação e Educação em Saúde** (futuro) — desenhado na ADR-0114; fatias C1 (comunicação básica) a C6
-  (avaliação).
+- **#28 Comunicação e Educação em Saúde** — desenhado na ADR-0114; ~~C1 (comunicação básica)~~ — ADR-0168 (e-mail só a
+  profissionais, sem consentimento para a população); faltam C2 a C6 (avaliação).
 - **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; ~~E1 (núcleo)~~ — ADR-0156 (sem a escolha
   manual das microáreas na tela); ~~E2 (contingência)~~ — ADR-0157; ~~E3 (coordenação)~~ — ADR-0158 (insumo, equipamento e veículo como necessidade até Estoque e Transporte); ~~E5 (pós-evento)~~ — ADR-0159 (sem o relatório em PDF, que depende de Documentos); ~~E6a (evento de massa e estruturas temporárias)~~ — ADR-0160 (ambulâncias como número até Transporte); ~~E6b (painel da epidemia e exposição ambiental)~~ — ADR-0161 (sem incidência por população); falta a E4 (integração da rede, depende de Estoque e Transporte).
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (sem a notificação no sistema, V1, e sem o SAMU, regulação

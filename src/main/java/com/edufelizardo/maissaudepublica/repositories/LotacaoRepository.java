@@ -16,4 +16,8 @@ public interface LotacaoRepository extends JpaRepository<Lotacao, UUID> {
     /** Lotações vigentes de todo o quadro, com unidade e cargo — uma consulta para a tela Profissionais (ADR-0072). */
     @Query("select l from Lotacao l join fetch l.unidade join fetch l.cargo where l.dataFim is null")
     List<Lotacao> findVigentesComUnidadeECargo();
+
+    /** Lotações vigentes com o profissional, para os destinatários de um comunicado (ADR-0168). */
+    @Query("select l from Lotacao l join fetch l.profissional join fetch l.unidade where l.dataFim is null")
+    List<Lotacao> findVigentesComProfissional();
 }

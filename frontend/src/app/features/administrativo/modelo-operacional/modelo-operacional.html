@@ -1,7 +1,7 @@
 <header class="page-head">
   <div>
     <h1>Modelo operacional</h1>
-    <p>O que as unidades operam e conseguem fazer: perfis operacionais e capacidades assistenciais, ligados a cada unidade em Equipamentos de Saúde</p>
+    <p>O que as unidades operam, conseguem fazer e como isso se organiza: perfis, capacidades e tipos de serviço, ligados a cada unidade em Equipamentos de Saúde</p>
   </div>
   @if (podeEditar()) {
     <div class="page-actions">
@@ -152,6 +152,54 @@
   </section>
 }
 
+<!-- ── Tipos de serviço ─────────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'tipos') {
+  <section class="card" id="pn-tipos" role="tabpanel" aria-labelledby="tab-tipos">
+    <div class="card__head">
+      <div>
+        <h2>Tipos de serviço</h2>
+        <p class="sub">Como a capacidade se organiza na unidade; o tipo pode exigir uma capacidade para ser oferecido</p>
+      </div>
+      <div class="filters">
+        <label class="search">
+          <span class="sr-only">Buscar tipo de serviço</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="search" placeholder="Código, nome ou descrição…" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        </label>
+      </div>
+    </div>
+    @if (carregando()) {
+      <p class="cell-sub" style="padding: var(--s-5);">Carregando…</p>
+    } @else if (!tiposFiltrados().length) {
+      <div class="empty"><strong>{{ tipos().length ? 'Nenhum tipo com essa busca' : 'Nenhum tipo cadastrado' }}</strong></div>
+    } @else {
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th scope="col">Tipo</th><th scope="col">Capacidade exigida</th><th scope="col" class="num">Serviços</th><th scope="col">Situação</th>@if (podeEditar()) { <th scope="col" class="num">Ações</th> }</tr></thead>
+          <tbody>
+            @for (t of tiposFiltrados(); track t.uuid) {
+              <tr>
+                <td>
+                  <span class="cell-main">{{ t.nome }} <span class="cell-sub mono" style="display: inline;">{{ t.codigo }}</span></span>
+                  @if (t.descricao) { <span class="cell-sub">{{ t.descricao }}</span> }
+                </td>
+                <td>{{ t.capacidadeExigidaNome || 'Nenhuma' }}</td>
+                <td class="num mono">{{ t.servicos }}</td>
+                <td>
+                  @if (t.ativo) { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Ativo</span> } @else { <span class="badge badge--muted">Inativo</span> }
+                </td>
+                @if (podeEditar()) {
+                  <td class="num"><button type="button" class="btn btn--ghost btn--sm" (click)="abrir('tipoServico', t)" [attr.aria-label]="'Editar ' + t.nome">Editar</button></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
+
 <!-- ── Gaveta ───────────────────────────────────────────────────────────────────────────────── -->
 @if (gaveta(); as g) {
   <app-drawer [titulo]="tituloGaveta(g)" (fechar)="fecharGaveta()">
@@ -179,6 +227,16 @@
               @for (p of perfisParaGrupo(g); track p.uuid) { <option [value]="p.uuid">{{ p.nome }}@if (!p.ativo) { · inativo }</option> }
             </select>
             <p class="dw-hint" id="h-perfilId">Sem perfil, vale em qualquer unidade de atendimento. O perfil não muda enquanto a capacidade estiver em alguma unidade.</p>
+          </div>
+        }
+        @if (g.tipo === 'tipoServico') {
+          <div class="dw-field">
+            <label for="f-capacidadeExigidaId">Capacidade exigida<span class="opt">opcional</span></label>
+            <select id="f-capacidadeExigidaId" formControlName="capacidadeExigidaId" aria-describedby="h-capacidadeExigidaId">
+              <option value="">Nenhuma</option>
+              @for (c of capacidadesParaTipo(g); track c.uuid) { <option [value]="c.uuid">{{ c.nome }}@if (!c.ativo) { · inativa }</option> }
+            </select>
+            <p class="dw-hint" id="h-capacidadeExigidaId">O serviço só entra na unidade que tem esta capacidade. Ela não muda enquanto houver serviço vigente do tipo.</p>
           </div>
         }
         <div class="dw-field">
