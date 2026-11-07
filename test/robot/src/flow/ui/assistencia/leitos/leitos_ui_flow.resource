@@ -132,7 +132,7 @@ UI Leitos - Bloquear E Desbloquear
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 UI Leitos - Cadastrar Leito Pela Gaveta
-    [Documentation]    Cadastra um leito num setor assistencial e vê o aviso.
+    [Documentation]    Sem a capacidade, a mensagem na gaveta; com ela, cadastra o leito e vê o aviso.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${setorId}    ${codigo}    ${unidadeId}=    Seed A Setor    ASSISTENCIAL
     ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
@@ -142,6 +142,10 @@ UI Leitos - Cadastrar Leito Pela Gaveta
     Escolher Opcao Da Gaveta    setorLeito    ${setorId}
     Preencher Campo Da Gaveta    identificacao    UI Novo ${sufixo}
     Escolher Opcao Da Gaveta    tipoLeito    UTI_ADULTO
+    Enviar Gaveta
+    Wait For Elements State    css=app-drawer [role="alert"] >> text=/UTI/    visible
+    Incluir Perfil Por Codigo    ${unidadeId}    INTERNACAO
+    Incluir Capacidade Por Codigo    ${unidadeId}    UTI
     Enviar Gaveta
     ${aviso}=    Ler Aviso De Status
     Should Contain    ${aviso}    Leito cadastrado
