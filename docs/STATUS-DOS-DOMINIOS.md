@@ -4,8 +4,8 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-07 (release 1.10.1)
-- **Release em produção:** v1.10.1 (2026-11-07)
+- **Atualizado em:** 2026-11-07 (release 1.10.2)
+- **Release em produção:** v1.10.2 (2026-11-07)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
 - **Fontes:**
@@ -417,7 +417,7 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 
 **Falta, na configuração dos ambientes** (passo a passo em
 [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGAR-AUTORIZACAO.md)):
-- [ ] Ligar o login em `qaa`, `homologacao` e `prod`, provisionando o Secret `app-secrets` em cada um.
+- [x] Ligar o login em `qaa`, `homologacao` e `prod`, com o Secret `app-secrets` em cada um (2026-11-07).
 - [ ] Garantir o próprio acesso e conceder os perfis; depois, ligar a exigência de permissão.
 - [ ] Ligar o vínculo do prontuário (domínio 6).
 - [ ] Escolher e contratar um SMTP para a recuperação de senha.

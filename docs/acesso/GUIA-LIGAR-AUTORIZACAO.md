@@ -12,7 +12,7 @@ São três interruptores, e cada um só funciona com o anterior ligado:
 
 | Variável (overlay do ambiente) | O que faz | `dev` | `qaa` / `homologacao` / `prod` |
 |---|---|---|---|
-| `APP_SECURITY_ENABLED` | Exige login (ADR-0055) | ligado | desligado |
+| `APP_SECURITY_ENABLED` | Exige login (ADR-0055) | ligado | ligado |
 | `APP_SECURITY_AUTHORIZATION_ENABLED` | Exige permissão por perfil e unidade | desligado | desligado |
 | `APP_SECURITY_PRONTUARIO_POR_VINCULO_ENABLED` | Exige vínculo assistencial para abrir o prontuário (ADR-0076) | desligado | desligado |
 
