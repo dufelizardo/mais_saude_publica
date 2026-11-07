@@ -34,6 +34,9 @@ public class CapacidadeEmergencialService {
     @Autowired private UnidadeDeSaudeRepository unidadeRepository;
     @Autowired private LeitoRepository leitoRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private ModeloOperacionalService modeloOperacionalService;
+
+    private static final List<String> CAPACIDADES_DE_LEITO = List.of("INTERNACAO_CLINICA", "CIRURGIA", "UTI", "OBSTETRICIA", "LEITO_SAUDE_MENTAL", "OBSERVACAO");
 
     @Transactional(readOnly = true)
     public List<CapacidadeEmergencialDto> listar(UUID unidadeId) {
@@ -50,6 +53,11 @@ public class CapacidadeEmergencialService {
         CapacidadeEmergencial c = new CapacidadeEmergencial();
         c.setUnidade(unidadeRepository.findById(dto.getUnidadeId()).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar uma unidade de saúde com o id " + dto.getUnidadeId() + " em nossos registros.")));
+        if (dto.getRecurso() == RecursoCapacidade.LEITOS
+                && CAPACIDADES_DE_LEITO.stream().noneMatch(k -> modeloOperacionalService.unidadeTemCapacidade(dto.getUnidadeId(), k))) {
+            throw new ResourceUnprocessableEntityException(c.getUnidade().getNome() + " não tem capacidade de internação nem de observação; "
+                    + "leitos emergenciais pedem uma delas (ADR-0170).");
+        }
         c.setRecurso(dto.getRecurso());
         c.setAtiva(dto.getAtiva() == null || dto.getAtiva());
         c.setRegistradoPorCpf(UsuarioAutenticado.cpf());

@@ -55,11 +55,11 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 feita (comunicado, conteúdo, portal e e-mail); fatias C2 a C6 |
-| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | MO1 a MO3 feitas; falta a MO4 |
+| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 13 ✅ · 12 🟡 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 14 ✅ · 11 🟡 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,7 +68,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| MO4 | 29 Modelo Operacional | Leitos, Agenda, Saúde Mental, Saúde Bucal e Emergências passam a consultar capacidades |
 | BI5 | 19 Indicadores e BI | painel por coordenação e regional (protótipo `Coordenacoes.html`) |
 | C2 | 28 Comunicação | campanhas de comunicação, sem os arquivos dos materiais, que dependem de Documentos |
 | C4 | 28 Comunicação | conteúdo ligado ao `Treinamento` do RH e competências |
@@ -78,7 +77,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
-MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade emergencial) · MO2 ✅ → MO4
+MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade emergencial) · MO2 ✅ · MO4 ✅
 MO3 ✅ ──► SAMU (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
@@ -761,9 +760,9 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   (domicílio do cadastro ou descrito, via pública, evento, escola, ponto da unidade); pontos da unidade como histórico; base,
   rotas programadas e localização informada da unidade móvel, que é a unidade com o perfil Atenção móvel. Aba Pontos em
   Equipamentos e campo na gaveta do Atendimento. Sem GPS.
-
-**Falta:**
-- [ ] **MO4 · Domínios consultam capacidades:** Leitos, Agenda, Saúde Mental, Saúde Bucal, Emergências.
+- [x] **MO4 · Domínios consultam capacidades** ([ADR-0170](./adr/0170-modelo-operacional-dominios-consultam-capacidades.md)): cada tipo de leito pede
+  a sua capacidade, a capacidade não encerra com leito ativo, leito emergencial pede internação ou observação, e a sala de vacina
+  exige `SALA_VACINA`. Saúde Mental, Saúde Bucal e Agenda ficam como estão, por decisão registrada.
 
 ### 30. Gestão da Rede de Atenção
 

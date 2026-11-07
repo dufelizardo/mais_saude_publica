@@ -97,6 +97,7 @@ class InternacaoAutorizacaoControllerTest {
     void seed() {
         limpar();
         hospital = unidade("Hospital");
+        CapacidadesDeTeste.habilitar(jdbc, hospital.getUuid(), "OBSTETRICIA");
         UnidadeDeSaude outro = unidade("Outro hospital");
         enfermaria = setorRepository.save(new Setor(hospital, PREFIXO + "Clínica", "IA-CL", TipoSetor.ASSISTENCIAL, true, null));
         atribuir(MEDICO, "MEDICO", hospital);
@@ -133,6 +134,7 @@ class InternacaoAutorizacaoControllerTest {
             usuarioRepository.findByCpf(cpf).ifPresent(usuarioRepository::delete);
             jdbc.update("delete from tb_evento_auditoria where usuario_cpf = ?", cpf);
         }
+        CapacidadesDeTeste.limpar(jdbc, PREFIXO);
         unidadeDeSaudeRepository.deleteAllById(unidades);
         pacienteRepository.deleteAll(pacienteRepository.findAll().stream()
                 .filter(p -> p.getNome() != null && p.getNome().startsWith(PREFIXO)).toList());

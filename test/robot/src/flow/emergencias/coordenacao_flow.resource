@@ -5,6 +5,7 @@ Resource    ../../pom/emergencias/coordenacao_pom.resource
 Resource    ../../pom/escalas/escala/escala_pom.resource
 Resource    contingencia_flow.resource
 Resource    ../setor/create_setor/create_setor_flow.resource
+Resource    ../equipamentos/modelo_operacional/modelo_operacional_flow.resource
 Resource    ../profissional/get_profissional_by_matricula/get_profissional_by_matricula_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -35,6 +36,8 @@ Seed Capacidade
     [Documentation]    Registers 30 activatable beds in a fresh unit; returns the capacity uuid.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${unidade}=    Seed A Unidade De Saude Uuid
+    Incluir Perfil Por Codigo    ${unidade}    INTERNACAO
+    Incluir Capacidade Por Codigo    ${unidade}    INTERNACAO_CLINICA
     ${payload}=    Create Dictionary    unidadeId=${unidade}    recurso=LEITOS    normal=${120}    emergencial=${30}
     ${r}=    POST Capacidade Emergencial    ${payload}
     Should Be Equal As Integers    ${r.status_code}    201
