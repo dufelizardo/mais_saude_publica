@@ -4,21 +4,24 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, catchError, forkJoin, of } from 'rxjs';
 import { AcessoDaInterface } from '../../../core/models/auth';
-import { CapacidadeAssistencialDto, GRUPO_TRANSVERSAL, PerfilOperacionalDto } from '../../../core/models/modelo-operacional';
+import { CapacidadeAssistencialDto, GRUPO_TRANSVERSAL, PerfilOperacionalDto, TipoServicoDto } from '../../../core/models/modelo-operacional';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { AuthService } from '../../../core/services/auth';
 import { ModeloOperacionalService } from '../../../core/services/modelo-operacional';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { proximaAba } from '../../../shared/formato';
 
-type Aba = 'perfis' | 'capacidades';
+type Aba = 'perfis' | 'capacidades' | 'tipos';
 
-type Gaveta = { tipo: 'perfil'; item: PerfilOperacionalDto | null } | { tipo: 'capacidade'; item: CapacidadeAssistencialDto | null };
+type Gaveta =
+  | { tipo: 'perfil'; item: PerfilOperacionalDto | null }
+  | { tipo: 'capacidade'; item: CapacidadeAssistencialDto | null }
+  | { tipo: 'tipoServico'; item: TipoServicoDto | null };
 
 /**
  * Modelo operacional (ADR-0117): o catálogo do que as unidades operam (perfis) e conseguem fazer (capacidades,
- * agrupadas por perfil ou transversais). As associações a cada unidade ficam na aba Capacidades de Equipamentos de
- * Saúde. Mesmo layout da tela Modelo administrativo (ADR-0074), no contexto assistencial.
+ * agrupadas por perfil ou transversais) e os tipos de serviço em que se organizam (ADR-0165). As associações a cada
+ * unidade ficam nas abas Capacidades e Serviços de Equipamentos de Saúde. Mesmo layout da tela Modelo administrativo (ADR-0074), no contexto assistencial.
  */
 @Component({
   selector: 'app-modelo-operacional',
@@ -35,10 +38,12 @@ export class ModeloOperacional {
   protected readonly abas: { id: Aba; rotulo: string }[] = [
     { id: 'perfis', rotulo: 'Perfis operacionais' },
     { id: 'capacidades', rotulo: 'Capacidades assistenciais' },
+    { id: 'tipos', rotulo: 'Tipos de serviço' },
   ];
 
   protected readonly perfis = signal<PerfilOperacionalDto[]>([]);
   protected readonly capacidades = signal<CapacidadeAssistencialDto[]>([]);
+  protected readonly tipos = signal<TipoServicoDto[]>([]);
   protected readonly carregando = signal(true);
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
 
@@ -54,11 +59,12 @@ export class ModeloOperacional {
   protected readonly toast = signal<{ titulo: string; detalhe: string } | null>(null);
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
 
-  protected readonly form = this.fb.nonNullable.group({ codigo: [''], nome: [''], descricao: [''], perfilId: [''], ativo: [true] });
+  protected readonly form = this.fb.nonNullable.group({ codigo: [''], nome: [''], descricao: [''], perfilId: [''], capacidadeExigidaId: [''], ativo: [true] });
 
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
-    if (this.route.snapshot.queryParamMap.get('aba') === 'capacidades') this.aba.set('capacidades');
+    const aba = this.route.snapshot.queryParamMap.get('aba');
+    if (aba === 'capacidades' || aba === 'tipos') this.aba.set(aba);
     this.carregar();
   }
 
@@ -67,9 +73,11 @@ export class ModeloOperacional {
     forkJoin({
       perfis: this.service.perfis().pipe(catchError(() => of([]))),
       capacidades: this.service.capacidades().pipe(catchError(() => of([]))),
+      tipos: this.service.tiposServico().pipe(catchError(() => of([]))),
     }).subscribe((r) => {
       this.perfis.set(r.perfis);
       this.capacidades.set(r.capacidades);
+      this.tipos.set(r.tipos);
       this.carregando.set(false);
     });
   }
@@ -96,6 +104,8 @@ export class ModeloOperacional {
     return this.filtrar(this.capacidades()).filter((c) => !f || (f === 'TRANSVERSAL' ? !c.perfilId : c.perfilId === f));
   });
 
+  protected readonly tiposFiltrados = computed(() => this.filtrar(this.tipos()));
+
   protected readonly resumo = computed(() => ({
     perfis: this.perfis().filter((p) => p.ativo).length,
     capacidades: this.capacidades().filter((c) => c.ativo).length,
@@ -104,7 +114,7 @@ export class ModeloOperacional {
   }));
 
   protected contagem(aba: Aba): number {
-    return aba === 'perfis' ? this.perfis().length : this.capacidades().length;
+    return aba === 'perfis' ? this.perfis().length : aba === 'capacidades' ? this.capacidades().length : this.tipos().length;
   }
 
   // ── Abas ───────────────────────────────────────────────────────────────────────────────────────
@@ -129,12 +139,14 @@ export class ModeloOperacional {
 
   protected tituloGaveta(g: Gaveta): string {
     if (g.tipo === 'perfil') return g.item ? 'Editar perfil operacional' : 'Novo perfil operacional';
+    if (g.tipo === 'tipoServico') return g.item ? 'Editar tipo de serviço' : 'Novo tipo de serviço';
     return g.item ? 'Editar capacidade assistencial' : 'Nova capacidade assistencial';
   }
 
-  protected abrir(tipo: 'perfil' | 'capacidade', item: PerfilOperacionalDto | CapacidadeAssistencialDto | null): void {
+  protected abrir(tipo: Gaveta['tipo'], item: PerfilOperacionalDto | CapacidadeAssistencialDto | TipoServicoDto | null): void {
     const perfilId = item && 'perfilId' in item ? (item.perfilId ?? '') : this.filtroPerfil() === 'TRANSVERSAL' ? '' : this.filtroPerfil();
-    this.form.reset({ codigo: item?.codigo ?? '', nome: item?.nome ?? '', descricao: item?.descricao ?? '', perfilId, ativo: item?.ativo ?? true });
+    const capacidadeExigidaId = item && 'capacidadeExigidaId' in item ? (item.capacidadeExigidaId ?? '') : '';
+    this.form.reset({ codigo: item?.codigo ?? '', nome: item?.nome ?? '', descricao: item?.descricao ?? '', perfilId, capacidadeExigidaId, ativo: item?.ativo ?? true });
     this.erros.set({});
     this.erroApi.set(null);
     this.gaveta.set({ tipo, item } as Gaveta);
@@ -145,17 +157,25 @@ export class ModeloOperacional {
   }
 
   protected novoNaAba(): void {
-    this.abrir(this.aba() === 'perfis' ? 'perfil' : 'capacidade', null);
+    const aba = this.aba();
+    this.abrir(aba === 'perfis' ? 'perfil' : aba === 'capacidades' ? 'capacidade' : 'tipoServico', null);
   }
 
   protected rotuloNovo(): string {
-    return this.aba() === 'perfis' ? 'Novo perfil' : 'Nova capacidade';
+    const aba = this.aba();
+    return aba === 'perfis' ? 'Novo perfil' : aba === 'capacidades' ? 'Nova capacidade' : 'Novo tipo de serviço';
   }
 
   /** Perfis que podem agrupar uma capacidade: os ativos, e o atual mesmo inativo (na edição). */
   protected perfisParaGrupo(g: Gaveta): PerfilOperacionalDto[] {
     const atual = g.tipo === 'capacidade' ? g.item?.perfilId : null;
     return this.perfis().filter((p) => p.ativo || p.uuid === atual);
+  }
+
+  /** Capacidades que um tipo pode exigir: as ativas, e a atual mesmo inativa (na edição). */
+  protected capacidadesParaTipo(g: Gaveta): CapacidadeAssistencialDto[] {
+    const atual = g.tipo === 'tipoServico' ? g.item?.capacidadeExigidaId : null;
+    return this.capacidades().filter((c) => c.ativo || c.uuid === atual).sort((a, b) => a.nome.localeCompare(b.nome));
   }
 
   // ── Salvar ─────────────────────────────────────────────────────────────────────────────────────
@@ -184,6 +204,10 @@ export class ModeloOperacional {
     if (g.tipo === 'perfil') {
       this.enviar(g.item ? this.service.atualizarPerfil(g.item.uuid, base) : this.service.criarPerfil(base),
         g.item ? 'Perfil atualizado' : 'Perfil cadastrado', detalhe);
+    } else if (g.tipo === 'tipoServico') {
+      const dto = { ...base, capacidadeExigidaId: v.capacidadeExigidaId || null };
+      this.enviar(g.item ? this.service.atualizarTipoServico(g.item.uuid, dto) : this.service.criarTipoServico(dto),
+        g.item ? 'Tipo de serviço atualizado' : 'Tipo de serviço cadastrado', detalhe);
     } else {
       const dto = { ...base, perfilId: v.perfilId || null };
       this.enviar(g.item ? this.service.atualizarCapacidade(g.item.uuid, dto) : this.service.criarCapacidade(dto),

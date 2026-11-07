@@ -85,6 +85,14 @@
 
 <main id="main">
 
+  @if (avisosEmergenciais().length) {
+    <section class="container" aria-label="Avisos emergenciais" style="padding-top: var(--s-4);">
+      @for (a of avisosEmergenciais(); track a.titulo) {
+        <div class="box box--err" role="alert"><div><strong>{{ a.titulo }}</strong><p style="margin: 4px 0 0; white-space: pre-line;">{{ a.mensagem }}</p></div></div>
+      }
+    </section>
+  }
+
   <!-- ========= Hero ========= -->
   <section class="hero" aria-labelledby="hero-title">
     <div class="container hero__grid">
@@ -570,6 +578,42 @@
     </div>
   </section>
 
+  @if (avisosComuns().length || orientacoes().length) {
+    <section id="avisos" class="block" aria-labelledby="avs-title">
+      <div class="container">
+        @if (avisosComuns().length) {
+          <header class="block-head">
+            <span class="eyebrow">Avisos</span>
+            <h2 id="avs-title" style="margin-top: var(--s-4);">Avisos da rede de saúde</h2>
+          </header>
+          <div style="display: grid; gap: var(--s-3);">
+            @for (a of avisosComuns(); track a.titulo) {
+              <article [attr.aria-label]="a.titulo" class="box box--info">
+                <div>
+                  <strong>{{ a.titulo }}</strong>@if (a.unidadeNome) { <span> · {{ a.unidadeNome }}</span> }
+                  <p style="margin: 4px 0 0; white-space: pre-line;">{{ a.mensagem }}</p>
+                </div>
+              </article>
+            }
+          </div>
+        }
+        @if (orientacoes().length) {
+          <header class="block-head" style="margin-top: var(--s-8);">
+            <span class="eyebrow">Orientações</span>
+            <h2 [attr.id]="avisosComuns().length ? null : 'avs-title'" style="margin-top: var(--s-4);">Orientações de saúde</h2>
+          </header>
+          <div style="display: grid; gap: var(--s-3);">
+            @for (o of orientacoes(); track o.titulo) {
+              <details style="border: 1px solid var(--ink-200); border-radius: 10px; padding: var(--s-4);">
+                <summary style="cursor: pointer;"><strong>{{ o.titulo }}</strong> <span style="color: var(--ink-500);">· {{ o.tema }}@if (o.faixaEtaria) { · {{ o.faixaEtaria }} }</span><p style="margin: 4px 0 0; color: var(--ink-500);">{{ o.resumo }}</p></summary>
+                <p style="margin-top: var(--s-3); white-space: pre-line;">{{ o.texto }}</p>
+              </details>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
 </main>
 
 <!-- ========= Footer ========= -->

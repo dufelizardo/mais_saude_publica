@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { VersaoService } from '../../core/services/versao';
 import { CampanhaPublicaDto, ProgramaPublicoDto, TIPOS_CAMPANHA } from '../../core/models/programa';
 import { ProgramaService } from '../../core/services/programa';
+import { ComunicadoPublicoDto, ConteudoPublicoDto } from '../../core/models/comunicacao';
+import { ComunicacaoService } from '../../core/services/comunicacao';
 
 type FontSize = 'default' | 'lg' | 'xl';
 
@@ -36,12 +38,21 @@ export class LandingPage {
   protected readonly campanhasVisiveis = computed(() => (this.todasCampanhas() ? this.campanhas() ?? [] : (this.campanhas() ?? []).slice(0, 5)));
   protected readonly tiposCampanha = TIPOS_CAMPANHA;
 
+  /** Avisos e orientações publicados (ADR-0168); o emergencial sobe para o topo da página. */
+  private readonly comunicacaoService = inject(ComunicacaoService);
+  protected readonly avisos = signal<ComunicadoPublicoDto[]>([]);
+  protected readonly orientacoes = signal<ConteudoPublicoDto[]>([]);
+  protected readonly avisosEmergenciais = computed(() => this.avisos().filter((a) => a.prioridade === 'EMERGENCIAL'));
+  protected readonly avisosComuns = computed(() => this.avisos().filter((a) => a.prioridade !== 'EMERGENCIAL'));
+
   protected readonly fontSize = signal<FontSize>('default');
   protected readonly highContrast = signal(false);
   protected readonly mobileMenuOpen = signal(false);
 
   constructor() {
     this.restorePreferences();
+    this.comunicacaoService.avisos().subscribe({ next: (a) => this.avisos.set(a) });
+    this.comunicacaoService.orientacoes().subscribe({ next: (o) => this.orientacoes.set(o) });
     this.programaService.publico().subscribe({ next: (p) => this.programas.set(p), error: () => this.programas.set(null) });
     this.programaService.campanhasPublicas().subscribe({ next: (c) => this.campanhas.set(c), error: () => this.campanhas.set(null) });
   }

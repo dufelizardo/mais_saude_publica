@@ -594,6 +594,7 @@
                 <div><dt>Profissional</dt><dd>{{ a.profissionalNome }}</dd></div>
                 <div><dt>Unidade</dt><dd>{{ a.unidadeNome }}</dd></div>
                 <div><dt>Setor</dt><dd>{{ a.setorNome || '—' }}</dd></div>
+                <div><dt>Local</dt><dd>{{ localDoAtendimento(a) }}</dd></div>
                 <div><dt>Agendamento</dt><dd>@if (agendamento(a.agendamentoUuid); as ag) { {{ rotulo(agTipos, ag.tipo) }} · {{ formatarDataHora(ag.dataHora) }} } @else { Demanda espontânea }</dd></div>
               </dl>
               <div class="dw-actions">
@@ -901,7 +902,7 @@
             <div class="dw-field">
               <label for="f-buscaPaciente">Paciente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
               <input id="f-buscaPaciente" type="search" formControlName="buscaPaciente" autocomplete="off" placeholder="Buscar por nome ou CPF…" />
-              <select id="f-pacienteId" formControlName="pacienteId" aria-label="Paciente" [attr.aria-invalid]="!!erro('pacienteId')" aria-describedby="e-pacienteId">
+              <select id="f-pacienteId" formControlName="pacienteId" (change)="carregarLocais()" aria-label="Paciente" [attr.aria-invalid]="!!erro('pacienteId')" aria-describedby="e-pacienteId">
                 <option value="">Selecione…</option>
                 @for (p of pacientesFiltrados(atForm.controls.buscaPaciente.value, atForm.controls.pacienteId.value); track p.uuid) {
                   <option [value]="p.uuid">{{ p.nome }} · CPF {{ formatCpf(p.cpf) }}</option>
@@ -926,7 +927,7 @@
             <div class="dw-row">
               <div class="dw-field">
                 <label for="f-unidadeId">Unidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
-                <select id="f-unidadeId" formControlName="unidadeId" [attr.aria-invalid]="!!erro('unidadeId')" aria-describedby="e-unidadeId">
+                <select id="f-unidadeId" formControlName="unidadeId" (change)="carregarLocais()" [attr.aria-invalid]="!!erro('unidadeId')" aria-describedby="e-unidadeId">
                   <option value="">Selecione…</option>
                   @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
                 </select>
@@ -967,6 +968,52 @@
                 }
               </select>
             </div>
+            <div class="dw-field">
+              <label for="f-localRealizacao">Local de realização<span class="opt">opcional · sem ele, na unidade</span></label>
+              <select id="f-localRealizacao" formControlName="localRealizacao" (change)="mudarLocal()">
+                <option value="">Na unidade</option>
+                @for (l of locaisDeRealizacao; track l.valor) { <option [value]="l.valor">{{ l.rotulo }}</option> }
+              </select>
+            </div>
+            @if (atForm.controls.localRealizacao.value === 'PONTO_DA_UNIDADE') {
+              <div class="dw-field">
+                <label for="f-pontoOperacionalId">Ponto <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-pontoOperacionalId" formControlName="pontoOperacionalId" [attr.aria-invalid]="!!erro('pontoOperacionalId')" aria-describedby="e-pontoOperacionalId">
+                  <option value="">Escolha…</option>
+                  @for (p of locais()?.pontos ?? []; track p.uuid) { <option [value]="p.uuid">{{ p.nome }}</option> }
+                  @if (g.at?.pontoOperacionalId; as atual) {
+                    @if (!pontoNaLista(atual)) { <option [value]="atual">{{ g.at?.pontoOperacionalNome }} · encerrado</option> }
+                  }
+                </select>
+                @if (erro('pontoOperacionalId')) { <p class="dw-err" id="e-pontoOperacionalId">{{ erro('pontoOperacionalId') }}</p> }
+              </div>
+            } @else if (atForm.controls.localRealizacao.value) {
+              @if (atForm.controls.localRealizacao.value === 'DOMICILIO' && locais()?.domicilioId) {
+                <div class="dw-field">
+                  <label for="f-domicilioId">Domicílio</label>
+                  <select id="f-domicilioId" formControlName="domicilioId">
+                    <option [value]="locais()?.domicilioId">{{ locais()?.domicilioDescricao || 'Domicílio do cadastro' }}</option>
+                    <option value="">Outro endereço</option>
+                  </select>
+                </div>
+              }
+              <div class="dw-field">
+                <label for="f-localDescricao">Descrição do local</label>
+                <input id="f-localDescricao" type="text" maxlength="300" formControlName="localDescricao" placeholder="Ex.: Praça da Sé, em frente à igreja" [attr.aria-invalid]="!!erro('localDescricao')" aria-describedby="e-localDescricao" />
+                @if (erro('localDescricao')) { <p class="dw-err" id="e-localDescricao">{{ erro('localDescricao') }}</p> }
+              </div>
+              <div class="dw-row">
+                <div class="dw-field">
+                  <label for="f-localLatitude">Latitude<span class="opt">opcional</span></label>
+                  <input id="f-localLatitude" type="text" inputmode="decimal" formControlName="localLatitude" autocomplete="off" [attr.aria-invalid]="!!erro('localLatitude')" aria-describedby="e-localLatitude" />
+                  @if (erro('localLatitude')) { <p class="dw-err" id="e-localLatitude">{{ erro('localLatitude') }}</p> }
+                </div>
+                <div class="dw-field">
+                  <label for="f-localLongitude">Longitude<span class="opt">opcional</span></label>
+                  <input id="f-localLongitude" type="text" inputmode="decimal" formControlName="localLongitude" autocomplete="off" />
+                </div>
+              </div>
+            }
             <fieldset class="dw-field">
               <legend>Status <span class="req" aria-hidden="true">*</span></legend>
               <div class="radios">

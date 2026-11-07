@@ -4,8 +4,8 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-06 (release 1.9.0)
-- **Release em produção:** v1.7.0 (2026-10-22)
+- **Atualizado em:** 2026-11-06 (release 1.10.0)
+- **Release em produção:** v1.10.0 (2026-11-06)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
 - **Fontes:**
@@ -45,7 +45,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
-| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI3 feitas (Sala de Situação: produção, situação operacional e indicadores da rede); BI4 e BI5 |
+| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI4 feitas (Sala de Situação e relatórios); falta a BI5 |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
@@ -54,8 +54,8 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
-| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 📐 | futuro; fatias C1 a C6 |
-| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | fatias MO2 a MO4 |
+| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 feita (comunicado, conteúdo, portal e e-mail); fatias C2 a C6 |
+| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | MO1 a MO3 feitas; falta a MO4 |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
@@ -68,19 +68,15 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| C1 | 28 Comunicação | comunicado, conteúdo, portal e e-mail |
-| MO2 | 29 Modelo Operacional | serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina) |
-| MO3 | 29 Modelo Operacional | ponto operacional: local de realização do atendimento e unidade móvel |
-| BI4 | 19 Indicadores e BI | relatórios (protótipo `Relatorios.html`) |
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
-MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade emergencial) · MO2 → MO4
-MO3 ──► SAMU e unidade móvel (com Transporte, 16)
+MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade emergencial) · MO2 ✅ → MO4
+MO3 ✅ ──► SAMU (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
-BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 (relatórios) · BI5 (coordenações)
+BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 ✅ (relatórios) · BI5 (coordenações)
 P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
@@ -93,7 +89,7 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6a ✅ ──► E6b ✅
-C1 ──► C2 · C4 · C5
+C1 ✅ ──► C2 · C4 · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
 
@@ -130,7 +126,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - [x] Componentes da RAPS no catálogo do modelo operacional e o acolhimento noturno do CAPS (domínio 26, SM5,
   [ADR-0153](./adr/0153-saude-mental-caps-e-raps.md)).
 - [x] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1, [ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
-- [ ] Serviços (MO2); coordenadas e pontos operacionais (MO3).
+- [x] Serviços da unidade, com setores e leitos por serviço (item 29, MO2, [ADR-0165](./adr/0165-modelo-operacional-servicos-da-unidade.md)).
+- [x] Pontos operacionais, base, rotas e localização da unidade móvel (item 29, MO3, [ADR-0166](./adr/0166-modelo-operacional-ponto-operacional.md)).
 - [x] Tipo de unidade do CEO: sem tipo próprio; é a unidade de especialidades com as capacidades odontológicas (ADR-0138).
 
 ### 2. RH
@@ -404,7 +401,8 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   referência, homogeneidade, abandono e campanhas de vacinação com o andamento, no lugar do bloco "Em breve".
 
 **Falta:**
-- [ ] **BI4 · Relatórios** (protótipo `Relatorios.html`).
+- [x] **BI4 · Relatórios** ([ADR-0167](./adr/0167-bi-relatorios.md)): catálogo de cinco relatórios sobre os números dos
+  domínios, com período e unidade, prévia na tela, CSV na trilha de auditoria e impressão. Sem envio agendado.
 - [ ] **BI5 · Coordenações & Gerência** (protótipo `Coordenacoes.html`).
 
 ### 20. Integrações / Identidade / Segurança / Governo
@@ -719,12 +717,14 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 28. Comunicação e Educação em Saúde
 
-**Estado:** 📐 **futuro**. Desenhado na [ADR-0114](./adr/0114-comunicacao-e-educacao-em-saude.md); detalhe em
+**Estado:** 🟡. Desenhado na [ADR-0114](./adr/0114-comunicacao-e-educacao-em-saude.md); detalhe em
 [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md).
 
+**Temos:**
+- [x] **C1 · Comunicação básica** ([ADR-0168](./adr/0168-comunicacao-basica.md)): comunicado com prioridade e período, conteúdo educativo com revisão
+  técnica, validade e versão, canais e publicação com resultado; avisos e orientações na página pública; e-mail só a profissionais.
+
 **Falta:**
-- [ ] **C1 · Comunicação básica:** comunicado, conteúdo educativo com validação técnica, publicação, canal; portal
-  (landing page) e e-mail.
 - [ ] **C2 · Campanhas de comunicação:** `CampanhaComunicacao` ligada a programa ou campanha operacional, público-alvo,
   material educativo (os arquivos dependem do domínio Documentos).
 - [ ] **C3 · Educação em saúde:** conteúdo e material nas ações educativas de Programas (P4).
@@ -745,10 +745,17 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   perfil, perfis na rede, aba Capacidades e filtro por perfil em Equipamentos, tela Modelo operacional. Destrava SB4,
   SM5 e E3.
 
+- [x] **MO2 · Serviços** ([ADR-0165](./adr/0165-modelo-operacional-servicos-da-unidade.md)): catálogo editável de tipos de serviço (11, com
+  capacidade exigida opcional), serviços da unidade como histórico, setores por serviço, leitos por serviço calculados
+  pelos setores, aba Serviços em Equipamentos e aba Tipos de serviço em Modelo operacional. A capacidade não encerra com
+  serviço vigente que a exige.
+
+- [x] **MO3 · Ponto operacional** ([ADR-0166](./adr/0166-modelo-operacional-ponto-operacional.md)): local de realização opcional no Atendimento
+  (domicílio do cadastro ou descrito, via pública, evento, escola, ponto da unidade); pontos da unidade como histórico; base,
+  rotas programadas e localização informada da unidade móvel, que é a unidade com o perfil Atenção móvel. Aba Pontos em
+  Equipamentos e campo na gaveta do Atendimento. Sem GPS.
+
 **Falta:**
-- [ ] **MO2 · Serviços:** serviços da unidade (pronto-socorro, UTI, centro cirúrgico, sala de vacina), ligados a
-  setores.
-- [ ] **MO3 · Ponto operacional:** local de realização no Atendimento; base, localização e rota da unidade móvel.
 - [ ] **MO4 · Domínios consultam capacidades:** Leitos, Agenda, Saúde Mental, Saúde Bucal, Emergências.
 
 ### 30. Gestão da Rede de Atenção

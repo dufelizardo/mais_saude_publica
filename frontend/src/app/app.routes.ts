@@ -172,6 +172,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/sala-de-situacao/sala-de-situacao').then((m) => m.SalaDeSituacao),
         data: { breadcrumb: 'Sala de Situação', area: 'Indicadores' },
       },
+      // Comunicação (ADR-0168), carregada sob demanda.
+      {
+        path: 'administrativo/comunicacao',
+        loadComponent: () => import('./features/administrativo/comunicacao/comunicacao').then((m) => m.Comunicacao),
+        data: { breadcrumb: 'Comunicação', area: 'Administrativo' },
+      },
+      // Relatórios (BI4, ADR-0167), carregados sob demanda.
+      {
+        path: 'relatorios',
+        loadComponent: () => import('./features/relatorios/relatorios').then((m) => m.Relatorios),
+        data: { breadcrumb: 'Relatórios', area: 'Indicadores' },
+      },
       // Vigilância epidemiológica (ADR-0124), carregada sob demanda.
       // Emergências e Desastres (ADR-0156).
       {

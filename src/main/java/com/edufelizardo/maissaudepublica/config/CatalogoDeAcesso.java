@@ -85,6 +85,10 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 OPERACAO));
         // A coordenação da resposta (ADR-0158): ações, mobilização e capacidade emergencial ativada.
         PERMISSOES.put("EMERGENCIA.COORDENAR", new Def("Coordenar a resposta: ações emergenciais, mobilização e capacidade emergencial", OPERACAO));
+        // Comunicação (ADR-0168): quem publica não é quem revisa a orientação técnica.
+        PERMISSOES.put("COMUNICACAO.PUBLICAR", new Def("Criar e publicar comunicados e publicar conteúdos aprovados", OPERACAO));
+        PERMISSOES.put("CONTEUDO.EDITAR", new Def("Escrever conteúdos educativos e enviá-los à revisão técnica", OPERACAO));
+        PERMISSOES.put("CONTEUDO.REVISAR", new Def("Fazer a revisão técnica dos conteúdos educativos", OPERACAO));
         PERMISSOES.put("CONTINGENCIA.GERENCIAR", new Def("Manter os tipos e níveis de emergência e, depois, os planos de contingência", OPERACAO));
         // Saúde Bucal (ADR-0134): a avaliação e o diagnóstico são do cirurgião-dentista (Lei 5.081/1966).
         PERMISSOES.put("ODONTOLOGIA.REGISTRAR", new Def("Registrar a avaliação odontológica (cirurgião-dentista)", ACESSO_AO_DADO_DE_SAUDE));
@@ -142,14 +146,15 @@ public class CatalogoDeAcesso implements ApplicationRunner {
     static {
         PAPEIS.put(ADMINISTRADOR_PLATAFORMA, new PapelPadrao("Administrador da plataforma",
                 "Usuários, acessos e estrutura. Não lê dado de saúde (ADR-0054).",
-                List.of("USUARIO.GERENCIAR", "ACESSO.GERENCIAR", "ORGANIZACAO.GERENCIAR")));
+                List.of("USUARIO.GERENCIAR", "ACESSO.GERENCIAR", "ORGANIZACAO.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR", "CONTEUDO.REVISAR")));
         PAPEIS.put("GESTOR", new PapelPadrao("Gestor",
                 "Gestão de RH, setor administrativo, estoque e acessos no seu escopo.",
                 List.of("ACESSO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR", "ADMINISTRATIVO.CONSULTAR",
                         "ADMINISTRATIVO.GERENCIAR", "PACIENTE.CONSULTAR", "FARMACIA.CONSULTAR", "EQUIPE.GERENCIAR",
                         "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
                         "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR",
-                        "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR")));
+                        "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR",
+                        "CONTEUDO.REVISAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",

@@ -1,5 +1,6 @@
 package com.edufelizardo.maissaudepublica.models;
 
+import com.edufelizardo.maissaudepublica.models.enuns.LocalRealizacao;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusAtendimento;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoAtendimento;
 import jakarta.persistence.*;
@@ -76,6 +77,26 @@ public class Atendimento implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "especialidade_id", referencedColumnName = "uuid")
     private Especialidade especialidade;
+
+    /** Onde o cuidado aconteceu (ADR-0166); sem valor, na unidade, que continua sendo o vínculo organizacional. */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private LocalRealizacao localRealizacao;
+
+    @Column(length = 300)
+    private String localDescricao;
+
+    private Double localLatitude;
+
+    private Double localLongitude;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "domicilio_id", referencedColumnName = "uuid")
+    private Domicilio domicilio;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ponto_operacional_id", referencedColumnName = "uuid")
+    private PontoOperacional pontoOperacional;
 
     public Atendimento(Paciente paciente, Profissional profissional, UnidadeDeSaude unidade, Setor setor,
                         Agendamento agendamento, TipoAtendimento tipo, StatusAtendimento status,

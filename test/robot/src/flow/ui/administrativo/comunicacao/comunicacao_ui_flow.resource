@@ -1,0 +1,88 @@
+*** Settings ***
+Library     Browser
+Library     String
+Library     DateTime
+Resource    ../../../../pom/common/mais_saude_publica_ui_common.resource
+Resource    ../../../comunicacao/comunicacao_flow.resource
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Comments ***
+    Tela Comunicação (ADR-0168) e os avisos na página pública.
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+*** Keywords ***
+UI Comunicacao - Abrir
+    [Documentation]    Abre a tela Comunicação.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /administrativo/comunicacao
+    Wait For Elements State    css=h1 >> text=Comunicação    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Comunicacao - Criar E Publicar Comunicado
+    [Documentation]    Sem título, a mensagem; com os dados, salva o rascunho e publica.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    ${titulo}=    Set Variable    UI Aviso ${sufixo}
+    ${hoje}=    Get Current Date    result_format=%Y-%m-%d
+    UI Comunicacao - Abrir
+    Wait For Elements State    css=#tab-canais .cnt >> text=/[1-9]/    visible
+    Clicar Botao    Novo comunicado
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    titulo
+    Should Contain    ${erro}    título
+    Preencher Campo Da Gaveta    titulo    ${titulo}
+    Fill Text    id=f-mensagem    UBS Central em obra
+    Preencher Campo Da Gaveta    fim    ${hoje}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Rascunho salvo
+    Clicar Botao    Publicar ${titulo}
+    Wait For Elements State    css=tr:has-text("${titulo}") >> text=No ar    visible
+    Ir Para Rota Do Frontend    /
+    Wait For Elements State    css=#avisos >> text=${titulo}    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Comunicacao - Fluxo Do Conteudo
+    [Documentation]    Cria o conteúdo, envia à revisão, aprova e publica pela tela.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    ${titulo}=    Set Variable    UI Dengue ${sufixo}
+    ${hoje}=    Get Current Date    result_format=%Y-%m-%d
+    ${validade}=    Add Time To Date    ${hoje}    90 days    result_format=%Y-%m-%d
+    UI Comunicacao - Abrir
+    Click    css=#tab-conteudos
+    Clicar Botao    Novo conteúdo
+    Preencher Campo Da Gaveta    tituloConteudo    ${titulo}
+    Fill Text    id=f-resumo    Como evitar focos
+    Fill Text    id=f-texto    Elimine a água parada.
+    Preencher Campo Da Gaveta    tema    Dengue
+    Preencher Campo Da Gaveta    validade    ${validade}
+    Enviar Gaveta
+    Clicar Botao    Enviar à revisão ${titulo}
+    Clicar Botao    Aprovar ${titulo}
+    Clicar Botao    Publicar ${titulo}
+    Enviar Gaveta
+    Wait For Elements State    css=tr:has-text("${titulo}") >> text=Publicado    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Comunicacao - Encerrar Comunicado
+    [Documentation]    Encerra um comunicado publicado: sem motivo, a mensagem.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    ${titulo}=    Set Variable    UI Encerrar ${sufixo}
+    ${payload}=    Payload Do Comunicado    ${titulo}
+    ${criado}=    POST Create Comunicado    ${payload}
+    POST Publicar Comunicado    ${criado.json()}[uuid]
+    UI Comunicacao - Abrir
+    Clicar Botao    Encerrar ${titulo}
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    motivo
+    Should Contain    ${erro}    motivo
+    Preencher Campo Da Gaveta    motivo    Obra concluída
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Comunicado encerrado
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+

@@ -3,6 +3,8 @@ Library     String
 Resource    ../../../../pom/ui/administrativo/modelo_operacional/modelo_operacional_ui_pom.resource
 Resource    ../equipamentos/equipamentos_ui_flow.resource
 Resource    ../../../equipamentos/modelo_operacional/modelo_operacional_flow.resource
+Resource    ../../../equipamentos/servicos_unidade/servicos_unidade_flow.resource
+Resource    ../../../equipamentos/pontos_operacionais/pontos_operacionais_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     As unidades e as associações de apoio são criadas pela API; a ação sob teste é feita pela tela.
@@ -121,3 +123,159 @@ UI Modelo Operacional - Gaveta Recusa Codigo Invalido
     Should Contain    ${erroNome}    nome
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Seed Hospital Com UTI E Nome
+    [Documentation]    Creates a hospital with the UTI capability and returns its uuid and name.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    ${nome}=    Set Variable    UI Hospital ${sufixo}
+    ${payload}=    Create Dictionary    nome=${nome}    tipo=HOSPITAL
+    ${response}=    POST Create Unidade Por Id    ${payload}
+    Should Be Equal As Integers    ${response.status_code}    201
+    ${uuid}=    Set Variable    ${response.json()}[resumo][uuid]
+    Incluir Perfil Por Codigo    ${uuid}    INTERNACAO
+    Incluir Capacidade Por Codigo    ${uuid}    UTI
+    RETURN    ${uuid}    ${nome}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Servicos - Incluir Com Setor
+    [Documentation]    Pela aba Serviços, inclui a UTI Adulto ligada a um setor; sem nome, a mensagem do campo.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${nome}=    Seed Hospital Com UTI E Nome
+    ${sufixo}=    Generate Random String    8    [LETTERS][NUMBERS]
+    ${setor}=    Set Variable    Ala ${sufixo}
+    ${payload}=    Build Setor Payload    ${uuid}    ${setor}    ROBOT-${sufixo}    ASSISTENCIAL
+    ${criado}=    POST Create Setor    ${payload}
+    Should Be Equal As Integers    ${criado.status_code}    201
+    ${tipo}=    Id Do Tipo De Servico    UTI
+    UI Equipamentos - Abrir Unidade    ${uuid}
+    Wait Until Keyword Succeeds    10s    500ms    UI Equipamentos - Painel Deve Ser    ${nome}
+    Clicar Aba    Serviços
+    Clicar Botao    Adicionar serviço
+    Escolher Opcao Da Gaveta    tipoId    ${tipo}
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    nomeServico
+    Should Contain    ${erro}    nome
+    Preencher Campo Da Gaveta    nomeServico    UTI Adulto
+    UI Servicos - Marcar Setor    ${setor}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Serviço incluído
+    Esperar Texto Aparecer    UTI Adulto
+    ${servicos}=    GET Servicos Da Unidade    ${uuid}
+    Should Be Equal    ${servicos.json()}[servicos][0][setores][0][nome]    ${setor}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Servicos - Encerrar
+    [Documentation]    Encerra o serviço pela gaveta e o vê em Serviços encerrados.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${nome}=    Seed Hospital Com UTI E Nome
+    Incluir Servico Do Tipo    ${uuid}    UTI    UTI Adulto
+    UI Equipamentos - Abrir Unidade    ${uuid}
+    Wait Until Keyword Succeeds    10s    500ms    UI Equipamentos - Painel Deve Ser    ${nome}
+    Clicar Aba    Serviços
+    Clicar Botao    Encerrar UTI Adulto
+    Preencher Campo Da Gaveta    motivoFim    Reforma da ala
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Serviço encerrado
+    Esperar Texto Aparecer    Serviços encerrados
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Modelo Operacional - Cadastrar Tipo De Servico
+    [Documentation]    Na aba Tipos de serviço, vê a carga e cadastra um tipo.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [UPPER]
+    UI Modelo Operacional - Abrir
+    Click    css=#tab-tipos
+    Esperar Texto Aparecer    Centro cirúrgico
+    Clicar Botao    Novo tipo de serviço
+    Preencher Campo Da Gaveta    codigo    UI_${sufixo}
+    Preencher Campo Da Gaveta    nome    Banco de leite ${sufixo}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Tipo de serviço cadastrado
+    UI Modelo Operacional - Buscar    ${sufixo}
+    Esperar Texto Aparecer    Banco de leite ${sufixo}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+
+UI Pontos - Incluir Na UBS
+    [Documentation]    Pela aba Pontos, inclui um ponto; sem nome, a mensagem do campo.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${nome}=    Seed CAPS Com Nome
+    UI Equipamentos - Abrir Unidade    ${uuid}
+    Wait Until Keyword Succeeds    10s    500ms    UI Equipamentos - Painel Deve Ser    ${nome}
+    Clicar Aba    Pontos
+    Clicar Botao    Adicionar ponto
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    nomePonto
+    Should Contain    ${erro}    nome
+    Preencher Campo Da Gaveta    nomePonto    Escola Rui Barbosa
+    Preencher Campo Da Gaveta    latitudePonto    -23,55
+    Preencher Campo Da Gaveta    longitudePonto    -46,63
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Ponto incluído
+    Esperar Texto Aparecer    Escola Rui Barbosa
+    ${pontos}=    GET Pontos Da Unidade    ${uuid}
+    Should Be Equal As Numbers    ${pontos.json()}[pontos][0][latitude]    -23.55
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Pontos - Rota E Posicao Da Unidade Movel
+    [Documentation]    Na unidade móvel, inclui a rota com dois pontos e registra onde ela está.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    ${nome}=    Set Variable    UI Movel ${sufixo}
+    ${payload}=    Create Dictionary    nome=${nome}    tipo=POLICLINICA
+    ${criada}=    POST Create Unidade Por Id    ${payload}
+    Should Be Equal As Integers    ${criada.status_code}    201
+    ${uuid}=    Set Variable    ${criada.json()}[resumo][uuid]
+    Incluir Perfil Por Codigo    ${uuid}    ATENCAO_MOVEL
+    ${a}=    Id Do Ponto Novo    ${uuid}    PONTO_PROGRAMADO    Comunidade Norte
+    ${b}=    Id Do Ponto Novo    ${uuid}    PONTO_PROGRAMADO    Comunidade Sul
+    UI Equipamentos - Abrir Unidade    ${uuid}
+    Wait Until Keyword Succeeds    10s    500ms    UI Equipamentos - Painel Deve Ser    ${nome}
+    Clicar Aba    Pontos
+    Clicar Botao    Adicionar rota
+    Preencher Campo Da Gaveta    nomeRota    Rota rural
+    Click    css=app-drawer label:has-text("Seg")
+    Escolher Opcao Da Gaveta    rotaPonto    ${b}
+    Escolher Opcao Da Gaveta    rotaPonto    ${a}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Rota incluída
+    Clicar Botao    Registrar posição
+    Escolher Opcao Da Gaveta    pontoPosicao    ${a}
+    Enviar Gaveta
+    ${registro}=    Ler Aviso De Status
+    Should Contain    ${registro}    Posição registrada
+    ${pontos}=    GET Pontos Da Unidade    ${uuid}
+    Should Be Equal    ${pontos.json()}[rotas][0][pontos][0][nome]    Comunidade Sul
+    Should Be Equal    ${pontos.json()}[posicoes][0][pontoNome]    Comunidade Norte
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Atendimento - Local De Realizacao
+    [Documentation]    Edita o atendimento, informa a escola e vê o local na ficha.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${atendimento}    ${paciente}    ${matricula}    ${unidade}=    Seed Um Atendimento
+    Ir Para Rota Do Frontend    /assistencia/atendimentos?aba=pront&pacienteId=${paciente}
+    Click    css=.pront-tl >> role=button[name="Abrir"] >> nth=0
+    Esperar Texto Aparecer    Na unidade
+    Clicar Botao    Editar atendimento
+    Escolher Opcao Da Gaveta    localRealizacao    ESCOLA
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    localDescricao
+    Should Contain    ${erro}    local
+    Preencher Campo Da Gaveta    localDescricao    EMEF Rui Barbosa
+    Enviar Gaveta
+    Esperar Texto Aparecer    Escola · EMEF Rui Barbosa
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
