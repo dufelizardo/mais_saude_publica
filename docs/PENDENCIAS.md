@@ -5,22 +5,20 @@ para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou ab
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.10.1, promovida em 2026-11-07). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.10.2, promovida em 2026-11-07). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
 |---|---|---|---|---|
-| Login (ADR-0055) | ✅ ligado | ❌ | ❌ | ❌ |
+| Login (ADR-0055) | ✅ ligado | ✅ ligado | ✅ ligado | ✅ ligado |
 | Exigência de permissão por perfil e unidade (ADR-0067) | ❌ | ❌ | ❌ | ❌ |
 | Prontuário por vínculo assistencial (ADR-0076) | ❌ | ❌ | ❌ | ❌ |
 | Recuperação de senha por e-mail (ADR-0081) | ❌ sem SMTP | ❌ | ❌ | ❌ |
 
 O que isso significa:
-- **Sem login** (`qaa`, `homologacao`, `prod`), qualquer pessoa entra e faz tudo. Usuários & Perfis,
-  troca de senha, encerramento de sessões e botões por permissão existem, mas não têm efeito.
-- **Com login e sem exigência de permissão** (`dev`), todo usuário logado faz tudo. Os perfis concedidos
+- **Com login e sem exigência de permissão** (os quatro ambientes), todo usuário logado faz tudo. Os perfis concedidos
   ficam guardados e só restringem quando a exigência for ligada.
-- **A auditoria grava em todos os ambientes.** Sem login, os eventos ficam sem a pessoa (CPF vazio).
+- **A auditoria grava em todos os ambientes.** Os eventos anteriores ao login ficaram sem a pessoa (CPF vazio).
 - **Cada item depende do anterior:** o vínculo só age com a permissão ligada, e a permissão só com o
   login ligado.
 
@@ -31,8 +29,7 @@ Na rede de casa, cada ambiente abre sem configurar o aparelho em `http://maissau
 
 O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGAR-AUTORIZACAO.md).
 
-1. **Login em `qaa`, `homologacao` e `prod`.** Provisionar o Secret `app-secrets` (chave do JWT, CPF e senha
-   do administrador inicial) em cada namespace e acrescentar `APP_SECURITY_ENABLED=true` no overlay.
+1. ~~**Login em `qaa`, `homologacao` e `prod`.**~~ Ligado em 2026-11-07, com o Secret `app-secrets` em cada namespace.
 2. **Antes de ligar a exigência de permissão, garantir o próprio acesso.** O administrador inicial só tem
    o perfil **Administrador da plataforma**, que não lê dado de saúde nem as áreas operacionais (ADR-0054).
    Há dois caminhos:
@@ -51,7 +48,7 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - [ ] Apagar o secret **`RENDER_DEPLOY_URL`** nas configurações do repositório. O deploy no Render foi
       removido e o workflow está desligado.
 - [ ] Apagar o serviço antigo no painel do **Render**, se ainda existir.
-- [ ] Provisionar `app-secrets` nos namespaces de `qaa`, `homologacao` e `prod` (item 2.1).
+- [x] Provisionar `app-secrets` nos namespaces de `qaa`, `homologacao` e `prod` (item 2.1).
 - [ ] Escolher e contratar o provedor SMTP (item 2.5).
 
 ## 4. Infraestrutura do home-lab (ADR-0012)
