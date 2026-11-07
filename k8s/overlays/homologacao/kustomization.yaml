@@ -22,6 +22,10 @@ configMapGenerator:
       - JAVA_TOOL_OPTIONS=-Xmx384m
       - DATABASE_URL=jdbc:postgresql://postgres:5432/saudepublica_homologacao
       - DATABASE_USERNAME=postgres
+  - name: mdns-config
+    literals:
+      # Nome amigável na rede local (ADR-0169).
+      - MDNS_NOME=maissaudepublica-cert.local
   - name: db-config
     literals:
       - POSTGRES_DB=saudepublica_homologacao
