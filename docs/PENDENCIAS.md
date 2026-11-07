@@ -201,7 +201,8 @@ real":
   ~~F3a (imóvel, domicílio e família)~~ — ADR-0127; ~~F3b (adscrição e cobertura)~~ — ADR-0128; ~~F4
   (escopo de acesso e fim do texto das microáreas)~~ — ADR-0129. Falta ligar o escopo territorial quando a rede tiver o
   cadastro.
-- **Integrações** (SUS, CNES, e-SUS, SIGTAP) e **Documentos**.
+- **Integrações** (SUS, CNES, e-SUS, SIGTAP) e **Documentos** além da D1 ([ADR-0172](./adr/0172-documentos-anexos.md)): outros donos, guias para imprimir, aprovação e assinatura.
+- **Backup do servidor,** agora também do volume `documentos-data`, antes de qualquer dado real.
 
 ## 7. Fluxo de promoção
 

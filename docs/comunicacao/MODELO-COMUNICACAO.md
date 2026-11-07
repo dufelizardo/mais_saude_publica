@@ -296,7 +296,7 @@ RH → profissionais e treinamentos → EDUCAÇÃO PERMANENTE (conteúdo e mater
 | Fatia | Entrega | Depende de |
 |---|---|---|
 | **C1** · comunicação básica ✅ ([ADR-0168](../adr/0168-comunicacao-basica.md)) | comunicado, conteúdo com validação técnica, publicação, canal; portal (landing page) e e-mail | — |
-| **C2** · campanhas de comunicação | `CampanhaComunicacao`, público-alvo, material educativo | C1; Programas P3; Documentos para os arquivos |
+| **C2** · campanhas de comunicação | `CampanhaComunicacao`, público-alvo, material educativo | C1; Programas P3; Documentos D2 para os arquivos |
 | **C3** · educação em saúde | conteúdo e material nas ações educativas de Programas | C2; Programas P4; Território |
 | **C4** · educação permanente | conteúdo e material ligados ao `Treinamento` do RH; competências | C1 |
 | **C5** · multicanal | adaptadores de SMS, notificação, aplicativo e painel; consentimento e descadastro | C1; Integrações (#20) |
