@@ -2,7 +2,8 @@
 
 ## Status
 
-Aceita e implementada (backend + frontend — ver Consequências para o que ainda falta).
+Aceita e implementada (backend + frontend — ver Consequências para o que ainda falta). Ligada em `qaa`, `homologacao` e `prod` em
+2026-11-07 (v1.10.2), além do `dev`.
 
 ## Contexto
 

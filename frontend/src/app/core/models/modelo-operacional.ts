@@ -227,5 +227,17 @@ export interface LocaisDeRealizacaoDto {
   domicilioDescricao?: string | null;
 }
 
+/** Leitos autorizados de uma capacidade na unidade (ADR-0171). */
+export interface LimiteLeitosDto {
+  capacidadeId: string;
+  capacidadeCodigo: string;
+  capacidadeNome: string;
+  tiposDeLeito: string[];
+  ativos: number;
+  /** Sem valor, não há limite. */
+  autorizados?: number | null;
+  historico: { quantidade: number; motivo: string; registradoEm: string }[];
+}
+
 /** Rótulo do grupo das capacidades sem perfil. */
 export const GRUPO_TRANSVERSAL = 'Transversais';

@@ -4,7 +4,10 @@
 
 Aceita. **Aceita e completa a [ADR-0053](./0053-criterio-de-governanca-para-equipamentos-de-saude.md).** Desenho;
 cada fatia tem ADR própria. A MO1 (perfis e capacidades) foi implementada na
-[ADR-0117](./0117-modelo-operacional-perfis-e-capacidades.md); MO2 a MO4 vêm depois. O detalhe, com a matriz dos equipamentos,
+[ADR-0117](./0117-modelo-operacional-perfis-e-capacidades.md), a MO2 (serviços) na
+[ADR-0165](./0165-modelo-operacional-servicos-da-unidade.md) e a MO3 (ponto operacional) na
+[ADR-0166](./0166-modelo-operacional-ponto-operacional.md) e a MO4 (domínios consultam capacidades) na
+[ADR-0170](./0170-modelo-operacional-dominios-consultam-capacidades.md), que registra onde a consulta não se aplica. O detalhe, com a matriz dos equipamentos,
 está em [`equipamentos/MODELO-OPERACIONAL.md`](../equipamentos/MODELO-OPERACIONAL.md).
 
 ## Contexto

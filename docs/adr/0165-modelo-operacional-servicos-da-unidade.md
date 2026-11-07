@@ -18,8 +18,8 @@ Aceita e implementada. Fatia MO2 da camada 29, desenhada na [ADR-0115](./0115-mo
    descrição, ativo e capacidade exigida opcional.
    - Carga com 11 tipos: pronto-socorro, UTI, internação clínica, centro cirúrgico, centro obstétrico, sala de vacina,
      ambulatório, odontologia, farmácia, laboratório e diagnóstico por imagem.
-   - **A sala de vacina nasce sem capacidade exigida,** porque o catálogo da MO1 não tem capacidade de vacinação. Quando
-     tiver, o município aponta na tela.
+   - **A sala de vacina nasceu sem capacidade exigida.** Foi um engano: `SALA_VACINA` já existia. A
+     [ADR-0170](./0170-modelo-operacional-dominios-consultam-capacidades.md) corrigiu.
    - A odontologia aponta o diagnóstico bucal, porta de entrada do serviço. O município revisa.
    - **A capacidade exigida não muda enquanto houver serviço vigente do tipo** (422), para não deixar serviço incoerente.
 2. **Serviço da unidade** (`TB_SERVICO_UNIDADE`, `ORGANIZACAO.GERENCIAR`): tipo, nome, responsável, 24 horas ou horário.

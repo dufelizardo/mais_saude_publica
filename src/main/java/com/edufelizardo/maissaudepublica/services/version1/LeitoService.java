@@ -18,6 +18,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.LeitoMapa
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoLeito;
 import com.edufelizardo.maissaudepublica.models.enuns.StatusInternacao;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoEventoLeito;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoLeito;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoSetor;
 import com.edufelizardo.maissaudepublica.repositories.EventoLeitoRepository;
 import com.edufelizardo.maissaudepublica.repositories.InternacaoRepository;
@@ -47,6 +48,22 @@ public class LeitoService {
     public static final String GERENCIAR = "LEITO.GERENCIAR";
     static final String[] VER = {"INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA", GERENCIAR};
 
+    /** A capacidade que a unidade precisa ter para oferecer cada tipo de leito (ADR-0170). */
+    private static final Map<TipoLeito, String> CAPACIDADE_DO_TIPO = Map.of(
+            TipoLeito.CLINICO, "INTERNACAO_CLINICA",
+            TipoLeito.PEDIATRICO, "INTERNACAO_CLINICA",
+            TipoLeito.ISOLAMENTO, "INTERNACAO_CLINICA",
+            TipoLeito.CIRURGICO, "CIRURGIA",
+            TipoLeito.OBSTETRICO, "OBSTETRICIA",
+            TipoLeito.UTI_ADULTO, "UTI",
+            TipoLeito.UTI_PEDIATRICA, "UTI",
+            TipoLeito.UTI_NEONATAL, "UTI",
+            TipoLeito.OBSERVACAO, "OBSERVACAO");
+
+    public static String capacidadeDoTipo(TipoLeito tipo) {
+        return CAPACIDADE_DO_TIPO.get(tipo);
+    }
+
     @Autowired
     private LeitoRepository leitoRepository;
 
@@ -65,6 +82,21 @@ public class LeitoService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private ModeloOperacionalService modeloOperacionalService;
+
+    @Autowired
+    private LimiteLeitosService limiteLeitosService;
+
+    /** O tipo de leito pede a capacidade vigente na unidade (422). */
+    private void exigirCapacidade(UnidadeDeSaude unidade, TipoLeito tipo) {
+        String capacidade = capacidadeDoTipo(tipo);
+        if (!modeloOperacionalService.unidadeTemCapacidade(unidade.getUuid(), capacidade)) {
+            throw new ResourceUnprocessableEntityException(unidade.getNome() + " não tem a capacidade " + capacidade + ", exigida pelo leito "
+                    + tipo + "; inclua a capacidade em Equipamentos de Saúde.");
+        }
+    }
+
     @Transactional
     public LeitoMapaDto criar(LeitoRequestDto dto) {
         UnidadeDeSaude unidade = unidadeDeSaudeRepository.findById(dto.getUnidadeId()).orElseThrow(() -> new ResourceNotFoundException(
@@ -82,6 +114,11 @@ public class LeitoService {
         if (leitoRepository.existsByUnidade_UuidAndIdentificacaoIgnoreCase(unidade.getUuid(), identificacao)) {
             throw new ResourceConflictException("Já existe o leito " + identificacao + " nesta unidade.");
         }
+        exigirCapacidade(unidade, dto.getTipo());
+        boolean emUso = dto.getAtivo() == null || dto.getAtivo();
+        if (emUso) {
+            limiteLeitosService.conferir(unidade, dto.getTipo(), null);
+        }
         Leito l = new Leito();
         l.setUnidade(unidade);
         l.setSetor(setor);
@@ -89,7 +126,7 @@ public class LeitoService {
         l.setTipo(dto.getTipo());
         l.setSexo(dto.getSexo());
         l.setSituacao(SituacaoLeito.LIVRE);
-        l.setAtivo(dto.getAtivo() == null || dto.getAtivo());
+        l.setAtivo(emUso);
         l = leitoRepository.save(l);
         ContextoAuditoria.registro(l.getUuid());
         return LeitoMapaDto.fromLeito(l, null);
@@ -105,12 +142,19 @@ public class LeitoService {
                 && leitoRepository.existsByUnidade_UuidAndIdentificacaoIgnoreCase(l.getUnidade().getUuid(), identificacao)) {
             throw new ResourceConflictException("Já existe o leito " + identificacao + " nesta unidade.");
         }
+        if (dto.getTipo() != l.getTipo()) {
+            exigirCapacidade(l.getUnidade(), dto.getTipo());
+        }
         boolean ativo = dto.getAtivo() == null || dto.getAtivo();
         if (!ativo && l.getSituacao() == SituacaoLeito.OCUPADO) {
             throw new ResourceUnprocessableEntityException("O leito está ocupado; dê alta ou troque o paciente de leito antes de tirá-lo de uso.");
         }
         if (l.getSituacao() == SituacaoLeito.OCUPADO && dto.getSexo() != l.getSexo()) {
             throw new ResourceUnprocessableEntityException("O leito está ocupado; mude quem a enfermaria recebe depois da saída do paciente.");
+        }
+        boolean mudouDeCapacidade = !capacidadeDoTipo(dto.getTipo()).equals(capacidadeDoTipo(l.getTipo()));
+        if (ativo && (!l.isAtivo() || mudouDeCapacidade)) {
+            limiteLeitosService.conferir(l.getUnidade(), dto.getTipo(), l.getUuid());
         }
         l.setIdentificacao(identificacao);
         l.setTipo(dto.getTipo());

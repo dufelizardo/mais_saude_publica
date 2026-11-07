@@ -85,6 +85,7 @@ class LeitoInternacaoControllerTest {
     void seed() {
         limpar();
         hospital = unidade("Hospital");
+        CapacidadesDeTeste.habilitar(jdbc, hospital.getUuid(), "INTERNACAO_CLINICA");
         outra = unidade("Outro hospital");
         enfermaria = setorRepository.save(new Setor(hospital, PREFIXO + "Clínica médica", "LT-CM", TipoSetor.ASSISTENCIAL, true, null));
         setorRepository.save(new Setor(hospital, PREFIXO + "Faturamento", "LT-FAT", TipoSetor.ADMINISTRATIVO, true, null));
@@ -109,6 +110,7 @@ class LeitoInternacaoControllerTest {
             jdbc.update("delete from tb_leito where unidade_id = ?", u);
             jdbc.update("delete from tb_setor where unidade_id = ?", u);
         }
+        CapacidadesDeTeste.limpar(jdbc, PREFIXO);
         unidadeDeSaudeRepository.deleteAllById(unidades);
         pacienteRepository.deleteAll(pacienteRepository.findAll().stream()
                 .filter(p -> p.getNome() != null && p.getNome().startsWith(PREFIXO)).toList());

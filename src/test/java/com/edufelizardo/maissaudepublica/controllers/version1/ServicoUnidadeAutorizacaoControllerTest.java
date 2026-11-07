@@ -90,6 +90,7 @@ class ServicoUnidadeAutorizacaoControllerTest {
                 .filter(u -> u.getNome() != null && u.getNome().startsWith(PREFIXO)).map(UnidadeDeSaude::getUuid).toList();
         for (UUID u : unidades) {
             jdbc.update("delete from tb_servico_unidade where unidade_id = ?", u);
+            jdbc.update("delete from tb_unidade_capacidade_assistencial where unidade_id = ?", u);
         }
         for (String cpf : CPFS) {
             atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
@@ -123,6 +124,7 @@ class ServicoUnidadeAutorizacaoControllerTest {
 
     @Test
     void quemGerenciaAOrganizacaoIncluiGestorSoLeOutroGestorNaoAlcanca() throws Exception {
+        CapacidadesDeTeste.habilitar(jdbc, ubsA.getUuid(), "SALA_VACINA");
         String url = "/api/v1/unidade-saude/id/" + ubsA.getUuid();
         String corpo = "{\"tipoId\": \"%s\", \"nome\": \"Sala de vacina\"}".formatted(tipoRepository.findByCodigo("SALA_DE_VACINA").orElseThrow().getUuid());
 

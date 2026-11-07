@@ -4,8 +4,8 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-07 (release 1.10.2)
-- **Release em produção:** v1.10.2 (2026-11-07)
+- **Atualizado em:** 2026-11-07 (release 1.11.0)
+- **Release em produção:** v1.11.0 (2026-11-07)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
 - **Fontes:**
@@ -27,13 +27,13 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 
 | # | Domínio | Estado | Principal pendência |
 |---|---|---|---|
-| 1 | [Organização da Rede / Unidades](#1-organização-da-rede--unidades-de-saúde) | ✅ | mapa e coordenadas reais |
+| 1 | [Organização da Rede / Unidades](#1-organização-da-rede--unidades-de-saúde) | ✅ | CNES, consultórios e vagas da unidade |
 | 2 | [RH](#2-rh) | ✅ | banco de horas e horas realizadas |
 | 3 | [Administrativo](#3-administrativo) | ✅ | teste de tela de Necessidades de pessoal |
 | 4 | [Atendimento](#4-atendimento) | ✅ | atividades coletivas |
-| 5 | [Paciente / Cidadão](#5-paciente--cidadão) | ✅ | abas Programas, Vacinação e Anexos |
+| 5 | [Paciente / Cidadão](#5-paciente--cidadão) | ✅ | aba Anexos (Documentos) e indicador de risco |
 | 6 | [Prontuário](#6-prontuário--histórico-clínico) | ✅ | ligar o vínculo assistencial nos ambientes |
-| 7 | [Agendamento / Agenda](#7-agendamento--agenda) | ✅ | visão Mês e programas na marcação |
+| 7 | [Agendamento / Agenda](#7-agendamento--agenda) | ✅ | visão Mês e exportação |
 | 8 | [Enfermagem](#8-enfermagem) | ✅ | plano de cuidados e aprazamento |
 | 9 | [Farmácia](#9-farmácia) | ✅ | — |
 | 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | 🟡 | exames de imagem e laudo assinado |
@@ -46,7 +46,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI4 feitas (Sala de Situação e relatórios); falta a BI5 |
-| 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar o login fora do `dev`; integrações |
+| 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1, V2 e V4 (vetores, animais e ambiental) feitas; sanitária e trabalhador (V3, V5) |
@@ -55,11 +55,11 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 feita (comunicado, conteúdo, portal e e-mail); fatias C2 a C6 |
-| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | 🟡 | MO1 a MO3 feitas; falta a MO4 |
+| 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 13 ✅ · 11 🟡 · 1 📐 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 14 ✅ · 11 🟡 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,11 +68,16 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
+| BI5 | 19 Indicadores e BI | painel por coordenação e regional (protótipo `Coordenacoes.html`) |
+| C2 | 28 Comunicação | campanhas de comunicação, sem os arquivos dos materiais, que dependem de Documentos |
+| C4 | 28 Comunicação | conteúdo ligado ao `Treinamento` do RH e competências |
+
+**Precisam de desenho (ADR) antes:** Documentos, regulação de urgência (11), Estoque (13), Transporte (16) e Gestão da Rede (30).
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
 ```text
-MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade emergencial) · MO2 ✅ → MO4
+MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade emergencial) · MO2 ✅ · MO4 ✅
 MO3 ✅ ──► SAMU (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
@@ -89,7 +94,8 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6a ✅ ──► E6b ✅
-C1 ✅ ──► C2 · C4 · C5
+C1 ✅ ──► C2 ──► C3 · C6
+C1 ✅ ──► C4 · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
 
@@ -147,7 +153,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - [ ] Exportar e importar profissionais.
 - [ ] Modelos de jornada cadastráveis pelo usuário.
 - [ ] Conteúdo e material didático ligados aos treinamentos (domínio 28, C4).
-- [ ] Turnos fora da lotação por mobilização em emergência ativa, como exceção controlada (domínio 27, E3).
+- [x] Turnos fora da lotação por mobilização em emergência ativa, como exceção controlada (domínio 27, E3, [ADR-0158](./adr/0158-emergencias-coordenacao.md)).
 - [ ] Confirmação do plantonista e troca pedida pelo próprio profissional.
 - [ ] Recorrência de escala e adicional noturno.
 - [ ] Agenda lendo a escala.
@@ -178,7 +184,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 **Falta:**
 - [x] Especialidade no atendimento, do catálogo, herdada da marcação (ADR-0134; serve a todas as especialidades).
-- [ ] Local de realização do atendimento (domicílio, via pública, local do evento, unidade móvel), item 29, MO3.
+- [x] Local de realização do atendimento (domicílio, via pública, local do evento, ponto da unidade), item 29, MO3 ([ADR-0166](./adr/0166-modelo-operacional-ponto-operacional.md)).
 - [ ] Atividades coletivas: vacinação aberta, coleta com vários pacientes, reunião, capacitação. O grupo e a visita
   do programa já são ações programáticas (domínio 22, P4, ADR-0132); falta o registro do atendimento coletivo.
 
@@ -191,10 +197,10 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - Tela Pacientes com lista, detalhe e prontuário (ADR-0052).
 
 **Falta:**
-- [ ] Aba Programas, indicador "Em programas de saúde" e filtro por programa (domínio 22, P2).
-- [ ] Aba Vacinação: depende do domínio 24, Imunização.
+- [x] Aba Programas, indicador "Em programas de saúde" e filtro por programa (domínio 22, P2).
+- [x] Aba Vacinação, com a caderneta (domínio 24, Imunização).
 - [ ] Aba Anexos (domínio Documentos).
-- [ ] Vínculo do paciente com a unidade: vem pela adscrição (domínio 21, F3).
+- [x] Vínculo do paciente com a unidade, pela adscrição (domínio 21, F3).
 - [ ] Indicador de risco: precisa de uma agregação sobre a triagem mais recente.
 
 ### 6. Prontuário / Histórico Clínico
@@ -308,7 +314,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - [ ] Censo diário formal.
 - [ ] Prescrição e dieta hospitalar.
 - [ ] Restrição de leito por idade (pediátrico, neonatal).
-- [ ] Leitos extras ativáveis em emergência (domínio 27, E3; sobre a capacidade do item 29, MO1).
+- [x] Limite de leitos autorizados por capacidade, mantido pela gestão ([ADR-0171](./adr/0171-limite-de-leitos-por-capacidade.md)).
+- [x] Leitos extras ativáveis em emergência, como quantidade ativada (domínio 27, E3, [ADR-0158](./adr/0158-emergencias-coordenacao.md)).
 - [ ] Modalidade da internação (voluntária, involuntária, compulsória) e comunicação ao Ministério Público em 72h na
   involuntária, pela Lei 10.216/2001 (domínio 26, SM3).
 - [ ] Sincronização com os leitos do CNES.
@@ -665,8 +672,8 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   prazo e retorno intersetorial), com metas, série e Sala de Situação.
 
 **Falta:**
-- [ ] **SM3 · o que ficou:** a notificação de violência autoprovocada no sistema (depende da Vigilância V1) e o
-  acionamento do SAMU (depende da regulação de urgência).
+- [ ] **SM3 · o que ficou:** o acionamento do SAMU (depende da regulação de urgência). A notificação de violência autoprovocada
+  já sai da crise pela Vigilância ([ADR-0124](./adr/0124-vigilancia-epidemiologica-fundacao.md)).
 - [ ] CAPS de referência por território e a produção do CAPS para o faturamento (RAAS, depende do domínio 20), depois da
   SM5 (ADR-0153).
 - [ ] A guia de encaminhamento intersetorial para imprimir (depende de Documentos).
@@ -713,7 +720,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 - [ ] **E4 · Integração da rede:** redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas,
   pacientes deslocados; Estoque e Transporte quando existirem.
 - [ ] Ambulâncias da estrutura como veículos (depende de Transporte) e hospital de campanha com leitos próprios.
-- [ ] Comunicação de risco à população: feita pelo domínio 28 (comunicado emergencial).
+- [x] Comunicação de risco à população, pelo comunicado emergencial (domínio 28, [ADR-0168](./adr/0168-comunicacao-basica.md)).
 
 ### 28. Comunicação e Educação em Saúde
 
@@ -754,9 +761,9 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   (domicílio do cadastro ou descrito, via pública, evento, escola, ponto da unidade); pontos da unidade como histórico; base,
   rotas programadas e localização informada da unidade móvel, que é a unidade com o perfil Atenção móvel. Aba Pontos em
   Equipamentos e campo na gaveta do Atendimento. Sem GPS.
-
-**Falta:**
-- [ ] **MO4 · Domínios consultam capacidades:** Leitos, Agenda, Saúde Mental, Saúde Bucal, Emergências.
+- [x] **MO4 · Domínios consultam capacidades** ([ADR-0170](./adr/0170-modelo-operacional-dominios-consultam-capacidades.md)): cada tipo de leito pede
+  a sua capacidade, a capacidade não encerra com leito ativo, leito emergencial pede internação ou observação, e a sala de vacina
+  exige `SALA_VACINA`. Saúde Mental, Saúde Bucal e Agenda ficam como estão, por decisão registrada.
 
 ### 30. Gestão da Rede de Atenção
 
