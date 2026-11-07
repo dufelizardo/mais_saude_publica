@@ -8,3 +8,9 @@ resources:
   - service-postgres.yaml
   - postgres-pvc.yaml
   - ingress.yaml
+  - deployment-mdns.yaml
+
+configMapGenerator:
+  - name: mdns-anunciador
+    files:
+      - mdns/anunciador.py

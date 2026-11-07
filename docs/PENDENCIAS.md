@@ -5,7 +5,7 @@ para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou ab
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.10.0, promovida em 2026-11-06). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.10.1, promovida em 2026-11-07). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -23,6 +23,9 @@ O que isso significa:
 - **A auditoria grava em todos os ambientes.** Sem login, os eventos ficam sem a pessoa (CPF vazio).
 - **Cada item depende do anterior:** o vínculo só age com a permissão ligada, e a permissão só com o
   login ligado.
+
+Na rede de casa, cada ambiente abre sem configurar o aparelho em `http://maissaudepublica-dev.local`, `-qaa.local`, `-cert.local` e
+`http://maissaudepublica.local` ([ADR-0169](./adr/0169-nomes-amigaveis-na-rede-local.md)). O nome chega a cada ambiente com a promoção.
 
 ## 2. Para ligar, nesta ordem
 
