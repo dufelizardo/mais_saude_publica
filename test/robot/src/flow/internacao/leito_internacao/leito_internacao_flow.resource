@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../pom/internacao/leito_internacao/leito_internacao_pom.resource
 Resource    ../../setor/create_setor/create_setor_flow.resource
+Resource    ../../equipamentos/modelo_operacional/modelo_operacional_flow.resource
 Resource    ../../paciente/create_paciente/create_paciente_flow.resource
 Resource    ../../profissional/get_profissional_by_matricula/get_profissional_by_matricula_flow.resource
 Resource    ../../common/schema_validation_flow.resource
@@ -21,11 +22,21 @@ Seed Um Leito
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+Habilitar Internacao Na Unidade
+    [Documentation]    Gives the unit the inpatient profile and capability that a clinical bed requires (ADR-0170).
+    [Arguments]    ${unidadeId}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Incluir Perfil Por Codigo    ${unidadeId}    INTERNACAO
+    Incluir Capacidade Por Codigo    ${unidadeId}    INTERNACAO_CLINICA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Seed Um Leito No Setor
     [Documentation]    Creates a bed in the given sector and returns its uuid.
     [Arguments]    ${unidadeId}    ${setorId}    ${sexo}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    Habilitar Internacao Na Unidade    ${unidadeId}
     ${payload}=    Create Dictionary    unidadeId=${unidadeId}    setorId=${setorId}    identificacao=Robot Leito ${sufixo}    tipo=CLINICO    sexo=${sexo}
     ${response}=    POST Create Leito    ${payload}
     Should Be Equal As Integers    ${response.status_code}    201
@@ -50,6 +61,7 @@ Leito - Criar - Status Code 201
     [Documentation]    Creates a bed, free, with a valid schema.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${setorId}    ${codigo}    ${unidadeId}=    Seed A Setor    ASSISTENCIAL
+    Habilitar Internacao Na Unidade    ${unidadeId}
     ${payload}=    Create Dictionary    unidadeId=${unidadeId}    setorId=${setorId}    identificacao=Enf. 1 · Leito 01    tipo=CLINICO    sexo=FEMININO
     ${response}=    POST Create Leito    ${payload}
     Should Be Equal As Integers    ${response.status_code}    201
@@ -57,6 +69,27 @@ Leito - Criar - Status Code 201
     Should Be Equal    ${response.json()}[situacao]    LIVRE
     ${repetido}=    POST Create Leito    ${payload}
     Should Be Equal As Integers    ${repetido.status_code}    409
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Leito - Criar - Status Code 422 - Sem Capacidade
+    [Documentation]    A UTI bed needs the UTI capability; the capability only ends after the bed.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${setorId}    ${codigo}    ${unidadeId}=    Seed A Setor    ASSISTENCIAL
+    ${payload}=    Create Dictionary    unidadeId=${unidadeId}    setorId=${setorId}    identificacao=UTI 01    tipo=UTI_ADULTO    sexo=MISTO
+    ${recusado}=    POST Create Leito    ${payload}
+    Should Be Equal As Integers    ${recusado.status_code}    422
+    Should Contain    ${recusado.json()}[message]    UTI
+    Incluir Perfil Por Codigo    ${unidadeId}    INTERNACAO
+    ${capacidade}=    Incluir Capacidade Por Codigo    ${unidadeId}    UTI
+    Should Be Equal As Integers    ${capacidade.status_code}    200
+    ${criado}=    POST Create Leito    ${payload}
+    Should Be Equal As Integers    ${criado.status_code}    201
+    ${modelo}=    GET Modelo Operacional Unidade    ${unidadeId}
+    ${associacao}=    Associacao Por Codigo    ${modelo.json()}    capacidades    UTI
+    ${motivo}=    Create Dictionary    motivo=Fim da habilitação
+    ${preso}=    POST Encerrar Na Unidade    ${unidadeId}    capacidade    ${associacao}    ${motivo}
+    Should Be Equal As Integers    ${preso.status_code}    422
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -197,6 +230,7 @@ Leito Internacao - By HTTP Status Code
     [Arguments]    ${meuHTTP}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Run Keyword If    '${meuHTTP}' == '201-leito'    Leito - Criar - Status Code 201
+    ...    ELSE IF    '${meuHTTP}' == '422-capacidade'    Leito - Criar - Status Code 422 - Sem Capacidade
     ...    ELSE IF    '${meuHTTP}' == '422-leito'    Leito - Criar - Status Code 422 - Setor Nao Assistencial
     ...    ELSE IF    '${meuHTTP}' == '201-internacao'    Internacao - Criar - Status Code 201
     ...    ELSE IF    '${meuHTTP}' == '422-sexo'    Internacao - Criar - Status Code 422 - Sexo Incompativel

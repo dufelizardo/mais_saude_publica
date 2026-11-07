@@ -14,6 +14,7 @@ UI Leitos - Seed Leito Com Nome
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
     ${identificacao}=    Set Variable    UI Leito ${sufixo}
+    Habilitar Internacao Na Unidade    ${unidadeId}
     ${payload}=    Create Dictionary    unidadeId=${unidadeId}    setorId=${setorId}    identificacao=${identificacao}    tipo=CLINICO    sexo=${sexo}
     ${response}=    POST Create Leito    ${payload}
     Should Be Equal As Integers    ${response.status_code}    201
