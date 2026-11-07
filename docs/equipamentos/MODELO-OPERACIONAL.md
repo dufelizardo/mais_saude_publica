@@ -1,9 +1,9 @@
 # Modelo Operacional dos Equipamentos de Saúde
 
-**Data:** 2026-10-07 (criado) · 2026-10-17 (MO1 implementada)
+**Data:** 2026-10-07 (criado) · 2026-10-17 (MO1 implementada) · 2026-11-06 (MO2 e MO3 implementadas)
 **Status:** desenho aprovado na [ADR-0115](../adr/0115-modelo-operacional-dos-equipamentos.md), que aceita e completa
-a [ADR-0053](../adr/0053-criterio-de-governanca-para-equipamentos-de-saude.md). **A MO1 (perfis e capacidades) está
-implementada** na [ADR-0117](../adr/0117-modelo-operacional-perfis-e-capacidades.md); MO2 a MO4 vêm depois (seção 9).
+a [ADR-0053](../adr/0053-criterio-de-governanca-para-equipamentos-de-saude.md). **MO1 a MO3 estão
+implementadas** nas ADRs [0117](../adr/0117-modelo-operacional-perfis-e-capacidades.md), [0165](../adr/0165-modelo-operacional-servicos-da-unidade.md) e [0166](../adr/0166-modelo-operacional-ponto-operacional.md); falta a MO4 (seção 9).
 
 > **Não estamos só modelando tipos de equipamentos; estamos modelando modos de operação diferentes dentro de uma
 > mesma rede.** O equipamento define o contexto e as capacidades; os domínios definem os processos de negócio.

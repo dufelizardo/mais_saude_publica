@@ -129,8 +129,8 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0111](./0111-saude-bucal.md) | Saúde Bucal: domínio assistencial especializado | Aceita e implementada (SB1 a SB5 nas ADRs 0134 a 0140) |
 | [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; SM1 a SM4 nas ADRs 0120 a 0123, SM5 na 0153 e SM6 na 0155; domínio completo) |
 | [0113](./0113-emergencias-e-desastres.md) | Gestão de Emergências e Desastres: coordenação extraordinária | Aceita (desenho; E1 a E3 nas ADRs 0156 a 0158, E5 na 0159 e E6 nas 0160 e 0161; E4 a fazer) |
-| [0114](./0114-comunicacao-e-educacao-em-saude.md) | Comunicação e Educação em Saúde: domínio futuro | Aceita (desenho; implementação nas fatias C1 a C6) |
-| [0115](./0115-modelo-operacional-dos-equipamentos.md) | Modelo Operacional dos Equipamentos e reconciliação do mapa (#29 a #31) | Aceita (desenho; MO1 na ADR-0117, MO2 a MO4 a fazer) |
+| [0114](./0114-comunicacao-e-educacao-em-saude.md) | Comunicação e Educação em Saúde: domínio próprio | Aceita (desenho; C1 na ADR-0168; C2 a C6 a fazer) |
+| [0115](./0115-modelo-operacional-dos-equipamentos.md) | Modelo Operacional dos Equipamentos e reconciliação do mapa (#29 a #31) | Aceita (desenho; MO1 a MO3 nas ADRs 0117, 0165 e 0166; MO4 a fazer) |
 | [0116](./0116-marco-mapa-de-dominios-fechado.md) | Marco: mapa de domínios fechado e regra para novos domínios | Aceita |
 | [0117](./0117-modelo-operacional-perfis-e-capacidades.md) | Modelo operacional: perfis e capacidades da unidade (MO1) | Aceita e implementada |
 | [0118](./0118-programas-catalogo.md) | Programas de saúde: catálogo (P1) | Aceita e implementada |
@@ -157,7 +157,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0139](./0139-saude-bucal-tratamento-protetico.md) | Saúde Bucal: tratamento protético (SB4b) | Aceita e implementada |
 | [0140](./0140-saude-bucal-coletiva.md) | Saúde Bucal: saúde bucal coletiva (SB5) | Aceita e implementada |
 | [0141](./0141-programas-metas-e-indicadores.md) | Programas: metas e indicadores programáticos (P6) | Aceita e implementada |
-| [0142](./0142-indicadores-bi-e-gestao.md) | Indicadores, BI e Gestão: camada de leitura (domínio 19) | Aceita (desenho; BI1 a BI3 nas ADRs 0143, 0144 e 0146; BI4 e BI5 a fazer) |
+| [0142](./0142-indicadores-bi-e-gestao.md) | Indicadores, BI e Gestão: camada de leitura (domínio 19) | Aceita (desenho; BI1 a BI4 nas ADRs 0143, 0144, 0146 e 0167; BI5 a fazer) |
 | [0143](./0143-bi-producao-assistencial.md) | Indicadores e BI: produção assistencial por unidade (BI1) | Aceita e implementada |
 | [0144](./0144-bi-situacao-operacional.md) | Indicadores e BI: situação operacional (BI2) | Aceita e implementada |
 | [0145](./0145-saude-da-aplicacao-para-o-kubernetes.md) | Saúde da aplicação para as verificações do Kubernetes | Aceita e implementada |
