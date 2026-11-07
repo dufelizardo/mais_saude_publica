@@ -29,6 +29,10 @@ configMapGenerator:
       # Exigir permissao por perfil e unidade (ADR-0067) fica DESLIGADO ate os acessos serem
       # concedidos — ver docs/acesso/GUIA-LIGAR-AUTORIZACAO.md antes de acrescentar
       # APP_SECURITY_AUTHORIZATION_ENABLED=true aqui.
+  - name: mdns-config
+    literals:
+      # Nome amigável na rede local (ADR-0169).
+      - MDNS_NOME=maissaudepublica-dev.local
   - name: db-config
     literals:
       - POSTGRES_DB=saudepublica_dev

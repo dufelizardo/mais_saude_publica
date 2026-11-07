@@ -24,6 +24,9 @@ O que isso significa:
 - **Cada item depende do anterior:** o vínculo só age com a permissão ligada, e a permissão só com o
   login ligado.
 
+Na rede de casa, cada ambiente abre sem configurar o aparelho em `http://maissaudepublica-dev.local`, `-qaa.local`, `-cert.local` e
+`http://maissaudepublica.local` ([ADR-0169](./adr/0169-nomes-amigaveis-na-rede-local.md)). O nome chega a cada ambiente com a promoção.
+
 ## 2. Para ligar, nesta ordem
 
 O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGAR-AUTORIZACAO.md).
