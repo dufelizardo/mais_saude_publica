@@ -15,10 +15,13 @@ import { CapacidadeAdministrativaService } from '../../../core/services/capacida
 import { PerfilAdministrativoService } from '../../../core/services/perfil-administrativo';
 import { PerfilPorTipoUnidadeService } from '../../../core/services/perfil-por-tipo-unidade';
 import { ProcessoAdministrativoService } from '../../../core/services/processo-administrativo';
+import { TipoDocumentoDto } from '../../../core/models/documento';
+import { DocumentoService } from '../../../core/services/documento';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { TiposDeDocumento } from './tipos-de-documento';
 import { proximaAba } from '../../../shared/formato';
 
-type Aba = 'capacidades' | 'processos' | 'perfis' | 'tipos';
+type Aba = 'capacidades' | 'processos' | 'perfis' | 'tipos' | 'documentos';
 
 type Gaveta =
   | { tipo: 'capacidade'; item: CapacidadeAdministrativaResponseDto | null }
@@ -46,7 +49,7 @@ const TIPOS_UNIDADE: { valor: TipoUnidadeDeSaude; rotulo: string }[] = [
  */
 @Component({
   selector: 'app-modelo-administrativo',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, Drawer, TiposDeDocumento],
   templateUrl: './modelo-administrativo.html',
 })
 export class ModeloAdministrativo {
@@ -56,6 +59,7 @@ export class ModeloAdministrativo {
   private readonly processoService = inject(ProcessoAdministrativoService);
   private readonly perfilService = inject(PerfilAdministrativoService);
   private readonly mapeamentoService = inject(PerfilPorTipoUnidadeService);
+  private readonly documentoService = inject(DocumentoService);
   private readonly route = inject(ActivatedRoute);
 
   protected readonly tiposUnidade = TIPOS_UNIDADE;
@@ -64,12 +68,14 @@ export class ModeloAdministrativo {
     { id: 'processos', rotulo: 'Processos' },
     { id: 'perfis', rotulo: 'Perfis administrativos' },
     { id: 'tipos', rotulo: 'Perfil por tipo de unidade' },
+    { id: 'documentos', rotulo: 'Tipos de documento' },
   ];
 
   protected readonly capacidades = signal<CapacidadeAdministrativaResponseDto[]>([]);
   protected readonly processos = signal<ProcessoAdministrativoResponseDto[]>([]);
   protected readonly perfis = signal<PerfilAdministrativoResponseDto[]>([]);
   protected readonly mapeamentos = signal<PerfilPorTipoUnidadeResponseDto[]>([]);
+  protected readonly tiposDeDocumento = signal<TipoDocumentoDto[]>([]);
   protected readonly carregando = signal(true);
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
 
@@ -90,7 +96,7 @@ export class ModeloAdministrativo {
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     const aba = this.route.snapshot.queryParamMap.get('aba');
-    if (aba === 'processos' || aba === 'perfis' || aba === 'tipos') this.aba.set(aba);
+    if (aba === 'processos' || aba === 'perfis' || aba === 'tipos' || aba === 'documentos') this.aba.set(aba);
     this.carregar();
   }
 
@@ -101,11 +107,13 @@ export class ModeloAdministrativo {
       processos: this.processoService.listar().pipe(catchError(() => of([]))),
       perfis: this.perfilService.listar().pipe(catchError(() => of([]))),
       mapeamentos: this.mapeamentoService.listar().pipe(catchError(() => of([]))),
+      tiposDeDocumento: this.documentoService.tipos().pipe(catchError(() => of([]))),
     }).subscribe((r) => {
       this.capacidades.set(r.capacidades);
       this.processos.set(r.processos);
       this.perfis.set(r.perfis);
       this.mapeamentos.set(r.mapeamentos);
+      this.tiposDeDocumento.set(r.tiposDeDocumento);
       this.carregando.set(false);
     });
   }
@@ -162,7 +170,14 @@ export class ModeloAdministrativo {
   }));
 
   protected contagem(aba: Aba): number {
-    return { capacidades: this.capacidades().length, processos: this.processos().length, perfis: this.perfis().length, tipos: this.mapeamentos().length }[aba];
+    return { capacidades: this.capacidades().length, processos: this.processos().length, perfis: this.perfis().length, tipos: this.mapeamentos().length, documentos: this.tiposDeDocumento().length }[aba];
+  }
+
+  protected tipoDeDocumentoSalvo(nome: string): void {
+    this.toast.set({ titulo: 'Tipo de documento salvo', detalhe: nome });
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+    this.carregar();
   }
 
   protected rotuloTipo(t: TipoUnidadeDeSaude): string {
@@ -235,7 +250,7 @@ export class ModeloAdministrativo {
   }
 
   protected rotuloNovo(): string {
-    return { capacidades: 'Nova capacidade', processos: 'Novo processo', perfis: 'Novo perfil', tipos: 'Definir perfil' }[this.aba()];
+    return { capacidades: 'Nova capacidade', processos: 'Novo processo', perfis: 'Novo perfil', tipos: 'Definir perfil', documentos: '' }[this.aba()];
   }
 
   // ── Salvar ─────────────────────────────────────────────────────────────────────────────────────

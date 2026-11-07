@@ -127,6 +127,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("INTERNACAO.CONSULTAR", new Def("Ver o mapa de leitos e as internações", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.GERENCIAR", new Def("Internar e trocar paciente de leito", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.ALTA", new Def("Dar alta da internação (ato médico)", ACESSO_AO_DADO_DE_SAUDE));
+        // Documentos (ADR-0172): anexar não dá direito de abrir; abrir segue o prontuário.
+        PERMISSOES.put("DOCUMENTO.ANEXAR", new Def("Anexar documentos ao paciente, enviar versões e retirar", OPERACAO));
         PERMISSOES.put("LEITO.GERENCIAR", new Def("Cadastrar, bloquear e liberar leitos", OPERACAO));
         // Quem cadastra leitos não muda o limite (ADR-0171): o número é da gestão.
         PERMISSOES.put("LEITO.AUTORIZAR", new Def("Definir quantos leitos a unidade tem autorizados por capacidade", OPERACAO));
@@ -152,7 +154,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "LEITO.AUTORIZAR")));
         PAPEIS.put("GESTOR", new PapelPadrao("Gestor",
                 "Gestão de RH, setor administrativo, estoque e acessos no seu escopo.",
-                List.of("ACESSO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR", "ADMINISTRATIVO.CONSULTAR",
+                List.of("DOCUMENTO.ANEXAR", "ACESSO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR", "ADMINISTRATIVO.CONSULTAR",
                         "ADMINISTRATIVO.GERENCIAR", "PACIENTE.CONSULTAR", "FARMACIA.CONSULTAR", "EQUIPE.GERENCIAR",
                         "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
                         "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR",
@@ -160,13 +162,13 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "CONTEUDO.REVISAR", "LEITO.AUTORIZAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
-                List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
                         "REGULACAO.CONSULTAR",
                         // Informar a família onde o paciente está internado (ADR-0098).
                         "INTERNACAO.CONSULTAR")));
         PAPEIS.put("MEDICO", new PapelPadrao("Médico",
                 "Consulta, prescrição e procedimentos.",
-                List.of("PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
                         "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
                         "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
@@ -176,7 +178,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR")));
         PAPEIS.put("ENFERMEIRO", new PapelPadrao("Enfermeiro",
                 "Classificação de risco, evolução, procedimentos e medicação.",
-                List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
                         "EVOLUCAO.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
                         // Pedido de exames em protocolos da atenção básica e do pré-natal (ADR-0093).
                         "EXAME.SOLICITAR", "LABORATORIO.COLETAR",
@@ -216,11 +218,11 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Saúde Mental (ADR-0120): as funções já existiam nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("PSICOLOGO", new PapelPadrao("Psicólogo",
                 "Acolhimento e acompanhamento em saúde mental; lê o prontuário com vínculo.",
-                List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
                         "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
         PAPEIS.put("ASSISTENTE_SOCIAL", new PapelPadrao("Assistente social",
                 "Acolhimento e acompanhamento psicossocial; lê o prontuário com vínculo e mantém o catálogo intersetorial.",
-                List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
                         "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR", "INTERSETORIAL.GERENCIAR")));
         // Vigilância epidemiológica (ADR-0124): investiga com acesso ao prontuário; o detalhe dos agravos sensíveis é dela.
         PAPEIS.put("VIGILANCIA_EPIDEMIOLOGICA", new PapelPadrao("Vigilância epidemiológica",

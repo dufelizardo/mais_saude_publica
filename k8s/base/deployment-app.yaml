@@ -14,6 +14,10 @@ spec:
       labels:
         app: mais-saude-app
     spec:
+      volumes:
+        - name: documentos
+          persistentVolumeClaim:
+            claimName: documentos-data
       containers:
         - name: app
           image: ghcr.io/dufelizardo/mais_saude_publica:developer
@@ -23,7 +27,13 @@ spec:
           envFrom:
             - configMapRef:
                 name: app-config
+          volumeMounts:
+            - name: documentos
+              mountPath: /dados/documentos
           env:
+            # Os arquivos dos documentos ficam no volume próprio (ADR-0172).
+            - name: APP_DOCUMENTOS_DIRETORIO
+              value: /dados/documentos
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:

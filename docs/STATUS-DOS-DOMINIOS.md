@@ -31,7 +31,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 2 | [RH](#2-rh) | ✅ | banco de horas e horas realizadas |
 | 3 | [Administrativo](#3-administrativo) | ✅ | teste de tela de Necessidades de pessoal |
 | 4 | [Atendimento](#4-atendimento) | ✅ | atividades coletivas |
-| 5 | [Paciente / Cidadão](#5-paciente--cidadão) | ✅ | aba Anexos (Documentos) e indicador de risco |
+| 5 | [Paciente / Cidadão](#5-paciente--cidadão) | ✅ | indicador de risco |
 | 6 | [Prontuário](#6-prontuário--histórico-clínico) | ✅ | ligar o vínculo assistencial nos ambientes |
 | 7 | [Agendamento / Agenda](#7-agendamento--agenda) | ✅ | visão Mês e exportação |
 | 8 | [Enfermagem](#8-enfermagem) | ✅ | plano de cuidados e aprazamento |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 14 ✅ · 11 🟡 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 14 ✅ · 11 🟡 · 6 ⬜ (e Documentos 🟡). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -69,10 +69,10 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 | BI5 | 19 Indicadores e BI | painel por coordenação e regional (protótipo `Coordenacoes.html`) |
-| C2 | 28 Comunicação | campanhas de comunicação, sem os arquivos dos materiais, que dependem de Documentos |
+| C2 | 28 Comunicação | campanhas de comunicação, sem os arquivos dos materiais, que dependem de Documentos D2 |
 | C4 | 28 Comunicação | conteúdo ligado ao `Treinamento` do RH e competências |
 
-**Precisam de desenho (ADR) antes:** Documentos, regulação de urgência (11), Estoque (13), Transporte (16) e Gestão da Rede (30).
+**Precisam de desenho (ADR) antes:** regulação de urgência (11), Estoque (13), Transporte (16) e Gestão da Rede (30).
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -103,7 +103,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 | Pré-requisito ainda sem desenho | Fatias que espera |
 |---|---|
-| Documentos | V3 (autos da VISA), C2 (arquivos dos materiais) |
+| Documentos D2 | V3 (autos da VISA), C2 (arquivos dos materiais) |
 | Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
 | Estoque (13) e Transporte (16) | E4 (insumos e veículos), SAMU |
 | Regulação de urgência (11) | SM3 (acionar SAMU), E4 |
@@ -199,7 +199,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 **Falta:**
 - [x] Aba Programas, indicador "Em programas de saúde" e filtro por programa (domínio 22, P2).
 - [x] Aba Vacinação, com a caderneta (domínio 24, Imunização).
-- [ ] Aba Anexos (domínio Documentos).
+- [x] Aba Anexos ([ADR-0172](./adr/0172-documentos-anexos.md)).
 - [x] Vínculo do paciente com a unidade, pela adscrição (domínio 21, F3).
 - [ ] Indicador de risco: precisa de uma agregação sobre a triagem mais recente.
 
@@ -800,9 +800,11 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 - [ ] Unificar os catálogos de Regulação (`ProcedimentoRegulado`), Laboratório (`ExameLaboratorial`) e o catálogo
   geral de procedimentos (ADR-0136).
 
-**Domínio "Documentos"** (⬜): anexos e documentos formais reaproveitáveis por qualquer domínio, com versão,
+**Domínio "Documentos"** (🟡): anexos e documentos formais reaproveitáveis por qualquer domínio, com versão,
 aprovação e assinatura.
-- [ ] Desenho e implementação. A aba Anexos de Pacientes depende disso.
+- [x] **D1 · Anexos do paciente** ([ADR-0172](./adr/0172-documentos-anexos.md)): tipos, versões com hash, retirada, volume próprio e aba Anexos.
+- [ ] **D2:** outros donos (materiais da C2, autos da Vigilância). **D3:** guias para imprimir. **D4:** aprovação e assinatura digital.
+- [ ] Backup do volume de documentos, antes de dado real.
 
 **Testes:**
 - [ ] Testes Robot de tela das telas antigas (adiados por decisão do usuário): Necessidades de pessoal, RH (Cargos
