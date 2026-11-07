@@ -5,7 +5,7 @@ para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou ab
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.10.0, promovida em 2026-11-06). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.10.1, promovida em 2026-11-07). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
