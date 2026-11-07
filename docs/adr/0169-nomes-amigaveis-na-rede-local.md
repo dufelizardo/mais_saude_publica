@@ -39,8 +39,8 @@ Aceita e implementada. Complementa a [ADR-0012](./0012-infraestrutura-local-k3s-
 
 - **Qualquer aparelho no Wi-Fi abre o sistema pelo nome,** sem mexer no aparelho nem no modem.
 - **Só na rede de casa:** o IP é interno. Acesso de fora pede túnel ou domínio próprio.
-- **Abrir o nome não é o mesmo que ter acesso:** `qaa`, `homologacao` e `prod` seguem sem login (`PENDENCIAS.md`, seção 1), então quem
-  está no Wi-Fi entra e faz tudo. Aceitável enquanto os dados forem fictícios; com dado real, o login vem antes.
+- **Abrir o nome não é o mesmo que ter acesso:** os quatro ambientes pedem login desde 2026-11-07; a exigência de permissão ainda
+  está desligada (`PENDENCIAS.md`, seção 1).
 - **Limites conhecidos:** Android antigo pode não resolver `.local`, e alguns roteadores bloqueiam multicast entre aparelhos. O `hosts`
   segue como alternativa.
 - **Só responde IPv4:** a pergunta por IPv6 fica sem resposta, e o aparelho usa o IPv4.

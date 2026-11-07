@@ -22,6 +22,9 @@ configMapGenerator:
       - JAVA_TOOL_OPTIONS=-Xmx384m
       - DATABASE_URL=jdbc:postgresql://postgres:5432/saudepublica_qaa
       - DATABASE_USERNAME=postgres
+      # Exige login (ADR-0055); o secret app-secrets foi provisionado neste namespace.
+      # A exigência de permissão segue desligada: ver docs/acesso/GUIA-LIGAR-AUTORIZACAO.md.
+      - APP_SECURITY_ENABLED=true
   - name: mdns-config
     literals:
       # Nome amigável na rede local (ADR-0169).
