@@ -172,13 +172,16 @@ class ServicoUnidadeControllerTest {
 
     @Test
     void tipoSemCapacidadeNoCatalogoEntraEmQualquerUnidade() throws Exception {
-        incluir(hospital.getUuid(), tipo("SALA_DE_VACINA"), "Sala de vacina").andExpect(status().isOk());
+        String r = mockMvc.perform(post(TIPO).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"codigo\": \"%sLIVRE\", \"nome\": \"Sem exigência\"}".formatted(CODIGO)))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        incluir(hospital.getUuid(), UUID.fromString(JsonPath.read(r, "$.uuid")), "Sem exigência").andExpect(status().isOk());
     }
 
     @Test
     void nivelDeGestaoNaoTemServico() throws Exception {
         UnidadeDeSaude regional = unidade("Regional", TipoUnidadeDeSaude.REGIONAL);
-        incluir(regional.getUuid(), tipo("SALA_DE_VACINA"), "Sala de vacina").andExpect(status().isUnprocessableEntity());
+        incluir(regional.getUuid(), tipo("PRONTO_SOCORRO"), "Pronto-socorro").andExpect(status().isUnprocessableEntity());
     }
 
     @Test

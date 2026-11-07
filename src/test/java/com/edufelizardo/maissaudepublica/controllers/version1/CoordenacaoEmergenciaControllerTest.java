@@ -59,6 +59,7 @@ class CoordenacaoEmergenciaControllerTest {
         inundacao = jdbc.queryForObject("select cast(uuid as varchar) from tb_tipo_emergencia where codigo = 'INUNDACAO'", String.class);
         nivel1 = jdbc.queryForObject("select cast(uuid as varchar) from tb_nivel_emergencia where ordem = 1", String.class);
         hospital = unidade("Hospital");
+        CapacidadesDeTeste.habilitar(jdbc, hospital.getUuid(), "INTERNACAO_CLINICA");
         ubs = unidade("UBS Norte");
     }
 
@@ -84,6 +85,7 @@ class CoordenacaoEmergenciaControllerTest {
         jdbc.update("delete from tb_plano_contingencia_nivel where plano_id in " + planos);
         jdbc.update("delete from tb_plano_contingencia where codigo like 'CRD_%'");
         jdbc.update("delete from tb_profissional where matricula like 'CRD-%'");
+        CapacidadesDeTeste.limpar(jdbc, PREFIXO);
         jdbc.update("delete from tb_unidade_de_saude where nome like '" + PREFIXO + "%'");
     }
 

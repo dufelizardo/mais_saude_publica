@@ -64,6 +64,9 @@ public class ModeloOperacionalService {
     private com.edufelizardo.maissaudepublica.repositories.ServicoUnidadeRepository servicoRepository;
 
     @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.LeitoRepository leitoRepository;
+
+    @Autowired
     private ControleDeAcesso controleDeAcesso;
 
     @Autowired
@@ -277,6 +280,12 @@ public class ModeloOperacionalService {
         if (!servicos.isEmpty()) {
             throw new ResourceUnprocessableEntityException("Encerre antes os serviços que dependem de " + a.getCapacidade().getNome() + ": "
                     + String.join(", ", servicos) + ".");
+        }
+        long leitos = leitoRepository.findByUnidade_UuidOrderByIdentificacaoAsc(u.getUuid()).stream()
+                .filter(l -> l.isAtivo() && a.getCapacidade().getCodigo().equals(LeitoService.capacidadeDoTipo(l.getTipo()))).count();
+        if (leitos > 0) {
+            throw new ResourceUnprocessableEntityException(u.getNome() + " tem " + leitos + " leito(s) ativo(s) que dependem de "
+                    + a.getCapacidade().getNome() + ": tire-os de uso antes.");
         }
         a.setFim(fim(dto.getFim(), a.getInicio()));
         a.setMotivoFim(dto.getMotivo().trim());

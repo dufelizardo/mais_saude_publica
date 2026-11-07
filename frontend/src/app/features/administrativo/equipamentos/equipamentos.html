@@ -515,6 +515,22 @@
                   }
                   @if (!m.capacidades.length && !m.perfis.length) { <p class="cell-sub">Inclua um perfil para ver as capacidades do grupo; as transversais (acolhimento, demanda espontânea) valem em qualquer unidade.</p> }
                 </div>
+                @if (limites().length) {
+                  <div class="info-block">
+                    <h3>Leitos autorizados</h3>
+                    <ul class="eq-prof" aria-label="Leitos autorizados por capacidade">
+                      @for (l of limites(); track l.capacidadeId) {
+                        <li class="mo-row">
+                          <span>
+                            <span class="cell-main">{{ l.capacidadeNome }}</span>
+                            <span class="cell-sub">@if (l.autorizados != null) { {{ l.ativos }} de {{ l.autorizados }} leito(s) } @else { {{ l.ativos }} leito(s) · sem limite definido }@if (l.historico[0]; as h) { · {{ h.motivo }} }</span>
+                          </span>
+                          @if (pode('LEITO.AUTORIZAR')) { <button type="button" class="link-btn" (click)="abrirLimite(m, l)" [attr.aria-label]="'Alterar limite de ' + l.capacidadeNome">Alterar limite</button> }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
                 @if (m.perfisEncerrados.length || m.capacidadesEncerradas.length) {
                   <div class="info-block">
                     <label class="switch" for="f-mostrarEncerradas">
@@ -857,6 +873,42 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Incluir capacidade' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('limiteLeitos') {
+        <form class="dw-form" [formGroup]="limiteForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Unidade</dt><dd>{{ g.unidade }}</dd></div>
+              <div><dt>Capacidade</dt><dd>{{ g.limite.capacidadeNome }}</dd></div>
+              <div><dt>Leitos ativos</dt><dd>{{ g.limite.ativos }}</dd></div>
+            </dl>
+            <div class="dw-field">
+              <label for="f-quantidadeLeitos">Leitos autorizados <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-quantidadeLeitos" type="text" inputmode="numeric" formControlName="quantidade" autocomplete="off" [attr.aria-invalid]="!!erroCampo('quantidadeLeitos')" aria-describedby="h-quantidadeLeitos e-quantidadeLeitos" />
+              <p class="dw-hint" id="h-quantidadeLeitos">Acima deste número, o sistema recusa novos leitos. Os leitos da capacidade emergencial ficam de fora.</p>
+              @if (erroCampo('quantidadeLeitos')) { <p class="dw-err" id="e-quantidadeLeitos">{{ erroCampo('quantidadeLeitos') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-motivoLimite">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-motivoLimite" type="text" maxlength="500" formControlName="motivo" placeholder="Ex.: ampliação da UTI" [attr.aria-invalid]="!!erroCampo('motivoLimite')" aria-describedby="e-motivoLimite" />
+              @if (erroCampo('motivoLimite')) { <p class="dw-err" id="e-motivoLimite">{{ erroCampo('motivoLimite') }}</p> }
+            </div>
+            @if (g.limite.historico.length) {
+              <h3 class="mo-grupo">Histórico</h3>
+              <ul class="eq-prof" aria-label="Histórico do limite">
+                @for (h of g.limite.historico; track h.registradoEm) {
+                  <li><span class="cell-main">{{ h.quantidade }} leito(s)</span><span class="cell-sub">{{ dataHora(h.registradoEm) }} · {{ h.motivo }}</span></li>
+                }
+              </ul>
+            }
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Salvar' }}</button>
           </footer>
         </form>
       }

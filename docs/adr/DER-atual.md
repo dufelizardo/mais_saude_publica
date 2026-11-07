@@ -1,6 +1,6 @@
 # DER (Diagrama Entidade-Relacionamento) — Modelo ATUAL implementado
 
-**Data:** 2026-09-06 (criado) — **corrigido em 2026-09-26**
+**Data:** 2026-09-06 (criado) — **corrigido em 2026-09-26** — inventário em 2026-11-07
 **Versão:** 1.1 (reflete o código em `src/main/java/com/edufelizardo/maissaudepublica/models/`)
 
 > **Correção 2026-09-26**: a versão 1.0 deste documento descrevia `tipo` como `int` solto (não
@@ -122,3 +122,62 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 - Nenhuma validação garante que os 8 valores do 5º nível sejam usados exclusivamente por unidades
   cujo `unidadeSuperior` é `MUNICIPAL` — a regra é aplicada pelos controllers (`getTiposAceitos()`),
   não pelo schema.
+
+## Inventário do esquema atual
+
+**Revisto em 2026-11-07.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **224 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V54). A fonte de verdade são as migrações, em
+`src/main/resources/db/migration`, e as ADRs de cada fatia.
+
+| Migração | Tabelas |
+|---|---|
+| V1 | `tb_acesso_justificado`, `tb_acidente_trabalho`, `tb_adesao_beneficio`, `tb_administracao_medicamento`, `tb_afastamento`, `tb_agendamento`, `tb_ajuste_individual`, `tb_atendimento`, `tb_atribuicao_acesso`, `tb_avaliacao`, `tb_calculo_rescisao`, `tb_candidato`, `tb_capacidade_administrativa`, `tb_cargo`, `tb_categoria_salarial`, `tb_ciclo_avaliacao`, `tb_consulta`, `tb_dispensacao`, `tb_epi`, `tb_evento_auditoria`, `tb_evolucao_enfermagem`, `tb_exame_ocupacional`, `tb_folha_pagamento`, `tb_horario_atendimento`, `tb_horario_funionamento`, `tb_licenca`, `tb_lotacao`, `tb_lote`, `tb_medicamento`, `tb_movimentacao_farmacia`, `tb_necessidade_de_pessoal`, `tb_paciente`, `tb_papel`, `tb_papel_permissao`, `tb_participacao_treinamento`, `tb_perfil_administrativo`, `tb_perfil_por_tipo_unidade`, `tb_permissao`, `tb_procedimento`, `tb_processo_administrativo`, `tb_profissional`, `tb_redefinicao_senha`, `tb_registro_ponto`, `tb_regra_anuenio`, `tb_responsabilidade_administrativa`, `tb_setor`, `tb_tabela_salarial`, `tb_telefones_paciente`, `tb_telefones_profissional`, `tb_telefones_saude`, `tb_tipo_beneficio`, `tb_transferencia_farmacia`, `tb_treinamento`, `tb_triagem`, `tb_unidade_de_saude`, `tb_usuario`, `tb_vaga`, `tb_valor_beneficio` |
+| V2 | `tb_evento_regulacao`, `tb_procedimento_regulado`, `tb_solicitacao_regulacao` |
+| V3 | `tb_bloco_agenda`, `tb_bloqueio_agenda` |
+| V4 | `tb_amostra_exame`, `tb_evento_exame`, `tb_exame_laboratorial`, `tb_item_pedido_exame`, `tb_pedido_exame`, `tb_resultado_exame` |
+| V5 | `tb_alerta_auditoria` |
+| V6 | `tb_evento_leito`, `tb_internacao`, `tb_leito` |
+| V7 | `tb_evento_situacao_unidade`, `tb_horario_unidade` |
+| V8 | `tb_equipe`, `tb_equipe_apoio`, `tb_membro_equipe` |
+| V9 | `tb_turno_escala` |
+| V11 | `tb_capacidade_assistencial`, `tb_perfil_operacional`, `tb_unidade_capacidade_assistencial`, `tb_unidade_perfil_operacional` |
+| V12 | `tb_categoria_programa`, `tb_participacao_programa`, `tb_programa`, `tb_programa_condicao` |
+| V13 | `tb_acompanhamento_programatico`, `tb_evento_acompanhamento` |
+| V14 | `tb_acolhimento_saude_mental`, `tb_acompanhamento_saude_mental`, `tb_avaliacao_saude_mental`, `tb_referencia_saude_mental` |
+| V15 | `tb_intervencao_prevista`, `tb_intervencao_saude_mental`, `tb_objetivo_terapeutico`, `tb_pessoa_rede_apoio`, `tb_projeto_terapeutico_singular`, `tb_tipo_intervencao_saude_mental` |
+| V16 | `tb_compartilhamento_cuidado`, `tb_encaminhamento_saude_mental`, `tb_transferencia_cuidado` |
+| V17 | `tb_avaliacao_risco`, `tb_comunicacao_ministerio_publico`, `tb_etapa_crise`, `tb_evento_crise` |
+| V18 | `tb_agravo`, `tb_agravo_cid`, `tb_agravo_criterio`, `tb_classificacao_caso`, `tb_ficha_agravo`, `tb_investigacao_epidemiologica`, `tb_investigacao_exame`, `tb_notificacao`, `tb_notificacao_negativa` |
+| V19 | `tb_area`, `tb_atribuicao_microarea`, `tb_microarea`, `tb_responsabilidade_territorial`, `tb_segmento_territorial`, `tb_territorio` |
+| V20 | `tb_domicilio`, `tb_imovel`, `tb_membro_nucleo`, `tb_nucleo_familiar` |
+| V21 | `tb_adscricao` |
+| V23 | `tb_contato_epidemiologico` |
+| V24 | `tb_medida_controle`, `tb_surto`, `tb_surto_microarea` |
+| V25 | `tb_acao_programatica`, `tb_acao_programatica_participante` |
+| V26 | `tb_campanha`, `tb_campanha_condicao`, `tb_local_campanha` |
+| V27 | `tb_avaliacao_odontologica`, `tb_especialidade` |
+| V28 | `tb_condicao_odontologica`, `tb_registro_odontograma` |
+| V29 | `tb_complemento_odontologico`, `tb_complemento_odontologico_face`, `tb_procedimento_catalogo` |
+| V30 | `tb_item_plano_tratamento`, `tb_item_plano_tratamento_face`, `tb_plano_tratamento` |
+| V32 | `tb_etapa_tratamento_protetico`, `tb_tratamento_protetico` |
+| V33 | `tb_acao_saude_bucal`, `tb_acao_saude_bucal_atividade`, `tb_avaliacao_bucal_coletiva` |
+| V34 | `tb_meta_programatica` |
+| V36 | `tb_esquema_vacinal`, `tb_imunobiologico`, `tb_registro_vacinacao` |
+| V37 | `tb_camara_refrigeracao`, `tb_frasco_aberto`, `tb_leitura_temperatura`, `tb_lote_imunobiologico`, `tb_movimentacao_imunobiologico` |
+| V38 | `tb_campanha_imunobiologico` |
+| V39 | `tb_contraindicacao_vacinal`, `tb_notificacao_dose` |
+| V40 | `tb_etapa_linha_cuidado`, `tb_linha_cuidado`, `tb_percurso_linha_cuidado`, `tb_registro_etapa_percurso` |
+| V41 | `tb_configuracao_acolhimento_noturno`, `tb_permanencia_acolhimento_noturno` |
+| V42 | `tb_encaminhamento_intersetorial`, `tb_instituicao_externa` |
+| V43 | `tb_avaliacao_impacto`, `tb_avaliacao_impacto_unidade`, `tb_emergencia`, `tb_emergencia_microarea`, `tb_evento_emergencial`, `tb_mudanca_nivel_emergencia`, `tb_nivel_emergencia`, `tb_tipo_emergencia` |
+| V44 | `tb_acao_plano`, `tb_ativacao_plano`, `tb_contato_plano`, `tb_criterio_ativacao`, `tb_plano_contingencia`, `tb_plano_contingencia_nivel`, `tb_plano_contingencia_unidade`, `tb_recurso_plano`, `tb_registro_ativacao_plano` |
+| V45 | `tb_acao_emergencial`, `tb_ativacao_capacidade`, `tb_capacidade_emergencial`, `tb_mobilizacao` |
+| V46 | `tb_desmobilizacao`, `tb_recomendacao_relatorio`, `tb_relatorio_pos_evento` |
+| V47 | `tb_boletim_estrutura`, `tb_estrutura_temporaria`, `tb_evento_massa` |
+| V48 | `tb_exposicao_ambiental`, `tb_exposicao_ambiental_unidade` |
+| V49 | `tb_acao_controle_vetorial`, `tb_acao_controle_vetorial_microarea`, `tb_foco_vetorial`, `tb_vistoria_vetorial` |
+| V50 | `tb_animal_zoonoses`, `tb_exame_animal`, `tb_observacao_animal`, `tb_vacinacao_antirrabica_animal` |
+| V51 | `tb_amostra_agua`, `tb_ponto_coleta_agua`, `tb_risco_ambiental` |
+| V52 | `tb_servico_setor`, `tb_servico_unidade`, `tb_tipo_servico` |
+| V53 | `tb_ponto_operacional`, `tb_posicao_unidade_movel`, `tb_rota_dia`, `tb_rota_ponto`, `tb_rota_programada` |
+| V54 | `tb_canal_comunicacao`, `tb_comunicado`, `tb_comunicado_canal`, `tb_conteudo_canal`, `tb_conteudo_educativo`, `tb_publicacao` |
