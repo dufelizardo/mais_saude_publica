@@ -30,7 +30,8 @@ Seed Unidade Com Turno Sem Cobertura
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${unidade}=    Seed A Unidade De Saude Uuid
     ${inicio}=    Evaluate    (datetime.datetime.now() + datetime.timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)    modules=datetime
-    ${fim}=    Evaluate    $inicio + datetime.timedelta(hours=1)    modules=datetime
+    # Às 23h o turno da próxima hora passaria da meia-noite e o fim ficaria antes do início (400): termina às 23h59.
+    ${fim}=    Evaluate    $inicio + datetime.timedelta(hours=1) if ($inicio + datetime.timedelta(hours=1)).date() == $inicio.date() else $inicio.replace(hour=23, minute=59)    modules=datetime
     ${payload}=    Payload De Turno    ${unidade}    ${EMPTY}    MEDICO    MANHA    ${inicio.date().isoformat()}    ${inicio.strftime('%H:%M')}    ${fim.strftime('%H:%M')}
     ${r}=    POST Create Turno    ${payload}
     Should Be Equal As Integers    ${r.status_code}    201

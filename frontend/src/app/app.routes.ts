@@ -122,6 +122,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/coordenacoes/coordenacoes').then((m) => m.Coordenacoes),
         data: { breadcrumb: 'Coordenações e gerência', area: 'Administrativo' },
       },
+      // Estoque e almoxarifado (ADR-0177).
+      {
+        path: 'administrativo/estoque',
+        loadComponent: () => import('./features/administrativo/estoque/estoque').then((m) => m.Estoque),
+        data: { breadcrumb: 'Estoque e almoxarifado', area: 'Administrativo' },
+      },
       {
         path: 'administrativo/necessidades-de-pessoal',
         loadComponent: () => import('./features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal').then((m) => m.NecessidadesDePessoal),
