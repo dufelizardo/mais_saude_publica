@@ -117,6 +117,7 @@ export class Urgencia implements OnDestroy {
     prioridade: ['' as PrioridadeRegulacao | ''],
     decisao: ['ENVIO_DE_RECURSO' as DecisaoRegulacaoUrgencia],
     conduta: [''],
+    veiculoId: [''],
     tipoRecurso: ['' as TipoRecursoUrgencia | ''],
     recursoIdentificacao: [''],
     destinoId: [''],
@@ -135,6 +136,9 @@ export class Urgencia implements OnDestroy {
   protected readonly origemNaGaveta = signal<OrigemOcorrenciaUrgencia>('CHAMADO_192');
 
   protected readonly abertas = computed(() => this.painel()?.abertas ?? []);
+  protected readonly viaturas = computed(() => this.painel()?.viaturas ?? []);
+  /** Com viatura da frota escolhida, o tipo e o texto saem dela. */
+  protected readonly viaturaNaGaveta = signal('');
 
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
@@ -228,8 +232,9 @@ export class Urgencia implements OnDestroy {
 
   protected abrirRegular(o: OcorrenciaUrgenciaDto): void {
     this.regularForm.reset({ profissionalMatricula: this.matriculaPadrao(), prioridade: '', decisao: o.unidadeSolicitanteId && o.origem === 'UNIDADE_DE_SAUDE' ? 'TRANSFERENCIA' : 'ENVIO_DE_RECURSO',
-      conduta: '', tipoRecurso: '', recursoIdentificacao: '', destinoId: '', vagaZero: false, justificativaVagaZero: '' });
+      conduta: '', veiculoId: '', tipoRecurso: '', recursoIdentificacao: '', destinoId: '', vagaZero: false, justificativaVagaZero: '' });
     this.decisaoNaGaveta.set(this.regularForm.getRawValue().decisao);
+    this.viaturaNaGaveta.set('');
     this.vagaZeroNaGaveta.set(false);
     this.abrir({ tipo: 'regular', o });
   }
@@ -319,14 +324,15 @@ export class Urgencia implements OnDestroy {
       if (!v.prioridade) erros['prioridadeRegular'] = 'Classifique a gravidade.';
       if (!v.conduta.trim()) erros['condutaRegular'] = 'Descreva a conduta.';
       const comRecurso = v.decisao === 'ENVIO_DE_RECURSO' || v.decisao === 'TRANSFERENCIA';
-      if (v.decisao === 'ENVIO_DE_RECURSO' && !v.tipoRecurso) erros['recursoRegular'] = 'Escolha o recurso.';
+      if (v.decisao === 'ENVIO_DE_RECURSO' && !v.tipoRecurso && !v.veiculoId) erros['recursoRegular'] = 'Escolha a viatura ou o tipo de recurso.';
       if ((v.decisao === 'ENCAMINHAMENTO' || v.decisao === 'TRANSFERENCIA') && !v.destinoId) erros['destinoRegular'] = 'Escolha o destino.';
       if (v.vagaZero && !v.justificativaVagaZero.trim()) erros['vagaZeroRegular'] = 'Justifique a vaga zero.';
       if (!this.validar(erros)) return;
       const orientacao = v.decisao === 'ORIENTACAO';
       this.enviar(this.service.regular(g.o.uuid, {
         profissionalMatricula: v.profissionalMatricula.trim(), prioridade: v.prioridade as PrioridadeRegulacao, decisao: v.decisao, conduta: v.conduta.trim(),
-        tipoRecurso: comRecurso && v.tipoRecurso ? v.tipoRecurso : null, recursoIdentificacao: comRecurso ? v.recursoIdentificacao.trim() || null : null,
+        veiculoId: comRecurso && v.veiculoId ? v.veiculoId : null,
+        tipoRecurso: comRecurso && v.tipoRecurso ? v.tipoRecurso : null, recursoIdentificacao: comRecurso && !v.veiculoId ? v.recursoIdentificacao.trim() || null : null,
         destinoId: orientacao ? null : v.destinoId || null, vagaZero: !orientacao && !!v.destinoId && v.vagaZero,
         justificativaVagaZero: !orientacao && v.vagaZero ? v.justificativaVagaZero.trim() : null,
       }), orientacao ? 'Orientação registrada' : 'Ocorrência regulada');

@@ -144,9 +144,16 @@ public class OcorrenciaUrgencia implements Serializable {
     @Column(length = 20)
     private TipoRecursoUrgencia tipoRecurso;
 
-    /** A viatura em texto até o Transporte (#16). */
+    /** O prefixo da viatura, ou um texto quando a central ainda não cadastrou a frota. */
     @Column(length = 60)
     private String recursoIdentificacao;
+
+    /** A viatura empenhada (ADR-0178). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "veiculo_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Veiculo veiculo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "destino_id", referencedColumnName = "uuid")

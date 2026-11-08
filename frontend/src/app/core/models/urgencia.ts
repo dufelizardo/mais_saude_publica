@@ -1,4 +1,5 @@
 import { PrioridadeRegulacao } from './regulacao';
+import { ViaturaDisponivelDto } from './transporte';
 
 /** Regulação de urgência (ADR-0176). */
 export type OrigemOcorrenciaUrgencia = 'CHAMADO_192' | 'UNIDADE_DE_SAUDE' | 'CRISE_SAUDE_MENTAL';
@@ -113,6 +114,8 @@ export interface OcorrenciaUrgenciaDto {
   conduta?: string | null;
   tipoRecurso?: TipoRecursoUrgencia | null;
   recursoIdentificacao?: string | null;
+  veiculoId?: string | null;
+  veiculoPrefixo?: string | null;
   destinoId?: string | null;
   destinoNome?: string | null;
   vagaZero: boolean;
@@ -137,6 +140,8 @@ export interface PainelUrgenciaDto {
   concluidasHoje: number;
   tempoMedioAteRegulacaoMinutos?: number | null;
   tempoMedioAteEnvioMinutos?: number | null;
+  /** Viaturas do SAMU disponíveis com plantão (ADR-0178). */
+  viaturas?: ViaturaDisponivelDto[] | null;
 }
 
 export interface DestinoUrgenciaDto {
@@ -174,6 +179,7 @@ export interface RegulacaoUrgenciaRequestDto {
   conduta: string;
   tipoRecurso?: TipoRecursoUrgencia | null;
   recursoIdentificacao?: string | null;
+  veiculoId?: string | null;
   destinoId?: string | null;
   vagaZero?: boolean;
   justificativaVagaZero?: string | null;

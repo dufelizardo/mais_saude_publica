@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **245 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V62). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **249 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V63). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -188,3 +188,4 @@ listadas aqui pela migração que criou cada uma (até a V62). A fonte de verdad
 | V60 | `tb_area_gestao`, `tb_titularidade_area_gestao` |
 | V61 | `tb_ocorrencia_urgencia`, `tb_evento_urgencia` |
 | V62 | `tb_material_estoque`, `tb_lote_material`, `tb_movimentacao_estoque`, `tb_estoque_minimo` |
+| V63 | `tb_veiculo`, `tb_situacao_veiculo`, `tb_plantao_viatura`, `tb_tripulante_plantao` (e `veiculo_id` em `tb_ocorrencia_urgencia`) |

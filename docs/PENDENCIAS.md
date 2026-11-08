@@ -87,7 +87,7 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - Vagas por unidade e procedimento (cotas e PPI): hoje o regulador informa a vaga na autorização.
 - Fora do escopo da ADR-0087: ~~regulação de urgência e SAMU~~ — ADR-0176; internação (depende de Leitos, #12),
   integração com SISREG e SIGTAP, e cotas por unidade (PPI).
-- Regulação de urgência (ADR-0176): viaturas, equipes e bases no lugar do recurso em texto (Transporte, #16); ficha clínica do
+- Regulação de urgência (ADR-0176): ~~viaturas no lugar do recurso em texto~~ — ADR-0178; ficha clínica do
   atendimento pré-hospitalar; telefonia e integração com o 192; reserva de leito na vaga zero; conceder os papéis **Atendente de regulação
   (TARM)** e **Médico regulador de urgência** na central quando a autorização for ligada.
 - Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
@@ -161,7 +161,8 @@ real":
   - ~~#10 Laboratório e diagnóstico~~ — ADRs 0093 a 0095;
   - ~~#11 Regulação~~ — ADRs 0087 a 0089 (falta a regulação de urgência e de internação);
   - ~~#12 Leitos e internação~~ — ADRs 0098 a 0100;
-  - #16 Transporte sanitário;
+  - #16 Transporte sanitário — ~~T1 (frota, plantão, viatura no SAMU)~~ — ADR-0178; T2 (transporte eletivo e TFD) e T3 (emergências)
+    com aprovação; conceder o papel **Coordenador de frota** quando a autorização for ligada;
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
     coletivas e equipe (programas pela ADR-0132; especialidade pela ADR-0134);
   - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);

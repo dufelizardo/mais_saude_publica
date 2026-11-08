@@ -33,6 +33,7 @@ const MENU: Record<string, string[]> = {
   // Coordenações e gerência (ADR-0175): a estrutura e os indicadores da regional.
   '/administrativo/coordenacoes': [...ADMINISTRATIVO, 'INDICADOR.CONSULTAR'],
   '/administrativo/estoque': ['ESTOQUE.CONSULTAR', 'ESTOQUE.MOVIMENTAR', 'ESTOQUE.GERENCIAR'],
+  '/administrativo/frota': ['TRANSPORTE.CONSULTAR', 'TRANSPORTE.GERENCIAR'],
   // Território (ADR-0125): o recorte geográfico é aberto a quem está logado.
   '/administrativo/territorio': [],
   // Instituições da rede intersetorial (ADR-0154): o catálogo é aberto a quem está logado.

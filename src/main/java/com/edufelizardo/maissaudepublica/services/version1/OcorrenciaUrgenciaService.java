@@ -110,6 +110,7 @@ public class OcorrenciaUrgenciaService {
     @Autowired private UnidadePerfilOperacionalRepository perfilRepository;
     @Autowired private LeitoRepository leitoRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private TransporteService transporteService;
 
     // ── Central: abertura ─────────────────────────────────────────────────────────────────────────
 
@@ -205,8 +206,8 @@ public class OcorrenciaUrgenciaService {
                 }
             }
             case ENVIO_DE_RECURSO -> {
-                if (dto.getTipoRecurso() == null) {
-                    throw new ResourceBadRequestException("Informe o tipo de recurso enviado.");
+                if (dto.getTipoRecurso() == null && dto.getVeiculoId() == null) {
+                    throw new ResourceBadRequestException("Informe a viatura ou o tipo de recurso enviado.");
                 }
             }
             case ENCAMINHAMENTO -> {
@@ -226,11 +227,22 @@ public class OcorrenciaUrgenciaService {
                 }
             }
         }
+        com.edufelizardo.maissaudepublica.models.Veiculo viatura = null;
+        if (dto.getVeiculoId() != null) {
+            if (decisao != DecisaoRegulacaoUrgencia.ENVIO_DE_RECURSO && decisao != DecisaoRegulacaoUrgencia.TRANSFERENCIA) {
+                throw new ResourceBadRequestException("Viatura só no envio de recurso ou na transferência.");
+            }
+            if (repository.existsByVeiculo_UuidAndSituacaoIn(dto.getVeiculoId(), ABERTAS)) {
+                throw new ResourceConflictException("A viatura já está empenhada noutra ocorrência aberta.");
+            }
+            viatura = transporteService.viaturaParaEmpenho(dto.getVeiculoId(), dto.getTipoRecurso());
+        }
         o.setPrioridade(dto.getPrioridade());
         o.setDecisao(decisao);
         o.setConduta(dto.getConduta().trim());
-        o.setTipoRecurso(dto.getTipoRecurso());
-        o.setRecursoIdentificacao(dto.getTipoRecurso() != null ? texto(dto.getRecursoIdentificacao()) : null);
+        o.setVeiculo(viatura);
+        o.setTipoRecurso(viatura != null && dto.getTipoRecurso() == null ? TransporteService.recurso(viatura.getTipo()) : dto.getTipoRecurso());
+        o.setRecursoIdentificacao(viatura != null ? viatura.getPrefixo() : o.getTipoRecurso() != null ? texto(dto.getRecursoIdentificacao()) : null);
         o.setRegulador(regulador);
         o.setReguladaEm(Instant.now());
         String destino = comDestino ? definirDestino(o, dto.getDestinoId(), Boolean.TRUE.equals(dto.getVagaZero()), dto.getJustificativaVagaZero()) : null;
@@ -311,6 +323,7 @@ public class OcorrenciaUrgenciaService {
         o.setDesfecho(desfecho);
         o.setEncerradaEm(agora);
         o.setSituacao(SituacaoOcorrenciaUrgencia.CONCLUIDA);
+        liberarViatura(o);
         registrar(o, TipoEventoUrgencia.ENCERRAMENTO, rotulo(desfecho) + ": " + dto.getObservacao().trim(), regulador, agora);
         return detalhe(o);
     }
@@ -329,6 +342,7 @@ public class OcorrenciaUrgenciaService {
         Instant agora = Instant.now();
         o.setSituacao(SituacaoOcorrenciaUrgencia.CANCELADA);
         o.setEncerradaEm(agora);
+        liberarViatura(o);
         registrar(o, TipoEventoUrgencia.CANCELAMENTO, dto.getMotivo().trim(), null, agora);
         return detalhe(o);
     }
@@ -369,7 +383,9 @@ public class OcorrenciaUrgenciaService {
             throw new ResourceBadRequestException("A hora precisa ser entre o último passo registrado e agora.");
         }
         if (tipo == TipoEventoUrgencia.ENVIO_DE_RECURSO) {
-            if (texto(dto.getRecursoIdentificacao()) != null) {
+            if (o.getVeiculo() != null) {
+                transporteService.colocarEmServico(o.getVeiculo(), "Ocorrência " + o.getProtocolo() + ".");
+            } else if (texto(dto.getRecursoIdentificacao()) != null) {
                 o.setRecursoIdentificacao(dto.getRecursoIdentificacao().trim());
             }
             o.setSituacao(SituacaoOcorrenciaUrgencia.EM_ATENDIMENTO);
@@ -419,6 +435,7 @@ public class OcorrenciaUrgenciaService {
         o.setDesfecho(DesfechoOcorrenciaUrgencia.RECEBIDO_NO_DESTINO);
         o.setEncerradaEm(agora);
         o.setSituacao(SituacaoOcorrenciaUrgencia.CONCLUIDA);
+        liberarViatura(o);
         registrar(o, TipoEventoUrgencia.RECEBIMENTO_NO_DESTINO, "Recebido em " + o.getDestino().getNome()
                 + (texto(dto.getObservacao()) != null ? ": " + dto.getObservacao().trim() : "."), quem, agora);
         return detalhe(o);
@@ -444,13 +461,21 @@ public class OcorrenciaUrgenciaService {
         }
         List<OcorrenciaUrgenciaDto> dtos = abertas.stream().map(o -> dto(o, v.clinico(o), eventos.getOrDefault(o.getUuid(), List.of()), false)).toList();
         List<OcorrenciaUrgenciaDto> doDia = hoje.stream().map(o -> dto(o, false, eventos.getOrDefault(o.getUuid(), List.of()), false)).toList();
-        return new PainelUrgenciaDto(dtos,
+        java.util.Set<UUID> empenhadas = abertasDeTodas().stream().filter(o -> o.getVeiculo() != null).map(o -> o.getVeiculo().getUuid())
+                .collect(Collectors.toSet());
+        PainelUrgenciaDto painel = new PainelUrgenciaDto(dtos,
                 abertas.stream().filter(o -> o.getSituacao() == SituacaoOcorrenciaUrgencia.RECEBIDA).count(),
                 abertas.stream().filter(o -> o.getSituacao() == SituacaoOcorrenciaUrgencia.EM_ATENDIMENTO).count(),
                 porPrioridade, hoje.size(),
                 hoje.stream().filter(o -> o.getSituacao() == SituacaoOcorrenciaUrgencia.CONCLUIDA).count(),
                 media(doDia.stream().map(OcorrenciaUrgenciaDto::getMinutosAteRegulacao)),
-                media(doDia.stream().map(OcorrenciaUrgenciaDto::getMinutosAteEnvio)));
+                media(doDia.stream().map(OcorrenciaUrgenciaDto::getMinutosAteEnvio)), null);
+        painel.setViaturas(transporteService.viaturasDisponiveis(empenhadas::contains));
+        return painel;
+    }
+
+    private List<OcorrenciaUrgencia> abertasDeTodas() {
+        return repository.findNasSituacoes(ABERTAS);
     }
 
     /** Histórico dos últimos dias (padrão 7, até 90), mais recente primeiro. */
@@ -580,6 +605,12 @@ public class OcorrenciaUrgenciaService {
         return dto(o, true, eventoRepository.findDaOcorrencia(o.getUuid()), true);
     }
 
+    private void liberarViatura(OcorrenciaUrgencia o) {
+        if (o.getVeiculo() != null) {
+            transporteService.liberar(o.getVeiculo(), "Fim da ocorrência " + o.getProtocolo() + ".");
+        }
+    }
+
     private Map<UUID, List<EventoUrgencia>> eventos(List<UUID> ids) {
         if (ids.isEmpty()) {
             return Map.of();
@@ -606,6 +637,10 @@ public class OcorrenciaUrgenciaService {
         d.setDecisao(o.getDecisao());
         d.setTipoRecurso(o.getTipoRecurso());
         d.setRecursoIdentificacao(o.getRecursoIdentificacao());
+        if (o.getVeiculo() != null) {
+            d.setVeiculoId(o.getVeiculo().getUuid());
+            d.setVeiculoPrefixo(o.getVeiculo().getPrefixo());
+        }
         if (o.getDestino() != null) {
             d.setDestinoId(o.getDestino().getUuid());
             d.setDestinoNome(o.getDestino().getNome());

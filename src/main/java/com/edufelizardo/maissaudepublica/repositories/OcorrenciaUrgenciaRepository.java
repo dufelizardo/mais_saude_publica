@@ -32,6 +32,8 @@ public interface OcorrenciaUrgenciaRepository extends JpaRepository<OcorrenciaUr
             + "where o.paciente.uuid = ?1 order by o.recebidaEm desc")
     List<OcorrenciaUrgencia> findDoPaciente(UUID pacienteId);
 
+    boolean existsByVeiculo_UuidAndSituacaoIn(UUID veiculoId, Collection<SituacaoOcorrenciaUrgencia> situacoes);
+
     boolean existsByCrise_UuidAndSituacaoIn(UUID criseId, Collection<SituacaoOcorrenciaUrgencia> situacoes);
 
     @Query(value = "select nextval('sq_protocolo_urgencia')", nativeQuery = true)
