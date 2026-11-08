@@ -40,4 +40,6 @@ public class ComunicadoDto implements Serializable {
     private LocalDate encerradoEm;
     private String motivoEncerramento;
     private List<PublicacaoDto> publicacoes;
+    private UUID campanhaId;
+    private String campanhaNome;
 }

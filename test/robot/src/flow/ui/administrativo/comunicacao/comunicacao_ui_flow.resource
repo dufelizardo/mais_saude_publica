@@ -86,3 +86,31 @@ UI Comunicacao - Encerrar Comunicado
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+
+UI Comunicacao - Planejar E Iniciar Campanha
+    [Documentation]    Pela aba Campanhas (ADR-0174): sem nome, a mensagem; planeja com o portal, inicia e vê na página pública.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    ${nome}=    Set Variable    UI Campanha ${sufixo}
+    ${hoje}=    Get Current Date    result_format=%Y-%m-%d
+    UI Comunicacao - Abrir
+    Wait For Elements State    css=#tab-canais .cnt >> text=/[1-9]/    visible
+    Click    css=#tab-campanhas
+    Clicar Botao    Nova campanha
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    nomeCampanha
+    Should Contain    ${erro}    nome
+    Preencher Campo Da Gaveta    nomeCampanha    ${nome}
+    Preencher Campo Da Gaveta    objetivoCampanha    Estimular a mamografia
+    Preencher Campo Da Gaveta    fimCampanha    ${hoje}
+    Check Checkbox    css=label.perm-check:has-text("Portal") >> input
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Campanha planejada
+    Clicar Botao    Iniciar ${nome}
+    Wait For Elements State    css=tr:has-text("${nome}") >> text=Em andamento    visible
+    Ir Para Rota Do Frontend    /
+    Wait For Elements State    css=#campanhas-comunicacao >> text=${nome}    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+

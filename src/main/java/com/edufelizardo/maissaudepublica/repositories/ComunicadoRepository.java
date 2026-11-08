@@ -10,6 +10,9 @@ import java.util.UUID;
 
 public interface ComunicadoRepository extends JpaRepository<Comunicado, UUID> {
 
+    /** Os comunicados da campanha (ADR-0174). */
+    List<Comunicado> findByCampanha_UuidOrderByInicioAsc(UUID campanhaId);
+
     List<Comunicado> findAllByOrderByInicioDesc();
 
     @Query("select distinct c from Comunicado c left join fetch c.unidade join c.canais k where c.situacao = 'PUBLICADO' and c.publico = 'POPULACAO' "
