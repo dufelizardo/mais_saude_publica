@@ -22,6 +22,7 @@ import { ErrorResponseDto } from '../../../core/models/profissional';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { AuthService } from '../../../core/services/auth';
 import { ComunicacaoService } from '../../../core/services/comunicacao';
+import { EducacaoPermanenteService } from '../../../core/services/educacao-permanente';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { hojeIso, proximaAba } from '../../../shared/formato';
@@ -49,6 +50,7 @@ export class Comunicacao {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly service = inject(ComunicacaoService);
+  private readonly educacaoService = inject(EducacaoPermanenteService);
   private readonly unidadeService = inject(UnidadeSaudeService);
 
   protected readonly tiposDeCanal = TIPOS_DE_CANAL;
@@ -68,6 +70,8 @@ export class Comunicacao {
 
   protected readonly comunicados = signal<ComunicadoDto[]>([]);
   protected readonly conteudos = signal<ConteudoEducativoDto[]>([]);
+  /** Treinamentos que usam cada conteúdo, pelo grupo (ADR-0173). */
+  protected readonly usoNosTreinamentos = signal<Record<string, string[]>>({});
   protected readonly canais = signal<CanalComunicacaoDto[]>([]);
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly carregando = signal(true);
@@ -116,7 +120,9 @@ export class Comunicacao {
       comunicados: this.service.comunicados().pipe(catchError(() => of([]))),
       conteudos: this.service.conteudos().pipe(catchError(() => of([]))),
       canais: this.service.canais().pipe(catchError(() => of([]))),
+      uso: this.educacaoService.usoDosConteudos().pipe(catchError(() => of([]))),
     }).subscribe((r) => {
+      this.usoNosTreinamentos.set(Object.fromEntries(r.uso.map((u) => [u.grupoId, u.treinamentos])));
       this.comunicados.set(r.comunicados);
       this.conteudos.set(r.conteudos);
       this.canais.set(r.canais);

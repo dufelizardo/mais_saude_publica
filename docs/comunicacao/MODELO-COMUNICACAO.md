@@ -225,6 +225,8 @@ A capacitação **já existe no RH**: `Treinamento` (nome, carga horária, valid
 - Este domínio acrescenta só o **conteúdo e o material didático** ligados ao treinamento e as **competências**
   abordadas.
 - **O histórico funcional continua no RH.** Não se cria uma `Capacitacao` paralela nem uma plataforma de EAD.
+- **Implementado na C4** ([ADR-0173](../adr/0173-educacao-permanente.md)): catálogo de competências, competências e conteúdos revisados ligados
+  ao treinamento, e as competências do profissional calculadas pelas participações.
 
 ## 13. Avaliação
 
@@ -298,7 +300,7 @@ RH → profissionais e treinamentos → EDUCAÇÃO PERMANENTE (conteúdo e mater
 | **C1** · comunicação básica ✅ ([ADR-0168](../adr/0168-comunicacao-basica.md)) | comunicado, conteúdo com validação técnica, publicação, canal; portal (landing page) e e-mail | — |
 | **C2** · campanhas de comunicação | `CampanhaComunicacao`, público-alvo, material educativo | C1; Programas P3; Documentos D2 para os arquivos |
 | **C3** · educação em saúde | conteúdo e material nas ações educativas de Programas | C2; Programas P4; Território |
-| **C4** · educação permanente | conteúdo e material ligados ao `Treinamento` do RH; competências | C1 |
+| **C4** · educação permanente ✅ ([ADR-0173](../adr/0173-educacao-permanente.md)) | conteúdo e material ligados ao `Treinamento` do RH; competências | C1 |
 | **C5** · multicanal | adaptadores de SMS, notificação, aplicativo e painel; consentimento e descadastro | C1; Integrações (#20) |
 | **C6** · avaliação | alcance, participação, efetividade | C2; Indicadores (#19) |
 

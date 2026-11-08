@@ -78,7 +78,7 @@
               <tr>
                 <td>
                   <span class="cell-main">{{ c.titulo }} <span class="cell-sub mono" style="display: inline;">v{{ c.versao }}</span></span>
-                  <span class="cell-sub">{{ c.tema }}@if (c.motivoDevolucao) { · devolvido: {{ c.motivoDevolucao }} }</span>
+                  <span class="cell-sub">{{ c.tema }}@if (c.motivoDevolucao) { · devolvido: {{ c.motivoDevolucao }} }@if (usoNosTreinamentos()[c.grupoId]; as t) { · em treinamento: {{ t.join(', ') }} }</span>
                 </td>
                 <td>{{ publicos[c.publico] }}</td>
                 <td>{{ dataBr(c.validade) }}</td>

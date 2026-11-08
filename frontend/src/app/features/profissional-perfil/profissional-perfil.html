@@ -1126,6 +1126,7 @@
             </table>
           </div>
         }
+        @if (profissional(); as pr) { <app-competencias-do-profissional [matricula]="pr.matricula" [versao]="participacoes().length" /> }
       </div>
     }
 
