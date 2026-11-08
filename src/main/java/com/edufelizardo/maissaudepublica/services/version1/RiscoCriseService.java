@@ -45,7 +45,7 @@ import java.util.UUID;
 /**
  * Saúde Mental, fatia SM3 (ADR-0123): o risco com histórico no caso e o evento de crise com as etapas. A notificação
  * compulsória de violência autoprovocada é só sugerida e registrada como feita (a notificação no sistema vem com a
- * Vigilância V1); o acionamento do SAMU é registrado em texto (depende da regulação de urgência).
+ * Vigilância V1); o acionamento do SAMU abre a ocorrência na regulação de urgência (ADR-0176).
  */
 @Service
 public class RiscoCriseService {
@@ -78,6 +78,9 @@ public class RiscoCriseService {
 
     @Autowired
     private VinculoAssistencialService vinculoService;
+
+    @Autowired
+    private OcorrenciaUrgenciaService urgenciaService;
 
     // ── Risco ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -144,6 +147,31 @@ public class RiscoCriseService {
         ContextoAuditoria.registro(c.getUuid());
         ContextoAuditoria.detalhe("Crise " + dto.getTipo() + ".");
         return CriseLeitura.dto(c, true, List.of());
+    }
+
+    /**
+     * Aciona o SAMU (ADR-0176, fecha o que faltava da SM3): abre a ocorrência de urgência na central, com o paciente, a unidade e o
+     * local da crise, e registra a etapa de acionamento da rede com o protocolo.
+     */
+    @Transactional
+    public com.edufelizardo.maissaudepublica.models.dtos.version1.response.OcorrenciaUrgenciaDto acionarSamu(UUID criseId,
+            com.edufelizardo.maissaudepublica.models.dtos.version1.request.AcionamentoSamuRequestDto dto) {
+        EventoCrise c = paraEscrever(criseId);
+        if (c.getSituacao() != SituacaoCriseSaudeMental.EM_CURSO) {
+            throw new ResourceUnprocessableEntityException("A crise já foi encerrada.");
+        }
+        var profissional = saudeMentalService.profissionalDoUsuario();
+        var ocorrencia = urgenciaService.abrirPelaCrise(c, dto, profissional);
+        EtapaCrise e = new EtapaCrise();
+        e.setCrise(c);
+        e.setEtapa(EtapaCriseSaudeMental.ACIONAMENTO_DA_REDE);
+        e.setDescricao("SAMU acionado: ocorrência " + ocorrencia.getProtocolo() + " na central " + ocorrencia.getCentralNome() + ".");
+        e.setOcorridaEm(ocorrencia.getRecebidaEm());
+        e.setProfissional(profissional);
+        e.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        etapaRepository.save(e);
+        ContextoAuditoria.detalhe("SAMU acionado pela crise: " + ocorrencia.getProtocolo() + ".");
+        return ocorrencia;
     }
 
     @Transactional

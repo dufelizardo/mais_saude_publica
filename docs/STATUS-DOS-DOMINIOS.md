@@ -37,7 +37,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 8 | [Enfermagem](#8-enfermagem) | ✅ | plano de cuidados e aprazamento |
 | 9 | [Farmácia](#9-farmácia) | ✅ | — |
 | 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | 🟡 | exames de imagem e laudo assinado |
-| 11 | [Regulação](#11-regulação) | 🟡 | urgência e internação |
+| 11 | [Regulação](#11-regulação) | 🟡 | regulação de leitos entre unidades e cotas (PPI) |
 | 12 | [Leitos / Internação](#12-leitos--internação) | 🟡 | regulação de leitos e faturamento (AIH) |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ⬜ | domínio inteiro |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
@@ -52,7 +52,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1, V2 e V4 (vetores, animais e ambiental) feitas; sanitária e trabalhador (V3, V5) |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
-| 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
+| 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1, C2 e C4 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação permanente); fatias C3, C5 e C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
@@ -69,7 +69,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 
-**Precisam de desenho (ADR) antes:** regulação de urgência (11), Estoque (13), Transporte (16) e Gestão da Rede (30).
+**Precisam de desenho (ADR) antes:** Estoque (13), Transporte (16) e Gestão da Rede (30).
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -102,8 +102,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 |---|---|
 | Documentos D2 | V3 (autos da VISA), C2 (arquivos dos materiais) |
 | Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
-| Estoque (13) e Transporte (16) | E4 (insumos e veículos), SAMU |
-| Regulação de urgência (11) | SM3 (acionar SAMU), E4 |
+| Estoque (13) e Transporte (16) | E4 (insumos e veículos), viaturas, equipes e bases do SAMU |
 | Gestão da Rede (30) | cotas PPI da Regulação |
 
 ## 2. Domínios
@@ -286,9 +285,14 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - Central de Regulação do Acesso: catálogo, solicitação, fila e eventos (ADR-0087).
 - Tela com "Encaminhar" no atendimento (ADR-0088).
 - Agendamento na executante, desfecho com contrarreferência e vínculo assistencial (ADR-0089).
+- Regulação de urgência ([ADR-0176](./adr/0176-regulacao-de-urgencia.md)): central do 192 pela capacidade do modelo operacional, ocorrência
+  com ou sem paciente, regulação médica (orientação, envio de recurso, encaminhamento, transferência), destino com perfil Urgência e vaga
+  zero, deslocamentos, recebimento no destino, tempos de resposta, acionamento pela crise em saúde mental e as ocorrências no prontuário.
 
 **Falta:**
-- [ ] Regulação de urgência e SAMU (também pedida pela crise em saúde mental, domínio 26, SM3).
+- [x] Regulação de urgência e SAMU, com o acionamento pela crise em saúde mental (domínio 26, SM3) ([ADR-0176](./adr/0176-regulacao-de-urgencia.md)).
+- [ ] Viaturas, equipes e bases do SAMU no lugar do recurso em texto (Transporte, domínio 16).
+- [ ] Ficha clínica do atendimento pré-hospitalar e telefonia ou integração com o 192.
 - [ ] Regulação de internação e de leitos entre unidades (com o domínio 12).
 - [ ] Cotas por unidade e procedimento (PPI); hoje o regulador informa a vaga. Pertencem à Gestão da Rede de Atenção
   (item 30).
@@ -671,8 +675,9 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   prazo e retorno intersetorial), com metas, série e Sala de Situação.
 
 **Falta:**
-- [ ] **SM3 · o que ficou:** o acionamento do SAMU (depende da regulação de urgência). A notificação de violência autoprovocada
-  já sai da crise pela Vigilância ([ADR-0124](./adr/0124-vigilancia-epidemiologica-fundacao.md)).
+- [x] **SM3 · o que ficou:** o acionamento do SAMU, que abre a ocorrência na regulação de urgência e registra a etapa com o protocolo
+  ([ADR-0176](./adr/0176-regulacao-de-urgencia.md)). A notificação de violência autoprovocada já sai da crise pela Vigilância
+  ([ADR-0124](./adr/0124-vigilancia-epidemiologica-fundacao.md)).
 - [ ] CAPS de referência por território e a produção do CAPS para o faturamento (RAAS, depende do domínio 20), depois da
   SM5 (ADR-0153).
 - [ ] A guia de encaminhamento intersetorial para imprimir (depende de Documentos).

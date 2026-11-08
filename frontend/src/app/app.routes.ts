@@ -153,6 +153,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/assistencia/regulacao/regulacao').then((m) => m.Regulacao),
         data: { breadcrumb: 'Regulação', area: 'Assistência' },
       },
+      // Regulação de urgência (ADR-0176), carregada sob demanda.
+      {
+        path: 'assistencia/urgencia',
+        loadComponent: () => import('./features/assistencia/urgencia/urgencia').then((m) => m.Urgencia),
+        data: { breadcrumb: 'Regulação de urgência', area: 'Assistência' },
+      },
       // Laboratório assistencial (ADR-0094), carregado sob demanda.
       {
         path: 'assistencia/laboratorio',

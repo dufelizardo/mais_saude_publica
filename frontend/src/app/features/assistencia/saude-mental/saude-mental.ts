@@ -57,6 +57,8 @@ import {
   TIPOS_INSTITUICAO,
 } from '../../../core/models/intersetorialidade';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
+import { UrgenciaService } from '../../../core/services/urgencia';
+import { CentralUrgenciaDto } from '../../../core/models/urgencia';
 import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-prontuario';
 import { Drawer } from '../../../shared/drawer/drawer';
 
@@ -102,6 +104,7 @@ export class SaudeMental {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly service = inject(SaudeMentalService);
+  private readonly urgenciaService = inject(UrgenciaService);
   private readonly unidadeService = inject(UnidadeSaudeService);
   private readonly equipeService = inject(EquipeService);
   private readonly pacienteService = inject(PacienteService);
@@ -234,6 +237,9 @@ export class SaudeMental {
   });
   protected readonly criseForm = this.fb.nonNullable.group({ pacienteId: [''], unidadeId: [''], tipo: [''], descricao: [''], localOcorrencia: [''] });
   protected readonly etapaForm = this.fb.nonNullable.group({ etapa: [''], descricao: [''] });
+  /** Acionar o SAMU pela crise (ADR-0176): abre a ocorrência na central de urgência. */
+  protected readonly samuForm = this.fb.nonNullable.group({ centralId: [''], motivo: [''], telefone: [''] });
+  protected readonly centraisUrgencia = signal<CentralUrgenciaDto[] | null>(null);
   protected readonly desfechoForm = this.fb.nonNullable.group({ desfecho: [''] });
   protected readonly notificacaoForm = this.fb.nonNullable.group({ numero: [''] });
 
@@ -676,6 +682,35 @@ export class SaudeMental {
     if (!this.validar(erros)) return;
     this.enviarCrise(this.service.etapaCrise(c.uuid, v.etapa, v.descricao.trim()), 'Etapa registrada');
     this.etapaForm.reset({ etapa: '', descricao: '' });
+  }
+
+  protected prepararSamu(): void {
+    if (this.centraisUrgencia() === null) {
+      this.urgenciaService.centrais().pipe(catchError(() => of([]))).subscribe((l) => {
+        this.centraisUrgencia.set(l);
+        if (l.length === 1) this.samuForm.patchValue({ centralId: l[0].unidadeId });
+      });
+    }
+  }
+
+  protected acionarSamu(c: EventoCriseDto): void {
+    const v = this.samuForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.centralId) erros['centralSamu'] = 'Escolha a central de urgência.';
+    if (!v.motivo.trim()) erros['motivoSamu'] = 'Descreva o motivo do acionamento.';
+    if (!this.validar(erros)) return;
+    this.submitting.set(true);
+    this.erroApi.set(null);
+    this.urgenciaService.acionarSamu(c.uuid, { centralId: v.centralId, motivo: v.motivo.trim(), telefone: v.telefone.trim() || null }).subscribe({
+      next: (o) => {
+        this.samuForm.reset({ centralId: v.centralId, motivo: '', telefone: '' });
+        this.enviarCrise(this.service.crise(c.uuid), 'SAMU acionado · ocorrência ' + o.protocolo);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.erroApi.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível acionar o SAMU.');
+      },
+    });
   }
 
   protected encerrarCrise(c: EventoCriseDto): void {

@@ -118,6 +118,12 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("REGULACAO.CONSULTAR", new Def("Acompanhar o andamento das solicitações de regulação", OPERACAO));
         PERMISSOES.put("REGULACAO.SOLICITAR", new Def("Solicitar regulação (encaminhar a especialidade, exame ou procedimento)", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("REGULACAO.REGULAR", new Def("Regular a fila: autorizar com vaga, devolver, negar e manter o catálogo", ACESSO_AO_DADO_DE_SAUDE));
+        // Regulação de urgência (ADR-0176): o atendente abre e registra os deslocamentos; o médico regulador decide; consultar é só o andamento.
+        PERMISSOES.put("URGENCIA.CONSULTAR", new Def("Acompanhar o andamento das ocorrências de urgência, sem dado clínico", OPERACAO));
+        PERMISSOES.put("URGENCIA.RECEBER", new Def("Abrir ocorrências na central de urgência e registrar os deslocamentos (TARM e rádio-operador)",
+                ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("URGENCIA.REGULAR", new Def("Regular as urgências: gravidade, decisão, destino com vaga zero e encerramento",
+                ACESSO_AO_DADO_DE_SAUDE));
         // Laboratório assistencial (ADR-0093).
         PERMISSOES.put("EXAME.SOLICITAR", new Def("Pedir exames laboratoriais", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LABORATORIO.COLETAR", new Def("Registrar a coleta de amostras", ACESSO_AO_DADO_DE_SAUDE));
@@ -159,7 +165,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
                         "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR",
                         "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR",
-                        "CONTEUDO.REVISAR", "LEITO.AUTORIZAR")));
+                        "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -176,6 +182,13 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
                 "Regula a fila da Central de Regulação do Acesso no seu escopo (ADR-0087).",
                 List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR")));
+        // Regulação de urgência (ADR-0176): a central do 192, pela Portaria 2.048/2002.
+        PAPEIS.put("ATENDENTE_REGULACAO_URGENCIA", new PapelPadrao("Atendente de regulação (TARM)",
+                "Atende o chamado, abre a ocorrência e registra os deslocamentos do recurso na central de urgência (ADR-0176).",
+                List.of("PACIENTE.CONSULTAR", "URGENCIA.CONSULTAR", "URGENCIA.RECEBER")));
+        PAPEIS.put("MEDICO_REGULADOR_URGENCIA", new PapelPadrao("Médico regulador de urgência",
+                "Classifica a gravidade, decide a conduta, indica o destino com vaga zero e encerra as ocorrências (ADR-0176).",
+                List.of("PACIENTE.CONSULTAR", "URGENCIA.CONSULTAR", "URGENCIA.REGULAR")));
         PAPEIS.put("ENFERMEIRO", new PapelPadrao("Enfermeiro",
                 "Classificação de risco, evolução, procedimentos e medicação.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",

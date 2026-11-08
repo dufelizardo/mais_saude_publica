@@ -202,6 +202,13 @@
                 </a>
               }
 
+              @if (podeVer('/assistencia/urgencia')) {
+                <a routerLink="/assistencia/urgencia" routerLinkActive #rlaUrgencia="routerLinkActive" [attr.aria-current]="rlaUrgencia.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                  <span class="nav-item__label">Urgência 192</span>
+                </a>
+              }
+
               @if (podeVer('/assistencia/laboratorio')) {
                 <a routerLink="/assistencia/laboratorio" routerLinkActive #rlaLaboratorio="routerLinkActive" [attr.aria-current]="rlaLaboratorio.isActive ? 'page' : null" class="nav-item">
                   <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2v6L4 18a2 2 0 0 0 1.8 3h12.4a2 2 0 0 0 1.8-3L15 8V2"></path><line x1="8" y1="2" x2="16" y2="2"></line><line x1="7" y1="14" x2="17" y2="14"></line></svg>

@@ -85,8 +85,11 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Regulação
 - ~~Tela~~ e ~~fechamento do ciclo~~ — feitos pelas ADRs 0088 e 0089.
 - Vagas por unidade e procedimento (cotas e PPI): hoje o regulador informa a vaga na autorização.
-- Fora do escopo da ADR-0087: regulação de urgência e SAMU, internação (depende de Leitos, #12),
+- Fora do escopo da ADR-0087: ~~regulação de urgência e SAMU~~ — ADR-0176; internação (depende de Leitos, #12),
   integração com SISREG e SIGTAP, e cotas por unidade (PPI).
+- Regulação de urgência (ADR-0176): viaturas, equipes e bases no lugar do recurso em texto (Transporte, #16); ficha clínica do
+  atendimento pré-hospitalar; telefonia e integração com o 192; reserva de leito na vaga zero; conceder os papéis **Atendente de regulação
+  (TARM)** e **Médico regulador de urgência** na central quando a autorização for ligada.
 - Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
   autorização for ligada.
 
@@ -180,9 +183,9 @@ real":
   profissionais, sem consentimento para a população); faltam C2 a C6 (avaliação).
 - **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; ~~E1 (núcleo)~~ — ADR-0156 (sem a escolha
   manual das microáreas na tela); ~~E2 (contingência)~~ — ADR-0157; ~~E3 (coordenação)~~ — ADR-0158 (insumo, equipamento e veículo como necessidade até Estoque e Transporte); ~~E5 (pós-evento)~~ — ADR-0159 (sem o relatório em PDF, que depende de Documentos); ~~E6a (evento de massa e estruturas temporárias)~~ — ADR-0160 (ambulâncias como número até Transporte); ~~E6b (painel da epidemia e exposição ambiental)~~ — ADR-0161 (sem incidência por população); falta a E4 (integração da rede, depende de Estoque e Transporte).
-- **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (sem a notificação no sistema, V1, e sem o SAMU, regulação
-  de urgência); ~~SM5 (CAPS e RAPS)~~ — ADR-0153 (sem o CAPS de referência por território e a RAAS); ~~SM6
-  (intersetorialidade e indicadores)~~ — ADR-0155. Domínio completo; o SAMU na crise segue com a regulação de urgência.
+- **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (a notificação pela V1; o SAMU pela
+  regulação de urgência, ADR-0176); ~~SM5 (CAPS e RAPS)~~ — ADR-0153 (sem o CAPS de referência por território e a RAAS); ~~SM6
+  (intersetorialidade e indicadores)~~ — ADR-0155. Domínio completo.
 - **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134, ~~SB2 (odontograma)~~ — ADR-0135, ~~SB3a (catálogo e procedimento odontológico)~~ — ADR-0136, ~~SB3b (plano de tratamento)~~ — ADR-0137; ~~SB4a (encaminhamento pela Regulação)~~ — ADR-0138; ~~SB4b (prótese)~~ — ADR-0139; ~~SB5 (coletiva)~~ — ADR-0140. Domínio completo; CPO-D e indicadores ficam para a P6 e o BI.
 - **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias ~~V1 (fundação)~~ — ADR-0124,
   ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131, ~~V4a (controle de vetores)~~ —
