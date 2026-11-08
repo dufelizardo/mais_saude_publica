@@ -221,7 +221,8 @@ class IndicadoresDaRedeControllerTest {
         assertThat((Integer) JsonPath.read(r, "$.sensiveisOcultas")).isZero();
         assertThat((List<?>) JsonPath.read(r, "$.agravos")).hasSize(2);
         assertThat((List<?>) JsonPath.read(r, "$.semanas")).hasSize(12);
-        assertThat((Integer) JsonPath.read(r, "$.semanas[11].notificacoes")).isGreaterThanOrEqualTo(1);
+        // As notificações de ontem e anteontem caem nas duas últimas semanas; no domingo, a semana atual começa vazia.
+        assertThat((Integer) JsonPath.read(r, "$.semanas[10].notificacoes") + (Integer) JsonPath.read(r, "$.semanas[11].notificacoes")).isGreaterThanOrEqualTo(1);
         assertThat((Integer) JsonPath.read(r, "$.regularidade.semana")).isEqualTo(anterior.semana());
         assertThat((Integer) JsonPath.read(r, "$.regularidade.unidadesAssistenciais")).isEqualTo(1);
         assertThat((Integer) JsonPath.read(r, "$.regularidade.comNegativa")).isEqualTo(1);

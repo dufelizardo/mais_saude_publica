@@ -54,7 +54,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
-| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 feita (comunicado, conteúdo, portal e e-mail); fatias C2 a C6 |
+| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 e C4 feitas (comunicado, conteúdo, portal e e-mail; educação permanente); fatias C2, C3, C5 e C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
@@ -70,7 +70,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 |---|---|---|
 | BI5 | 19 Indicadores e BI | painel por coordenação e regional (protótipo `Coordenacoes.html`) |
 | C2 | 28 Comunicação | campanhas de comunicação, sem os arquivos dos materiais, que dependem de Documentos D2 |
-| C4 | 28 Comunicação | conteúdo ligado ao `Treinamento` do RH e competências |
 
 **Precisam de desenho (ADR) antes:** regulação de urgência (11), Estoque (13), Transporte (16) e Gestão da Rede (30).
 
@@ -95,7 +94,7 @@ SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6a ✅ ──► E6b ✅
 C1 ✅ ──► C2 ──► C3 · C6
-C1 ✅ ──► C4 · C5
+C1 ✅ ──► C4 ✅ · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
 
@@ -152,7 +151,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - [ ] Banco de horas e horas realizadas, ligando o ponto à escala.
 - [ ] Exportar e importar profissionais.
 - [ ] Modelos de jornada cadastráveis pelo usuário.
-- [ ] Conteúdo e material didático ligados aos treinamentos (domínio 28, C4).
+- [x] Conteúdo e material didático ligados aos treinamentos, com competências (domínio 28, C4, [ADR-0173](./adr/0173-educacao-permanente.md)).
+- [ ] Competências exigidas por cargo e o painel de quem não as tem; a Necessidade de pessoal passar a usar o catálogo.
 - [x] Turnos fora da lotação por mobilização em emergência ativa, como exceção controlada (domínio 27, E3, [ADR-0158](./adr/0158-emergencias-coordenacao.md)).
 - [ ] Confirmação do plantonista e troca pedida pelo próprio profissional.
 - [ ] Recorrência de escala e adicional noturno.
@@ -735,7 +735,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 - [ ] **C2 · Campanhas de comunicação:** `CampanhaComunicacao` ligada a programa ou campanha operacional, público-alvo,
   material educativo (os arquivos dependem do domínio Documentos).
 - [ ] **C3 · Educação em saúde:** conteúdo e material nas ações educativas de Programas (P4).
-- [ ] **C4 · Educação permanente:** conteúdo e material ligados ao `Treinamento` do RH; competências.
+- [x] **C4 · Educação permanente** ([ADR-0173](./adr/0173-educacao-permanente.md)): catálogo de competências, competências e conteúdos revisados no treinamento, competências do profissional pelas participações.
 - [ ] **C5 · Multicanal:** adaptadores de SMS, notificação, aplicativo e painel (Integrações, #20); consentimento e
   descadastro.
 - [ ] **C6 · Avaliação:** alcance, participação e efetividade, para o #19.
