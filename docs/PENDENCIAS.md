@@ -147,6 +147,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - **Cobertura Robot de interface das demais telas**, deixada para o final (ADR-0077): Necessidades de
   pessoal, RH (Cargos & salários, Benefícios, Desenvolvimento, Recrutamento, Folha; o perfil já tem cobertura pelas ADRs 0084 a 0086),
   Profissionais, Usuários & Perfis (além do encerramento de sessões) e Auditoria.
+- **`SetorControllerTest` depende de banco limpo:** a limpeza dele apaga todos os setores e falha quando uma execução Robot
+  deixou leitos (`Robot Leito ...`) ligados a um setor. Restringir a limpeza aos setores criados pelo próprio teste.
 
 ## 6. Roadmap de domínios
 
@@ -165,7 +167,8 @@ real":
   - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);
   - na Enfermagem, `Cuidado` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
-  - #13 Estoque;
+  - #13 Estoque — ~~ES1 (catálogo, lotes, livro, mínimo e alertas)~~ — ADR-0177; ES2 (central, requisição, transferência,
+    inventário) e ES3 (emergências) com aprovação; conceder o papel **Almoxarife** quando a autorização for ligada;
   - #14 Compras;
   - #15 Patrimônio;
   - #17 Financeiro;

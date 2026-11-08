@@ -95,6 +95,10 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Plano de tratamento odontológico (ADR-0137): abrir, conduzir e concluir é do cirurgião-dentista.
         PERMISSOES.put("ODONTOLOGIA.PLANEJAR", new Def("Abrir, conduzir e concluir o plano de tratamento odontológico (cirurgião-dentista)",
                 ACESSO_AO_DADO_DE_SAUDE));
+        // Estoque e almoxarifado (ADR-0177): materiais gerais; medicamento é da Farmácia e vacina, da Sala de Vacina.
+        PERMISSOES.put("ESTOQUE.CONSULTAR", new Def("Consultar o saldo, o livro e os alertas do estoque de materiais", OPERACAO));
+        PERMISSOES.put("ESTOQUE.MOVIMENTAR", new Def("Registrar entrada, saída por consumo, perda e ajuste de materiais", OPERACAO));
+        PERMISSOES.put("ESTOQUE.GERENCIAR", new Def("Manter o catálogo de materiais e o estoque mínimo", OPERACAO));
         PERMISSOES.put("PACIENTE.CONSULTAR", new Def("Consultar cadastro de pacientes", OPERACAO));
         PERMISSOES.put("PACIENTE.CADASTRAR", new Def("Cadastrar e atualizar pacientes", OPERACAO));
         PERMISSOES.put("AGENDAMENTO.GERENCIAR", new Def("Agendar, confirmar e cancelar", OPERACAO));
@@ -165,7 +169,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
                         "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR",
                         "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR",
-                        "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR")));
+                        "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR",
+                        "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -209,7 +214,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
-                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR")));
+                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR", "ESTOQUE.CONSULTAR")));
         // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
                 "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",
@@ -258,6 +263,10 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("TECNICO_SAUDE_BUCAL", new PapelPadrao("Técnico em saúde bucal",
                 "Procedimentos permitidos, sob supervisão do dentista (Lei 11.889/2008). Sem avaliação nem diagnóstico.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR", "PROGRAMA.ACOMPANHAR")));
+        // Estoque e almoxarifado (ADR-0177).
+        PAPEIS.put("ALMOXARIFE", new PapelPadrao("Almoxarife",
+                "Entrada, saída por consumo, perda e ajuste de materiais e insumos gerais (ADR-0177).",
+                List.of("ESTOQUE.CONSULTAR", "ESTOQUE.MOVIMENTAR")));
         PAPEIS.put("FARMACEUTICO", new PapelPadrao("Farmacêutico",
                 "Estoque, dispensação e transferências; lê a prescrição.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "FARMACIA.CONSULTAR", "FARMACIA.GERENCIAR_ESTOQUE",

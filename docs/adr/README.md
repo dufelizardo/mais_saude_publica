@@ -191,6 +191,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0174](./0174-campanhas-de-comunicacao.md) | Comunicação e Educação em Saúde: campanhas de comunicação (C2) | Aceita e implementada |
 | [0175](./0175-coordenacoes-e-gerencia.md) | Indicadores e BI: coordenações e gerência (BI5) | Aceita e implementada |
 | [0176](./0176-regulacao-de-urgencia.md) | Regulação de urgência: central do 192, regulação médica, vaga zero e o SAMU pela crise | Aceita e implementada |
+| [0177](./0177-estoque-e-almoxarifado.md) | Estoque e Almoxarifado: desenho do domínio 13 e a ES1 (catálogo, lotes, livro, mínimo e alertas) | Aceita (ES1 implementada; ES2 e ES3 com aprovação) |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

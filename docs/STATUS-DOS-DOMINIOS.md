@@ -39,7 +39,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | 🟡 | exames de imagem e laudo assinado |
 | 11 | [Regulação](#11-regulação) | 🟡 | regulação de leitos entre unidades e cotas (PPI) |
 | 12 | [Leitos / Internação](#12-leitos--internação) | 🟡 | regulação de leitos e faturamento (AIH) |
-| 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ⬜ | domínio inteiro |
+| 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 feita (catálogo, lotes, livro, mínimo e alertas); ES2 (central, requisição, inventário) e ES3 (emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 15 ✅ · 10 🟡 · 6 ⬜ (e Documentos 🟡). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 15 ✅ · 11 🟡 · 5 ⬜ (e Documentos 🟡). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -69,7 +69,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 
-**Precisam de desenho (ADR) antes:** Estoque (13), Transporte (16) e Gestão da Rede (30).
+**Precisam de desenho (ADR) antes:** Transporte (16) e Gestão da Rede (30).
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -102,7 +102,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 |---|---|
 | Documentos D2 | V3 (autos da VISA), C2 (arquivos dos materiais) |
 | Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
-| Estoque (13) e Transporte (16) | E4 (insumos e veículos), viaturas, equipes e bases do SAMU |
+| Transporte (16) | E4 (veículos), viaturas, equipes e bases do SAMU |
+| Estoque ES3 (13), com aprovação | E4 (insumos) |
 | Gestão da Rede (30) | cotas PPI da Regulação |
 
 ## 2. Domínios
@@ -324,13 +325,18 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 13. Estoque / Almoxarifado
 
-**Estado:** ⬜. Hoje só existe o rótulo `ESTOQUE` reservado no catálogo de capacidades (ADR-0032).
+**Estado:** 🟡. Desenho na [ADR-0177](./adr/0177-estoque-e-almoxarifado.md); detalhe em
+[`estoque/MODELO-ESTOQUE.md`](./estoque/MODELO-ESTOQUE.md).
+
+**Temos:**
+- **ES1:** catálogo de materiais da rede (com ou sem lote e validade), estoque por unidade em lotes, livro de movimentação (entrada por
+  nota fiscal, doação ou saldo inicial; saída por consumo para um setor, pelos lotes que vencem primeiro; perda; ajuste de inventário),
+  estoque mínimo, alertas de mínimo e validade e o valor do estoque. Tela em Administrativo e o papel Almoxarife.
 
 **Falta:**
-- [ ] Consumido pela mobilização em emergência: reserva, consumo extraordinário, redistribuição (domínio 27, E4).
-- [ ] Desenho (ADR): produto, lote, estoque, movimentação, inventário, almoxarifado. Fica separado da Farmácia,
-  porque medicamento tem regra própria.
-- [ ] Implementação.
+- [ ] **ES2:** almoxarifado central, requisição das unidades, transferência em duas etapas com divergência e inventário com fechamento.
+- [ ] **ES3:** consumido pela mobilização em emergência: reserva, consumo extraordinário, redistribuição (domínio 27, E4).
+- [ ] Fornecedor cadastrado e pedido de compra (domínio 14); custo médio e contabilidade (domínio 17); código de barras.
 
 ### 14. Compras / Contratos / Fornecedores
 
