@@ -179,8 +179,8 @@ public class EducacaoPermanenteService {
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
 
-    /** Por grupo, a versão revisada mais recente. */
-    private Map<UUID, ConteudoEducativo> vigentes() {
+    /** Por grupo, a versão revisada mais recente. Também usada pelas campanhas (ADR-0174). */
+    public Map<UUID, ConteudoEducativo> vigentes() {
         Map<UUID, ConteudoEducativo> vigentes = new HashMap<>();
         for (ConteudoEducativo c : conteudoRepository.findBySituacaoIn(REVISADOS)) {
             vigentes.merge(c.getGrupoId(), c, (a, b) -> a.getVersao() >= b.getVersao() ? a : b);
@@ -199,7 +199,7 @@ public class EducacaoPermanenteService {
         return new EducacaoPermanenteDto.Competencia(c.getUuid(), c.getCodigo(), c.getNome(), c.getDescricao(), c.isAtivo());
     }
 
-    private static EducacaoPermanenteDto.Conteudo dto(ConteudoEducativo c) {
+    public static EducacaoPermanenteDto.Conteudo dto(ConteudoEducativo c) {
         boolean vencido = c.getValidade().isBefore(LocalDate.now());
         SituacaoConteudo situacao = c.getSituacao() == SituacaoConteudo.PUBLICADO && vencido ? SituacaoConteudo.EXPIRADO : c.getSituacao();
         return new EducacaoPermanenteDto.Conteudo(c.getGrupoId(), c.getUuid(), c.getTitulo(), c.getVersao(), situacao, c.getPublico(), c.getValidade(), vencido);

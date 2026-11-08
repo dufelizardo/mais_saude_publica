@@ -67,6 +67,7 @@ public class ComunicacaoService {
 
     @Autowired private CanalComunicacaoRepository canalRepository;
     @Autowired private ComunicadoRepository comunicadoRepository;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.CampanhaComunicacaoRepository campanhaComunicacaoRepository;
     @Autowired private ConteudoEducativoRepository conteudoRepository;
     @Autowired private PublicacaoRepository publicacaoRepository;
     @Autowired private LotacaoRepository lotacaoRepository;
@@ -370,6 +371,25 @@ public class ComunicacaoService {
         c.setUnidade(unidade);
         c.getCanais().clear();
         c.getCanais().addAll(canais);
+        c.setCampanha(campanhaDoComunicado(dto));
+    }
+
+    /** A campanha precisa estar planejada ou em andamento, e o período do comunicado caber no dela (422). */
+    private com.edufelizardo.maissaudepublica.models.CampanhaComunicacao campanhaDoComunicado(ComunicadoRequestDto dto) {
+        if (dto.getCampanhaId() == null) {
+            return null;
+        }
+        var campanha = campanhaComunicacaoRepository.findById(dto.getCampanhaId()).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar a campanha " + dto.getCampanhaId() + " em nossos registros."));
+        var s = campanha.getSituacao();
+        if (s == com.edufelizardo.maissaudepublica.models.enuns.SituacaoCampanhaComunicacao.ENCERRADA
+                || s == com.edufelizardo.maissaudepublica.models.enuns.SituacaoCampanhaComunicacao.CANCELADA) {
+            throw new ResourceUnprocessableEntityException("A campanha " + campanha.getNome() + " já terminou.");
+        }
+        if (dto.getInicio().isBefore(campanha.getInicio()) || dto.getFim().isAfter(campanha.getFim())) {
+            throw new ResourceUnprocessableEntityException("O período do comunicado precisa caber no da campanha.");
+        }
+        return campanha;
     }
 
     private static void preencher(ConteudoEducativo c, ConteudoEducativoRequestDto dto) {
@@ -463,7 +483,8 @@ public class ComunicacaoService {
         return new ComunicadoDto(c.getUuid(), c.getTitulo(), c.getMensagem(), c.getPrioridade(), c.getPublico(), c.getInicio(), c.getFim(),
                 c.getUnidade() != null ? c.getUnidade().getUuid() : null, c.getUnidade() != null ? c.getUnidade().getNome() : null,
                 new ArrayList<>(c.getCanais().stream().map(CanalComunicacao::getUuid).toList()), c.getSituacao(), vigente, c.getPublicadoEm(), c.getEncerradoEm(),
-                c.getMotivoEncerramento(), publicacaoRepository.findDoComunicado(c.getUuid()).stream().map(ComunicacaoService::dto).toList());
+                c.getMotivoEncerramento(), publicacaoRepository.findDoComunicado(c.getUuid()).stream().map(ComunicacaoService::dto).toList(),
+                c.getCampanha() != null ? c.getCampanha().getUuid() : null, c.getCampanha() != null ? c.getCampanha().getNome() : null);
     }
 
     private ConteudoEducativoDto dto(ConteudoEducativo c) {

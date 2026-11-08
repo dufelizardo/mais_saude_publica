@@ -72,6 +72,9 @@ export interface ComunicadoDto {
   encerradoEm?: string | null;
   motivoEncerramento?: string | null;
   publicacoes: PublicacaoDto[];
+  /** Campanha de comunicação de onde saiu (ADR-0174). */
+  campanhaId?: string | null;
+  campanhaNome?: string | null;
 }
 
 export interface ComunicadoRequestDto {
@@ -83,6 +86,7 @@ export interface ComunicadoRequestDto {
   fim: string;
   unidadeId?: string | null;
   canalIds: string[];
+  campanhaId?: string | null;
 }
 
 export interface ConteudoEducativoDto {
@@ -129,4 +133,118 @@ export interface ConteudoPublicoDto {
   faixaEtaria?: string | null;
   versao: number;
   validade: string;
+}
+
+// ── Campanhas de comunicação e material educativo (ADR-0174) ───────────────────────────────────────
+
+export type SituacaoCampanhaComunicacao = 'PLANEJADA' | 'EM_ANDAMENTO' | 'ENCERRADA' | 'CANCELADA';
+export type PublicoAlvoCampanha = 'POPULACAO_GERAL' | 'GESTANTES' | 'CRIANCAS' | 'ADOLESCENTES' | 'IDOSOS' | 'PROFISSIONAIS_SAUDE' | 'ACS';
+export type FormatoMaterial = 'CARTILHA' | 'FOLDER' | 'CARTAZ' | 'INFOGRAFICO' | 'VIDEO' | 'AUDIO' | 'REDE_SOCIAL' | 'OUTRO';
+
+export const SITUACOES_CAMPANHA: Record<SituacaoCampanhaComunicacao, string> = {
+  PLANEJADA: 'Planejada',
+  EM_ANDAMENTO: 'Em andamento',
+  ENCERRADA: 'Encerrada',
+  CANCELADA: 'Cancelada',
+};
+export const PUBLICOS_ALVO: Record<PublicoAlvoCampanha, string> = {
+  POPULACAO_GERAL: 'População geral',
+  GESTANTES: 'Gestantes',
+  CRIANCAS: 'Crianças',
+  ADOLESCENTES: 'Adolescentes',
+  IDOSOS: 'Idosos',
+  PROFISSIONAIS_SAUDE: 'Profissionais de saúde',
+  ACS: 'Agentes comunitários de saúde',
+};
+export const FORMATOS_MATERIAL: Record<FormatoMaterial, string> = {
+  CARTILHA: 'Cartilha',
+  FOLDER: 'Folder',
+  CARTAZ: 'Cartaz',
+  INFOGRAFICO: 'Infográfico',
+  VIDEO: 'Vídeo',
+  AUDIO: 'Áudio',
+  REDE_SOCIAL: 'Peça para redes sociais',
+  OUTRO: 'Outro',
+};
+
+export interface ConteudoDaCampanhaDto {
+  grupoId: string;
+  uuid: string;
+  titulo: string;
+  versao: number;
+  situacao: SituacaoConteudo;
+  validade: string;
+  vencido: boolean;
+}
+
+export interface CampanhaComunicacaoDto {
+  uuid: string;
+  nome: string;
+  objetivo: string;
+  descricao?: string | null;
+  inicio: string;
+  fim: string;
+  situacao: SituacaoCampanhaComunicacao;
+  publicoAlvo: PublicoAlvoCampanha;
+  faixaEtaria?: string | null;
+  unidadeId?: string | null;
+  unidadeNome?: string | null;
+  territorios: { uuid: string; nome: string }[];
+  temas: string[];
+  canalIds: string[];
+  conteudos: ConteudoDaCampanhaDto[];
+  programaId?: string | null;
+  programaNome?: string | null;
+  campanhaOperacionalId?: string | null;
+  campanhaOperacionalNome?: string | null;
+  comunicados: { uuid: string; titulo: string; situacao: SituacaoComunicado; inicio: string; fim: string }[];
+  alcance: { canal: string; publicacoes: number; enviados: number; falhas: number }[];
+  iniciadaEm?: string | null;
+  encerradaEm?: string | null;
+  balanco?: string | null;
+  motivoCancelamento?: string | null;
+}
+
+export interface CampanhaComunicacaoRequestDto {
+  nome: string;
+  objetivo: string;
+  descricao?: string | null;
+  inicio: string;
+  fim: string;
+  publicoAlvo: PublicoAlvoCampanha;
+  faixaEtaria?: string | null;
+  unidadeId?: string | null;
+  territorioIds: string[];
+  temas: string[];
+  canalIds: string[];
+  conteudoGrupoIds: string[];
+}
+
+export interface MaterialEducativoDto {
+  uuid: string;
+  conteudoGrupoId: string;
+  formato: FormatoMaterial;
+  titulo: string;
+  descricao?: string | null;
+  link?: string | null;
+  registradoEm: string;
+  retiradoEm?: string | null;
+  motivoRetirada?: string | null;
+}
+
+export interface MaterialEducativoRequestDto {
+  conteudoGrupoId: string;
+  formato: FormatoMaterial;
+  titulo: string;
+  descricao?: string | null;
+  link?: string | null;
+}
+
+export interface CampanhaComunicacaoPublicaDto {
+  nome: string;
+  objetivo: string;
+  inicio: string;
+  fim: string;
+  temas: string[];
+  conteudos: { titulo: string; resumo: string; materiais: { formato: FormatoMaterial; titulo: string; link?: string | null }[] }[];
 }

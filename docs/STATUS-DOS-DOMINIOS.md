@@ -54,7 +54,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
-| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 e C4 feitas (comunicado, conteúdo, portal e e-mail; educação permanente); fatias C2, C3, C5 e C6 |
+| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1, C2 e C4 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação permanente); fatias C3, C5 e C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
@@ -69,7 +69,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 | BI5 | 19 Indicadores e BI | painel por coordenação e regional (protótipo `Coordenacoes.html`) |
-| C2 | 28 Comunicação | campanhas de comunicação, sem os arquivos dos materiais, que dependem de Documentos D2 |
 
 **Precisam de desenho (ADR) antes:** regulação de urgência (11), Estoque (13), Transporte (16) e Gestão da Rede (30).
 
@@ -81,7 +80,7 @@ MO3 ✅ ──► SAMU (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
 BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 ✅ (relatórios) · BI5 (coordenações)
-P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
+P1 ✅ ──► P3 ✅ ──► C2 ✅ (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 ✅ (área afetada) · Equipamentos com mapa real ✅
@@ -93,7 +92,7 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6a ✅ ──► E6b ✅
-C1 ✅ ──► C2 ──► C3 · C6
+C1 ✅ ──► C2 ✅ ──► C3 · C6
 C1 ✅ ──► C4 ✅ · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
@@ -732,8 +731,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   técnica, validade e versão, canais e publicação com resultado; avisos e orientações na página pública; e-mail só a profissionais.
 
 **Falta:**
-- [ ] **C2 · Campanhas de comunicação:** `CampanhaComunicacao` ligada a programa ou campanha operacional, público-alvo,
-  material educativo (os arquivos dependem do domínio Documentos).
+- [x] **C2 · Campanhas de comunicação** ([ADR-0174](./adr/0174-campanhas-de-comunicacao.md)): campanha com público, territórios, temas, canais, conteúdos revisados e comunicados, alcance por canal, portal; material educativo com link (arquivo com a D2).
 - [ ] **C3 · Educação em saúde:** conteúdo e material nas ações educativas de Programas (P4).
 - [x] **C4 · Educação permanente** ([ADR-0173](./adr/0173-educacao-permanente.md)): catálogo de competências, competências e conteúdos revisados no treinamento, competências do profissional pelas participações.
 - [ ] **C5 · Multicanal:** adaptadores de SMS, notificação, aplicativo e painel (Integrações, #20); consentimento e

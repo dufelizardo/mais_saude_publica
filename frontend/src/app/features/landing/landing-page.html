@@ -578,6 +578,31 @@
     </div>
   </section>
 
+  @if (campanhasDeComunicacao().length) {
+    <section id="campanhas-comunicacao" class="block" aria-labelledby="cc-title">
+      <div class="container">
+        <header class="block-head">
+          <span class="eyebrow">Campanhas</span>
+          <h2 id="cc-title" style="margin-top: var(--s-4);">Campanhas de saúde em andamento</h2>
+        </header>
+        <div style="display: grid; gap: var(--s-3);">
+          @for (c of campanhasDeComunicacao(); track c.nome) {
+            <article [attr.aria-label]="c.nome" style="border: 1px solid var(--ink-200); border-radius: 10px; padding: var(--s-4);">
+              <strong>{{ c.nome }}</strong> <span style="color: var(--ink-500);">&nbsp;· até {{ c.fim.split('-').reverse().join('/') }}</span>
+              <p style="margin: 4px 0 0;">{{ c.objetivo }}</p>
+              @for (x of c.conteudos; track x.titulo) {
+                <p style="margin: var(--s-3) 0 0;"><strong>{{ x.titulo }}</strong> <span style="color: var(--ink-500);">· {{ x.resumo }}</span></p>
+                @for (m of x.materiais; track m.titulo) {
+                  <p style="margin: 2px 0 0;">{{ formatosMaterial[m.formato] }}: @if (m.link) { <a [href]="m.link" target="_blank" rel="noopener noreferrer">{{ m.titulo }}</a> } @else { {{ m.titulo }} }</p>
+                }
+              }
+            </article>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
   @if (avisosComuns().length || orientacoes().length) {
     <section id="avisos" class="block" aria-labelledby="avs-title">
       <div class="container">

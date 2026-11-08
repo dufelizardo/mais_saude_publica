@@ -4,6 +4,8 @@ import com.edufelizardo.maissaudepublica.config.RotaPublica;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ComunicadoPublicoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ConteudoPublicoDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CampanhaComunicacaoPublicaDto;
+import com.edufelizardo.maissaudepublica.services.version1.CampanhaComunicacaoService;
 import com.edufelizardo.maissaudepublica.services.version1.ComunicacaoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +25,18 @@ public class ComunicacaoPublicaController {
 
     @Autowired
     private ComunicacaoService service;
+
+    @Autowired
+    private CampanhaComunicacaoService campanhaService;
+
+    @RotaPublica
+    @GetMapping(value = "/campanhas", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Campanhas de comunicação", description = "Para a landing page, sem login (ADR-0174): as campanhas em andamento com o portal, "
+            + "com os conteúdos publicados e os materiais. Nenhum dado de pessoa.", tags = "Consulta pública")
+    @ApiErrorResponsesListagem
+    public ResponseEntity<List<CampanhaComunicacaoPublicaDto>> campanhas() {
+        return ResponseEntity.ok(campanhaService.publicas());
+    }
 
     @RotaPublica
     @GetMapping(value = "/avisos", produces = MediaType.APPLICATION_JSON_VALUE)
