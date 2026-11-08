@@ -32,4 +32,6 @@ public class PainelUrgenciaDto implements Serializable {
     private Double tempoMedioAteRegulacaoMinutos;
     /** Do chamado ao envio do recurso, nos envios de hoje. */
     private Double tempoMedioAteEnvioMinutos;
+    /** Viaturas do SAMU disponíveis, com plantão vigente e sem ocorrência aberta (ADR-0178). */
+    private List<TransporteDtos.ViaturaDisponivel> viaturas;
 }

@@ -125,6 +125,15 @@
   </section>
 </div>
 
+<section class="card" aria-labelledby="h-viaturas" style="margin-top: var(--s-4);">
+  <div class="card__head"><div><h2 id="h-viaturas">Viaturas disponíveis</h2><p class="sub">Do SAMU, com plantão agora e sem ocorrência aberta</p></div></div>
+  <ul class="eq-prof" aria-label="Viaturas disponíveis" style="padding: 0 var(--s-5) var(--s-5);">
+    @for (v of viaturas(); track v.veiculoId) {
+      <li class="mo-row"><span><span class="cell-main mono">{{ v.prefixo }}</span><span class="cell-sub">{{ v.tipo }} · {{ v.unidadeNome }} · plantão até {{ hora(v.plantaoAte) }}</span></span><div style="flex: none;"><span class="badge badge--ok">Disponível</span></div></li>
+    } @empty { <li class="cell-sub">Nenhuma viatura disponível com plantão. O recurso pode ser registrado pelo tipo e um texto.</li> }
+  </ul>
+</section>
+
 <section class="card" aria-labelledby="h-destinos" style="margin-top: var(--s-4);">
   <div class="card__head"><div><h2 id="h-destinos">Destinos de urgência</h2><p class="sub">Unidades com o perfil Urgência: leitos livres e ocorrências a caminho. Sem vaga, o regulador ainda pode mandar (vaga zero).</p></div></div>
   <div class="tbl-wrap">
@@ -258,6 +267,15 @@
               @if (erro('condutaRegular')) { <p class="dw-err" id="e-condutaRegular">{{ erro('condutaRegular') }}</p> }
             </div>
             @if (decisaoNaGaveta() === 'ENVIO_DE_RECURSO' || decisaoNaGaveta() === 'TRANSFERENCIA') {
+              <div class="dw-field">
+                <label for="f-veiculoRegular">Viatura da frota<span class="opt">disponíveis, com plantão</span></label>
+                <select id="f-veiculoRegular" formControlName="veiculoId" (change)="viaturaNaGaveta.set($any($event.target).value)">
+                  <option value="">{{ viaturas().length ? 'Sem viatura da frota' : 'Nenhuma viatura disponível' }}</option>
+                  @for (v of viaturas(); track v.veiculoId) { <option [value]="v.veiculoId">{{ v.prefixo }} · {{ v.tipo }} · {{ v.unidadeNome }}</option> }
+                </select>
+              </div>
+            }
+            @if ((decisaoNaGaveta() === 'ENVIO_DE_RECURSO' || decisaoNaGaveta() === 'TRANSFERENCIA') && !viaturaNaGaveta()) {
               <div class="dw-row">
                 <div class="dw-field">
                   <label for="f-recursoRegular">Recurso@if (decisaoNaGaveta() === 'ENVIO_DE_RECURSO') { <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span> } @else { <span class="opt">opcional</span> }</label>

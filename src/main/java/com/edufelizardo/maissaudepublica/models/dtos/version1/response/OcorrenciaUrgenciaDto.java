@@ -61,6 +61,8 @@ public class OcorrenciaUrgenciaDto implements Serializable {
     private String conduta;
     private TipoRecursoUrgencia tipoRecurso;
     private String recursoIdentificacao;
+    private UUID veiculoId;
+    private String veiculoPrefixo;
     private UUID destinoId;
     private String destinoNome;
     private boolean vagaZero;

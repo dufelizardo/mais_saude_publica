@@ -128,6 +128,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/estoque/estoque').then((m) => m.Estoque),
         data: { breadcrumb: 'Estoque e almoxarifado', area: 'Administrativo' },
       },
+      // Frota e transporte (ADR-0178).
+      {
+        path: 'administrativo/frota',
+        loadComponent: () => import('./features/administrativo/frota/frota').then((m) => m.Frota),
+        data: { breadcrumb: 'Frota e transporte', area: 'Administrativo' },
+      },
       {
         path: 'administrativo/necessidades-de-pessoal',
         loadComponent: () => import('./features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal').then((m) => m.NecessidadesDePessoal),

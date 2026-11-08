@@ -35,6 +35,8 @@ public class RegulacaoUrgenciaRequestDto implements Serializable {
     @Size(max = 60, message = "A identificação do recurso vai até 60 caracteres.")
     private String recursoIdentificacao;
     private java.util.UUID destinoId;
+    /** A viatura da frota (ADR-0178): disponível, com plantão e do tipo pedido. */
+    private java.util.UUID veiculoId;
     private Boolean vagaZero;
     @Size(max = 500, message = "A justificativa da vaga zero vai até 500 caracteres.")
     private String justificativaVagaZero;

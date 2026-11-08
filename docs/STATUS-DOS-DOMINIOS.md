@@ -42,7 +42,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 feita (catálogo, lotes, livro, mínimo e alertas); ES2 (central, requisição, inventário) e ES3 (emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
-| 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
+| 16 | [Transporte Sanitário](#16-transporte-sanitário) | 🟡 | T1 feita (frota, plantão, viatura no SAMU); T2 (transporte eletivo e TFD) e T3 (emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 15 ✅ · 11 🟡 · 5 ⬜ (e Documentos 🟡). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 15 ✅ · 12 🟡 · 4 ⬜ (e Documentos 🟡). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -69,7 +69,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 
-**Precisam de desenho (ADR) antes:** Transporte (16) e Gestão da Rede (30).
+**Precisam de desenho (ADR) antes:** Gestão da Rede (30).
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -102,7 +102,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 |---|---|
 | Documentos D2 | V3 (autos da VISA), C2 (arquivos dos materiais) |
 | Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
-| Transporte (16) | E4 (veículos), viaturas, equipes e bases do SAMU |
+| Transporte T3 (16), com aprovação | E4 (veículos) |
 | Estoque ES3 (13), com aprovação | E4 (insumos) |
 | Gestão da Rede (30) | cotas PPI da Regulação |
 
@@ -292,7 +292,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 **Falta:**
 - [x] Regulação de urgência e SAMU, com o acionamento pela crise em saúde mental (domínio 26, SM3) ([ADR-0176](./adr/0176-regulacao-de-urgencia.md)).
-- [ ] Viaturas, equipes e bases do SAMU no lugar do recurso em texto (Transporte, domínio 16).
+- [x] Viaturas do SAMU com plantão e tripulação no lugar do recurso em texto ([ADR-0178](./adr/0178-transporte-sanitario.md)); o texto segue aceito
+  para a central sem frota cadastrada.
 - [ ] Ficha clínica do atendimento pré-hospitalar e telefonia ou integração com o 192.
 - [ ] Regulação de internação e de leitos entre unidades (com o domínio 12).
 - [ ] Cotas por unidade e procedimento (PPI); hoje o regulador informa a vaga. Pertencem à Gestão da Rede de Atenção
@@ -356,13 +357,19 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 16. Transporte Sanitário
 
-**Estado:** ⬜
+**Estado:** 🟡. Desenho na [ADR-0178](./adr/0178-transporte-sanitario.md); detalhe em
+[`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md).
+
+**Temos:**
+- **T1:** frota (placa, prefixo, tipo, lotação; viatura do SAMU só em unidade com o perfil Atenção móvel), situação com histórico
+  (manutenção, em serviço, inativo), plantão das viaturas com a tripulação mínima das Portarias 2.048/2002 e 1.010/2012, e a viatura
+  empenhada pela regulação de urgência, em serviço no envio e livre no fim. Tela Frota e transporte e o papel Coordenador de frota.
 
 **Falta:**
-- [ ] Consumido pela mobilização em emergência: veículos e ambulâncias (domínio 27, E4).
-- [ ] Desenho (ADR): veículo, solicitação de transporte. Integra com Patrimônio (veículo), RH (motorista) e
-  Regulação (necessidade).
-- [ ] Implementação.
+- [ ] **T2:** transporte sanitário eletivo: solicitação (consulta, exame, hemodiálise, alta, TFD), agenda de viagens, embarques e
+  quilometragem.
+- [ ] **T3:** consumido pela mobilização em emergência: veículos e ambulâncias (domínio 27, E4).
+- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (domínio 15).
 
 ### 17. Financeiro
 
