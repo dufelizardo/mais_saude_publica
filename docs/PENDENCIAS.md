@@ -168,8 +168,7 @@ real":
   - #17 Financeiro;
   - #18 Qualidade;
   - #19 Indicadores e BI — desenhado na ADR-0142; ~~BI1 (produção assistencial e Sala de Situação)~~ — ADR-0143;
-    ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; ~~BI4 (relatórios)~~ — ADR-0167 (sem envio agendado); falta a BI5
-    (coordenações).
+    ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; ~~BI4 (relatórios)~~ — ADR-0167 (sem envio agendado); ~~BI5 (coordenações e gerência)~~ — ADR-0175.
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —
   perfis e capacidades, ADR-0117; ~~MO2~~ — serviços da unidade, ADR-0165 (sem o leito apontar direto para o serviço). ~~MO3~~ — ponto operacional, ADR-0166 (sem GPS, sem agendar pelo ponto ou pela rota e sem
   indicadores por local). ~~MO4~~ — domínios consultam capacidades, ADR-0170. Camada completa.

@@ -157,7 +157,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0139](./0139-saude-bucal-tratamento-protetico.md) | Saúde Bucal: tratamento protético (SB4b) | Aceita e implementada |
 | [0140](./0140-saude-bucal-coletiva.md) | Saúde Bucal: saúde bucal coletiva (SB5) | Aceita e implementada |
 | [0141](./0141-programas-metas-e-indicadores.md) | Programas: metas e indicadores programáticos (P6) | Aceita e implementada |
-| [0142](./0142-indicadores-bi-e-gestao.md) | Indicadores, BI e Gestão: camada de leitura (domínio 19) | Aceita (desenho; BI1 a BI4 nas ADRs 0143, 0144, 0146 e 0167; BI5 a fazer) |
+| [0142](./0142-indicadores-bi-e-gestao.md) | Indicadores, BI e Gestão: camada de leitura (domínio 19) | Aceita (desenho; BI1 a BI5 nas ADRs 0143, 0144, 0146, 0167 e 0175) |
 | [0143](./0143-bi-producao-assistencial.md) | Indicadores e BI: produção assistencial por unidade (BI1) | Aceita e implementada |
 | [0144](./0144-bi-situacao-operacional.md) | Indicadores e BI: situação operacional (BI2) | Aceita e implementada |
 | [0145](./0145-saude-da-aplicacao-para-o-kubernetes.md) | Saúde da aplicação para as verificações do Kubernetes | Aceita e implementada |
@@ -189,6 +189,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0172](./0172-documentos-anexos.md) | Documentos: anexos do paciente (D1) | Aceita e implementada |
 | [0173](./0173-educacao-permanente.md) | Comunicação e Educação em Saúde: educação permanente (C4) | Aceita e implementada |
 | [0174](./0174-campanhas-de-comunicacao.md) | Comunicação e Educação em Saúde: campanhas de comunicação (C2) | Aceita e implementada |
+| [0175](./0175-coordenacoes-e-gerencia.md) | Indicadores e BI: coordenações e gerência (BI5) | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

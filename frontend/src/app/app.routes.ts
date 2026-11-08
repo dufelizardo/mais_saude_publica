@@ -116,6 +116,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/territorio/territorio').then((m) => m.Territorio),
         data: { breadcrumb: 'Território', area: 'Administrativo' },
       },
+      // Coordenações e gerência (ADR-0175).
+      {
+        path: 'administrativo/coordenacoes',
+        loadComponent: () => import('./features/administrativo/coordenacoes/coordenacoes').then((m) => m.Coordenacoes),
+        data: { breadcrumb: 'Coordenações e gerência', area: 'Administrativo' },
+      },
       {
         path: 'administrativo/necessidades-de-pessoal',
         loadComponent: () => import('./features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal').then((m) => m.NecessidadesDePessoal),
