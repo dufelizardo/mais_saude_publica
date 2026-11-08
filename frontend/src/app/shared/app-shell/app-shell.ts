@@ -41,6 +41,7 @@ const MENU: Record<string, string[]> = {
   '/assistencia/atendimentos': ['ATENDIMENTO.GERENCIAR', 'PRONTUARIO.CONSULTAR', 'AGENDAMENTO.GERENCIAR'],
   '/assistencia/farmacia': ['FARMACIA.CONSULTAR', 'FARMACIA.DISPENSAR', 'FARMACIA.TRANSFERIR', 'FARMACIA.GERENCIAR_ESTOQUE'],
   '/assistencia/regulacao': ['REGULACAO.CONSULTAR', 'REGULACAO.SOLICITAR', 'REGULACAO.REGULAR'],
+  '/assistencia/urgencia': ['URGENCIA.CONSULTAR', 'URGENCIA.RECEBER', 'URGENCIA.REGULAR'],
   '/assistencia/laboratorio': ['EXAME.SOLICITAR', 'LABORATORIO.COLETAR', 'LABORATORIO.ANALISAR', 'LABORATORIO.LIBERAR', 'LABORATORIO.GERENCIAR'],
   '/assistencia/leitos': ['INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'LEITO.GERENCIAR'],
   // Catálogo de programas (ADR-0118): aberto a quem está logado.
@@ -66,7 +67,7 @@ const MENU: Record<string, string[]> = {
 
 /** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
 const GRUPOS: Record<string, string[]> = {
-  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas', '/assistencia/sala-de-vacina', '/assistencia/saude-mental'],
+  Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/urgencia', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas', '/assistencia/sala-de-vacina', '/assistencia/saude-mental'],
   Vigilância: ['/vigilancia', '/vigilancia/vetores', '/vigilancia/emergencias'],
   Administração: ['/administracao/usuarios', '/administracao/auditoria'],
 };

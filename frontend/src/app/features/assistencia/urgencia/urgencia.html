@@ -1,0 +1,439 @@
+<header class="page-head">
+  <div>
+    <h1>Regulação de urgência</h1>
+    <p>Central do 192: chamados, regulação médica, destino com vaga zero e os tempos de resposta</p>
+  </div>
+  <div class="page-actions">
+    @if (centrais().length > 1) {
+      <select class="sel" aria-label="Central de regulação" [value]="centralId()" (change)="mudarCentral($any($event.target).value)">
+        <option value="">Todas as centrais</option>
+        @for (c of centrais(); track c.unidadeId) { <option [value]="c.unidadeId">{{ c.nome }}</option> }
+      </select>
+    }
+    @if (pode('URGENCIA.RECEBER')) { <button type="button" class="btn" (click)="abrirChamado()" [disabled]="!centrais().length">Novo chamado</button> }
+  </div>
+</header>
+
+@if (!carregando() && !centrais().length) {
+  <div class="box box--info" role="status"><div>Nenhuma unidade tem a capacidade <b>Regulação médica de urgência</b>. Inclua-a no modelo operacional da central (Administrativo › Modelo operacional).</div></div>
+}
+
+<section class="stats" aria-label="Resumo da central">
+  <div class="stat"><div><div class="stat__lbl">Aguardando regulação</div><div class="stat__val mono">{{ painel()?.aguardandoRegulacao ?? 0 }}</div><div class="stat__sub">sem gravidade ainda</div></div></div>
+  <div class="stat"><div><div class="stat__lbl">Vermelho · amarelo</div><div class="stat__val mono">{{ painel()?.porPrioridade?.VERMELHO ?? 0 }} · {{ painel()?.porPrioridade?.AMARELO ?? 0 }}</div><div class="stat__sub">abertas por gravidade</div></div></div>
+  <div class="stat"><div><div class="stat__lbl">Recurso em campo</div><div class="stat__val mono">{{ painel()?.emAtendimento ?? 0 }}</div><div class="stat__sub">{{ painel()?.recebidasHoje ?? 0 }} chamado(s) hoje · {{ painel()?.concluidasHoje ?? 0 }} concluído(s)</div></div></div>
+  <div class="stat"><div><div class="stat__lbl">Até a regulação</div><div class="stat__val mono">{{ minutos(painel()?.tempoMedioAteRegulacaoMinutos) }}</div><div class="stat__sub">média de hoje · até o envio {{ minutos(painel()?.tempoMedioAteEnvioMinutos) }}</div></div></div>
+</section>
+
+<style>
+  .urg-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: var(--s-4); align-items: start; }
+  @media (max-width: 1100px) { .urg-layout { grid-template-columns: 1fr; } }
+  .urg-sel { background: var(--blue-50); }
+  .tbl-wrap .urg-tabela { table-layout: fixed; width: 100%; min-width: 560px; }
+  .urg-tabela td { white-space: normal; overflow-wrap: anywhere; }
+  .urg-tl { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-3); }
+  .urg-tl li { display: grid; grid-template-columns: 96px 1fr; gap: var(--s-3); }
+  .urg-tl time { color: var(--ink-500); font-variant-numeric: tabular-nums; }
+</style>
+
+<div class="urg-layout">
+  <section class="card" aria-labelledby="h-abertas">
+    <div class="card__head"><div><h2 id="h-abertas">Ocorrências abertas</h2><p class="sub">Aguardando regulação primeiro; depois a gravidade e quem chamou antes</p></div></div>
+    <div class="tbl-wrap">
+      <table class="urg-tabela">
+        <colgroup><col style="width: 17%" /><col style="width: 24%" /><col style="width: 22%" /><col style="width: 37%" /></colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Gravidade</th>
+            <th scope="col">Protocolo</th>
+            <th scope="col">Situação</th>
+            <th scope="col">Queixa · local</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (o of abertas(); track o.uuid) {
+            <tr [class.urg-sel]="selecionada()?.uuid === o.uuid">
+              <td>@if (o.prioridade) { <span [class]="'risk risk-' + o.prioridade"><span class="sw" aria-hidden="true"></span>{{ prioridades[o.prioridade].rotulo }}</span> } @else { <span class="badge badge--warn">A regular</span> }</td>
+              <td class="mono"><button type="button" class="link-btn mono" [attr.aria-label]="'Abrir a ocorrência ' + o.protocolo" (click)="selecionar(o.uuid)">{{ o.protocolo }}</button><span class="cell-sub">{{ origens[o.origem] }} · há {{ espera(o) }}</span></td>
+              <td><span [class]="'badge badge--' + situacoes[o.situacao].classe">{{ situacoes[o.situacao].rotulo }}</span>@if (o.destinoNome) { <span class="cell-sub">→ {{ o.destinoNome }}@if (o.vagaZero) { · vaga zero }</span> }</td>
+              <td>@if (o.clinico) { <span class="cell-main">{{ o.queixa }}</span> } @else { <span class="cell-sub">sem acesso ao dado clínico</span> }<span class="cell-sub">{{ o.endereco ?? o.unidadeSolicitanteNome ?? '' }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4"><div class="empty"><strong>{{ carregando() ? 'Carregando…' : 'Nenhuma ocorrência aberta' }}</strong></div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-ocorrencia" aria-live="polite">
+    @if (selecionada(); as o) {
+      <div class="card__head">
+        <div>
+          <h2 id="h-ocorrencia">Ocorrência {{ o.protocolo }}</h2>
+          <p class="sub">{{ origens[o.origem] }} · {{ o.centralNome }} · {{ hora(o.recebidaEm) }}</p>
+        </div>
+        <span [class]="'badge badge--' + situacoes[o.situacao].classe">{{ situacoes[o.situacao].rotulo }}</span>
+      </div>
+      <div style="padding: var(--s-5); display: grid; gap: var(--s-4);">
+        <dl class="ro">
+          <div><dt>Gravidade</dt><dd>@if (o.prioridade) { <span [class]="'risk risk-' + o.prioridade"><span class="sw" aria-hidden="true"></span>{{ prioridades[o.prioridade].rotulo }} · {{ prioridades[o.prioridade].descricao }}</span> } @else { aguardando o médico regulador }</dd></div>
+          @if (o.clinico) {
+            <div><dt>Paciente</dt><dd>{{ o.pacienteNome ?? o.descricaoPaciente ?? 'Não identificado' }}</dd></div>
+            <div><dt>Queixa</dt><dd>{{ o.queixa }}</dd></div>
+            @if (o.solicitanteTelefone || o.solicitanteNome) { <div><dt>Quem chamou</dt><dd>{{ o.solicitanteNome ?? '—' }}@if (o.solicitanteTelefone) { <span class="cell-sub mono">{{ o.solicitanteTelefone }}</span> }</dd></div> }
+            @if (o.endereco) { <div><dt>Local</dt><dd>{{ o.endereco }}@if (o.localTipo) { <span class="cell-sub">{{ locais[o.localTipo] }}@if (o.referencia) { · {{ o.referencia }} }</span> }</dd></div> }
+          }
+          @if (o.unidadeSolicitanteNome) { <div><dt>Unidade que pediu</dt><dd>{{ o.unidadeSolicitanteNome }}</dd></div> }
+          @if (o.decisao) { <div><dt>Decisão</dt><dd>{{ decisoes[o.decisao] }}@if (o.reguladorNome) { <span class="cell-sub">{{ o.reguladorNome }}</span> }</dd></div> }
+          @if (o.clinico && o.conduta) { <div><dt>Conduta</dt><dd>{{ o.conduta }}</dd></div> }
+          @if (o.tipoRecurso) { <div><dt>Recurso</dt><dd>{{ recursos[o.tipoRecurso] }}@if (o.recursoIdentificacao) { <span class="cell-sub mono">{{ o.recursoIdentificacao }}</span> }</dd></div> }
+          @if (o.destinoNome) { <div><dt>Destino</dt><dd>{{ o.destinoNome }}@if (o.vagaZero) { <span class="tag tag--warn">Vaga zero</span>@if (o.justificativaVagaZero) { <span class="cell-sub">{{ o.justificativaVagaZero }}</span> } }</dd></div> }
+          @if (o.desfecho) { <div><dt>Desfecho</dt><dd>{{ desfechos[o.desfecho] }}</dd></div> }
+        </dl>
+
+        <dl class="ro" aria-label="Tempos de resposta">
+          <div><dt>Até a regulação</dt><dd class="mono">{{ minutos(o.minutosAteRegulacao) }}</dd></div>
+          <div><dt>Até o envio</dt><dd class="mono">{{ minutos(o.minutosAteEnvio) }}</dd></div>
+          <div><dt>Envio até o local</dt><dd class="mono">{{ minutos(o.minutosEnvioAteLocal) }}</dd></div>
+          <div><dt>Total</dt><dd class="mono">{{ minutos(o.minutosTotal) }}</dd></div>
+        </dl>
+
+        @if (aberta(o)) {
+          <div class="row-actions" style="justify-content: flex-start; flex-wrap: wrap;">
+            @if (o.situacao === 'RECEBIDA' && pode('URGENCIA.REGULAR')) { <button type="button" class="btn btn--sm" (click)="abrirRegular(o)">Regular</button> }
+            @if (proximoPasso(o); as p) { @if (pode('URGENCIA.RECEBER')) { <button type="button" class="btn btn--sm" (click)="registrarPasso(o, p)" [disabled]="submitting()">Registrar: {{ eventos[p] }}</button> } }
+            @if (o.situacao !== 'RECEBIDA' && o.decisao !== 'ORIENTACAO' && o.ultimoDeslocamento !== 'CHEGADA_AO_DESTINO' && pode('URGENCIA.REGULAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirDestino(o)">{{ o.destinoId ? 'Trocar destino' : 'Definir destino' }}</button> }
+            @if (o.situacao !== 'RECEBIDA' && pode('URGENCIA.REGULAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirReclassificar(o)">Reclassificar</button> }
+            @if (podeReceber(o) && pode('ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn btn--sm" (click)="receber(o)" [disabled]="submitting()">Receber no destino</button> }
+            @if (!o.pacienteId && o.clinico && pode('URGENCIA.RECEBER', 'URGENCIA.REGULAR', 'ATENDIMENTO.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirPaciente(o)">Identificar paciente</button> }
+            @if (pode('URGENCIA.REGULAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEncerrar(o)">Encerrar</button> }
+            @if ((o.situacao === 'RECEBIDA' || (o.situacao === 'REGULADA' && !o.ultimoDeslocamento)) && pode('URGENCIA.RECEBER', 'URGENCIA.REGULAR')) { <button type="button" class="link-btn" (click)="abrirCancelar(o)">Cancelar</button> }
+          </div>
+        }
+
+        <h3 class="mo-grupo">Linha do tempo</h3>
+        <ol class="urg-tl" aria-label="Linha do tempo da ocorrência">
+          @for (e of o.eventos ?? []; track e.uuid) {
+            <li><time [attr.datetime]="e.ocorridoEm">{{ hora(e.ocorridoEm) }}</time><div><span class="cell-main">{{ eventos[e.tipo] }}</span>@if (e.texto) { <span class="cell-sub">{{ e.texto }}</span> }@if (e.profissionalNome) { <span class="cell-sub">{{ e.profissionalNome }}</span> }</div></li>
+          }
+        </ol>
+      </div>
+    } @else {
+      <div class="empty" style="padding: var(--s-6);"><strong id="h-ocorrencia">Abra uma ocorrência do painel</strong></div>
+    }
+  </section>
+</div>
+
+<section class="card" aria-labelledby="h-destinos" style="margin-top: var(--s-4);">
+  <div class="card__head"><div><h2 id="h-destinos">Destinos de urgência</h2><p class="sub">Unidades com o perfil Urgência: leitos livres e ocorrências a caminho. Sem vaga, o regulador ainda pode mandar (vaga zero).</p></div></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th scope="col">Unidade</th><th scope="col" class="num">Leitos livres</th><th scope="col" class="num">A caminho</th></tr></thead>
+      <tbody>
+        @for (d of destinos(); track d.unidadeId) {
+          <tr>
+            <td class="cell-main">{{ d.nome }}<span class="cell-sub">{{ d.tipo }}</span></td>
+            <td class="num mono">@if (d.leitosAtivos) { {{ d.leitosLivres }} de {{ d.leitosAtivos }} } @else { — }</td>
+            <td class="num mono">{{ d.aCaminho }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="3"><div class="empty"><strong>Nenhuma unidade com o perfil Urgência</strong></div></td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="g.tipo === 'chamado' ? 'Novo chamado' : g.tipo === 'regular' ? 'Regular ' + g.o.protocolo : g.tipo === 'destino' ? 'Destino de ' + g.o.protocolo
+      : g.tipo === 'reclassificar' ? 'Reclassificar ' + g.o.protocolo : g.tipo === 'encerrar' ? 'Encerrar ' + g.o.protocolo : g.tipo === 'cancelar' ? 'Cancelar ' + g.o.protocolo
+      : 'Identificar o paciente'" (fechar)="gaveta.set(null)">
+    @switch (g.tipo) {
+      @case ('chamado') {
+        <form class="dw-form" [formGroup]="chamadoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-centralChamado">Central <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-centralChamado" formControlName="centralId" [attr.aria-invalid]="!!erro('centralChamado')" aria-describedby="e-centralChamado">
+                  @for (c of centrais(); track c.unidadeId) { <option [value]="c.unidadeId">{{ c.nome }}</option> }
+                </select>
+                @if (erro('centralChamado')) { <p class="dw-err" id="e-centralChamado">{{ erro('centralChamado') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-origemChamado">Origem</label>
+                <select id="f-origemChamado" formControlName="origem" (change)="origemNaGaveta.set($any($event.target).value)">
+                  <option value="CHAMADO_192">Chamado 192</option>
+                  <option value="UNIDADE_DE_SAUDE">Pedido de unidade</option>
+                </select>
+              </div>
+            </div>
+            @if (origemNaGaveta() === 'UNIDADE_DE_SAUDE') {
+              <div class="dw-field">
+                <label for="f-unidadeChamado">Unidade que pede <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-unidadeChamado" formControlName="unidadeSolicitanteId" [attr.aria-invalid]="!!erro('unidadeChamado')" aria-describedby="e-unidadeChamado">
+                  <option value="">Escolha…</option>
+                  @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+                </select>
+                @if (erro('unidadeChamado')) { <p class="dw-err" id="e-unidadeChamado">{{ erro('unidadeChamado') }}</p> }
+              </div>
+            }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-nomeChamado">Quem chamou<span class="opt">opcional</span></label>
+                <input id="f-nomeChamado" type="text" maxlength="100" formControlName="solicitanteNome" />
+              </div>
+              <div class="dw-field">
+                <label for="f-telefoneChamado">Telefone de retorno@if (origemNaGaveta() === 'CHAMADO_192') { <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span> } @else { <span class="opt">opcional</span> }</label>
+                <input id="f-telefoneChamado" type="tel" maxlength="20" formControlName="solicitanteTelefone" class="mono" [attr.aria-invalid]="!!erro('telefoneChamado')" aria-describedby="e-telefoneChamado" />
+                @if (erro('telefoneChamado')) { <p class="dw-err" id="e-telefoneChamado">{{ erro('telefoneChamado') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-queixaChamado">Queixa <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-queixaChamado" rows="3" maxlength="2000" formControlName="queixa" placeholder="O que está acontecendo, desde quando" [attr.aria-invalid]="!!erro('queixaChamado')" aria-describedby="e-queixaChamado"></textarea>
+              @if (erro('queixaChamado')) { <p class="dw-err" id="e-queixaChamado">{{ erro('queixaChamado') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-cpfChamado">CPF do paciente<span class="opt">opcional</span></label>
+                <input id="f-cpfChamado" type="text" inputmode="numeric" maxlength="14" formControlName="cpfPaciente" class="mono" [attr.aria-invalid]="!!erro('cpfChamado')" aria-describedby="e-cpfChamado" />
+                @if (erro('cpfChamado')) { <p class="dw-err" id="e-cpfChamado">{{ erro('cpfChamado') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-descricaoChamado">Sem identificação<span class="opt">sexo, idade aproximada</span></label>
+                <input id="f-descricaoChamado" type="text" maxlength="200" formControlName="descricaoPaciente" />
+              </div>
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-localChamado">Tipo de local<span class="opt">opcional</span></label>
+                <select id="f-localChamado" formControlName="localTipo">
+                  <option value="">—</option>
+                  @for (l of listaLocais; track l[0]) { <option [value]="l[0]">{{ l[1] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-enderecoChamado">Endereço<span class="opt">opcional</span></label>
+                <input id="f-enderecoChamado" type="text" maxlength="300" formControlName="endereco" />
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-referenciaChamado">Ponto de referência<span class="opt">opcional</span></label>
+              <input id="f-referenciaChamado" type="text" maxlength="300" formControlName="referencia" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Abrindo…' : 'Abrir ocorrência' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('regular') {
+        <form class="dw-form" [formGroup]="regularForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (g.tipo === 'regular' && g.o.queixa) { <div class="box box--info"><div><b>Queixa:</b> {{ g.o.queixa }}</div></div> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-prioridadeRegular">Gravidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-prioridadeRegular" formControlName="prioridade" [attr.aria-invalid]="!!erro('prioridadeRegular')" aria-describedby="e-prioridadeRegular">
+                  <option value="">Escolha…</option>
+                  @for (p of listaPrioridades; track p) { <option [value]="p">{{ prioridades[p].rotulo }} · {{ prioridades[p].descricao }}</option> }
+                </select>
+                @if (erro('prioridadeRegular')) { <p class="dw-err" id="e-prioridadeRegular">{{ erro('prioridadeRegular') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-decisaoRegular">Decisão</label>
+                <select id="f-decisaoRegular" formControlName="decisao" (change)="decisaoNaGaveta.set($any($event.target).value)">
+                  @for (d of listaDecisoes; track d[0]) { <option [value]="d[0]">{{ d[1] }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-condutaRegular">Conduta <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-condutaRegular" rows="3" maxlength="2000" formControlName="conduta" [attr.aria-invalid]="!!erro('condutaRegular')" aria-describedby="e-condutaRegular"></textarea>
+              @if (erro('condutaRegular')) { <p class="dw-err" id="e-condutaRegular">{{ erro('condutaRegular') }}</p> }
+            </div>
+            @if (decisaoNaGaveta() === 'ENVIO_DE_RECURSO' || decisaoNaGaveta() === 'TRANSFERENCIA') {
+              <div class="dw-row">
+                <div class="dw-field">
+                  <label for="f-recursoRegular">Recurso@if (decisaoNaGaveta() === 'ENVIO_DE_RECURSO') { <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span> } @else { <span class="opt">opcional</span> }</label>
+                  <select id="f-recursoRegular" formControlName="tipoRecurso" [attr.aria-invalid]="!!erro('recursoRegular')" aria-describedby="e-recursoRegular">
+                    <option value="">{{ decisaoNaGaveta() === 'TRANSFERENCIA' ? 'Sem recurso da central' : 'Escolha…' }}</option>
+                    @for (r of listaRecursos; track r[0]) { <option [value]="r[0]">{{ r[1] }}</option> }
+                  </select>
+                  @if (erro('recursoRegular')) { <p class="dw-err" id="e-recursoRegular">{{ erro('recursoRegular') }}</p> }
+                </div>
+                <div class="dw-field">
+                  <label for="f-viaturaRegular">Viatura<span class="opt">opcional</span></label>
+                  <input id="f-viaturaRegular" type="text" maxlength="60" formControlName="recursoIdentificacao" class="mono" placeholder="Ex.: USA-01" />
+                </div>
+              </div>
+            }
+            @if (decisaoNaGaveta() !== 'ORIENTACAO') {
+              <div class="dw-field">
+                <label for="f-destinoRegular">Destino@if (decisaoNaGaveta() === 'ENVIO_DE_RECURSO') { <span class="opt">opcional · pode ser definido com a equipe no local</span> } @else { <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span> }</label>
+                <select id="f-destinoRegular" formControlName="destinoId" [attr.aria-invalid]="!!erro('destinoRegular')" aria-describedby="e-destinoRegular">
+                  <option value="">{{ decisaoNaGaveta() === 'ENVIO_DE_RECURSO' ? 'Depois' : 'Escolha…' }}</option>
+                  @for (d of destinos(); track d.unidadeId) { @if (d.unidadeId !== (g.tipo === 'regular' ? g.o.unidadeSolicitanteId : null)) { <option [value]="d.unidadeId">{{ d.nome }} · {{ d.leitosAtivos ? d.leitosLivres + ' leito(s) livre(s)' : 'sem leitos cadastrados' }}</option> } }
+                </select>
+                @if (erro('destinoRegular')) { <p class="dw-err" id="e-destinoRegular">{{ erro('destinoRegular') }}</p> }
+                @if (regularForm.getRawValue().destinoId && destinoSemVaga(regularForm.getRawValue().destinoId)) { <p class="cell-sub">Sem leito livre agora: para mandar assim mesmo, marque vaga zero.</p> }
+              </div>
+              <div class="dw-field"><label class="switch" for="f-vagaZeroRegularSw"><span><b style="font-weight: 500;">Vaga zero</b> <span class="cell-sub">encaminhar sem vaga confirmada</span></span><input type="checkbox" role="switch" id="f-vagaZeroRegularSw" formControlName="vagaZero" (change)="vagaZeroNaGaveta.set($any($event.target).checked)" /></label></div>
+              @if (vagaZeroNaGaveta()) {
+                <div class="dw-field">
+                  <label for="f-vagaZeroRegular">Justificativa da vaga zero <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <textarea id="f-vagaZeroRegular" rows="2" maxlength="500" formControlName="justificativaVagaZero" [attr.aria-invalid]="!!erro('vagaZeroRegular')" aria-describedby="e-vagaZeroRegular"></textarea>
+                  @if (erro('vagaZeroRegular')) { <p class="dw-err" id="e-vagaZeroRegular">{{ erro('vagaZeroRegular') }}</p> }
+                </div>
+              }
+            }
+            <div class="dw-field">
+              <label for="f-reguladorRegular">Matrícula do médico regulador <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-reguladorRegular" type="text" formControlName="profissionalMatricula" class="mono" [attr.aria-invalid]="!!erro('reguladorRegular')" aria-describedby="e-reguladorRegular" />
+              @if (erro('reguladorRegular')) { <p class="dw-err" id="e-reguladorRegular">{{ erro('reguladorRegular') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Regular' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('destino') {
+        <form class="dw-form" [formGroup]="destinoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-destinoDestino">Destino <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-destinoDestino" formControlName="destinoId" [attr.aria-invalid]="!!erro('destinoDestino')" aria-describedby="e-destinoDestino">
+                <option value="">Escolha…</option>
+                @for (d of destinos(); track d.unidadeId) { <option [value]="d.unidadeId">{{ d.nome }} · {{ d.leitosAtivos ? d.leitosLivres + ' leito(s) livre(s)' : 'sem leitos cadastrados' }}</option> }
+              </select>
+              @if (erro('destinoDestino')) { <p class="dw-err" id="e-destinoDestino">{{ erro('destinoDestino') }}</p> }
+            </div>
+            <div class="dw-field"><label class="switch" for="f-vagaZeroDestinoSw"><span><b style="font-weight: 500;">Vaga zero</b></span><input type="checkbox" role="switch" id="f-vagaZeroDestinoSw" formControlName="vagaZero" (change)="vagaZeroNaGaveta.set($any($event.target).checked)" /></label></div>
+            @if (vagaZeroNaGaveta()) {
+              <div class="dw-field">
+                <label for="f-vagaZeroDestino">Justificativa da vaga zero <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <textarea id="f-vagaZeroDestino" rows="2" maxlength="500" formControlName="justificativaVagaZero" [attr.aria-invalid]="!!erro('vagaZeroDestino')" aria-describedby="e-vagaZeroDestino"></textarea>
+                @if (erro('vagaZeroDestino')) { <p class="dw-err" id="e-vagaZeroDestino">{{ erro('vagaZeroDestino') }}</p> }
+              </div>
+            }
+            <div class="dw-field">
+              <label for="f-reguladorDestino">Matrícula do médico regulador <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-reguladorDestino" type="text" formControlName="profissionalMatricula" class="mono" [attr.aria-invalid]="!!erro('reguladorDestino')" aria-describedby="e-reguladorDestino" />
+              @if (erro('reguladorDestino')) { <p class="dw-err" id="e-reguladorDestino">{{ erro('reguladorDestino') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Definir destino' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('reclassificar') {
+        <form class="dw-form" [formGroup]="reclassificarForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-prioridadeReclassificar">Nova gravidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-prioridadeReclassificar" formControlName="prioridade" [attr.aria-invalid]="!!erro('prioridadeReclassificar')" aria-describedby="e-prioridadeReclassificar">
+                <option value="">Escolha…</option>
+                @for (p of listaPrioridades; track p) { <option [value]="p">{{ prioridades[p].rotulo }} · {{ prioridades[p].descricao }}</option> }
+              </select>
+              @if (erro('prioridadeReclassificar')) { <p class="dw-err" id="e-prioridadeReclassificar">{{ erro('prioridadeReclassificar') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-motivoReclassificar">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-motivoReclassificar" rows="2" maxlength="500" formControlName="motivo" [attr.aria-invalid]="!!erro('motivoReclassificar')" aria-describedby="e-motivoReclassificar"></textarea>
+              @if (erro('motivoReclassificar')) { <p class="dw-err" id="e-motivoReclassificar">{{ erro('motivoReclassificar') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-reguladorReclassificar">Matrícula do médico regulador <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-reguladorReclassificar" type="text" formControlName="profissionalMatricula" class="mono" [attr.aria-invalid]="!!erro('reguladorReclassificar')" aria-describedby="e-reguladorReclassificar" />
+              @if (erro('reguladorReclassificar')) { <p class="dw-err" id="e-reguladorReclassificar">{{ erro('reguladorReclassificar') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Reclassificar' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('encerrar') {
+        <form class="dw-form" [formGroup]="encerrarForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="box box--info"><div>O recebimento no destino é registrado pela unidade que recebe; a orientação por telefone, na regulação.</div></div>
+            <div class="dw-field">
+              <label for="f-desfechoEncerrar">Desfecho <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-desfechoEncerrar" formControlName="desfecho" [attr.aria-invalid]="!!erro('desfechoEncerrar')" aria-describedby="e-desfechoEncerrar">
+                <option value="">Escolha…</option>
+                @for (d of listaDesfechos; track d[0]) { <option [value]="d[0]">{{ d[1] }}</option> }
+              </select>
+              @if (erro('desfechoEncerrar')) { <p class="dw-err" id="e-desfechoEncerrar">{{ erro('desfechoEncerrar') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-observacaoEncerrar">Descrição <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-observacaoEncerrar" rows="3" maxlength="1000" formControlName="observacao" [attr.aria-invalid]="!!erro('observacaoEncerrar')" aria-describedby="e-observacaoEncerrar"></textarea>
+              @if (erro('observacaoEncerrar')) { <p class="dw-err" id="e-observacaoEncerrar">{{ erro('observacaoEncerrar') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-reguladorEncerrar">Matrícula do médico regulador <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-reguladorEncerrar" type="text" formControlName="profissionalMatricula" class="mono" [attr.aria-invalid]="!!erro('reguladorEncerrar')" aria-describedby="e-reguladorEncerrar" />
+              @if (erro('reguladorEncerrar')) { <p class="dw-err" id="e-reguladorEncerrar">{{ erro('reguladorEncerrar') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Encerrar' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('cancelar') {
+        <form class="dw-form" [formGroup]="motivoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-motivoCancelar">Motivo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-motivoCancelar" rows="2" maxlength="500" formControlName="motivo" placeholder="Ex.: chamado duplicado" [attr.aria-invalid]="!!erro('motivoCancelar')" aria-describedby="e-motivoCancelar"></textarea>
+              @if (erro('motivoCancelar')) { <p class="dw-err" id="e-motivoCancelar">{{ erro('motivoCancelar') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Cancelando…' : 'Cancelar ocorrência' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('paciente') {
+        <form class="dw-form" [formGroup]="pacienteForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-cpfPaciente">CPF do paciente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-cpfPaciente" type="text" inputmode="numeric" maxlength="14" formControlName="cpf" class="mono" [attr.aria-invalid]="!!erro('cpfPaciente')" aria-describedby="e-cpfPaciente" />
+              @if (erro('cpfPaciente')) { <p class="dw-err" id="e-cpfPaciente">{{ erro('cpfPaciente') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Identificar' }}</button>
+          </footer>
+        </form>
+      }
+    }
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}

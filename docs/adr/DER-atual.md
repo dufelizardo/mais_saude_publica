@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-07.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **239 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V60). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **241 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V61). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -186,3 +186,4 @@ listadas aqui pela migração que criou cada uma (até a V60). A fonte de verdad
 | V58 | `tb_competencia`, `tb_treinamento_competencia`, `tb_treinamento_conteudo` |
 | V59 | `tb_campanha_comunicacao`, `tb_campanha_comunicacao_canal`, `tb_campanha_comunicacao_conteudo`, `tb_campanha_comunicacao_tema`, `tb_campanha_comunicacao_territorio`, `tb_material_educativo` |
 | V60 | `tb_area_gestao`, `tb_titularidade_area_gestao` |
+| V61 | `tb_ocorrencia_urgencia`, `tb_evento_urgencia` |
