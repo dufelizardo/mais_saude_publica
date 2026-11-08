@@ -26,6 +26,14 @@ public class EscopoDosIndicadores {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private AutorizacaoService autorizacaoService;
+
+    /** Níveis que organizam a rede sem atender: o recorte deles soma as unidades abaixo (ADR-0175). */
+    private static final java.util.Set<com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude> ORGANIZADORES = java.util.EnumSet.of(
+            com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude.FEDERAL, com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude.ESTADUAL,
+            com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude.MUNICIPAL, com.edufelizardo.maissaudepublica.models.enuns.TipoUnidadeDeSaude.REGIONAL);
+
     /** A unidade pedida, ou as do acesso ({@code unidades} nulo = todas). */
     public record Escopo(UnidadeDeSaude unidade, Set<UUID> unidades, String abrangencia) {
 
@@ -44,6 +52,9 @@ public class EscopoDosIndicadores {
             UnidadeDeSaude u = unidadeRepository.findById(unidadeId).orElseThrow(() -> new ResourceNotFoundException(
                     "Não foi possível encontrar a unidade " + unidadeId + " em nossos registros."));
             controleDeAcesso.exigir(CONSULTAR, u);
+            if (ORGANIZADORES.contains(u.getTipo())) {
+                return new Escopo(u, autorizacaoService.abaixoDe(Set.of(u.getUuid())), u.getNome());
+            }
             return new Escopo(u, Set.of(u.getUuid()), u.getNome());
         }
         controleDeAcesso.exigirAlguma(CONSULTAR);

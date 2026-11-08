@@ -45,7 +45,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
-| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI4 feitas (Sala de Situação e relatórios); falta a BI5 |
+| 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 14 ✅ · 11 🟡 · 6 ⬜ (e Documentos 🟡). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 15 ✅ · 10 🟡 · 6 ⬜ (e Documentos 🟡). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,7 +68,6 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| BI5 | 19 Indicadores e BI | painel por coordenação e regional (protótipo `Coordenacoes.html`) |
 
 **Precisam de desenho (ADR) antes:** regulação de urgência (11), Estoque (13), Transporte (16) e Gestão da Rede (30).
 
@@ -79,7 +78,7 @@ MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade 
 MO3 ✅ ──► SAMU (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
-BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 ✅ (relatórios) · BI5 (coordenações)
+BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 ✅ (relatórios) · BI5 ✅ (coordenações)
 P1 ✅ ──► P3 ✅ ──► C2 ✅ (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
@@ -409,7 +408,8 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 **Falta:**
 - [x] **BI4 · Relatórios** ([ADR-0167](./adr/0167-bi-relatorios.md)): catálogo de cinco relatórios sobre os números dos
   domínios, com período e unidade, prévia na tela, CSV na trilha de auditoria e impressão. Sem envio agendado.
-- [ ] **BI5 · Coordenações & Gerência** (protótipo `Coordenacoes.html`).
+- [x] **BI5 · Coordenações e gerência** ([ADR-0175](./adr/0175-coordenacoes-e-gerencia.md)): indicadores somados por regional, estrutura de gestão e quem responde, como histórico.
+- [ ] Cargo gestor no RH, metas por coordenação e exportação do organograma.
 
 ### 20. Integrações / Identidade / Segurança / Governo
 

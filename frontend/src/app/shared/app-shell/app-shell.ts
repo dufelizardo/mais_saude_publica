@@ -30,6 +30,8 @@ const MENU: Record<string, string[]> = {
   '/administrativo/equipamentos': ['ORGANIZACAO.GERENCIAR', 'ADMINISTRATIVO.CONSULTAR'],
   '/administrativo/modelo-operacional': ['ORGANIZACAO.GERENCIAR', 'ADMINISTRATIVO.CONSULTAR'],
   '/administrativo/necessidades-de-pessoal': [...ADMINISTRATIVO, ...RH],
+  // Coordenações e gerência (ADR-0175): a estrutura e os indicadores da regional.
+  '/administrativo/coordenacoes': [...ADMINISTRATIVO, 'INDICADOR.CONSULTAR'],
   // Território (ADR-0125): o recorte geográfico é aberto a quem está logado.
   '/administrativo/territorio': [],
   // Instituições da rede intersetorial (ADR-0154): o catálogo é aberto a quem está logado.
