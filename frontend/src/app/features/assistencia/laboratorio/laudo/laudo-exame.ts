@@ -7,6 +7,7 @@ import {
   INTERPRETACOES,
   MATERIAIS,
   PedidoExameResponseDto,
+  faixaCritica,
   faixaReferencia,
   valorResultado,
 } from '../../../../core/models/laboratorio';
@@ -33,6 +34,7 @@ export class LaudoExame {
   protected readonly materiais = MATERIAIS;
   protected readonly interpretacoes = INTERPRETACOES;
   protected readonly faixa = faixaReferencia;
+  protected readonly faixaCritica = faixaCritica;
   protected readonly valor = valorResultado;
   protected readonly formatCpf = formatCpf;
 

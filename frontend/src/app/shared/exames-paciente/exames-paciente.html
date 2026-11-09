@@ -17,16 +17,25 @@
             <td><span [class]="'badge badge--' + statusItem[e.status].classe"><span class="dot" aria-hidden="true"></span> {{ statusItem[e.status].rotulo }}</span></td>
             <td>
               @if (e.resultado; as r) {
-                <span class="mono lab-valor">{{ valor(r) }}</span>
+                <span class="mono lab-valor" [class.lab-valor--critico]="critico(r.interpretacao)">{{ valor(r) }}</span>
                 @if (r.interpretacao; as it) { <span [class]="'badge badge--' + interpretacoes[it].classe">{{ interpretacoes[it].rotulo }}</span> }
                 @if (r.retificacaoDeId) { <span class="cell-sub">Retificado: {{ r.motivoRetificacao }}</span> }
               } @else { — }
             </td>
-            <td>{{ e.resultado ? faixa(e.resultado) : '—' }}</td>
+            <td>
+              {{ e.resultado ? faixa(e.resultado) : '—' }}
+              @if (e.resultado?.faixaDescricao; as fd) { <span class="cell-sub">{{ fd }}</span> }
+              @if (faixaCritica(e.resultado); as fc) { <span class="cell-sub">{{ fc }}</span> }
+            </td>
             <td class="num">
-              @if (e.status === 'LIBERADO') {
-                <a class="btn btn--ghost btn--sm" [href]="'/laudo/exame/' + e.pedidoId" target="_blank" rel="noopener" [attr.aria-label]="'Laudo de ' + e.exameNome">Laudo</a>
-              }
+              <div class="lab-acoes">
+                @if (temEvolucao(e)) {
+                  <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Evolução de ' + e.exameNome" (click)="abrirEvolucao(e)">Evolução</button>
+                }
+                @if (e.status === 'LIBERADO') {
+                  <a class="btn btn--ghost btn--sm" [href]="'/laudo/exame/' + e.pedidoId" target="_blank" rel="noopener" [attr.aria-label]="'Laudo de ' + e.exameNome">Laudo</a>
+                }
+              </div>
             </td>
           </tr>
         }
@@ -35,4 +44,66 @@
   </div>
 } @else {
   <p class="cell-sub">{{ vazio }}</p>
+}
+
+@if (evolucaoAberta(); as nome) {
+  <app-drawer [titulo]="'Evolução: ' + nome" [larga]="true" (fechar)="fecharEvolucao()">
+    <div class="dw-body">
+      @if (erroEvolucao()) {
+        <div class="box box--err" role="alert"><strong>{{ erroEvolucao() }}</strong></div>
+      } @else if (evolucao(); as d) {
+        @if (d.pontos.length) {
+          <figure class="evo">
+            <svg class="evo__svg" [attr.viewBox]="'0 0 ' + largura + ' ' + altura" role="img" [attr.aria-label]="resumoGrafico()" preserveAspectRatio="xMidYMid meet">
+              @for (m of marcasY(); track $index) {
+                <line class="evo__grade" [attr.x1]="margem.esquerda" [attr.x2]="largura - margem.direita" [attr.y1]="m.y" [attr.y2]="m.y" />
+                <text class="evo__eixo" [attr.x]="margem.esquerda - 6" [attr.y]="m.y + 4" text-anchor="end">{{ m.rotulo }}</text>
+              }
+              @if (areaReferencia()) { <polygon class="evo__faixa" [attr.points]="areaReferencia()" /> }
+              <polyline class="evo__linha" [attr.points]="linha()" />
+              @for (p of pontosGrafico(); track p.ponto.itemId) {
+                <circle [attr.class]="'evo__ponto' + (p.fora ? ' evo__ponto--fora' : '') + (critico(p.ponto.interpretacao) ? ' evo__ponto--critico' : '')" [attr.cx]="p.x" [attr.cy]="p.y" r="5">
+                  <title>{{ data(p.ponto.data) }}: {{ numero(p.ponto.valor) }}{{ d.unidadeMedida ? ' ' + d.unidadeMedida : '' }}</title>
+                </circle>
+                <text class="evo__eixo" [attr.x]="p.x" [attr.y]="altura - 10" text-anchor="middle">{{ dataCurta(p.ponto.data) }}</text>
+              }
+            </svg>
+            <figcaption class="evo__legenda">
+              <span><span class="evo__amostra evo__amostra--faixa" aria-hidden="true"></span> Faixa de referência</span>
+              <span><span class="evo__amostra evo__amostra--fora" aria-hidden="true"></span> Fora da referência</span>
+              <span><span class="evo__amostra evo__amostra--critico" aria-hidden="true"></span> Crítico</span>
+            </figcaption>
+          </figure>
+
+          <div class="tbl-wrap">
+            <table class="evo__tabela">
+              <caption class="sr-only">Valores de {{ d.exameNome }}, do mais antigo para o mais recente</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Coleta</th>
+                  <th scope="col">Valor</th>
+                  <th scope="col">Referência</th>
+                  <th scope="col">Interpretação</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of d.pontos; track p.itemId) {
+                  <tr>
+                    <td>{{ data(p.data) }}</td>
+                    <td class="mono" [class.lab-valor--critico]="critico(p.interpretacao)">{{ numero(p.valor) }}{{ p.unidadeMedida ? ' ' + p.unidadeMedida : '' }}@if (p.retificado) { <span class="cell-sub">Retificado</span> }</td>
+                    <td>{{ faixa(p) }}@if (p.faixaDescricao) { <span class="cell-sub">{{ p.faixaDescricao }}</span> }</td>
+                    <td>@if (p.interpretacao; as it) { <span [class]="'badge badge--' + interpretacoes[it].classe">{{ interpretacoes[it].rotulo }}</span> } @else { — }</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="cell-sub">Nenhum resultado liberado deste exame.</p>
+        }
+      } @else {
+        <p class="cell-sub">Carregando…</p>
+      }
+    </div>
+  </app-drawer>
 }

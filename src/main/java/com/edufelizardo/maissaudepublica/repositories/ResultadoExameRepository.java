@@ -10,6 +10,9 @@ import java.util.UUID;
 public interface ResultadoExameRepository extends JpaRepository<ResultadoExame, UUID> {
     List<ResultadoExame> findByItem_UuidOrderByRegistradoEmAsc(UUID itemId);
 
+    /** Todos os resultados dos itens, para saber quais foram retificados (evolução do exame, ADR-0180). */
+    List<ResultadoExame> findByItem_UuidIn(java.util.Collection<UUID> itemIds);
+
     /** Paciente, data e valor do resultado vigente liberado do exame, no intervalo (indicadores, ADR-0141). */
     @org.springframework.data.jpa.repository.Query("select r.item.pedido.paciente.uuid, r.liberadoEm, r.valorNumerico from ResultadoExame r "
             + "where r.item.resultadoAtual = r and r.item.exame.uuid = ?1 and r.item.pedido.paciente.uuid in ?2 "

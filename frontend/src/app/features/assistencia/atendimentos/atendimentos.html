@@ -380,7 +380,7 @@
       @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.exames?.length) {
         <section class="pront-exames" aria-labelledby="pront-exames-h">
           <h4 id="pront-exames-h">Exames laboratoriais</h4>
-          <app-exames-paciente [exames]="prontuario()?.exames ?? []" />
+          <app-exames-paciente [exames]="prontuario()?.exames ?? []" [pacienteId]="prontuario()?.pacienteUuid" />
         </section>
       }
       @if (prontuarioCarregando()) {

@@ -1,11 +1,14 @@
-/** Laboratório assistencial (#10) — ADRs 0093 e 0094. */
+/** Laboratório assistencial (#10) — ADRs 0093, 0094 e 0180 (faixas por sexo e idade, críticos e evolução). */
+
+import { Sexo } from './paciente';
 
 export type MaterialExame = 'SANGUE' | 'URINA' | 'FEZES' | 'SECRECAO' | 'OUTRO';
 export type TipoResultadoExame = 'NUMERICO' | 'TEXTO';
 export type PrioridadeExame = 'ROTINA' | 'URGENTE';
 export type StatusItemExame = 'SOLICITADO' | 'COLETADO' | 'RESULTADO_REGISTRADO' | 'LIBERADO' | 'CANCELADO';
 export type MotivoRejeicaoAmostra = 'HEMOLISADA' | 'INSUFICIENTE' | 'COAGULADA' | 'IDENTIFICACAO_INCORRETA' | 'OUTRO';
-export type InterpretacaoResultado = 'NORMAL' | 'ACIMA' | 'ABAIXO';
+export type InterpretacaoResultado = 'NORMAL' | 'ACIMA' | 'ABAIXO' | 'CRITICO_ALTO' | 'CRITICO_BAIXO';
+export type UnidadeIdade = 'DIAS' | 'MESES' | 'ANOS';
 export type TipoEventoExame = 'SOLICITACAO' | 'COLETA' | 'REJEICAO_AMOSTRA' | 'RESULTADO' | 'LIBERACAO' | 'RETIFICACAO' | 'CANCELAMENTO';
 export type SituacaoPedidoExame = 'AGUARDANDO_COLETA' | 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO';
 export type EtapaTrabalho = 'PARA_COLETAR' | 'EM_ANALISE' | 'PARA_LIBERAR';
@@ -17,6 +20,8 @@ export interface ExameLaboratorialRequestDto {
   unidadeMedida?: string;
   referenciaMinima?: number | null;
   referenciaMaxima?: number | null;
+  criticoMinimo?: number | null;
+  criticoMaximo?: number | null;
   referenciaTexto?: string;
   preparo?: string;
   prazoDias?: number | null;
@@ -31,10 +36,57 @@ export interface ExameLaboratorialResponseDto {
   unidadeMedida?: string | null;
   referenciaMinima?: number | null;
   referenciaMaxima?: number | null;
+  criticoMinimo?: number | null;
+  criticoMaximo?: number | null;
   referenciaTexto?: string | null;
   preparo?: string | null;
   prazoDias?: number | null;
   ativo: boolean;
+  /** Faixas por sexo e idade (ADR-0180), da mais nova para a mais velha. */
+  faixas?: FaixaReferenciaExameDto[];
+}
+
+/** Faixa de referência por sexo e idade (ADR-0180). Sem sexo: os dois. Sem idade máxima: sem limite. */
+export interface FaixaReferenciaExameRequestDto {
+  sexo?: Sexo | null;
+  idadeMinima: number;
+  unidadeIdadeMinima: UnidadeIdade;
+  idadeMaxima?: number | null;
+  unidadeIdadeMaxima?: UnidadeIdade | null;
+  referenciaMinima?: number | null;
+  referenciaMaxima?: number | null;
+  criticoMinimo?: number | null;
+  criticoMaximo?: number | null;
+  descricao?: string;
+}
+
+export interface FaixaReferenciaExameDto extends FaixaReferenciaExameRequestDto {
+  uuid: string;
+  /** "Feminino, 12 a 59 anos". */
+  rotulo: string;
+}
+
+/** Evolução de um exame numérico do paciente (ADR-0180): só liberados, da coleta mais antiga para a mais nova. */
+export interface EvolucaoExameDto {
+  exameId: string;
+  exameNome: string;
+  unidadeMedida?: string | null;
+  pontos: PontoEvolucaoExame[];
+}
+
+export interface PontoEvolucaoExame {
+  itemId: string;
+  pedidoId: string;
+  data: string;
+  valor: number;
+  unidadeMedida?: string | null;
+  referenciaMinima?: number | null;
+  referenciaMaxima?: number | null;
+  criticoMinimo?: number | null;
+  criticoMaximo?: number | null;
+  interpretacao?: InterpretacaoResultado | null;
+  faixaDescricao?: string | null;
+  retificado: boolean;
 }
 
 export interface PedidoExameRequestDto {
@@ -74,6 +126,10 @@ export interface ResultadoExameDto {
   referenciaMinima?: number | null;
   referenciaMaxima?: number | null;
   referenciaTexto?: string | null;
+  criticoMinimo?: number | null;
+  criticoMaximo?: number | null;
+  /** Qual faixa valeu: "Feminino, 12 a 59 anos" ou "Faixa geral" (ADR-0180). */
+  faixaDescricao?: string | null;
   interpretacao?: InterpretacaoResultado | null;
   observacao?: string | null;
   analisadoPorMatricula: string;
@@ -172,6 +228,8 @@ export interface ExameProntuarioDto {
   itemId: string;
   pedidoId: string;
   atendimentoId?: string | null;
+  /** O exame do catálogo: chave da evolução (ADR-0180). */
+  exameId: string;
   exameNome: string;
   material: MaterialExame;
   status: StatusItemExame;
@@ -198,7 +256,26 @@ export const INTERPRETACOES: Record<InterpretacaoResultado, { classe: string; ro
   NORMAL: { classe: 'ok', rotulo: 'Dentro da referência' },
   ACIMA: { classe: 'alert', rotulo: 'Acima da referência' },
   ABAIXO: { classe: 'warn', rotulo: 'Abaixo da referência' },
+  CRITICO_ALTO: { classe: 'alert', rotulo: 'Crítico alto' },
+  CRITICO_BAIXO: { classe: 'alert', rotulo: 'Crítico baixo' },
 };
+
+export const UNIDADES_IDADE: Record<UnidadeIdade, string> = { DIAS: 'dias', MESES: 'meses', ANOS: 'anos' };
+
+/** Valor de pânico (ADR-0180): pede aviso imediato. */
+export function critico(i: InterpretacaoResultado | null | undefined): boolean {
+  return i === 'CRITICO_ALTO' || i === 'CRITICO_BAIXO';
+}
+
+/** Os valores críticos, para mostrar ao lado da referência: "crítico < 7 ou > 20". */
+export function faixaCritica(e: { criticoMinimo?: number | null; criticoMaximo?: number | null } | null | undefined): string {
+  if (!e || (e.criticoMinimo == null && e.criticoMaximo == null)) return '';
+  const partes = [
+    e.criticoMinimo != null ? `< ${numeroLaboratorio(e.criticoMinimo)}` : '',
+    e.criticoMaximo != null ? `> ${numeroLaboratorio(e.criticoMaximo)}` : '',
+  ].filter(Boolean);
+  return 'crítico ' + partes.join(' ou ');
+}
 
 export const MOTIVOS_REJEICAO: Record<MotivoRejeicaoAmostra, string> = {
   HEMOLISADA: 'Hemolisada',

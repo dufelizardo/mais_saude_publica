@@ -10,6 +10,8 @@ import com.edufelizardo.maissaudepublica.models.AmostraExame;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.EventoExame;
 import com.edufelizardo.maissaudepublica.models.ExameLaboratorial;
+import com.edufelizardo.maissaudepublica.models.FaixaReferenciaExame;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.FaixaReferenciaExameDto;
 import com.edufelizardo.maissaudepublica.models.ItemPedidoExame;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.PedidoExame;
@@ -49,7 +51,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -399,9 +403,29 @@ public class PedidoExameService {
             }
             r.setValorNumerico(valorNumerico);
             r.setUnidadeMedida(exame.getUnidadeMedida());
-            r.setReferenciaMinima(exame.getReferenciaMinima());
-            r.setReferenciaMaxima(exame.getReferenciaMaxima());
-            r.setInterpretacao(interpretar(valorNumerico, exame.getReferenciaMinima(), exame.getReferenciaMaxima()));
+            // A faixa do sexo e da idade do paciente na data da coleta; senão, a faixa geral do catálogo (ADR-0180).
+            Paciente paciente = item.getPedido().getPaciente();
+            LocalDate dataColeta = item.getAmostra() != null && item.getAmostra().getColetadaEm() != null
+                    ? item.getAmostra().getColetadaEm().toLocalDate() : LocalDate.now();
+            Optional<FaixaReferenciaExame> faixa = exameService.faixaPara(exame, paciente.getSexo(), paciente.getDataNascimento(), dataColeta);
+            if (faixa.isPresent()) {
+                FaixaReferenciaExame f = faixa.get();
+                r.setReferenciaMinima(f.getReferenciaMinima());
+                r.setReferenciaMaxima(f.getReferenciaMaxima());
+                r.setCriticoMinimo(f.getCriticoMinimo());
+                r.setCriticoMaximo(f.getCriticoMaximo());
+                r.setFaixaDescricao(FaixaReferenciaExameDto.rotulo(f));
+            } else {
+                r.setReferenciaMinima(exame.getReferenciaMinima());
+                r.setReferenciaMaxima(exame.getReferenciaMaxima());
+                r.setCriticoMinimo(exame.getCriticoMinimo());
+                r.setCriticoMaximo(exame.getCriticoMaximo());
+                boolean temLimite = Stream.of(exame.getReferenciaMinima(), exame.getReferenciaMaxima(), exame.getCriticoMinimo(),
+                        exame.getCriticoMaximo()).anyMatch(java.util.Objects::nonNull);
+                r.setFaixaDescricao(temLimite ? ExameLaboratorialService.FAIXA_GERAL : null);
+            }
+            r.setInterpretacao(interpretar(valorNumerico, r.getReferenciaMinima(), r.getReferenciaMaxima(), r.getCriticoMinimo(),
+                    r.getCriticoMaximo()));
         } else {
             if (textoOuNulo(valorTexto) == null) {
                 throw new ResourceBadRequestException("O exame " + exame.getNome() + " tem resultado em texto: informe o resultado.");
@@ -423,8 +447,20 @@ public class PedidoExameService {
     }
 
     static InterpretacaoResultado interpretar(BigDecimal valor, BigDecimal minima, BigDecimal maxima) {
+        return interpretar(valor, minima, maxima, null, null);
+    }
+
+    /** Crítico vence o fora da faixa: abaixo do crítico mínimo é crítico baixo; acima do crítico máximo, crítico alto (ADR-0180). */
+    static InterpretacaoResultado interpretar(BigDecimal valor, BigDecimal minima, BigDecimal maxima, BigDecimal criticoMinimo,
+                                              BigDecimal criticoMaximo) {
+        if (criticoMinimo != null && valor.compareTo(criticoMinimo) < 0) {
+            return InterpretacaoResultado.CRITICO_BAIXO;
+        }
+        if (criticoMaximo != null && valor.compareTo(criticoMaximo) > 0) {
+            return InterpretacaoResultado.CRITICO_ALTO;
+        }
         if (minima == null && maxima == null) {
-            return null;
+            return criticoMinimo != null || criticoMaximo != null ? InterpretacaoResultado.NORMAL : null;
         }
         if (minima != null && valor.compareTo(minima) < 0) {
             return InterpretacaoResultado.ABAIXO;

@@ -271,7 +271,7 @@
             <tr>
               <td class="cell-main">{{ e.nome }}@if (e.preparo) { <span class="cell-sub">{{ e.preparo }}</span> }</td>
               <td>{{ materiais[e.material] }}</td>
-              <td>{{ faixa(e) }}</td>
+              <td>{{ faixa(e) }}@if (faixaCritica(e)) { <span class="cell-sub">{{ faixaCritica(e) }}</span> }@if (e.faixas?.length) { <span class="cell-sub">+ {{ e.faixas!.length }} {{ e.faixas!.length === 1 ? 'faixa' : 'faixas' }} por sexo e idade</span> }</td>
               <td>{{ e.prazoDias != null ? e.prazoDias + ' dia(s)' : '—' }}</td>
               <td>@if (e.ativo) { <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span> Em uso</span> } @else { <span class="badge badge--muted">Fora de uso</span> }</td>
               @if (pode('LABORATORIO.GERENCIAR')) {
@@ -767,6 +767,19 @@
                   @if (erro('referenciaMaxima')) { <p class="dw-err" id="e-referenciaMaxima">{{ erro('referenciaMaxima') }}</p> }
                 </div>
               </div>
+              <div class="dw-row">
+                <div class="dw-field">
+                  <label for="f-criticoMinimo">Crítico abaixo de<span class="opt">opcional</span></label>
+                  <input id="f-criticoMinimo" type="number" step="any" class="mono" formControlName="criticoMinimo" [attr.aria-invalid]="!!erro('criticoMinimo')" aria-describedby="h-critico e-criticoMinimo" />
+                  @if (erro('criticoMinimo')) { <p class="dw-err" id="e-criticoMinimo">{{ erro('criticoMinimo') }}</p> }
+                </div>
+                <div class="dw-field">
+                  <label for="f-criticoMaximo">Crítico acima de<span class="opt">opcional</span></label>
+                  <input id="f-criticoMaximo" type="number" step="any" class="mono" formControlName="criticoMaximo" [attr.aria-invalid]="!!erro('criticoMaximo')" aria-describedby="h-critico e-criticoMaximo" />
+                  @if (erro('criticoMaximo')) { <p class="dw-err" id="e-criticoMaximo">{{ erro('criticoMaximo') }}</p> }
+                </div>
+              </div>
+              <p class="cell-sub" id="h-critico">Esta é a <b>faixa geral</b>: vale quando nenhuma faixa por sexo e idade se aplica. Crítico é o valor de pânico, que pede aviso imediato.</p>
             } @else {
               <div class="dw-row">
                 <div class="dw-field">
@@ -789,6 +802,99 @@
                 <input type="checkbox" role="switch" id="f-ativo" formControlName="ativo" aria-describedby="h-ativo" />
               </label>
             </div>
+
+            @if (g.exame && g.exame.tipoResultado === 'NUMERICO' && exameForm.controls.tipoResultado.value === 'NUMERICO') {
+              <section class="faixas" aria-labelledby="t-faixas">
+                <div class="faixas__head">
+                  <h3 id="t-faixas">Faixas por sexo e idade</h3>
+                  @if (faixaEditando() === null) { <button type="button" class="btn btn--ghost btn--sm" (click)="novaFaixa()">+ Faixa</button> }
+                </div>
+                <p class="cell-sub">A faixa do sexo do paciente que cubra a idade na data da coleta; senão, a sem sexo; senão, a faixa geral acima. Mudar ou remover não muda resultado já dado.</p>
+                @if (erroFaixa()) { <div class="box box--err" role="alert"><strong>{{ erroFaixa() }}</strong></div> }
+                @if (g.exame.faixas?.length) {
+                  <ul class="faixas__lista">
+                    @for (f of g.exame.faixas; track f.uuid) {
+                      <li class="faixas__item">
+                        <div>
+                          <strong>{{ f.rotulo }}</strong>
+                          <span class="cell-sub mono">{{ faixa({ referenciaMinima: f.referenciaMinima, referenciaMaxima: f.referenciaMaxima, unidadeMedida: g.exame.unidadeMedida }) }}@if (faixaCritica(f)) { · {{ faixaCritica(f) }} }</span>
+                        </div>
+                        <div class="faixas__acoes">
+                          <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Editar faixa ' + f.rotulo" (click)="editarFaixa(f)">Editar</button>
+                          <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Remover faixa ' + f.rotulo" [disabled]="salvandoFaixa()" (click)="removerFaixa(f)">Remover</button>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                } @else if (faixaEditando() === null) {
+                  <p class="cell-sub">Nenhuma faixa: vale a faixa geral para todos.</p>
+                }
+
+                @if (faixaEditando() !== null) {
+                  <div class="faixas__form" [formGroup]="faixaForm" role="group" aria-labelledby="t-faixaForm" (keydown.enter)="$event.preventDefault(); salvarFaixa(g.exame)">
+                    <h4 id="t-faixaForm">{{ faixaEditando() ? 'Editar faixa' : 'Nova faixa' }}</h4>
+                    <div class="dw-row">
+                      <div class="dw-field">
+                        <label for="f-faixaSexo">Sexo</label>
+                        <select id="f-faixaSexo" formControlName="sexo">
+                          <option value="">Os dois</option>
+                          <option value="FEMININO">Feminino</option>
+                          <option value="MASCULINO">Masculino</option>
+                        </select>
+                      </div>
+                      <div class="dw-field">
+                        <label for="f-faixaDescricao">Descrição<span class="opt">opcional</span></label>
+                        <input id="f-faixaDescricao" type="text" formControlName="descricao" maxlength="100" placeholder="Ex.: Recém-nascido" />
+                      </div>
+                    </div>
+                    <div class="dw-row">
+                      <div class="dw-field">
+                        <label for="f-faixaIdadeMinima">Idade a partir de</label>
+                        <div class="faixas__idade">
+                          <input id="f-faixaIdadeMinima" type="number" min="0" class="mono" formControlName="idadeMinima" />
+                          <select aria-label="Unidade da idade mínima" formControlName="unidadeIdadeMinima">
+                            @for (u of listaUnidadesIdade; track u) { <option [value]="u">{{ unidadesIdade[u] }}</option> }
+                          </select>
+                        </div>
+                      </div>
+                      <div class="dw-field">
+                        <label for="f-faixaIdadeMaxima">Até antes de<span class="opt">vazio: sem limite</span></label>
+                        <div class="faixas__idade">
+                          <input id="f-faixaIdadeMaxima" type="number" min="1" class="mono" formControlName="idadeMaxima" />
+                          <select aria-label="Unidade da idade máxima" formControlName="unidadeIdadeMaxima">
+                            @for (u of listaUnidadesIdade; track u) { <option [value]="u">{{ unidadesIdade[u] }}</option> }
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="dw-row">
+                      <div class="dw-field">
+                        <label for="f-faixaRefMin">Referência mínima</label>
+                        <input id="f-faixaRefMin" type="number" step="any" class="mono" formControlName="referenciaMinima" />
+                      </div>
+                      <div class="dw-field">
+                        <label for="f-faixaRefMax">Referência máxima</label>
+                        <input id="f-faixaRefMax" type="number" step="any" class="mono" formControlName="referenciaMaxima" />
+                      </div>
+                    </div>
+                    <div class="dw-row">
+                      <div class="dw-field">
+                        <label for="f-faixaCritMin">Crítico abaixo de<span class="opt">opcional</span></label>
+                        <input id="f-faixaCritMin" type="number" step="any" class="mono" formControlName="criticoMinimo" />
+                      </div>
+                      <div class="dw-field">
+                        <label for="f-faixaCritMax">Crítico acima de<span class="opt">opcional</span></label>
+                        <input id="f-faixaCritMax" type="number" step="any" class="mono" formControlName="criticoMaximo" />
+                      </div>
+                    </div>
+                    <div class="faixas__acoes">
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="cancelarFaixa()">Cancelar</button>
+                      <button type="button" class="btn btn--sm" [disabled]="salvandoFaixa()" (click)="salvarFaixa(g.exame)">{{ salvandoFaixa() ? 'Salvando…' : (faixaEditando() ? 'Salvar faixa' : 'Incluir faixa') }}</button>
+                    </div>
+                  </div>
+                }
+              </section>
+            }
           </div>
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Cancelar</button>

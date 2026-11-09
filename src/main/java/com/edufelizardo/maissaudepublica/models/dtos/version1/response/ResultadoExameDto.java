@@ -28,6 +28,10 @@ public class ResultadoExameDto implements Serializable {
     private BigDecimal referenciaMinima;
     private BigDecimal referenciaMaxima;
     private String referenciaTexto;
+    private BigDecimal criticoMinimo;
+    private BigDecimal criticoMaximo;
+    /** Qual faixa de referência valeu (ADR-0180). */
+    private String faixaDescricao;
     private InterpretacaoResultado interpretacao;
     private String observacao;
     private String analisadoPorMatricula;
@@ -41,7 +45,7 @@ public class ResultadoExameDto implements Serializable {
 
     public static ResultadoExameDto fromResultado(ResultadoExame r) {
         return new ResultadoExameDto(r.getUuid(), r.getValorNumerico(), r.getValorTexto(), r.getUnidadeMedida(), r.getReferenciaMinima(),
-                r.getReferenciaMaxima(), r.getReferenciaTexto(), r.getInterpretacao(), r.getObservacao(),
+                r.getReferenciaMaxima(), r.getReferenciaTexto(), r.getCriticoMinimo(), r.getCriticoMaximo(), r.getFaixaDescricao(), r.getInterpretacao(), r.getObservacao(),
                 r.getAnalisadoPor().getMatricula(), r.getAnalisadoPor().getNome(), r.getRegistradoEm(),
                 r.getLiberadoPor() != null ? r.getLiberadoPor().getMatricula() : null,
                 r.getLiberadoPor() != null ? r.getLiberadoPor().getNome() : null, r.getLiberadoEm(),

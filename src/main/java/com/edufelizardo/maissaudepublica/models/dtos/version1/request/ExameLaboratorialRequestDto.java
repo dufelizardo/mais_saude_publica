@@ -40,6 +40,11 @@ public class ExameLaboratorialRequestDto implements Serializable {
 
     private BigDecimal referenciaMaxima;
 
+    /** Valores de pânico da faixa geral (ADR-0180). */
+    private BigDecimal criticoMinimo;
+
+    private BigDecimal criticoMaximo;
+
     @Size(max = 200)
     private String referenciaTexto;
 
