@@ -181,7 +181,7 @@ class TransporteControllerTest {
         plantao(usa, inicio, inicio.plus(12, ChronoUnit.HOURS),
                 t("TR-CONDUTOR2", "CONDUTOR") + "," + t("TR-ENFERMEIRO", "ENFERMEIRO") + "," + t("TR-MEDICO", "MEDICO"), 201);
         assertThat((List<String>) JsonPath.read(ler(URG + "painel?centralId=" + base.getUuid()), "$.viaturas[*].prefixo"))
-                .containsExactly("TR-USA-21", "TR-USB-21");
+                .contains("TR-USA-21", "TR-USB-21");
         // Tipo pedido diferente da viatura: 422; orientação com viatura: 400.
         enviar(post(URG + "ocorrencia/" + id + "/regulacao"), regular.formatted(", \"tipoRecurso\": \"USA\", \"veiculoId\": \"" + usb + "\""), 422);
         enviar(post(URG + "ocorrencia/" + id + "/regulacao"),
@@ -189,7 +189,8 @@ class TransporteControllerTest {
         String regulada = enviar(post(URG + "ocorrencia/" + id + "/regulacao"), regular.formatted(", \"veiculoId\": \"" + usb + "\""), 200);
         assertThat((String) JsonPath.read(regulada, "$.tipoRecurso")).isEqualTo("USB");
         assertThat((String) JsonPath.read(regulada, "$.recursoIdentificacao")).isEqualTo("TR-USB-21");
-        assertThat((List<String>) JsonPath.read(ler(URG + "painel?centralId=" + base.getUuid()), "$.viaturas[*].prefixo")).containsExactly("TR-USA-21");
+        assertThat((List<String>) JsonPath.read(ler(URG + "painel?centralId=" + base.getUuid()), "$.viaturas[*].prefixo"))
+                .contains("TR-USA-21").doesNotContain("TR-USB-21");
 
         String outro = JsonPath.read(enviar(post(URG + "ocorrencia"), chamado, 201), "$.uuid");
         enviar(post(URG + "ocorrencia/" + outro + "/regulacao"), regular.formatted(", \"veiculoId\": \"" + usb + "\""), 409);

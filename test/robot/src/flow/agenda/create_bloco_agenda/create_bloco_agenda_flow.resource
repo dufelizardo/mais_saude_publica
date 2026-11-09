@@ -28,7 +28,8 @@ Seed A Bloco Agenda
     ${payload}=    Build Bloco Agenda Payload    ${matricula}    ${unidadeId}
     ${criado}=    POST Create Bloco Agenda    ${payload}
     Should Be Equal As Integers    ${criado.status_code}    201
-    ${segunda}=    Evaluate    str(datetime.date.today() + datetime.timedelta(days=(7 - datetime.date.today().weekday()) or 7))    modules=datetime
+    # A primeira segunda com a vaga das 8h ainda por vir: numa segunda antes das 8h, é hoje (o CI roda em UTC, de madrugada).
+    ${segunda}=    Evaluate    str((lambda h: h if h.weekday() == 0 and datetime.datetime.now().hour < 8 else h + datetime.timedelta(days=(7 - h.weekday()) or 7))(datetime.date.today()))    modules=datetime
     RETURN    ${matricula}    ${unidadeId}    ${segunda}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

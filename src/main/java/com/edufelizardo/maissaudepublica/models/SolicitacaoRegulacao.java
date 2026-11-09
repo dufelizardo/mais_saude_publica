@@ -104,6 +104,20 @@ public class SolicitacaoRegulacao implements Serializable {
     /** Quando o desfecho (realizado ou falta) foi registrado. */
     private Instant concluidoEm;
 
+    /** A cota da PPI que a autorização consumiu (ADR-0179). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cota_ppi_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private CotaPpi cota;
+
+    /** Autorizada sem saldo de cota, com justificativa (ADR-0179). */
+    @Column(nullable = false)
+    private boolean extraCota;
+
+    @Column(length = 500)
+    private String justificativaExtraCota;
+
     public SolicitacaoRegulacao(Paciente paciente, ProcedimentoRegulado procedimento, UnidadeDeSaude unidadeSolicitante,
                                 Profissional profissionalSolicitante, String cid, String justificativa,
                                 PrioridadeRegulacao prioridade, Instant solicitadoEm, String solicitadoPorCpf) {

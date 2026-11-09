@@ -107,6 +107,9 @@ public class SolicitacaoRegulacaoService {
     @Autowired
     private PlanoTratamentoService planoTratamentoService;
 
+    @Autowired
+    private RedeService redeService;
+
     // ── Solicitante ────────────────────────────────────────────────────────────────────────────────
 
     @Transactional
@@ -207,10 +210,30 @@ public class SolicitacaoRegulacaoService {
         if (dto.getDataHoraPrevista().isBefore(LocalDateTime.now().withSecond(0).withNano(0))) {
             throw new ResourceUnprocessableEntityException("A data e a hora da vaga não podem estar no passado.");
         }
+        // A cota da PPI (ADR-0179): com oferta cadastrada para a executante, o procedimento e o mês, a vaga sai da cota da solicitante;
+        // sem saldo, só como extracota justificada. Sem oferta cadastrada, nada muda.
+        RedeService.ParaAutorizar ppi = redeService.paraAutorizar(solicitacao.getProcedimento(), executante, solicitacao.getUnidadeSolicitante(),
+                dto.getDataHoraPrevista());
+        String textoPpi = null;
+        if (ppi.controlada()) {
+            if (ppi.cotaComSaldo() != null) {
+                solicitacao.setCota(ppi.cotaComSaldo());
+                textoPpi = "PPI: " + ppi.descricao() + ".";
+            } else {
+                String justificativa = textoOuNulo(dto.getJustificativaExtraCota());
+                if (!Boolean.TRUE.equals(dto.getExtraCota()) || justificativa == null) {
+                    throw new ResourceUnprocessableEntityException("Sem saldo na PPI (" + ppi.descricao()
+                            + "): autorize como extracota, com justificativa.");
+                }
+                solicitacao.setExtraCota(true);
+                solicitacao.setJustificativaExtraCota(justificativa);
+                textoPpi = "Extracota (" + ppi.descricao() + "): " + justificativa + ".";
+            }
+        }
         solicitacao.setUnidadeExecutante(executante);
         solicitacao.setDataHoraPrevista(dto.getDataHoraPrevista());
         solicitacao.setStatus(StatusSolicitacaoRegulacao.AUTORIZADA);
-        String vaga = executante.getNome() + ", " + DATA_HORA.format(dto.getDataHoraPrevista());
+        String vaga = executante.getNome() + ", " + DATA_HORA.format(dto.getDataHoraPrevista()) + (textoPpi != null ? ". " + textoPpi : "");
         String observacao = textoOuNulo(dto.getObservacao());
         Profissional profissionalExecutante = textoOuNulo(dto.getProfissionalExecutanteMatricula()) == null ? null
                 : buscarProfissional(dto.getProfissionalExecutanteMatricula().trim());

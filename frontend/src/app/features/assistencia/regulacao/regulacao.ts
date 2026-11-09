@@ -20,6 +20,8 @@ import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { AuthService } from '../../../core/services/auth';
 import { PacienteService } from '../../../core/services/paciente';
 import { RegulacaoService } from '../../../core/services/regulacao';
+import { RedeService } from '../../../core/services/rede';
+import { SaldoPpiDto } from '../../../core/models/rede';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { AgendaService } from '../../../core/services/agenda';
 import { ItemAgendaDto } from '../../../core/models/agenda';
@@ -168,7 +170,29 @@ export class Regulacao {
     prioridade: ['' as PrioridadeRegulacao | ''],
     profissionalMatricula: [''],
     profissionalExecutanteMatricula: [''],
+    extraCota: [false],
+    justificativaExtraCota: [''],
   });
+
+  private readonly redeService = inject(RedeService);
+  /** O saldo da cota da PPI para a executante e o mês escolhidos (ADR-0179); nulo sem os dois. */
+  protected readonly saldoPpi = signal<SaldoPpiDto | null>(null);
+
+  protected consultarSaldoPpi(): void {
+    const d = this.detalhe();
+    const v = this.decisaoForm.getRawValue();
+    if (!d || !v.unidadeExecutanteId || !v.dataHoraPrevista) {
+      this.saldoPpi.set(null);
+      return;
+    }
+    this.redeService.saldo(d.procedimentoId, v.unidadeExecutanteId, d.unidadeSolicitanteId, v.dataHoraPrevista.slice(0, 7))
+      .subscribe({ next: (s) => this.saldoPpi.set(s), error: () => this.saldoPpi.set(null) });
+  }
+
+  protected semSaldoPpi(): boolean {
+    const s = this.saldoPpi();
+    return !!s && s.controlada && !s.saldo;
+  }
 
   protected readonly agendarForm = this.fb.nonNullable.group({
     profissionalExecutanteMatricula: [''],
@@ -400,10 +424,13 @@ export class Regulacao {
   protected abrirDetalhe(s: SolicitacaoRegulacaoResumoDto): void {
     this.detalhe.set(null);
     this.erroDetalhe.set(null);
+    this.saldoPpi.set(null);
     this.decisaoForm.reset({
       decisao: 'AUTORIZAR',
       unidadeExecutanteId: '',
       dataHoraPrevista: '',
+      extraCota: false,
+      justificativaExtraCota: '',
       observacao: '',
       motivo: '',
       prioridade: '',
@@ -575,6 +602,8 @@ export class Regulacao {
       if (!v.unidadeExecutanteId) erros['unidadeExecutanteId'] = 'Selecione onde o paciente será atendido.';
       if (!v.dataHoraPrevista) erros['dataHoraPrevista'] = 'Informe a data e a hora da vaga.';
       else if (v.dataHoraPrevista < agoraLocal()) erros['dataHoraPrevista'] = 'A vaga não pode estar no passado.';
+      if (this.semSaldoPpi() && !v.extraCota) erros['extraCota'] = 'Sem saldo na PPI: marque extracota para autorizar.';
+      if (this.semSaldoPpi() && v.extraCota && !v.justificativaExtraCota.trim()) erros['justificativaExtraCota'] = 'Justifique a extracota.';
     } else if (v.decisao === 'RECLASSIFICAR') {
       if (!v.prioridade) erros['prioridadeNova'] = 'Escolha a nova prioridade.';
       else if (v.prioridade === d.prioridade) erros['prioridadeNova'] = 'Escolha uma prioridade diferente da atual.';
@@ -593,6 +622,8 @@ export class Regulacao {
             dataHoraPrevista: v.dataHoraPrevista.length === 16 ? v.dataHoraPrevista + ':00' : v.dataHoraPrevista,
             observacao: v.observacao.trim() || undefined,
             profissionalExecutanteMatricula: v.profissionalExecutanteMatricula.trim() || undefined,
+            extraCota: this.semSaldoPpi() ? v.extraCota : undefined,
+            justificativaExtraCota: this.semSaldoPpi() && v.extraCota ? v.justificativaExtraCota.trim() : undefined,
           }),
           v.profissionalExecutanteMatricula.trim() ? 'Solicitação autorizada e agendada' : 'Solicitação autorizada',
           `${d.pacienteNome} · ${this.formatarVaga(v.dataHoraPrevista)}`,
