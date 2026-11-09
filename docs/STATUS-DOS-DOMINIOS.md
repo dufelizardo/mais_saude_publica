@@ -4,8 +4,8 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-07 (release 1.11.0)
-- **Release em produção:** v1.11.0 (2026-11-07)
+- **Atualizado em:** 2026-11-08 (release 1.12.0)
+- **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
 - **Fontes:**
