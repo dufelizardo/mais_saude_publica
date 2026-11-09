@@ -378,7 +378,7 @@
                       <div class="dw-row">
                         <div class="dw-field">
                           <label for="f-unidadeExecutanteId">Unidade executante <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
-                          <select id="f-unidadeExecutanteId" formControlName="unidadeExecutanteId" [attr.aria-invalid]="!!erro('unidadeExecutanteId')" aria-describedby="e-unidadeExecutanteId">
+                          <select id="f-unidadeExecutanteId" formControlName="unidadeExecutanteId" (change)="consultarSaldoPpi()" [attr.aria-invalid]="!!erro('unidadeExecutanteId')" aria-describedby="e-unidadeExecutanteId">
                             <option value="">Selecione…</option>
                             @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
                           </select>
@@ -386,10 +386,25 @@
                         </div>
                         <div class="dw-field">
                           <label for="f-dataHoraPrevista">Data e hora da vaga <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
-                          <input id="f-dataHoraPrevista" type="datetime-local" formControlName="dataHoraPrevista" [attr.aria-invalid]="!!erro('dataHoraPrevista')" aria-describedby="e-dataHoraPrevista" />
+                          <input id="f-dataHoraPrevista" type="datetime-local" formControlName="dataHoraPrevista" (change)="consultarSaldoPpi()" [attr.aria-invalid]="!!erro('dataHoraPrevista')" aria-describedby="e-dataHoraPrevista" />
                           @if (erro('dataHoraPrevista')) { <p class="dw-err" id="e-dataHoraPrevista">{{ erro('dataHoraPrevista') }}</p> }
                         </div>
                       </div>
+                      @if (saldoPpi(); as s) {
+                        @if (s.controlada && s.saldo) {
+                          <div class="box box--info" role="status" id="ppi-saldo"><div>PPI: cota de <b>{{ s.beneficiariaNome }}</b> · saldo {{ s.saldo }} de {{ s.cota }} no mês.</div></div>
+                        } @else if (s.controlada) {
+                          <div class="box box--warn" role="status" id="ppi-saldo"><div>Sem saldo na PPI {{ s.beneficiariaNome ? 'na cota de ' + s.beneficiariaNome : 'para esta unidade' }}. Para autorizar, registre como extracota.</div></div>
+                          <div class="dw-field"><label class="switch" for="f-extraCota"><span><b style="font-weight: 500;">Autorizar como extracota</b></span><input type="checkbox" role="switch" id="f-extraCota" formControlName="extraCota" [attr.aria-invalid]="!!erro('extraCota')" aria-describedby="e-extraCota" /></label>
+                            @if (erro('extraCota')) { <p class="dw-err" id="e-extraCota">{{ erro('extraCota') }}</p> }
+                          </div>
+                          <div class="dw-field">
+                            <label for="f-justificativaExtraCota">Justificativa da extracota</label>
+                            <textarea id="f-justificativaExtraCota" rows="2" maxlength="500" formControlName="justificativaExtraCota" [attr.aria-invalid]="!!erro('justificativaExtraCota')" aria-describedby="e-justificativaExtraCota"></textarea>
+                            @if (erro('justificativaExtraCota')) { <p class="dw-err" id="e-justificativaExtraCota">{{ erro('justificativaExtraCota') }}</p> }
+                          </div>
+                        }
+                      }
                       <div class="dw-row">
                         <div class="dw-field">
                           <label for="f-profissionalExecutanteMatricula">Quem vai atender<span class="opt">opcional</span></label>

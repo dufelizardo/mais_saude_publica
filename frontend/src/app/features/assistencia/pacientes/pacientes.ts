@@ -7,6 +7,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Modal } from '../../../shared/modal/modal';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { AdscricaoDoPaciente } from './adscricao-do-paciente';
+import { AnexosDoPaciente } from './anexos-do-paciente';
 import { formatCartaoSus, formatCpf, formatTelefone } from '../../../shared/format-mask';
 import { PacienteResponseDto, Sexo } from '../../../core/models/paciente';
 import { ErrorResponseDto } from '../../../core/models/profissional';
@@ -49,7 +50,7 @@ interface TimelineItem {
 
 @Component({
   selector: 'app-pacientes',
-  imports: [ReactiveFormsModule, RouterLink, Modal, Drawer, DatePipe, AcessoProntuario, AdscricaoDoPaciente, CadernetaVacinacao, LinhasDoPaciente],
+  imports: [ReactiveFormsModule, RouterLink, Modal, Drawer, DatePipe, AcessoProntuario, AdscricaoDoPaciente, CadernetaVacinacao, LinhasDoPaciente, AnexosDoPaciente],
   templateUrl: './pacientes.html',
   styleUrl: './pacientes.css',
 })

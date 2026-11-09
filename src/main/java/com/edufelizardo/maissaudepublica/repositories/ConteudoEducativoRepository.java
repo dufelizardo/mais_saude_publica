@@ -14,6 +14,9 @@ public interface ConteudoEducativoRepository extends JpaRepository<ConteudoEduca
 
     List<ConteudoEducativo> findByGrupoId(UUID grupoId);
 
+    /** Os conteúdos que já passaram pela revisão técnica (ADR-0173). */
+    List<ConteudoEducativo> findBySituacaoIn(java.util.Collection<com.edufelizardo.maissaudepublica.models.enuns.SituacaoConteudo> situacoes);
+
     @Query("select distinct c from ConteudoEducativo c join c.canais k where c.situacao = 'PUBLICADO' and c.publico = 'POPULACAO' "
             + "and k.tipo = 'PORTAL' and c.validade >= ?1 order by c.titulo")
     List<ConteudoEducativo> findNoPortal(LocalDate hoje);

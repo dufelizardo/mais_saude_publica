@@ -56,3 +56,20 @@ UI Modelo - Cadastrar Capacidade Pela Gaveta
     Esperar Texto Aparecer    Robot UI Capacidade ${sufixo}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Modelo - Cadastrar Tipo De Documento
+    [Documentation]    Pela aba Tipos de documento (ADR-0172): a carga aparece e o tipo novo entra na lista.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [UPPER]
+    UI Modelo - Abrir Tela
+    Click    css=#tab-documentos
+    Esperar Texto Aparecer    Termo de consentimento
+    Clicar Botao    Novo tipo
+    Preencher Campo Da Gaveta    codigoTipoDoc    UI_${sufixo}
+    Preencher Campo Da Gaveta    nomeTipoDoc    Tipo ${sufixo}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Tipo de documento salvo
+    Esperar Texto Aparecer    Tipo ${sufixo}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

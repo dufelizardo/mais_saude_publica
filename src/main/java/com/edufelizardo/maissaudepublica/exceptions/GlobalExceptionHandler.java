@@ -24,6 +24,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(org.springframework.web.multipart.MaxUploadSizeExceededException ex,
+                                                                          org.springframework.http.HttpHeaders headers,
+                                                                          org.springframework.http.HttpStatusCode status,
+                                                                          org.springframework.web.context.request.WebRequest request) {
+        return new ResponseEntity<>(new ErrorExceptionResponse("Bad Request", "O arquivo vai até 10 MB."), HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ResourceBadRequestException.class)
     public ResponseEntity<ErrorExceptionResponse> handleResourceBadRequest(ResourceBadRequestException ex) {
         ErrorExceptionResponse error = new ErrorExceptionResponse("Bad Request", ex.getMessage());

@@ -10,10 +10,14 @@ import { TreinamentoResponseDto } from '../../../core/models/treinamento';
 import { AuthService } from '../../../core/services/auth';
 import { AvaliacaoService } from '../../../core/services/avaliacao';
 import { TreinamentoService } from '../../../core/services/treinamento';
+import { CompetenciaDto, EducacaoDoTreinamentoDto } from '../../../core/models/educacao-permanente';
+import { EducacaoPermanenteService } from '../../../core/services/educacao-permanente';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { Competencias } from './competencias';
+import { EducacaoDoTreinamento } from './educacao-do-treinamento';
 import { dataBr, hojeIso, proximaAba } from '../../../shared/formato';
 
-type Aba = 'treinamentos' | 'ciclos';
+type Aba = 'treinamentos' | 'competencias' | 'ciclos';
 type Gaveta = { tipo: 'treinamento'; item: TreinamentoResponseDto | null } | { tipo: 'ciclo'; item: CicloAvaliacaoResponseDto | null };
 type StatusCiclo = { rotulo: 'Agendado' | 'Em andamento' | 'Encerrado'; classe: string };
 
@@ -24,7 +28,7 @@ type StatusCiclo = { rotulo: 'Agendado' | 'Em andamento' | 'Encerrado'; classe: 
  */
 @Component({
   selector: 'app-desenvolvimento',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, Drawer, Competencias, EducacaoDoTreinamento],
   templateUrl: './desenvolvimento.html',
 })
 export class Desenvolvimento {
@@ -32,16 +36,27 @@ export class Desenvolvimento {
   private readonly authService = inject(AuthService);
   private readonly treinamentoService = inject(TreinamentoService);
   private readonly avaliacaoService = inject(AvaliacaoService);
+  private readonly educacaoService = inject(EducacaoPermanenteService);
   private readonly route = inject(ActivatedRoute);
 
   protected readonly dataBr = dataBr;
   protected readonly abas: { id: Aba; rotulo: string }[] = [
     { id: 'treinamentos', rotulo: 'Catálogo de treinamentos' },
+    { id: 'competencias', rotulo: 'Competências' },
     { id: 'ciclos', rotulo: 'Ciclos de avaliação' },
   ];
 
   protected readonly treinamentos = signal<TreinamentoResponseDto[]>([]);
   protected readonly ciclos = signal<CicloAvaliacaoResponseDto[]>([]);
+  protected readonly competencias = signal<CompetenciaDto[]>([]);
+  /** Competências e conteúdos de cada treinamento (ADR-0173). */
+  protected readonly educacao = signal<Record<string, EducacaoDoTreinamentoDto>>({});
+  protected readonly educacaoAberta = signal<EducacaoDoTreinamentoDto | null>(null);
+  protected readonly usosDaCompetencia = computed(() => {
+    const usos: Record<string, number> = {};
+    for (const e of Object.values(this.educacao())) for (const c of e.competencias) usos[c.uuid] = (usos[c.uuid] ?? 0) + 1;
+    return usos;
+  });
   protected readonly carregando = signal(true);
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
 
@@ -61,7 +76,8 @@ export class Desenvolvimento {
 
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
-    if (this.route.snapshot.queryParamMap.get('aba') === 'ciclos') this.aba.set('ciclos');
+    const abaInicial = this.route.snapshot.queryParamMap.get('aba');
+    if (abaInicial === 'ciclos' || abaInicial === 'competencias') this.aba.set(abaInicial);
     this.carregar();
   }
 
@@ -70,9 +86,13 @@ export class Desenvolvimento {
     forkJoin({
       treinamentos: this.treinamentoService.listarCatalogo().pipe(catchError(() => of([]))),
       ciclos: this.avaliacaoService.listarCiclos().pipe(catchError(() => of([]))),
+      competencias: this.educacaoService.competencias().pipe(catchError(() => of([]))),
+      educacao: this.educacaoService.treinamentos().pipe(catchError(() => of([]))),
     }).subscribe((r) => {
       this.treinamentos.set(r.treinamentos);
       this.ciclos.set(r.ciclos);
+      this.competencias.set(r.competencias);
+      this.educacao.set(Object.fromEntries(r.educacao.map((e) => [e.treinamentoId, e])));
       this.carregando.set(false);
     });
   }
@@ -120,7 +140,7 @@ export class Desenvolvimento {
   }
 
   protected contagem(aba: Aba): number {
-    return aba === 'treinamentos' ? this.treinamentos().length : this.ciclos().length;
+    return aba === 'treinamentos' ? this.treinamentos().length : aba === 'competencias' ? this.competencias().length : this.ciclos().length;
   }
 
   protected selecionarAba(aba: Aba): void {
@@ -131,6 +151,18 @@ export class Desenvolvimento {
   protected navegarAbas(event: KeyboardEvent): void {
     const proxima = proximaAba(event, this.abas.map((a) => a.id), this.aba());
     if (proxima) this.selecionarAba(proxima);
+  }
+
+  protected educacaoDo(t: TreinamentoResponseDto): EducacaoDoTreinamentoDto {
+    return this.educacao()[t.uuid] ?? { treinamentoId: t.uuid, treinamentoNome: t.nome, competencias: [], conteudos: [] };
+  }
+
+  protected avisar(titulo: string, detalhe: string): void {
+    this.educacaoAberta.set(null);
+    this.toast.set({ titulo, detalhe });
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+    this.carregar();
   }
 
   // ── Gavetas ────────────────────────────────────────────────────────────────────────────────────

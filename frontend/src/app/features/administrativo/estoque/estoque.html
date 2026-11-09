@@ -1,0 +1,381 @@
+<header class="page-head">
+  <div>
+    <h1>Estoque e almoxarifado</h1>
+    <p>Materiais e insumos gerais por unidade: lotes, entradas, consumo, perdas e alertas. Medicamento fica na Farmácia; vacina, na Sala de Vacina.</p>
+  </div>
+  <div class="page-actions">
+    <select class="sel" aria-label="Unidade" [value]="unidadeId()" (change)="mudarUnidade($any($event.target).value)">
+      @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+    </select>
+    @if (pode('ESTOQUE.MOVIMENTAR')) { <button type="button" class="btn" (click)="abrirEntrada(null)" [disabled]="!unidadeId()">Nova entrada</button> }
+  </div>
+</header>
+
+<section class="stats" aria-label="Resumo do estoque da unidade">
+  <div class="stat"><div><div class="stat__lbl">Materiais em estoque</div><div class="stat__val mono">{{ saldo()?.itens?.length ?? 0 }}</div><div class="stat__sub">com saldo ou mínimo nesta unidade</div></div></div>
+  <div class="stat"><div><div class="stat__lbl">Abaixo do mínimo</div><div class="stat__val mono">{{ saldo()?.abaixoDoMinimo ?? 0 }}</div><div class="stat__sub">pedir reposição</div></div></div>
+  <div class="stat"><div><div class="stat__lbl">Vencendo em 90 dias</div><div class="stat__val mono">{{ saldo()?.vencendo ?? 0 }}</div><div class="stat__sub">{{ saldo()?.vencidosComSaldo ?? 0 }} lote(s) vencido(s) com saldo</div></div></div>
+  <div class="stat"><div><div class="stat__lbl">Valor do estoque</div><div class="stat__val mono">{{ moeda(saldo()?.valorTotal ?? 0) }}</div><div class="stat__sub">pelo custo das entradas</div></div></div>
+</section>
+
+<div class="page-tabs" role="tablist" aria-label="Seções do estoque">
+  @for (a of abas; track a.id) {
+    <button type="button" role="tab" [id]="'tab-' + a.id" [attr.aria-controls]="'pn-' + a.id" [attr.aria-selected]="aba() === a.id"
+      [tabIndex]="aba() === a.id ? 0 : -1" (click)="selecionarAba(a.id)" (keydown)="navegarAbas($event)">
+      {{ a.rotulo }}@if (contagem(a.id) !== null) { <span class="cnt">{{ contagem(a.id) }}</span> }
+    </button>
+  }
+</div>
+
+@if (aba() === 'saldo') {
+  <section class="card" id="pn-saldo" role="tabpanel" aria-labelledby="tab-saldo">
+    <div class="card__head">
+      <div><h2>Saldo · {{ saldo()?.unidadeNome ?? '' }}</h2><p class="sub">Por material, com os lotes; a saída sai dos que vencem primeiro</p></div>
+      <div class="filters">
+        <input class="sel" type="search" aria-label="Buscar material" placeholder="Buscar material" [value]="busca()" (input)="busca.set($any($event.target).value)" />
+        @if (pode('ESTOQUE.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirMinimo(null)">Definir mínimo</button> }
+      </div>
+    </div>
+    <ul class="eq-prof" aria-label="Materiais em estoque" style="padding: 0 var(--s-5) var(--s-5);">
+      @for (i of itensFiltrados(); track i.materialId) {
+        <li class="mo-row" style="display: block;">
+          <div style="display: flex; gap: var(--s-3); align-items: flex-start; justify-content: space-between; flex-wrap: wrap;">
+            <span>
+              <span class="cell-main">{{ i.nome }} <span class="cell-sub" style="display: inline;">{{ i.codigo }} · {{ categorias[i.categoria] }}</span></span>
+              <span class="cell-sub"><b class="mono">{{ i.total }}</b> {{ unidadesMedida[i.unidadeMedida] }}(s)@if (i.minimo != null) { · mínimo {{ i.minimo }} }@if (i.valor != null) { · {{ moeda(i.valor) }} }</span>
+            </span>
+            <div class="row-actions" style="flex: none;">
+              @if (i.abaixoDoMinimo) { <span class="badge badge--warn">Abaixo do mínimo</span> }
+              @if (pode('ESTOQUE.MOVIMENTAR')) {
+                <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEntrada(i)" [attr.aria-label]="'Entrada de ' + i.nome">Entrada</button>
+                @if (i.total > 0) { <button type="button" class="btn btn--sm" (click)="abrirSaida(i)" [attr.aria-label]="'Saída de ' + i.nome">Saída</button> }
+              }
+              @if (pode('ESTOQUE.GERENCIAR')) { <button type="button" class="link-btn" (click)="abrirMinimo(i)" [attr.aria-label]="'Mínimo de ' + i.nome">Mínimo</button> }
+            </div>
+          </div>
+          @if (i.lotes.length) {
+            <table class="lotes" style="margin-top: var(--s-2); font-size: 0.8125rem;" [attr.aria-label]="'Lotes de ' + i.nome">
+              <thead><tr><th scope="col">Lote</th><th scope="col">Validade</th><th scope="col" class="num">Quantidade</th><th scope="col" class="num">Ações</th></tr></thead>
+              <tbody>
+                @for (l of i.lotes; track l.uuid) {
+                  <tr>
+                    <td class="mono">{{ l.numeroLote ?? 'sem lote' }}</td>
+                    <td>{{ l.validade ? dataBr(l.validade) : '—' }}@if (l.vencido) { <span class="badge badge--alert">Vencido</span> } @else if (l.diasParaVencer != null && l.diasParaVencer <= 90) { <span class="badge badge--warn">{{ rotuloValidade(l.diasParaVencer) }}</span> }</td>
+                    <td class="num mono">{{ l.quantidade }}</td>
+                    <td class="num">@if (pode('ESTOQUE.MOVIMENTAR')) { <button type="button" class="link-btn" (click)="abrirPerda(i, l)" [attr.aria-label]="'Perda do lote ' + (l.numeroLote ?? i.nome)">Perda</button> · <button type="button" class="link-btn" (click)="abrirAjuste(i, l)" [attr.aria-label]="'Ajustar o lote ' + (l.numeroLote ?? i.nome)">Ajustar</button> }</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </li>
+      } @empty {
+        <li><div class="empty"><strong>{{ carregando() ? 'Carregando…' : 'Nenhum material nesta unidade' }}</strong>@if (!carregando()) { <span>Registre uma entrada para começar.</span> }</div></li>
+      }
+    </ul>
+  </section>
+}
+
+@if (aba() === 'movimentacao') {
+  <section class="card" id="pn-movimentacao" role="tabpanel" aria-labelledby="tab-movimentacao">
+    <div class="card__head">
+      <div><h2>Livro de movimentação</h2><p class="sub">Últimos 30 dias, mais recente primeiro; nada se edita nem se apaga</p></div>
+      <div class="filters">
+        <select class="sel" aria-label="Filtrar por tipo" [value]="filtroTipo()" (change)="filtroTipo.set($any($event.target).value); carregarMovimentos()">
+          <option value="">Todos os tipos</option>
+          @for (t of listaTipos; track t[0]) { <option [value]="t[0]">{{ t[1] }}</option> }
+        </select>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th scope="col">Quando</th><th scope="col">Tipo</th><th scope="col">Material · lote</th><th scope="col" class="num">Quantidade</th><th scope="col" class="num">Saldo do lote</th><th scope="col">Detalhe</th></tr></thead>
+        <tbody>
+          @for (m of movimentos(); track m.uuid) {
+            <tr>
+              <td class="mono">{{ dataBr(m.registradoEm) }} {{ m.registradoEm.slice(11, 16) }}</td>
+              <td>{{ tipos[m.tipo] }}</td>
+              <td class="cell-main">{{ m.materialNome }}<span class="cell-sub mono">{{ m.numeroLote ?? 'sem lote' }}</span></td>
+              <td class="num mono">{{ m.quantidade > 0 ? '+' : '' }}{{ m.quantidade }}</td>
+              <td class="num mono">{{ m.saldoApos }}</td>
+              <td><span class="cell-sub">@if (m.origem) { {{ origens[m.origem] }}@if (m.documento) { nº {{ m.documento }} }@if (m.fornecedor) { · {{ m.fornecedor }} } }@if (m.setorNome) { {{ m.setorNome }} }@if (m.motivoPerda) { {{ motivos[m.motivoPerda] }} }@if (m.justificativa) { · {{ m.justificativa }} }@if (m.profissionalNome) { · {{ m.profissionalNome }} }</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><div class="empty"><strong>Nenhum lançamento no período</strong></div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+@if (aba() === 'alertas') {
+  <section class="card" id="pn-alertas" role="tabpanel" aria-labelledby="tab-alertas">
+    <div class="card__head"><div><h2>Alertas</h2><p class="sub">Abaixo do mínimo, vencendo em até 90 dias e vencidos com saldo</p></div></div>
+    <div style="padding: var(--s-5); display: grid; gap: var(--s-4);">
+      <h3 class="mo-grupo">Abaixo do mínimo · {{ abaixoDoMinimo().length }}</h3>
+      <ul class="eq-prof" aria-label="Abaixo do mínimo">
+        @for (i of abaixoDoMinimo(); track i.materialId) {
+          <li class="mo-row"><span><span class="cell-main">{{ i.nome }}</span><span class="cell-sub">{{ i.total }} de {{ i.minimo }} {{ unidadesMedida[i.unidadeMedida] }}(s)</span></span><div style="flex: none;"><span class="badge badge--warn">Repor {{ (i.minimo ?? 0) - i.total }}</span></div></li>
+        } @empty { <li class="cell-sub">Nenhum material abaixo do mínimo.</li> }
+      </ul>
+      <h3 class="mo-grupo">Validade · {{ saldo()?.vencimentos?.length ?? 0 }}</h3>
+      <ul class="eq-prof" aria-label="Lotes vencendo ou vencidos">
+        @for (v of saldo()?.vencimentos ?? []; track v.loteId) {
+          <li class="mo-row"><span><span class="cell-main">{{ v.materialNome }} <span class="cell-sub mono" style="display: inline;">{{ v.numeroLote }}</span></span><span class="cell-sub">{{ v.quantidade }} · validade {{ dataBr(v.validade) }}</span></span><div style="flex: none;"><span [class]="v.diasParaVencer < 0 ? 'badge badge--alert' : 'badge badge--warn'">{{ rotuloValidade(v.diasParaVencer) }}</span></div></li>
+        } @empty { <li class="cell-sub">Nenhum lote vencendo nos próximos 90 dias.</li> }
+      </ul>
+    </div>
+  </section>
+}
+
+@if (aba() === 'catalogo') {
+  <section class="card" id="pn-catalogo" role="tabpanel" aria-labelledby="tab-catalogo">
+    <div class="card__head">
+      <div><h2>Catálogo de materiais</h2><p class="sub">Vale para a rede inteira</p></div>
+      @if (pode('ESTOQUE.GERENCIAR')) { <button type="button" class="btn btn--sm" (click)="abrirMaterial(null)">Novo material</button> }
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th scope="col">Código</th><th scope="col">Material</th><th scope="col">Categoria</th><th scope="col">Medida</th><th scope="col">Lote</th><th scope="col" class="num">Ações</th></tr></thead>
+        <tbody>
+          @for (m of materiais(); track m.uuid) {
+            <tr>
+              <td class="mono">{{ m.codigo }}</td>
+              <td class="cell-main">{{ m.nome }}@if (!m.ativo) { <span class="badge badge--muted">Inativo</span> }@if (m.catmat) { <span class="cell-sub">CATMAT {{ m.catmat }}</span> }</td>
+              <td>{{ categorias[m.categoria] }}</td>
+              <td>{{ unidadesMedida[m.unidadeMedida] }}</td>
+              <td>{{ m.controlaLote ? 'Com lote e validade' : 'Sem lote' }}</td>
+              <td class="num">@if (pode('ESTOQUE.GERENCIAR')) { <button type="button" class="link-btn" (click)="abrirMaterial(m)" [attr.aria-label]="'Editar ' + m.nome">Editar</button> }</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><div class="empty"><strong>Nenhum material cadastrado</strong></div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+@if (gaveta(); as g) {
+  <app-drawer [titulo]="g.tipo === 'material' ? (g.item ? 'Editar material' : 'Novo material') : g.tipo === 'entrada' ? 'Entrada de material'
+      : g.tipo === 'saida' ? 'Saída de ' + g.item.nome : g.tipo === 'perda' ? 'Perda' : g.tipo === 'ajuste' ? 'Ajuste de inventário' : 'Estoque mínimo'" (fechar)="gaveta.set(null)">
+    @switch (g.tipo) {
+      @case ('material') {
+        <form class="dw-form" [formGroup]="materialForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-codigoMaterial">Código <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-codigoMaterial" type="text" maxlength="30" formControlName="codigo" class="mono" [attr.aria-invalid]="!!erro('codigoMaterial')" aria-describedby="e-codigoMaterial" />
+                @if (erro('codigoMaterial')) { <p class="dw-err" id="e-codigoMaterial">{{ erro('codigoMaterial') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-catmatMaterial">CATMAT<span class="opt">opcional</span></label>
+                <input id="f-catmatMaterial" type="text" maxlength="20" formControlName="catmat" class="mono" />
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-nomeMaterial">Nome <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-nomeMaterial" type="text" maxlength="150" formControlName="nome" placeholder="Ex.: Luva de procedimento M" [attr.aria-invalid]="!!erro('nomeMaterial')" aria-describedby="e-nomeMaterial" />
+              @if (erro('nomeMaterial')) { <p class="dw-err" id="e-nomeMaterial">{{ erro('nomeMaterial') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-categoriaMaterial">Categoria</label>
+                <select id="f-categoriaMaterial" formControlName="categoria">@for (c of listaCategorias; track c[0]) { <option [value]="c[0]">{{ c[1] }}</option> }</select>
+              </div>
+              <div class="dw-field">
+                <label for="f-medidaMaterial">Unidade de medida</label>
+                <select id="f-medidaMaterial" formControlName="unidadeMedida">@for (u of listaUnidadesMedida; track u[0]) { <option [value]="u[0]">{{ u[1] }}</option> }</select>
+              </div>
+            </div>
+            <div class="dw-field"><label class="switch" for="f-loteMaterial"><span><b style="font-weight: 500;">Controla lote e validade</b>@if (g.item?.comMovimento) { <span class="cell-sub">não muda depois da primeira entrada</span> }</span><input type="checkbox" role="switch" id="f-loteMaterial" formControlName="controlaLote" [attr.disabled]="g.item?.comMovimento ? '' : null" /></label></div>
+            <div class="dw-field">
+              <label for="f-descricaoMaterial">Descrição<span class="opt">opcional</span></label>
+              <textarea id="f-descricaoMaterial" rows="2" maxlength="500" formControlName="descricao"></textarea>
+            </div>
+            @if (g.item) { <div class="dw-field"><label class="switch" for="f-ativoMaterial"><span><b style="font-weight: 500;">Ativo</b></span><input type="checkbox" role="switch" id="f-ativoMaterial" formControlName="ativo" /></label></div> }
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Salvar' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('entrada') {
+        <form class="dw-form" [formGroup]="entradaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-materialEntrada">Material <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-materialEntrada" formControlName="materialId" (change)="mudarMaterialDaEntrada($any($event.target).value)" [attr.aria-invalid]="!!erro('materialEntrada')" aria-describedby="e-materialEntrada">
+                <option value="">Escolha…</option>
+                @for (m of materiaisAtivos(); track m.uuid) { <option [value]="m.uuid">{{ m.nome }} · {{ m.codigo }}</option> }
+              </select>
+              @if (erro('materialEntrada')) { <p class="dw-err" id="e-materialEntrada">{{ erro('materialEntrada') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-quantidadeEntrada">Quantidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span>@if (materialDaEntrada(); as m) { <span class="opt">em {{ unidadesMedida[m.unidadeMedida] }}</span> }</label>
+                <input id="f-quantidadeEntrada" type="number" min="1" step="1" formControlName="quantidade" class="mono" [attr.aria-invalid]="!!erro('quantidadeEntrada')" aria-describedby="e-quantidadeEntrada" />
+                @if (erro('quantidadeEntrada')) { <p class="dw-err" id="e-quantidadeEntrada">{{ erro('quantidadeEntrada') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-origemEntrada">Origem</label>
+                <select id="f-origemEntrada" formControlName="origem">@for (o of listaOrigens; track o[0]) { <option [value]="o[0]">{{ o[1] }}</option> }</select>
+              </div>
+            </div>
+            @if (materialDaEntrada()?.controlaLote) {
+              <div class="dw-row">
+                <div class="dw-field">
+                  <label for="f-loteEntrada">Lote <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <input id="f-loteEntrada" type="text" maxlength="60" formControlName="numeroLote" class="mono" [attr.aria-invalid]="!!erro('loteEntrada')" aria-describedby="e-loteEntrada" />
+                  @if (erro('loteEntrada')) { <p class="dw-err" id="e-loteEntrada">{{ erro('loteEntrada') }}</p> }
+                </div>
+                <div class="dw-field">
+                  <label for="f-validadeEntrada">Validade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <input id="f-validadeEntrada" type="date" formControlName="validade" [attr.aria-invalid]="!!erro('validadeEntrada')" aria-describedby="e-validadeEntrada" />
+                  @if (erro('validadeEntrada')) { <p class="dw-err" id="e-validadeEntrada">{{ erro('validadeEntrada') }}</p> }
+                </div>
+              </div>
+            }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-documentoEntrada">Nota fiscal ou documento@if (entradaForm.getRawValue().origem === 'NOTA_FISCAL') { <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span> } @else { <span class="opt">opcional</span> }</label>
+                <input id="f-documentoEntrada" type="text" maxlength="60" formControlName="documento" class="mono" [attr.aria-invalid]="!!erro('documentoEntrada')" aria-describedby="e-documentoEntrada" />
+                @if (erro('documentoEntrada')) { <p class="dw-err" id="e-documentoEntrada">{{ erro('documentoEntrada') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-custoEntrada">Custo unitário<span class="opt">opcional · R$</span></label>
+                <input id="f-custoEntrada" type="text" inputmode="decimal" formControlName="custoUnitario" class="mono" />
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-fornecedorEntrada">Fornecedor<span class="opt">opcional</span></label>
+              <input id="f-fornecedorEntrada" type="text" maxlength="150" formControlName="fornecedor" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar entrada' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('saida') {
+        <form class="dw-form" [formGroup]="saidaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (g.tipo === 'saida') { <dl class="ro"><div><dt>Em estoque</dt><dd>{{ g.item.total }} {{ unidadesMedida[g.item.unidadeMedida] }}(s)</dd></div></dl> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-quantidadeSaida">Quantidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-quantidadeSaida" type="number" min="1" step="1" formControlName="quantidade" class="mono" [attr.aria-invalid]="!!erro('quantidadeSaida')" aria-describedby="e-quantidadeSaida" />
+                @if (erro('quantidadeSaida')) { <p class="dw-err" id="e-quantidadeSaida">{{ erro('quantidadeSaida') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-setorSaida">Setor que consumiu<span class="opt">opcional</span></label>
+                <select id="f-setorSaida" formControlName="setorId"><option value="">—</option>@for (s of setoresDaUnidade(); track s.uuid) { <option [value]="s.uuid">{{ s.nome }}</option> }</select>
+              </div>
+            </div>
+            @if (g.tipo === 'saida' && g.item.controlaLote) {
+              <div class="dw-field">
+                <label for="f-loteSaida">Lote<span class="opt">opcional · sem escolha, os que vencem primeiro</span></label>
+                <select id="f-loteSaida" formControlName="loteId"><option value="">Os que vencem primeiro</option>@for (l of g.item.lotes; track l.uuid) { @if (!l.vencido) { <option [value]="l.uuid">{{ l.numeroLote }} · validade {{ dataBr(l.validade) }} · {{ l.quantidade }}</option> } }</select>
+              </div>
+            }
+            <div class="dw-field">
+              <label for="f-observacaoSaida">Observação<span class="opt">opcional</span></label>
+              <input id="f-observacaoSaida" type="text" maxlength="500" formControlName="justificativa" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar saída' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('perda') {
+        <form class="dw-form" [formGroup]="perdaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (g.tipo === 'perda') { <dl class="ro"><div><dt>Material</dt><dd>{{ g.item.nome }}</dd></div><div><dt>Lote</dt><dd class="mono">{{ g.lote.numeroLote ?? 'sem lote' }} · {{ g.lote.quantidade }}</dd></div></dl> }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-quantidadePerda">Quantidade <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-quantidadePerda" type="number" min="1" step="1" formControlName="quantidade" class="mono" [attr.aria-invalid]="!!erro('quantidadePerda')" aria-describedby="e-quantidadePerda" />
+                @if (erro('quantidadePerda')) { <p class="dw-err" id="e-quantidadePerda">{{ erro('quantidadePerda') }}</p> }
+              </div>
+              <div class="dw-field">
+                <label for="f-motivoPerda">Motivo</label>
+                <select id="f-motivoPerda" formControlName="motivo">@for (m of listaMotivos; track m[0]) { <option [value]="m[0]">{{ m[1] }}</option> }</select>
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-justificativaPerda">Justificativa<span class="opt">opcional</span></label>
+              <input id="f-justificativaPerda" type="text" maxlength="500" formControlName="justificativa" />
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Registrar perda' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('ajuste') {
+        <form class="dw-form" [formGroup]="ajusteForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            @if (g.tipo === 'ajuste') { <dl class="ro"><div><dt>Material</dt><dd>{{ g.item.nome }}</dd></div><div><dt>Saldo do lote</dt><dd class="mono">{{ g.lote.numeroLote ?? 'sem lote' }} · {{ g.lote.quantidade }}</dd></div></dl> }
+            <div class="dw-field">
+              <label for="f-contagemAjuste">Quantidade contada <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-contagemAjuste" type="number" min="0" step="1" formControlName="quantidadeContada" class="mono" [attr.aria-invalid]="!!erro('contagemAjuste')" aria-describedby="e-contagemAjuste" />
+              @if (erro('contagemAjuste')) { <p class="dw-err" id="e-contagemAjuste">{{ erro('contagemAjuste') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-justificativaAjuste">Justificativa <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <textarea id="f-justificativaAjuste" rows="2" maxlength="500" formControlName="justificativa" [attr.aria-invalid]="!!erro('justificativaAjuste')" aria-describedby="e-justificativaAjuste"></textarea>
+              @if (erro('justificativaAjuste')) { <p class="dw-err" id="e-justificativaAjuste">{{ erro('justificativaAjuste') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Ajustar' }}</button>
+          </footer>
+        </form>
+      }
+      @case ('minimo') {
+        <form class="dw-form" [formGroup]="minimoForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <div class="dw-field">
+              <label for="f-materialMinimo">Material <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <select id="f-materialMinimo" formControlName="materialId" [attr.disabled]="g.item ? '' : null" [attr.aria-invalid]="!!erro('materialMinimo')" aria-describedby="e-materialMinimo">
+                <option value="">Escolha…</option>
+                @for (m of materiaisAtivos(); track m.uuid) { <option [value]="m.uuid">{{ m.nome }} · {{ m.codigo }}</option> }
+              </select>
+              @if (erro('materialMinimo')) { <p class="dw-err" id="e-materialMinimo">{{ erro('materialMinimo') }}</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-quantidadeMinimo">Estoque mínimo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-quantidadeMinimo" type="number" min="0" step="1" formControlName="quantidadeMinima" class="mono" [attr.aria-invalid]="!!erro('quantidadeMinimo')" aria-describedby="e-quantidadeMinimo" />
+              @if (erro('quantidadeMinimo')) { <p class="dw-err" id="e-quantidadeMinimo">{{ erro('quantidadeMinimo') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Salvando…' : 'Definir' }}</button>
+          </footer>
+        </form>
+      }
+    }
+  </app-drawer>
+}
+
+@if (toast(); as t) {
+  <div class="toast" role="status" aria-live="polite">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
+  </div>
+}

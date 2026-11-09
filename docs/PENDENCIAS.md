@@ -1,11 +1,11 @@
 # Pendências e estado dos ambientes
 
-Documento vivo, com **o que falta** no projeto (revisto na release **v1.11.0**, 2026-11-07). Cada item aponta
+Documento vivo, com **o que falta** no projeto (revisto na release **v1.12.0**, 2026-11-08). Cada item aponta
 para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou abrir uma pendência.
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.11.0, promovida em 2026-11-07). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.12.0, promovida em 2026-11-08). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -84,9 +84,12 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 
 ### Regulação
 - ~~Tela~~ e ~~fechamento do ciclo~~ — feitos pelas ADRs 0088 e 0089.
-- Vagas por unidade e procedimento (cotas e PPI): hoje o regulador informa a vaga na autorização.
-- Fora do escopo da ADR-0087: regulação de urgência e SAMU, internação (depende de Leitos, #12),
-  integração com SISREG e SIGTAP, e cotas por unidade (PPI).
+- ~~Vagas por unidade e procedimento (cotas e PPI)~~ — ADR-0179 (Gestão da Rede, GR1).
+- Fora do escopo da ADR-0087: ~~regulação de urgência e SAMU~~ — ADR-0176; internação (depende de Leitos, #12),
+  integração com SISREG e SIGTAP, e ~~cotas por unidade (PPI)~~ — ADR-0179.
+- Regulação de urgência (ADR-0176): ~~viaturas no lugar do recurso em texto~~ — ADR-0178; ficha clínica do
+  atendimento pré-hospitalar; telefonia e integração com o 192; reserva de leito na vaga zero; conceder os papéis **Atendente de regulação
+  (TARM)** e **Médico regulador de urgência** na central quando a autorização for ligada.
 - Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
   autorização for ligada.
 
@@ -144,6 +147,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - **Cobertura Robot de interface das demais telas**, deixada para o final (ADR-0077): Necessidades de
   pessoal, RH (Cargos & salários, Benefícios, Desenvolvimento, Recrutamento, Folha; o perfil já tem cobertura pelas ADRs 0084 a 0086),
   Profissionais, Usuários & Perfis (além do encerramento de sessões) e Auditoria.
+- **`SetorControllerTest` depende de banco limpo:** a limpeza dele apaga todos os setores e falha quando uma execução Robot
+  deixou leitos (`Robot Leito ...`) ligados a um setor. Restringir a limpeza aos setores criados pelo próprio teste.
 
 ## 6. Roadmap de domínios
 
@@ -156,24 +161,26 @@ real":
   - ~~#10 Laboratório e diagnóstico~~ — ADRs 0093 a 0095;
   - ~~#11 Regulação~~ — ADRs 0087 a 0089 (falta a regulação de urgência e de internação);
   - ~~#12 Leitos e internação~~ — ADRs 0098 a 0100;
-  - #16 Transporte sanitário;
+  - #16 Transporte sanitário — ~~T1 (frota, plantão, viatura no SAMU)~~ — ADR-0178; T2 (transporte eletivo e TFD) e T3 (emergências)
+    com aprovação; conceder o papel **Coordenador de frota** quando a autorização for ligada;
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
     coletivas e equipe (programas pela ADR-0132; especialidade pela ADR-0134);
   - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);
   - na Enfermagem, `Cuidado` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
-  - #13 Estoque;
+  - #13 Estoque — ~~ES1 (catálogo, lotes, livro, mínimo e alertas)~~ — ADR-0177; ES2 (central, requisição, transferência,
+    inventário) e ES3 (emergências) com aprovação; conceder o papel **Almoxarife** quando a autorização for ligada;
   - #14 Compras;
   - #15 Patrimônio;
   - #17 Financeiro;
   - #18 Qualidade;
   - #19 Indicadores e BI — desenhado na ADR-0142; ~~BI1 (produção assistencial e Sala de Situação)~~ — ADR-0143;
-    ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; ~~BI4 (relatórios)~~ — ADR-0167 (sem envio agendado); falta a BI5
-    (coordenações).
+    ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; ~~BI4 (relatórios)~~ — ADR-0167 (sem envio agendado); ~~BI5 (coordenações e gerência)~~ — ADR-0175.
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —
   perfis e capacidades, ADR-0117; ~~MO2~~ — serviços da unidade, ADR-0165 (sem o leito apontar direto para o serviço). ~~MO3~~ — ponto operacional, ADR-0166 (sem GPS, sem agendar pelo ponto ou pela rota e sem
   indicadores por local). ~~MO4~~ — domínios consultam capacidades, ADR-0170. Camada completa.
-- **#30 Gestão da Rede de Atenção** — reservado pela ADR-0115; a desenhar em ADR própria.
+- **#30 Gestão da Rede de Atenção** — desenhado na ADR-0179; ~~GR1 (oferta e cotas da PPI)~~ — ADR-0179; GR2 (redes temáticas) e GR3
+  (cobertura) com aprovação.
 - **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
   ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir
   (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
@@ -181,9 +188,9 @@ real":
   profissionais, sem consentimento para a população); faltam C2 a C6 (avaliação).
 - **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; ~~E1 (núcleo)~~ — ADR-0156 (sem a escolha
   manual das microáreas na tela); ~~E2 (contingência)~~ — ADR-0157; ~~E3 (coordenação)~~ — ADR-0158 (insumo, equipamento e veículo como necessidade até Estoque e Transporte); ~~E5 (pós-evento)~~ — ADR-0159 (sem o relatório em PDF, que depende de Documentos); ~~E6a (evento de massa e estruturas temporárias)~~ — ADR-0160 (ambulâncias como número até Transporte); ~~E6b (painel da epidemia e exposição ambiental)~~ — ADR-0161 (sem incidência por população); falta a E4 (integração da rede, depende de Estoque e Transporte).
-- **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (sem a notificação no sistema, V1, e sem o SAMU, regulação
-  de urgência); ~~SM5 (CAPS e RAPS)~~ — ADR-0153 (sem o CAPS de referência por território e a RAAS); ~~SM6
-  (intersetorialidade e indicadores)~~ — ADR-0155. Domínio completo; o SAMU na crise segue com a regulação de urgência.
+- **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (a notificação pela V1; o SAMU pela
+  regulação de urgência, ADR-0176); ~~SM5 (CAPS e RAPS)~~ — ADR-0153 (sem o CAPS de referência por território e a RAAS); ~~SM6
+  (intersetorialidade e indicadores)~~ — ADR-0155. Domínio completo.
 - **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134, ~~SB2 (odontograma)~~ — ADR-0135, ~~SB3a (catálogo e procedimento odontológico)~~ — ADR-0136, ~~SB3b (plano de tratamento)~~ — ADR-0137; ~~SB4a (encaminhamento pela Regulação)~~ — ADR-0138; ~~SB4b (prótese)~~ — ADR-0139; ~~SB5 (coletiva)~~ — ADR-0140. Domínio completo; CPO-D e indicadores ficam para a P6 e o BI.
 - **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias ~~V1 (fundação)~~ — ADR-0124,
   ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131, ~~V4a (controle de vetores)~~ —
@@ -201,7 +208,8 @@ real":
   ~~F3a (imóvel, domicílio e família)~~ — ADR-0127; ~~F3b (adscrição e cobertura)~~ — ADR-0128; ~~F4
   (escopo de acesso e fim do texto das microáreas)~~ — ADR-0129. Falta ligar o escopo territorial quando a rede tiver o
   cadastro.
-- **Integrações** (SUS, CNES, e-SUS, SIGTAP) e **Documentos**.
+- **Integrações** (SUS, CNES, e-SUS, SIGTAP) e **Documentos** além da D1 ([ADR-0172](./adr/0172-documentos-anexos.md)): outros donos, guias para imprimir, aprovação e assinatura.
+- **Backup do servidor,** agora também do volume `documentos-data`, antes de qualquer dado real.
 
 ## 7. Fluxo de promoção
 

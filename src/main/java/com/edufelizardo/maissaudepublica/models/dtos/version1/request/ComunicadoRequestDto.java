@@ -38,4 +38,6 @@ public class ComunicadoRequestDto implements Serializable {
     private LocalDate fim;
     private UUID unidadeId;
     private List<UUID> canalIds;
+    /** Campanha de comunicação de onde sai, opcional (ADR-0174). */
+    private UUID campanhaId;
 }

@@ -78,4 +78,11 @@ public class Comunicado implements Serializable {
 
     @Column(updatable = false)
     private String registradoPorCpf;
+
+    /** A campanha de onde o comunicado saiu, opcional (ADR-0174). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "campanha_comunicacao_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private CampanhaComunicacao campanha;
 }

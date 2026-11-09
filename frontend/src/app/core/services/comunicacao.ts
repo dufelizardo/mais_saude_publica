@@ -10,6 +10,11 @@ import {
   ConteudoEducativoDto,
   ConteudoEducativoRequestDto,
   ConteudoPublicoDto,
+  CampanhaComunicacaoDto,
+  CampanhaComunicacaoPublicaDto,
+  CampanhaComunicacaoRequestDto,
+  MaterialEducativoDto,
+  MaterialEducativoRequestDto,
 } from '../models/comunicacao';
 
 /** Comunicação (ADR-0168): canais, comunicados, conteúdos com revisão e a consulta pública. */
@@ -80,5 +85,47 @@ export class ComunicacaoService {
 
   orientacoes(): Observable<ConteudoPublicoDto[]> {
     return this.http.get<ConteudoPublicoDto[]>('/api/v1/publico/comunicacao/orientacoes');
+  }
+
+  // ── Campanhas e materiais (ADR-0174) ──
+
+  campanhas(): Observable<CampanhaComunicacaoDto[]> {
+    return this.http.get<CampanhaComunicacaoDto[]>(`${this.api}/campanha`);
+  }
+
+  criarCampanha(dto: CampanhaComunicacaoRequestDto): Observable<CampanhaComunicacaoDto> {
+    return this.http.post<CampanhaComunicacaoDto>(`${this.api}/campanha`, dto);
+  }
+
+  atualizarCampanha(uuid: string, dto: CampanhaComunicacaoRequestDto): Observable<CampanhaComunicacaoDto> {
+    return this.http.patch<CampanhaComunicacaoDto>(`${this.api}/campanha/${uuid}`, dto);
+  }
+
+  iniciarCampanha(uuid: string): Observable<CampanhaComunicacaoDto> {
+    return this.http.post<CampanhaComunicacaoDto>(`${this.api}/campanha/${uuid}/inicio`, {});
+  }
+
+  encerrarCampanha(uuid: string, balanco: string): Observable<CampanhaComunicacaoDto> {
+    return this.http.post<CampanhaComunicacaoDto>(`${this.api}/campanha/${uuid}/encerramento`, { balanco });
+  }
+
+  cancelarCampanha(uuid: string, motivo: string): Observable<CampanhaComunicacaoDto> {
+    return this.http.post<CampanhaComunicacaoDto>(`${this.api}/campanha/${uuid}/cancelamento`, { motivo });
+  }
+
+  materiais(conteudoGrupoId: string): Observable<MaterialEducativoDto[]> {
+    return this.http.get<MaterialEducativoDto[]>(`${this.api}/material`, { params: { conteudoGrupoId } });
+  }
+
+  criarMaterial(dto: MaterialEducativoRequestDto): Observable<MaterialEducativoDto> {
+    return this.http.post<MaterialEducativoDto>(`${this.api}/material`, dto);
+  }
+
+  retirarMaterial(uuid: string, motivo: string): Observable<MaterialEducativoDto> {
+    return this.http.post<MaterialEducativoDto>(`${this.api}/material/${uuid}/retirada`, { motivo });
+  }
+
+  campanhasPublicas(): Observable<CampanhaComunicacaoPublicaDto[]> {
+    return this.http.get<CampanhaComunicacaoPublicaDto[]>('/api/v1/publico/comunicacao/campanhas');
   }
 }

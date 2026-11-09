@@ -1,0 +1,22 @@
+package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
+
+import lombok.*;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.UUID;
+
+/** Uma central de regulação das urgências: unidade com a capacidade REGULACAO_MEDICA_URGENCIA vigente (ADR-0176). */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
+public class CentralUrgenciaDto implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private UUID unidadeId;
+    private String nome;
+}
