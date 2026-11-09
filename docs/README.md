@@ -24,17 +24,21 @@ correspondente está na ADR indicada.
 | Assistência (Paciente, Atendimento, Agenda, Prontuário) | [`assistencia/ESCOPO-ASSISTENCIA.md`](./assistencia/ESCOPO-ASSISTENCIA.md) | 0040 a 0046, 0063, 0091, 0092 | funcionando |
 | Enfermagem | [`enfermagem/ESCOPO-ENFERMAGEM.md`](./enfermagem/ESCOPO-ENFERMAGEM.md) | 0047, 0048, 0064 | funcionando |
 | Farmácia | [`farmacia/ESCOPO-FARMACIA.md`](./farmacia/ESCOPO-FARMACIA.md) | 0049 a 0051, 0057 a 0061 | funcionando |
-| Modelo Operacional dos Equipamentos | [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md) | [0115](./adr/0115-modelo-operacional-dos-equipamentos.md), [0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md) | em parte (MO1 funcionando) |
+| Modelo Operacional dos Equipamentos | [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md) | [0115](./adr/0115-modelo-operacional-dos-equipamentos.md), [0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md), 0165, 0166, 0170 | funcionando (MO1 a MO4) |
 | Território e Adscrição | [`territorio/MODELO-TERRITORIO.md`](./territorio/MODELO-TERRITORIO.md) | [0108](./adr/0108-territorio-e-adscricao.md), 0125 a 0129 | funcionando (F1 a F4) |
-| Programas, Ações e Linhas de Cuidado | [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md) | [0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), [0118](./adr/0118-programas-catalogo.md), [0119](./adr/0119-programas-acompanhamento.md) | em parte (P1 a P4 funcionando) |
-| Vigilância em Saúde | [`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md) | [0110](./adr/0110-vigilancia-em-saude.md), 0124, 0130, 0131 | em parte (V1 e V2 funcionando) |
+| Programas, Ações e Linhas de Cuidado | [`programas/MODELO-PROGRAMAS.md`](./programas/MODELO-PROGRAMAS.md) | [0109](./adr/0109-programas-acoes-e-linhas-de-cuidado.md), [0118](./adr/0118-programas-catalogo.md), [0119](./adr/0119-programas-acompanhamento.md), 0132, 0133, 0141, 0152 | funcionando (P1 a P6) |
+| Vigilância em Saúde | [`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md) | [0110](./adr/0110-vigilancia-em-saude.md), 0124, 0130, 0131, 0162 a 0164 | em parte (V1, V2 e V4 funcionando) |
 | Saúde Bucal | [`saude-bucal/MODELO-SAUDE-BUCAL.md`](./saude-bucal/MODELO-SAUDE-BUCAL.md) | [0111](./adr/0111-saude-bucal.md), 0134 a 0140 | funcionando (SB1 a SB5) |
-| Saúde Mental | [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md) | [0112](./adr/0112-saude-mental.md), 0120 a 0123 | em parte (SM1 a SM4 funcionando) |
-| Gestão de Emergências e Desastres | [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md) | [0113](./adr/0113-emergencias-e-desastres.md) | desenhado |
-| Comunicação e Educação em Saúde | [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md) | [0114](./adr/0114-comunicacao-e-educacao-em-saude.md) | C1 implementada |
+| Saúde Mental | [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md) | [0112](./adr/0112-saude-mental.md), 0120 a 0123, 0153, 0155 | funcionando (SM1 a SM6) |
+| Gestão de Emergências e Desastres | [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md) | [0113](./adr/0113-emergencias-e-desastres.md), 0156 a 0161 | em parte (E1 a E3, E5 e E6 funcionando) |
+| Comunicação e Educação em Saúde | [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md) | [0114](./adr/0114-comunicacao-e-educacao-em-saude.md), 0168, 0173, 0174 | em parte (C1, C2 e C4 funcionando) |
+| Estoque e Almoxarifado | [`estoque/MODELO-ESTOQUE.md`](./estoque/MODELO-ESTOQUE.md) | [0177](./adr/0177-estoque-e-almoxarifado.md) | em parte (ES1 funcionando) |
+| Transporte Sanitário | [`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md) | [0178](./adr/0178-transporte-sanitario.md) | em parte (T1 funcionando) |
+| Gestão da Rede de Atenção | [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md) | [0179](./adr/0179-gestao-da-rede-de-atencao.md) | em parte (GR1 funcionando) |
 
-Laboratório, Regulação e Leitos e Internação estão documentados nas próprias ADRs (0087 a 0089, 0093 a 0095, 0098 a
-0100).
+Estão documentados nas próprias ADRs: Laboratório (0093 a 0095), Regulação do acesso (0087 a 0089) e de urgência (0176), Leitos e
+Internação (0098 a 0100, 0171), Imunização (0147 a 0150), Indicadores e BI (0142 a 0146, 0167, 0175), Intersetorialidade (0154) e
+Documentos (0172).
 
 ## Acesso, segurança e frontend
 
