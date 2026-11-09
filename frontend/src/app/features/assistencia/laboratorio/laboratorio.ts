@@ -6,7 +6,9 @@ import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import {
+  FORMAS_ENTREGA,
   INTERPRETACOES,
+  MEIOS_COMUNICACAO,
   MATERIAIS,
   MOTIVOS_REJEICAO,
   STATUS_ITEM,
@@ -20,13 +22,16 @@ import {
   ExameLaboratorialResponseDto,
   FaixaReferenciaExameDto,
   FaixaReferenciaExameRequestDto,
+  FormaEntregaResultado,
   ItemPedidoExameDto,
   ItemTrabalhoExameDto,
   MaterialExame,
+  MeioComunicacaoCritico,
   MotivoRejeicaoAmostra,
   PedidoExameResponseDto,
   PedidoExameResumoDto,
   PrioridadeExame,
+  ResultadoAvisoExameDto,
   SituacaoPedidoExame,
   StatusItemExame,
   TipoEventoExame,
@@ -43,7 +48,7 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
 
-type Aba = 'coletar' | 'analise' | 'liberar' | 'pedidos' | 'catalogo';
+type Aba = 'coletar' | 'analise' | 'liberar' | 'criticos' | 'ciencia' | 'pedidos' | 'catalogo';
 
 type Gaveta =
   | { tipo: 'pedido' }
@@ -54,7 +59,9 @@ type Gaveta =
   | { tipo: 'detalhe'; pedidoId: string }
   | { tipo: 'retificar'; itemId: string; pedidoId: string }
   | { tipo: 'cancelar'; itemId: string; pedidoId: string; exameNome: string }
-  | { tipo: 'exame'; exame: ExameLaboratorialResponseDto | null };
+  | { tipo: 'exame'; exame: ExameLaboratorialResponseDto | null }
+  | { tipo: 'comunicar'; aviso: ResultadoAvisoExameDto }
+  | { tipo: 'entrega'; pedidoId: string };
 
 /** Os exames de um pedido que aguardam coleta: a coleta é por pedido. */
 interface GrupoColeta {
@@ -82,6 +89,9 @@ const EVENTOS: Record<TipoEventoExame, string> = {
   LIBERACAO: 'Resultado liberado',
   RETIFICACAO: 'Resultado retificado',
   CANCELAMENTO: 'Exame cancelado',
+  COMUNICACAO_CRITICO: 'Crítico comunicado',
+  CIENCIA: 'Ciência de quem pediu',
+  ENTREGA: 'Resultado entregue',
 };
 
 const CID = /^\s*([A-Za-z][0-9]{2}(\.?[0-9A-Za-z]{1,2})?)?\s*$/;
@@ -118,6 +128,10 @@ export class Laboratorio {
   protected readonly listaUnidadesIdade = Object.keys(UNIDADES_IDADE) as UnidadeIdade[];
   protected readonly critico = critico;
   protected readonly faixaCritica = faixaCritica;
+  protected readonly meiosComunicacao = MEIOS_COMUNICACAO;
+  protected readonly listaMeios = Object.keys(MEIOS_COMUNICACAO) as MeioComunicacaoCritico[];
+  protected readonly formasEntrega = FORMAS_ENTREGA;
+  protected readonly listaFormas = Object.keys(FORMAS_ENTREGA) as FormaEntregaResultado[];
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
   private readonly matriculaPadrao = signal('');
@@ -125,6 +139,11 @@ export class Laboratorio {
   protected readonly paraColetar = signal<ItemTrabalhoExameDto[]>([]);
   protected readonly emAnalise = signal<ItemTrabalhoExameDto[]>([]);
   protected readonly paraLiberar = signal<ItemTrabalhoExameDto[]>([]);
+  /** Resultados para a ciência de quem pediu e críticos a comunicar (ADR-0181). */
+  protected readonly paraCiencia = signal<ResultadoAvisoExameDto[]>([]);
+  protected readonly criticosAComunicar = signal<ResultadoAvisoExameDto[]>([]);
+  protected readonly matriculaCiencia = signal('');
+  protected readonly erroCiencia = signal<string | null>(null);
   protected readonly pedidos = signal<PedidoExameResumoDto[]>([]);
   protected readonly exames = signal<ExameLaboratorialResponseDto[]>([]);
   protected readonly pacientes = signal<PacienteResponseDto[]>([]);
@@ -168,6 +187,14 @@ export class Laboratorio {
     valorNumerico: [''], valorTexto: [''], observacao: [''], motivo: [''], profissionalMatricula: [''],
   });
   protected readonly cancelarForm = this.fb.nonNullable.group({ motivo: [''], profissionalMatricula: [''] });
+  protected readonly comunicarForm = this.fb.nonNullable.group({
+    receptorNome: [''], meio: ['TELEFONE' as MeioComunicacaoCritico], comunicadoEm: [''], profissionalMatricula: [''],
+  });
+  protected readonly entregaForm = this.fb.nonNullable.group({
+    unidadeId: [''], retirada: ['PACIENTE' as 'PACIENTE' | 'TERCEIRO'], terceiroNome: [''], terceiroDocumento: [''], terceiroParentesco: [''],
+    forma: ['IMPRESSO_NA_UNIDADE' as FormaEntregaResultado], profissionalMatricula: [''],
+  });
+  protected readonly matriculaCienciaForm = this.fb.nonNullable.group({ matricula: [''] });
   protected readonly exameForm = this.fb.nonNullable.group({
     nome: [''],
     material: ['SANGUE' as MaterialExame],
@@ -206,6 +233,8 @@ export class Laboratorio {
     ...(this.pode('LABORATORIO.COLETAR') ? [{ id: 'coletar' as Aba, rotulo: 'Para coletar', contagem: this.gruposColeta().length }] : []),
     ...(this.pode('LABORATORIO.ANALISAR') ? [{ id: 'analise' as Aba, rotulo: 'Em análise', contagem: this.emAnalise().length }] : []),
     ...(this.pode('LABORATORIO.LIBERAR') ? [{ id: 'liberar' as Aba, rotulo: 'Para liberar', contagem: this.paraLiberar().length }] : []),
+    ...(this.pode('LABORATORIO.LIBERAR') ? [{ id: 'criticos' as Aba, rotulo: 'Críticos a comunicar', contagem: this.criticosAComunicar().length }] : []),
+    ...(this.pode('EXAME.SOLICITAR') ? [{ id: 'ciencia' as Aba, rotulo: 'Para ciência', contagem: this.paraCiencia().length }] : []),
     { id: 'pedidos', rotulo: 'Pedidos', contagem: this.pedidos().length },
     { id: 'catalogo', rotulo: 'Catálogo de exames', contagem: this.exames().length },
   ]);
@@ -256,7 +285,11 @@ export class Laboratorio {
   });
 
   constructor() {
-    this.authService.usuarioAtual().subscribe((u) => this.matriculaPadrao.set(u?.profissionalMatricula ?? ''));
+    this.authService.usuarioAtual().subscribe((u) => {
+      this.matriculaPadrao.set(u?.profissionalMatricula ?? '');
+      // Com login, a lista de ciência é sempre a do profissional logado (ADR-0181).
+      if (u?.profissionalMatricula) this.verParaCiencia(u.profissionalMatricula);
+    });
     this.authService.acessoDaInterface().subscribe((a) => {
       this.acesso.set(a);
       const pedida = this.route.snapshot.queryParamMap.get('aba') as Aba | null;
@@ -287,14 +320,70 @@ export class Laboratorio {
       liberar: etapa('PARA_LIBERAR'),
       pedidos: this.laboratorioService.listarPedidos().pipe(catchError(() => of([]))),
       exames: this.laboratorioService.listarExames().pipe(catchError(() => of([]))),
-    }).subscribe(({ coletar, analise, liberar, pedidos, exames }) => {
+      criticos: this.pode('LABORATORIO.LIBERAR') ? this.laboratorioService.criticosAComunicar().pipe(catchError(() => of([]))) : of([]),
+    }).subscribe(({ coletar, analise, liberar, pedidos, exames, criticos }) => {
       this.paraColetar.set(coletar);
       this.emAnalise.set(analise);
       this.paraLiberar.set(liberar);
+      this.criticosAComunicar.set(criticos);
       this.pedidos.set(pedidos);
       this.exames.set(exames);
       this.carregando.set(false);
     });
+    if (this.matriculaCiencia()) this.verParaCiencia(this.matriculaCiencia());
+  }
+
+  // ── Ciência de quem pediu (ADR-0181) ───────────────────────────────────────────────────────
+
+  protected verParaCiencia(matricula: string): void {
+    const m = matricula.trim();
+    this.erroCiencia.set(null);
+    if (!m) {
+      this.erroCiencia.set('Informe a sua matrícula para ver os resultados dos seus pedidos.');
+      return;
+    }
+    this.matriculaCiencia.set(m);
+    this.matriculaCienciaForm.setValue({ matricula: m });
+    this.laboratorioService.paraCiencia(m).subscribe({
+      next: (lista) => this.paraCiencia.set(lista),
+      error: (e: HttpErrorResponse) => {
+        this.paraCiencia.set([]);
+        this.erroCiencia.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível carregar os resultados.');
+      },
+    });
+  }
+
+  protected darCiencia(a: ResultadoAvisoExameDto): void {
+    if (this.submitting()) return;
+    this.submitting.set(true);
+    this.laboratorioService.darCiencia(a.itemId, this.matriculaCiencia()).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.mostrarToast('Ciência registrada', `${a.exameNome} · ${a.pacienteNome}`);
+        this.carregarTudo();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.erroCiencia.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível registrar a ciência.');
+      },
+    });
+  }
+
+  /** No detalhe: ciência de todos os liberados do pedido, por quem pediu. */
+  protected darCienciaDoPedido(d: PedidoExameResponseDto): void {
+    const matricula = this.matriculaCiencia() || this.matriculaPadrao() || d.profissionalSolicitanteMatricula;
+    this.enviar(this.laboratorioService.darCienciaDoPedido(d.uuid, matricula), 'Ciência registrada', d.pacienteNome);
+  }
+
+  protected readonly exameNomeDe = (i: ItemPedidoExameDto) => i.exameNome;
+
+  protected pendentesDeCiencia(d: PedidoExameResponseDto): ItemPedidoExameDto[] {
+    return d.itens.filter((i) => i.status === 'LIBERADO' && i.resultado && !i.resultado.cienciaEm);
+  }
+
+  /** Críticos liberados que o médico ainda não viu: a entrega mostra o aviso. */
+  protected criticosSemCiencia(d: PedidoExameResponseDto): ItemPedidoExameDto[] {
+    return this.pendentesDeCiencia(d).filter((i) => critico(i.resultado?.interpretacao));
   }
 
   protected selecionarAba(aba: Aba, focar = false): void {
@@ -395,6 +484,10 @@ export class Laboratorio {
         return 'Cancelar exame';
       case 'exame':
         return g.exame ? 'Editar exame' : 'Novo exame';
+      case 'comunicar':
+        return 'Comunicar valor crítico';
+      case 'entrega':
+        return 'Registrar entrega';
     }
   }
 
@@ -467,6 +560,19 @@ export class Laboratorio {
   protected abrirCancelamento(item: ItemPedidoExameDto, pedidoId: string): void {
     this.cancelarForm.reset({ motivo: '', profissionalMatricula: this.matriculaPadrao() });
     this.abrir({ tipo: 'cancelar', itemId: item.uuid, pedidoId, exameNome: item.exameNome });
+  }
+
+  protected abrirComunicacao(aviso: ResultadoAvisoExameDto): void {
+    this.comunicarForm.reset({ receptorNome: '', meio: 'TELEFONE', comunicadoEm: '', profissionalMatricula: this.matriculaPadrao() });
+    this.abrir({ tipo: 'comunicar', aviso });
+  }
+
+  protected abrirEntrega(d: PedidoExameResponseDto): void {
+    this.entregaForm.reset({
+      unidadeId: d.unidadeSolicitanteId, retirada: 'PACIENTE', terceiroNome: '', terceiroDocumento: '', terceiroParentesco: '',
+      forma: 'IMPRESSO_NA_UNIDADE', profissionalMatricula: this.matriculaPadrao(),
+    });
+    this.abrir({ tipo: 'entrega', pedidoId: d.uuid }, d.uuid);
   }
 
   protected abrirExame(exame: ExameLaboratorialResponseDto | null = null): void {
@@ -608,6 +714,10 @@ export class Laboratorio {
         return this.salvarCancelamento(g.itemId, g.exameNome);
       case 'exame':
         return this.salvarExame(g.exame);
+      case 'comunicar':
+        return this.salvarComunicacao(g.aviso);
+      case 'entrega':
+        return this.salvarEntrega(g.pedidoId);
       default:
         return;
     }
@@ -740,6 +850,49 @@ export class Laboratorio {
     if (!v.profissionalMatricula.trim()) erros['matriculaCancelamento'] = 'Informe a matrícula.';
     if (!this.validar(erros)) return;
     this.enviar(this.laboratorioService.cancelar(itemId, v.profissionalMatricula.trim(), v.motivo.trim()), 'Exame cancelado', exameNome);
+  }
+
+  private salvarComunicacao(aviso: ResultadoAvisoExameDto): void {
+    const v = this.comunicarForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.receptorNome.trim()) erros['receptorNome'] = 'Informe quem recebeu a informação.';
+    if (v.comunicadoEm && new Date(v.comunicadoEm).getTime() > Date.now() + 5 * 60 * 1000) erros['comunicadoEm'] = 'A comunicação não pode estar no futuro.';
+    if (!v.profissionalMatricula.trim()) erros['matriculaComunicacao'] = 'Informe a matrícula de quem comunicou.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.laboratorioService.comunicarCritico(aviso.itemId, {
+        profissionalMatricula: v.profissionalMatricula.trim(),
+        receptorNome: v.receptorNome.trim(),
+        meio: v.meio,
+        comunicadoEm: v.comunicadoEm ? (v.comunicadoEm.length === 16 ? v.comunicadoEm + ':00' : v.comunicadoEm) : undefined,
+      }),
+      'Comunicação registrada',
+      `${aviso.exameNome} · ${aviso.pacienteNome}`,
+    );
+  }
+
+  private salvarEntrega(pedidoId: string): void {
+    const v = this.entregaForm.getRawValue();
+    const terceiro = v.retirada === 'TERCEIRO';
+    const erros: Record<string, string> = {};
+    if (!v.unidadeId) erros['unidadeEntrega'] = 'Selecione a unidade da entrega.';
+    if (terceiro && !v.terceiroNome.trim()) erros['terceiroNome'] = 'Informe o nome de quem retirou.';
+    if (terceiro && !v.terceiroDocumento.trim()) erros['terceiroDocumento'] = 'Informe o documento de quem retirou.';
+    if (!v.profissionalMatricula.trim()) erros['matriculaEntrega'] = 'Informe a matrícula de quem entrega.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.laboratorioService.entregar(pedidoId, {
+        profissionalMatricula: v.profissionalMatricula.trim(),
+        unidadeId: v.unidadeId,
+        retiradoPeloPaciente: !terceiro,
+        terceiroNome: terceiro ? v.terceiroNome.trim() : undefined,
+        terceiroDocumento: terceiro ? v.terceiroDocumento.trim() : undefined,
+        terceiroParentesco: terceiro ? v.terceiroParentesco.trim() || undefined : undefined,
+        forma: v.forma,
+      }),
+      'Entrega registrada',
+      `${this.detalhe()?.pacienteNome ?? 'Paciente'} · ${terceiro ? 'retirado por ' + v.terceiroNome.trim() : 'retirado pelo paciente'}`,
+    );
   }
 
   private salvarExame(exame: ExameLaboratorialResponseDto | null): void {

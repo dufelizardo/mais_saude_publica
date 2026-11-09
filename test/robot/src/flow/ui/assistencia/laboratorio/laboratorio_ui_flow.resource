@@ -4,6 +4,7 @@ Resource    ../../../../pom/ui/assistencia/laboratorio/laboratorio_ui_pom.resour
 Resource    ../../../laboratorio/pedido_exame/pedido_exame_flow.resource
 Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.resource
 Resource    ../../../laboratorio/faixa_referencia/faixa_referencia_flow.resource
+Resource    ../../../laboratorio/ciencia_entrega/ciencia_entrega_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (paciente, unidade, profissional, exame, pedido, coleta) são criados pela API; a ação sob
@@ -297,5 +298,65 @@ UI Laboratorio - Evolucao Do Exame No Prontuario
     ${linhas}=    Get Element Count    css=app-drawer table.evo__tabela tbody tr
     Should Be Equal As Integers    ${linhas}    2
     Wait For Elements State    css=app-drawer table.evo__tabela >> text=Abaixo da referência    visible    10s
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Ciencia Pela Aba Para Ciencia
+    [Documentation]    Quem pediu vê o resultado liberado na aba Para ciência e registra a ciência (ADR-0181).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${unidadeId}=    Seed A Resultado Liberado
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    ciencia
+    Fill Text    id=f-matriculaCiencia    ${matricula}
+    Clicar Botao    Ver resultados
+    Clicar Botao    Registrar ciência de ${exameNome} de ${nomePaciente}
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Ciência registrada
+    ${detalhe}=    GET Get Pedido Exame By Id    ${pedidoId}
+    Should Be Equal    ${detalhe.json()}[itens][0][resultado][cienciaPorMatricula]    ${matricula}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Comunicar Critico Pela Aba
+    [Documentation]    O laboratório registra a comunicação do crítico pela aba Críticos a comunicar (ADR-0181).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${unidadeId}=    Seed A Resultado Liberado    ${5}
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    criticos
+    Clicar Botao    Comunicar crítico de ${exameNome} de ${nomePaciente}
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Comunicar valor crítico
+    Preencher Campo Da Gaveta    receptorNome    Dra. Plantonista
+    Escolher Opcao Da Gaveta    meio    TELEFONE
+    Preencher Campo Da Gaveta    matriculaComunicacao    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Comunicação registrada
+    ${detalhe}=    GET Get Pedido Exame By Id    ${pedidoId}
+    Should Be Equal    ${detalhe.json()}[comunicacoesCritico][0][receptorNome]    Dra. Plantonista
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Entrega Pelo Detalhe Do Pedido
+    [Documentation]    Registra a entrega a um parente pelo detalhe do pedido concluído (ADR-0181).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${unidadeId}=    Seed A Resultado Liberado
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    pedidos
+    Clicar Botao    Ver pedido de ${nomePaciente}
+    Clicar Botao    Registrar entrega
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Registrar entrega
+    Click    css=app-drawer label >> text=Outra pessoa
+    Preencher Campo Da Gaveta    terceiroNome    Maria da Silva
+    Preencher Campo Da Gaveta    terceiroDocumento    RG 12.345.678-9
+    Preencher Campo Da Gaveta    terceiroParentesco    Mãe
+    Preencher Campo Da Gaveta    matriculaEntrega    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Entrega registrada
+    ${detalhe}=    GET Get Pedido Exame By Id    ${pedidoId}
+    Should Be Equal    ${detalhe.json()}[entregas][0][terceiroNome]    Maria da Silva
+    Should Be Equal    ${detalhe.json()}[entregas][0][unidadeId]    ${unidadeId}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

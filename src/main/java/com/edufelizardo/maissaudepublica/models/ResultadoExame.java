@@ -96,4 +96,11 @@ public class ResultadoExame implements Serializable {
     private Profissional liberadoPor;
 
     private Instant liberadoEm;
+
+    /** Ciência do solicitante (ADR-0181): o resultado retificado é outro, então a ciência volta a ficar pendente. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ciencia_por_id", referencedColumnName = "uuid")
+    private Profissional cienciaPor;
+
+    private Instant cienciaEm;
 }

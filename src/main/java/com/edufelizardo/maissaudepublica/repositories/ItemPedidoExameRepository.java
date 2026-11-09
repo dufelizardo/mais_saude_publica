@@ -26,6 +26,19 @@ public interface ItemPedidoExameRepository extends JpaRepository<ItemPedidoExame
             + "and i.status = com.edufelizardo.maissaudepublica.models.enuns.StatusItemExame.LIBERADO")
     List<ItemPedidoExame> findLiberadosDoPaciente(@Param("paciente") UUID pacienteId);
 
+    /** Os resultados liberados dos pedidos do profissional, ainda sem ciência (ADR-0181). */
+    @Query("select i from ItemPedidoExame i join fetch i.exame join fetch i.resultadoAtual r join fetch i.pedido p join fetch p.paciente "
+            + "where p.profissionalSolicitante.uuid = :profissional and r.cienciaEm is null "
+            + "and i.status = com.edufelizardo.maissaudepublica.models.enuns.StatusItemExame.LIBERADO")
+    List<ItemPedidoExame> findParaCiencia(@Param("profissional") UUID profissionalId);
+
+    /** Os resultados liberados com valor crítico ainda sem ciência do solicitante (ADR-0181). */
+    @Query("select i from ItemPedidoExame i join fetch i.exame join fetch i.resultadoAtual r join fetch i.pedido p join fetch p.paciente "
+            + "where r.cienciaEm is null and i.status = com.edufelizardo.maissaudepublica.models.enuns.StatusItemExame.LIBERADO "
+            + "and r.interpretacao in (com.edufelizardo.maissaudepublica.models.enuns.InterpretacaoResultado.CRITICO_ALTO, "
+            + "com.edufelizardo.maissaudepublica.models.enuns.InterpretacaoResultado.CRITICO_BAIXO)")
+    List<ItemPedidoExame> findCriticosSemCiencia();
+
     /** Trava o item: dois profissionais não registram ou liberam o mesmo exame ao mesmo tempo. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from ItemPedidoExame i where i.uuid = :uuid")

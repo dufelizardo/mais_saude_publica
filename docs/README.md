@@ -36,7 +36,7 @@ correspondente está na ADR indicada.
 | Transporte Sanitário | [`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md) | [0178](./adr/0178-transporte-sanitario.md) | em parte (T1 funcionando) |
 | Gestão da Rede de Atenção | [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md) | [0179](./adr/0179-gestao-da-rede-de-atencao.md) | em parte (GR1 funcionando) |
 
-Estão documentados nas próprias ADRs: Laboratório (0093 a 0095, 0180), Regulação do acesso (0087 a 0089) e de urgência (0176), Leitos e
+Estão documentados nas próprias ADRs: Laboratório (0093 a 0095, 0180, 0181), Regulação do acesso (0087 a 0089) e de urgência (0176), Leitos e
 Internação (0098 a 0100, 0171), Imunização (0147 a 0150), Indicadores e BI (0142 a 0146, 0167, 0175), Intersetorialidade (0154) e
 Documentos (0172).
 

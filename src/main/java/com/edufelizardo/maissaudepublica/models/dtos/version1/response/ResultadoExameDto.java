@@ -42,6 +42,10 @@ public class ResultadoExameDto implements Serializable {
     private Instant liberadoEm;
     private UUID retificacaoDeId;
     private String motivoRetificacao;
+    /** Ciência do solicitante (ADR-0181). */
+    private String cienciaPorMatricula;
+    private String cienciaPorNome;
+    private Instant cienciaEm;
 
     public static ResultadoExameDto fromResultado(ResultadoExame r) {
         return new ResultadoExameDto(r.getUuid(), r.getValorNumerico(), r.getValorTexto(), r.getUnidadeMedida(), r.getReferenciaMinima(),
@@ -49,6 +53,8 @@ public class ResultadoExameDto implements Serializable {
                 r.getAnalisadoPor().getMatricula(), r.getAnalisadoPor().getNome(), r.getRegistradoEm(),
                 r.getLiberadoPor() != null ? r.getLiberadoPor().getMatricula() : null,
                 r.getLiberadoPor() != null ? r.getLiberadoPor().getNome() : null, r.getLiberadoEm(),
-                r.getRetificacaoDe() != null ? r.getRetificacaoDe().getUuid() : null, r.getMotivoRetificacao());
+                r.getRetificacaoDe() != null ? r.getRetificacaoDe().getUuid() : null, r.getMotivoRetificacao(),
+                r.getCienciaPor() != null ? r.getCienciaPor().getMatricula() : null,
+                r.getCienciaPor() != null ? r.getCienciaPor().getNome() : null, r.getCienciaEm());
     }
 }

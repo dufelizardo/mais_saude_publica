@@ -9,7 +9,13 @@ export type StatusItemExame = 'SOLICITADO' | 'COLETADO' | 'RESULTADO_REGISTRADO'
 export type MotivoRejeicaoAmostra = 'HEMOLISADA' | 'INSUFICIENTE' | 'COAGULADA' | 'IDENTIFICACAO_INCORRETA' | 'OUTRO';
 export type InterpretacaoResultado = 'NORMAL' | 'ACIMA' | 'ABAIXO' | 'CRITICO_ALTO' | 'CRITICO_BAIXO';
 export type UnidadeIdade = 'DIAS' | 'MESES' | 'ANOS';
-export type TipoEventoExame = 'SOLICITACAO' | 'COLETA' | 'REJEICAO_AMOSTRA' | 'RESULTADO' | 'LIBERACAO' | 'RETIFICACAO' | 'CANCELAMENTO';
+export type TipoEventoExame =
+  | 'SOLICITACAO' | 'COLETA' | 'REJEICAO_AMOSTRA' | 'RESULTADO' | 'LIBERACAO' | 'RETIFICACAO' | 'CANCELAMENTO'
+  | 'COMUNICACAO_CRITICO' | 'CIENCIA' | 'ENTREGA';
+
+/** Ciência, comunicação de crítico e entrega (ADR-0181). */
+export type MeioComunicacaoCritico = 'TELEFONE' | 'PRESENCIAL' | 'MENSAGEM_NO_SISTEMA';
+export type FormaEntregaResultado = 'IMPRESSO_NA_UNIDADE' | 'NA_CONSULTA';
 export type SituacaoPedidoExame = 'AGUARDANDO_COLETA' | 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO';
 export type EtapaTrabalho = 'PARA_COLETAR' | 'EM_ANALISE' | 'PARA_LIBERAR';
 
@@ -140,6 +146,10 @@ export interface ResultadoExameDto {
   liberadoEm?: string | null;
   retificacaoDeId?: string | null;
   motivoRetificacao?: string | null;
+  /** Ciência do solicitante (ADR-0181). */
+  cienciaPorMatricula?: string | null;
+  cienciaPorNome?: string | null;
+  cienciaEm?: string | null;
 }
 
 export interface ItemPedidoExameDto {
@@ -202,7 +212,81 @@ export interface PedidoExameResponseDto extends PedidoExameResumoDto {
   cid?: string | null;
   amostras: AmostraExameDto[];
   eventos: EventoExameDto[];
+  comunicacoesCritico: ComunicacaoCriticoExameDto[];
+  entregas: EntregaResultadoExameDto[];
 }
+
+/** Resultado liberado aguardando ciência ou comunicação do crítico, sem o valor (ADR-0181). */
+export interface ResultadoAvisoExameDto {
+  itemId: string;
+  pedidoId: string;
+  pacienteId: string;
+  pacienteNome: string;
+  exameNome: string;
+  interpretacao?: InterpretacaoResultado | null;
+  critico: boolean;
+  retificado: boolean;
+  liberadoEm: string;
+  prioridade: PrioridadeExame;
+  solicitanteMatricula: string;
+  solicitanteNome: string;
+  unidadeSolicitanteNome: string;
+  comunicadoEm?: string | null;
+}
+
+export interface ComunicacaoCriticoExameDto {
+  uuid: string;
+  itemId: string;
+  resultadoId: string;
+  exameNome: string;
+  receptorNome: string;
+  meio: MeioComunicacaoCritico;
+  comunicadoEm: string;
+  profissionalMatricula: string;
+  profissionalNome: string;
+}
+
+export interface ComunicacaoCriticoRequestDto {
+  profissionalMatricula: string;
+  receptorNome: string;
+  meio: MeioComunicacaoCritico;
+  comunicadoEm?: string;
+}
+
+export interface EntregaResultadoExameDto {
+  uuid: string;
+  retiradoPeloPaciente: boolean;
+  terceiroNome?: string | null;
+  terceiroDocumento?: string | null;
+  terceiroParentesco?: string | null;
+  forma: FormaEntregaResultado;
+  unidadeId: string;
+  unidadeNome: string;
+  entregueEm: string;
+  profissionalMatricula: string;
+  profissionalNome: string;
+}
+
+export interface EntregaResultadoRequestDto {
+  profissionalMatricula: string;
+  unidadeId: string;
+  retiradoPeloPaciente: boolean;
+  terceiroNome?: string;
+  terceiroDocumento?: string;
+  terceiroParentesco?: string;
+  forma: FormaEntregaResultado;
+}
+
+export const MEIOS_COMUNICACAO: Record<MeioComunicacaoCritico, string> = {
+  TELEFONE: 'Telefone',
+  PRESENCIAL: 'Presencial',
+  MENSAGEM_NO_SISTEMA: 'Mensagem no sistema',
+};
+
+export const FORMAS_ENTREGA: Record<FormaEntregaResultado, string> = {
+  IMPRESSO_NA_UNIDADE: 'Impresso, retirado na unidade',
+  NA_CONSULTA: 'Entregue na consulta',
+};
 
 export interface ItemTrabalhoExameDto {
   itemId: string;

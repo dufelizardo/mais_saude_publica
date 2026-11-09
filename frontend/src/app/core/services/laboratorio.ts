@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { SuccessResponseDto } from '../models/profissional';
 import {
   ColetaExameRequestDto,
+  ComunicacaoCriticoRequestDto,
+  EntregaResultadoRequestDto,
   EtapaTrabalho,
   EvolucaoExameDto,
   ExameLaboratorialRequestDto,
@@ -14,6 +16,7 @@ import {
   PedidoExameRequestDto,
   PedidoExameResponseDto,
   PedidoExameResumoDto,
+  ResultadoAvisoExameDto,
   ResultadoExameRequestDto,
   RetificacaoResultadoExameRequestDto,
 } from '../models/laboratorio';
@@ -101,5 +104,33 @@ export class LaboratorioService {
 
   cancelar(itemId: string, profissionalMatricula: string, motivo: string): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/item/${itemId}/cancelamento`, { profissionalMatricula, motivo });
+  }
+
+  // ── Ciência, comunicação do crítico e entrega (ADR-0181) ──
+
+  /** Do profissional logado; sem login, a matrícula é obrigatória. Críticos primeiro, sem valores. */
+  paraCiencia(matricula?: string): Observable<ResultadoAvisoExameDto[]> {
+    const params = matricula ? new HttpParams().set('matricula', matricula) : undefined;
+    return this.http.get<ResultadoAvisoExameDto[]>(`${this.pedidoUrl}/para-ciencia`, { params });
+  }
+
+  darCiencia(itemId: string, profissionalMatricula: string): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/item/${itemId}/ciencia`, { profissionalMatricula });
+  }
+
+  darCienciaDoPedido(pedidoId: string, profissionalMatricula: string): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/${pedidoId}/ciencia`, { profissionalMatricula });
+  }
+
+  criticosAComunicar(): Observable<ResultadoAvisoExameDto[]> {
+    return this.http.get<ResultadoAvisoExameDto[]>(`${this.pedidoUrl}/criticos-a-comunicar`);
+  }
+
+  comunicarCritico(itemId: string, dto: ComunicacaoCriticoRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/item/${itemId}/comunicacao-critico`, dto);
+  }
+
+  entregar(pedidoId: string, dto: EntregaResultadoRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/${pedidoId}/entrega`, dto);
   }
 }
