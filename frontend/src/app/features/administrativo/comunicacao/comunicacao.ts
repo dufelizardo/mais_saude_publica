@@ -17,16 +17,20 @@ import {
   SITUACOES_PUBLICACAO,
   TIPOS_DE_CANAL,
   TipoCanal,
+  CampanhaComunicacaoDto,
 } from '../../../core/models/comunicacao';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { AuthService } from '../../../core/services/auth';
 import { ComunicacaoService } from '../../../core/services/comunicacao';
+import { EducacaoPermanenteService } from '../../../core/services/educacao-permanente';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { CampanhasDeComunicacao } from './campanhas-de-comunicacao';
+import { MateriaisDoConteudo } from './materiais-do-conteudo';
 import { hojeIso, proximaAba } from '../../../shared/formato';
 
-type Aba = 'comunicados' | 'conteudos' | 'canais';
+type Aba = 'comunicados' | 'campanhas' | 'conteudos' | 'canais';
 
 type Gaveta =
   | { tipo: 'comunicado'; item: ComunicadoDto | null }
@@ -42,13 +46,14 @@ type Gaveta =
  */
 @Component({
   selector: 'app-comunicacao',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, Drawer, CampanhasDeComunicacao, MateriaisDoConteudo],
   templateUrl: './comunicacao.html',
 })
 export class Comunicacao {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly service = inject(ComunicacaoService);
+  private readonly educacaoService = inject(EducacaoPermanenteService);
   private readonly unidadeService = inject(UnidadeSaudeService);
 
   protected readonly tiposDeCanal = TIPOS_DE_CANAL;
@@ -62,12 +67,19 @@ export class Comunicacao {
   protected readonly situacoesPublicacao = SITUACOES_PUBLICACAO;
   protected readonly abas: { id: Aba; rotulo: string }[] = [
     { id: 'comunicados', rotulo: 'Comunicados' },
+    { id: 'campanhas', rotulo: 'Campanhas' },
     { id: 'conteudos', rotulo: 'Conteúdos educativos' },
     { id: 'canais', rotulo: 'Canais' },
   ];
 
   protected readonly comunicados = signal<ComunicadoDto[]>([]);
   protected readonly conteudos = signal<ConteudoEducativoDto[]>([]);
+  protected readonly campanhas = signal<CampanhaComunicacaoDto[]>([]);
+  /** Campanhas que ainda aceitam comunicado (ADR-0174). */
+  protected readonly campanhasAbertas = computed(() => this.campanhas().filter((c) => c.situacao === 'PLANEJADA' || c.situacao === 'EM_ANDAMENTO'));
+  protected readonly materiaisDe = signal<ConteudoEducativoDto | null>(null);
+  /** Treinamentos que usam cada conteúdo, pelo grupo (ADR-0173). */
+  protected readonly usoNosTreinamentos = signal<Record<string, string[]>>({});
   protected readonly canais = signal<CanalComunicacaoDto[]>([]);
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly carregando = signal(true);
@@ -92,6 +104,7 @@ export class Comunicacao {
     inicio: [''],
     fim: [''],
     unidadeId: [''],
+    campanhaId: [''],
   });
   protected readonly conteudoForm = this.fb.nonNullable.group({
     titulo: [''],
@@ -116,7 +129,11 @@ export class Comunicacao {
       comunicados: this.service.comunicados().pipe(catchError(() => of([]))),
       conteudos: this.service.conteudos().pipe(catchError(() => of([]))),
       canais: this.service.canais().pipe(catchError(() => of([]))),
+      uso: this.educacaoService.usoDosConteudos().pipe(catchError(() => of([]))),
+      campanhas: this.service.campanhas().pipe(catchError(() => of([]))),
     }).subscribe((r) => {
+      this.campanhas.set(r.campanhas);
+      this.usoNosTreinamentos.set(Object.fromEntries(r.uso.map((u) => [u.grupoId, u.treinamentos])));
       this.comunicados.set(r.comunicados);
       this.conteudos.set(r.conteudos);
       this.canais.set(r.canais);
@@ -139,7 +156,7 @@ export class Comunicacao {
   }
 
   protected contagem(aba: Aba): number {
-    return aba === 'comunicados' ? this.comunicados().length : aba === 'conteudos' ? this.conteudos().length : this.canais().length;
+    return aba === 'comunicados' ? this.comunicados().length : aba === 'campanhas' ? this.campanhas().length : aba === 'conteudos' ? this.conteudos().length : this.canais().length;
   }
 
   protected selecionarAba(aba: Aba): void {
@@ -156,12 +173,21 @@ export class Comunicacao {
     return iso.slice(0, 10).split('-').reverse().join('/');
   }
 
+  /** Aviso vindo das abas que têm componente próprio (ADR-0174). */
+  protected avisar(t: { titulo: string; detalhe: string }): void {
+    this.toast.set(t);
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+    this.carregar();
+  }
+
   protected rotuloNovo(): string {
     const a = this.aba();
     return a === 'comunicados' ? 'Novo comunicado' : a === 'conteudos' ? 'Novo conteúdo' : 'Novo canal';
   }
 
   protected podeCriar(): boolean {
+    if (this.aba() === 'campanhas') return false;
     return this.aba() === 'conteudos' ? this.podeEditar() : this.podePublicar();
   }
 
@@ -210,6 +236,7 @@ export class Comunicacao {
       inicio: item?.inicio ?? hojeIso(),
       fim: item?.fim ?? '',
       unidadeId: item?.unidadeId ?? '',
+      campanhaId: item?.campanhaId ?? '',
     });
     this.publicoDaGaveta.set(item?.publico ?? 'POPULACAO');
     this.canaisEscolhidos.set(new Set(item?.canalIds ?? this.canaisDoPublico('POPULACAO').map((k) => k.uuid)));
@@ -295,7 +322,7 @@ export class Comunicacao {
     if (!v.fim) erros['fim'] = 'Informe o fim.';
     else if (v.inicio && v.fim < v.inicio) erros['fim'] = 'O fim vem depois do início.';
     if (!this.validar(erros)) return;
-    const dto = { ...v, titulo: v.titulo.trim(), mensagem: v.mensagem.trim(), unidadeId: v.unidadeId || null, canalIds: [...this.canaisEscolhidos()] };
+    const dto = { ...v, titulo: v.titulo.trim(), mensagem: v.mensagem.trim(), unidadeId: v.unidadeId || null, campanhaId: v.campanhaId || null, canalIds: [...this.canaisEscolhidos()] };
     this.enviar(item ? this.service.atualizarComunicado(item.uuid, dto) : this.service.criarComunicado(dto), item ? 'Comunicado atualizado' : 'Rascunho salvo', dto.titulo);
   }
 

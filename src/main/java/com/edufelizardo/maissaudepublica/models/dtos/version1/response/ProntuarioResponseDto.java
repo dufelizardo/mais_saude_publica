@@ -31,4 +31,7 @@ public class ProntuarioResponseDto implements Serializable {
     private List<ExameProntuarioDto> exames;
     /** Internações do paciente, da mais recente à mais antiga, com motivo, sumário de alta e movimentos (ADR-0100). */
     private List<InternacaoResponseDto> internacoes;
+
+    /** Ocorrências de urgência do paciente (ADR-0176), mais recente primeiro. */
+    private List<OcorrenciaUrgenciaDto> ocorrenciasUrgencia;
 }

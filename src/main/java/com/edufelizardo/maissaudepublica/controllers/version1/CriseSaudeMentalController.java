@@ -79,6 +79,17 @@ public class CriseSaudeMentalController {
         return ResponseEntity.ok(service.registrarNotificacao(uuid, dto));
     }
 
+    @RequerPermissao({"SAUDE_MENTAL.CRISE"})
+    @PostMapping(value = "crise/{uuid}/acionamento-samu", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Aciona o SAMU", description = "Abre a ocorrência de urgência na central, com o paciente, a unidade e o local da crise, e registra "
+            + "a etapa de acionamento da rede com o protocolo (ADR-0176). Crise encerrada ou central sem a capacidade: 422; já acionado e aberto: 409.",
+            tags = "Saúde Mental · Risco e crise")
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<com.edufelizardo.maissaudepublica.models.dtos.version1.response.OcorrenciaUrgenciaDto> acionarSamu(@PathVariable UUID uuid,
+            @Valid @RequestBody com.edufelizardo.maissaudepublica.models.dtos.version1.request.AcionamentoSamuRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.acionarSamu(uuid, dto));
+    }
+
     @AuditarLeitura
     @RequerPermissao({"SAUDE_MENTAL.CRISE", "SAUDE_MENTAL.ACOMPANHAR"})
     @GetMapping(value = "crises", produces = MediaType.APPLICATION_JSON_VALUE)

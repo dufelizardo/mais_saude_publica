@@ -4,8 +4,8 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-07 (release 1.11.0)
-- **Release em produção:** v1.11.0 (2026-11-07)
+- **Atualizado em:** 2026-11-08 (release 1.12.0)
+- **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
 - **Fontes:**
@@ -31,35 +31,35 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 2 | [RH](#2-rh) | ✅ | banco de horas e horas realizadas |
 | 3 | [Administrativo](#3-administrativo) | ✅ | teste de tela de Necessidades de pessoal |
 | 4 | [Atendimento](#4-atendimento) | ✅ | atividades coletivas |
-| 5 | [Paciente / Cidadão](#5-paciente--cidadão) | ✅ | aba Anexos (Documentos) e indicador de risco |
+| 5 | [Paciente / Cidadão](#5-paciente--cidadão) | ✅ | indicador de risco |
 | 6 | [Prontuário](#6-prontuário--histórico-clínico) | ✅ | ligar o vínculo assistencial nos ambientes |
 | 7 | [Agendamento / Agenda](#7-agendamento--agenda) | ✅ | visão Mês e exportação |
 | 8 | [Enfermagem](#8-enfermagem) | ✅ | plano de cuidados e aprazamento |
 | 9 | [Farmácia](#9-farmácia) | ✅ | — |
 | 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | 🟡 | exames de imagem e laudo assinado |
-| 11 | [Regulação](#11-regulação) | 🟡 | urgência e internação |
+| 11 | [Regulação](#11-regulação) | 🟡 | regulação de leitos entre unidades |
 | 12 | [Leitos / Internação](#12-leitos--internação) | 🟡 | regulação de leitos e faturamento (AIH) |
-| 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ⬜ | domínio inteiro |
+| 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 feita (catálogo, lotes, livro, mínimo e alertas); ES2 (central, requisição, inventário) e ES3 (emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
-| 16 | [Transporte Sanitário](#16-transporte-sanitário) | ⬜ | domínio inteiro |
+| 16 | [Transporte Sanitário](#16-transporte-sanitário) | 🟡 | T1 feita (frota, plantão, viatura no SAMU); T2 (transporte eletivo e TFD) e T3 (emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
-| 19 | [Indicadores / BI](#19-indicadores--bi) | 🟡 | BI1 a BI4 feitas (Sala de Situação e relatórios); falta a BI5 |
+| 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1, V2 e V4 (vetores, animais e ambiental) feitas; sanitária e trabalhador (V3, V5) |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
-| 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas; o SAMU na crise (regulação de urgência) |
+| 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
-| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 feita (comunicado, conteúdo, portal e e-mail); fatias C2 a C6 |
+| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1, C2 e C4 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação permanente); fatias C3, C5 e C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
-| 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
+| 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | 🟡 | GR1 feita (oferta e cotas da PPI na Regulação); GR2 (redes temáticas) e GR3 (cobertura) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 14 ✅ · 11 🟡 · 6 ⬜ (e Documentos ⬜). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 15 ✅ · 13 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -68,11 +68,8 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 | Fatia | Domínio | O que é |
 |---|---|---|
-| BI5 | 19 Indicadores e BI | painel por coordenação e regional (protótipo `Coordenacoes.html`) |
-| C2 | 28 Comunicação | campanhas de comunicação, sem os arquivos dos materiais, que dependem de Documentos |
-| C4 | 28 Comunicação | conteúdo ligado ao `Treinamento` do RH e competências |
 
-**Precisam de desenho (ADR) antes:** Documentos, regulação de urgência (11), Estoque (13), Transporte (16) e Gestão da Rede (30).
+**Precisam de desenho (ADR) antes:** nenhum dos itens da ordem de 2026-11-08; os ⬜ restantes (14, 15, 17) ainda pedem ADR.
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -81,8 +78,8 @@ MO1 ✅ ──► SB4a ✅ (CEO) · SM5 ✅ (CAPS e RAPS) · E3 ✅ (capacidade 
 MO3 ✅ ──► SAMU (com Transporte, 16)
 
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
-BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 ✅ (relatórios) · BI5 (coordenações)
-P1 ✅ ──► P3 ✅ ──► C2 (campanha de comunicação)
+BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 ✅ (relatórios) · BI5 ✅ (coordenações)
+P1 ✅ ──► P3 ✅ ──► C2 ✅ (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 ✅ (área afetada) · Equipamentos com mapa real ✅
@@ -94,8 +91,8 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6a ✅ ──► E6b ✅
-C1 ✅ ──► C2 ──► C3 · C6
-C1 ✅ ──► C4 · C5
+C1 ✅ ──► C2 ✅ ──► C3 · C6
+C1 ✅ ──► C4 ✅ · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
 
@@ -103,11 +100,10 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 | Pré-requisito ainda sem desenho | Fatias que espera |
 |---|---|
-| Documentos | V3 (autos da VISA), C2 (arquivos dos materiais) |
+| Documentos D2 | V3 (autos da VISA), C2 (arquivos dos materiais) |
 | Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
-| Estoque (13) e Transporte (16) | E4 (insumos e veículos), SAMU |
-| Regulação de urgência (11) | SM3 (acionar SAMU), E4 |
-| Gestão da Rede (30) | cotas PPI da Regulação |
+| Transporte T3 (16), com aprovação | E4 (veículos) |
+| Estoque ES3 (13), com aprovação | E4 (insumos) |
 
 ## 2. Domínios
 
@@ -152,7 +148,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - [ ] Banco de horas e horas realizadas, ligando o ponto à escala.
 - [ ] Exportar e importar profissionais.
 - [ ] Modelos de jornada cadastráveis pelo usuário.
-- [ ] Conteúdo e material didático ligados aos treinamentos (domínio 28, C4).
+- [x] Conteúdo e material didático ligados aos treinamentos, com competências (domínio 28, C4, [ADR-0173](./adr/0173-educacao-permanente.md)).
+- [ ] Competências exigidas por cargo e o painel de quem não as tem; a Necessidade de pessoal passar a usar o catálogo.
 - [x] Turnos fora da lotação por mobilização em emergência ativa, como exceção controlada (domínio 27, E3, [ADR-0158](./adr/0158-emergencias-coordenacao.md)).
 - [ ] Confirmação do plantonista e troca pedida pelo próprio profissional.
 - [ ] Recorrência de escala e adicional noturno.
@@ -199,7 +196,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 **Falta:**
 - [x] Aba Programas, indicador "Em programas de saúde" e filtro por programa (domínio 22, P2).
 - [x] Aba Vacinação, com a caderneta (domínio 24, Imunização).
-- [ ] Aba Anexos (domínio Documentos).
+- [x] Aba Anexos ([ADR-0172](./adr/0172-documentos-anexos.md)).
 - [x] Vínculo do paciente com a unidade, pela adscrição (domínio 21, F3).
 - [ ] Indicador de risco: precisa de uma agregação sobre a triagem mais recente.
 
@@ -288,12 +285,18 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - Central de Regulação do Acesso: catálogo, solicitação, fila e eventos (ADR-0087).
 - Tela com "Encaminhar" no atendimento (ADR-0088).
 - Agendamento na executante, desfecho com contrarreferência e vínculo assistencial (ADR-0089).
+- Regulação de urgência ([ADR-0176](./adr/0176-regulacao-de-urgencia.md)): central do 192 pela capacidade do modelo operacional, ocorrência
+  com ou sem paciente, regulação médica (orientação, envio de recurso, encaminhamento, transferência), destino com perfil Urgência e vaga
+  zero, deslocamentos, recebimento no destino, tempos de resposta, acionamento pela crise em saúde mental e as ocorrências no prontuário.
 
 **Falta:**
-- [ ] Regulação de urgência e SAMU (também pedida pela crise em saúde mental, domínio 26, SM3).
+- [x] Regulação de urgência e SAMU, com o acionamento pela crise em saúde mental (domínio 26, SM3) ([ADR-0176](./adr/0176-regulacao-de-urgencia.md)).
+- [x] Viaturas do SAMU com plantão e tripulação no lugar do recurso em texto ([ADR-0178](./adr/0178-transporte-sanitario.md)); o texto segue aceito
+  para a central sem frota cadastrada.
+- [ ] Ficha clínica do atendimento pré-hospitalar e telefonia ou integração com o 192.
 - [ ] Regulação de internação e de leitos entre unidades (com o domínio 12).
-- [ ] Cotas por unidade e procedimento (PPI); hoje o regulador informa a vaga. Pertencem à Gestão da Rede de Atenção
-  (item 30).
+- [x] Cotas por unidade e procedimento (PPI), consumidas na autorização, com extracota justificada (Gestão da Rede, item 30,
+  [ADR-0179](./adr/0179-gestao-da-rede-de-atencao.md)).
 - [ ] Integração com SISREG e SIGTAP.
 - [ ] Conceder o papel Médico regulador quando a autorização for ligada.
 
@@ -322,13 +325,18 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 13. Estoque / Almoxarifado
 
-**Estado:** ⬜. Hoje só existe o rótulo `ESTOQUE` reservado no catálogo de capacidades (ADR-0032).
+**Estado:** 🟡. Desenho na [ADR-0177](./adr/0177-estoque-e-almoxarifado.md); detalhe em
+[`estoque/MODELO-ESTOQUE.md`](./estoque/MODELO-ESTOQUE.md).
+
+**Temos:**
+- **ES1:** catálogo de materiais da rede (com ou sem lote e validade), estoque por unidade em lotes, livro de movimentação (entrada por
+  nota fiscal, doação ou saldo inicial; saída por consumo para um setor, pelos lotes que vencem primeiro; perda; ajuste de inventário),
+  estoque mínimo, alertas de mínimo e validade e o valor do estoque. Tela em Administrativo e o papel Almoxarife.
 
 **Falta:**
-- [ ] Consumido pela mobilização em emergência: reserva, consumo extraordinário, redistribuição (domínio 27, E4).
-- [ ] Desenho (ADR): produto, lote, estoque, movimentação, inventário, almoxarifado. Fica separado da Farmácia,
-  porque medicamento tem regra própria.
-- [ ] Implementação.
+- [ ] **ES2:** almoxarifado central, requisição das unidades, transferência em duas etapas com divergência e inventário com fechamento.
+- [ ] **ES3:** consumido pela mobilização em emergência: reserva, consumo extraordinário, redistribuição (domínio 27, E4).
+- [ ] Fornecedor cadastrado e pedido de compra (domínio 14); custo médio e contabilidade (domínio 17); código de barras.
 
 ### 14. Compras / Contratos / Fornecedores
 
@@ -348,13 +356,19 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 16. Transporte Sanitário
 
-**Estado:** ⬜
+**Estado:** 🟡. Desenho na [ADR-0178](./adr/0178-transporte-sanitario.md); detalhe em
+[`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md).
+
+**Temos:**
+- **T1:** frota (placa, prefixo, tipo, lotação; viatura do SAMU só em unidade com o perfil Atenção móvel), situação com histórico
+  (manutenção, em serviço, inativo), plantão das viaturas com a tripulação mínima das Portarias 2.048/2002 e 1.010/2012, e a viatura
+  empenhada pela regulação de urgência, em serviço no envio e livre no fim. Tela Frota e transporte e o papel Coordenador de frota.
 
 **Falta:**
-- [ ] Consumido pela mobilização em emergência: veículos e ambulâncias (domínio 27, E4).
-- [ ] Desenho (ADR): veículo, solicitação de transporte. Integra com Patrimônio (veículo), RH (motorista) e
-  Regulação (necessidade).
-- [ ] Implementação.
+- [ ] **T2:** transporte sanitário eletivo: solicitação (consulta, exame, hemodiálise, alta, TFD), agenda de viagens, embarques e
+  quilometragem.
+- [ ] **T3:** consumido pela mobilização em emergência: veículos e ambulâncias (domínio 27, E4).
+- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (domínio 15).
 
 ### 17. Financeiro
 
@@ -410,7 +424,8 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 **Falta:**
 - [x] **BI4 · Relatórios** ([ADR-0167](./adr/0167-bi-relatorios.md)): catálogo de cinco relatórios sobre os números dos
   domínios, com período e unidade, prévia na tela, CSV na trilha de auditoria e impressão. Sem envio agendado.
-- [ ] **BI5 · Coordenações & Gerência** (protótipo `Coordenacoes.html`).
+- [x] **BI5 · Coordenações e gerência** ([ADR-0175](./adr/0175-coordenacoes-e-gerencia.md)): indicadores somados por regional, estrutura de gestão e quem responde, como histórico.
+- [ ] Cargo gestor no RH, metas por coordenação e exportação do organograma.
 
 ### 20. Integrações / Identidade / Segurança / Governo
 
@@ -672,8 +687,9 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   prazo e retorno intersetorial), com metas, série e Sala de Situação.
 
 **Falta:**
-- [ ] **SM3 · o que ficou:** o acionamento do SAMU (depende da regulação de urgência). A notificação de violência autoprovocada
-  já sai da crise pela Vigilância ([ADR-0124](./adr/0124-vigilancia-epidemiologica-fundacao.md)).
+- [x] **SM3 · o que ficou:** o acionamento do SAMU, que abre a ocorrência na regulação de urgência e registra a etapa com o protocolo
+  ([ADR-0176](./adr/0176-regulacao-de-urgencia.md)). A notificação de violência autoprovocada já sai da crise pela Vigilância
+  ([ADR-0124](./adr/0124-vigilancia-epidemiologica-fundacao.md)).
 - [ ] CAPS de referência por território e a produção do CAPS para o faturamento (RAAS, depende do domínio 20), depois da
   SM5 (ADR-0153).
 - [ ] A guia de encaminhamento intersetorial para imprimir (depende de Documentos).
@@ -732,10 +748,9 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   técnica, validade e versão, canais e publicação com resultado; avisos e orientações na página pública; e-mail só a profissionais.
 
 **Falta:**
-- [ ] **C2 · Campanhas de comunicação:** `CampanhaComunicacao` ligada a programa ou campanha operacional, público-alvo,
-  material educativo (os arquivos dependem do domínio Documentos).
+- [x] **C2 · Campanhas de comunicação** ([ADR-0174](./adr/0174-campanhas-de-comunicacao.md)): campanha com público, territórios, temas, canais, conteúdos revisados e comunicados, alcance por canal, portal; material educativo com link (arquivo com a D2).
 - [ ] **C3 · Educação em saúde:** conteúdo e material nas ações educativas de Programas (P4).
-- [ ] **C4 · Educação permanente:** conteúdo e material ligados ao `Treinamento` do RH; competências.
+- [x] **C4 · Educação permanente** ([ADR-0173](./adr/0173-educacao-permanente.md)): catálogo de competências, competências e conteúdos revisados no treinamento, competências do profissional pelas participações.
 - [ ] **C5 · Multicanal:** adaptadores de SMS, notificação, aplicativo e painel (Integrações, #20); consentimento e
   descadastro.
 - [ ] **C6 · Avaliação:** alcance, participação e efetividade, para o #19.
@@ -767,12 +782,18 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 30. Gestão da Rede de Atenção
 
-**Estado:** ⬜. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md).
+**Estado:** 🟡. Desenho na [ADR-0179](./adr/0179-gestao-da-rede-de-atencao.md); detalhe em [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md).
+
+**Temos:**
+- **GR1:** oferta assistencial por executante, procedimento e mês, cotas da PPI para unidades e esferas, a Regulação consumindo a cota
+  mais específica na autorização (extracota com justificativa; sem oferta cadastrada, sem controle), painel da PPI com usado e saldo, cópia
+  de competência e o saldo na gaveta de autorização.
 
 **Falta:**
-- [ ] Desenho (ADR): rede de atenção, participação de cada unidade, oferta e pactuação assistencial, cotas da PPI,
-  redes temáticas (RAPS, Rede de Urgência, Rede Cegonha), referência estrutural, cobertura.
-- [ ] Implementação. A Regulação (item 11) passa a ler cotas e ofertas daqui.
+- [ ] **GR2:** redes temáticas (Rede de Urgência, Rede Cegonha/Alyne, Pessoa com Deficiência, Doenças Crônicas) e referência estrutural, no
+  padrão da RAPS (ADR-0153).
+- [ ] **GR3:** cobertura da rede e indicadores de pactuação no BI.
+- [ ] Teto financeiro (MAC) e programação físico-orçamentária (domínio 17); SISREG e SIGTAP (domínio 20).
 
 ### 31. Intersetorialidade e Proteção Social
 
@@ -800,9 +821,11 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 - [ ] Unificar os catálogos de Regulação (`ProcedimentoRegulado`), Laboratório (`ExameLaboratorial`) e o catálogo
   geral de procedimentos (ADR-0136).
 
-**Domínio "Documentos"** (⬜): anexos e documentos formais reaproveitáveis por qualquer domínio, com versão,
+**Domínio "Documentos"** (🟡): anexos e documentos formais reaproveitáveis por qualquer domínio, com versão,
 aprovação e assinatura.
-- [ ] Desenho e implementação. A aba Anexos de Pacientes depende disso.
+- [x] **D1 · Anexos do paciente** ([ADR-0172](./adr/0172-documentos-anexos.md)): tipos, versões com hash, retirada, volume próprio e aba Anexos.
+- [ ] **D2:** outros donos (materiais da C2, autos da Vigilância). **D3:** guias para imprimir. **D4:** aprovação e assinatura digital.
+- [ ] Backup do volume de documentos, antes de dado real.
 
 **Testes:**
 - [ ] Testes Robot de tela das telas antigas (adiados por decisão do usuário): Necessidades de pessoal, RH (Cargos

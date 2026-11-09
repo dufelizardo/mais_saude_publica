@@ -138,6 +138,34 @@
               </a>
             }
 
+            @if (podeVer('/administrativo/coordenacoes')) {
+              <a routerLink="/administrativo/coordenacoes" routerLinkActive #rlaCoordenacoes="routerLinkActive" [attr.aria-current]="rlaCoordenacoes.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="5" rx="1"></rect><rect x="2" y="17" width="6" height="5" rx="1"></rect><rect x="16" y="17" width="6" height="5" rx="1"></rect><path d="M12 7v5M5 17v-2a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2"></path></svg>
+                <span class="nav-item__label">Coordenações e gerência</span>
+              </a>
+            }
+
+            @if (podeVer('/administrativo/estoque')) {
+              <a routerLink="/administrativo/estoque" routerLinkActive #rlaEstoque="routerLinkActive" [attr.aria-current]="rlaEstoque.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"></path><path d="M3 8l9 5 9-5M12 13v8"></path></svg>
+                <span class="nav-item__label">Estoque e almoxarifado</span>
+              </a>
+            }
+
+            @if (podeVer('/administrativo/frota')) {
+              <a routerLink="/administrativo/frota" routerLinkActive #rlaFrota="routerLinkActive" [attr.aria-current]="rlaFrota.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="6" width="15" height="10" rx="1"></rect><path d="M16 9h4l3 3v4h-7"></path><circle cx="5.5" cy="18" r="2"></circle><circle cx="18.5" cy="18" r="2"></circle></svg>
+                <span class="nav-item__label">Frota e transporte</span>
+              </a>
+            }
+
+            @if (podeVer('/administrativo/ppi')) {
+              <a routerLink="/administrativo/ppi" routerLinkActive #rlaPpi="routerLinkActive" [attr.aria-current]="rlaPpi.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.5"></circle><circle cx="5" cy="19" r="2.5"></circle><circle cx="19" cy="19" r="2.5"></circle><path d="M12 7.5v4M12 11.5l-5.5 5.5M12 11.5l5.5 5.5"></path></svg>
+                <span class="nav-item__label">Rede e pactuação</span>
+              </a>
+            }
+
             @if (podeVer('/administrativo/necessidades-de-pessoal')) {
               <a routerLink="/administrativo/necessidades-de-pessoal" routerLinkActive #rlaNecessidades="routerLinkActive" [attr.aria-current]="rlaNecessidades.isActive ? 'page' : null" class="nav-item">
                 <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="16" y1="11" x2="22" y2="11"></line></svg>
@@ -192,6 +220,13 @@
                 <a routerLink="/assistencia/regulacao" routerLinkActive #rlaRegulacao="routerLinkActive" [attr.aria-current]="rlaRegulacao.isActive ? 'page' : null" class="nav-item">
                   <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"></path><path d="M21 3l-7 7"></path><path d="M3 12a9 9 0 0 0 15.5 6.2"></path><path d="M8 21H3v-5"></path></svg>
                   <span class="nav-item__label">Regulação</span>
+                </a>
+              }
+
+              @if (podeVer('/assistencia/urgencia')) {
+                <a routerLink="/assistencia/urgencia" routerLinkActive #rlaUrgencia="routerLinkActive" [attr.aria-current]="rlaUrgencia.isActive ? 'page' : null" class="nav-item">
+                  <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                  <span class="nav-item__label">Urgência 192</span>
                 </a>
               }
 

@@ -116,6 +116,30 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/territorio/territorio').then((m) => m.Territorio),
         data: { breadcrumb: 'Território', area: 'Administrativo' },
       },
+      // Coordenações e gerência (ADR-0175).
+      {
+        path: 'administrativo/coordenacoes',
+        loadComponent: () => import('./features/administrativo/coordenacoes/coordenacoes').then((m) => m.Coordenacoes),
+        data: { breadcrumb: 'Coordenações e gerência', area: 'Administrativo' },
+      },
+      // Estoque e almoxarifado (ADR-0177).
+      {
+        path: 'administrativo/estoque',
+        loadComponent: () => import('./features/administrativo/estoque/estoque').then((m) => m.Estoque),
+        data: { breadcrumb: 'Estoque e almoxarifado', area: 'Administrativo' },
+      },
+      // Frota e transporte (ADR-0178).
+      {
+        path: 'administrativo/frota',
+        loadComponent: () => import('./features/administrativo/frota/frota').then((m) => m.Frota),
+        data: { breadcrumb: 'Frota e transporte', area: 'Administrativo' },
+      },
+      // Rede e pactuação, PPI (ADR-0179).
+      {
+        path: 'administrativo/ppi',
+        loadComponent: () => import('./features/administrativo/ppi/ppi').then((m) => m.Ppi),
+        data: { breadcrumb: 'Rede e pactuação (PPI)', area: 'Administrativo' },
+      },
       {
         path: 'administrativo/necessidades-de-pessoal',
         loadComponent: () => import('./features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal').then((m) => m.NecessidadesDePessoal),
@@ -146,6 +170,12 @@ export const routes: Routes = [
         path: 'assistencia/regulacao',
         loadComponent: () => import('./features/assistencia/regulacao/regulacao').then((m) => m.Regulacao),
         data: { breadcrumb: 'Regulação', area: 'Assistência' },
+      },
+      // Regulação de urgência (ADR-0176), carregada sob demanda.
+      {
+        path: 'assistencia/urgencia',
+        loadComponent: () => import('./features/assistencia/urgencia/urgencia').then((m) => m.Urgencia),
+        data: { breadcrumb: 'Regulação de urgência', area: 'Assistência' },
       },
       // Laboratório assistencial (ADR-0094), carregado sob demanda.
       {

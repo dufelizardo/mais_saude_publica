@@ -1380,6 +1380,32 @@
                 }
               </div>
               @if (c.situacao === 'EM_CURSO' && pode('SAUDE_MENTAL.CRISE')) {
+                <details class="samu" style="margin-top: var(--s-3);" (toggle)="prepararSamu()">
+                  <summary class="btn btn--ghost btn--sm">Acionar o SAMU</summary>
+                  <form [formGroup]="samuForm" (ngSubmit)="acionarSamu(c)" novalidate style="margin-top: var(--s-3);">
+                    @if (centraisUrgencia()?.length === 0) { <p class="cell-sub">Nenhuma central de urgência cadastrada; acione pelo telefone 192 e registre como etapa.</p> }
+                    <div class="dw-row">
+                      <div class="dw-field">
+                        <label for="f-centralSamu">Central <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                        <select id="f-centralSamu" formControlName="centralId" [attr.aria-invalid]="!!erroCampo('centralSamu')" aria-describedby="e-centralSamu">
+                          <option value="">Escolha…</option>
+                          @for (u of centraisUrgencia() ?? []; track u.unidadeId) { <option [value]="u.unidadeId">{{ u.nome }}</option> }
+                        </select>
+                        @if (erroCampo('centralSamu')) { <p class="dw-err" id="e-centralSamu">{{ erroCampo('centralSamu') }}</p> }
+                      </div>
+                      <div class="dw-field">
+                        <label for="f-telefoneSamu">Telefone de retorno<span class="opt">opcional</span></label>
+                        <input id="f-telefoneSamu" type="tel" maxlength="20" formControlName="telefone" class="mono" />
+                      </div>
+                    </div>
+                    <div class="dw-field">
+                      <label for="f-motivoSamu">Motivo do acionamento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                      <textarea id="f-motivoSamu" rows="2" maxlength="2000" formControlName="motivo" placeholder="O que a equipe do SAMU precisa saber" [attr.aria-invalid]="!!erroCampo('motivoSamu')" aria-describedby="e-motivoSamu"></textarea>
+                      @if (erroCampo('motivoSamu')) { <p class="dw-err" id="e-motivoSamu">{{ erroCampo('motivoSamu') }}</p> }
+                    </div>
+                    <button type="submit" class="btn btn--sm" [disabled]="submitting()">Acionar</button>
+                  </form>
+                </details>
                 <form [formGroup]="etapaForm" (ngSubmit)="registrarEtapa(c)" novalidate style="margin-top: var(--s-3);">
                   <div class="dw-row">
                     <div class="dw-field">

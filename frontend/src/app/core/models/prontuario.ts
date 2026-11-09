@@ -43,6 +43,8 @@ export interface ProntuarioResponseDto {
   exames?: ExameProntuarioDto[];
   /** Internações do paciente (ADR-0100); ausente em respostas anteriores. */
   internacoes?: InternacaoResponseDto[];
+  /** Ocorrências de urgência do paciente (ADR-0176). */
+  ocorrenciasUrgencia?: import('./urgencia').OcorrenciaUrgenciaDto[];
 }
 
 export type MotivoAcessoJustificado = 'EMERGENCIA' | 'CONTINUIDADE_DO_CUIDADO' | 'REGULACAO_OU_ENCAMINHAMENTO' | 'OUTRO';
