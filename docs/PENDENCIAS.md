@@ -84,9 +84,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 
 ### Regulação
 - ~~Tela~~ e ~~fechamento do ciclo~~ — feitos pelas ADRs 0088 e 0089.
-- Vagas por unidade e procedimento (cotas e PPI): hoje o regulador informa a vaga na autorização.
+- ~~Vagas por unidade e procedimento (cotas e PPI)~~ — ADR-0179 (Gestão da Rede, GR1).
 - Fora do escopo da ADR-0087: ~~regulação de urgência e SAMU~~ — ADR-0176; internação (depende de Leitos, #12),
-  integração com SISREG e SIGTAP, e cotas por unidade (PPI).
+  integração com SISREG e SIGTAP, e ~~cotas por unidade (PPI)~~ — ADR-0179.
 - Regulação de urgência (ADR-0176): ~~viaturas no lugar do recurso em texto~~ — ADR-0178; ficha clínica do
   atendimento pré-hospitalar; telefonia e integração com o 192; reserva de leito na vaga zero; conceder os papéis **Atendente de regulação
   (TARM)** e **Médico regulador de urgência** na central quando a autorização for ligada.
@@ -179,7 +179,8 @@ real":
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —
   perfis e capacidades, ADR-0117; ~~MO2~~ — serviços da unidade, ADR-0165 (sem o leito apontar direto para o serviço). ~~MO3~~ — ponto operacional, ADR-0166 (sem GPS, sem agendar pelo ponto ou pela rota e sem
   indicadores por local). ~~MO4~~ — domínios consultam capacidades, ADR-0170. Camada completa.
-- **#30 Gestão da Rede de Atenção** — reservado pela ADR-0115; a desenhar em ADR própria.
+- **#30 Gestão da Rede de Atenção** — desenhado na ADR-0179; ~~GR1 (oferta e cotas da PPI)~~ — ADR-0179; GR2 (redes temáticas) e GR3
+  (cobertura) com aprovação.
 - **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
   ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir
   (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).

@@ -75,6 +75,9 @@ export interface AutorizacaoRegulacaoRequestDto {
   observacao?: string;
   /** Quem vai atender, se já se sabe: a autorização já agenda (ADR-0089). */
   profissionalExecutanteMatricula?: string;
+  /** Sem saldo de cota da PPI (ADR-0179). */
+  extraCota?: boolean;
+  justificativaExtraCota?: string;
 }
 
 /** Agendamento da autorizada na executante (ADR-0089); sem data, vale a da vaga. */

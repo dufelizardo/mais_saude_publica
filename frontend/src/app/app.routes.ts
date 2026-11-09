@@ -134,6 +134,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/frota/frota').then((m) => m.Frota),
         data: { breadcrumb: 'Frota e transporte', area: 'Administrativo' },
       },
+      // Rede e pactuação, PPI (ADR-0179).
+      {
+        path: 'administrativo/ppi',
+        loadComponent: () => import('./features/administrativo/ppi/ppi').then((m) => m.Ppi),
+        data: { breadcrumb: 'Rede e pactuação (PPI)', area: 'Administrativo' },
+      },
       {
         path: 'administrativo/necessidades-de-pessoal',
         loadComponent: () => import('./features/administrativo/necessidades-de-pessoal/necessidades-de-pessoal').then((m) => m.NecessidadesDePessoal),

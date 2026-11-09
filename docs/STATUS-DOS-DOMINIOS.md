@@ -37,7 +37,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 8 | [Enfermagem](#8-enfermagem) | ✅ | plano de cuidados e aprazamento |
 | 9 | [Farmácia](#9-farmácia) | ✅ | — |
 | 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | 🟡 | exames de imagem e laudo assinado |
-| 11 | [Regulação](#11-regulação) | 🟡 | regulação de leitos entre unidades e cotas (PPI) |
+| 11 | [Regulação](#11-regulação) | 🟡 | regulação de leitos entre unidades |
 | 12 | [Leitos / Internação](#12-leitos--internação) | 🟡 | regulação de leitos e faturamento (AIH) |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 feita (catálogo, lotes, livro, mínimo e alertas); ES2 (central, requisição, inventário) e ES3 (emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
@@ -56,10 +56,10 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1, C2 e C4 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação permanente); fatias C3, C5 e C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
-| 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ⬜ | desenhar em ADR própria |
+| 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | 🟡 | GR1 feita (oferta e cotas da PPI na Regulação); GR2 (redes temáticas) e GR3 (cobertura) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 15 ✅ · 12 🟡 · 4 ⬜ (e Documentos 🟡). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 15 ✅ · 13 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -69,7 +69,7 @@ iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 | Fatia | Domínio | O que é |
 |---|---|---|
 
-**Precisam de desenho (ADR) antes:** Gestão da Rede (30).
+**Precisam de desenho (ADR) antes:** nenhum dos itens da ordem de 2026-11-08; os ⬜ restantes (14, 15, 17) ainda pedem ADR.
 
 **Dependências entre fatias** (A → B: B precisa de A):
 
@@ -104,7 +104,6 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 | Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
 | Transporte T3 (16), com aprovação | E4 (veículos) |
 | Estoque ES3 (13), com aprovação | E4 (insumos) |
-| Gestão da Rede (30) | cotas PPI da Regulação |
 
 ## 2. Domínios
 
@@ -296,8 +295,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   para a central sem frota cadastrada.
 - [ ] Ficha clínica do atendimento pré-hospitalar e telefonia ou integração com o 192.
 - [ ] Regulação de internação e de leitos entre unidades (com o domínio 12).
-- [ ] Cotas por unidade e procedimento (PPI); hoje o regulador informa a vaga. Pertencem à Gestão da Rede de Atenção
-  (item 30).
+- [x] Cotas por unidade e procedimento (PPI), consumidas na autorização, com extracota justificada (Gestão da Rede, item 30,
+  [ADR-0179](./adr/0179-gestao-da-rede-de-atencao.md)).
 - [ ] Integração com SISREG e SIGTAP.
 - [ ] Conceder o papel Médico regulador quando a autorização for ligada.
 
@@ -783,12 +782,18 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 30. Gestão da Rede de Atenção
 
-**Estado:** ⬜. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md).
+**Estado:** 🟡. Desenho na [ADR-0179](./adr/0179-gestao-da-rede-de-atencao.md); detalhe em [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md).
+
+**Temos:**
+- **GR1:** oferta assistencial por executante, procedimento e mês, cotas da PPI para unidades e esferas, a Regulação consumindo a cota
+  mais específica na autorização (extracota com justificativa; sem oferta cadastrada, sem controle), painel da PPI com usado e saldo, cópia
+  de competência e o saldo na gaveta de autorização.
 
 **Falta:**
-- [ ] Desenho (ADR): rede de atenção, participação de cada unidade, oferta e pactuação assistencial, cotas da PPI,
-  redes temáticas (RAPS, Rede de Urgência, Rede Cegonha), referência estrutural, cobertura.
-- [ ] Implementação. A Regulação (item 11) passa a ler cotas e ofertas daqui.
+- [ ] **GR2:** redes temáticas (Rede de Urgência, Rede Cegonha/Alyne, Pessoa com Deficiência, Doenças Crônicas) e referência estrutural, no
+  padrão da RAPS (ADR-0153).
+- [ ] **GR3:** cobertura da rede e indicadores de pactuação no BI.
+- [ ] Teto financeiro (MAC) e programação físico-orçamentária (domínio 17); SISREG e SIGTAP (domínio 20).
 
 ### 31. Intersetorialidade e Proteção Social
 

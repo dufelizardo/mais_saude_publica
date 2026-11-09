@@ -102,6 +102,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.
         PERMISSOES.put("TRANSPORTE.CONSULTAR", new Def("Consultar a frota, a situação dos veículos e os plantões", OPERACAO));
         PERMISSOES.put("TRANSPORTE.GERENCIAR", new Def("Cadastrar veículos, registrar manutenção e montar os plantões das viaturas", OPERACAO));
+        // Gestão da Rede (ADR-0179): oferta e cotas da PPI; a Regulação consome a cota na autorização.
+        PERMISSOES.put("REDE.CONSULTAR", new Def("Consultar a oferta assistencial e as cotas da PPI", OPERACAO));
+        PERMISSOES.put("REDE.GERENCIAR", new Def("Cadastrar a oferta da executante e pactuar as cotas da PPI", OPERACAO));
         PERMISSOES.put("PACIENTE.CONSULTAR", new Def("Consultar cadastro de pacientes", OPERACAO));
         PERMISSOES.put("PACIENTE.CADASTRAR", new Def("Cadastrar e atualizar pacientes", OPERACAO));
         PERMISSOES.put("AGENDAMENTO.GERENCIAR", new Def("Agendar, confirmar e cancelar", OPERACAO));
@@ -174,7 +177,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR",
                         "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR",
                         "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
-                        "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR")));
+                        "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -190,7 +193,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
                 "Regula a fila da Central de Regulação do Acesso no seu escopo (ADR-0087).",
-                List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR")));
+                List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR", "REDE.CONSULTAR")));
         // Regulação de urgência (ADR-0176): a central do 192, pela Portaria 2.048/2002.
         PAPEIS.put("ATENDENTE_REGULACAO_URGENCIA", new PapelPadrao("Atendente de regulação (TARM)",
                 "Atende o chamado, abre a ocorrência e registra os deslocamentos do recurso na central de urgência (ADR-0176).",

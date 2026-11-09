@@ -49,6 +49,10 @@ public class SolicitacaoRegulacaoResumoDto implements Serializable {
     private String profissionalExecutanteMatricula;
     private String profissionalExecutanteNome;
     private Instant concluidoEm;
+    /** A cota da PPI consumida e a marca de extracota (ADR-0179). */
+    private String cotaBeneficiariaNome;
+    private boolean extraCota;
+    private String justificativaExtraCota;
 
     public static SolicitacaoRegulacaoResumoDto fromSolicitacao(SolicitacaoRegulacao s, Integer posicaoNaFila) {
         SolicitacaoRegulacaoResumoDto dto = new SolicitacaoRegulacaoResumoDto();
@@ -83,5 +87,8 @@ public class SolicitacaoRegulacaoResumoDto implements Serializable {
             dto.setProfissionalExecutanteNome(s.getAgendamento().getProfissional().getNome());
         }
         dto.setConcluidoEm(s.getConcluidoEm());
+        dto.setCotaBeneficiariaNome(s.getCota() != null ? s.getCota().getBeneficiaria().getNome() : null);
+        dto.setExtraCota(s.isExtraCota());
+        dto.setJustificativaExtraCota(s.getJustificativaExtraCota());
     }
 }
