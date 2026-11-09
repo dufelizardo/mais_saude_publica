@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Assistência - Laboratório
-Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094); recoleta, laudo e exames no prontuário e no atendimento (ADR-0095).
+Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094); recoleta, laudo e exames no prontuário e no atendimento (ADR-0095); faixas por sexo e idade e evolução do exame (ADR-0180).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiLaboratorio    MaisSaudePublicaFrontend
@@ -103,5 +103,21 @@ CT-011 - Exame liberado no prontuário e no atendimento
     [Tags]    UI    UiLaboratorio
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - LABORATORIO - PRONTUARIO E ATENDIMENTO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-012 - Incluir faixa por sexo e idade no catálogo
+    [Documentation]    Aviso e rótulo da faixa na gaveta do exame.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - FAIXA POR SEXO E IDADE
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-013 - Evolução do exame no prontuário
+    [Documentation]    Gráfico e tabela com os dois resultados liberados.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - EVOLUCAO DO EXAME
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

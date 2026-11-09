@@ -10,11 +10,16 @@ import {
   MATERIAIS,
   MOTIVOS_REJEICAO,
   STATUS_ITEM,
+  UNIDADES_IDADE,
+  critico,
+  faixaCritica,
   faixaReferencia,
   numeroLaboratorio,
   valorResultado,
   EtapaTrabalho,
   ExameLaboratorialResponseDto,
+  FaixaReferenciaExameDto,
+  FaixaReferenciaExameRequestDto,
   ItemPedidoExameDto,
   ItemTrabalhoExameDto,
   MaterialExame,
@@ -26,8 +31,9 @@ import {
   StatusItemExame,
   TipoEventoExame,
   TipoResultadoExame,
+  UnidadeIdade,
 } from '../../../core/models/laboratorio';
-import { PacienteResponseDto } from '../../../core/models/paciente';
+import { PacienteResponseDto, Sexo } from '../../../core/models/paciente';
 import { ErrorResponseDto, SuccessResponseDto } from '../../../core/models/profissional';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { AuthService } from '../../../core/services/auth';
@@ -89,6 +95,7 @@ const CID = /^\s*([A-Za-z][0-9]{2}(\.?[0-9A-Za-z]{1,2})?)?\s*$/;
   selector: 'app-laboratorio',
   imports: [ReactiveFormsModule, Drawer],
   templateUrl: './laboratorio.html',
+  styleUrl: './laboratorio.css',
 })
 export class Laboratorio {
   private readonly fb = inject(FormBuilder);
@@ -107,6 +114,10 @@ export class Laboratorio {
   protected readonly motivosRejeicao = MOTIVOS_REJEICAO;
   protected readonly listaMotivos = Object.keys(MOTIVOS_REJEICAO) as MotivoRejeicaoAmostra[];
   protected readonly eventos = EVENTOS;
+  protected readonly unidadesIdade = UNIDADES_IDADE;
+  protected readonly listaUnidadesIdade = Object.keys(UNIDADES_IDADE) as UnidadeIdade[];
+  protected readonly critico = critico;
+  protected readonly faixaCritica = faixaCritica;
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
   private readonly matriculaPadrao = signal('');
@@ -164,10 +175,29 @@ export class Laboratorio {
     unidadeMedida: [''],
     referenciaMinima: [''],
     referenciaMaxima: [''],
+    criticoMinimo: [''],
+    criticoMaximo: [''],
     referenciaTexto: [''],
     preparo: [''],
     prazoDias: [''],
     ativo: [true],
+  });
+
+  /** Faixa por sexo e idade em edição na gaveta do exame (ADR-0180): nula fechada, vazia nova, uuid editando. */
+  protected readonly faixaEditando = signal<string | null>(null);
+  protected readonly erroFaixa = signal<string | null>(null);
+  protected readonly salvandoFaixa = signal(false);
+  protected readonly faixaForm = this.fb.nonNullable.group({
+    sexo: ['' as Sexo | ''],
+    idadeMinima: ['0'],
+    unidadeIdadeMinima: ['ANOS' as UnidadeIdade],
+    idadeMaxima: [''],
+    unidadeIdadeMaxima: ['ANOS' as UnidadeIdade],
+    referenciaMinima: [''],
+    referenciaMaxima: [''],
+    criticoMinimo: [''],
+    criticoMaximo: [''],
+    descricao: [''],
   });
 
   // ── Derivados ──────────────────────────────────────────────────────────────────────────────
@@ -447,12 +477,104 @@ export class Laboratorio {
       unidadeMedida: exame?.unidadeMedida ?? '',
       referenciaMinima: exame?.referenciaMinima != null ? String(exame.referenciaMinima) : '',
       referenciaMaxima: exame?.referenciaMaxima != null ? String(exame.referenciaMaxima) : '',
+      criticoMinimo: exame?.criticoMinimo != null ? String(exame.criticoMinimo) : '',
+      criticoMaximo: exame?.criticoMaximo != null ? String(exame.criticoMaximo) : '',
       referenciaTexto: exame?.referenciaTexto ?? '',
       preparo: exame?.preparo ?? '',
       prazoDias: exame?.prazoDias != null ? String(exame.prazoDias) : '',
       ativo: exame?.ativo ?? true,
     });
+    this.faixaEditando.set(null);
+    this.erroFaixa.set(null);
     this.abrir({ tipo: 'exame', exame });
+  }
+
+  // ── Faixas por sexo e idade (ADR-0180) ─────────────────────────────────────────────────────
+
+  protected novaFaixa(): void {
+    this.faixaForm.reset({
+      sexo: '', idadeMinima: '0', unidadeIdadeMinima: 'ANOS', idadeMaxima: '', unidadeIdadeMaxima: 'ANOS',
+      referenciaMinima: '', referenciaMaxima: '', criticoMinimo: '', criticoMaximo: '', descricao: '',
+    });
+    this.erroFaixa.set(null);
+    this.faixaEditando.set('');
+    setTimeout(() => document.getElementById('f-faixaSexo')?.focus());
+  }
+
+  protected editarFaixa(f: FaixaReferenciaExameDto): void {
+    const txt = (v: number | null | undefined) => (v != null ? String(v) : '');
+    this.faixaForm.reset({
+      sexo: f.sexo ?? '', idadeMinima: String(f.idadeMinima), unidadeIdadeMinima: f.unidadeIdadeMinima,
+      idadeMaxima: txt(f.idadeMaxima), unidadeIdadeMaxima: f.unidadeIdadeMaxima ?? 'ANOS',
+      referenciaMinima: txt(f.referenciaMinima), referenciaMaxima: txt(f.referenciaMaxima),
+      criticoMinimo: txt(f.criticoMinimo), criticoMaximo: txt(f.criticoMaximo), descricao: f.descricao ?? '',
+    });
+    this.erroFaixa.set(null);
+    this.faixaEditando.set(f.uuid);
+    setTimeout(() => document.getElementById('f-faixaSexo')?.focus());
+  }
+
+  protected cancelarFaixa(): void {
+    this.faixaEditando.set(null);
+    this.erroFaixa.set(null);
+  }
+
+  protected salvarFaixa(exame: ExameLaboratorialResponseDto): void {
+    const editando = this.faixaEditando();
+    if (editando === null || this.salvandoFaixa()) return;
+    const v = this.faixaForm.getRawValue();
+    const num = (t: string) => (String(t).trim() === '' ? null : Number(t));
+    if (String(v.idadeMinima).trim() === '') {
+      this.erroFaixa.set('Informe a idade mínima (0 para desde o nascimento).');
+      return;
+    }
+    if (num(v.referenciaMinima) == null && num(v.referenciaMaxima) == null) {
+      this.erroFaixa.set('Informe ao menos um limite de referência.');
+      return;
+    }
+    const maxima = num(v.idadeMaxima);
+    const dto: FaixaReferenciaExameRequestDto = {
+      sexo: v.sexo || null,
+      idadeMinima: Number(v.idadeMinima),
+      unidadeIdadeMinima: v.unidadeIdadeMinima,
+      idadeMaxima: maxima,
+      unidadeIdadeMaxima: maxima != null ? v.unidadeIdadeMaxima : null,
+      referenciaMinima: num(v.referenciaMinima),
+      referenciaMaxima: num(v.referenciaMaxima),
+      criticoMinimo: num(v.criticoMinimo),
+      criticoMaximo: num(v.criticoMaximo),
+      descricao: v.descricao.trim() || undefined,
+    };
+    this.salvandoFaixa.set(true);
+    const req = editando ? this.laboratorioService.atualizarFaixa(editando, dto) : this.laboratorioService.adicionarFaixa(exame.uuid, dto);
+    req.subscribe({
+      next: (atualizado) => this.aposFaixa(atualizado, editando ? 'Faixa atualizada' : 'Faixa incluída'),
+      error: (e: HttpErrorResponse) => {
+        this.salvandoFaixa.set(false);
+        this.erroFaixa.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar a faixa.');
+      },
+    });
+  }
+
+  protected removerFaixa(f: FaixaReferenciaExameDto): void {
+    if (this.salvandoFaixa()) return;
+    this.salvandoFaixa.set(true);
+    this.laboratorioService.removerFaixa(f.uuid).subscribe({
+      next: (atualizado) => this.aposFaixa(atualizado, 'Faixa removida'),
+      error: (e: HttpErrorResponse) => {
+        this.salvandoFaixa.set(false);
+        this.erroFaixa.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível remover a faixa.');
+      },
+    });
+  }
+
+  private aposFaixa(exame: ExameLaboratorialResponseDto, titulo: string): void {
+    this.salvandoFaixa.set(false);
+    this.faixaEditando.set(null);
+    this.erroFaixa.set(null);
+    this.exames.update((lista) => lista.map((e) => (e.uuid === exame.uuid ? exame : e)));
+    this.gaveta.set({ tipo: 'exame', exame });
+    this.mostrarToast(titulo, exame.nome);
   }
 
   protected podeAgirNoItem(i: ItemPedidoExameDto): { retificar: boolean; cancelar: boolean } {
@@ -627,6 +749,10 @@ export class Laboratorio {
     const min = v.referenciaMinima === '' ? null : Number(v.referenciaMinima);
     const max = v.referenciaMaxima === '' ? null : Number(v.referenciaMaxima);
     if (v.tipoResultado === 'NUMERICO' && min != null && max != null && min > max) erros['referenciaMaxima'] = 'A máxima precisa ser maior ou igual à mínima.';
+    const critMin = v.criticoMinimo === '' ? null : Number(v.criticoMinimo);
+    const critMax = v.criticoMaximo === '' ? null : Number(v.criticoMaximo);
+    if (v.tipoResultado === 'NUMERICO' && critMin != null && min != null && critMin > min) erros['criticoMinimo'] = 'O crítico mínimo fica abaixo da referência mínima.';
+    if (v.tipoResultado === 'NUMERICO' && critMax != null && max != null && critMax < max) erros['criticoMaximo'] = 'O crítico máximo fica acima da referência máxima.';
     if (!this.validar(erros)) return;
     const numerico = v.tipoResultado === 'NUMERICO';
     const dto = {
@@ -636,6 +762,8 @@ export class Laboratorio {
       unidadeMedida: numerico ? v.unidadeMedida.trim() || undefined : undefined,
       referenciaMinima: numerico ? min : null,
       referenciaMaxima: numerico ? max : null,
+      criticoMinimo: numerico ? critMin : null,
+      criticoMaximo: numerico ? critMax : null,
       referenciaTexto: numerico ? undefined : v.referenciaTexto.trim() || undefined,
       preparo: v.preparo.trim() || undefined,
       prazoDias: v.prazoDias === '' ? null : Number(v.prazoDias),

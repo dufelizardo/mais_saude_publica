@@ -110,12 +110,14 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   com os leitos do CNES; restrição de leito por idade (pediátrico e neonatal).
 
 ### Laboratório
-- Depois da ADR-0095: laudo PDF assinado digitalmente (ICP-Brasil), envio do resultado ao paciente, gráfico
-  da evolução de um exame no tempo e aviso ao solicitante quando o resultado é liberado.
+- Depois da ADR-0095: laudo PDF assinado (L4 da ADR-0180, com assinatura eletrônica interna; o ICP-Brasil é integração),
+  envio do resultado ao paciente e aviso ao solicitante quando o resultado é liberado (L2), ~~gráfico da evolução de um
+  exame no tempo~~ — ADR-0180 (L1).
 - A tela (ADR-0094) não tem protótipo próprio: segue o padrão de Farmácia e Regulação.
 - Fora do escopo da ADR-0093: LACEN e vigilância, integração com equipamentos (LIS, HL7, ASTM), controle
-  de qualidade, insumos de coleta (Estoque, #13), exames de imagem, laudo PDF assinado, SIGTAP e BPA,
-  e valores de referência por sexo e idade.
+  de qualidade, insumos de coleta (Estoque, #13; L4), exames de imagem (L3), laudo PDF assinado (L4), SIGTAP e BPA,
+  e ~~valores de referência por sexo e idade~~ — ADR-0180 (L1).
+- Fora do escopo da ADR-0180: gestação e outras condições clínicas como critério da faixa de referência.
 
 ### Agenda (diferenças com o protótipo `Agenda.html`, ADR-0092)
 - Visão Mês e exportação ("Em breve"). ~~Filtro de especialidade~~ — feito pela ADR-0134 (SB1).

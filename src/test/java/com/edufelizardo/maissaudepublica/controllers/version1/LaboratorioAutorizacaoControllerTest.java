@@ -156,6 +156,7 @@ class LaboratorioAutorizacaoControllerTest {
             }
         }
         pacienteRepository.deleteAllById(pacientes);
+        jdbc.update("delete from tb_faixa_referencia_exame where exame_id in (select uuid from tb_exame_laboratorial where nome like ?)", PREFIXO + "%");
         exameRepository.deleteAll(exameRepository.findAll().stream().filter(e -> e.getNome().startsWith(PREFIXO)).toList());
         for (String cpf : CPFS) {
             atribuicaoRepository.deleteAll(atribuicaoRepository.findByUsuarioCpf(cpf));
@@ -229,6 +230,27 @@ class LaboratorioAutorizacaoControllerTest {
         mockMvc.perform(como(MEDICO, get(URL + pedido)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.itens[0].resultado.interpretacao").value("ABAIXO"));
+    }
+
+    @Test
+    void soQuemMantemOCatalogoMexeNasFaixasEAEvolucaoSegueOProntuario() throws Exception {
+        String faixa = """
+                {"sexo": "FEMININO", "idadeMinima": 12, "unidadeIdadeMinima": "ANOS", "referenciaMinima": 12, "referenciaMaxima": 15.5}
+                """;
+        String catalogo = "/api/v1/exame-laboratorial/";
+        mockMvc.perform(como(TECNICO, json(post(catalogo + hemoglobina.getUuid() + "/faixa"), faixa))).andExpect(status().isForbidden());
+        mockMvc.perform(como(MEDICO, json(post(catalogo + hemoglobina.getUuid() + "/faixa"), faixa))).andExpect(status().isForbidden());
+        mockMvc.perform(como(RT, json(post(catalogo + hemoglobina.getUuid() + "/faixa"), faixa))).andExpect(status().isCreated());
+        // O técnico lê o catálogo com as faixas, mas não as remove.
+        String faixaId = com.jayway.jsonpath.JsonPath.read(mockMvc.perform(como(TECNICO, get(catalogo + hemoglobina.getUuid())))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), "$.faixas[0].uuid");
+        mockMvc.perform(como(TECNICO, org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(catalogo + "faixa/" + faixaId)))
+                .andExpect(status().isForbidden());
+
+        String evolucao = "/api/v1/prontuario/" + paciente.getUuid() + "/exame/" + hemoglobina.getUuid() + "/evolucao";
+        mockMvc.perform(como(MEDICO, get(evolucao))).andExpect(status().isOk());
+        mockMvc.perform(como(RECEPCAO, get(evolucao))).andExpect(status().isForbidden());
+        mockMvc.perform(get(evolucao)).andExpect(status().isUnauthorized());
     }
 
     @Test

@@ -54,6 +54,17 @@ public class ResultadoExame implements Serializable {
     @Column(length = 200, updatable = false)
     private String referenciaTexto;
 
+    /** Os valores de pânico da faixa usada, copiados no registro (ADR-0180). */
+    @Column(precision = 14, scale = 4, updatable = false)
+    private BigDecimal criticoMinimo;
+
+    @Column(precision = 14, scale = 4, updatable = false)
+    private BigDecimal criticoMaximo;
+
+    /** Qual faixa valeu, por exemplo "Feminino, 12 a 59 anos" ou "Faixa geral" (ADR-0180). */
+    @Column(length = 200, updatable = false)
+    private String faixaDescricao;
+
     @Enumerated(EnumType.STRING)
     @Column(updatable = false)
     private InterpretacaoResultado interpretacao;

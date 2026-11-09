@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ExameLaboratorialRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.FaixaReferenciaExameRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ExameLaboratorialResponseDto;
 import com.edufelizardo.maissaudepublica.services.version1.ExameLaboratorialService;
 
@@ -85,5 +86,45 @@ public class ExameLaboratorialController {
     @ApiErrorResponsesBusca
     public ResponseEntity<ExameLaboratorialResponseDto> findById(@PathVariable UUID uuid) {
         return ResponseEntity.ok(service.buscarPorId(uuid));
+    }
+
+    @RequerPermissao({"LABORATORIO.GERENCIAR"})
+    @PostMapping(value = "{uuid}/faixa", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Inclui uma faixa de referência por sexo e idade",
+            description = "ADR-0180. Só exame numérico (422). Sem sexo, vale para os dois; IGNORADO, 400. Idade com unidade (DIAS, MESES, "
+                    + "ANOS); sem máxima, sem limite. Ao menos um limite de referência; críticos fora da referência (400). Sobrepor as "
+                    + "idades de outra faixa do mesmo sexo: 409. Devolve o exame com as faixas.", tags = "Exame Laboratorial")
+    @ApiResponse(responseCode = "201", description = "Created:", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ExameLaboratorialResponseDto.class))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<ExameLaboratorialResponseDto> adicionarFaixa(@PathVariable UUID uuid,
+                                                                       @Valid @RequestBody FaixaReferenciaExameRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.adicionarFaixa(uuid, dto));
+    }
+
+    @RequerPermissao({"LABORATORIO.GERENCIAR"})
+    @PutMapping(value = "faixa/{faixaId}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Edita uma faixa de referência", description = "ADR-0180. Mesmas regras da inclusão. Resultados já dados "
+            + "guardam a faixa da época.", tags = "Exame Laboratorial")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ExameLaboratorialResponseDto.class))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<ExameLaboratorialResponseDto> atualizarFaixa(@PathVariable UUID faixaId,
+                                                                       @Valid @RequestBody FaixaReferenciaExameRequestDto dto) {
+        return ResponseEntity.ok(service.atualizarFaixa(faixaId, dto));
+    }
+
+    @RequerPermissao({"LABORATORIO.GERENCIAR"})
+    @DeleteMapping(value = "faixa/{faixaId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Remove uma faixa de referência", description = "ADR-0180. Resultados já dados guardam a cópia da faixa.",
+            tags = "Exame Laboratorial")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ExameLaboratorialResponseDto.class))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<ExameLaboratorialResponseDto> removerFaixa(@PathVariable UUID faixaId) {
+        return ResponseEntity.ok(service.removerFaixa(faixaId));
     }
 }

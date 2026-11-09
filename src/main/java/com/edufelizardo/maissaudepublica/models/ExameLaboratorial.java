@@ -53,6 +53,16 @@ public class ExameLaboratorial implements Serializable {
     @Column(precision = 14, scale = 4)
     private BigDecimal referenciaMaxima;
 
+    /**
+     * Valores de pânico da faixa geral (ADR-0180): abaixo do mínimo ou acima do máximo, o resultado é crítico. A faixa geral
+     * vale quando nenhuma faixa por sexo e idade ({@link FaixaReferenciaExame}) se aplica.
+     */
+    @Column(precision = 14, scale = 4)
+    private BigDecimal criticoMinimo;
+
+    @Column(precision = 14, scale = 4)
+    private BigDecimal criticoMaximo;
+
     /** Referência de exame em texto, por exemplo "Não reagente". */
     @Column(length = 200)
     private String referenciaTexto;

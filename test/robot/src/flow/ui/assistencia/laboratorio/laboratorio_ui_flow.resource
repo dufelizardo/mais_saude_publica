@@ -3,6 +3,7 @@ Library     String
 Resource    ../../../../pom/ui/assistencia/laboratorio/laboratorio_ui_pom.resource
 Resource    ../../../laboratorio/pedido_exame/pedido_exame_flow.resource
 Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.resource
+Resource    ../../../laboratorio/faixa_referencia/faixa_referencia_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (paciente, unidade, profissional, exame, pedido, coleta) são criados pela API; a ação sob
@@ -251,5 +252,50 @@ UI Laboratorio - Exames No Prontuario E No Atendimento
     Wait For Elements State    css=.pront-exames >> text=Acima da referência    visible    10s
     Clicar Botao    Abrir
     Wait For Elements State    css=app-drawer app-exames-paciente >> text=${exameNome}    visible    10s
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Incluir Faixa Por Sexo E Idade
+    [Documentation]    Inclui a faixa feminina adulta pela gaveta do exame do catálogo e vê o rótulo (ADR-0180).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${exameId}    ${nome}=    Seed A Exame Laboratorial
+    UI Laboratorio - Abrir Aba    catalogo
+    Clicar Botao    Editar ${nome}
+    Clicar Botao    + Faixa
+    Escolher Opcao Da Gaveta    faixaSexo    FEMININO
+    Preencher Campo Da Gaveta    faixaIdadeMinima    12
+    Preencher Campo Da Gaveta    faixaIdadeMaxima    60
+    Preencher Campo Da Gaveta    faixaRefMin    11.5
+    Preencher Campo Da Gaveta    faixaRefMax    15
+    Preencher Campo Da Gaveta    faixaCritMin    7
+    Clicar Botao    Incluir faixa
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Faixa incluída
+    Wait For Elements State    css=app-drawer .faixas__item >> text=Feminino, 12 a 59 anos    visible    10s
+    ${exame}=    GET Exame Laboratorial By Id    ${exameId}
+    Should Be Equal    ${exame.json()}[faixas][0][rotulo]    Feminino, 12 a 59 anos
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Evolucao Do Exame No Prontuario
+    [Documentation]    Dois resultados liberados do mesmo exame: o prontuário abre a evolução com o gráfico e a tabela (ADR-0180).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${exameId}    ${nome}    ${faixaId}=    Seed A Exame Com Faixa Feminina
+    ${pacienteId}    ${cpf}    ${cartaoSus}    ${pacienteNome}=    Seed A Paciente
+    ${unidadeId}=    Seed A Unidade De Saude Uuid
+    ${matricula}=    Seed A Profissional Matricula
+    Registrar Resultado Do Exame    ${pacienteId}    ${exameId}    ${unidadeId}    ${matricula}    ${10.2}    diasAtras=${30}
+    Registrar Resultado Do Exame    ${pacienteId}    ${exameId}    ${unidadeId}    ${matricula}    ${12.4}    diasAtras=${2}
+    Ir Para Rota Do Frontend    /assistencia/atendimentos?aba=pront&pacienteId=${pacienteId}
+    Wait For Elements State    css=.pront-exames >> text=Feminino, 12 a 59 anos >> nth=0    visible    10s
+    Clicar Botao    Evolução de ${nome}
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Evolução: ${nome}
+    Wait For Elements State    css=app-drawer svg.evo__svg    visible    10s
+    ${pontos}=    Get Element Count    css=app-drawer svg.evo__svg circle
+    Should Be Equal As Integers    ${pontos}    2
+    ${linhas}=    Get Element Count    css=app-drawer table.evo__tabela tbody tr
+    Should Be Equal As Integers    ${linhas}    2
+    Wait For Elements State    css=app-drawer table.evo__tabela >> text=Abaixo da referência    visible    10s
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

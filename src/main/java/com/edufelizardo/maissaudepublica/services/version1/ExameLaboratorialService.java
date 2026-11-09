@@ -3,31 +3,51 @@ package com.edufelizardo.maissaudepublica.services.version1;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceConflictException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.ExameLaboratorial;
+import com.edufelizardo.maissaudepublica.models.FaixaReferenciaExame;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ExameLaboratorialRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.FaixaReferenciaExameRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ExameLaboratorialResponseDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.FaixaReferenciaExameDto;
+import com.edufelizardo.maissaudepublica.models.enuns.Sexo;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoResultadoExame;
 import com.edufelizardo.maissaudepublica.repositories.ExameLaboratorialRepository;
+import com.edufelizardo.maissaudepublica.repositories.FaixaReferenciaExameRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-/** Catálogo de exames do laboratório assistencial (ADR-0093). */
+/**
+ * Catálogo de exames do laboratório assistencial (ADR-0093), com as faixas de referência por sexo e idade e os valores
+ * críticos (ADR-0180).
+ */
 @Service
 public class ExameLaboratorialService {
 
+    /** Rótulo da faixa geral no resultado, quando nenhuma faixa por sexo e idade se aplica. */
+    public static final String FAIXA_GERAL = "Faixa geral";
+
     @Autowired
     private ExameLaboratorialRepository repository;
+
+    @Autowired
+    private FaixaReferenciaExameRepository faixaRepository;
 
     @Transactional
     public ExameLaboratorialResponseDto criar(ExameLaboratorialRequestDto dto) {
         ExameLaboratorial exame = new ExameLaboratorial();
         aplicar(exame, dto, null);
         exame.setAtivo(dto.getAtivo() == null || dto.getAtivo());
-        return ExameLaboratorialResponseDto.fromExame(repository.save(exame));
+        return resposta(repository.save(exame));
     }
 
     @Transactional
@@ -37,23 +57,127 @@ public class ExameLaboratorialService {
         if (dto.getAtivo() != null) {
             exame.setAtivo(dto.getAtivo());
         }
-        return ExameLaboratorialResponseDto.fromExame(repository.save(exame));
+        if (exame.getTipoResultado() != TipoResultadoExame.NUMERICO && !faixaRepository.findByExame_Uuid(uuid).isEmpty()) {
+            throw new ResourceUnprocessableEntityException("O exame tem faixas de referência por sexo e idade: remova-as antes de "
+                    + "mudar o resultado para texto.");
+        }
+        return resposta(repository.save(exame));
     }
 
     @Transactional(readOnly = true)
     public List<ExameLaboratorialResponseDto> listar(boolean apenasAtivos) {
-        return repository.findAllByOrderByNomeAsc().stream().filter(e -> !apenasAtivos || e.isAtivo())
-                .map(ExameLaboratorialResponseDto::fromExame).toList();
+        List<ExameLaboratorial> exames = repository.findAllByOrderByNomeAsc().stream().filter(e -> !apenasAtivos || e.isAtivo()).toList();
+        Map<UUID, List<FaixaReferenciaExame>> faixas = exames.isEmpty() ? Map.of()
+                : faixaRepository.findByExame_UuidIn(exames.stream().map(ExameLaboratorial::getUuid).toList()).stream()
+                .collect(Collectors.groupingBy(f -> f.getExame().getUuid()));
+        return exames.stream().map(e -> ExameLaboratorialResponseDto.fromExame(e, faixas.getOrDefault(e.getUuid(), List.of()))).toList();
     }
 
     @Transactional(readOnly = true)
     public ExameLaboratorialResponseDto buscarPorId(UUID uuid) {
-        return ExameLaboratorialResponseDto.fromExame(buscar(uuid));
+        return resposta(buscar(uuid));
     }
 
     ExameLaboratorial buscar(UUID uuid) {
         return repository.findById(uuid).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar um exame com o id " + uuid + " em nossos registros."));
+    }
+
+    // ── Faixas por sexo e idade (ADR-0180) ─────────────────────────────────────────────────────────
+
+    @Transactional
+    public ExameLaboratorialResponseDto adicionarFaixa(UUID exameId, FaixaReferenciaExameRequestDto dto) {
+        ExameLaboratorial exame = buscar(exameId);
+        if (exame.getTipoResultado() != TipoResultadoExame.NUMERICO) {
+            throw new ResourceUnprocessableEntityException("Faixa por sexo e idade só vale para exame de resultado numérico.");
+        }
+        FaixaReferenciaExame faixa = new FaixaReferenciaExame();
+        faixa.setExame(exame);
+        aplicarFaixa(faixa, dto);
+        faixaRepository.save(faixa);
+        return resposta(exame);
+    }
+
+    @Transactional
+    public ExameLaboratorialResponseDto atualizarFaixa(UUID faixaId, FaixaReferenciaExameRequestDto dto) {
+        FaixaReferenciaExame faixa = buscarFaixa(faixaId);
+        aplicarFaixa(faixa, dto);
+        faixaRepository.save(faixa);
+        return resposta(faixa.getExame());
+    }
+
+    /** Remove a faixa; os resultados já dados guardam a cópia da faixa usada. */
+    @Transactional
+    public ExameLaboratorialResponseDto removerFaixa(UUID faixaId) {
+        FaixaReferenciaExame faixa = buscarFaixa(faixaId);
+        ExameLaboratorial exame = faixa.getExame();
+        faixaRepository.delete(faixa);
+        faixaRepository.flush();
+        return resposta(exame);
+    }
+
+    /**
+     * A faixa que vale para o paciente na data da coleta: a do sexo dele que cubra a idade; senão, a sem sexo que cubra a
+     * idade. Sexo ignorado: só as sem sexo. Sem nascimento: nenhuma. Vazio: vale a faixa geral do catálogo.
+     */
+    @Transactional(readOnly = true)
+    public Optional<FaixaReferenciaExame> faixaPara(ExameLaboratorial exame, Sexo sexo, LocalDate nascimento, LocalDate data) {
+        if (nascimento == null || data.isBefore(nascimento)) {
+            return Optional.empty();
+        }
+        List<FaixaReferenciaExame> cobrem = faixaRepository.findByExame_Uuid(exame.getUuid()).stream()
+                .filter(f -> f.cobre(nascimento, data)).toList();
+        Optional<FaixaReferenciaExame> doSexo = sexo == Sexo.MASCULINO || sexo == Sexo.FEMININO
+                ? cobrem.stream().filter(f -> f.getSexo() == sexo).findFirst() : Optional.empty();
+        return doSexo.or(() -> cobrem.stream().filter(f -> f.getSexo() == null).findFirst());
+    }
+
+    private void aplicarFaixa(FaixaReferenciaExame faixa, FaixaReferenciaExameRequestDto dto) {
+        if (dto.getSexo() == Sexo.IGNORADO) {
+            throw new ResourceBadRequestException("A faixa é de um sexo (MASCULINO ou FEMININO) ou dos dois (sem sexo); IGNORADO não vale.");
+        }
+        if ((dto.getIdadeMaxima() == null) != (dto.getUnidadeIdadeMaxima() == null)) {
+            throw new ResourceBadRequestException("Informe a idade máxima com a sua unidade, ou nenhuma das duas para faixa sem limite.");
+        }
+        faixa.setSexo(dto.getSexo());
+        faixa.setIdadeMinima(dto.getIdadeMinima());
+        faixa.setUnidadeIdadeMinima(dto.getUnidadeIdadeMinima());
+        faixa.setIdadeMaxima(dto.getIdadeMaxima());
+        faixa.setUnidadeIdadeMaxima(dto.getUnidadeIdadeMaxima());
+        if (faixa.fimAproximado() <= faixa.inicioAproximado()) {
+            throw new ResourceBadRequestException("A idade máxima precisa ser maior que a mínima.");
+        }
+        if (dto.getReferenciaMinima() == null && dto.getReferenciaMaxima() == null) {
+            throw new ResourceBadRequestException("Informe ao menos um limite de referência (mínimo ou máximo).");
+        }
+        validarLimites(dto.getReferenciaMinima(), dto.getReferenciaMaxima(), dto.getCriticoMinimo(), dto.getCriticoMaximo());
+        faixa.setReferenciaMinima(dto.getReferenciaMinima());
+        faixa.setReferenciaMaxima(dto.getReferenciaMaxima());
+        faixa.setCriticoMinimo(dto.getCriticoMinimo());
+        faixa.setCriticoMaximo(dto.getCriticoMaximo());
+        faixa.setDescricao(textoOuNulo(dto.getDescricao()));
+        faixaRepository.findByExame_Uuid(faixa.getExame().getUuid()).stream()
+                .filter(o -> !o.getUuid().equals(faixa.getUuid()) && o.getSexo() == faixa.getSexo() && o.sobrepoe(faixa))
+                .findFirst().ifPresent(o -> {
+                    throw new ResourceConflictException("A faixa sobrepõe as idades de outra do mesmo sexo: "
+                            + FaixaReferenciaExameDto.rotulo(o) + ".");
+                });
+    }
+
+    /** Mínima até máxima; crítico mínimo abaixo da mínima e crítico máximo acima da máxima. */
+    private static void validarLimites(BigDecimal minima, BigDecimal maxima, BigDecimal criticoMinimo, BigDecimal criticoMaximo) {
+        if (minima != null && maxima != null && minima.compareTo(maxima) > 0) {
+            throw new ResourceBadRequestException("A referência mínima não pode ser maior que a máxima.");
+        }
+        if (criticoMinimo != null && minima != null && criticoMinimo.compareTo(minima) > 0) {
+            throw new ResourceBadRequestException("O crítico mínimo precisa ficar abaixo (ou no limite) da referência mínima.");
+        }
+        if (criticoMaximo != null && maxima != null && criticoMaximo.compareTo(maxima) < 0) {
+            throw new ResourceBadRequestException("O crítico máximo precisa ficar acima (ou no limite) da referência máxima.");
+        }
+        if (criticoMinimo != null && criticoMaximo != null && criticoMinimo.compareTo(criticoMaximo) >= 0) {
+            throw new ResourceBadRequestException("O crítico mínimo precisa ser menor que o crítico máximo.");
+        }
     }
 
     private void aplicar(ExameLaboratorial exame, ExameLaboratorialRequestDto dto, UUID proprio) {
@@ -62,9 +186,8 @@ public class ExameLaboratorialService {
             throw new ResourceConflictException("Já existe um exame com o nome " + nome + ".");
         });
         boolean numerico = dto.getTipoResultado() == TipoResultadoExame.NUMERICO;
-        if (numerico && dto.getReferenciaMinima() != null && dto.getReferenciaMaxima() != null
-                && dto.getReferenciaMinima().compareTo(dto.getReferenciaMaxima()) > 0) {
-            throw new ResourceBadRequestException("A referência mínima não pode ser maior que a máxima.");
+        if (numerico) {
+            validarLimites(dto.getReferenciaMinima(), dto.getReferenciaMaxima(), dto.getCriticoMinimo(), dto.getCriticoMaximo());
         }
         exame.setNome(nome);
         exame.setMaterial(dto.getMaterial());
@@ -72,9 +195,20 @@ public class ExameLaboratorialService {
         exame.setUnidadeMedida(numerico ? textoOuNulo(dto.getUnidadeMedida()) : null);
         exame.setReferenciaMinima(numerico ? dto.getReferenciaMinima() : null);
         exame.setReferenciaMaxima(numerico ? dto.getReferenciaMaxima() : null);
+        exame.setCriticoMinimo(numerico ? dto.getCriticoMinimo() : null);
+        exame.setCriticoMaximo(numerico ? dto.getCriticoMaximo() : null);
         exame.setReferenciaTexto(numerico ? null : textoOuNulo(dto.getReferenciaTexto()));
         exame.setPreparo(textoOuNulo(dto.getPreparo()));
         exame.setPrazoDias(dto.getPrazoDias());
+    }
+
+    private ExameLaboratorialResponseDto resposta(ExameLaboratorial exame) {
+        return ExameLaboratorialResponseDto.fromExame(exame, faixaRepository.findByExame_Uuid(exame.getUuid()));
+    }
+
+    private FaixaReferenciaExame buscarFaixa(UUID uuid) {
+        return faixaRepository.findById(uuid).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar uma faixa de referência com o id " + uuid + " em nossos registros."));
     }
 
     private static String textoOuNulo(String texto) {

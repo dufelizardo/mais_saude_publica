@@ -52,7 +52,11 @@
                 }
                 @if (i.resultado?.observacao) { <span class="laudo__sub">{{ i.resultado?.observacao }}</span> }
               </td>
-              <td>{{ faixa(i.resultado) }}</td>
+              <td>
+                {{ faixa(i.resultado) }}
+                @if (i.resultado?.faixaDescricao; as fd) { <span class="laudo__sub">{{ fd }}</span> }
+                @if (faixaCritica(i.resultado); as fc) { <span class="laudo__sub">{{ fc }}</span> }
+              </td>
             </tr>
             <tr class="laudo__assina">
               <td colspan="3">

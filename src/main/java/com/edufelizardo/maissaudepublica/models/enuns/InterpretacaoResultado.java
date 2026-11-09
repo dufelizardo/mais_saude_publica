@@ -4,5 +4,9 @@ package com.edufelizardo.maissaudepublica.models.enuns;
 public enum InterpretacaoResultado {
     NORMAL,
     ACIMA,
-    ABAIXO
+    ABAIXO,
+    /** Acima do crítico máximo: valor de pânico (ADR-0180). */
+    CRITICO_ALTO,
+    /** Abaixo do crítico mínimo: valor de pânico (ADR-0180). */
+    CRITICO_BAIXO
 }

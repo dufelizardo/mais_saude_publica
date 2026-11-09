@@ -5,7 +5,9 @@ import { SuccessResponseDto } from '../models/profissional';
 import {
   ColetaExameRequestDto,
   EtapaTrabalho,
+  EvolucaoExameDto,
   ExameLaboratorialRequestDto,
+  FaixaReferenciaExameRequestDto,
   ExameLaboratorialResponseDto,
   ItemTrabalhoExameDto,
   MotivoRejeicaoAmostra,
@@ -35,6 +37,24 @@ export class LaboratorioService {
 
   atualizarExame(uuid: string, dto: ExameLaboratorialRequestDto): Observable<SuccessResponseDto> {
     return this.http.patch<SuccessResponseDto>(`${this.exameUrl}/${uuid}`, dto);
+  }
+
+  /** Faixas por sexo e idade (ADR-0180): devolvem o exame com as faixas. */
+  adicionarFaixa(exameId: string, dto: FaixaReferenciaExameRequestDto): Observable<ExameLaboratorialResponseDto> {
+    return this.http.post<ExameLaboratorialResponseDto>(`${this.exameUrl}/${exameId}/faixa`, dto);
+  }
+
+  atualizarFaixa(faixaId: string, dto: FaixaReferenciaExameRequestDto): Observable<ExameLaboratorialResponseDto> {
+    return this.http.put<ExameLaboratorialResponseDto>(`${this.exameUrl}/faixa/${faixaId}`, dto);
+  }
+
+  removerFaixa(faixaId: string): Observable<ExameLaboratorialResponseDto> {
+    return this.http.delete<ExameLaboratorialResponseDto>(`${this.exameUrl}/faixa/${faixaId}`);
+  }
+
+  /** Evolução de um exame do paciente, com as regras de acesso do prontuário (ADR-0180). */
+  evolucao(pacienteId: string, exameId: string): Observable<EvolucaoExameDto> {
+    return this.http.get<EvolucaoExameDto>(`/api/v1/prontuario/${pacienteId}/exame/${exameId}/evolucao`);
   }
 
   // ── Pedidos ──

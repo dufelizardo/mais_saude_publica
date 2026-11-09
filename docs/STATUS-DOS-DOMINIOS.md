@@ -36,7 +36,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 7 | [Agendamento / Agenda](#7-agendamento--agenda) | ✅ | visão Mês e exportação |
 | 8 | [Enfermagem](#8-enfermagem) | ✅ | plano de cuidados e aprazamento |
 | 9 | [Farmácia](#9-farmácia) | ✅ | — |
-| 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | 🟡 | exames de imagem e laudo assinado |
+| 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | 🟡 | L1 feita (faixas por sexo e idade, críticos, evolução); L2 a L4 (aviso, imagem, laudo assinado) |
 | 11 | [Regulação](#11-regulação) | 🟡 | regulação de leitos entre unidades |
 | 12 | [Leitos / Internação](#12-leitos--internação) | 🟡 | regulação de leitos e faturamento (AIH) |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 feita (catálogo, lotes, livro, mínimo e alertas); ES2 (central, requisição, inventário) e ES3 (emergências) |
@@ -266,16 +266,17 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - Catálogo, pedido, coleta em amostras, resultado, liberação e retificação (ADR-0093).
 - Listas de trabalho por etapa (ADR-0094).
 - Resultado no prontuário e no atendimento, laudo imprimível e recoleta (ADR-0095).
+- Faixas de referência por sexo e idade, valores críticos e a evolução do exame no tempo, com gráfico, no prontuário
+  ([ADR-0180](./adr/0180-laboratorio-faixas-de-referencia.md), fatia L1).
 
-**Falta:**
-- [ ] Exames de imagem (diagnóstico além do laboratório).
-- [ ] Laudo PDF com assinatura digital (ICP-Brasil).
-- [ ] Envio do resultado ao paciente e aviso ao solicitante quando o resultado é liberado.
-- [ ] Gráfico da evolução de um exame no tempo.
-- [ ] Valores de referência por sexo e idade.
-- [ ] Integração com equipamentos (LIS, HL7, ASTM) e controle de qualidade.
-- [ ] Insumos de coleta (depende do Estoque, domínio 13).
-- [ ] LACEN e vigilância (vigilância: domínio 23); SIGTAP e BPA.
+**Falta** (fatias L2 a L4 da ADR-0180; as integrações não impedem nenhuma e estão no domínio 20):
+- [ ] L2: envio do resultado ao paciente e aviso ao solicitante quando o resultado é liberado, com urgência no crítico.
+- [ ] L3: exames de imagem (diagnóstico além do laboratório), com o laudo do radiologista.
+- [ ] L4: laudo PDF com assinatura eletrônica interna e os insumos de coleta baixados do Estoque (domínio 13).
+- [x] Gráfico da evolução de um exame no tempo ([ADR-0180](./adr/0180-laboratorio-faixas-de-referencia.md)).
+- [x] Valores de referência por sexo e idade, com os valores críticos ([ADR-0180](./adr/0180-laboratorio-faixas-de-referencia.md)).
+- [ ] Controle de qualidade interno.
+- Integrações, no domínio 20: equipamentos (LIS, HL7, ASTM), PACS, LACEN, SIGTAP e BPA, certificado ICP-Brasil.
 
 ### 11. Regulação
 
@@ -449,7 +450,8 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 - [ ] Login e recuperação de senha pelo gov.br.
 - [ ] Os botões sem permissão aparecem por um instante ao abrir as telas (ADR-0079).
 - [ ] **Integrações** (não iniciadas): arquitetura de adapters e depois CNES, e-SUS APS e SISAB, SIGTAP, SISREG e
-  DATASUS.
+  DATASUS. Do laboratório (domínio 10): equipamentos (LIS, HL7, ASTM), PACS, LACEN, BPA e o certificado ICP-Brasil no laudo.
+  Nenhuma integração impede fechar um domínio: cada fatia entrega o fluxo interno e deixa o encaixe previsto.
 - [ ] Teste de tela de Usuários & Perfis.
 
 ### 21. Território e Adscrição

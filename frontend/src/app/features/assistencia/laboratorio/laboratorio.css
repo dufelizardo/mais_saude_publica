@@ -1,0 +1,17 @@
+/* Faixas por sexo e idade na gaveta do exame (ADR-0180). */
+.faixas { margin-top: var(--s-5); padding-top: var(--s-4); border-top: 1px solid var(--ink-100); display: grid; gap: var(--s-3); }
+.faixas__head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
+.faixas__head h3 { margin: 0; font-size: 0.9rem; color: var(--ink-900); }
+.faixas__lista { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.faixas__item { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--ink-100); border-radius: var(--r-md); background: var(--white); }
+.faixas__item strong { font-weight: 500; font-size: 0.82rem; color: var(--ink-900); }
+.faixas__acoes { display: flex; gap: var(--s-2); justify-content: flex-end; flex-wrap: wrap; }
+.faixas__form { display: grid; gap: var(--s-3); padding: var(--s-3); border: 1px solid var(--blue-50); border-radius: var(--r-md); background: var(--ink-50); }
+.faixas__form h4 { margin: 0; font-size: 0.82rem; color: var(--ink-700); }
+.faixas__idade { display: flex; gap: var(--s-2); }
+.faixas__idade input { flex: 1 1 5rem; min-width: 0; }
+.faixas__idade select { flex: 0 0 auto; }
+@media (max-width: 520px) {
+  .faixas__item { flex-direction: column; align-items: flex-start; }
+}
