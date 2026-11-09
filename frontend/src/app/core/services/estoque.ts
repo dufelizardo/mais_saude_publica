@@ -30,6 +30,11 @@ export class EstoqueService {
     return this.http.put<MaterialEstoqueDto>(`${this.api}/material/${uuid}`, dto);
   }
 
+  /** O almoxarife conferiu o consumo sem saldo (ADR-0183). */
+  conferirConsumoSemSaldo(uuid: string): Observable<void> {
+    return this.http.post<void>(`${this.api}/consumo-sem-saldo/${uuid}/conferencia`, {});
+  }
+
   saldo(unidadeId: string): Observable<SaldoEstoqueDto> {
     return this.http.get<SaldoEstoqueDto>(`${this.api}/saldo`, { params: { unidadeId } });
   }

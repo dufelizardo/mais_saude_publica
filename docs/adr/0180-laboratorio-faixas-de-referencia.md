@@ -8,7 +8,8 @@ Aceita. Fatia **L1** do plano para fechar o domínio 10 (Laboratório e Diagnós
 - **L2:** aviso ao solicitante quando o resultado é liberado (com urgência no crítico) e envio ao paciente, na
   [ADR-0181](./0181-laboratorio-ciencia-critico-entrega.md);
 - **L3:** exames de imagem, com o laudo do radiologista, na [ADR-0182](./0182-exames-de-imagem.md);
-- **L4:** laudo em PDF com assinatura eletrônica interna e os insumos de coleta baixados do Estoque.
+- **L4:** laudo em PDF com assinatura eletrônica interna e os insumos de coleta baixados do Estoque, na
+  [ADR-0183](./0183-laudo-pdf-assinado-e-insumos.md).
 
 As integrações (equipamentos LIS/HL7/ASTM, PACS, LACEN, SIGTAP/BPA e o certificado ICP-Brasil) **não impedem nenhuma fatia**: cada uma
 fica com o ponto de encaixe previsto e entra na lista do domínio 20.

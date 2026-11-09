@@ -111,8 +111,16 @@
 
 @if (aba() === 'alertas') {
   <section class="card" id="pn-alertas" role="tabpanel" aria-labelledby="tab-alertas">
-    <div class="card__head"><div><h2>Alertas</h2><p class="sub">Abaixo do mínimo, vencendo em até 90 dias e vencidos com saldo</p></div></div>
+    <div class="card__head"><div><h2>Alertas</h2><p class="sub">Abaixo do mínimo, vencendo em até 90 dias, vencidos com saldo e consumo sem saldo</p></div></div>
     <div style="padding: var(--s-5); display: grid; gap: var(--s-4);">
+      <h3 class="mo-grupo">Consumo sem saldo · {{ saldo()?.consumosSemSaldo?.length ?? 0 }}</h3>
+      <p class="cell-sub" style="margin: 0;">Insumos que a coleta ou a realização de exame usou sem saldo no estoque. Acerte a entrada ou o inventário e marque como conferido.</p>
+      <ul class="eq-prof" aria-label="Consumo sem saldo">
+        @for (c of saldo()?.consumosSemSaldo ?? []; track c.uuid) {
+          <li class="mo-row"><span><span class="cell-main">{{ c.materialNome }} <span class="cell-sub mono" style="display: inline;">{{ c.materialCodigo }}</span></span><span class="cell-sub">Faltaram {{ c.quantidadeFaltante }} · {{ c.origem }} · {{ dataHoraBr(c.ocorridoEm) }}@if (c.profissionalNome) { · {{ c.profissionalNome }} }</span></span>
+            <div style="flex: none;">@if (pode('ESTOQUE.MOVIMENTAR')) { <button type="button" class="btn btn--ghost btn--sm" [disabled]="submitting()" [attr.aria-label]="'Marcar como conferido o consumo de ' + c.materialNome" (click)="conferirConsumo(c)">Conferido</button> } @else { <span class="badge badge--warn">Sem saldo</span> }</div></li>
+        } @empty { <li class="cell-sub">Nenhum consumo sem saldo para conferir.</li> }
+      </ul>
       <h3 class="mo-grupo">Abaixo do mínimo · {{ abaixoDoMinimo().length }}</h3>
       <ul class="eq-prof" aria-label="Abaixo do mínimo">
         @for (i of abaixoDoMinimo(); track i.materialId) {

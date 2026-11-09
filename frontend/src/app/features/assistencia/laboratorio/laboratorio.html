@@ -883,6 +883,22 @@
                   </div>
                 </section>
               }
+              @if (emissoes().length) {
+                <section class="dsec">
+                  <div class="dsec__h"><h3>Laudos emitidos <span class="cnt">{{ emissoes().length }}</span></h3></div>
+                  <div class="tl">
+                    @for (e of emissoes(); track e.uuid) {
+                      <div class="tl-row">
+                        <div class="date mono">{{ formatarInstante(e.emitidoEm) }}</div>
+                        <div class="title">Versão {{ e.versao }} · código <span class="mono">{{ e.codigo }}</span>
+                          @if (e.vigente) { <span class="badge badge--ok">Vigente</span> } @else { <span class="badge badge--muted">Substituída</span> }
+                        </div>
+                        <div class="desc">{{ e.exames }} exame(s) · SHA-256 <span class="mono">{{ e.hashPdf.slice(0, 16) }}…</span></div>
+                      </div>
+                    }
+                  </div>
+                </section>
+              }
               <section class="dsec">
                 <div class="dsec__h"><h3>Histórico <span class="cnt">{{ d.eventos.length }}</span></h3></div>
                 <div class="tl">
@@ -906,7 +922,8 @@
                 <button type="button" class="btn btn--ghost" (click)="abrirEntrega(d)">Registrar entrega</button>
               }
               @if (d.liberados > 0) {
-                <a class="btn" [href]="'/laudo/exame/' + d.uuid" target="_blank" rel="noopener">Imprimir laudo</a>
+                <a class="btn btn--ghost" [href]="'/laudo/exame/' + d.uuid" target="_blank" rel="noopener">Prévia para imprimir</a>
+                <button type="button" class="btn" [disabled]="baixandoLaudo()" (click)="baixarLaudo(d)">{{ baixandoLaudo() ? 'Emitindo…' : 'Baixar laudo (PDF)' }}</button>
               }
             </footer>
           </div>
@@ -1329,6 +1346,42 @@
                 <input type="checkbox" role="switch" id="f-ativo" formControlName="ativo" aria-describedby="h-ativo" />
               </label>
             </div>
+
+            @if (g.exame && pode('LABORATORIO.GERENCIAR')) {
+              <section class="faixas" aria-labelledby="t-insumos">
+                <div class="faixas__head"><h3 id="t-insumos">Insumos de {{ g.exame.categoria === 'IMAGEM' ? 'realização' : 'coleta' }}</h3></div>
+                <p class="cell-sub">Baixados do estoque da unidade na {{ g.exame.categoria === 'IMAGEM' ? 'realização' : 'coleta' }}. Na mesma amostra, cada material conta uma vez. Sem saldo, a coleta não para e o Estoque recebe o alerta.</p>
+                @if (erroInsumo()) { <div class="box box--err" role="alert"><strong>{{ erroInsumo() }}</strong></div> }
+                <ul class="faixas__lista">
+                  @for (i of g.exame.insumos ?? []; track i.uuid) {
+                    <li class="faixas__item">
+                      <span><span class="cell-main">{{ i.materialNome }}</span><span class="cell-sub">{{ i.quantidade }} · <span class="mono">{{ i.materialCodigo }}</span>@if (i.soComContraste) { · só com contraste }</span></span>
+                      <button type="button" class="btn btn--ghost btn--sm" [disabled]="salvandoInsumo()" [attr.aria-label]="'Remover insumo ' + i.materialNome" (click)="removerInsumo(g.exame, i)">Remover</button>
+                    </li>
+                  } @empty { <li class="cell-sub">Nenhum insumo cadastrado.</li> }
+                </ul>
+                <div [formGroup]="insumoForm" class="dw-row" style="align-items: end;">
+                  <div class="dw-field">
+                    <label for="f-insumoMaterial">Material do estoque</label>
+                    <select id="f-insumoMaterial" formControlName="materialId">
+                      <option value="">Selecione…</option>
+                      @for (m of materiaisEstoque(); track m.uuid) { <option [value]="m.uuid">{{ m.nome }} ({{ m.codigo }})</option> }
+                    </select>
+                  </div>
+                  <div class="dw-field">
+                    <label for="f-insumoQuantidade">Quantidade</label>
+                    <input id="f-insumoQuantidade" type="number" min="1" max="100" formControlName="quantidade" (keydown.enter)="$event.preventDefault(); incluirInsumo(g.exame)" />
+                  </div>
+                </div>
+                @if (g.exame.categoria === 'IMAGEM') {
+                  <label class="switch" for="f-insumoContraste" [formGroup]="insumoForm">
+                    <span><b style="font-weight: 500;">Só com contraste</b><span class="cell-sub">Baixa só quando a realização usar contraste.</span></span>
+                    <input type="checkbox" role="switch" id="f-insumoContraste" formControlName="soComContraste" />
+                  </label>
+                }
+                <div><button type="button" class="btn btn--ghost btn--sm" [disabled]="salvandoInsumo()" (click)="incluirInsumo(g.exame)">Incluir insumo</button></div>
+              </section>
+            }
 
             @if (g.exame && g.exame.categoria !== 'IMAGEM' && g.exame.tipoResultado === 'NUMERICO' && exameForm.controls.tipoResultado.value === 'NUMERICO') {
               <section class="faixas" aria-labelledby="t-faixas">

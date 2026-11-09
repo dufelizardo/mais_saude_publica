@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Assistência - Laboratório
-Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094); recoleta, laudo e exames no prontuário e no atendimento (ADR-0095); faixas por sexo e idade e evolução do exame (ADR-0180); ciência, comunicação do crítico e entrega (ADR-0181); exames de imagem (ADR-0182).
+Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094); recoleta, laudo e exames no prontuário e no atendimento (ADR-0095); faixas por sexo e idade e evolução do exame (ADR-0180); ciência, comunicação do crítico e entrega (ADR-0181); exames de imagem (ADR-0182); laudo em PDF, verificação e insumos (ADR-0183).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiLaboratorio    MaisSaudePublicaFrontend
@@ -159,5 +159,29 @@ CT-018 - Realizar e laudar exame de imagem
     [Tags]    UI    UiLaboratorio
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - LABORATORIO - REALIZAR E LAUDAR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-019 - Baixar o laudo em PDF
+    [Documentation]    Aviso com o código e a emissão vigente no detalhe.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - LAUDO EM PDF
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-020 - Verificar o laudo na página pública
+    [Documentation]    Código válido e o hash do PDF, sem login.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - VERIFICAR LAUDO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-021 - Incluir insumo no exame do catálogo
+    [Documentation]    Material do estoque e quantidade na gaveta do exame.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - INSUMOS DO EXAME
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

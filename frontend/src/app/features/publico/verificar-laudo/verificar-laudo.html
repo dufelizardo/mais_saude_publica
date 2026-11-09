@@ -1,0 +1,45 @@
+<a href="#main" class="skip-link">Pular para a verificação</a>
+
+<div class="login-shell login-shell--solo">
+  <section class="form-panel" aria-labelledby="form-title">
+    <main id="main" class="form-wrap" role="main">
+      <span class="bp-brand__mark senha-mark" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+      </span>
+      <h1 id="form-title">Verificar laudo</h1>
+      <p class="lead">Confira se um laudo de exames emitido pela rede é autêntico. O código fica no rodapé do laudo, ao lado do QR code.</p>
+
+      <form novalidate [formGroup]="form" (ngSubmit)="verificar()">
+        <div class="field" [class.has-error]="!!erro()">
+          <label for="f-codigo">Código de verificação</label>
+          <div class="input-wrap" [class.has-error]="!!erro()">
+            <input id="f-codigo" formControlName="codigo" class="mono" autocomplete="off" maxlength="14" placeholder="ABCD-EFGH-JKLM" aria-describedby="e-codigo" />
+          </div>
+          @if (erro()) { <span class="error-msg" id="e-codigo" role="alert" style="display: inline-flex;">{{ erro() }}</span> }
+        </div>
+        <button type="submit" class="btn btn--block" [disabled]="consultando()">{{ consultando() ? 'Verificando…' : 'Verificar' }}</button>
+      </form>
+
+      @if (resultado(); as r) {
+        <section class="verif" [class.verif--ok]="r.valido" [class.verif--velho]="r.substituido" role="status" aria-live="polite">
+          @if (r.valido) {
+            <h2>Laudo autêntico e vigente</h2>
+          } @else {
+            <h2>Laudo autêntico, mas substituído</h2>
+            <p>Esta é a versão {{ r.versao }}. Depois dela saiu a versão {{ r.versaoVigente }}, com resultado novo, retificação ou adendo. Peça a versão mais nova à unidade.</p>
+          }
+          <dl>
+            <div><dt>Emitido em</dt><dd>{{ dataHora(r.emitidoEm) }}</dd></div>
+            <div><dt>Unidade</dt><dd>{{ r.unidadeSolicitanteNome }}</dd></div>
+            <div><dt>Paciente</dt><dd>{{ r.pacienteIniciais }}</dd></div>
+            <div><dt>Exames</dt><dd>{{ r.exames.join(', ') }}</dd></div>
+            <div><dt>Hash do PDF (SHA-256)</dt><dd class="mono verif__hash">{{ r.hashPdf }}</dd></div>
+          </dl>
+          <p class="verif__nota">Para conferir o arquivo, calcule o SHA-256 do PDF recebido: ele precisa ser igual ao hash acima.</p>
+        </section>
+      }
+
+      <a class="btn btn--ghost btn--block" routerLink="/">Voltar à página inicial</a>
+    </main>
+  </section>
+</div>

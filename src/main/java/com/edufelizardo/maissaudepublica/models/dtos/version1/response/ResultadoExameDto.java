@@ -51,6 +51,8 @@ public class ResultadoExameDto implements Serializable {
     private String laudoAchados;
     private String laudoConclusao;
     private String imagemUrl;
+    /** Assinatura eletrônica interna (ADR-0183): o SHA-256 do conteúdo assinado. */
+    private String hashConteudo;
 
     public static ResultadoExameDto fromResultado(ResultadoExame r) {
         return new ResultadoExameDto(r.getUuid(), r.getValorNumerico(), r.getValorTexto(), r.getUnidadeMedida(), r.getReferenciaMinima(),
@@ -61,6 +63,6 @@ public class ResultadoExameDto implements Serializable {
                 r.getRetificacaoDe() != null ? r.getRetificacaoDe().getUuid() : null, r.getMotivoRetificacao(),
                 r.getCienciaPor() != null ? r.getCienciaPor().getMatricula() : null,
                 r.getCienciaPor() != null ? r.getCienciaPor().getNome() : null, r.getCienciaEm(),
-                r.getLaudoTecnica(), r.getLaudoAchados(), r.getLaudoConclusao(), r.getImagemUrl());
+                r.getLaudoTecnica(), r.getLaudoAchados(), r.getLaudoConclusao(), r.getImagemUrl(), r.getHashConteudo());
     }
 }

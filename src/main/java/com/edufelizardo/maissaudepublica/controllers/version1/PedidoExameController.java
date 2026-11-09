@@ -46,6 +46,35 @@ public class PedidoExameController {
     @Autowired
     private PedidoExameService service;
 
+    @Autowired
+    private com.edufelizardo.maissaudepublica.services.version1.LaudoExameService laudoService;
+
+    @RequerPermissao({"EXAME.SOLICITAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR", "IMAGEM.REALIZAR", "IMAGEM.LAUDAR"})
+    @AuditarLeitura
+    @GetMapping(value = "{uuid}/laudo.pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @Operation(summary = "Laudo do pedido em PDF", description = "Os resultados liberados e assinados, com o código de verificação e o QR code. "
+            + "Sem resultado novo, devolve a mesma emissão; com resultado novo, retificação ou adendo, emite outra versão. Nada liberado: 422. "
+            + "Fora do escopo: 403. Leitura auditada (ADR-0183).", tags = "Laboratório")
+    @ApiErrorResponsesBusca
+    public ResponseEntity<byte[]> laudoPdf(@PathVariable UUID uuid) {
+        com.edufelizardo.maissaudepublica.models.EmissaoLaudoExame e = laudoService.emitir(uuid);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"laudo-" + e.getCodigo() + ".pdf\"")
+                .header("X-Codigo-Verificacao", e.getCodigo())
+                .header(org.springframework.http.HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "X-Codigo-Verificacao, Content-Disposition")
+                .body(e.getPdf());
+    }
+
+    @RequerPermissao({"EXAME.SOLICITAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR", "IMAGEM.REALIZAR", "IMAGEM.LAUDAR"})
+    @GetMapping(value = "{uuid}/emissoes", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Emissões do laudo do pedido", description = "Versão, código, hash e se é a vigente; da mais nova para a mais velha (ADR-0183).",
+            tags = "Laboratório")
+    @ApiErrorResponsesListagem
+    public ResponseEntity<List<com.edufelizardo.maissaudepublica.models.dtos.version1.response.EmissaoLaudoDtos.Emissao>> emissoes(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(laudoService.emissoes(uuid));
+    }
+
     @RequerPermissao({"EXAME.SOLICITAR"})
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Pede exames para um paciente",

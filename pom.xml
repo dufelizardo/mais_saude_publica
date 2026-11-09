@@ -64,6 +64,18 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
+		<!-- Laudo de exames em PDF gerado no servidor, com QR code de verificação (ADR-0183). LGPL/MPL. -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>2.0.3</version>
+		</dependency>
+		<!-- Só a matriz do QR code do laudo; o desenho no PDF é feito com o OpenPDF (ADR-0183). Apache 2.0. -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.5.3</version>
+		</dependency>
 		<!-- JWT stateless (mecanismo escolhido pela ADR-0006/ADR-0055) — emissão/validação direta,
 		     sem subir a complexidade de um Authorization Server completo. -->
 		<dependency>

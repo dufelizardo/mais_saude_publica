@@ -58,6 +58,49 @@ export interface ExameLaboratorialResponseDto {
   ativo: boolean;
   /** Faixas por sexo e idade (ADR-0180), da mais nova para a mais velha. */
   faixas?: FaixaReferenciaExameDto[];
+  /** Insumos de coleta ou de realização (ADR-0183). */
+  insumos?: InsumoExameDto[];
+}
+
+/** Um insumo do exame, baixado do Estoque na coleta ou na realização (ADR-0183). */
+export interface InsumoExameDto {
+  uuid: string;
+  materialId: string;
+  materialCodigo: string;
+  materialNome: string;
+  quantidade: number;
+  soComContraste: boolean;
+}
+
+export interface InsumoExameRequestDto {
+  materialId: string;
+  quantidade: number;
+  soComContraste?: boolean;
+}
+
+/** Uma emissão do laudo em PDF (ADR-0183). */
+export interface EmissaoLaudoDto {
+  uuid: string;
+  versao: number;
+  codigo: string;
+  hashPdf: string;
+  emitidoEm: string;
+  exames: number;
+  vigente: boolean;
+}
+
+/** Verificação pública do laudo pelo código, sem o nome do paciente (ADR-0183). */
+export interface VerificacaoLaudoDto {
+  codigo: string;
+  valido: boolean;
+  substituido: boolean;
+  versao: number;
+  versaoVigente: number;
+  emitidoEm: string;
+  unidadeSolicitanteNome: string;
+  pacienteIniciais: string;
+  exames: string[];
+  hashPdf: string;
 }
 
 /** Faixa de referência por sexo e idade (ADR-0180). Sem sexo: os dois. Sem idade máxima: sem limite. */
@@ -199,6 +242,8 @@ export interface ResultadoExameDto {
   laudoAchados?: string | null;
   laudoConclusao?: string | null;
   imagemUrl?: string | null;
+  /** Assinatura eletrônica interna (ADR-0183): SHA-256 do conteúdo assinado. */
+  hashConteudo?: string | null;
 }
 
 export interface ItemPedidoExameDto {

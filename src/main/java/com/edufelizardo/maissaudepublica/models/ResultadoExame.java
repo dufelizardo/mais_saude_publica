@@ -111,6 +111,15 @@ public class ResultadoExame implements Serializable {
 
     private Instant liberadoEm;
 
+    /**
+     * Assinatura eletrônica interna (ADR-0183): o CPF de quem liberou autenticado e o SHA-256 do conteúdo assinado. Gravados na
+     * liberação, no laudo, na retificação e no adendo.
+     */
+    private String assinadoPorCpf;
+
+    @Column(length = 64)
+    private String hashConteudo;
+
     /** Ciência do solicitante (ADR-0181): o resultado retificado é outro, então a ciência volta a ficar pendente. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ciencia_por_id", referencedColumnName = "uuid")

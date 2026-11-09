@@ -42,6 +42,8 @@ public class ExameLaboratorialResponseDto implements Serializable {
     /** Categoria e modalidade (ADR-0182). */
     private com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame categoria;
     private com.edufelizardo.maissaudepublica.models.enuns.ModalidadeImagem modalidade;
+    /** Insumos de coleta ou de realização (ADR-0183). */
+    private List<InsumoExameDto> insumos;
 
     public static ExameLaboratorialResponseDto fromExame(ExameLaboratorial e, List<FaixaReferenciaExame> faixas) {
         return new ExameLaboratorialResponseDto(e.getUuid(), e.getNome(), e.getMaterial(), e.getTipoResultado(), e.getUnidadeMedida(),
@@ -49,6 +51,6 @@ public class ExameLaboratorialResponseDto implements Serializable {
                 e.getPreparo(), e.getPrazoDias(), e.isAtivo(), faixas.stream()
                 .sorted(Comparator.comparing((FaixaReferenciaExame f) -> f.inicioAproximado())
                         .thenComparing(f -> f.getSexo() == null ? "" : f.getSexo().name()))
-                .map(FaixaReferenciaExameDto::fromFaixa).toList(), e.getCategoria(), e.getModalidade());
+                .map(FaixaReferenciaExameDto::fromFaixa).toList(), e.getCategoria(), e.getModalidade(), List.of());
     }
 }

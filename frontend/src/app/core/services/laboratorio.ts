@@ -1,9 +1,12 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { SuccessResponseDto } from '../models/profissional';
 import {
   ColetaExameRequestDto,
+  EmissaoLaudoDto,
+  InsumoExameRequestDto,
+  VerificacaoLaudoDto,
   ComunicacaoCriticoRequestDto,
   EntregaResultadoRequestDto,
   EtapaTrabalho,
@@ -106,6 +109,26 @@ export class LaboratorioService {
 
   cancelar(itemId: string, profissionalMatricula: string, motivo: string): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/item/${itemId}/cancelamento`, { profissionalMatricula, motivo });
+  }
+
+  // ── Laudo em PDF, verificação e insumos (ADR-0183) ──
+
+  /** O PDF da emissão vigente; o código de verificação vem no cabeçalho X-Codigo-Verificacao. */
+  baixarLaudo(pedidoId: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.pedidoUrl}/${pedidoId}/laudo.pdf`, { observe: 'response', responseType: 'blob' });
+  }
+
+  emissoesDoLaudo(pedidoId: string): Observable<EmissaoLaudoDto[]> {
+    return this.http.get<EmissaoLaudoDto[]>(`${this.pedidoUrl}/${pedidoId}/emissoes`);
+  }
+
+  /** Sem login. */
+  verificarLaudo(codigo: string): Observable<VerificacaoLaudoDto> {
+    return this.http.get<VerificacaoLaudoDto>(`/api/v1/publico/laudo/${encodeURIComponent(codigo)}`);
+  }
+
+  definirInsumos(exameId: string, insumos: InsumoExameRequestDto[]): Observable<ExameLaboratorialResponseDto> {
+    return this.http.put<ExameLaboratorialResponseDto>(`${this.exameUrl}/${exameId}/insumos`, insumos);
   }
 
   // ── Exames de imagem (ADR-0182) ──
