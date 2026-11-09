@@ -36,8 +36,18 @@ public class ExameLaboratorial implements Serializable {
     @Column(nullable = false, unique = true, length = 200)
     private String nome;
 
+    /** Laboratorial ou de imagem: decide o fluxo e não muda depois de criado (ADR-0182). */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame categoria =
+            com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame.LABORATORIAL;
+
+    /** Só do exame de imagem (ADR-0182). */
+    @Enumerated(EnumType.STRING)
+    private com.edufelizardo.maissaudepublica.models.enuns.ModalidadeImagem modalidade;
+
+    /** Só do exame laboratorial; o de imagem não tem amostra (ADR-0182). */
+    @Enumerated(EnumType.STRING)
     private MaterialExame material;
 
     @Enumerated(EnumType.STRING)

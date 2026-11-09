@@ -6,7 +6,13 @@ import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import {
+  CLASSIFICACOES_LAUDO,
   FORMAS_ENTREGA,
+  MODALIDADES,
+  tipoDoExame,
+  CategoriaExame,
+  ClassificacaoLaudo,
+  ModalidadeImagem,
   INTERPRETACOES,
   MEIOS_COMUNICACAO,
   MATERIAIS,
@@ -48,7 +54,7 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
 
-type Aba = 'coletar' | 'analise' | 'liberar' | 'criticos' | 'ciencia' | 'pedidos' | 'catalogo';
+type Aba = 'coletar' | 'analise' | 'liberar' | 'realizar' | 'laudar' | 'criticos' | 'ciencia' | 'pedidos' | 'catalogo';
 
 type Gaveta =
   | { tipo: 'pedido' }
@@ -61,7 +67,9 @@ type Gaveta =
   | { tipo: 'cancelar'; itemId: string; pedidoId: string; exameNome: string }
   | { tipo: 'exame'; exame: ExameLaboratorialResponseDto | null }
   | { tipo: 'comunicar'; aviso: ResultadoAvisoExameDto }
-  | { tipo: 'entrega'; pedidoId: string };
+  | { tipo: 'entrega'; pedidoId: string }
+  | { tipo: 'realizacao'; itemId: string; pedidoId: string }
+  | { tipo: 'laudo'; itemId: string; pedidoId: string; adendo: boolean };
 
 /** Os exames de um pedido que aguardam coleta: a coleta é por pedido. */
 interface GrupoColeta {
@@ -92,6 +100,9 @@ const EVENTOS: Record<TipoEventoExame, string> = {
   COMUNICACAO_CRITICO: 'Crítico comunicado',
   CIENCIA: 'Ciência de quem pediu',
   ENTREGA: 'Resultado entregue',
+  REALIZACAO: 'Exame realizado',
+  LAUDO: 'Laudo liberado',
+  ADENDO: 'Adendo ao laudo',
 };
 
 const CID = /^\s*([A-Za-z][0-9]{2}(\.?[0-9A-Za-z]{1,2})?)?\s*$/;
@@ -118,6 +129,11 @@ export class Laboratorio {
   protected readonly formatCpf = formatCpf;
   protected readonly materiais = MATERIAIS;
   protected readonly listaMateriais = Object.keys(MATERIAIS) as MaterialExame[];
+  protected readonly modalidades = MODALIDADES;
+  protected readonly listaModalidades = Object.keys(MODALIDADES) as ModalidadeImagem[];
+  protected readonly classificacoesLaudo = CLASSIFICACOES_LAUDO;
+  protected readonly listaClassificacoes = Object.keys(CLASSIFICACOES_LAUDO) as ClassificacaoLaudo[];
+  protected readonly tipoDoExame = tipoDoExame;
   protected readonly statusItem = STATUS_ITEM;
   protected readonly situacoes = SITUACOES;
   protected readonly interpretacoes = INTERPRETACOES;
@@ -139,6 +155,9 @@ export class Laboratorio {
   protected readonly paraColetar = signal<ItemTrabalhoExameDto[]>([]);
   protected readonly emAnalise = signal<ItemTrabalhoExameDto[]>([]);
   protected readonly paraLiberar = signal<ItemTrabalhoExameDto[]>([]);
+  /** Exames de imagem a realizar e a laudar (ADR-0182). */
+  protected readonly paraRealizar = signal<ItemTrabalhoExameDto[]>([]);
+  protected readonly paraLaudar = signal<ItemTrabalhoExameDto[]>([]);
   /** Resultados para a ciência de quem pediu e críticos a comunicar (ADR-0181). */
   protected readonly paraCiencia = signal<ResultadoAvisoExameDto[]>([]);
   protected readonly criticosAComunicar = signal<ResultadoAvisoExameDto[]>([]);
@@ -177,6 +196,15 @@ export class Laboratorio {
     cid: [''],
     prioridade: ['ROTINA' as PrioridadeExame],
     profissionalMatricula: [''],
+    unidadeExecutanteImagemId: [''],
+  });
+
+  protected readonly realizacaoForm = this.fb.nonNullable.group({
+    realizadaEm: [''], equipamento: [''], contraste: [false], contrasteDescricao: [''], observacao: [''], profissionalMatricula: [''],
+  });
+  protected readonly laudoForm = this.fb.nonNullable.group({
+    tecnica: [''], achados: [''], conclusao: [''], classificacao: ['NORMAL' as ClassificacaoLaudo], imagemUrl: [''], motivo: [''],
+    profissionalMatricula: [''],
   });
 
   protected readonly coletaForm = this.fb.nonNullable.group({ unidadeColetaId: [''], laboratorioId: [''], profissionalMatricula: [''] });
@@ -197,6 +225,8 @@ export class Laboratorio {
   protected readonly matriculaCienciaForm = this.fb.nonNullable.group({ matricula: [''] });
   protected readonly exameForm = this.fb.nonNullable.group({
     nome: [''],
+    categoria: ['LABORATORIAL' as CategoriaExame],
+    modalidade: ['RAIO_X' as ModalidadeImagem],
     material: ['SANGUE' as MaterialExame],
     tipoResultado: ['NUMERICO' as TipoResultadoExame],
     unidadeMedida: [''],
@@ -233,7 +263,9 @@ export class Laboratorio {
     ...(this.pode('LABORATORIO.COLETAR') ? [{ id: 'coletar' as Aba, rotulo: 'Para coletar', contagem: this.gruposColeta().length }] : []),
     ...(this.pode('LABORATORIO.ANALISAR') ? [{ id: 'analise' as Aba, rotulo: 'Em análise', contagem: this.emAnalise().length }] : []),
     ...(this.pode('LABORATORIO.LIBERAR') ? [{ id: 'liberar' as Aba, rotulo: 'Para liberar', contagem: this.paraLiberar().length }] : []),
-    ...(this.pode('LABORATORIO.LIBERAR') ? [{ id: 'criticos' as Aba, rotulo: 'Críticos a comunicar', contagem: this.criticosAComunicar().length }] : []),
+    ...(this.pode('IMAGEM.REALIZAR') ? [{ id: 'realizar' as Aba, rotulo: 'Para realizar', contagem: this.paraRealizar().length }] : []),
+    ...(this.pode('IMAGEM.LAUDAR') ? [{ id: 'laudar' as Aba, rotulo: 'Para laudar', contagem: this.paraLaudar().length }] : []),
+    ...(this.pode('LABORATORIO.LIBERAR', 'IMAGEM.LAUDAR') ? [{ id: 'criticos' as Aba, rotulo: 'Críticos a comunicar', contagem: this.criticosAComunicar().length }] : []),
     ...(this.pode('EXAME.SOLICITAR') ? [{ id: 'ciencia' as Aba, rotulo: 'Para ciência', contagem: this.paraCiencia().length }] : []),
     { id: 'pedidos', rotulo: 'Pedidos', contagem: this.pedidos().length },
     { id: 'catalogo', rotulo: 'Catálogo de exames', contagem: this.exames().length },
@@ -318,10 +350,14 @@ export class Laboratorio {
       coletar: etapa('PARA_COLETAR'),
       analise: etapa('EM_ANALISE'),
       liberar: etapa('PARA_LIBERAR'),
+      realizar: this.pode('IMAGEM.REALIZAR') ? etapa('PARA_REALIZAR') : of([]),
+      laudar: this.pode('IMAGEM.LAUDAR') ? etapa('PARA_LAUDAR') : of([]),
       pedidos: this.laboratorioService.listarPedidos().pipe(catchError(() => of([]))),
       exames: this.laboratorioService.listarExames().pipe(catchError(() => of([]))),
-      criticos: this.pode('LABORATORIO.LIBERAR') ? this.laboratorioService.criticosAComunicar().pipe(catchError(() => of([]))) : of([]),
-    }).subscribe(({ coletar, analise, liberar, pedidos, exames, criticos }) => {
+      criticos: this.pode('LABORATORIO.LIBERAR', 'IMAGEM.LAUDAR') ? this.laboratorioService.criticosAComunicar().pipe(catchError(() => of([]))) : of([]),
+    }).subscribe(({ coletar, analise, liberar, realizar, laudar, pedidos, exames, criticos }) => {
+      this.paraRealizar.set(realizar);
+      this.paraLaudar.set(laudar);
       this.paraColetar.set(coletar);
       this.emAnalise.set(analise);
       this.paraLiberar.set(liberar);
@@ -488,6 +524,10 @@ export class Laboratorio {
         return 'Comunicar valor crítico';
       case 'entrega':
         return 'Registrar entrega';
+      case 'realizacao':
+        return 'Registrar realização';
+      case 'laudo':
+        return g.adendo ? 'Adendo ao laudo' : 'Laudo de imagem';
     }
   }
 
@@ -513,7 +553,7 @@ export class Laboratorio {
   protected abrirPedido(pacienteId = '', unidadeId = '', atendimentoId = ''): void {
     this.pedidoForm.reset({
       buscaPaciente: '', pacienteId, atendimentoId, unidadeSolicitanteId: unidadeId, buscaExame: '', indicacaoClinica: '', cid: '',
-      prioridade: 'ROTINA', profissionalMatricula: this.matriculaPadrao(),
+      prioridade: 'ROTINA', profissionalMatricula: this.matriculaPadrao(), unidadeExecutanteImagemId: '',
     });
     this.examesMarcados.set(new Set());
     this.abrir({ tipo: 'pedido' });
@@ -578,6 +618,8 @@ export class Laboratorio {
   protected abrirExame(exame: ExameLaboratorialResponseDto | null = null): void {
     this.exameForm.reset({
       nome: exame?.nome ?? '',
+      categoria: exame?.categoria ?? 'LABORATORIAL',
+      modalidade: exame?.modalidade ?? 'RAIO_X',
       material: exame?.material ?? 'SANGUE',
       tipoResultado: exame?.tipoResultado ?? 'NUMERICO',
       unidadeMedida: exame?.unidadeMedida ?? '',
@@ -590,6 +632,9 @@ export class Laboratorio {
       prazoDias: exame?.prazoDias != null ? String(exame.prazoDias) : '',
       ativo: exame?.ativo ?? true,
     });
+    // A categoria não muda depois de criado (ADR-0182).
+    if (exame) this.exameForm.controls.categoria.disable();
+    else this.exameForm.controls.categoria.enable();
     this.faixaEditando.set(null);
     this.erroFaixa.set(null);
     this.abrir({ tipo: 'exame', exame });
@@ -683,10 +728,12 @@ export class Laboratorio {
     this.mostrarToast(titulo, exame.nome);
   }
 
-  protected podeAgirNoItem(i: ItemPedidoExameDto): { retificar: boolean; cancelar: boolean } {
+  protected podeAgirNoItem(i: ItemPedidoExameDto): { retificar: boolean; cancelar: boolean; adendo: boolean } {
     return {
-      retificar: i.status === 'LIBERADO' && this.pode('LABORATORIO.LIBERAR'),
-      cancelar: (i.status === 'SOLICITADO' || i.status === 'COLETADO' || i.status === 'RESULTADO_REGISTRADO') && this.pode('EXAME.SOLICITAR', 'LABORATORIO.ANALISAR'),
+      retificar: i.status === 'LIBERADO' && i.categoria !== 'IMAGEM' && this.pode('LABORATORIO.LIBERAR'),
+      cancelar: (i.status === 'SOLICITADO' || i.status === 'COLETADO' || i.status === 'REALIZADO' || i.status === 'RESULTADO_REGISTRADO')
+        && this.pode('EXAME.SOLICITAR', 'LABORATORIO.ANALISAR', 'IMAGEM.REALIZAR'),
+      adendo: i.status === 'LIBERADO' && i.categoria === 'IMAGEM' && this.pode('IMAGEM.LAUDAR'),
     };
   }
 
@@ -718,6 +765,10 @@ export class Laboratorio {
         return this.salvarComunicacao(g.aviso);
       case 'entrega':
         return this.salvarEntrega(g.pedidoId);
+      case 'realizacao':
+        return this.salvarRealizacao(g.itemId);
+      case 'laudo':
+        return this.salvarLaudo(g.itemId, g.adendo);
       default:
         return;
     }
@@ -742,6 +793,7 @@ export class Laboratorio {
     if (!v.indicacaoClinica.trim()) erros['indicacaoClinica'] = 'Informe a indicação clínica.';
     if (!CID.test(v.cid)) erros['cid'] = 'CID-10 inválido (ex.: I10, E11.9).';
     if (!v.profissionalMatricula.trim()) erros['profissionalMatricula'] = 'Informe a matrícula de quem pede.';
+    if (this.temImagemMarcada() && !v.unidadeExecutanteImagemId) erros['unidadeExecutanteImagemId'] = 'Selecione o serviço de imagem.';
     if (!this.validar(erros)) return;
     const paciente = this.pacientes().find((p) => p.uuid === v.pacienteId);
     this.enviar(
@@ -754,6 +806,7 @@ export class Laboratorio {
         indicacaoClinica: v.indicacaoClinica.trim(),
         cid: v.cid.trim() || undefined,
         prioridade: v.prioridade,
+        unidadeExecutanteImagemId: this.temImagemMarcada() ? v.unidadeExecutanteImagemId : undefined,
       }),
       'Pedido de exames registrado',
       `${paciente?.nome ?? 'Paciente'} · ${this.examesMarcados().size} exame(s)`,
@@ -852,6 +905,86 @@ export class Laboratorio {
     this.enviar(this.laboratorioService.cancelar(itemId, v.profissionalMatricula.trim(), v.motivo.trim()), 'Exame cancelado', exameNome);
   }
 
+  // ── Exames de imagem (ADR-0182) ────────────────────────────────────────────────────────────
+
+  /** O pedido em montagem tem exame de imagem: pede o serviço de imagem. */
+  protected temImagemMarcada(): boolean {
+    const marcados = this.examesMarcados();
+    return this.exames().some((e) => marcados.has(e.uuid) && e.categoria === 'IMAGEM');
+  }
+
+  protected abrirRealizacao(i: { itemId: string; pedidoId: string }): void {
+    this.realizacaoForm.reset({
+      realizadaEm: '', equipamento: '', contraste: false, contrasteDescricao: '', observacao: '', profissionalMatricula: this.matriculaPadrao(),
+    });
+    this.abrir({ tipo: 'realizacao', itemId: i.itemId, pedidoId: i.pedidoId }, i.pedidoId);
+  }
+
+  protected abrirLaudo(i: { itemId: string; pedidoId: string }, adendo = false, atual?: ItemPedidoExameDto): void {
+    const r = adendo ? atual?.resultado : null;
+    this.laudoForm.reset({
+      tecnica: r?.laudoTecnica ?? '', achados: r?.laudoAchados ?? '', conclusao: r?.laudoConclusao ?? '',
+      classificacao: (r?.interpretacao as ClassificacaoLaudo | undefined) ?? 'NORMAL', imagemUrl: r?.imagemUrl ?? '', motivo: '',
+      profissionalMatricula: this.matriculaPadrao(),
+    });
+    this.abrir({ tipo: 'laudo', itemId: i.itemId, pedidoId: i.pedidoId, adendo }, i.pedidoId);
+  }
+
+  protected realizacaoDe(d: PedidoExameResponseDto, itemId: string) {
+    return d.realizacoes.find((r) => r.itemId === itemId);
+  }
+
+  protected laudosDe(d: PedidoExameResponseDto): ItemPedidoExameDto[] {
+    return d.itens.filter((i) => i.categoria === 'IMAGEM' && i.status === 'LIBERADO' && i.resultado?.laudoConclusao);
+  }
+
+  private salvarRealizacao(itemId: string): void {
+    const v = this.realizacaoForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (v.realizadaEm && new Date(v.realizadaEm).getTime() > Date.now() + 5 * 60 * 1000) erros['realizadaEm'] = 'A realização não pode estar no futuro.';
+    if (v.contraste && !v.contrasteDescricao.trim()) erros['contrasteDescricao'] = 'Informe qual contraste foi usado.';
+    if (!v.profissionalMatricula.trim()) erros['matriculaRealizacao'] = 'Informe a matrícula de quem realizou.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.laboratorioService.realizarImagem(itemId, {
+        profissionalMatricula: v.profissionalMatricula.trim(),
+        realizadaEm: v.realizadaEm ? (v.realizadaEm.length === 16 ? v.realizadaEm + ':00' : v.realizadaEm) : undefined,
+        equipamento: v.equipamento.trim() || undefined,
+        contraste: v.contraste,
+        contrasteDescricao: v.contraste ? v.contrasteDescricao.trim() : undefined,
+        observacao: v.observacao.trim() || undefined,
+      }),
+      'Exame realizado',
+      `${this.itemAtual()?.item.exameNome ?? ''} · aguarda o laudo`,
+    );
+  }
+
+  private salvarLaudo(itemId: string, adendo: boolean): void {
+    const v = this.laudoForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.achados.trim()) erros['achados'] = 'Descreva os achados.';
+    if (!v.conclusao.trim()) erros['conclusao'] = 'Informe a conclusão.';
+    if (v.imagemUrl.trim() && !v.imagemUrl.trim().toLowerCase().startsWith('https://')) erros['imagemUrl'] = 'O link precisa começar com https://.';
+    if (adendo && !v.motivo.trim()) erros['motivoAdendo'] = 'Informe o motivo do adendo.';
+    if (!v.profissionalMatricula.trim()) erros['matriculaLaudo'] = 'Informe a matrícula do radiologista.';
+    if (!this.validar(erros)) return;
+    const dto = {
+      profissionalMatricula: v.profissionalMatricula.trim(),
+      tecnica: v.tecnica.trim() || undefined,
+      achados: v.achados.trim(),
+      conclusao: v.conclusao.trim(),
+      classificacao: v.classificacao,
+      imagemUrl: v.imagemUrl.trim() || undefined,
+      motivo: adendo ? v.motivo.trim() : undefined,
+    };
+    const exame = this.itemAtual()?.item.exameNome ?? '';
+    this.enviar(
+      adendo ? this.laboratorioService.adendo(itemId, dto) : this.laboratorioService.laudar(itemId, dto),
+      adendo ? 'Adendo registrado' : 'Laudo liberado',
+      `${exame} · ${CLASSIFICACOES_LAUDO[v.classificacao]}`,
+    );
+  }
+
   private salvarComunicacao(aviso: ResultadoAvisoExameDto): void {
     const v = this.comunicarForm.getRawValue();
     const erros: Record<string, string> = {};
@@ -899,6 +1032,23 @@ export class Laboratorio {
     const v = this.exameForm.getRawValue();
     const erros: Record<string, string> = {};
     if (!v.nome.trim()) erros['nome'] = 'Informe o nome do exame.';
+    if (v.categoria === 'IMAGEM') {
+      if (!this.validar(erros)) return;
+      const imagem = {
+        nome: v.nome.trim(),
+        categoria: 'IMAGEM' as CategoriaExame,
+        modalidade: v.modalidade,
+        preparo: v.preparo.trim() || undefined,
+        prazoDias: v.prazoDias === '' ? null : Number(v.prazoDias),
+        ativo: v.ativo,
+      };
+      this.enviar(
+        exame ? this.laboratorioService.atualizarExame(exame.uuid, imagem) : this.laboratorioService.criarExame(imagem),
+        exame ? 'Exame atualizado' : 'Exame cadastrado',
+        imagem.nome,
+      );
+      return;
+    }
     const min = v.referenciaMinima === '' ? null : Number(v.referenciaMinima);
     const max = v.referenciaMaxima === '' ? null : Number(v.referenciaMaxima);
     if (v.tipoResultado === 'NUMERICO' && min != null && max != null && min > max) erros['referenciaMaxima'] = 'A máxima precisa ser maior ou igual à mínima.';
@@ -910,6 +1060,7 @@ export class Laboratorio {
     const numerico = v.tipoResultado === 'NUMERICO';
     const dto = {
       nome: v.nome.trim(),
+      categoria: 'LABORATORIAL' as CategoriaExame,
       material: v.material,
       tipoResultado: v.tipoResultado,
       unidadeMedida: numerico ? v.unidadeMedida.trim() || undefined : undefined,

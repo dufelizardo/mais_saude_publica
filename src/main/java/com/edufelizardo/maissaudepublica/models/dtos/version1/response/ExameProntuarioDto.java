@@ -39,6 +39,9 @@ public class ExameProntuarioDto implements Serializable {
     private String unidadeSolicitanteNome;
     private String profissionalSolicitanteNome;
     private ResultadoExameDto resultado;
+    /** Categoria do exame: o de imagem mostra o laudo (ADR-0182). */
+    private com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame categoria;
+    private com.edufelizardo.maissaudepublica.models.enuns.ModalidadeImagem modalidade;
 
     public static ExameProntuarioDto fromItem(ItemPedidoExame i) {
         var p = i.getPedido();
@@ -46,6 +49,7 @@ public class ExameProntuarioDto implements Serializable {
                 i.getExame().getUuid(), i.getExame().getNome(), i.getExame().getMaterial(), i.getStatus(), p.getPrioridade(), p.getSolicitadoEm(),
                 p.getUnidadeSolicitante().getNome(), p.getProfissionalSolicitante().getNome(),
                 i.getStatus() == StatusItemExame.LIBERADO && i.getResultadoAtual() != null
-                        ? ResultadoExameDto.fromResultado(i.getResultadoAtual()) : null);
+                        ? ResultadoExameDto.fromResultado(i.getResultadoAtual()) : null, i.getExame().getCategoria(),
+                i.getExame().getModalidade());
     }
 }

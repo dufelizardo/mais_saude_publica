@@ -61,7 +61,9 @@ class LaboratorioAutorizacaoControllerTest {
     private static final String TECNICO_OUTRO = "60413958207";
     private static final String RT = "71524069308";
     private static final String RECEPCAO = "82635170409";
-    private static final List<String> CPFS = List.of(MEDICO, TECNICO, TECNICO_OUTRO, RT, RECEPCAO);
+    private static final String TEC_RADIOLOGIA = "93746102804";
+    private static final String RADIOLOGISTA = "14857203979";
+    private static final List<String> CPFS = List.of(MEDICO, TECNICO, TECNICO_OUTRO, RT, RECEPCAO, TEC_RADIOLOGIA, RADIOLOGISTA);
 
     @Autowired
     private MockMvc mockMvc;
@@ -148,6 +150,7 @@ class LaboratorioAutorizacaoControllerTest {
             for (PedidoExame pedido : pedidoRepository.findByPaciente_UuidOrderBySolicitadoEmDesc(p)) {
                 UUID id = pedido.getUuid();
                 jdbc.update("delete from tb_comunicacao_critico_exame where item_id in (select uuid from tb_item_pedido_exame where pedido_id = ?)", id);
+                jdbc.update("delete from tb_realizacao_exame_imagem where item_id in (select uuid from tb_item_pedido_exame where pedido_id = ?)", id);
                 jdbc.update("delete from tb_entrega_resultado_exame where pedido_id = ?", id);
                 jdbc.update("update tb_item_pedido_exame set resultado_atual_id = null, amostra_id = null where pedido_id = ?", id);
                 jdbc.update("delete from tb_resultado_exame where item_id in (select uuid from tb_item_pedido_exame where pedido_id = ?)", id);
@@ -166,6 +169,7 @@ class LaboratorioAutorizacaoControllerTest {
         }
         profissionalRepository.deleteAll(profissionalRepository.findAll().stream()
                 .filter(p -> p.getMatricula() != null && p.getMatricula().startsWith("LABAUT-")).toList());
+        CapacidadesDeTeste.limpar(jdbc, PREFIXO);
         unidadeDeSaudeRepository.deleteAll(unidadeDeSaudeRepository.findAll().stream()
                 .filter(u -> u.getNome() != null && u.getNome().startsWith(PREFIXO)).toList());
     }
@@ -294,6 +298,61 @@ class LaboratorioAutorizacaoControllerTest {
                 .andExpect(status().isOk());
         mockMvc.perform(como(MEDICO, json(post(URL + pedido + "/entrega"), entrega.formatted(MEDICO.substring(0, 4), ubs.getUuid()))))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void tecnicoEmRadiologiaRealizaERadiologistaLaudaNoServicoDeImagem() throws Exception {
+        UnidadeDeSaude policlinica = unidade("Policlínica");
+        CapacidadesDeTeste.habilitar(jdbc, policlinica.getUuid(), "DIAGNOSTICO_POR_IMAGEM");
+        usuario(TEC_RADIOLOGIA, "TECNICO_EM_RADIOLOGIA", policlinica);
+        usuario(RADIOLOGISTA, "MEDICO_RADIOLOGISTA", policlinica);
+        for (String cpf : List.of(TEC_RADIOLOGIA, RADIOLOGISTA)) {
+            Profissional p = new Profissional();
+            p.setMatricula("LABAUT-" + cpf.substring(0, 4));
+            p.setCpf(cpf);
+            p.setNome(PREFIXO + cpf);
+            p.setAtivo(true);
+            profissionalRepository.save(p);
+        }
+        ExameLaboratorial raioX = new ExameLaboratorial();
+        raioX.setNome(PREFIXO + "Raio-X de tórax");
+        raioX.setCategoria(com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame.IMAGEM);
+        raioX.setModalidade(com.edufelizardo.maissaudepublica.models.enuns.ModalidadeImagem.RAIO_X);
+        raioX.setTipoResultado(TipoResultadoExame.TEXTO);
+        raioX.setAtivo(true);
+        raioX = exameRepository.save(raioX);
+        mockMvc.perform(como(MEDICO, json(post(URL), """
+                {"pacienteId": "%s", "unidadeSolicitanteId": "%s", "profissionalMatricula": "LABAUT-%s", "exameIds": ["%s"],
+                 "indicacaoClinica": "Tosse há 3 semanas.", "prioridade": "ROTINA", "unidadeExecutanteImagemId": "%s"}
+                """.formatted(paciente.getUuid(), ubs.getUuid(), MEDICO.substring(0, 4), raioX.getUuid(), policlinica.getUuid()))))
+                .andExpect(status().isCreated());
+        UUID pedido = pedidoRepository.findByPaciente_UuidOrderBySolicitadoEmDesc(paciente.getUuid()).get(0).getUuid();
+        UUID item = itemRepository.findByPedido_Uuid(pedido).get(0).getUuid();
+
+        mockMvc.perform(como(TEC_RADIOLOGIA, get(URL + "trabalho?etapa=PARA_REALIZAR")))
+                .andExpect(jsonPath("$[?(@.itemId == '%s')]".formatted(item)).isNotEmpty());
+        // O técnico de laboratório entra na rota, mas a lista de imagem só traz o que o serviço de imagem dele realiza.
+        mockMvc.perform(como(TECNICO, get(URL + "trabalho?etapa=PARA_REALIZAR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.itemId == '%s')]".formatted(item)).isEmpty());
+        String realizar = "{\"profissionalMatricula\": \"LABAUT-%s\"}";
+        mockMvc.perform(como(RADIOLOGISTA, json(post(URL + "item/" + item + "/realizacao"), realizar.formatted(RADIOLOGISTA.substring(0, 4)))))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(TEC_RADIOLOGIA, json(post(URL + "item/" + item + "/realizacao"), realizar.formatted(TEC_RADIOLOGIA.substring(0, 4)))))
+                .andExpect(status().isOk());
+
+        String laudo = """
+                {"profissionalMatricula": "LABAUT-%s", "achados": "Sem alterações.", "conclusao": "Normal.", "classificacao": "NORMAL"}
+                """;
+        mockMvc.perform(como(TEC_RADIOLOGIA, json(post(URL + "item/" + item + "/laudo"), laudo.formatted(TEC_RADIOLOGIA.substring(0, 4)))))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(RT, json(post(URL + "item/" + item + "/laudo"), laudo.formatted(RT.substring(0, 4))))).andExpect(status().isForbidden());
+        mockMvc.perform(como(RADIOLOGISTA, json(post(URL + "item/" + item + "/laudo"), laudo.formatted(RADIOLOGISTA.substring(0, 4)))))
+                .andExpect(status().isOk());
+        // O radiologista lê o pedido do serviço de imagem; o laboratório de outra unidade, não.
+        mockMvc.perform(como(RADIOLOGISTA, get(URL + pedido))).andExpect(status().isOk());
+        mockMvc.perform(como(TECNICO_OUTRO, get(URL + pedido))).andExpect(status().isForbidden());
+        mockMvc.perform(como(RECEPCAO, get(URL + "trabalho?etapa=PARA_LAUDAR"))).andExpect(status().isForbidden());
     }
 
     @Test

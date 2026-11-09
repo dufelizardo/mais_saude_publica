@@ -5,6 +5,7 @@ Resource    ../../../laboratorio/pedido_exame/pedido_exame_flow.resource
 Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.resource
 Resource    ../../../laboratorio/faixa_referencia/faixa_referencia_flow.resource
 Resource    ../../../laboratorio/ciencia_entrega/ciencia_entrega_flow.resource
+Resource    ../../../laboratorio/exame_imagem/exame_imagem_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (paciente, unidade, profissional, exame, pedido, coleta) são criados pela API; a ação sob
@@ -358,5 +359,56 @@ UI Laboratorio - Entrega Pelo Detalhe Do Pedido
     ${detalhe}=    GET Get Pedido Exame By Id    ${pedidoId}
     Should Be Equal    ${detalhe.json()}[entregas][0][terceiroNome]    Maria da Silva
     Should Be Equal    ${detalhe.json()}[entregas][0][unidadeId]    ${unidadeId}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Cadastrar Exame De Imagem Pela Gaveta
+    [Documentation]    Cadastra um exame de imagem no catálogo com a modalidade (ADR-0182).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    ${nome}=    Set Variable    Robot UI USG ${sufixo}
+    UI Laboratorio - Abrir Aba    catalogo
+    Clicar Botao    + Exame
+    Preencher Campo Da Gaveta    nome    ${nome}
+    Click    css=app-drawer label >> text=Imagem
+    Escolher Opcao Da Gaveta    modalidade    ULTRASSONOGRAFIA
+    Preencher Campo Da Gaveta    preparo    Jejum de 8 horas.
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Exame cadastrado
+    Wait For Elements State    css=table >> text=Imagem · Ultrassonografia >> nth=0    visible    10s
+    ${lista}=    GET List Exame Laboratorial
+    ${exame}=    Evaluate    [e for e in $lista.json() if e['nome'] == $nome][0]
+    Should Be Equal    ${exame}[categoria]    IMAGEM
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Realizar E Laudar Pela Tela
+    [Documentation]    Realiza o exame na aba Para realizar e lauda na aba Para laudar (ADR-0182).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${servico}=    Seed A Pedido De Imagem
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    realizar
+    Clicar Botao    Realizar ${exameNome} de ${nomePaciente}
+    Esperar Texto Aparecer    Retirar objetos metálicos.
+    Preencher Campo Da Gaveta    equipamento    Aparelho da sala 1
+    Preencher Campo Da Gaveta    matriculaRealizacao    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Exame realizado
+    UI Laboratorio - Status Do Item Deve Ser    ${pedidoId}    REALIZADO
+    UI Laboratorio - Abrir Aba    laudar
+    Clicar Botao    Laudar ${exameNome} de ${nomePaciente}
+    Preencher Campo Da Gaveta    achados    Opacidade em base direita.
+    Preencher Campo Da Gaveta    conclusao    Pneumonia em base direita.
+    Click    css=app-drawer label >> text=Com alterações
+    Preencher Campo Da Gaveta    matriculaLaudo    ${matricula}
+    Enviar Gaveta
+    ${laudado}=    Ler Aviso De Status
+    Should Contain    ${laudado}    Laudo liberado
+    ${detalhe}=    GET Get Pedido Exame By Id    ${pedidoId}
+    Should Be Equal    ${detalhe.json()}[itens][0][status]    LIBERADO
+    Should Be Equal    ${detalhe.json()}[itens][0][resultado][interpretacao]    ALTERADO
+    Should Be Equal    ${detalhe.json()}[realizacoes][0][equipamento]    Aparelho da sala 1
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

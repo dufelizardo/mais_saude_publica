@@ -1,28 +1,34 @@
-/** Laboratório assistencial (#10) — ADRs 0093, 0094 e 0180 (faixas por sexo e idade, críticos e evolução). */
+/** Laboratório e imagem (#10) — ADRs 0093, 0094, 0180 (faixas, críticos e evolução), 0181 (ciência e entrega) e 0182 (imagem). */
 
 import { Sexo } from './paciente';
 
 export type MaterialExame = 'SANGUE' | 'URINA' | 'FEZES' | 'SECRECAO' | 'OUTRO';
 export type TipoResultadoExame = 'NUMERICO' | 'TEXTO';
 export type PrioridadeExame = 'ROTINA' | 'URGENTE';
-export type StatusItemExame = 'SOLICITADO' | 'COLETADO' | 'RESULTADO_REGISTRADO' | 'LIBERADO' | 'CANCELADO';
+export type StatusItemExame = 'SOLICITADO' | 'COLETADO' | 'REALIZADO' | 'RESULTADO_REGISTRADO' | 'LIBERADO' | 'CANCELADO';
+/** Exames de imagem (ADR-0182). */
+export type CategoriaExame = 'LABORATORIAL' | 'IMAGEM';
+export type ModalidadeImagem = 'RAIO_X' | 'ULTRASSONOGRAFIA' | 'TOMOGRAFIA' | 'RESSONANCIA_MAGNETICA' | 'MAMOGRAFIA' | 'DENSITOMETRIA' | 'OUTRA';
+export type ClassificacaoLaudo = 'NORMAL' | 'ALTERADO' | 'ACHADO_CRITICO';
 export type MotivoRejeicaoAmostra = 'HEMOLISADA' | 'INSUFICIENTE' | 'COAGULADA' | 'IDENTIFICACAO_INCORRETA' | 'OUTRO';
-export type InterpretacaoResultado = 'NORMAL' | 'ACIMA' | 'ABAIXO' | 'CRITICO_ALTO' | 'CRITICO_BAIXO';
+export type InterpretacaoResultado = 'NORMAL' | 'ACIMA' | 'ABAIXO' | 'CRITICO_ALTO' | 'CRITICO_BAIXO' | 'ALTERADO' | 'ACHADO_CRITICO';
 export type UnidadeIdade = 'DIAS' | 'MESES' | 'ANOS';
 export type TipoEventoExame =
   | 'SOLICITACAO' | 'COLETA' | 'REJEICAO_AMOSTRA' | 'RESULTADO' | 'LIBERACAO' | 'RETIFICACAO' | 'CANCELAMENTO'
-  | 'COMUNICACAO_CRITICO' | 'CIENCIA' | 'ENTREGA';
+  | 'COMUNICACAO_CRITICO' | 'CIENCIA' | 'ENTREGA' | 'REALIZACAO' | 'LAUDO' | 'ADENDO';
 
 /** Ciência, comunicação de crítico e entrega (ADR-0181). */
 export type MeioComunicacaoCritico = 'TELEFONE' | 'PRESENCIAL' | 'MENSAGEM_NO_SISTEMA';
 export type FormaEntregaResultado = 'IMPRESSO_NA_UNIDADE' | 'NA_CONSULTA';
 export type SituacaoPedidoExame = 'AGUARDANDO_COLETA' | 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO';
-export type EtapaTrabalho = 'PARA_COLETAR' | 'EM_ANALISE' | 'PARA_LIBERAR';
+export type EtapaTrabalho = 'PARA_COLETAR' | 'EM_ANALISE' | 'PARA_LIBERAR' | 'PARA_REALIZAR' | 'PARA_LAUDAR';
 
 export interface ExameLaboratorialRequestDto {
   nome: string;
-  material: MaterialExame;
-  tipoResultado: TipoResultadoExame;
+  categoria?: CategoriaExame;
+  modalidade?: ModalidadeImagem | null;
+  material?: MaterialExame | null;
+  tipoResultado?: TipoResultadoExame | null;
   unidadeMedida?: string;
   referenciaMinima?: number | null;
   referenciaMaxima?: number | null;
@@ -37,7 +43,9 @@ export interface ExameLaboratorialRequestDto {
 export interface ExameLaboratorialResponseDto {
   uuid: string;
   nome: string;
-  material: MaterialExame;
+  categoria: CategoriaExame;
+  modalidade?: ModalidadeImagem | null;
+  material?: MaterialExame | null;
   tipoResultado: TipoResultadoExame;
   unidadeMedida?: string | null;
   referenciaMinima?: number | null;
@@ -104,6 +112,42 @@ export interface PedidoExameRequestDto {
   indicacaoClinica: string;
   cid?: string;
   prioridade: PrioridadeExame;
+  /** Obrigatório com exame de imagem (ADR-0182). */
+  unidadeExecutanteImagemId?: string;
+}
+
+export interface RealizacaoExameImagemRequestDto {
+  profissionalMatricula: string;
+  realizadaEm?: string;
+  equipamento?: string;
+  contraste?: boolean;
+  contrasteDescricao?: string;
+  observacao?: string;
+}
+
+export interface LaudoImagemRequestDto {
+  profissionalMatricula: string;
+  tecnica?: string;
+  achados: string;
+  conclusao: string;
+  classificacao: ClassificacaoLaudo;
+  imagemUrl?: string;
+  motivo?: string;
+}
+
+export interface RealizacaoExameImagemDto {
+  uuid: string;
+  itemId: string;
+  exameNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  realizadaEm: string;
+  tecnicoMatricula: string;
+  tecnicoNome: string;
+  equipamento?: string | null;
+  contraste: boolean;
+  contrasteDescricao?: string | null;
+  observacao?: string | null;
 }
 
 export interface ColetaExameRequestDto {
@@ -150,13 +194,20 @@ export interface ResultadoExameDto {
   cienciaPorMatricula?: string | null;
   cienciaPorNome?: string | null;
   cienciaEm?: string | null;
+  /** Laudo de imagem (ADR-0182). */
+  laudoTecnica?: string | null;
+  laudoAchados?: string | null;
+  laudoConclusao?: string | null;
+  imagemUrl?: string | null;
 }
 
 export interface ItemPedidoExameDto {
   uuid: string;
   exameId: string;
   exameNome: string;
-  material: MaterialExame;
+  categoria: CategoriaExame;
+  modalidade?: ModalidadeImagem | null;
+  material?: MaterialExame | null;
   tipoResultado: TipoResultadoExame;
   status: StatusItemExame;
   amostraCodigo?: string | null;
@@ -204,6 +255,8 @@ export interface PedidoExameResumoDto {
   totalExames: number;
   liberados: number;
   itens: ItemPedidoExameDto[];
+  unidadeExecutanteImagemId?: string | null;
+  unidadeExecutanteImagemNome?: string | null;
 }
 
 export interface PedidoExameResponseDto extends PedidoExameResumoDto {
@@ -214,6 +267,7 @@ export interface PedidoExameResponseDto extends PedidoExameResumoDto {
   eventos: EventoExameDto[];
   comunicacoesCritico: ComunicacaoCriticoExameDto[];
   entregas: EntregaResultadoExameDto[];
+  realizacoes: RealizacaoExameImagemDto[];
 }
 
 /** Resultado liberado aguardando ciência ou comunicação do crítico, sem o valor (ADR-0181). */
@@ -294,7 +348,9 @@ export interface ItemTrabalhoExameDto {
   pacienteId: string;
   pacienteNome: string;
   exameNome: string;
-  material: MaterialExame;
+  categoria: CategoriaExame;
+  modalidade?: ModalidadeImagem | null;
+  material?: MaterialExame | null;
   preparo?: string | null;
   status: StatusItemExame;
   prioridade: PrioridadeExame;
@@ -315,7 +371,9 @@ export interface ExameProntuarioDto {
   /** O exame do catálogo: chave da evolução (ADR-0180). */
   exameId: string;
   exameNome: string;
-  material: MaterialExame;
+  material?: MaterialExame | null;
+  categoria?: CategoriaExame;
+  modalidade?: ModalidadeImagem | null;
   status: StatusItemExame;
   prioridade: PrioridadeExame;
   solicitadoEm: string;
@@ -331,6 +389,7 @@ export const MATERIAIS: Record<MaterialExame, string> = { SANGUE: 'Sangue', URIN
 export const STATUS_ITEM: Record<StatusItemExame, { classe: string; rotulo: string }> = {
   SOLICITADO: { classe: 'info', rotulo: 'Aguardando coleta' },
   COLETADO: { classe: 'warn', rotulo: 'Em análise' },
+  REALIZADO: { classe: 'purple', rotulo: 'Para laudar' },
   RESULTADO_REGISTRADO: { classe: 'purple', rotulo: 'Para liberar' },
   LIBERADO: { classe: 'ok', rotulo: 'Liberado' },
   CANCELADO: { classe: 'muted', rotulo: 'Cancelado' },
@@ -342,13 +401,37 @@ export const INTERPRETACOES: Record<InterpretacaoResultado, { classe: string; ro
   ABAIXO: { classe: 'warn', rotulo: 'Abaixo da referência' },
   CRITICO_ALTO: { classe: 'alert', rotulo: 'Crítico alto' },
   CRITICO_BAIXO: { classe: 'alert', rotulo: 'Crítico baixo' },
+  ALTERADO: { classe: 'warn', rotulo: 'Com alterações' },
+  ACHADO_CRITICO: { classe: 'alert', rotulo: 'Achado crítico' },
 };
+
+export const MODALIDADES: Record<ModalidadeImagem, string> = {
+  RAIO_X: 'Raio-X',
+  ULTRASSONOGRAFIA: 'Ultrassonografia',
+  TOMOGRAFIA: 'Tomografia',
+  RESSONANCIA_MAGNETICA: 'Ressonância magnética',
+  MAMOGRAFIA: 'Mamografia',
+  DENSITOMETRIA: 'Densitometria óssea',
+  OUTRA: 'Outra',
+};
+
+export const CLASSIFICACOES_LAUDO: Record<ClassificacaoLaudo, string> = {
+  NORMAL: 'Sem alterações',
+  ALTERADO: 'Com alterações',
+  ACHADO_CRITICO: 'Achado crítico',
+};
+
+/** O que vai ao lado do nome do exame: o material do laboratorial ou a modalidade do de imagem (ADR-0182). */
+export function tipoDoExame(e: { categoria?: CategoriaExame | null; modalidade?: ModalidadeImagem | null; material?: MaterialExame | null }): string {
+  if (e.categoria === 'IMAGEM') return 'Imagem · ' + (e.modalidade ? MODALIDADES[e.modalidade] : '');
+  return e.material ? MATERIAIS[e.material] : '';
+}
 
 export const UNIDADES_IDADE: Record<UnidadeIdade, string> = { DIAS: 'dias', MESES: 'meses', ANOS: 'anos' };
 
 /** Valor de pânico (ADR-0180): pede aviso imediato. */
 export function critico(i: InterpretacaoResultado | null | undefined): boolean {
-  return i === 'CRITICO_ALTO' || i === 'CRITICO_BAIXO';
+  return i === 'CRITICO_ALTO' || i === 'CRITICO_BAIXO' || i === 'ACHADO_CRITICO';
 }
 
 /** Os valores críticos, para mostrar ao lado da referência: "crítico < 7 ou > 20". */
@@ -377,6 +460,8 @@ type Referencia = { referenciaMinima?: number | null; referenciaMaxima?: number 
 
 export function faixaReferencia(e: Referencia | undefined | null): string {
   if (!e) return '—';
+  if ('laudoConclusao' in e && (e as ResultadoExameDto).laudoConclusao) return 'Laudo de imagem';
+  if ('categoria' in e && (e as { categoria?: string }).categoria === 'IMAGEM') return 'Laudo de imagem';
   if (e.referenciaTexto) return e.referenciaTexto;
   const un = e.unidadeMedida ? ` ${e.unidadeMedida}` : '';
   if (e.referenciaMinima != null && e.referenciaMaxima != null) return `${numeroLaboratorio(e.referenciaMinima)} a ${numeroLaboratorio(e.referenciaMaxima)}${un}`;

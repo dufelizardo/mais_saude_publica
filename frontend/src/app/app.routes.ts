@@ -181,7 +181,7 @@ export const routes: Routes = [
       {
         path: 'assistencia/laboratorio',
         loadComponent: () => import('./features/assistencia/laboratorio/laboratorio').then((m) => m.Laboratorio),
-        data: { breadcrumb: 'Laboratório', area: 'Assistência' },
+        data: { breadcrumb: 'Laboratório e imagem', area: 'Assistência' },
       },
       // Leitos e internação (ADR-0099), carregados sob demanda.
       {

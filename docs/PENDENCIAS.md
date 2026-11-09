@@ -115,10 +115,12 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   eletrônico, com consentimento, fica na C5 e no domínio 20), ~~gráfico da evolução de um exame no tempo~~ — ADR-0180 (L1).
 - A tela (ADR-0094) não tem protótipo próprio: segue o padrão de Farmácia e Regulação.
 - Fora do escopo da ADR-0093: LACEN e vigilância, integração com equipamentos (LIS, HL7, ASTM), controle
-  de qualidade, insumos de coleta (Estoque, #13; L4), exames de imagem (L3), laudo PDF assinado (L4), SIGTAP e BPA,
+  de qualidade, insumos de coleta (Estoque, #13; L4), ~~exames de imagem~~ — ADR-0182 (L3), laudo PDF assinado (L4), SIGTAP e BPA,
   e ~~valores de referência por sexo e idade~~ — ADR-0180 (L1).
 - Fora do escopo da ADR-0180: gestação e outras condições clínicas como critério da faixa de referência.
 - Fora do escopo da ADR-0181: central de notificações geral; prazo de liberação com alerta de atraso (L4 ou Indicadores).
+- Fora do escopo da ADR-0182: cadastro de aparelhos com dose de radiação (com o RIS, domínio 20); ligação automática da autorização
+  da Regulação ao pedido de imagem; laudo comparativo com exames anteriores.
 
 ### Agenda (diferenças com o protótipo `Agenda.html`, ADR-0092)
 - Visão Mês e exportação ("Em breve"). ~~Filtro de especialidade~~ — feito pela ADR-0134 (SB1).

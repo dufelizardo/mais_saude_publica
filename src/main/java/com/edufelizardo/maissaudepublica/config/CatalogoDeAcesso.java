@@ -135,11 +135,15 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("URGENCIA.REGULAR", new Def("Regular as urgências: gravidade, decisão, destino com vaga zero e encerramento",
                 ACESSO_AO_DADO_DE_SAUDE));
         // Laboratório assistencial (ADR-0093).
-        PERMISSOES.put("EXAME.SOLICITAR", new Def("Pedir exames laboratoriais", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("EXAME.SOLICITAR", new Def("Pedir exames laboratoriais e de imagem", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LABORATORIO.COLETAR", new Def("Registrar a coleta de amostras", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LABORATORIO.ANALISAR", new Def("Registrar resultados e rejeitar amostras", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LABORATORIO.LIBERAR", new Def("Liberar e retificar resultados (responsável técnico)", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LABORATORIO.GERENCIAR", new Def("Manter o catálogo de exames", OPERACAO));
+        PERMISSOES.put("IMAGEM.REALIZAR", new Def("Realizar exames de imagem no serviço de imagem (técnico em radiologia)",
+                ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("IMAGEM.LAUDAR", new Def("Laudar exames de imagem, registrar adendo e comunicar achado crítico (radiologista)",
+                ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.CONSULTAR", new Def("Ver o mapa de leitos e as internações", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.GERENCIAR", new Def("Internar e trocar paciente de leito", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.ALTA", new Def("Dar alta da internação (ato médico)", ACESSO_AO_DADO_DE_SAUDE));
@@ -241,6 +245,12 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "Analisa, libera e retifica resultados e mantém o catálogo de exames (ADR-0093).",
                 List.of("PACIENTE.CONSULTAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR",
                         "LABORATORIO.GERENCIAR")));
+        PAPEIS.put("TECNICO_EM_RADIOLOGIA", new PapelPadrao("Técnico em radiologia",
+                "Realiza os exames de imagem no serviço de imagem (ADR-0182).",
+                List.of("PACIENTE.CONSULTAR", "IMAGEM.REALIZAR")));
+        PAPEIS.put("MEDICO_RADIOLOGISTA", new PapelPadrao("Médico radiologista",
+                "Lauda os exames de imagem, registra adendo e comunica achado crítico (ADR-0182).",
+                List.of("PACIENTE.CONSULTAR", "IMAGEM.LAUDAR", "PRONTUARIO.CONSULTAR")));
         PAPEIS.put("GESTOR_DE_LEITOS", new PapelPadrao("Gestor de leitos (NIR)",
                 "Núcleo Interno de Regulação: mapa de leitos, internação, troca de leito, bloqueio e liberação (ADR-0098).",
                 List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR")));

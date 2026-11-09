@@ -27,10 +27,16 @@ public class ExameLaboratorialRequestDto implements Serializable {
     @Size(max = 200)
     private String nome;
 
-    @NotNull
+    /** Laboratorial (padrão) ou de imagem; não muda depois de criado (ADR-0182). */
+    private com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame categoria;
+
+    /** Obrigatória no exame de imagem (ADR-0182). */
+    private com.edufelizardo.maissaudepublica.models.enuns.ModalidadeImagem modalidade;
+
+    /** Obrigatório no exame laboratorial. */
     private MaterialExame material;
 
-    @NotNull
+    /** Obrigatório no exame laboratorial; o de imagem tem sempre laudo. */
     private TipoResultadoExame tipoResultado;
 
     @Size(max = 30)

@@ -11,6 +11,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.FaixaRefer
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ExameLaboratorialResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.FaixaReferenciaExameDto;
 import com.edufelizardo.maissaudepublica.models.enuns.Sexo;
+import com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoResultadoExame;
 import com.edufelizardo.maissaudepublica.repositories.ExameLaboratorialRepository;
 import com.edufelizardo.maissaudepublica.repositories.FaixaReferenciaExameRepository;
@@ -185,6 +186,35 @@ public class ExameLaboratorialService {
         repository.findByNomeIgnoreCase(nome).filter(e -> !e.getUuid().equals(proprio)).ifPresent(e -> {
             throw new ResourceConflictException("Já existe um exame com o nome " + nome + ".");
         });
+        // A categoria decide o fluxo (coleta e liberação técnica ou realização e laudo) e não muda depois (ADR-0182).
+        CategoriaExame categoria = dto.getCategoria() != null ? dto.getCategoria() : proprio != null ? exame.getCategoria() : CategoriaExame.LABORATORIAL;
+        if (proprio != null && categoria != exame.getCategoria()) {
+            throw new ResourceUnprocessableEntityException("A categoria do exame não muda depois de criado: cadastre outro exame.");
+        }
+        if (categoria == CategoriaExame.IMAGEM) {
+            if (dto.getModalidade() == null) {
+                throw new ResourceBadRequestException("Informe a modalidade do exame de imagem.");
+            }
+            exame.setNome(nome);
+            exame.setCategoria(categoria);
+            exame.setModalidade(dto.getModalidade());
+            exame.setMaterial(null);
+            exame.setTipoResultado(TipoResultadoExame.TEXTO);
+            exame.setUnidadeMedida(null);
+            exame.setReferenciaMinima(null);
+            exame.setReferenciaMaxima(null);
+            exame.setCriticoMinimo(null);
+            exame.setCriticoMaximo(null);
+            exame.setReferenciaTexto(null);
+            exame.setPreparo(textoOuNulo(dto.getPreparo()));
+            exame.setPrazoDias(dto.getPrazoDias());
+            return;
+        }
+        if (dto.getMaterial() == null || dto.getTipoResultado() == null) {
+            throw new ResourceBadRequestException("Informe o material e o tipo de resultado do exame laboratorial.");
+        }
+        exame.setCategoria(categoria);
+        exame.setModalidade(null);
         boolean numerico = dto.getTipoResultado() == TipoResultadoExame.NUMERICO;
         if (numerico) {
             validarLimites(dto.getReferenciaMinima(), dto.getReferenciaMaxima(), dto.getCriticoMinimo(), dto.getCriticoMaximo());

@@ -46,6 +46,11 @@ public class ResultadoExameDto implements Serializable {
     private String cienciaPorMatricula;
     private String cienciaPorNome;
     private Instant cienciaEm;
+    /** Laudo de imagem (ADR-0182). */
+    private String laudoTecnica;
+    private String laudoAchados;
+    private String laudoConclusao;
+    private String imagemUrl;
 
     public static ResultadoExameDto fromResultado(ResultadoExame r) {
         return new ResultadoExameDto(r.getUuid(), r.getValorNumerico(), r.getValorTexto(), r.getUnidadeMedida(), r.getReferenciaMinima(),
@@ -55,6 +60,7 @@ public class ResultadoExameDto implements Serializable {
                 r.getLiberadoPor() != null ? r.getLiberadoPor().getNome() : null, r.getLiberadoEm(),
                 r.getRetificacaoDe() != null ? r.getRetificacaoDe().getUuid() : null, r.getMotivoRetificacao(),
                 r.getCienciaPor() != null ? r.getCienciaPor().getMatricula() : null,
-                r.getCienciaPor() != null ? r.getCienciaPor().getNome() : null, r.getCienciaEm());
+                r.getCienciaPor() != null ? r.getCienciaPor().getNome() : null, r.getCienciaEm(),
+                r.getLaudoTecnica(), r.getLaudoAchados(), r.getLaudoConclusao(), r.getImagemUrl());
     }
 }

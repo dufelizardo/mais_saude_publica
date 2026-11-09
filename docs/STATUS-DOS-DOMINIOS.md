@@ -36,7 +36,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 7 | [Agendamento / Agenda](#7-agendamento--agenda) | ✅ | visão Mês e exportação |
 | 8 | [Enfermagem](#8-enfermagem) | ✅ | plano de cuidados e aprazamento |
 | 9 | [Farmácia](#9-farmácia) | ✅ | — |
-| 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | 🟡 | L1 e L2 feitas (faixas, críticos, evolução; ciência, comunicação do crítico, entrega); L3 e L4 (imagem, laudo assinado) |
+| 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | 🟡 | L1 a L3 feitas (faixas, críticos, evolução; ciência, crítico, entrega; exames de imagem); falta a L4 (laudo PDF assinado e insumos) |
 | 11 | [Regulação](#11-regulação) | 🟡 | regulação de leitos entre unidades |
 | 12 | [Leitos / Internação](#12-leitos--internação) | 🟡 | regulação de leitos e faturamento (AIH) |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 feita (catálogo, lotes, livro, mínimo e alertas); ES2 (central, requisição, inventário) e ES3 (emergências) |
@@ -271,16 +271,18 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - Ciência de quem pediu (lista "Para ciência", reaberta na retificação), comunicação do valor crítico pelo laboratório (lista "Críticos
   a comunicar" e e-mail ao solicitante) e entrega do resultado ao paciente, com terceiro identificado e segunda via
   ([ADR-0181](./adr/0181-laboratorio-ciencia-critico-entrega.md), fatia L2).
+- Exames de imagem no mesmo catálogo e pedido: serviço de imagem com a capacidade `DIAGNOSTICO_POR_IMAGEM`, realização pelo técnico em
+  radiologia, laudo assinado pelo radiologista, adendo e achado crítico na comunicação da L2 ([ADR-0182](./adr/0182-exames-de-imagem.md), fatia L3).
 
-**Falta** (fatias L3 e L4 da ADR-0180; as integrações não impedem nenhuma e estão no domínio 20):
+**Falta** (fatia L4 da ADR-0180; as integrações não impedem nenhuma e estão no domínio 20):
 - [x] L2: aviso ao solicitante quando o resultado é liberado, com urgência no crítico, e entrega ao paciente ([ADR-0181](./adr/0181-laboratorio-ciencia-critico-entrega.md)).
   O envio eletrônico ao paciente, com consentimento, fica na C5 e no domínio 20.
-- [ ] L3: exames de imagem (diagnóstico além do laboratório), com o laudo do radiologista.
+- [x] L3: exames de imagem (diagnóstico além do laboratório), com o laudo do radiologista ([ADR-0182](./adr/0182-exames-de-imagem.md)).
 - [ ] L4: laudo PDF com assinatura eletrônica interna e os insumos de coleta baixados do Estoque (domínio 13).
 - [x] Gráfico da evolução de um exame no tempo ([ADR-0180](./adr/0180-laboratorio-faixas-de-referencia.md)).
 - [x] Valores de referência por sexo e idade, com os valores críticos ([ADR-0180](./adr/0180-laboratorio-faixas-de-referencia.md)).
 - [ ] Controle de qualidade interno.
-- Integrações, no domínio 20: equipamentos (LIS, HL7, ASTM), PACS, LACEN, SIGTAP e BPA, certificado ICP-Brasil; envio do resultado
+- Integrações, no domínio 20: equipamentos (LIS, HL7, ASTM), PACS e DICOM (com a lista de trabalho MWL), RIS, LACEN, SIGTAP e BPA, certificado ICP-Brasil; envio do resultado
   ao paciente pelo Meu SUS Digital ou RNDS.
 
 ### 11. Regulação

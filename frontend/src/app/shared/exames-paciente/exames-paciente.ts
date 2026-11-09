@@ -5,6 +5,7 @@ import {
   ExameProntuarioDto,
   INTERPRETACOES,
   MATERIAIS,
+  tipoDoExame,
   PontoEvolucaoExame,
   STATUS_ITEM,
   critico,
@@ -48,6 +49,7 @@ export class ExamesPaciente {
   @Input() pacienteId: string | null | undefined = null;
 
   protected readonly materiais = MATERIAIS;
+  protected readonly tipoDoExame = tipoDoExame;
   protected readonly statusItem = STATUS_ITEM;
   protected readonly interpretacoes = INTERPRETACOES;
   protected readonly faixa = faixaReferencia;

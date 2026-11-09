@@ -11,5 +11,8 @@ public enum TipoEventoExame {
     CANCELAMENTO,
     COMUNICACAO_CRITICO,
     CIENCIA,
-    ENTREGA
+    ENTREGA,
+    REALIZACAO,
+    LAUDO,
+    ADENDO
 }

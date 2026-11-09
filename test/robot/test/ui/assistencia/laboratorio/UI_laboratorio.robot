@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Assistência - Laboratório
-Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094); recoleta, laudo e exames no prontuário e no atendimento (ADR-0095); faixas por sexo e idade e evolução do exame (ADR-0180); ciência, comunicação do crítico e entrega (ADR-0181).
+Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094); recoleta, laudo e exames no prontuário e no atendimento (ADR-0095); faixas por sexo e idade e evolução do exame (ADR-0180); ciência, comunicação do crítico e entrega (ADR-0181); exames de imagem (ADR-0182).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiLaboratorio    MaisSaudePublicaFrontend
@@ -143,5 +143,21 @@ CT-016 - Entrega do resultado a um parente
     [Tags]    UI    UiLaboratorio
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - LABORATORIO - ENTREGA DO RESULTADO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-017 - Cadastrar exame de imagem no catálogo
+    [Documentation]    Categoria imagem e modalidade na gaveta do exame.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - EXAME DE IMAGEM NO CATALOGO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-018 - Realizar e laudar exame de imagem
+    [Documentation]    Abas Para realizar e Para laudar, com as gavetas.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - REALIZAR E LAUDAR
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

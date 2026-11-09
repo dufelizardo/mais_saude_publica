@@ -30,10 +30,13 @@ public class PedidoExameResponseDto extends PedidoExameResumoDto {
     /** Comunicações de valor crítico e entregas ao paciente (ADR-0181). */
     private List<ComunicacaoCriticoExameDto> comunicacoesCritico;
     private List<EntregaResultadoExameDto> entregas;
+    /** Realização dos exames de imagem (ADR-0182). */
+    private List<RealizacaoExameImagemDto> realizacoes;
 
     public static PedidoExameResponseDto fromPedido(PedidoExame p, List<ItemPedidoExame> itens, List<AmostraExame> amostras,
                                                     List<EventoExame> eventos, List<ComunicacaoCriticoExame> comunicacoes,
-                                                    List<EntregaResultadoExame> entregas) {
+                                                    List<EntregaResultadoExame> entregas,
+                                                    List<com.edufelizardo.maissaudepublica.models.RealizacaoExameImagem> realizacoes) {
         PedidoExameResponseDto dto = new PedidoExameResponseDto();
         preencher(dto, p, itens, true);
         dto.setAtendimentoId(p.getAtendimento() != null ? p.getAtendimento().getUuid() : null);
@@ -43,6 +46,7 @@ public class PedidoExameResponseDto extends PedidoExameResumoDto {
         dto.setEventos(eventos.stream().map(EventoExameDto::fromEvento).toList());
         dto.setComunicacoesCritico(comunicacoes.stream().map(ComunicacaoCriticoExameDto::fromComunicacao).toList());
         dto.setEntregas(entregas.stream().map(EntregaResultadoExameDto::fromEntrega).toList());
+        dto.setRealizacoes(realizacoes.stream().map(RealizacaoExameImagemDto::fromRealizacao).toList());
         return dto;
     }
 }
