@@ -147,6 +147,8 @@ class LaboratorioAutorizacaoControllerTest {
         for (UUID p : pacientes) {
             for (PedidoExame pedido : pedidoRepository.findByPaciente_UuidOrderBySolicitadoEmDesc(p)) {
                 UUID id = pedido.getUuid();
+                jdbc.update("delete from tb_comunicacao_critico_exame where item_id in (select uuid from tb_item_pedido_exame where pedido_id = ?)", id);
+                jdbc.update("delete from tb_entrega_resultado_exame where pedido_id = ?", id);
                 jdbc.update("update tb_item_pedido_exame set resultado_atual_id = null, amostra_id = null where pedido_id = ?", id);
                 jdbc.update("delete from tb_resultado_exame where item_id in (select uuid from tb_item_pedido_exame where pedido_id = ?)", id);
                 jdbc.update("delete from tb_evento_exame where pedido_id = ?", id);
@@ -251,6 +253,47 @@ class LaboratorioAutorizacaoControllerTest {
         mockMvc.perform(como(MEDICO, get(evolucao))).andExpect(status().isOk());
         mockMvc.perform(como(RECEPCAO, get(evolucao))).andExpect(status().isForbidden());
         mockMvc.perform(get(evolucao)).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void cienciaEDoProprioSolicitanteCriticoEDoRtEEntregaNaUnidade() throws Exception {
+        UUID pedido = pedidoColetado();
+        UUID item = itemRepository.findByPedido_Uuid(pedido).get(0).getUuid();
+        mockMvc.perform(como(TECNICO, json(post(URL + "item/" + item + "/resultado"),
+                "{\"profissionalMatricula\": \"LABAUT-%s\", \"valorNumerico\": 13}".formatted(TECNICO.substring(0, 4)))))
+                .andExpect(status().isOk());
+        mockMvc.perform(como(RT, json(post(URL + "item/" + item + "/liberacao"),
+                "{\"profissionalMatricula\": \"LABAUT-%s\"}".formatted(RT.substring(0, 4))))).andExpect(status().isOk());
+
+        // A lista é sempre a do profissional logado: a matrícula de outro dá 403.
+        mockMvc.perform(como(MEDICO, get(URL + "para-ciencia")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.itemId == '%s')]".formatted(item)).isNotEmpty());
+        mockMvc.perform(como(MEDICO, get(URL + "para-ciencia?matricula=LABAUT-" + RT.substring(0, 4)))).andExpect(status().isForbidden());
+        mockMvc.perform(como(RECEPCAO, get(URL + "para-ciencia"))).andExpect(status().isForbidden());
+        mockMvc.perform(get(URL + "para-ciencia")).andExpect(status().isUnauthorized());
+
+        // O RT não dá ciência no lugar do médico, nem informando a matrícula dele.
+        String cienciaDoMedico = "{\"profissionalMatricula\": \"LABAUT-%s\"}".formatted(MEDICO.substring(0, 4));
+        mockMvc.perform(como(RT, json(post(URL + "item/" + item + "/ciencia"), cienciaDoMedico))).andExpect(status().isForbidden());
+        mockMvc.perform(como(MEDICO, json(post(URL + "item/" + item + "/ciencia"), cienciaDoMedico))).andExpect(status().isOk());
+
+        // Críticos a comunicar: só quem libera.
+        mockMvc.perform(como(TECNICO, get(URL + "criticos-a-comunicar"))).andExpect(status().isForbidden());
+        mockMvc.perform(como(RT, get(URL + "criticos-a-comunicar"))).andExpect(status().isOk());
+
+        // Entrega: quem coleta ou pede exames na unidade; a recepção, não.
+        String entrega = """
+                {"profissionalMatricula": "LABAUT-%s", "unidadeId": "%s", "retiradoPeloPaciente": true, "forma": "IMPRESSO_NA_UNIDADE"}
+                """;
+        mockMvc.perform(como(RECEPCAO, json(post(URL + pedido + "/entrega"), entrega.formatted(TECNICO.substring(0, 4), ubs.getUuid()))))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(TECNICO_OUTRO, json(post(URL + pedido + "/entrega"), entrega.formatted(TECNICO_OUTRO.substring(0, 4), ubs.getUuid()))))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(como(TECNICO, json(post(URL + pedido + "/entrega"), entrega.formatted(TECNICO.substring(0, 4), ubs.getUuid()))))
+                .andExpect(status().isOk());
+        mockMvc.perform(como(MEDICO, json(post(URL + pedido + "/entrega"), entrega.formatted(MEDICO.substring(0, 4), ubs.getUuid()))))
+                .andExpect(status().isOk());
     }
 
     @Test

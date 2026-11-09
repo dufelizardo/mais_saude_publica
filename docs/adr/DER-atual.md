@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **252 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V65). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **254 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V66). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -191,3 +191,4 @@ listadas aqui pela migração que criou cada uma (até a V65). A fonte de verdad
 | V63 | `tb_veiculo`, `tb_situacao_veiculo`, `tb_plantao_viatura`, `tb_tripulante_plantao` (e `veiculo_id` em `tb_ocorrencia_urgencia`) |
 | V64 | `tb_oferta_assistencial`, `tb_cota_ppi` (e a cota e a extracota em `tb_solicitacao_regulacao`) |
 | V65 | `tb_faixa_referencia_exame` (e os críticos em `tb_exame_laboratorial` e em `tb_resultado_exame`, com a descrição da faixa usada) |
+| V66 | `tb_comunicacao_critico_exame`, `tb_entrega_resultado_exame` (e a ciência de quem pediu em `tb_resultado_exame`) |

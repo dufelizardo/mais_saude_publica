@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CancelamentoItemExameRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ComunicacaoCriticoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EntregaResultadoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ResultadoAvisoExameDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ColetaExameRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.PedidoExameRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalExameRequestDto;
@@ -146,6 +149,87 @@ public class PedidoExameController {
     @ApiErrorResponsesMutacao
     public ResponseEntity<SuccessResponseDto> cancelar(@PathVariable UUID uuid, @Valid @RequestBody CancelamentoItemExameRequestDto dto) {
         return ResponseEntity.ok(sucesso("Exame cancelado!", service.cancelar(uuid, dto)));
+    }
+
+    @RequerPermissao({"EXAME.SOLICITAR"})
+    @GetMapping(value = "para-ciencia", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Resultados liberados aguardando a ciência de quem pediu",
+            description = "Do profissional logado (outra matrícula: 403); sem login, a matrícula é obrigatória (400). Críticos primeiro. Sem valores (ADR-0181).",
+            tags = "Laboratório")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResultadoAvisoExameDto.class)))
+    })
+    @ApiErrorResponsesListagem
+    public ResponseEntity<List<ResultadoAvisoExameDto>> paraCiencia(@RequestParam(required = false) String matricula) {
+        return ResponseEntity.ok(service.paraCiencia(matricula));
+    }
+
+    @RequerPermissao({"EXAME.SOLICITAR"})
+    @PostMapping(value = "item/{uuid}/ciencia", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra a ciência do resultado", description = "Só quem pediu (422), resultado liberado (422), uma vez por resultado (409). A retificação reabre a ciência (ADR-0181).", tags = "Laboratório")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> darCiencia(@PathVariable UUID uuid, @Valid @RequestBody ProfissionalExameRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Ciência registrada!", service.darCiencia(uuid, dto)));
+    }
+
+    @RequerPermissao({"EXAME.SOLICITAR"})
+    @PostMapping(value = "{uuid}/ciencia", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra a ciência de todos os resultados liberados do pedido", description = "Só quem pediu (422). Nenhum pendente: 409 (ADR-0181).", tags = "Laboratório")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> darCienciaDoPedido(@PathVariable UUID uuid, @Valid @RequestBody ProfissionalExameRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Ciência registrada!", service.darCienciaDoPedido(uuid, dto)));
+    }
+
+    @RequerPermissao({"LABORATORIO.LIBERAR"})
+    @GetMapping(value = "criticos-a-comunicar", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Resultados críticos liberados sem comunicação nem ciência",
+            description = "Nos laboratórios do escopo, do mais antigo ao mais novo. Sem valores (ADR-0181).", tags = "Laboratório")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ResultadoAvisoExameDto.class)))
+    })
+    @ApiErrorResponsesListagem
+    public ResponseEntity<List<ResultadoAvisoExameDto>> criticosAComunicar() {
+        return ResponseEntity.ok(service.criticosAComunicar());
+    }
+
+    @RequerPermissao({"LABORATORIO.LIBERAR"})
+    @PostMapping(value = "item/{uuid}/comunicacao-critico", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra a comunicação do valor crítico", description = "Quem recebeu, meio e quando. Resultado não crítico ou data no futuro: 422. Já comunicado: 409 (ADR-0181).", tags = "Laboratório")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> comunicarCritico(@PathVariable UUID uuid, @Valid @RequestBody ComunicacaoCriticoRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Comunicação do crítico registrada!", service.comunicarCritico(uuid, dto)));
+    }
+
+    @RequerPermissao({"LABORATORIO.COLETAR", "EXAME.SOLICITAR"})
+    @PostMapping(value = "{uuid}/entrega", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra a entrega do resultado ao paciente", description = "Na unidade informada. Exame em andamento ou nada liberado: 422. Terceiro sem nome ou documento: 400. Segunda via é outra entrega (ADR-0181).", tags = "Laboratório")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> entregar(@PathVariable UUID uuid, @Valid @RequestBody EntregaResultadoRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Entrega do resultado registrada!", service.entregar(uuid, dto)));
     }
 
     @RequerPermissao({"LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR"})

@@ -3,10 +3,13 @@ package com.edufelizardo.maissaudepublica.services.version1;
 import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
 import com.edufelizardo.maissaudepublica.config.UsuarioAutenticado;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceBadRequestException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceConflictException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceForbiddenException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.AmostraExame;
+import com.edufelizardo.maissaudepublica.models.ComunicacaoCriticoExame;
+import com.edufelizardo.maissaudepublica.models.EntregaResultadoExame;
 import com.edufelizardo.maissaudepublica.models.Atendimento;
 import com.edufelizardo.maissaudepublica.models.EventoExame;
 import com.edufelizardo.maissaudepublica.models.ExameLaboratorial;
@@ -20,6 +23,8 @@ import com.edufelizardo.maissaudepublica.models.ResultadoExame;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CancelamentoItemExameRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ColetaExameRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ComunicacaoCriticoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EntregaResultadoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.PedidoExameRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ProfissionalExameRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RejeicaoAmostraRequestDto;
@@ -28,7 +33,10 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Retificaca
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ItemTrabalhoExameDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PedidoExameResponseDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PedidoExameResumoDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ResultadoAvisoExameDto;
+import com.edufelizardo.maissaudepublica.models.enuns.FormaEntregaResultado;
 import com.edufelizardo.maissaudepublica.models.enuns.InterpretacaoResultado;
+import com.edufelizardo.maissaudepublica.models.enuns.MeioComunicacaoCritico;
 import com.edufelizardo.maissaudepublica.models.enuns.MaterialExame;
 import com.edufelizardo.maissaudepublica.models.enuns.MotivoRejeicaoAmostra;
 import com.edufelizardo.maissaudepublica.models.enuns.PrioridadeExame;
@@ -37,6 +45,8 @@ import com.edufelizardo.maissaudepublica.models.enuns.TipoEventoExame;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoResultadoExame;
 import com.edufelizardo.maissaudepublica.repositories.AmostraExameRepository;
 import com.edufelizardo.maissaudepublica.repositories.AtendimentoRepository;
+import com.edufelizardo.maissaudepublica.repositories.ComunicacaoCriticoExameRepository;
+import com.edufelizardo.maissaudepublica.repositories.EntregaResultadoExameRepository;
 import com.edufelizardo.maissaudepublica.repositories.EventoExameRepository;
 import com.edufelizardo.maissaudepublica.repositories.ItemPedidoExameRepository;
 import com.edufelizardo.maissaudepublica.repositories.PacienteRepository;
@@ -53,6 +63,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -121,6 +132,15 @@ public class PedidoExameService {
 
     @Autowired
     private ControleDeAcesso controleDeAcesso;
+
+    @Autowired
+    private ComunicacaoCriticoExameRepository comunicacaoRepository;
+
+    @Autowired
+    private EntregaResultadoExameRepository entregaRepository;
+
+    @Autowired
+    private AvisoResultadoCritico avisoResultadoCritico;
 
     // ── Pedido ─────────────────────────────────────────────────────────────────────────────────────
 
@@ -280,6 +300,7 @@ public class PedidoExameService {
         item.setStatus(StatusItemExame.LIBERADO);
         itemRepository.save(item);
         registrar(item.getPedido(), item, TipoEventoExame.LIBERACAO, null, liberador);
+        avisarSeCritico(item, resultado);
         return detalhe(item.getPedido());
     }
 
@@ -296,6 +317,7 @@ public class PedidoExameService {
         item.setResultadoAtual(novo);
         itemRepository.save(item);
         registrar(item.getPedido(), item, TipoEventoExame.RETIFICACAO, dto.getMotivo().trim(), profissional);
+        avisarSeCritico(item, novo);
         return detalhe(item.getPedido());
     }
 
@@ -387,6 +409,210 @@ public class PedidoExameService {
         controleDeAcesso.filtrar(Stream.of(pedido), p -> unidadesDo(p, itens, new LinkedHashMap<>()), VER).findAny()
                 .orElseThrow(() -> new ResourceForbiddenException("Este pedido é de unidades fora do seu acesso."));
         return detalhe(pedido);
+    }
+
+    // ── Ciência, comunicação do crítico e entrega (ADR-0181) ───────────────────────────────────────
+
+    private static final Map<MeioComunicacaoCritico, String> MEIOS = Map.of(MeioComunicacaoCritico.TELEFONE, "telefone",
+            MeioComunicacaoCritico.PRESENCIAL, "presencial", MeioComunicacaoCritico.MENSAGEM_NO_SISTEMA, "mensagem no sistema");
+
+    /**
+     * Os resultados liberados dos pedidos do profissional ainda sem ciência: críticos primeiro, depois do mais antigo ao mais
+     * novo. Com login, é sempre o profissional logado; outra matrícula dá 403. Sem login (segurança desligada), a matrícula
+     * é obrigatória (400).
+     */
+    @Transactional(readOnly = true)
+    public List<ResultadoAvisoExameDto> paraCiencia(String matricula) {
+        Profissional profissional = profissionalDaAcao(matricula, "ver os resultados para ciência");
+        List<ItemPedidoExame> itens = itemRepository.findParaCiencia(profissional.getUuid());
+        Map<UUID, Instant> comunicados = comunicadosEm(itens);
+        return itens.stream()
+                .sorted(Comparator.comparing((ItemPedidoExame i) -> ResultadoAvisoExameDto.critico(i.getResultadoAtual().getInterpretacao()) ? 0 : 1)
+                        .thenComparing(i -> i.getResultadoAtual().getLiberadoEm()))
+                .map(i -> ResultadoAvisoExameDto.fromItem(i, comunicados.get(i.getResultadoAtual().getUuid())))
+                .toList();
+    }
+
+    /** Ciência do solicitante em um resultado liberado. Só quem pediu (422); uma vez por resultado (409). */
+    @Transactional
+    public PedidoExameResponseDto darCiencia(UUID itemId, ProfissionalExameRequestDto dto) {
+        ItemPedidoExame item = travarItem(itemId);
+        Profissional profissional = solicitanteDaCiencia(item.getPedido(), dto.getProfissionalMatricula());
+        exigirStatus(item, "dar ciência de", StatusItemExame.LIBERADO);
+        if (item.getResultadoAtual().getCienciaEm() != null) {
+            throw new ResourceConflictException("A ciência deste resultado já foi registrada.");
+        }
+        registrarCiencia(item, profissional);
+        return detalhe(item.getPedido());
+    }
+
+    /** Ciência de todos os resultados liberados do pedido ainda sem ciência. Nenhum pendente: 409. */
+    @Transactional
+    public PedidoExameResponseDto darCienciaDoPedido(UUID pedidoId, ProfissionalExameRequestDto dto) {
+        PedidoExame pedido = buscarPedido(pedidoId);
+        ContextoAuditoria.paciente(pedido.getPaciente().getUuid());
+        Profissional profissional = solicitanteDaCiencia(pedido, dto.getProfissionalMatricula());
+        List<ItemPedidoExame> pendentes = itemRepository.findByPedido_Uuid(pedidoId).stream()
+                .filter(i -> i.getStatus() == StatusItemExame.LIBERADO && i.getResultadoAtual().getCienciaEm() == null).toList();
+        if (pendentes.isEmpty()) {
+            throw new ResourceConflictException("Não há resultado liberado aguardando ciência neste pedido.");
+        }
+        pendentes.forEach(i -> registrarCiencia(i, profissional));
+        return detalhe(pedido);
+    }
+
+    /**
+     * Os críticos liberados ainda sem comunicação registrada e sem ciência do solicitante, nos laboratórios do escopo de quem
+     * libera. Do mais antigo ao mais novo.
+     */
+    @Transactional(readOnly = true)
+    public List<ResultadoAvisoExameDto> criticosAComunicar() {
+        List<ItemPedidoExame> criticos = itemRepository.findCriticosSemCiencia();
+        Map<UUID, Instant> comunicados = comunicadosEm(criticos);
+        return controleDeAcesso.filtrar(criticos.stream().filter(i -> !comunicados.containsKey(i.getResultadoAtual().getUuid())),
+                        i -> Stream.of(i.getAmostra().getLaboratorio()), LIBERAR)
+                .sorted(Comparator.comparing(i -> i.getResultadoAtual().getLiberadoEm()))
+                .map(i -> ResultadoAvisoExameDto.fromItem(i, null))
+                .toList();
+    }
+
+    /**
+     * O laboratório registra que comunicou o valor crítico (RDC 786/2023): quem recebeu, por qual meio e quando. Só resultado
+     * crítico liberado (422); uma por resultado (409); nem no futuro nem antes da liberação (422).
+     */
+    @Transactional
+    public PedidoExameResponseDto comunicarCritico(UUID itemId, ComunicacaoCriticoRequestDto dto) {
+        ItemPedidoExame item = travarItem(itemId);
+        controleDeAcesso.exigir(LIBERAR, item.getAmostra() != null ? item.getAmostra().getLaboratorio() : null);
+        exigirStatus(item, "comunicar o crítico de", StatusItemExame.LIBERADO);
+        ResultadoExame resultado = item.getResultadoAtual();
+        if (!ResultadoAvisoExameDto.critico(resultado.getInterpretacao())) {
+            throw new ResourceUnprocessableEntityException("O resultado de " + item.getExame().getNome() + " não é crítico.");
+        }
+        if (comunicacaoRepository.existsByResultado_Uuid(resultado.getUuid())) {
+            throw new ResourceConflictException("A comunicação deste resultado crítico já foi registrada.");
+        }
+        LocalDateTime quando = dto.getComunicadoEm() != null ? dto.getComunicadoEm() : LocalDateTime.now().withNano(0);
+        if (quando.isAfter(LocalDateTime.now().plusMinutes(5))) {
+            throw new ResourceUnprocessableEntityException("A comunicação não pode estar no futuro.");
+        }
+        Instant comunicadoEm = quando.atZone(ZoneId.systemDefault()).toInstant();
+        if (resultado.getLiberadoEm() != null && comunicadoEm.isBefore(resultado.getLiberadoEm().minusSeconds(300))) {
+            throw new ResourceUnprocessableEntityException("A comunicação não pode ser anterior à liberação do resultado.");
+        }
+        Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
+        ComunicacaoCriticoExame c = new ComunicacaoCriticoExame();
+        c.setItem(item);
+        c.setResultado(resultado);
+        c.setReceptorNome(dto.getReceptorNome().trim());
+        c.setMeio(dto.getMeio());
+        c.setComunicadoEm(comunicadoEm);
+        c.setProfissional(profissional);
+        c.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        comunicacaoRepository.save(c);
+        registrar(item.getPedido(), item, TipoEventoExame.COMUNICACAO_CRITICO,
+                "Comunicado a " + c.getReceptorNome() + " (" + MEIOS.get(dto.getMeio()) + ")", profissional);
+        return detalhe(item.getPedido());
+    }
+
+    /**
+     * Entrega do resultado ao paciente, na unidade informada: quem coleta ou quem pede exames ali (403). Pedido sem exame em
+     * andamento e com ao menos um liberado (422). Terceiro pede nome e documento (400). Segunda via é outra entrega.
+     */
+    @Transactional
+    public PedidoExameResponseDto entregar(UUID pedidoId, EntregaResultadoRequestDto dto) {
+        PedidoExame pedido = buscarPedido(pedidoId);
+        ContextoAuditoria.paciente(pedido.getPaciente().getUuid());
+        UnidadeDeSaude unidade = buscarUnidade(dto.getUnidadeId());
+        try {
+            controleDeAcesso.exigir(COLETAR, unidade);
+        } catch (ResourceForbiddenException semColetar) {
+            controleDeAcesso.exigir(SOLICITAR, unidade);
+        }
+        List<ItemPedidoExame> itens = itemRepository.findByPedido_Uuid(pedidoId);
+        if (itens.stream().anyMatch(i -> i.getStatus() == StatusItemExame.SOLICITADO || i.getStatus() == StatusItemExame.COLETADO
+                || i.getStatus() == StatusItemExame.RESULTADO_REGISTRADO)) {
+            throw new ResourceUnprocessableEntityException("O pedido ainda tem exame em andamento: entregue quando todos estiverem liberados.");
+        }
+        if (itens.stream().noneMatch(i -> i.getStatus() == StatusItemExame.LIBERADO)) {
+            throw new ResourceUnprocessableEntityException("O pedido não tem resultado liberado para entregar.");
+        }
+        boolean peloPaciente = Boolean.TRUE.equals(dto.getRetiradoPeloPaciente());
+        if (!peloPaciente && (textoOuNulo(dto.getTerceiroNome()) == null || textoOuNulo(dto.getTerceiroDocumento()) == null)) {
+            throw new ResourceBadRequestException("Retirada por outra pessoa: informe o nome e o documento de quem retirou.");
+        }
+        Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
+        boolean segundaVia = !entregaRepository.findByPedido_UuidOrderByEntregueEmAsc(pedidoId).isEmpty();
+        EntregaResultadoExame e = new EntregaResultadoExame();
+        e.setPedido(pedido);
+        e.setRetiradoPeloPaciente(peloPaciente);
+        e.setTerceiroNome(peloPaciente ? null : dto.getTerceiroNome().trim());
+        e.setTerceiroDocumento(peloPaciente ? null : dto.getTerceiroDocumento().trim());
+        e.setTerceiroParentesco(peloPaciente ? null : textoOuNulo(dto.getTerceiroParentesco()));
+        e.setForma(dto.getForma());
+        e.setUnidade(unidade);
+        e.setProfissional(profissional);
+        e.setEntregueEm(Instant.now());
+        e.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        entregaRepository.save(e);
+        String quem = peloPaciente ? "ao paciente"
+                : "a " + e.getTerceiroNome() + (e.getTerceiroParentesco() != null ? " (" + e.getTerceiroParentesco() + ")" : "");
+        registrar(pedido, null, TipoEventoExame.ENTREGA, (segundaVia ? "Segunda via entregue " : "Resultado entregue ")
+                + (dto.getForma() == FormaEntregaResultado.NA_CONSULTA ? "na consulta " : "impresso ") + quem, profissional);
+        return detalhe(pedido);
+    }
+
+    private void registrarCiencia(ItemPedidoExame item, Profissional profissional) {
+        ResultadoExame r = item.getResultadoAtual();
+        r.setCienciaPor(profissional);
+        r.setCienciaEm(Instant.now());
+        resultadoRepository.save(r);
+        registrar(item.getPedido(), item, TipoEventoExame.CIENCIA, null, profissional);
+    }
+
+    /** Quem dá ciência é o solicitante do pedido (422), e, com login, o próprio profissional logado (403). */
+    private Profissional solicitanteDaCiencia(PedidoExame pedido, String matricula) {
+        Profissional profissional = profissionalDaAcao(matricula, "dar ciência de resultado");
+        if (!profissional.getUuid().equals(pedido.getProfissionalSolicitante().getUuid())) {
+            throw new ResourceUnprocessableEntityException("Só quem pediu o exame registra a ciência do resultado.");
+        }
+        return profissional;
+    }
+
+    /** Com login, o profissional logado (outra matrícula: 403); sem login, a matrícula informada (obrigatória, 400). */
+    private Profissional profissionalDaAcao(String matricula, String acao) {
+        String cpf = UsuarioAutenticado.cpf();
+        Profissional logado = cpf == null ? null : profissionalRepository.findByCpfAndAtivoTrue(cpf).orElse(null);
+        if (logado != null) {
+            if (textoOuNulo(matricula) != null && !matricula.trim().equals(logado.getMatricula())) {
+                throw new ResourceForbiddenException("Só o próprio profissional pode " + acao + ".");
+            }
+            return logado;
+        }
+        if (cpf != null) {
+            throw new ResourceForbiddenException("O seu usuário não tem cadastro de profissional para " + acao + ".");
+        }
+        if (textoOuNulo(matricula) == null) {
+            throw new ResourceBadRequestException("Informe a matrícula do profissional.");
+        }
+        return buscarProfissional(matricula.trim());
+    }
+
+    /** Resultado → quando o crítico foi comunicado. */
+    private Map<UUID, Instant> comunicadosEm(List<ItemPedidoExame> itens) {
+        if (itens.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, Instant> mapa = new java.util.HashMap<>();
+        comunicacaoRepository.findByResultado_UuidIn(itens.stream().map(i -> i.getResultadoAtual().getUuid()).toList())
+                .forEach(c -> mapa.merge(c.getResultado().getUuid(), c.getComunicadoEm(), (x, y) -> x.isBefore(y) ? x : y));
+        return mapa;
+    }
+
+    private void avisarSeCritico(ItemPedidoExame item, ResultadoExame resultado) {
+        if (ResultadoAvisoExameDto.critico(resultado.getInterpretacao())) {
+            avisoResultadoCritico.avisar(item);
+        }
     }
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
@@ -491,7 +717,9 @@ public class PedidoExameService {
         ContextoAuditoria.registro(pedido.getUuid());
         return PedidoExameResponseDto.fromPedido(pedido, itemRepository.findByPedido_Uuid(pedido.getUuid()),
                 amostraRepository.findByPedido_UuidOrderByColetadaEmAsc(pedido.getUuid()),
-                eventoRepository.findByPedido_UuidOrderByOcorridoEmAsc(pedido.getUuid()));
+                eventoRepository.findByPedido_UuidOrderByOcorridoEmAsc(pedido.getUuid()),
+                comunicacaoRepository.findByItem_Pedido_UuidOrderByComunicadoEmAsc(pedido.getUuid()),
+                entregaRepository.findByPedido_UuidOrderByEntregueEmAsc(pedido.getUuid()));
     }
 
     private void registrar(PedidoExame pedido, ItemPedidoExame item, TipoEventoExame tipo, String texto, Profissional profissional) {

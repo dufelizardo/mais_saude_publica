@@ -187,6 +187,106 @@
   </section>
 }
 
+<!-- ── Críticos a comunicar (ADR-0181) ────────────────────────────────────────────────────────── -->
+@if (aba() === 'criticos') {
+  <section class="card" id="pn-criticos" role="tabpanel" aria-labelledby="tab-criticos">
+    <div class="card__head">
+      <div>
+        <h2>Críticos a comunicar</h2>
+        <p class="sub">Resultados liberados com valor crítico que o médico ainda não viu. Avise quem responde pelo paciente e registre quem recebeu, por qual meio e quando.</p>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Paciente</th>
+            <th scope="col">Exame</th>
+            <th scope="col">Interpretação</th>
+            <th scope="col">Quem pediu</th>
+            <th scope="col">Liberado em</th>
+            <th scope="col" class="num">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of criticosAComunicar(); track c.itemId) {
+            <tr>
+              <td class="cell-main">{{ c.pacienteNome }}<span class="cell-sub">{{ c.unidadeSolicitanteNome }}</span></td>
+              <td>{{ c.exameNome }}@if (c.retificado) { <span class="cell-sub">Retificado</span> }</td>
+              <td>@if (c.interpretacao; as it) { <span [class]="'badge badge--' + interpretacoes[it].classe"><span class="dot" aria-hidden="true"></span> {{ interpretacoes[it].rotulo }}</span> }</td>
+              <td>{{ c.solicitanteNome }}<span class="cell-sub mono">{{ c.solicitanteMatricula }}</span></td>
+              <td class="mono">{{ formatarInstante(c.liberadoEm) }}</td>
+              <td class="num">
+                <div class="row-actions">
+                  <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Ver pedido de ' + c.pacienteNome" (click)="abrirDetalhe(c.pedidoId)">Ver pedido</button>
+                  <button type="button" class="btn btn--sm" [attr.aria-label]="'Comunicar crítico de ' + c.exameNome + ' de ' + c.pacienteNome" (click)="abrirComunicacao(c)">Comunicar</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><div class="empty"><strong>{{ carregando() ? 'Carregando…' : 'Nenhum crítico pendente' }}</strong>@if (!carregando()) { <span>Todo valor crítico liberado no seu laboratório já foi comunicado ou visto por quem pediu.</span> }</div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
+<!-- ── Para ciência (ADR-0181) ────────────────────────────────────────────────────────────────── -->
+@if (aba() === 'ciencia') {
+  <section class="card" id="pn-ciencia" role="tabpanel" aria-labelledby="tab-ciencia">
+    <div class="card__head">
+      <div>
+        <h2>Para ciência</h2>
+        <p class="sub">Resultados liberados dos exames que você pediu e ainda não viu. Críticos primeiro. O valor aparece no pedido; registre a ciência depois de ver.</p>
+      </div>
+      @if (!matriculaPadrao()) {
+        <form class="filters" [formGroup]="matriculaCienciaForm" (ngSubmit)="verParaCiencia(matriculaCienciaForm.controls.matricula.value)" novalidate>
+          <label class="sr-only" for="f-matriculaCiencia">Sua matrícula</label>
+          <input id="f-matriculaCiencia" type="text" inputmode="numeric" autocomplete="off" placeholder="Sua matrícula" formControlName="matricula" />
+          <button type="submit" class="btn btn--sm">Ver resultados</button>
+        </form>
+      }
+    </div>
+    @if (erroCiencia()) { <div class="box box--err" role="alert"><strong>{{ erroCiencia() }}</strong></div> }
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Paciente</th>
+            <th scope="col">Exame</th>
+            <th scope="col">Interpretação</th>
+            <th scope="col">Liberado em</th>
+            <th scope="col">Laboratório</th>
+            <th scope="col" class="num">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of paraCiencia(); track a.itemId) {
+            <tr [class.lab-critico]="a.critico">
+              <td class="cell-main">{{ a.pacienteNome }}<span class="cell-sub">{{ a.unidadeSolicitanteNome }}</span></td>
+              <td>{{ a.exameNome }}@if (a.retificado) { <span class="cell-sub">Retificado: veja o valor corrigido</span> }</td>
+              <td>
+                @if (a.interpretacao; as it) { <span [class]="'badge badge--' + interpretacoes[it].classe"><span class="dot" aria-hidden="true"></span> {{ interpretacoes[it].rotulo }}</span> } @else { <span class="cell-sub" style="display: inline;">Sem interpretação</span> }
+              </td>
+              <td class="mono">{{ formatarInstante(a.liberadoEm) }}</td>
+              <td>@if (a.critico) { @if (a.comunicadoEm) { <span class="cell-sub" style="display: inline;">Comunicado em {{ formatarInstante(a.comunicadoEm) }}</span> } @else { <span class="cell-sub" style="display: inline;">Ainda não comunicado</span> } } @else { — }</td>
+              <td class="num">
+                <div class="row-actions">
+                  <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Ver pedido de ' + a.pacienteNome" (click)="abrirDetalhe(a.pedidoId)">Ver pedido</button>
+                  <button type="button" class="btn btn--sm" [disabled]="submitting()" [attr.aria-label]="'Registrar ciência de ' + a.exameNome + ' de ' + a.pacienteNome" (click)="darCiencia(a)">Ciente</button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6"><div class="empty"><strong>{{ matriculaCiencia() ? 'Nada para ciência' : 'Informe a sua matrícula' }}</strong>@if (matriculaCiencia()) { <span>Todos os resultados dos seus pedidos já foram vistos.</span> }</div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}
+
 <!-- ── Pedidos ────────────────────────────────────────────────────────────────────────────────── -->
 @if (aba() === 'pedidos') {
   <section class="card" id="pn-pedidos" role="tabpanel" aria-labelledby="tab-pedidos">
@@ -589,6 +689,7 @@
                               @if (i.resultado.interpretacao; as it) { <span [class]="'badge badge--' + interpretacoes[it].classe">{{ interpretacoes[it].rotulo }}</span> }
                               @if (i.resultado.retificacaoDeId) { <span class="cell-sub">Retificado: {{ i.resultado.motivoRetificacao }}</span> }
                               <span class="cell-sub">Liberado por {{ i.resultado.liberadoPorNome }} · {{ formatarInstante(i.resultado.liberadoEm) }}</span>
+                              @if (i.resultado.cienciaEm) { <span class="cell-sub">Ciência de {{ i.resultado.cienciaPorNome }} · {{ formatarInstante(i.resultado.cienciaEm) }}</span> } @else { <span class="cell-sub">Aguardando ciência de quem pediu</span> }
                             } @else if (i.resultado) {
                               <span class="cell-sub" style="display: inline;">Aguardando liberação</span>
                             } @else { — }
@@ -627,6 +728,35 @@
                   </div>
                 </section>
               }
+              @if (d.comunicacoesCritico.length) {
+                <section class="dsec">
+                  <div class="dsec__h"><h3>Comunicação de críticos <span class="cnt">{{ d.comunicacoesCritico.length }}</span></h3></div>
+                  <div class="tl">
+                    @for (c of d.comunicacoesCritico; track c.uuid) {
+                      <div class="tl-row">
+                        <div class="date mono">{{ formatarInstante(c.comunicadoEm) }}</div>
+                        <div class="title">{{ c.exameNome }} · comunicado a {{ c.receptorNome }}</div>
+                        <div class="desc">{{ meiosComunicacao[c.meio] }} · por {{ c.profissionalNome }} · {{ c.profissionalMatricula }}</div>
+                      </div>
+                    }
+                  </div>
+                </section>
+              }
+              @if (d.entregas.length) {
+                <section class="dsec">
+                  <div class="dsec__h"><h3>Entregas ao paciente <span class="cnt">{{ d.entregas.length }}</span></h3></div>
+                  <div class="tl">
+                    @for (e of d.entregas; track e.uuid; let n = $index) {
+                      <div class="tl-row">
+                        <div class="date mono">{{ formatarInstante(e.entregueEm) }}</div>
+                        <div class="title">{{ n ? 'Segunda via' : 'Entrega' }} · {{ e.retiradoPeloPaciente ? 'retirado pelo paciente' : 'retirado por ' + e.terceiroNome }}@if (e.terceiroParentesco) { ({{ e.terceiroParentesco }}) }</div>
+                        <div class="desc">{{ formasEntrega[e.forma] }} · {{ e.unidadeNome }}@if (e.terceiroDocumento) { · documento {{ e.terceiroDocumento }} }</div>
+                        <div class="desc">Entregue por {{ e.profissionalNome }} · {{ e.profissionalMatricula }}</div>
+                      </div>
+                    }
+                  </div>
+                </section>
+              }
               <section class="dsec">
                 <div class="dsec__h"><h3>Histórico <span class="cnt">{{ d.eventos.length }}</span></h3></div>
                 <div class="tl">
@@ -643,6 +773,12 @@
             </div>
             <footer class="dw-foot">
               <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button>
+              @if (pendentesDeCiencia(d).length && pode('EXAME.SOLICITAR') && (!matriculaPadrao() || matriculaPadrao() === d.profissionalSolicitanteMatricula)) {
+                <button type="button" class="btn btn--ghost" [disabled]="submitting()" (click)="darCienciaDoPedido(d)">Registrar ciência</button>
+              }
+              @if (d.situacao === 'CONCLUIDO' && pode('LABORATORIO.COLETAR', 'EXAME.SOLICITAR')) {
+                <button type="button" class="btn btn--ghost" (click)="abrirEntrega(d)">Registrar entrega</button>
+              }
               @if (d.liberados > 0) {
                 <a class="btn" [href]="'/laudo/exame/' + d.uuid" target="_blank" rel="noopener">Imprimir laudo</a>
               }
@@ -717,6 +853,119 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="abrirDetalhe(g.pedidoId)">Voltar</button>
             <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Cancelando…' : 'Cancelar exame' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('comunicar') {
+        <form class="dw-form" [formGroup]="comunicarForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi()) { <div class="box box--err" role="alert"><strong>{{ erroApi() }}</strong></div> }
+            <dl class="ro">
+              <div><dt>Paciente</dt><dd>{{ g.aviso.pacienteNome }}</dd></div>
+              <div><dt>Exame</dt><dd>{{ g.aviso.exameNome }}@if (g.aviso.interpretacao; as it) { · {{ interpretacoes[it].rotulo }} }</dd></div>
+              <div><dt>Quem pediu</dt><dd>{{ g.aviso.solicitanteNome }} <span class="cell-sub mono">{{ g.aviso.solicitanteMatricula }}</span></dd></div>
+              <div><dt>Unidade</dt><dd>{{ g.aviso.unidadeSolicitanteNome }}</dd></div>
+            </dl>
+            <div class="box box--warn"><div>Registre a comunicação depois de falar com quem responde pelo paciente: o solicitante, o plantonista ou a enfermagem do setor.</div></div>
+            <div class="dw-field">
+              <label for="f-receptorNome">Quem recebeu a informação <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-receptorNome" type="text" maxlength="150" formControlName="receptorNome" [attr.aria-invalid]="!!erro('receptorNome')" aria-describedby="h-receptorNome e-receptorNome" />
+              <p class="dw-hint" id="h-receptorNome">Nome e função, por exemplo "Dra. Ana, plantonista".</p>
+              @if (erro('receptorNome')) { <p class="dw-err" id="e-receptorNome">{{ erro('receptorNome') }}</p> }
+            </div>
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-meio">Meio <span class="req" aria-hidden="true">*</span></label>
+                <select id="f-meio" formControlName="meio">
+                  @for (m of listaMeios; track m) { <option [value]="m">{{ meiosComunicacao[m] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-comunicadoEm">Quando<span class="opt">vazio: agora</span></label>
+                <input id="f-comunicadoEm" type="datetime-local" class="mono" formControlName="comunicadoEm" [attr.aria-invalid]="!!erro('comunicadoEm')" aria-describedby="e-comunicadoEm" />
+                @if (erro('comunicadoEm')) { <p class="dw-err" id="e-comunicadoEm">{{ erro('comunicadoEm') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-matriculaComunicacao">Matrícula de quem comunicou <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-matriculaComunicacao" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('matriculaComunicacao')" aria-describedby="e-matriculaComunicacao" />
+              @if (erro('matriculaComunicacao')) { <p class="dw-err" id="e-matriculaComunicacao">{{ erro('matriculaComunicacao') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting()">{{ submitting() ? 'Registrando…' : 'Registrar comunicação' }}</button>
+          </footer>
+        </form>
+      }
+
+      @case ('entrega') {
+        <form class="dw-form" [formGroup]="entregaForm" (ngSubmit)="salvar()" novalidate>
+          <div class="dw-body">
+            @if (erroApi() || erroDetalhe()) { <div class="box box--err" role="alert"><strong>{{ erroApi() || erroDetalhe() }}</strong></div> }
+            @if (detalhe(); as d) {
+              <dl class="ro">
+                <div><dt>Paciente</dt><dd>{{ d.pacienteNome }}</dd></div>
+                <div><dt>Exames liberados</dt><dd>{{ d.liberados }}</dd></div>
+              </dl>
+              @if (criticosSemCiencia(d).length) {
+                <div class="box box--warn" role="note"><div><strong>Resultado crítico ainda não visto por quem pediu:</strong> {{ criticosSemCiencia(d).map(exameNomeDe).join(', ') }}. Oriente o paciente a procurar a unidade.</div></div>
+              }
+              @if (d.entregas.length) { <p class="dw-hint">Já entregue {{ d.entregas.length }} vez(es): esta fica registrada como segunda via.</p> }
+            } @else {
+              <p class="cell-sub">Carregando o pedido…</p>
+            }
+            <fieldset class="dw-field">
+              <legend>Quem retirou <span class="req" aria-hidden="true">*</span></legend>
+              <div class="radios" role="radiogroup">
+                <label><input type="radio" formControlName="retirada" value="PACIENTE" id="f-retirada" />O próprio paciente</label>
+                <label><input type="radio" formControlName="retirada" value="TERCEIRO" />Outra pessoa</label>
+              </div>
+            </fieldset>
+            @if (entregaForm.controls.retirada.value === 'TERCEIRO') {
+              <div class="dw-field">
+                <label for="f-terceiroNome">Nome de quem retirou <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <input id="f-terceiroNome" type="text" maxlength="150" formControlName="terceiroNome" [attr.aria-invalid]="!!erro('terceiroNome')" aria-describedby="e-terceiroNome" />
+                @if (erro('terceiroNome')) { <p class="dw-err" id="e-terceiroNome">{{ erro('terceiroNome') }}</p> }
+              </div>
+              <div class="dw-row">
+                <div class="dw-field">
+                  <label for="f-terceiroDocumento">Documento <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                  <input id="f-terceiroDocumento" type="text" maxlength="30" formControlName="terceiroDocumento" [attr.aria-invalid]="!!erro('terceiroDocumento')" aria-describedby="e-terceiroDocumento" />
+                  @if (erro('terceiroDocumento')) { <p class="dw-err" id="e-terceiroDocumento">{{ erro('terceiroDocumento') }}</p> }
+                </div>
+                <div class="dw-field">
+                  <label for="f-terceiroParentesco">Parentesco<span class="opt">opcional</span></label>
+                  <input id="f-terceiroParentesco" type="text" maxlength="50" formControlName="terceiroParentesco" />
+                </div>
+              </div>
+            }
+            <div class="dw-row">
+              <div class="dw-field">
+                <label for="f-forma">Forma <span class="req" aria-hidden="true">*</span></label>
+                <select id="f-forma" formControlName="forma">
+                  @for (f of listaFormas; track f) { <option [value]="f">{{ formasEntrega[f] }}</option> }
+                </select>
+              </div>
+              <div class="dw-field">
+                <label for="f-unidadeEntrega">Unidade da entrega <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                <select id="f-unidadeEntrega" formControlName="unidadeId" [attr.aria-invalid]="!!erro('unidadeEntrega')" aria-describedby="e-unidadeEntrega">
+                  <option value="">Selecione…</option>
+                  @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+                </select>
+                @if (erro('unidadeEntrega')) { <p class="dw-err" id="e-unidadeEntrega">{{ erro('unidadeEntrega') }}</p> }
+              </div>
+            </div>
+            <div class="dw-field">
+              <label for="f-matriculaEntrega">Matrícula de quem entrega <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+              <input id="f-matriculaEntrega" type="text" inputmode="numeric" autocomplete="off" formControlName="profissionalMatricula" [attr.aria-invalid]="!!erro('matriculaEntrega')" aria-describedby="e-matriculaEntrega" />
+              @if (erro('matriculaEntrega')) { <p class="dw-err" id="e-matriculaEntrega">{{ erro('matriculaEntrega') }}</p> }
+            </div>
+          </div>
+          <footer class="dw-foot">
+            <button type="button" class="btn btn--ghost" (click)="abrirDetalhe(g.pedidoId)">Voltar</button>
+            <button type="submit" class="btn" [disabled]="submitting() || !detalhe()">{{ submitting() ? 'Registrando…' : 'Registrar entrega' }}</button>
           </footer>
         </form>
       }
