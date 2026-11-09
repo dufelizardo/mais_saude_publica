@@ -25,19 +25,20 @@ com auditoria, controle de acesso por perfil e unidade, e testes de aceitação 
 
 | Área | O que tem |
 |---|---|
-| **Organização da rede** | hierarquia federal → estadual → municipal → regional → unidade; Equipamentos de Saúde com horário estruturado, situação operacional e modelo operacional (perfis e capacidades de cada unidade) |
-| **Recursos Humanos** | profissionais, lotação, cargos e salários, benefícios, desenvolvimento, recrutamento, folha, perfil; **equipes de saúde** e **escalas** com modelos de jornada |
-| **Administrativo** | setores, modelo administrativo, processos, necessidades de pessoal |
-| **Assistência** | pacientes, atendimentos, agenda do profissional, prontuário, enfermagem (triagem, evolução, medicação), farmácia (estoque, dispensação, transferência) |
-| **Rede assistencial** | laboratório (pedido, coleta, resultado, laudo), regulação do acesso (fila, agendamento, contrarreferência), leitos e internação |
-| **Programas de saúde** | catálogo de programas com público-alvo e unidades participantes; acompanhamento dos pacientes (inscrição, faltosos, atrasados); consulta pública na página inicial |
+| **Organização da rede** | hierarquia federal → estadual → municipal → regional → unidade; Equipamentos de Saúde com horário, situação operacional e modelo operacional (perfis, capacidades, serviços e pontos de atuação); território com mapa, cadastro domiciliar e adscrição; **Gestão da Rede** com oferta e cotas da PPI |
+| **Pessoas** | RH completo (lotação, cargos e salários, benefícios, desenvolvimento com competências, recrutamento, folha, perfil), equipes, escalas, setor administrativo e coordenações e gerência |
+| **Assistência** | pacientes, atendimentos, agenda, prontuário, anexos com versões, enfermagem, farmácia, laboratório, leitos e internação |
+| **Regulação** | do acesso (fila, cotas da PPI, agendamento, contrarreferência) e **de urgência** (central do 192, regulação médica, vaga zero, viatura do SAMU) |
+| **Cuidado** | programas e linhas de cuidado, saúde mental (CAPS e RAPS), saúde bucal, imunização (sala de vacina, cobertura, ESAVI), vigilância (notificação, surto, vetores, zoonoses, ambiental) e intersetorialidade |
+| **Operação** | **estoque e almoxarifado**, **frota e transporte**, emergências e desastres, comunicação e educação (comunicados, campanhas, educação permanente) |
+| **Gestão** | Sala de Situação, indicadores da rede, relatórios e indicadores por regional |
 | **Governança** | login (JWT), perfis e permissões com escopo por unidade, trilha de auditoria com alertas, prontuário por vínculo assistencial |
 
 O que cada domínio já tem e o que falta está em [`docs/STATUS-DOS-DOMINIOS.md`](docs/STATUS-DOS-DOMINIOS.md). O mapa
 completo da plataforma (31 itens) está em [`docs/MAPA-DE-DOMINIOS.md`](docs/MAPA-DE-DOMINIOS.md).
 
 > **Ambientes:** o login, a exigência de permissão e o prontuário por vínculo são ligados por ambiente. Hoje o login
-> está ligado só em `dev`. O estado de cada ambiente está em [`docs/PENDENCIAS.md`](docs/PENDENCIAS.md), e o passo a
+> está ligado nos quatro ambientes; a exigência de permissão e o vínculo, ainda em nenhum. O estado de cada ambiente está em [`docs/PENDENCIAS.md`](docs/PENDENCIAS.md), e o passo a
 > passo para ligar, em [`docs/acesso/GUIA-LIGAR-AUTORIZACAO.md`](docs/acesso/GUIA-LIGAR-AUTORIZACAO.md).
 
 ## Domínio
