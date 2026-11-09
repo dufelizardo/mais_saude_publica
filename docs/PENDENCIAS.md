@@ -1,11 +1,11 @@
 # Pendências e estado dos ambientes
 
-Documento vivo, com **o que falta** no projeto (revisto na release **v1.11.0**, 2026-11-07). Cada item aponta
+Documento vivo, com **o que falta** no projeto (revisto na release **v1.12.0**, 2026-11-08). Cada item aponta
 para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou abrir uma pendência.
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.11.0, promovida em 2026-11-07). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.12.0, promovida em 2026-11-08). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
