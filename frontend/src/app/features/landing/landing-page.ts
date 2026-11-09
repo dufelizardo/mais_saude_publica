@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { VersaoService } from '../../core/services/versao';
 import { CampanhaPublicaDto, ProgramaPublicoDto, TIPOS_CAMPANHA } from '../../core/models/programa';
 import { ProgramaService } from '../../core/services/programa';
-import { ComunicadoPublicoDto, ConteudoPublicoDto } from '../../core/models/comunicacao';
+import { ComunicadoPublicoDto, ConteudoPublicoDto, CampanhaComunicacaoPublicaDto, FORMATOS_MATERIAL } from '../../core/models/comunicacao';
 import { ComunicacaoService } from '../../core/services/comunicacao';
 
 type FontSize = 'default' | 'lg' | 'xl';
@@ -42,6 +42,9 @@ export class LandingPage {
   private readonly comunicacaoService = inject(ComunicacaoService);
   protected readonly avisos = signal<ComunicadoPublicoDto[]>([]);
   protected readonly orientacoes = signal<ConteudoPublicoDto[]>([]);
+  /** Campanhas de comunicação em andamento (ADR-0174). */
+  protected readonly campanhasDeComunicacao = signal<CampanhaComunicacaoPublicaDto[]>([]);
+  protected readonly formatosMaterial = FORMATOS_MATERIAL;
   protected readonly avisosEmergenciais = computed(() => this.avisos().filter((a) => a.prioridade === 'EMERGENCIAL'));
   protected readonly avisosComuns = computed(() => this.avisos().filter((a) => a.prioridade !== 'EMERGENCIAL'));
 
@@ -53,6 +56,7 @@ export class LandingPage {
     this.restorePreferences();
     this.comunicacaoService.avisos().subscribe({ next: (a) => this.avisos.set(a) });
     this.comunicacaoService.orientacoes().subscribe({ next: (o) => this.orientacoes.set(o) });
+    this.comunicacaoService.campanhasPublicas().subscribe({ next: (c) => this.campanhasDeComunicacao.set(c) });
     this.programaService.publico().subscribe({ next: (p) => this.programas.set(p), error: () => this.programas.set(null) });
     this.programaService.campanhasPublicas().subscribe({ next: (c) => this.campanhas.set(c), error: () => this.campanhas.set(null) });
   }

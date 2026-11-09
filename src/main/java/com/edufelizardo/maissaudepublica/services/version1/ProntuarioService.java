@@ -97,6 +97,9 @@ public class ProntuarioService {
     @Autowired
     private EventoLeitoRepository eventoLeitoRepository;
 
+    @Autowired
+    private OcorrenciaUrgenciaService ocorrenciaUrgenciaService;
+
     public ProntuarioResponseDto buscarPorPacienteId(UUID pacienteId) {
         Paciente paciente = pacienteRepository.findById(pacienteId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -118,6 +121,7 @@ public class ProntuarioService {
         response.setInternacoes(internacaoRepository.findByPaciente_UuidOrderByAdmitidaEmDesc(pacienteId).stream()
                 .map(i -> InternacaoResponseDto.fromInternacao(i, eventoLeitoRepository.findByInternacao_UuidOrderByOcorridoEmAsc(i.getUuid()), true))
                 .collect(Collectors.toList()));
+        response.setOcorrenciasUrgencia(ocorrenciaUrgenciaService.doPaciente(pacienteId));
         return response;
     }
 

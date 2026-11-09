@@ -1,0 +1,12 @@
+# Arquivos dos documentos (ADR-0172), separados do Postgres.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: documentos-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi

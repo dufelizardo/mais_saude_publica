@@ -89,6 +89,7 @@
               <th scope="col" class="num">Carga horária</th>
               <th scope="col">Validade</th>
               <th scope="col">Exigência</th>
+              <th scope="col">Competências e material</th>
               @if (pode('RH.GERENCIAR')) { <th scope="col" class="num">Ações</th> }
             </tr>
           </thead>
@@ -105,8 +106,20 @@
                     <span class="badge badge--muted">Opcional</span>
                   }
                 </td>
+                <td>
+                  @let e = educacaoDo(t);
+                  @if (e.competencias.length || e.conteudos.length) {
+                    <span class="cell-sub">{{ e.competencias.length }} competência(s) · {{ e.conteudos.length }} conteúdo(s)</span>
+                    @for (c of e.competencias.slice(0, 2); track c.uuid) { <span class="tag tag--info">{{ c.nome }}</span> }
+                  } @else { <span class="cell-sub">—</span> }
+                </td>
                 @if (pode('RH.GERENCIAR')) {
-                  <td class="num"><button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Editar ' + t.nome" (click)="abrirTreinamento(t)">Editar</button></td>
+                  <td class="num">
+                    <div class="row-actions">
+                      <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Competências e conteúdos de ' + t.nome" (click)="educacaoAberta.set(educacaoDo(t))">Competências</button>
+                      <button type="button" class="btn btn--ghost btn--sm" [attr.aria-label]="'Editar ' + t.nome" (click)="abrirTreinamento(t)">Editar</button>
+                    </div>
+                  </td>
                 }
               </tr>
             }
@@ -115,6 +128,14 @@
       </div>
     }
   </section>
+}
+
+@if (aba() === 'competencias') {
+  <app-competencias [competencias]="competencias()" [usos]="usosDaCompetencia()" [podeEditar]="pode('RH.GERENCIAR')" (salvou)="avisar('Competência salva', $event)" />
+}
+
+@if (educacaoAberta(); as e) {
+  <app-educacao-do-treinamento [atual]="e" [competencias]="competencias()" (fechar)="educacaoAberta.set(null)" (salvou)="avisar('Competências e conteúdos salvos', $event)" />
 }
 
 @if (aba() === 'ciclos') {

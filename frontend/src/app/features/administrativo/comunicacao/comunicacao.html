@@ -62,6 +62,14 @@
   </section>
 }
 
+@if (aba() === 'campanhas') {
+  <app-campanhas-de-comunicacao [campanhas]="campanhas()" [canais]="canais()" [conteudos]="conteudos()" [unidades]="unidades()" [podePublicar]="podePublicar()" (salvou)="avisar($event)" />
+}
+
+@if (materiaisDe(); as m) {
+  <app-materiais-do-conteudo [conteudo]="m" [podeEditar]="podeEditar()" (fechar)="materiaisDe.set(null)" (salvou)="avisar({ titulo: 'Material adicionado', detalhe: $event })" />
+}
+
 @if (aba() === 'conteudos') {
   <section class="card" id="pn-conteudos" role="tabpanel" aria-labelledby="tab-conteudos">
     <div class="card__head"><div><h2>Conteúdos educativos</h2><p class="sub">Rascunho, revisão técnica, aprovado e publicado; quem escreveu não aprova o próprio conteúdo</p></div></div>
@@ -78,7 +86,7 @@
               <tr>
                 <td>
                   <span class="cell-main">{{ c.titulo }} <span class="cell-sub mono" style="display: inline;">v{{ c.versao }}</span></span>
-                  <span class="cell-sub">{{ c.tema }}@if (c.motivoDevolucao) { · devolvido: {{ c.motivoDevolucao }} }</span>
+                  <span class="cell-sub">{{ c.tema }}@if (c.motivoDevolucao) { · devolvido: {{ c.motivoDevolucao }} }@if (usoNosTreinamentos()[c.grupoId]; as t) { · em treinamento: {{ t.join(', ') }} }</span>
                 </td>
                 <td>{{ publicos[c.publico] }}</td>
                 <td>{{ dataBr(c.validade) }}</td>
@@ -98,6 +106,7 @@
                     @if (c.situacao === 'APROVADO' && podePublicar()) { <button type="button" class="btn btn--sm" (click)="abrirPublicarConteudo(c)" [attr.aria-label]="'Publicar ' + c.titulo">Publicar</button> }
                     @if ((c.situacao === 'PUBLICADO' || c.situacao === 'EXPIRADO') && podeEditar()) { <button type="button" class="btn btn--ghost btn--sm" (click)="acaoDoConteudo(c, 'nova-versao', 'Nova versão criada')" [attr.aria-label]="'Nova versão de ' + c.titulo">Nova versão</button> }
                     @if (c.publicacoes.length) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirHistorico(c.titulo, c.publicacoes)" [attr.aria-label]="'Histórico de ' + c.titulo">Histórico</button> }
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="materiaisDe.set(c)" [attr.aria-label]="'Materiais de ' + c.titulo">Materiais</button>
                   </div>
                 </td>
               </tr>
@@ -182,6 +191,15 @@
                 @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
               </select>
             </div>
+            @if (campanhasAbertas().length) {
+              <div class="dw-field">
+                <label for="f-campanhaId">Campanha de comunicação<span class="opt">opcional · o período cabe no dela</span></label>
+                <select id="f-campanhaId" formControlName="campanhaId">
+                  <option value="">Nenhuma</option>
+                  @for (c of campanhasAbertas(); track c.uuid) { <option [value]="c.uuid">{{ c.nome }}</option> }
+                </select>
+              </div>
+            }
         <fieldset class="perm-groups">
           <legend>Canais</legend>
           @if (canaisDoPublico(publicoDaGaveta()).length) {

@@ -34,4 +34,10 @@ public class AutorizacaoRegulacaoRequestDto implements Serializable {
 
     /** Quem vai atender, se já se sabe: a autorização já cria o agendamento (ADR-0089). */
     private String profissionalExecutanteMatricula;
+
+    /** Sem saldo de cota da PPI, autoriza como extracota (ADR-0179). */
+    private Boolean extraCota;
+
+    @Size(max = 500)
+    private String justificativaExtraCota;
 }

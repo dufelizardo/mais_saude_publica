@@ -339,7 +339,7 @@ Assim o modelo dos sistemas externos não contamina o domínio interno.
 | **V1** · fundação ✅ ([ADR-0124](../adr/0124-vigilancia-epidemiologica-fundacao.md)) | agravo (catálogo e ficha como dado), notificação e notificação negativa, investigação, classificação; sugestão de notificação a partir de atendimento, internação e exame | Paciente, Atendimento; Território opcional |
 | **V2a** · contatos, local e mapa ✅ ([ADR-0130](../adr/0130-vigilancia-contatos-local-e-mapa.md)) | contato e monitoramento, contato que vira caso, local do caso, mapa e curva | V1; Território F1 a F3 |
 | **V2b** · surto e medidas ✅ ([ADR-0131](../adr/0131-vigilancia-surto-e-medidas.md)) | surto, medida de controle e linha do tempo dos casos | V2a |
-| **V3** · sanitária | estabelecimento regulado, inspeção, irregularidade, medida, licença | Documentos (autos) |
+| **V3** · sanitária | estabelecimento regulado, inspeção, irregularidade, medida, licença | Documentos D2 (autos) |
 | **V4a** · controle de vetores ✅ ([ADR-0162](../adr/0162-vigilancia-controle-de-vetores.md)) | vistoria, foco, índices do ciclo, ação de controle | Território F3 (imóvel) |
 | **V4b** · animais ✅ ([ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md)) | animal, observação do agressor, exames, vacinação antirrábica | V4a |
 | **V4c** · ambiental ✅ ([ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md)) | qualidade da água, risco ambiental | V4a |

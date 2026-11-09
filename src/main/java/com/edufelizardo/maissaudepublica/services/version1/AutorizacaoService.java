@@ -81,6 +81,14 @@ public class AutorizacaoService {
         if (raizes.isEmpty()) {
             return Optional.of(Set.of());
         }
+        return Optional.of(abaixoDe(raizes));
+    }
+
+    /**
+     * As unidades dadas e todas abaixo delas, pela unidade superior ou pela supervisão regional. Também dá o recorte dos indicadores por
+     * esfera e regional (ADR-0175).
+     */
+    public Set<UUID> abaixoDe(java.util.Collection<UUID> raizes) {
         Map<UUID, List<UUID>> filhas = new HashMap<>();
         for (UnidadeDeSaude u : unidadeDeSaudeRepository.findAll()) {
             if (u.getUnidadeSuperior() != null) {
@@ -98,7 +106,7 @@ public class AutorizacaoService {
                 fila.addAll(filhas.getOrDefault(id, List.of()));
             }
         }
-        return Optional.of(cobertas);
+        return cobertas;
     }
 
     /** Códigos das permissões vigentes, em qualquer escopo. */

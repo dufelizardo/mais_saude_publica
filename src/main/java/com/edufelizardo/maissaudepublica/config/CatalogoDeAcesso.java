@@ -95,6 +95,16 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Plano de tratamento odontológico (ADR-0137): abrir, conduzir e concluir é do cirurgião-dentista.
         PERMISSOES.put("ODONTOLOGIA.PLANEJAR", new Def("Abrir, conduzir e concluir o plano de tratamento odontológico (cirurgião-dentista)",
                 ACESSO_AO_DADO_DE_SAUDE));
+        // Estoque e almoxarifado (ADR-0177): materiais gerais; medicamento é da Farmácia e vacina, da Sala de Vacina.
+        PERMISSOES.put("ESTOQUE.CONSULTAR", new Def("Consultar o saldo, o livro e os alertas do estoque de materiais", OPERACAO));
+        PERMISSOES.put("ESTOQUE.MOVIMENTAR", new Def("Registrar entrada, saída por consumo, perda e ajuste de materiais", OPERACAO));
+        PERMISSOES.put("ESTOQUE.GERENCIAR", new Def("Manter o catálogo de materiais e o estoque mínimo", OPERACAO));
+        // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.
+        PERMISSOES.put("TRANSPORTE.CONSULTAR", new Def("Consultar a frota, a situação dos veículos e os plantões", OPERACAO));
+        PERMISSOES.put("TRANSPORTE.GERENCIAR", new Def("Cadastrar veículos, registrar manutenção e montar os plantões das viaturas", OPERACAO));
+        // Gestão da Rede (ADR-0179): oferta e cotas da PPI; a Regulação consome a cota na autorização.
+        PERMISSOES.put("REDE.CONSULTAR", new Def("Consultar a oferta assistencial e as cotas da PPI", OPERACAO));
+        PERMISSOES.put("REDE.GERENCIAR", new Def("Cadastrar a oferta da executante e pactuar as cotas da PPI", OPERACAO));
         PERMISSOES.put("PACIENTE.CONSULTAR", new Def("Consultar cadastro de pacientes", OPERACAO));
         PERMISSOES.put("PACIENTE.CADASTRAR", new Def("Cadastrar e atualizar pacientes", OPERACAO));
         PERMISSOES.put("AGENDAMENTO.GERENCIAR", new Def("Agendar, confirmar e cancelar", OPERACAO));
@@ -118,6 +128,12 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("REGULACAO.CONSULTAR", new Def("Acompanhar o andamento das solicitações de regulação", OPERACAO));
         PERMISSOES.put("REGULACAO.SOLICITAR", new Def("Solicitar regulação (encaminhar a especialidade, exame ou procedimento)", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("REGULACAO.REGULAR", new Def("Regular a fila: autorizar com vaga, devolver, negar e manter o catálogo", ACESSO_AO_DADO_DE_SAUDE));
+        // Regulação de urgência (ADR-0176): o atendente abre e registra os deslocamentos; o médico regulador decide; consultar é só o andamento.
+        PERMISSOES.put("URGENCIA.CONSULTAR", new Def("Acompanhar o andamento das ocorrências de urgência, sem dado clínico", OPERACAO));
+        PERMISSOES.put("URGENCIA.RECEBER", new Def("Abrir ocorrências na central de urgência e registrar os deslocamentos (TARM e rádio-operador)",
+                ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("URGENCIA.REGULAR", new Def("Regular as urgências: gravidade, decisão, destino com vaga zero e encerramento",
+                ACESSO_AO_DADO_DE_SAUDE));
         // Laboratório assistencial (ADR-0093).
         PERMISSOES.put("EXAME.SOLICITAR", new Def("Pedir exames laboratoriais", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LABORATORIO.COLETAR", new Def("Registrar a coleta de amostras", ACESSO_AO_DADO_DE_SAUDE));
@@ -127,6 +143,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("INTERNACAO.CONSULTAR", new Def("Ver o mapa de leitos e as internações", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.GERENCIAR", new Def("Internar e trocar paciente de leito", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.ALTA", new Def("Dar alta da internação (ato médico)", ACESSO_AO_DADO_DE_SAUDE));
+        // Documentos (ADR-0172): anexar não dá direito de abrir; abrir segue o prontuário.
+        PERMISSOES.put("DOCUMENTO.ANEXAR", new Def("Anexar documentos ao paciente, enviar versões e retirar", OPERACAO));
         PERMISSOES.put("LEITO.GERENCIAR", new Def("Cadastrar, bloquear e liberar leitos", OPERACAO));
         // Quem cadastra leitos não muda o limite (ADR-0171): o número é da gestão.
         PERMISSOES.put("LEITO.AUTORIZAR", new Def("Definir quantos leitos a unidade tem autorizados por capacidade", OPERACAO));
@@ -152,31 +170,44 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "LEITO.AUTORIZAR")));
         PAPEIS.put("GESTOR", new PapelPadrao("Gestor",
                 "Gestão de RH, setor administrativo, estoque e acessos no seu escopo.",
-                List.of("ACESSO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR", "ADMINISTRATIVO.CONSULTAR",
+                List.of("DOCUMENTO.ANEXAR", "ACESSO.GERENCIAR", "RH.CONSULTAR", "RH.GERENCIAR", "ADMINISTRATIVO.CONSULTAR",
                         "ADMINISTRATIVO.GERENCIAR", "PACIENTE.CONSULTAR", "FARMACIA.CONSULTAR", "EQUIPE.GERENCIAR",
                         "ESCALA.GERENCIAR", "PROGRAMA.GERENCIAR", "VIGILANCIA.GERENCIAR", "TERRITORIO.GERENCIAR",
                         "INDICADOR.CONSULTAR", "IMUNIZACAO.GERENCIAR", "INTERSETORIAL.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.ATIVAR",
                         "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR",
-                        "CONTEUDO.REVISAR", "LEITO.AUTORIZAR")));
+                        "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR",
+                        "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
+                        "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
-                List.of("PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
                         "REGULACAO.CONSULTAR",
                         // Informar a família onde o paciente está internado (ADR-0098).
                         "INTERNACAO.CONSULTAR")));
         PAPEIS.put("MEDICO", new PapelPadrao("Médico",
                 "Consulta, prescrição e procedimentos.",
-                List.of("PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
                         "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
                         "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
                         "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
                 "Regula a fila da Central de Regulação do Acesso no seu escopo (ADR-0087).",
-                List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR")));
+                List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR", "REDE.CONSULTAR")));
+        // Regulação de urgência (ADR-0176): a central do 192, pela Portaria 2.048/2002.
+        PAPEIS.put("ATENDENTE_REGULACAO_URGENCIA", new PapelPadrao("Atendente de regulação (TARM)",
+                "Atende o chamado, abre a ocorrência e registra os deslocamentos do recurso na central de urgência (ADR-0176).",
+                List.of("PACIENTE.CONSULTAR", "URGENCIA.CONSULTAR", "URGENCIA.RECEBER", "TRANSPORTE.CONSULTAR")));
+        PAPEIS.put("MEDICO_REGULADOR_URGENCIA", new PapelPadrao("Médico regulador de urgência",
+                "Classifica a gravidade, decide a conduta, indica o destino com vaga zero e encerra as ocorrências (ADR-0176).",
+                List.of("PACIENTE.CONSULTAR", "URGENCIA.CONSULTAR", "URGENCIA.REGULAR", "TRANSPORTE.CONSULTAR")));
+        // Transporte (ADR-0178).
+        PAPEIS.put("COORDENADOR_DE_FROTA", new PapelPadrao("Coordenador de frota",
+                "Frota, manutenção e plantão das viaturas, com a tripulação (ADR-0178).",
+                List.of("TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR")));
         PAPEIS.put("ENFERMEIRO", new PapelPadrao("Enfermeiro",
                 "Classificação de risco, evolução, procedimentos e medicação.",
-                List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
                         "EVOLUCAO.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
                         // Pedido de exames em protocolos da atenção básica e do pré-natal (ADR-0093).
                         "EXAME.SOLICITAR", "LABORATORIO.COLETAR",
@@ -194,7 +225,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
-                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR")));
+                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR", "ESTOQUE.CONSULTAR")));
         // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
                 "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",
@@ -216,11 +247,11 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Saúde Mental (ADR-0120): as funções já existiam nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("PSICOLOGO", new PapelPadrao("Psicólogo",
                 "Acolhimento e acompanhamento em saúde mental; lê o prontuário com vínculo.",
-                List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
                         "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
         PAPEIS.put("ASSISTENTE_SOCIAL", new PapelPadrao("Assistente social",
                 "Acolhimento e acompanhamento psicossocial; lê o prontuário com vínculo e mantém o catálogo intersetorial.",
-                List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
+                List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
                         "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR", "INTERSETORIAL.GERENCIAR")));
         // Vigilância epidemiológica (ADR-0124): investiga com acesso ao prontuário; o detalhe dos agravos sensíveis é dela.
         PAPEIS.put("VIGILANCIA_EPIDEMIOLOGICA", new PapelPadrao("Vigilância epidemiológica",
@@ -243,6 +274,10 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("TECNICO_SAUDE_BUCAL", new PapelPadrao("Técnico em saúde bucal",
                 "Procedimentos permitidos, sob supervisão do dentista (Lei 11.889/2008). Sem avaliação nem diagnóstico.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR", "PROGRAMA.ACOMPANHAR")));
+        // Estoque e almoxarifado (ADR-0177).
+        PAPEIS.put("ALMOXARIFE", new PapelPadrao("Almoxarife",
+                "Entrada, saída por consumo, perda e ajuste de materiais e insumos gerais (ADR-0177).",
+                List.of("ESTOQUE.CONSULTAR", "ESTOQUE.MOVIMENTAR")));
         PAPEIS.put("FARMACEUTICO", new PapelPadrao("Farmacêutico",
                 "Estoque, dispensação e transferências; lê a prescrição.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "FARMACIA.CONSULTAR", "FARMACIA.GERENCIAR_ESTOQUE",

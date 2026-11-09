@@ -43,6 +43,7 @@ import { AvaliacaoService } from '../../core/services/avaliacao';
 import { CalculoRescisaoService } from '../../core/services/calculo-rescisao';
 import { formatCpf, formatTelefone } from '../../shared/format-mask';
 import { Drawer } from '../../shared/drawer/drawer';
+import { CompetenciasDoProfissional } from './competencias-do-profissional';
 import { hojeIso, moeda } from '../../shared/formato';
 import { categoriaDoProfissional, iniciaisDoNome, situacaoDoProfissional } from '../../shared/profissional-categoria';
 import { AcessoDaInterface } from '../../core/models/auth';
@@ -94,7 +95,7 @@ function competenciaAtual(): string {
 
 @Component({
   selector: 'app-profissional-perfil',
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Drawer, RouterLink],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, Drawer, RouterLink, CompetenciasDoProfissional],
   templateUrl: './profissional-perfil.html',
   styleUrl: './profissional-perfil.css',
 })

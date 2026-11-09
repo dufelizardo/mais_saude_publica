@@ -12,8 +12,7 @@ UI Instituicoes Externas - Tela Abre
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Ir Para Rota Do Frontend    /administrativo/setores
     Clicar Item Do Menu    Rede intersetorial
-    ${titulo}=    Ler Titulo Da Pagina
-    Should Be Equal    ${titulo}    Instituições da rede intersetorial
+    Wait For Elements State    role=heading[level=1] >> text=Instituições da rede intersetorial    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

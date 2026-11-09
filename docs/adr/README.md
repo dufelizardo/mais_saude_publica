@@ -129,7 +129,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0111](./0111-saude-bucal.md) | Saúde Bucal: domínio assistencial especializado | Aceita e implementada (SB1 a SB5 nas ADRs 0134 a 0140) |
 | [0112](./0112-saude-mental.md) | Saúde Mental: domínio de atenção psicossocial | Aceita (desenho; SM1 a SM4 nas ADRs 0120 a 0123, SM5 na 0153 e SM6 na 0155; domínio completo) |
 | [0113](./0113-emergencias-e-desastres.md) | Gestão de Emergências e Desastres: coordenação extraordinária | Aceita (desenho; E1 a E3 nas ADRs 0156 a 0158, E5 na 0159 e E6 nas 0160 e 0161; E4 a fazer) |
-| [0114](./0114-comunicacao-e-educacao-em-saude.md) | Comunicação e Educação em Saúde: domínio próprio | Aceita (desenho; C1 na ADR-0168; C2 a C6 a fazer) |
+| [0114](./0114-comunicacao-e-educacao-em-saude.md) | Comunicação e Educação em Saúde: domínio próprio | Aceita (desenho; C1, C4 e C2 nas ADRs 0168, 0173 e 0174; C3, C5 e C6 a fazer) |
 | [0115](./0115-modelo-operacional-dos-equipamentos.md) | Modelo Operacional dos Equipamentos e reconciliação do mapa (#29 a #31) | Aceita (desenho; MO1 a MO4 nas ADRs 0117, 0165, 0166 e 0170; camada completa) |
 | [0116](./0116-marco-mapa-de-dominios-fechado.md) | Marco: mapa de domínios fechado e regra para novos domínios | Aceita |
 | [0117](./0117-modelo-operacional-perfis-e-capacidades.md) | Modelo operacional: perfis e capacidades da unidade (MO1) | Aceita e implementada |
@@ -157,7 +157,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0139](./0139-saude-bucal-tratamento-protetico.md) | Saúde Bucal: tratamento protético (SB4b) | Aceita e implementada |
 | [0140](./0140-saude-bucal-coletiva.md) | Saúde Bucal: saúde bucal coletiva (SB5) | Aceita e implementada |
 | [0141](./0141-programas-metas-e-indicadores.md) | Programas: metas e indicadores programáticos (P6) | Aceita e implementada |
-| [0142](./0142-indicadores-bi-e-gestao.md) | Indicadores, BI e Gestão: camada de leitura (domínio 19) | Aceita (desenho; BI1 a BI4 nas ADRs 0143, 0144, 0146 e 0167; BI5 a fazer) |
+| [0142](./0142-indicadores-bi-e-gestao.md) | Indicadores, BI e Gestão: camada de leitura (domínio 19) | Aceita (desenho; BI1 a BI5 nas ADRs 0143, 0144, 0146, 0167 e 0175) |
 | [0143](./0143-bi-producao-assistencial.md) | Indicadores e BI: produção assistencial por unidade (BI1) | Aceita e implementada |
 | [0144](./0144-bi-situacao-operacional.md) | Indicadores e BI: situação operacional (BI2) | Aceita e implementada |
 | [0145](./0145-saude-da-aplicacao-para-o-kubernetes.md) | Saúde da aplicação para as verificações do Kubernetes | Aceita e implementada |
@@ -186,6 +186,14 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0169](./0169-nomes-amigaveis-na-rede-local.md) | Nomes amigáveis na rede local (mDNS) | Aceita e implementada |
 | [0170](./0170-modelo-operacional-dominios-consultam-capacidades.md) | Modelo Operacional: domínios consultam capacidades (MO4) | Aceita e implementada |
 | [0171](./0171-limite-de-leitos-por-capacidade.md) | Limite de leitos por capacidade | Aceita e implementada |
+| [0172](./0172-documentos-anexos.md) | Documentos: anexos do paciente (D1) | Aceita e implementada |
+| [0173](./0173-educacao-permanente.md) | Comunicação e Educação em Saúde: educação permanente (C4) | Aceita e implementada |
+| [0174](./0174-campanhas-de-comunicacao.md) | Comunicação e Educação em Saúde: campanhas de comunicação (C2) | Aceita e implementada |
+| [0175](./0175-coordenacoes-e-gerencia.md) | Indicadores e BI: coordenações e gerência (BI5) | Aceita e implementada |
+| [0176](./0176-regulacao-de-urgencia.md) | Regulação de urgência: central do 192, regulação médica, vaga zero e o SAMU pela crise | Aceita e implementada |
+| [0177](./0177-estoque-e-almoxarifado.md) | Estoque e Almoxarifado: desenho do domínio 13 e a ES1 (catálogo, lotes, livro, mínimo e alertas) | Aceita (ES1 implementada; ES2 e ES3 com aprovação) |
+| [0178](./0178-transporte-sanitario.md) | Transporte Sanitário: desenho do domínio 16 e a T1 (frota, plantão das viaturas e a viatura no SAMU) | Aceita (T1 implementada; T2 e T3 com aprovação) |
+| [0179](./0179-gestao-da-rede-de-atencao.md) | Gestão da Rede de Atenção: desenho do domínio 30 e a GR1 (oferta assistencial e cotas da PPI consumidas pela Regulação) | Aceita (GR1 implementada; GR2 e GR3 com aprovação) |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 
