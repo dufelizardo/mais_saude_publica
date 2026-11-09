@@ -46,4 +46,7 @@ public class PedidoExameRequestDto implements Serializable {
 
     @NotNull
     private PrioridadeExame prioridade;
+
+    /** O serviço de imagem, obrigatório quando o pedido tem exame de imagem (ADR-0182). */
+    private UUID unidadeExecutanteImagemId;
 }

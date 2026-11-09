@@ -18,3 +18,8 @@
 
 /* Resultado crítico na lista de ciência (ADR-0181): faixa à esquerda da linha. */
 tr.lab-critico td:first-child { box-shadow: inset 3px 0 0 var(--alert); }
+
+/* Laudo de imagem no detalhe do pedido (ADR-0182). */
+.lab-laudo { border: 1px solid var(--ink-200); border-radius: var(--r-md); padding: var(--s-3); margin-bottom: var(--s-3); background: var(--white); }
+.lab-laudo h4 { margin: 0 0 var(--s-2); font-size: 0.92rem; }
+.lab-laudo p { margin: 0 0 var(--s-1); white-space: pre-line; }

@@ -72,6 +72,20 @@ public class ResultadoExame implements Serializable {
     @Column(length = 1000, updatable = false)
     private String observacao;
 
+    /** Laudo de imagem (ADR-0182): técnica, achados e conclusão; a conclusão também vai em valorTexto. */
+    @Column(length = 1000, updatable = false)
+    private String laudoTecnica;
+
+    @Column(length = 4000, updatable = false)
+    private String laudoAchados;
+
+    @Column(length = 2000, updatable = false)
+    private String laudoConclusao;
+
+    /** Link para as imagens (visualizador do PACS), só https; o PACS é integração do domínio 20. */
+    @Column(length = 500, updatable = false)
+    private String imagemUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "analisado_por_id", referencedColumnName = "uuid", nullable = false, updatable = false)
     private Profissional analisadoPor;

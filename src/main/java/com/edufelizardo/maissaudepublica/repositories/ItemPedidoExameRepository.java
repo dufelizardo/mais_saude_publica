@@ -36,7 +36,8 @@ public interface ItemPedidoExameRepository extends JpaRepository<ItemPedidoExame
     @Query("select i from ItemPedidoExame i join fetch i.exame join fetch i.resultadoAtual r join fetch i.pedido p join fetch p.paciente "
             + "where r.cienciaEm is null and i.status = com.edufelizardo.maissaudepublica.models.enuns.StatusItemExame.LIBERADO "
             + "and r.interpretacao in (com.edufelizardo.maissaudepublica.models.enuns.InterpretacaoResultado.CRITICO_ALTO, "
-            + "com.edufelizardo.maissaudepublica.models.enuns.InterpretacaoResultado.CRITICO_BAIXO)")
+            + "com.edufelizardo.maissaudepublica.models.enuns.InterpretacaoResultado.CRITICO_BAIXO, "
+            + "com.edufelizardo.maissaudepublica.models.enuns.InterpretacaoResultado.ACHADO_CRITICO)")
     List<ItemPedidoExame> findCriticosSemCiencia();
 
     /** Trava o item: dois profissionais não registram ou liberam o mesmo exame ao mesmo tempo. */

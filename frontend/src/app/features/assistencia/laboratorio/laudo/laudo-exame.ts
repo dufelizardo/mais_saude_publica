@@ -6,6 +6,7 @@ import { catchError } from 'rxjs/operators';
 import {
   INTERPRETACOES,
   MATERIAIS,
+  tipoDoExame,
   PedidoExameResponseDto,
   faixaCritica,
   faixaReferencia,
@@ -32,6 +33,7 @@ export class LaudoExame {
   private readonly pacienteService = inject(PacienteService);
 
   protected readonly materiais = MATERIAIS;
+  protected readonly tipoDoExame = tipoDoExame;
   protected readonly interpretacoes = INTERPRETACOES;
   protected readonly faixa = faixaReferencia;
   protected readonly faixaCritica = faixaCritica;

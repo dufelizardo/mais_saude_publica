@@ -194,8 +194,9 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0177](./0177-estoque-e-almoxarifado.md) | Estoque e Almoxarifado: desenho do domínio 13 e a ES1 (catálogo, lotes, livro, mínimo e alertas) | Aceita (ES1 implementada; ES2 e ES3 com aprovação) |
 | [0178](./0178-transporte-sanitario.md) | Transporte Sanitário: desenho do domínio 16 e a T1 (frota, plantão das viaturas e a viatura no SAMU) | Aceita (T1 implementada; T2 e T3 com aprovação) |
 | [0179](./0179-gestao-da-rede-de-atencao.md) | Gestão da Rede de Atenção: desenho do domínio 30 e a GR1 (oferta assistencial e cotas da PPI consumidas pela Regulação) | Aceita (GR1 implementada; GR2 e GR3 com aprovação) |
-| [0180](./0180-laboratorio-faixas-de-referencia.md) | Laboratório: faixas de referência por sexo e idade, valores críticos e evolução do exame (L1) | Aceita (L1 implementada; L2 na 0181; L3 e L4 em seguida) |
+| [0180](./0180-laboratorio-faixas-de-referencia.md) | Laboratório: faixas de referência por sexo e idade, valores críticos e evolução do exame (L1) | Aceita (L1 implementada; L2 na 0181, L3 na 0182; L4 em seguida) |
 | [0181](./0181-laboratorio-ciencia-critico-entrega.md) | Laboratório: ciência de quem pediu, comunicação do valor crítico e entrega do resultado ao paciente (L2) | Aceita e implementada |
+| [0182](./0182-exames-de-imagem.md) | Laboratório e Diagnóstico: exames de imagem, com realização, laudo do radiologista e adendo (L3) | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

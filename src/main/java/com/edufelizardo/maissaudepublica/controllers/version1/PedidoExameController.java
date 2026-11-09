@@ -137,7 +137,52 @@ public class PedidoExameController {
     }
 
 
-    @RequerPermissao({"EXAME.SOLICITAR", "LABORATORIO.ANALISAR"})
+    @RequerPermissao({"IMAGEM.REALIZAR"})
+    @PostMapping(value = "item/{uuid}/realizacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra a realização do exame de imagem", description = "No serviço de imagem do pedido (403). Exame laboratorial, já realizado ou data no futuro: 422. Contraste sem descrição: 400 (ADR-0182).", tags = "Laboratório")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> realizar(@PathVariable UUID uuid,
+            @Valid @RequestBody com.edufelizardo.maissaudepublica.models.dtos.version1.request.RealizacaoExameImagemRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Exame realizado!", service.realizar(uuid, dto)));
+    }
+
+    @RequerPermissao({"IMAGEM.LAUDAR"})
+    @PostMapping(value = "item/{uuid}/laudo", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra e assina o laudo de imagem", description = "O laudo sai liberado. Só exame realizado (422). Classificação NORMAL, ALTERADO ou ACHADO_CRITICO; link das imagens só https (400) (ADR-0182).", tags = "Laboratório")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> laudar(@PathVariable UUID uuid,
+            @Valid @RequestBody com.edufelizardo.maissaudepublica.models.dtos.version1.request.LaudoImagemRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Laudo liberado!", service.laudar(uuid, dto)));
+    }
+
+    @RequerPermissao({"IMAGEM.LAUDAR"})
+    @PostMapping(value = "item/{uuid}/adendo", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra adendo ao laudo de imagem", description = "Grava outro laudo ligado ao anterior, já liberado. Motivo obrigatório (400). Só laudo liberado (422) (ADR-0182).", tags = "Laboratório")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponseDto.class),
+                    examples = @ExampleObject(name = "Success", summary = "SuccessResponse",
+                            value = ExampleConstants.SUCCESS_RESPONSE_EXAMPLE))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SuccessResponseDto> adendo(@PathVariable UUID uuid,
+            @Valid @RequestBody com.edufelizardo.maissaudepublica.models.dtos.version1.request.LaudoImagemRequestDto dto) {
+        return ResponseEntity.ok(sucesso("Adendo registrado!", service.adendo(uuid, dto)));
+    }
+
+    @RequerPermissao({"EXAME.SOLICITAR", "LABORATORIO.ANALISAR", "IMAGEM.REALIZAR"})
     @PostMapping(value = "item/{uuid}/cancelamento", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Cancela um exame do pedido", description = "Quem pediu ou o laboratório, antes da liberação (422). Motivo obrigatório.", tags = "Laboratório")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -192,7 +237,7 @@ public class PedidoExameController {
         return ResponseEntity.ok(sucesso("Ciência registrada!", service.darCienciaDoPedido(uuid, dto)));
     }
 
-    @RequerPermissao({"LABORATORIO.LIBERAR"})
+    @RequerPermissao({"LABORATORIO.LIBERAR", "IMAGEM.LAUDAR"})
     @GetMapping(value = "criticos-a-comunicar", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Resultados críticos liberados sem comunicação nem ciência",
             description = "Nos laboratórios do escopo, do mais antigo ao mais novo. Sem valores (ADR-0181).", tags = "Laboratório")
@@ -204,7 +249,7 @@ public class PedidoExameController {
         return ResponseEntity.ok(service.criticosAComunicar());
     }
 
-    @RequerPermissao({"LABORATORIO.LIBERAR"})
+    @RequerPermissao({"LABORATORIO.LIBERAR", "IMAGEM.LAUDAR"})
     @PostMapping(value = "item/{uuid}/comunicacao-critico", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Registra a comunicação do valor crítico", description = "Quem recebeu, meio e quando. Resultado não crítico ou data no futuro: 422. Já comunicado: 409 (ADR-0181).", tags = "Laboratório")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -232,10 +277,10 @@ public class PedidoExameController {
         return ResponseEntity.ok(sucesso("Entrega do resultado registrada!", service.entregar(uuid, dto)));
     }
 
-    @RequerPermissao({"LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR"})
+    @RequerPermissao({"LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR", "IMAGEM.REALIZAR", "IMAGEM.LAUDAR"})
     @GetMapping(value = "trabalho", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista de trabalho por exame",
-            description = "etapa=PARA_COLETAR, EM_ANALISE ou PARA_LIBERAR, nas unidades do escopo; urgente primeiro. Sem valores.",
+            description = "etapa=PARA_COLETAR, EM_ANALISE ou PARA_LIBERAR (laboratório) e PARA_REALIZAR ou PARA_LAUDAR (imagem, ADR-0182), nas unidades do escopo; urgente primeiro. Sem valores.",
             tags = "Laboratório")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = ItemTrabalhoExameDto.class)))
@@ -245,7 +290,7 @@ public class PedidoExameController {
         return ResponseEntity.ok(service.trabalho(etapa));
     }
 
-    @RequerPermissao({"EXAME.SOLICITAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR"})
+    @RequerPermissao({"EXAME.SOLICITAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR", "IMAGEM.REALIZAR", "IMAGEM.LAUDAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os pedidos, do mais recente ao mais antigo",
             description = "Sem valores. Filtros: pacienteId e situacao (AGUARDANDO_COLETA, EM_ANDAMENTO, CONCLUIDO, CANCELADO).",
@@ -259,7 +304,7 @@ public class PedidoExameController {
         return ResponseEntity.ok(service.listar(pacienteId, situacao));
     }
 
-    @RequerPermissao({"EXAME.SOLICITAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR"})
+    @RequerPermissao({"EXAME.SOLICITAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR", "LABORATORIO.LIBERAR", "IMAGEM.REALIZAR", "IMAGEM.LAUDAR"})
     @AuditarLeitura
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Detalhe do pedido, com indicação clínica, resultados, amostras e eventos",

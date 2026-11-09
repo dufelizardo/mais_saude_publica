@@ -47,6 +47,11 @@ public class PedidoExame implements Serializable {
     @JoinColumn(name = "profissional_solicitante_id", referencedColumnName = "uuid", nullable = false, updatable = false)
     private Profissional profissionalSolicitante;
 
+    /** O serviço de imagem que realiza e lauda os exames de imagem do pedido (ADR-0182); nulo sem exame de imagem. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unidade_executante_imagem_id", referencedColumnName = "uuid", updatable = false)
+    private UnidadeDeSaude unidadeExecutanteImagem;
+
     /** Dado de saúde. */
     @NotNull
     @Column(nullable = false, length = 2000, updatable = false)

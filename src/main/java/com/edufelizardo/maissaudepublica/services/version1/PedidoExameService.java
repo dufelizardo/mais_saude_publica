@@ -91,7 +91,11 @@ public class PedidoExameService {
     public static final String COLETAR = "LABORATORIO.COLETAR";
     public static final String ANALISAR = "LABORATORIO.ANALISAR";
     public static final String LIBERAR = "LABORATORIO.LIBERAR";
-    static final String[] VER = {SOLICITAR, COLETAR, ANALISAR, LIBERAR};
+    /** Exames de imagem (ADR-0182): o técnico realiza e o radiologista lauda, no serviço de imagem do pedido. */
+    public static final String REALIZAR = "IMAGEM.REALIZAR";
+    public static final String LAUDAR = "IMAGEM.LAUDAR";
+    static final String[] VER = {SOLICITAR, COLETAR, ANALISAR, LIBERAR, REALIZAR, LAUDAR};
+    private static final String CAPACIDADE_IMAGEM = "DIAGNOSTICO_POR_IMAGEM";
 
     private static final Comparator<ItemPedidoExame> ORDEM_DE_TRABALHO = Comparator
             .comparing((ItemPedidoExame i) -> i.getPedido().getPrioridade() == PrioridadeExame.URGENTE ? 0 : 1)
@@ -134,6 +138,12 @@ public class PedidoExameService {
     private ControleDeAcesso controleDeAcesso;
 
     @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.RealizacaoExameImagemRepository realizacaoRepository;
+
+    @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.UnidadeCapacidadeAssistencialRepository capacidadeRepository;
+
+    @Autowired
     private ComunicacaoCriticoExameRepository comunicacaoRepository;
 
     @Autowired
@@ -171,8 +181,21 @@ public class PedidoExameService {
             throw new ResourceUnprocessableEntityException("O exame " + e.getNome() + " está fora de uso no catálogo.");
         });
         Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
+        // Com exame de imagem, o pedido aponta o serviço de imagem, que precisa da capacidade no modelo operacional (ADR-0182).
+        UnidadeDeSaude executanteImagem = null;
+        if (exames.stream().anyMatch(PedidoExameService::deImagem)) {
+            if (dto.getUnidadeExecutanteImagemId() == null) {
+                throw new ResourceBadRequestException("O pedido tem exame de imagem: informe o serviço de imagem que vai realizá-lo.");
+            }
+            executanteImagem = buscarUnidade(dto.getUnidadeExecutanteImagemId());
+            if (!capacidadeRepository.existsByUnidade_UuidAndCapacidade_CodigoAndFimIsNull(executanteImagem.getUuid(), CAPACIDADE_IMAGEM)) {
+                throw new ResourceUnprocessableEntityException("A unidade " + executanteImagem.getNome()
+                        + " não tem diagnóstico por imagem (capacidade do modelo operacional).");
+            }
+        }
 
         PedidoExame pedido = new PedidoExame();
+        pedido.setUnidadeExecutanteImagem(executanteImagem);
         pedido.setPaciente(paciente);
         pedido.setAtendimento(atendimento);
         pedido.setUnidadeSolicitante(unidade);
@@ -199,7 +222,7 @@ public class PedidoExameService {
         UnidadeDeSaude laboratorio = dto.getLaboratorioId() != null ? buscarUnidade(dto.getLaboratorioId()) : unidadeColeta;
         Profissional coletor = buscarProfissional(dto.getProfissionalMatricula());
         List<ItemPedidoExame> aguardando = itemRepository.findByPedido_Uuid(pedidoId).stream()
-                .filter(i -> i.getStatus() == StatusItemExame.SOLICITADO).toList();
+                .filter(i -> i.getStatus() == StatusItemExame.SOLICITADO && !deImagem(i.getExame())).toList();
         List<ItemPedidoExame> coletar = dto.getItemIds() == null || dto.getItemIds().isEmpty() ? aguardando
                 : aguardando.stream().filter(i -> dto.getItemIds().contains(i.getUuid())).toList();
         if (coletar.isEmpty() || (dto.getItemIds() != null && !dto.getItemIds().isEmpty() && coletar.size() != dto.getItemIds().size())) {
@@ -310,6 +333,9 @@ public class PedidoExameService {
         ItemPedidoExame item = travarItem(itemId);
         controleDeAcesso.exigir(LIBERAR, item.getAmostra() != null ? item.getAmostra().getLaboratorio() : null);
         exigirStatus(item, "retificar", StatusItemExame.LIBERADO);
+        if (deImagem(item.getExame())) {
+            throw new ResourceUnprocessableEntityException("Laudo de imagem se corrige por adendo do radiologista.");
+        }
         Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
         ResultadoExame anterior = item.getResultadoAtual();
         ResultadoExame novo = novoResultado(item, dto.getValorNumerico(), dto.getValorTexto(), dto.getObservacao(), profissional,
@@ -328,9 +354,14 @@ public class PedidoExameService {
         try {
             controleDeAcesso.exigir(SOLICITAR, item.getPedido().getUnidadeSolicitante());
         } catch (ResourceForbiddenException semSolicitar) {
-            controleDeAcesso.exigir(ANALISAR, item.getAmostra() != null ? item.getAmostra().getLaboratorio() : item.getPedido().getUnidadeSolicitante());
+            if (deImagem(item.getExame())) {
+                controleDeAcesso.exigir(REALIZAR, item.getPedido().getUnidadeExecutanteImagem());
+            } else {
+                controleDeAcesso.exigir(ANALISAR, item.getAmostra() != null ? item.getAmostra().getLaboratorio() : item.getPedido().getUnidadeSolicitante());
+            }
         }
-        exigirStatus(item, "cancelar", StatusItemExame.SOLICITADO, StatusItemExame.COLETADO, StatusItemExame.RESULTADO_REGISTRADO);
+        exigirStatus(item, "cancelar", StatusItemExame.SOLICITADO, StatusItemExame.COLETADO, StatusItemExame.REALIZADO,
+                StatusItemExame.RESULTADO_REGISTRADO);
         Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
         item.setStatus(StatusItemExame.CANCELADO);
         item.setMotivoCancelamento(dto.getMotivo().trim());
@@ -356,7 +387,8 @@ public class PedidoExameService {
 
     /**
      * Lista de trabalho por exame, sem valores: PARA_COLETAR (aguardando coleta, nas unidades solicitantes do escopo),
-     * EM_ANALISE (coletados, no laboratório) e PARA_LIBERAR (com resultado, no laboratório). Urgente primeiro.
+     * EM_ANALISE (coletados, no laboratório) e PARA_LIBERAR (com resultado, no laboratório); e, dos exames de imagem, PARA_REALIZAR
+     * e PARA_LAUDAR, no serviço de imagem do pedido (ADR-0182). Urgente primeiro.
      */
     @Transactional(readOnly = true)
     public List<ItemTrabalhoExameDto> trabalho(String etapa) {
@@ -366,9 +398,18 @@ public class PedidoExameService {
             case "PARA_COLETAR" -> { status = StatusItemExame.SOLICITADO; permissao = COLETAR; }
             case "EM_ANALISE" -> { status = StatusItemExame.COLETADO; permissao = ANALISAR; }
             case "PARA_LIBERAR" -> { status = StatusItemExame.RESULTADO_REGISTRADO; permissao = LIBERAR; }
-            default -> throw new ResourceBadRequestException("Etapa inválida: use PARA_COLETAR, EM_ANALISE ou PARA_LIBERAR.");
+            case "PARA_REALIZAR", "PARA_LAUDAR" -> {
+                StatusItemExame s = etapa.equals("PARA_REALIZAR") ? StatusItemExame.SOLICITADO : StatusItemExame.REALIZADO;
+                return controleDeAcesso.filtrar(itemRepository.findByStatus(s).stream().filter(i -> deImagem(i.getExame())),
+                                i -> Stream.of(i.getPedido().getUnidadeExecutanteImagem()), etapa.equals("PARA_REALIZAR") ? REALIZAR : LAUDAR)
+                        .sorted(ORDEM_DE_TRABALHO)
+                        .map(i -> ItemTrabalhoExameDto.fromItem(i, null))
+                        .toList();
+            }
+            default -> throw new ResourceBadRequestException(
+                    "Etapa inválida: use PARA_COLETAR, EM_ANALISE, PARA_LIBERAR, PARA_REALIZAR ou PARA_LAUDAR.");
         }
-        List<ItemPedidoExame> itens = itemRepository.findByStatus(status);
+        List<ItemPedidoExame> itens = itemRepository.findByStatus(status).stream().filter(i -> !deImagem(i.getExame())).toList();
         Map<String, MotivoRejeicaoAmostra> recoleta = status == StatusItemExame.SOLICITADO ? recoletas(itens) : Map.of();
         return controleDeAcesso.filtrar(itens.stream(), i -> Stream.of(status == StatusItemExame.SOLICITADO
                         ? i.getPedido().getUnidadeSolicitante() : i.getAmostra().getLaboratorio()), permissao)
@@ -469,8 +510,13 @@ public class PedidoExameService {
     public List<ResultadoAvisoExameDto> criticosAComunicar() {
         List<ItemPedidoExame> criticos = itemRepository.findCriticosSemCiencia();
         Map<UUID, Instant> comunicados = comunicadosEm(criticos);
-        return controleDeAcesso.filtrar(criticos.stream().filter(i -> !comunicados.containsKey(i.getResultadoAtual().getUuid())),
-                        i -> Stream.of(i.getAmostra().getLaboratorio()), LIBERAR)
+        List<ItemPedidoExame> pendentes = criticos.stream().filter(i -> !comunicados.containsKey(i.getResultadoAtual().getUuid())).toList();
+        // Laboratório: quem libera no laboratório da amostra; imagem: o radiologista do serviço de imagem (ADR-0182).
+        Stream<ItemPedidoExame> doLaboratorio = controleDeAcesso.filtrar(pendentes.stream().filter(i -> !deImagem(i.getExame())),
+                i -> Stream.of(i.getAmostra().getLaboratorio()), LIBERAR);
+        Stream<ItemPedidoExame> daImagem = controleDeAcesso.filtrar(pendentes.stream().filter(i -> deImagem(i.getExame())),
+                i -> Stream.of(i.getPedido().getUnidadeExecutanteImagem()), LAUDAR);
+        return Stream.concat(doLaboratorio, daImagem)
                 .sorted(Comparator.comparing(i -> i.getResultadoAtual().getLiberadoEm()))
                 .map(i -> ResultadoAvisoExameDto.fromItem(i, null))
                 .toList();
@@ -483,7 +529,11 @@ public class PedidoExameService {
     @Transactional
     public PedidoExameResponseDto comunicarCritico(UUID itemId, ComunicacaoCriticoRequestDto dto) {
         ItemPedidoExame item = travarItem(itemId);
-        controleDeAcesso.exigir(LIBERAR, item.getAmostra() != null ? item.getAmostra().getLaboratorio() : null);
+        if (deImagem(item.getExame())) {
+            controleDeAcesso.exigir(LAUDAR, item.getPedido().getUnidadeExecutanteImagem());
+        } else {
+            controleDeAcesso.exigir(LIBERAR, item.getAmostra() != null ? item.getAmostra().getLaboratorio() : null);
+        }
         exigirStatus(item, "comunicar o crítico de", StatusItemExame.LIBERADO);
         ResultadoExame resultado = item.getResultadoAtual();
         if (!ResultadoAvisoExameDto.critico(resultado.getInterpretacao())) {
@@ -531,7 +581,7 @@ public class PedidoExameService {
         }
         List<ItemPedidoExame> itens = itemRepository.findByPedido_Uuid(pedidoId);
         if (itens.stream().anyMatch(i -> i.getStatus() == StatusItemExame.SOLICITADO || i.getStatus() == StatusItemExame.COLETADO
-                || i.getStatus() == StatusItemExame.RESULTADO_REGISTRADO)) {
+                || i.getStatus() == StatusItemExame.REALIZADO || i.getStatus() == StatusItemExame.RESULTADO_REGISTRADO)) {
             throw new ResourceUnprocessableEntityException("O pedido ainda tem exame em andamento: entregue quando todos estiverem liberados.");
         }
         if (itens.stream().noneMatch(i -> i.getStatus() == StatusItemExame.LIBERADO)) {
@@ -613,6 +663,127 @@ public class PedidoExameService {
         if (ResultadoAvisoExameDto.critico(resultado.getInterpretacao())) {
             avisoResultadoCritico.avisar(item);
         }
+    }
+
+    // ── Exames de imagem (ADR-0182) ────────────────────────────────────────────────────────────────
+
+    static boolean deImagem(ExameLaboratorial exame) {
+        return exame.getCategoria() == com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame.IMAGEM;
+    }
+
+    /**
+     * O técnico registra a realização no serviço de imagem do pedido (403 fora dele): quando, equipamento e contraste. Só exame
+     * de imagem aguardando (422); nada no futuro (422).
+     */
+    @Transactional
+    public PedidoExameResponseDto realizar(UUID itemId, com.edufelizardo.maissaudepublica.models.dtos.version1.request.RealizacaoExameImagemRequestDto dto) {
+        ItemPedidoExame item = travarItem(itemId);
+        if (!deImagem(item.getExame())) {
+            throw new ResourceUnprocessableEntityException("O exame " + item.getExame().getNome() + " é laboratorial: registre a coleta.");
+        }
+        UnidadeDeSaude servico = item.getPedido().getUnidadeExecutanteImagem();
+        controleDeAcesso.exigir(REALIZAR, servico);
+        exigirStatus(item, "realizar", StatusItemExame.SOLICITADO);
+        LocalDateTime quando = dto.getRealizadaEm() != null ? dto.getRealizadaEm() : LocalDateTime.now().withNano(0);
+        if (quando.isAfter(LocalDateTime.now().plusMinutes(5))) {
+            throw new ResourceUnprocessableEntityException("A realização não pode estar no futuro.");
+        }
+        boolean contraste = Boolean.TRUE.equals(dto.getContraste());
+        if (contraste && textoOuNulo(dto.getContrasteDescricao()) == null) {
+            throw new ResourceBadRequestException("Com contraste: informe qual contraste foi usado.");
+        }
+        Profissional tecnico = buscarProfissional(dto.getProfissionalMatricula());
+        com.edufelizardo.maissaudepublica.models.RealizacaoExameImagem r = new com.edufelizardo.maissaudepublica.models.RealizacaoExameImagem();
+        r.setItem(item);
+        r.setUnidade(servico);
+        r.setRealizadaEm(quando.atZone(ZoneId.systemDefault()).toInstant());
+        r.setTecnico(tecnico);
+        r.setEquipamento(textoOuNulo(dto.getEquipamento()));
+        r.setContraste(contraste);
+        r.setContrasteDescricao(contraste ? dto.getContrasteDescricao().trim() : null);
+        r.setObservacao(textoOuNulo(dto.getObservacao()));
+        r.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        realizacaoRepository.save(r);
+        item.setStatus(StatusItemExame.REALIZADO);
+        itemRepository.save(item);
+        registrar(item.getPedido(), item, TipoEventoExame.REALIZACAO, "No " + servico.getNome()
+                + (r.getEquipamento() != null ? ", " + r.getEquipamento() : "") + (contraste ? ", com contraste" : ""), tecnico);
+        return detalhe(item.getPedido());
+    }
+
+    /**
+     * O radiologista escreve e assina o laudo num passo só: o laudo sai liberado (não há a liberação técnica do laboratório).
+     * Só exame realizado (422). Achado crítico segue a comunicação da ADR-0181.
+     */
+    @Transactional
+    public PedidoExameResponseDto laudar(UUID itemId, com.edufelizardo.maissaudepublica.models.dtos.version1.request.LaudoImagemRequestDto dto) {
+        ItemPedidoExame item = itemDeImagem(itemId);
+        exigirStatus(item, "laudar", StatusItemExame.REALIZADO);
+        Profissional radiologista = buscarProfissional(dto.getProfissionalMatricula());
+        ResultadoExame laudo = novoLaudo(item, dto, radiologista, null, null);
+        item.setResultadoAtual(laudo);
+        item.setStatus(StatusItemExame.LIBERADO);
+        itemRepository.save(item);
+        registrar(item.getPedido(), item, TipoEventoExame.LAUDO, CLASSIFICACOES.get(laudo.getInterpretacao()), radiologista);
+        avisarSeCritico(item, laudo);
+        return detalhe(item.getPedido());
+    }
+
+    /** Adendo ao laudo liberado, com motivo: grava outro laudo ligado ao anterior, já liberado. */
+    @Transactional
+    public PedidoExameResponseDto adendo(UUID itemId, com.edufelizardo.maissaudepublica.models.dtos.version1.request.LaudoImagemRequestDto dto) {
+        ItemPedidoExame item = itemDeImagem(itemId);
+        exigirStatus(item, "registrar adendo de", StatusItemExame.LIBERADO);
+        if (textoOuNulo(dto.getMotivo()) == null) {
+            throw new ResourceBadRequestException("Informe o motivo do adendo.");
+        }
+        Profissional radiologista = buscarProfissional(dto.getProfissionalMatricula());
+        ResultadoExame laudo = novoLaudo(item, dto, radiologista, item.getResultadoAtual(), dto.getMotivo().trim());
+        item.setResultadoAtual(laudo);
+        itemRepository.save(item);
+        registrar(item.getPedido(), item, TipoEventoExame.ADENDO, dto.getMotivo().trim(), radiologista);
+        avisarSeCritico(item, laudo);
+        return detalhe(item.getPedido());
+    }
+
+    private static final Map<InterpretacaoResultado, String> CLASSIFICACOES = Map.of(InterpretacaoResultado.NORMAL, "Sem alterações",
+            InterpretacaoResultado.ALTERADO, "Com alterações", InterpretacaoResultado.ACHADO_CRITICO, "Achado crítico");
+
+    private ItemPedidoExame itemDeImagem(UUID itemId) {
+        ItemPedidoExame item = travarItem(itemId);
+        if (!deImagem(item.getExame())) {
+            throw new ResourceUnprocessableEntityException("O exame " + item.getExame().getNome() + " é laboratorial: não tem laudo de imagem.");
+        }
+        controleDeAcesso.exigir(LAUDAR, item.getPedido().getUnidadeExecutanteImagem());
+        return item;
+    }
+
+    private ResultadoExame novoLaudo(ItemPedidoExame item, com.edufelizardo.maissaudepublica.models.dtos.version1.request.LaudoImagemRequestDto dto,
+                                     Profissional radiologista, ResultadoExame adendoDe, String motivo) {
+        if (!CLASSIFICACOES.containsKey(dto.getClassificacao())) {
+            throw new ResourceBadRequestException("Classifique o laudo como NORMAL (sem alterações), ALTERADO ou ACHADO_CRITICO.");
+        }
+        String url = textoOuNulo(dto.getImagemUrl());
+        if (url != null && !url.toLowerCase(Locale.ROOT).startsWith("https://")) {
+            throw new ResourceBadRequestException("O link das imagens precisa começar com https://.");
+        }
+        Instant agora = Instant.now();
+        ResultadoExame r = new ResultadoExame();
+        r.setItem(item);
+        r.setLaudoTecnica(textoOuNulo(dto.getTecnica()));
+        r.setLaudoAchados(dto.getAchados().trim());
+        r.setLaudoConclusao(dto.getConclusao().trim());
+        r.setValorTexto(dto.getConclusao().trim());
+        r.setImagemUrl(url);
+        r.setInterpretacao(dto.getClassificacao());
+        r.setAnalisadoPor(radiologista);
+        r.setRegistradoEm(agora);
+        r.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        r.setLiberadoPor(radiologista);
+        r.setLiberadoEm(agora);
+        r.setRetificacaoDe(adendoDe);
+        r.setMotivoRetificacao(motivo);
+        return resultadoRepository.save(r);
     }
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
@@ -709,7 +880,8 @@ public class PedidoExameService {
     private Stream<UnidadeDeSaude> unidadesDo(PedidoExame p, List<ItemPedidoExame> itens, Map<UUID, List<AmostraExame>> cache) {
         Stream<UnidadeDeSaude> daAmostra = itens.stream().filter(i -> i.getAmostra() != null)
                 .flatMap(i -> Stream.of(i.getAmostra().getUnidadeColeta(), i.getAmostra().getLaboratorio()));
-        return Stream.concat(Stream.of(p.getUnidadeSolicitante()), daAmostra);
+        Stream<UnidadeDeSaude> daImagem = Stream.ofNullable(p.getUnidadeExecutanteImagem());
+        return Stream.concat(Stream.concat(Stream.of(p.getUnidadeSolicitante()), daAmostra), daImagem);
     }
 
     private PedidoExameResponseDto detalhe(PedidoExame pedido) {
@@ -719,7 +891,8 @@ public class PedidoExameService {
                 amostraRepository.findByPedido_UuidOrderByColetadaEmAsc(pedido.getUuid()),
                 eventoRepository.findByPedido_UuidOrderByOcorridoEmAsc(pedido.getUuid()),
                 comunicacaoRepository.findByItem_Pedido_UuidOrderByComunicadoEmAsc(pedido.getUuid()),
-                entregaRepository.findByPedido_UuidOrderByEntregueEmAsc(pedido.getUuid()));
+                entregaRepository.findByPedido_UuidOrderByEntregueEmAsc(pedido.getUuid()),
+                realizacaoRepository.findByItem_Pedido_UuidOrderByRealizadaEmAsc(pedido.getUuid()));
     }
 
     private void registrar(PedidoExame pedido, ItemPedidoExame item, TipoEventoExame tipo, String texto, Profissional profissional) {

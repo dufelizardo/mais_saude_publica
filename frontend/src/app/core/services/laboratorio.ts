@@ -10,6 +10,8 @@ import {
   EvolucaoExameDto,
   ExameLaboratorialRequestDto,
   FaixaReferenciaExameRequestDto,
+  LaudoImagemRequestDto,
+  RealizacaoExameImagemRequestDto,
   ExameLaboratorialResponseDto,
   ItemTrabalhoExameDto,
   MotivoRejeicaoAmostra,
@@ -104,6 +106,20 @@ export class LaboratorioService {
 
   cancelar(itemId: string, profissionalMatricula: string, motivo: string): Observable<SuccessResponseDto> {
     return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/item/${itemId}/cancelamento`, { profissionalMatricula, motivo });
+  }
+
+  // ── Exames de imagem (ADR-0182) ──
+
+  realizarImagem(itemId: string, dto: RealizacaoExameImagemRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/item/${itemId}/realizacao`, dto);
+  }
+
+  laudar(itemId: string, dto: LaudoImagemRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/item/${itemId}/laudo`, dto);
+  }
+
+  adendo(itemId: string, dto: LaudoImagemRequestDto): Observable<SuccessResponseDto> {
+    return this.http.post<SuccessResponseDto>(`${this.pedidoUrl}/item/${itemId}/adendo`, dto);
   }
 
   // ── Ciência, comunicação do crítico e entrega (ADR-0181) ──

@@ -50,6 +50,7 @@ public class ResultadoAvisoExameDto implements Serializable {
     }
 
     public static boolean critico(InterpretacaoResultado i) {
-        return i == InterpretacaoResultado.CRITICO_ALTO || i == InterpretacaoResultado.CRITICO_BAIXO;
+        return i == InterpretacaoResultado.CRITICO_ALTO || i == InterpretacaoResultado.CRITICO_BAIXO
+                || i == InterpretacaoResultado.ACHADO_CRITICO;
     }
 }

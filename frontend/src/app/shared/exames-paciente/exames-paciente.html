@@ -13,7 +13,7 @@
       <tbody>
         @for (e of visiveis(); track e.itemId) {
           <tr>
-            <td class="cell-main">{{ e.exameNome }}<span class="cell-sub">{{ materiais[e.material] }} · pedido em {{ data(e.solicitadoEm) }} por {{ e.profissionalSolicitanteNome }}</span></td>
+            <td class="cell-main">{{ e.exameNome }}<span class="cell-sub">{{ tipoDoExame(e) }} · pedido em {{ data(e.solicitadoEm) }} por {{ e.profissionalSolicitanteNome }}</span></td>
             <td><span [class]="'badge badge--' + statusItem[e.status].classe"><span class="dot" aria-hidden="true"></span> {{ statusItem[e.status].rotulo }}</span></td>
             <td>
               @if (e.resultado; as r) {
