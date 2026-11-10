@@ -147,6 +147,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("INTERNACAO.CONSULTAR", new Def("Ver o mapa de leitos e as internações", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.GERENCIAR", new Def("Internar e trocar paciente de leito", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("INTERNACAO.ALTA", new Def("Dar alta da internação (ato médico)", ACESSO_AO_DADO_DE_SAUDE));
+        // Central de regulação de leitos (ADR-0184).
+        PERMISSOES.put("INTERNACAO.SOLICITAR_VAGA", new Def("Pedir leito de outra unidade à central de regulação de leitos", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("LEITO.REGULAR", new Def("Regular a fila de leitos: reservar leito em outra unidade, vaga zero e negar", ACESSO_AO_DADO_DE_SAUDE));
         // Documentos (ADR-0172): anexar não dá direito de abrir; abrir segue o prontuário.
         PERMISSOES.put("DOCUMENTO.ANEXAR", new Def("Anexar documentos ao paciente, enviar versões e retirar", OPERACAO));
         PERMISSOES.put("LEITO.GERENCIAR", new Def("Cadastrar, bloquear e liberar leitos", OPERACAO));
@@ -192,7 +195,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "Consulta, prescrição e procedimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
                         "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
-                        "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA",
+                        "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA", "INTERNACAO.SOLICITAR_VAGA",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
                         "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
@@ -204,7 +207,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 List.of("PACIENTE.CONSULTAR", "URGENCIA.CONSULTAR", "URGENCIA.RECEBER", "TRANSPORTE.CONSULTAR")));
         PAPEIS.put("MEDICO_REGULADOR_URGENCIA", new PapelPadrao("Médico regulador de urgência",
                 "Classifica a gravidade, decide a conduta, indica o destino com vaga zero e encerra as ocorrências (ADR-0176).",
-                List.of("PACIENTE.CONSULTAR", "URGENCIA.CONSULTAR", "URGENCIA.REGULAR", "TRANSPORTE.CONSULTAR")));
+                List.of("PACIENTE.CONSULTAR", "URGENCIA.CONSULTAR", "URGENCIA.REGULAR", "TRANSPORTE.CONSULTAR", "INTERNACAO.SOLICITAR_VAGA")));
         // Transporte (ADR-0178).
         PAPEIS.put("COORDENADOR_DE_FROTA", new PapelPadrao("Coordenador de frota",
                 "Frota, manutenção e plantão das viaturas, com a tripulação (ADR-0178).",
@@ -251,6 +254,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("MEDICO_RADIOLOGISTA", new PapelPadrao("Médico radiologista",
                 "Lauda os exames de imagem, registra adendo e comunica achado crítico (ADR-0182).",
                 List.of("PACIENTE.CONSULTAR", "IMAGEM.LAUDAR", "PRONTUARIO.CONSULTAR")));
+        PAPEIS.put("REGULADOR_DE_LEITOS", new PapelPadrao("Regulador de leitos",
+                "Central de regulação de leitos entre unidades: fila, vagas compatíveis, reserva com prazo, vaga zero e negação (ADR-0184).",
+                List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "LEITO.REGULAR", "TRANSPORTE.CONSULTAR")));
         PAPEIS.put("GESTOR_DE_LEITOS", new PapelPadrao("Gestor de leitos (NIR)",
                 "Núcleo Interno de Regulação: mapa de leitos, internação, troca de leito, bloqueio e liberação (ADR-0098).",
                 List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR")));

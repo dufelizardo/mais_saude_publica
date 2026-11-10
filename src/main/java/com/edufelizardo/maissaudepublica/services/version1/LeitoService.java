@@ -125,6 +125,7 @@ public class LeitoService {
         l.setIdentificacao(identificacao);
         l.setTipo(dto.getTipo());
         l.setSexo(dto.getSexo());
+        l.setFaixaEtaria(dto.getFaixaEtaria() != null ? dto.getFaixaEtaria() : faixaDoTipo(dto.getTipo()));
         l.setSituacao(SituacaoLeito.LIVRE);
         l.setAtivo(emUso);
         l = leitoRepository.save(l);
@@ -156,9 +157,16 @@ public class LeitoService {
         if (ativo && (!l.isAtivo() || mudouDeCapacidade)) {
             limiteLeitosService.conferir(l.getUnidade(), dto.getTipo(), l.getUuid());
         }
+        if (l.getSituacao() == SituacaoLeito.RESERVADO && l.situacaoEm(Instant.now()) == SituacaoLeito.RESERVADO
+                && (!ativo || dto.getTipo() != l.getTipo() || dto.getSexo() != l.getSexo())) {
+            throw new ResourceUnprocessableEntityException("O leito está reservado pela central de leitos; mude depois da admissão ou do fim da reserva.");
+        }
         l.setIdentificacao(identificacao);
         l.setTipo(dto.getTipo());
         l.setSexo(dto.getSexo());
+        if (dto.getFaixaEtaria() != null) {
+            l.setFaixaEtaria(dto.getFaixaEtaria());
+        }
         l.setAtivo(ativo);
         return LeitoMapaDto.fromLeito(leitoRepository.save(l), internacaoAtiva(l));
     }
@@ -167,6 +175,7 @@ public class LeitoService {
     public LeitoMapaDto bloquear(UUID uuid, String motivo) {
         Leito l = travar(uuid);
         controleDeAcesso.exigir(GERENCIAR, l.getUnidade());
+        liberarReservaVencida(l);
         if (l.getSituacao() != SituacaoLeito.LIVRE && l.getSituacao() != SituacaoLeito.HIGIENIZACAO) {
             throw new ResourceUnprocessableEntityException("Só leito livre ou em higienização pode ser bloqueado; este está " + l.getSituacao() + ".");
         }
@@ -228,6 +237,20 @@ public class LeitoService {
                 .mapToDouble(i -> Duration.between(i.getAdmitidaEm(), i.getAltaEm()).toHours() / 24.0).average().orElse(0) * 10) / 10.0;
         Double taxa = operacionais == 0 ? null : Math.round(ocupados * 1000.0 / operacionais) / 10.0;
         return new IndicadoresLeitosDto(leitos.size(), livres, ocupados, higienizacao, bloqueados, taxa, media, altas.size());
+    }
+
+    /** A faixa etária que o tipo do leito sugere (ADR-0184). */
+    public static com.edufelizardo.maissaudepublica.models.enuns.FaixaEtariaLeito faixaDoTipo(TipoLeito tipo) {
+        return Leito.faixaDoTipo(tipo);
+    }
+
+    /** Reserva vencida volta a livre na hora de mexer no leito (ADR-0184). */
+    void liberarReservaVencida(Leito l) {
+        if (l.getSituacao() == SituacaoLeito.RESERVADO && l.situacaoEm(Instant.now()) == SituacaoLeito.LIVRE) {
+            l.setSituacao(SituacaoLeito.LIVRE);
+            l.setReservadoAte(null);
+            l.setReservaSolicitacaoId(null);
+        }
     }
 
     // ── Apoio, também usado pela internação ────────────────────────────────────────────────────────

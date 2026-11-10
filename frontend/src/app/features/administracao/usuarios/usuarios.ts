@@ -47,6 +47,7 @@ const CLASSE_POR_PAPEL: Record<string, ClassePapel> = {
   TECNICO_EM_RADIOLOGIA: 'audit',
   MEDICO_RADIOLOGISTA: 'med',
   GESTOR_DE_LEITOS: 'coord',
+  REGULADOR_DE_LEITOS: 'med',
   ENFERMEIRO: 'enf',
   TECNICO_DE_ENFERMAGEM: 'enf',
   RECEPCAO: 'acs',
@@ -111,6 +112,13 @@ const MODULOS: Modulo[] = [
     ver: ['INTERNACAO.CONSULTAR'],
     registrar: ['INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA'],
     gerenciar: ['LEITO.GERENCIAR'],
+  },
+  {
+    nome: 'Regulação de leitos',
+    sub: 'pedido de leito, central, reserva e vaga zero (ADR-0184)',
+    ver: [],
+    registrar: ['INTERNACAO.SOLICITAR_VAGA'],
+    gerenciar: ['LEITO.REGULAR'],
   },
   {
     nome: 'Farmácia',

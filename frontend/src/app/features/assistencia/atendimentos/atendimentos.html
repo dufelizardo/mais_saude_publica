@@ -621,6 +621,7 @@
                 }
                 @if (pode('INTERNACAO.GERENCIAR')) {
                   <a class="btn btn--ghost btn--sm" routerLink="/assistencia/leitos" [queryParams]="{ acao: 'internar', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid, atendimentoId: a.uuid }">Internar</a>
+                  <a class="btn btn--ghost btn--sm" routerLink="/assistencia/leitos" [queryParams]="{ acao: 'vaga', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid, atendimentoId: a.uuid }" [attr.aria-label]="'Pedir vaga de internação para ' + a.pacienteNome">Pedir vaga</a>
                 }
               </div>
 

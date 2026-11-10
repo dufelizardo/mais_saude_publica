@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **259 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V68). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **261 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V69). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -194,3 +194,4 @@ listadas aqui pela migração que criou cada uma (até a V68). A fonte de verdad
 | V66 | `tb_comunicacao_critico_exame`, `tb_entrega_resultado_exame` (e a ciência de quem pediu em `tb_resultado_exame`) |
 | V67 | `tb_realizacao_exame_imagem` (e a categoria e a modalidade no catálogo, o serviço de imagem no pedido e o laudo em `tb_resultado_exame`) |
 | V68 | `tb_emissao_laudo_exame`, `tb_emissao_laudo_exame_resultado`, `tb_insumo_exame`, `tb_consumo_sem_saldo` (e a assinatura em `tb_resultado_exame`) |
+| V69 | `tb_solicitacao_leito`, `tb_evento_solicitacao_leito` (e a faixa etária e a reserva em `tb_leito`) |

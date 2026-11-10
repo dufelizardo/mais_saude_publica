@@ -105,9 +105,11 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 ### Leitos e internação
 - ~~Internações no prontuário e vínculo de quem cuida do internado~~ — feitos pela ADR-0100. A tela (ADR-0099)
   não tem protótipo próprio.
-- Fora do escopo da ADR-0098: AIH, SIH e faturamento; central de regulação de leitos entre unidades;
-  reserva de leito para cirurgia eletiva; censo diário formal; prescrição e dieta hospitalar; sincronização
-  com os leitos do CNES; restrição de leito por idade (pediátrico e neonatal).
+- Fora do escopo da ADR-0098: AIH, SIH e faturamento (AIH interna na RL3; SIH no domínio 20); ~~central de regulação de leitos
+  entre unidades~~ — ADR-0184 (RL1); reserva de leito para cirurgia eletiva e censo diário formal (RL2); prescrição e dieta
+  hospitalar (RL4); sincronização com os leitos do CNES (domínio 20); ~~restrição de leito por idade~~ — ADR-0184.
+- Fora do escopo da ADR-0184: rotina agendada para vencer reservas (o vencimento é visto na consulta); pedido de leito gerado
+  sozinho pela transferência da urgência; faixa etária na troca de leito.
 
 ### Laboratório
 - Depois da ADR-0095: ~~laudo PDF assinado~~ — ADR-0183 (L4, com assinatura eletrônica interna; o ICP-Brasil é integração),

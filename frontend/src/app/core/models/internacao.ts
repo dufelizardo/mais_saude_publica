@@ -11,7 +11,12 @@ export type TipoLeito =
   | 'OBSERVACAO'
   | 'ISOLAMENTO';
 export type SexoLeito = 'MASCULINO' | 'FEMININO' | 'MISTO';
-export type SituacaoLeito = 'LIVRE' | 'OCUPADO' | 'HIGIENIZACAO' | 'BLOQUEADO';
+export type SituacaoLeito = 'LIVRE' | 'OCUPADO' | 'HIGIENIZACAO' | 'BLOQUEADO' | 'RESERVADO';
+/** Central de regulação de leitos (ADR-0184). */
+export type FaixaEtariaLeito = 'ADULTO' | 'PEDIATRICO' | 'NEONATAL';
+export type PrioridadeLeito = 'VERMELHO' | 'AMARELO' | 'VERDE' | 'AZUL';
+export type StatusSolicitacaoLeito = 'SOLICITADA' | 'RESERVADA' | 'ADMITIDA' | 'NEGADA' | 'CANCELADA';
+export type TipoEventoSolicitacaoLeito = 'SOLICITACAO' | 'RESERVA' | 'VAGA_ZERO' | 'EXPIRACAO' | 'RECUSA_DESTINO' | 'NEGACAO' | 'CANCELAMENTO' | 'ADMISSAO';
 export type CaraterInternacao = 'ELETIVA' | 'URGENCIA';
 export type StatusInternacao = 'INTERNADO' | 'ALTA';
 export type TipoAlta = 'MELHORADO' | 'A_PEDIDO' | 'TRANSFERENCIA' | 'EVASAO' | 'OBITO';
@@ -24,6 +29,7 @@ export interface LeitoRequestDto {
   tipo: TipoLeito;
   sexo: SexoLeito;
   ativo?: boolean;
+  faixaEtaria?: FaixaEtariaLeito;
 }
 
 export interface LeitoMapaDto {
@@ -45,6 +51,9 @@ export interface LeitoMapaDto {
   diasInternado?: number | null;
   previsaoAlta?: string | null;
   medicoResponsavelNome?: string | null;
+  faixaEtaria: FaixaEtariaLeito;
+  reservadoAte?: string | null;
+  reservaSolicitacaoId?: string | null;
 }
 
 export interface IndicadoresLeitosDto {
@@ -67,7 +76,108 @@ export interface InternacaoRequestDto {
   motivo: string;
   carater: CaraterInternacao;
   previsaoAlta?: string;
+  /** Leito de outra faixa etária: só com justificativa (ADR-0184). */
+  justificativaFaixaEtaria?: string;
 }
+
+export interface SolicitacaoLeitoRequestDto {
+  pacienteId: string;
+  unidadeOrigemId: string;
+  atendimentoId?: string;
+  internacaoOrigemId?: string;
+  profissionalMatricula: string;
+  cid: string;
+  quadroClinico: string;
+  tipoLeito: TipoLeito;
+  prioridade: PrioridadeLeito;
+}
+
+export interface EventoSolicitacaoLeitoDto {
+  tipo: TipoEventoSolicitacaoLeito;
+  texto?: string | null;
+  profissionalNome?: string | null;
+  ocorridoEm: string;
+}
+
+export interface SolicitacaoLeitoDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeOrigemId: string;
+  unidadeOrigemNome: string;
+  internacaoOrigemId?: string | null;
+  atendimentoId?: string | null;
+  ocorrenciaUrgenciaId?: string | null;
+  solicitadoPorMatricula: string;
+  solicitadoPorNome: string;
+  cid: string;
+  quadroClinico: string;
+  tipoLeito: TipoLeito;
+  prioridade: PrioridadeLeito;
+  status: StatusSolicitacaoLeito;
+  solicitadaEm: string;
+  posicaoNaFila?: number | null;
+  leitoReservadoId?: string | null;
+  leitoReservadoIdentificacao?: string | null;
+  unidadeDestinoId?: string | null;
+  unidadeDestinoNome?: string | null;
+  reservadoAte?: string | null;
+  vagaZero: boolean;
+  justificativaVagaZero?: string | null;
+  transporte?: string | null;
+  motivoEncerramento?: string | null;
+  internacaoDestinoId?: string | null;
+  eventos: EventoSolicitacaoLeitoDto[];
+}
+
+export interface VagaLeitoDto {
+  leitoId: string;
+  identificacao: string;
+  unidadeId: string;
+  unidadeNome: string;
+  setorNome: string;
+  tipo: TipoLeito;
+  sexo: SexoLeito;
+  faixaEtaria: FaixaEtariaLeito;
+}
+
+export interface ReservaLeitoRequestDto {
+  profissionalMatricula: string;
+  leitoId?: string;
+  unidadeDestinoId?: string;
+  justificativaVagaZero?: string;
+  horas?: number;
+  transporte?: string;
+}
+
+export interface AdmissaoRegulacaoLeitoRequestDto {
+  medicoMatricula: string;
+  leitoId?: string;
+  previsaoAlta?: string;
+  justificativaFaixaEtaria?: string;
+}
+
+export const FAIXAS_ETARIAS: Record<FaixaEtariaLeito, string> = { ADULTO: 'Adulto', PEDIATRICO: 'Pediátrico', NEONATAL: 'Neonatal' };
+
+export const PRIORIDADES_LEITO: Record<PrioridadeLeito, { rotulo: string; classe: string }> = {
+  VERMELHO: { rotulo: 'Vermelho · emergência', classe: 'alert' },
+  AMARELO: { rotulo: 'Amarelo · urgente', classe: 'warn' },
+  VERDE: { rotulo: 'Verde · não urgente', classe: 'ok' },
+  AZUL: { rotulo: 'Azul · eletivo', classe: 'info' },
+};
+
+export const STATUS_SOLICITACAO_LEITO: Record<StatusSolicitacaoLeito, { rotulo: string; classe: string }> = {
+  SOLICITADA: { rotulo: 'Aguardando vaga', classe: 'warn' },
+  RESERVADA: { rotulo: 'Leito reservado', classe: 'info' },
+  ADMITIDA: { rotulo: 'Admitido', classe: 'ok' },
+  NEGADA: { rotulo: 'Negado', classe: 'muted' },
+  CANCELADA: { rotulo: 'Cancelado', classe: 'muted' },
+};
+
+export const EVENTOS_SOLICITACAO_LEITO: Record<TipoEventoSolicitacaoLeito, string> = {
+  SOLICITACAO: 'Pedido de leito', RESERVA: 'Leito reservado', VAGA_ZERO: 'Vaga zero', EXPIRACAO: 'Reserva vencida',
+  RECUSA_DESTINO: 'Recusado no destino', NEGACAO: 'Negado pela central', CANCELAMENTO: 'Cancelado pela origem', ADMISSAO: 'Admitido no destino',
+};
 
 export interface EventoLeitoDto {
   tipo: TipoEventoLeito;
@@ -149,6 +259,7 @@ export const SITUACOES_LEITO: Record<SituacaoLeito, { rotulo: string; classe: st
   OCUPADO: { rotulo: 'Ocupado', classe: 'info' },
   HIGIENIZACAO: { rotulo: 'Em higienização', classe: 'warn' },
   BLOQUEADO: { rotulo: 'Bloqueado', classe: 'muted' },
+  RESERVADO: { rotulo: 'Reservado', classe: 'purple' },
 };
 
 export const TIPOS_ALTA: Record<TipoAlta, string> = {

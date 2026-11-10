@@ -9,6 +9,11 @@ import {
   LeitoRequestDto,
   StatusInternacao,
   TipoAlta,
+  AdmissaoRegulacaoLeitoRequestDto,
+  ReservaLeitoRequestDto,
+  SolicitacaoLeitoDto,
+  SolicitacaoLeitoRequestDto,
+  VagaLeitoDto,
 } from '../models/internacao';
 
 /** Leitos e internação (ADR-0098): mapa, indicadores, cadastro de leito, internação, troca de leito e alta. */
@@ -89,5 +94,49 @@ export class InternacaoService {
 
   darAlta(uuid: string, dto: { tipoAlta: TipoAlta; sumario: string; medicoMatricula: string; altaEm?: string }): Observable<InternacaoResponseDto> {
     return this.http.post<InternacaoResponseDto>(`${this.internacaoUrl}/${uuid}/alta`, dto);
+  }
+
+  // ── Central de regulação de leitos (ADR-0184) ──
+
+  private readonly regulacaoUrl = '/api/v1/regulacao-leito';
+
+  pedirLeito(dto: SolicitacaoLeitoRequestDto): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/`, dto);
+  }
+
+  filaDeLeitos(): Observable<SolicitacaoLeitoDto[]> {
+    return this.http.get<SolicitacaoLeitoDto[]>(`${this.regulacaoUrl}/fila`);
+  }
+
+  aReceber(): Observable<SolicitacaoLeitoDto[]> {
+    return this.http.get<SolicitacaoLeitoDto[]>(`${this.regulacaoUrl}/a-receber`);
+  }
+
+  pedidoDeLeito(uuid: string): Observable<SolicitacaoLeitoDto> {
+    return this.http.get<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}`);
+  }
+
+  vagasCompativeis(uuid: string): Observable<VagaLeitoDto[]> {
+    return this.http.get<VagaLeitoDto[]>(`${this.regulacaoUrl}/${uuid}/vagas`);
+  }
+
+  reservarLeito(uuid: string, dto: ReservaLeitoRequestDto): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/reserva`, dto);
+  }
+
+  negarPedidoDeLeito(uuid: string, profissionalMatricula: string, motivo: string): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/negacao`, { profissionalMatricula, motivo });
+  }
+
+  cancelarPedidoDeLeito(uuid: string, profissionalMatricula: string, motivo: string): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/cancelamento`, { profissionalMatricula, motivo });
+  }
+
+  admitirRegulado(uuid: string, dto: AdmissaoRegulacaoLeitoRequestDto): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/admissao`, dto);
+  }
+
+  recusarNoDestino(uuid: string, profissionalMatricula: string, motivo: string): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/recusa`, { profissionalMatricula, motivo });
   }
 }

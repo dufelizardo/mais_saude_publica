@@ -7,5 +7,7 @@ public enum SituacaoLeito {
     /** Depois da saída do paciente, até alguém registrar a limpeza. */
     HIGIENIZACAO,
     /** Fora de uso por um tempo (manutenção, isolamento…), com motivo. */
-    BLOQUEADO
+    BLOQUEADO,
+    /** Reservado pela central de regulação de leitos para um paciente de outra unidade, até um prazo (ADR-0184). */
+    RESERVADO
 }
