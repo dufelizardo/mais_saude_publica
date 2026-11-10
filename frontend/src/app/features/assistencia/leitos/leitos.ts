@@ -11,6 +11,15 @@ import {
   EVENTOS_LEITO,
   EVENTOS_SOLICITACAO_LEITO,
   EVENTOS_ELETIVA,
+  CAUSAS_EXTERNAS_AIH,
+  CLINICAS_AIH,
+  CausaExternaAih,
+  ClinicaAih,
+  EVENTOS_LAUDO_AIH,
+  FaixaAihDto,
+  LaudoAihDto,
+  PendenciaAihDto,
+  STATUS_LAUDO_AIH,
   STATUS_ELETIVA,
   CensoDiarioDto,
   InternacaoAgendadaDto,
@@ -36,19 +45,22 @@ import {
 } from '../../../core/models/internacao';
 import { LimiteLeitosDto } from '../../../core/models/modelo-operacional';
 import { PacienteResponseDto } from '../../../core/models/paciente';
+import { ProcedimentoCatalogoDto } from '../../../core/models/procedimento';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { SetorResponseDto } from '../../../core/models/setor';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { AuthService } from '../../../core/services/auth';
 import { InternacaoService } from '../../../core/services/internacao';
 import { PacienteService } from '../../../core/services/paciente';
+import { ProcedimentoService } from '../../../core/services/procedimento';
 import { SetorService } from '../../../core/services/setor';
 import { ModeloOperacionalService } from '../../../core/services/modelo-operacional';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
 
-type Aba = 'mapa' | 'internacoes' | 'eletivas' | 'censo' | 'central' | 'receber' | 'leitos';
+type Aba = 'mapa' | 'internacoes' | 'eletivas' | 'censo' | 'aih' | 'central' | 'receber' | 'leitos';
+type AcaoAih = 'autorizacao' | 'devolucao' | 'negacao' | 'cancelamento';
 
 type Gaveta =
   | { tipo: 'internar'; leito: LeitoMapaDto | null }
@@ -62,7 +74,10 @@ type Gaveta =
   | { tipo: 'admitirRegulado'; pedido: SolicitacaoLeitoDto }
   | { tipo: 'recusarRegulado'; pedido: SolicitacaoLeitoDto }
   | { tipo: 'agendarEletiva' }
-  | { tipo: 'eletiva'; agendamento: InternacaoAgendadaDto; acao: 'reserva' | 'admissao' | 'outras' };
+  | { tipo: 'eletiva'; agendamento: InternacaoAgendadaDto; acao: 'reserva' | 'admissao' | 'outras' }
+  | { tipo: 'laudoAih'; internacao: InternacaoResponseDto | null; agendamento: InternacaoAgendadaDto | null; laudo: LaudoAihDto | null }
+  | { tipo: 'decisaoAih'; laudo: LaudoAihDto; acao: AcaoAih }
+  | { tipo: 'faixaAih' };
 
 interface GrupoSetor {
   setorId: string;
@@ -89,6 +104,7 @@ export class Leitos {
   private readonly authService = inject(AuthService);
   private readonly internacaoService = inject(InternacaoService);
   private readonly pacienteService = inject(PacienteService);
+  private readonly procedimentoService = inject(ProcedimentoService);
   private readonly setorService = inject(SetorService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
   private readonly modeloOperacionalService = inject(ModeloOperacionalService);
@@ -119,6 +135,27 @@ export class Leitos {
   protected readonly statusEletiva = STATUS_ELETIVA;
   protected readonly eventosEletiva = EVENTOS_ELETIVA;
   protected readonly eletivas = signal<InternacaoAgendadaDto[]>([]);
+
+  /** Laudo de AIH e autorização interna (ADR-0186). */
+  protected readonly statusAih = STATUS_LAUDO_AIH;
+  protected readonly clinicasAih = CLINICAS_AIH;
+  protected readonly listaClinicasAih = Object.keys(CLINICAS_AIH) as ClinicaAih[];
+  protected readonly causasExternasAih = CAUSAS_EXTERNAS_AIH;
+  protected readonly listaCausasExternasAih = Object.keys(CAUSAS_EXTERNAS_AIH) as CausaExternaAih[];
+  protected readonly eventosAih = EVENTOS_LAUDO_AIH;
+  protected readonly laudosDaInternacao = signal<LaudoAihDto[]>([]);
+  protected readonly filaAih = signal<LaudoAihDto[]>([]);
+  protected readonly pendenciasAih = signal<PendenciaAihDto[]>([]);
+  protected readonly faixasAih = signal<FaixaAihDto[]>([]);
+  protected readonly procedimentosAih = signal<ProcedimentoCatalogoDto[]>([]);
+  protected readonly baixandoAih = signal(false);
+  protected readonly laudoAihForm = this.fb.nonNullable.group({
+    profissionalMatricula: [''], sinaisSintomas: [''], condicoesJustificativas: [''], resultadosExames: [''], diagnosticoInicial: [''],
+    cidPrincipal: [''], cidSecundario: [''], cidCausaAssociada: [''], buscaProcedimento: [''], procedimentoId: [''],
+    clinica: ['CLINICA_MEDICA' as ClinicaAih], causaExterna: ['' as CausaExternaAih | ''],
+  });
+  protected readonly decisaoAihForm = this.fb.nonNullable.group({ profissionalMatricula: [''], motivo: [''] });
+  protected readonly faixaAihForm = this.fb.nonNullable.group({ ano: [String(new Date().getFullYear())], inicio: [''], fim: [''] });
   protected readonly censo = signal<CensoDiarioDto | null>(null);
   protected readonly pendenciasCenso = signal<PendenciaCensoDto[]>([]);
   protected readonly erroCenso = signal<string | null>(null);
@@ -209,6 +246,7 @@ export class Leitos {
     { id: 'internacoes', rotulo: 'Internações', contagem: this.internacoes().filter((i) => i.status === 'INTERNADO').length },
     ...(this.pode('INTERNACAO.GERENCIAR') ? [{ id: 'eletivas' as Aba, rotulo: 'Eletivas', contagem: this.eletivas().filter((e) => e.status === 'AGENDADA' || e.status === 'RESERVADA').length }] : []),
     ...(this.pode('CENSO.FECHAR', 'INTERNACAO.CONSULTAR', 'LEITO.GERENCIAR') ? [{ id: 'censo' as Aba, rotulo: 'Censo diário', contagem: this.pendenciasCenso().length || null }] : []),
+    ...(this.pode('AIH.AUTORIZAR', 'AIH.NUMERAR') ? [{ id: 'aih' as Aba, rotulo: 'Autorização de AIH', contagem: this.filaAih().length || null }] : []),
     ...(this.pode('LEITO.REGULAR') ? [{ id: 'central' as Aba, rotulo: 'Central de leitos', contagem: this.fila().filter((s) => s.status === 'SOLICITADA').length }] : []),
     ...(this.pode('INTERNACAO.GERENCIAR') ? [{ id: 'receber' as Aba, rotulo: 'A receber', contagem: this.aReceber().length }] : []),
     ...(this.pode('LEITO.GERENCIAR') ? [{ id: 'leitos' as Aba, rotulo: 'Cadastro de leitos', contagem: this.leitos().length }] : []),
@@ -279,7 +317,13 @@ export class Leitos {
       receber: this.pode('INTERNACAO.GERENCIAR') ? this.internacaoService.aReceber().pipe(catchError(() => of([]))) : of([]),
       eletivas: this.pode('INTERNACAO.GERENCIAR') ? this.internacaoService.agendaEletivas(undefined, hojeIso(), diaIso(30)).pipe(catchError(() => of([]))) : of([]),
       pendencias: this.pode('CENSO.FECHAR') ? this.internacaoService.pendenciasDoCenso().pipe(catchError(() => of([]))) : of([]),
-    }).subscribe(({ leitos, internacoes, fila, receber, eletivas, pendencias }) => {
+      filaAih: this.pode('AIH.AUTORIZAR') ? this.internacaoService.filaAih().pipe(catchError(() => of([]))) : of([]),
+      pendenciasAih: this.pode('AIH.SOLICITAR', 'AIH.AUTORIZAR') ? this.internacaoService.pendenciasAih().pipe(catchError(() => of([]))) : of([]),
+      faixasAih: this.pode('AIH.AUTORIZAR', 'AIH.NUMERAR') ? this.internacaoService.faixasAih().pipe(catchError(() => of([]))) : of([]),
+    }).subscribe(({ leitos, internacoes, fila, receber, eletivas, pendencias, filaAih, pendenciasAih, faixasAih }) => {
+      this.filaAih.set(filaAih);
+      this.pendenciasAih.set(pendenciasAih);
+      this.faixasAih.set(faixasAih);
       this.eletivas.set(eletivas);
       this.pendenciasCenso.set(pendencias);
       this.fila.set(fila);
@@ -409,6 +453,12 @@ export class Leitos {
         return 'Agendar internação eletiva';
       case 'eletiva':
         return g.acao === 'reserva' ? 'Reservar leito da eletiva' : g.acao === 'admissao' ? 'Admitir eletiva' : 'Remarcar, falta ou cancelamento';
+      case 'laudoAih':
+        return g.laudo ? 'Corrigir o laudo de AIH' : 'Laudo para solicitação de AIH';
+      case 'decisaoAih':
+        return { autorizacao: 'Autorizar a AIH', devolucao: 'Devolver para correção', negacao: 'Negar a AIH', cancelamento: 'Cancelar o laudo de AIH' }[g.acao];
+      case 'faixaAih':
+        return 'Faixa de numeração de AIH';
     }
   }
 
@@ -444,6 +494,10 @@ export class Leitos {
     this.detalhe.set(null);
     this.erroDetalhe.set(null);
     this.abrir({ tipo: 'internacao', internacaoId });
+    this.laudosDaInternacao.set([]);
+    if (this.pode('INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'AIH.SOLICITAR', 'AIH.AUTORIZAR')) {
+      this.internacaoService.laudosAih({ internacaoId }).pipe(catchError(() => of([]))).subscribe((l) => this.laudosDaInternacao.set(l));
+    }
     this.internacaoService.buscar(internacaoId).subscribe({
       next: (d) => {
         this.detalhe.set(d);
@@ -581,6 +635,12 @@ export class Leitos {
         return this.salvarAgendamento();
       case 'eletiva':
         return this.salvarAcaoEletiva(g.agendamento, g.acao);
+      case 'laudoAih':
+        return this.salvarLaudoAih(g.internacao, g.agendamento, g.laudo);
+      case 'decisaoAih':
+        return this.salvarDecisaoAih(g.laudo, g.acao);
+      case 'faixaAih':
+        return this.salvarFaixaAih();
       default:
         return;
     }
@@ -949,6 +1009,139 @@ export class Leitos {
 
   protected numeroCenso(v: number | null | undefined, sufixo = ''): string {
     return v == null ? '—' : `${v.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}${sufixo}`;
+  }
+
+  // ── Laudo de AIH (ADR-0186) ──────────────────────────────────────────────────────────────────
+
+  /** O laudo em andamento ou autorizado da internação (o que bloqueia um novo). */
+  protected laudoAtivo(laudos: LaudoAihDto[]): LaudoAihDto | null {
+    return laudos.find((l) => l.status === 'SOLICITADO' || l.status === 'DEVOLVIDO' || l.status === 'AUTORIZADO') ?? null;
+  }
+
+  protected abrirLaudoAih(internacao: InternacaoResponseDto | null, agendamento: InternacaoAgendadaDto | null, laudo: LaudoAihDto | null): void {
+    this.laudoAihForm.reset({
+      profissionalMatricula: this.matriculaPadrao(),
+      sinaisSintomas: laudo?.sinaisSintomas ?? '',
+      condicoesJustificativas: laudo?.condicoesJustificativas ?? '',
+      resultadosExames: laudo?.resultadosExames ?? '',
+      diagnosticoInicial: laudo?.diagnosticoInicial ?? '',
+      cidPrincipal: laudo?.cidPrincipal ?? internacao?.cid ?? agendamento?.cid ?? '',
+      cidSecundario: laudo?.cidSecundario ?? '',
+      cidCausaAssociada: laudo?.cidCausaAssociada ?? '',
+      buscaProcedimento: '',
+      procedimentoId: laudo?.procedimentoId ?? '',
+      clinica: laudo?.clinica ?? (agendamento ? 'CIRURGICA' : 'CLINICA_MEDICA'),
+      causaExterna: laudo?.causaExterna ?? '',
+    });
+    if (!this.procedimentosAih().length) {
+      this.procedimentoService.catalogo().pipe(catchError(() => of([]))).subscribe((p) => this.procedimentosAih.set(p.filter((x) => x.ativo !== false)));
+    }
+    this.abrir({ tipo: 'laudoAih', internacao, agendamento, laudo });
+  }
+
+  protected procedimentosParaAih(): ProcedimentoCatalogoDto[] {
+    const q = this.laudoAihForm.controls.buscaProcedimento.value.trim().toLowerCase();
+    const selecionado = this.laudoAihForm.controls.procedimentoId.value;
+    const lista = this.procedimentosAih().filter((p) => !p.odontologico && (!q || p.nome.toLowerCase().includes(q) || (p.sigtap ?? '').includes(q))).slice(0, 50);
+    const atual = this.procedimentosAih().find((p) => p.uuid === selecionado);
+    return atual && !lista.includes(atual) ? [atual, ...lista] : lista;
+  }
+
+  /** Abre a gaveta do laudo da eletiva: o laudo ativo para corrigir, se devolvido, ou um novo. */
+  protected abrirLaudoDaEletiva(a: InternacaoAgendadaDto): void {
+    this.internacaoService.laudosAih({ agendamentoId: a.uuid }).pipe(catchError(() => of([]))).subscribe((l) => {
+      const ativo = this.laudoAtivo(l);
+      if (ativo && ativo.status !== 'DEVOLVIDO') {
+        this.mostrarToast('A eletiva já tem laudo de AIH', `${this.statusAih[ativo.status].rotulo}${ativo.numeroAih ? ' · AIH ' + ativo.numeroAih : ''}`);
+        return;
+      }
+      this.abrirLaudoAih(null, a, ativo);
+    });
+  }
+
+  protected abrirDecisaoAih(laudo: LaudoAihDto, acao: AcaoAih): void {
+    this.decisaoAihForm.reset({ profissionalMatricula: this.matriculaPadrao(), motivo: '' });
+    this.abrir({ tipo: 'decisaoAih', laudo, acao });
+  }
+
+  protected abrirFaixaAih(): void {
+    this.faixaAihForm.reset({ ano: String(new Date().getFullYear()), inicio: '', fim: '' });
+    this.abrir({ tipo: 'faixaAih' });
+  }
+
+  protected baixarLaudoAih(laudo: LaudoAihDto): void {
+    this.baixandoAih.set(true);
+    this.internacaoService.baixarLaudoAih(laudo.uuid).subscribe({
+      next: (r) => {
+        this.baixandoAih.set(false);
+        const url = URL.createObjectURL(r.body ?? new Blob());
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `laudo-aih-${laudo.numeroAih ?? laudo.uuid}.pdf`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: () => {
+        this.baixandoAih.set(false);
+        this.mostrarToast('Não foi possível gerar o PDF', laudo.pacienteNome);
+      },
+    });
+  }
+
+  private salvarLaudoAih(internacao: InternacaoResponseDto | null, agendamento: InternacaoAgendadaDto | null, laudo: LaudoAihDto | null): void {
+    const v = this.laudoAihForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.profissionalMatricula.trim()) erros['matriculaAih'] = 'Informe a matrícula do médico solicitante.';
+    if (!v.sinaisSintomas.trim()) erros['sinaisSintomas'] = 'Informe os principais sinais e sintomas.';
+    if (!v.condicoesJustificativas.trim()) erros['condicoesJustificativas'] = 'Informe as condições que justificam a internação.';
+    if (!v.diagnosticoInicial.trim()) erros['diagnosticoInicial'] = 'Informe o diagnóstico inicial.';
+    if (!v.cidPrincipal.trim() || !CID.test(v.cidPrincipal)) erros['cidPrincipal'] = 'Informe o CID-10 principal (ex.: J18.9).';
+    if (v.cidSecundario.trim() && !CID.test(v.cidSecundario)) erros['cidSecundario'] = 'CID-10 inválido.';
+    if (v.cidCausaAssociada.trim() && !CID.test(v.cidCausaAssociada)) erros['cidCausaAssociada'] = 'CID-10 inválido.';
+    if (!v.procedimentoId) erros['procedimentoAih'] = 'Escolha o procedimento solicitado.';
+    if (!this.validar(erros)) return;
+    const dto = {
+      internacaoId: laudo ? undefined : internacao?.uuid,
+      agendamentoId: laudo ? undefined : agendamento?.uuid,
+      profissionalMatricula: v.profissionalMatricula.trim(),
+      sinaisSintomas: v.sinaisSintomas.trim(),
+      condicoesJustificativas: v.condicoesJustificativas.trim(),
+      resultadosExames: v.resultadosExames.trim() || undefined,
+      diagnosticoInicial: v.diagnosticoInicial.trim(),
+      cidPrincipal: v.cidPrincipal.trim(),
+      cidSecundario: v.cidSecundario.trim() || undefined,
+      cidCausaAssociada: v.cidCausaAssociada.trim() || undefined,
+      procedimentoId: v.procedimentoId,
+      clinica: v.clinica,
+      causaExterna: v.causaExterna || null,
+    };
+    const nome = internacao?.pacienteNome ?? agendamento?.pacienteNome ?? laudo?.pacienteNome ?? '';
+    this.enviar(laudo ? this.internacaoService.corrigirAih(laudo.uuid, dto) : this.internacaoService.solicitarAih(dto),
+      laudo ? 'Laudo de AIH corrigido' : 'AIH solicitada', nome);
+  }
+
+  private salvarDecisaoAih(laudo: LaudoAihDto, acao: AcaoAih): void {
+    const v = this.decisaoAihForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.profissionalMatricula.trim()) erros['matriculaDecisao'] = 'Informe a matrícula.';
+    if (acao !== 'autorizacao' && !v.motivo.trim()) erros['motivoDecisao'] = 'Informe o motivo.';
+    if (!this.validar(erros)) return;
+    const titulos: Record<AcaoAih, string> = { autorizacao: 'AIH autorizada', devolucao: 'Laudo devolvido', negacao: 'AIH negada', cancelamento: 'Laudo cancelado' };
+    this.enviar(this.internacaoService.decidirAih(laudo.uuid, acao, { profissionalMatricula: v.profissionalMatricula.trim(), motivo: v.motivo.trim() || undefined }),
+      titulos[acao], laudo.pacienteNome);
+  }
+
+  private salvarFaixaAih(): void {
+    const v = this.faixaAihForm.getRawValue();
+    const erros: Record<string, string> = {};
+    const doze = /^\d{1,12}$/;
+    if (!/^\d{4}$/.test(v.ano)) erros['anoFaixa'] = 'Informe o ano.';
+    if (!doze.test(v.inicio)) erros['inicioFaixa'] = 'Informe os 12 primeiros dígitos, sem o verificador.';
+    if (!doze.test(v.fim)) erros['fimFaixa'] = 'Informe os 12 primeiros dígitos, sem o verificador.';
+    else if (doze.test(v.inicio) && Number(v.inicio) > Number(v.fim)) erros['fimFaixa'] = 'O fim não pode ser menor que o início.';
+    if (!this.validar(erros)) return;
+    this.enviar(this.internacaoService.cadastrarFaixaAih({ ano: Number(v.ano), inicio: Number(v.inicio), fim: Number(v.fim) }),
+      'Faixa de AIH cadastrada', `${v.inicio} a ${v.fim}`);
   }
 
   private enviar(req: Observable<unknown>, titulo: string, detalhe: string): void {

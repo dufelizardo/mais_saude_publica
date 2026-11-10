@@ -38,7 +38,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 9 | [Farmácia](#9-farmácia) | ✅ | — |
 | 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | ✅ | controle de qualidade interno; integrações (LIS, PACS, LACEN, BPA) no domínio 20 |
 | 11 | [Regulação](#11-regulação) | 🟡 | RL1 feita (central de leitos); falta a ficha do APH (RL5) |
-| 12 | [Leitos / Internação](#12-leitos--internação) | 🟡 | RL1 e RL2 feitas (central de leitos, faixa etária, eletiva e censo); faltam RL3 e RL4 (AIH, prescrição) |
+| 12 | [Leitos / Internação](#12-leitos--internação) | 🟡 | RL1 a RL3 feitas (central de leitos, faixa etária, eletiva e censo, laudo de AIH); falta a RL4 (prescrição e dieta) |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 feita (catálogo, lotes, livro, mínimo e alertas); ES2 (central, requisição, inventário) e ES3 (emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
@@ -324,7 +324,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 **Falta:**
 - [x] Central de regulação de leitos entre unidades, com reserva de leito com prazo e vaga zero ([ADR-0184](./adr/0184-regulacao-de-leitos.md), fatia RL1).
-- [ ] AIH, SIH e faturamento.
+- [x] Laudo para solicitação de AIH e autorização interna, com o número da faixa do gestor ([ADR-0186](./adr/0186-laudo-aih.md), fatia RL3).
+- [ ] SIH e faturamento da AIH (domínio 20).
 - [x] Reserva de leito para cirurgia eletiva: internação eletiva agendada, reserva na janela de dois dias, admissão, falta,
   remarcação e cancelamento ([ADR-0185](./adr/0185-internacao-eletiva-e-censo.md), fatia RL2).
 - [x] Censo diário formal: fechamento por unidade e dia, paciente-dia, taxa de ocupação, média de permanência, censo nominal e
