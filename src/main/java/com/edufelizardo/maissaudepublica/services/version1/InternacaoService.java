@@ -108,6 +108,12 @@ public class InternacaoService {
         return admitir(dto, leito, solicitacaoId);
     }
 
+    /** Admissão da internação eletiva agendada (ADR-0185): aceita o leito reservado para o agendamento. */
+    @Transactional
+    public Internacao internarAgendada(InternacaoRequestDto dto, Leito leito, UUID agendamentoId) {
+        return admitir(dto, leito, agendamentoId);
+    }
+
     private Internacao admitir(InternacaoRequestDto dto, Leito leito, UUID solicitacaoReservada) {
         Paciente paciente = pacienteRepository.findById(dto.getPacienteId()).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar um paciente com o id " + dto.getPacienteId() + " em nossos registros."));
@@ -126,10 +132,8 @@ public class InternacaoService {
                 throw new ResourceBadRequestException("O atendimento informado é de outro paciente.");
             }
         }
-        if (solicitacaoReservada != null && leito.getSituacao() == SituacaoLeito.RESERVADO
-                && solicitacaoReservada.equals(leito.getReservaSolicitacaoId())) {
-            leito.setReservadoAte(null);
-            leito.setReservaSolicitacaoId(null);
+        if (leito.reservadoPara(solicitacaoReservada)) {
+            leito.limparReserva();
         } else {
             exigirLivre(leito);
         }

@@ -14,6 +14,11 @@ import {
   SolicitacaoLeitoDto,
   SolicitacaoLeitoRequestDto,
   VagaLeitoDto,
+  AgendamentoInternacaoRequestDto,
+  CensoDiarioDto,
+  EletivaLeitoRequestDto,
+  InternacaoAgendadaDto,
+  PendenciaCensoDto,
 } from '../models/internacao';
 
 /** Leitos e internação (ADR-0098): mapa, indicadores, cadastro de leito, internação, troca de leito e alta. */
@@ -94,6 +99,41 @@ export class InternacaoService {
 
   darAlta(uuid: string, dto: { tipoAlta: TipoAlta; sumario: string; medicoMatricula: string; altaEm?: string }): Observable<InternacaoResponseDto> {
     return this.http.post<InternacaoResponseDto>(`${this.internacaoUrl}/${uuid}/alta`, dto);
+  }
+
+  // ── Internação eletiva e censo diário (ADR-0185) ──
+
+  agendarEletiva(dto: AgendamentoInternacaoRequestDto): Observable<InternacaoAgendadaDto> {
+    return this.http.post<InternacaoAgendadaDto>('/api/v1/internacao-eletiva/', dto);
+  }
+
+  agendaEletivas(unidadeId?: string, de?: string, ate?: string): Observable<InternacaoAgendadaDto[]> {
+    let params = new HttpParams();
+    if (unidadeId) params = params.set('unidadeId', unidadeId);
+    if (de) params = params.set('de', de);
+    if (ate) params = params.set('ate', ate);
+    return this.http.get<InternacaoAgendadaDto[]>('/api/v1/internacao-eletiva/', { params });
+  }
+
+  acaoEletiva(uuid: string, acao: 'reserva' | 'admissao' | 'falta' | 'remarcacao' | 'cancelamento', dto: EletivaLeitoRequestDto): Observable<InternacaoAgendadaDto> {
+    return this.http.post<InternacaoAgendadaDto>(`/api/v1/internacao-eletiva/${uuid}/${acao}`, dto);
+  }
+
+  censoDoDia(unidadeId: string, data: string): Observable<CensoDiarioDto> {
+    return this.http.get<CensoDiarioDto>('/api/v1/censo-diario/', { params: { unidadeId, data } });
+  }
+
+  pendenciasDoCenso(unidadeId?: string): Observable<PendenciaCensoDto[]> {
+    const params = unidadeId ? new HttpParams().set('unidadeId', unidadeId) : undefined;
+    return this.http.get<PendenciaCensoDto[]>('/api/v1/censo-diario/pendencias', { params });
+  }
+
+  fecharCenso(unidadeId: string, data: string): Observable<CensoDiarioDto> {
+    return this.http.post<CensoDiarioDto>('/api/v1/censo-diario/fechamento', { unidadeId, data });
+  }
+
+  reabrirCenso(unidadeId: string, data: string, motivo: string): Observable<CensoDiarioDto> {
+    return this.http.post<CensoDiarioDto>('/api/v1/censo-diario/reabertura', { unidadeId, data, motivo });
   }
 
   // ── Central de regulação de leitos (ADR-0184) ──

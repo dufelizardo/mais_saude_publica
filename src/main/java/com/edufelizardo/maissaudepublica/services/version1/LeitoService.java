@@ -248,8 +248,7 @@ public class LeitoService {
     void liberarReservaVencida(Leito l) {
         if (l.getSituacao() == SituacaoLeito.RESERVADO && l.situacaoEm(Instant.now()) == SituacaoLeito.LIVRE) {
             l.setSituacao(SituacaoLeito.LIVRE);
-            l.setReservadoAte(null);
-            l.setReservaSolicitacaoId(null);
+            l.limparReserva();
         }
     }
 

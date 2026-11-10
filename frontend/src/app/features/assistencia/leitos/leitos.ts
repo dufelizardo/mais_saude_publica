@@ -10,6 +10,11 @@ import {
   CaraterInternacao,
   EVENTOS_LEITO,
   EVENTOS_SOLICITACAO_LEITO,
+  EVENTOS_ELETIVA,
+  STATUS_ELETIVA,
+  CensoDiarioDto,
+  InternacaoAgendadaDto,
+  PendenciaCensoDto,
   FAIXAS_ETARIAS,
   FaixaEtariaLeito,
   PRIORIDADES_LEITO,
@@ -43,7 +48,7 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
 
-type Aba = 'mapa' | 'internacoes' | 'central' | 'receber' | 'leitos';
+type Aba = 'mapa' | 'internacoes' | 'eletivas' | 'censo' | 'central' | 'receber' | 'leitos';
 
 type Gaveta =
   | { tipo: 'internar'; leito: LeitoMapaDto | null }
@@ -55,7 +60,9 @@ type Gaveta =
   | { tipo: 'pedirVaga'; internacao: InternacaoResponseDto | null }
   | { tipo: 'pedidoLeito'; id: string }
   | { tipo: 'admitirRegulado'; pedido: SolicitacaoLeitoDto }
-  | { tipo: 'recusarRegulado'; pedido: SolicitacaoLeitoDto };
+  | { tipo: 'recusarRegulado'; pedido: SolicitacaoLeitoDto }
+  | { tipo: 'agendarEletiva' }
+  | { tipo: 'eletiva'; agendamento: InternacaoAgendadaDto; acao: 'reserva' | 'admissao' | 'outras' };
 
 interface GrupoSetor {
   setorId: string;
@@ -107,6 +114,24 @@ export class Leitos {
   protected readonly aReceber = signal<SolicitacaoLeitoDto[]>([]);
   protected readonly pedido = signal<SolicitacaoLeitoDto | null>(null);
   protected readonly vagas = signal<VagaLeitoDto[]>([]);
+
+  /** Internação eletiva e censo diário (ADR-0185). */
+  protected readonly statusEletiva = STATUS_ELETIVA;
+  protected readonly eventosEletiva = EVENTOS_ELETIVA;
+  protected readonly eletivas = signal<InternacaoAgendadaDto[]>([]);
+  protected readonly censo = signal<CensoDiarioDto | null>(null);
+  protected readonly pendenciasCenso = signal<PendenciaCensoDto[]>([]);
+  protected readonly erroCenso = signal<string | null>(null);
+  protected readonly salvandoCenso = signal(false);
+  protected readonly censoForm = this.fb.nonNullable.group({ unidadeId: [''], data: [ontemIso()], motivo: [''] });
+  protected readonly eletivaForm = this.fb.nonNullable.group({
+    buscaPaciente: [''], pacienteId: [''], unidadeId: [''], dataPrevista: [''], tipoLeito: ['CIRURGICO' as TipoLeito], medicoMatricula: [''],
+    cid: [''], procedimento: [''], previsaoDias: [''],
+  });
+  protected readonly acaoEletivaForm = this.fb.nonNullable.group({
+    leitoId: [''], profissionalMatricula: [''], previsaoAlta: [''], justificativaFaixaEtaria: [''],
+    outra: ['remarcacao' as 'remarcacao' | 'falta' | 'cancelamento'], dataPrevista: [''], motivo: [''],
+  });
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
   private readonly matriculaPadrao = signal('');
@@ -182,6 +207,8 @@ export class Leitos {
   protected readonly abas = computed<{ id: Aba; rotulo: string; contagem: number | null }[]>(() => [
     { id: 'mapa', rotulo: 'Mapa de leitos', contagem: this.leitosDoMapa().length },
     { id: 'internacoes', rotulo: 'Internações', contagem: this.internacoes().filter((i) => i.status === 'INTERNADO').length },
+    ...(this.pode('INTERNACAO.GERENCIAR') ? [{ id: 'eletivas' as Aba, rotulo: 'Eletivas', contagem: this.eletivas().filter((e) => e.status === 'AGENDADA' || e.status === 'RESERVADA').length }] : []),
+    ...(this.pode('CENSO.FECHAR', 'INTERNACAO.CONSULTAR', 'LEITO.GERENCIAR') ? [{ id: 'censo' as Aba, rotulo: 'Censo diário', contagem: this.pendenciasCenso().length || null }] : []),
     ...(this.pode('LEITO.REGULAR') ? [{ id: 'central' as Aba, rotulo: 'Central de leitos', contagem: this.fila().filter((s) => s.status === 'SOLICITADA').length }] : []),
     ...(this.pode('INTERNACAO.GERENCIAR') ? [{ id: 'receber' as Aba, rotulo: 'A receber', contagem: this.aReceber().length }] : []),
     ...(this.pode('LEITO.GERENCIAR') ? [{ id: 'leitos' as Aba, rotulo: 'Cadastro de leitos', contagem: this.leitos().length }] : []),
@@ -250,7 +277,11 @@ export class Leitos {
       internacoes: this.internacaoService.listar().pipe(catchError(() => of([]))),
       fila: this.pode('LEITO.REGULAR') ? this.internacaoService.filaDeLeitos().pipe(catchError(() => of([]))) : of([]),
       receber: this.pode('INTERNACAO.GERENCIAR') ? this.internacaoService.aReceber().pipe(catchError(() => of([]))) : of([]),
-    }).subscribe(({ leitos, internacoes, fila, receber }) => {
+      eletivas: this.pode('INTERNACAO.GERENCIAR') ? this.internacaoService.agendaEletivas(undefined, hojeIso(), diaIso(30)).pipe(catchError(() => of([]))) : of([]),
+      pendencias: this.pode('CENSO.FECHAR') ? this.internacaoService.pendenciasDoCenso().pipe(catchError(() => of([]))) : of([]),
+    }).subscribe(({ leitos, internacoes, fila, receber, eletivas, pendencias }) => {
+      this.eletivas.set(eletivas);
+      this.pendenciasCenso.set(pendencias);
       this.fila.set(fila);
       this.aReceber.set(receber);
       this.leitos.set(leitos);
@@ -374,6 +405,10 @@ export class Leitos {
         return 'Admitir paciente regulado';
       case 'recusarRegulado':
         return 'Recusar o paciente';
+      case 'agendarEletiva':
+        return 'Agendar internação eletiva';
+      case 'eletiva':
+        return g.acao === 'reserva' ? 'Reservar leito da eletiva' : g.acao === 'admissao' ? 'Admitir eletiva' : 'Remarcar, falta ou cancelamento';
     }
   }
 
@@ -542,6 +577,10 @@ export class Leitos {
         return this.salvarAdmissaoRegulada(g.pedido);
       case 'recusarRegulado':
         return this.salvarRecusa(g.pedido);
+      case 'agendarEletiva':
+        return this.salvarAgendamento();
+      case 'eletiva':
+        return this.salvarAcaoEletiva(g.agendamento, g.acao);
       default:
         return;
     }
@@ -775,6 +814,143 @@ export class Leitos {
       `${p.pacienteNome} · volta para a fila da central`);
   }
 
+  // ── Internação eletiva (ADR-0185) ──────────────────────────────────────────────────────────
+
+  protected abrirAgendarEletiva(): void {
+    this.eletivaForm.reset({
+      buscaPaciente: '', pacienteId: '', unidadeId: this.unidadeFiltro(), dataPrevista: '', tipoLeito: 'CIRURGICO',
+      medicoMatricula: this.matriculaPadrao(), cid: '', procedimento: '', previsaoDias: '',
+    });
+    this.abrir({ tipo: 'agendarEletiva' });
+  }
+
+  protected pacientesParaEletiva(): PacienteResponseDto[] {
+    const q = this.eletivaForm.controls.buscaPaciente.value.trim().toLowerCase();
+    const selecionado = this.eletivaForm.controls.pacienteId.value;
+    const lista = this.pacientes().filter((p) => p.ativo !== false && (!q || p.nome.toLowerCase().includes(q))).slice(0, 50);
+    const atual = this.pacientes().find((p) => p.uuid === selecionado);
+    return atual && !lista.includes(atual) ? [atual, ...lista] : lista;
+  }
+
+  protected abrirAcaoEletiva(agendamento: InternacaoAgendadaDto, acao: 'reserva' | 'admissao' | 'outras'): void {
+    this.acaoEletivaForm.reset({
+      leitoId: '', profissionalMatricula: this.matriculaPadrao(), previsaoAlta: '', justificativaFaixaEtaria: '',
+      outra: agendamento.aguardandoDesfecho ? 'falta' : 'remarcacao', dataPrevista: '', motivo: '',
+    });
+    this.abrir({ tipo: 'eletiva', agendamento, acao });
+  }
+
+  /** Leitos livres da unidade da eletiva, do tipo pedido. */
+  protected leitosParaEletiva(a: InternacaoAgendadaDto): LeitoMapaDto[] {
+    return this.leitos().filter((l) => l.ativo && l.situacao === 'LIVRE' && l.unidadeId === a.unidadeId && l.tipo === a.tipoLeito);
+  }
+
+  protected hojeOuDepois(dataIso: string): boolean {
+    return dataIso <= hojeIso();
+  }
+
+  private salvarAgendamento(): void {
+    const v = this.eletivaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.pacienteId) erros['pacienteEletiva'] = 'Selecione o paciente.';
+    if (!v.unidadeId) erros['unidadeEletiva'] = 'Selecione a unidade.';
+    if (!v.dataPrevista) erros['dataPrevista'] = 'Informe a data prevista.';
+    else if (v.dataPrevista < hojeIso()) erros['dataPrevista'] = 'A data não pode ser no passado.';
+    if (!CID.test(v.cid) || !v.cid.trim()) erros['cidEletiva'] = 'Informe o CID-10 (ex.: K80.2).';
+    if (!v.procedimento.trim()) erros['procedimento'] = 'Informe o procedimento ou a cirurgia prevista.';
+    if (!v.medicoMatricula.trim()) erros['medicoEletiva'] = 'Informe a matrícula do médico responsável.';
+    if (!this.validar(erros)) return;
+    const paciente = this.pacientes().find((p) => p.uuid === v.pacienteId);
+    this.enviar(
+      this.internacaoService.agendarEletiva({
+        pacienteId: v.pacienteId, unidadeId: v.unidadeId, dataPrevista: v.dataPrevista, tipoLeito: v.tipoLeito,
+        medicoMatricula: v.medicoMatricula.trim(), cid: v.cid.trim(), procedimento: v.procedimento.trim(),
+        previsaoDias: v.previsaoDias ? Number(v.previsaoDias) : null,
+      }),
+      'Internação eletiva agendada',
+      `${paciente?.nome ?? 'Paciente'} · ${this.data(v.dataPrevista)}`,
+    );
+  }
+
+  private salvarAcaoEletiva(a: InternacaoAgendadaDto, acao: 'reserva' | 'admissao' | 'outras'): void {
+    const v = this.acaoEletivaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.profissionalMatricula.trim()) erros['matriculaEletiva'] = 'Informe a matrícula.';
+    if (acao === 'reserva' && !v.leitoId) erros['leitoEletiva'] = 'Escolha o leito.';
+    if (acao === 'admissao' && a.status !== 'RESERVADA' && !v.leitoId) erros['leitoEletiva'] = 'Sem reserva: escolha o leito livre.';
+    if (acao === 'outras' && !v.motivo.trim()) erros['motivoEletiva'] = 'Informe o motivo.';
+    if (acao === 'outras' && v.outra === 'remarcacao' && (!v.dataPrevista || v.dataPrevista < hojeIso())) erros['novaData'] = 'Informe a nova data, de hoje em diante.';
+    if (!this.validar(erros)) return;
+    const rota = acao === 'reserva' ? 'reserva' : acao === 'admissao' ? 'admissao' : v.outra;
+    const titulos = { reserva: 'Leito reservado', admissao: 'Paciente admitido', remarcacao: 'Eletiva remarcada', falta: 'Falta registrada', cancelamento: 'Eletiva cancelada' };
+    this.enviar(
+      this.internacaoService.acaoEletiva(a.uuid, rota, {
+        profissionalMatricula: v.profissionalMatricula.trim(),
+        leitoId: v.leitoId || undefined,
+        previsaoAlta: v.previsaoAlta || undefined,
+        justificativaFaixaEtaria: v.justificativaFaixaEtaria.trim() || undefined,
+        dataPrevista: rota === 'remarcacao' ? v.dataPrevista : undefined,
+        motivo: acao === 'outras' ? v.motivo.trim() : undefined,
+      }),
+      titulos[rota],
+      a.pacienteNome,
+    );
+  }
+
+  // ── Censo diário (ADR-0185) ────────────────────────────────────────────────────────────────
+
+  protected verCenso(unidadeId?: string, data?: string): void {
+    if (unidadeId) this.censoForm.controls.unidadeId.setValue(unidadeId);
+    if (data) this.censoForm.controls.data.setValue(data);
+    const v = this.censoForm.getRawValue();
+    this.erroCenso.set(null);
+    this.censo.set(null);
+    if (!v.unidadeId || !v.data) {
+      this.erroCenso.set('Escolha a unidade e o dia.');
+      return;
+    }
+    this.internacaoService.censoDoDia(v.unidadeId, v.data).subscribe({
+      next: (c) => this.censo.set(c),
+      error: (e: HttpErrorResponse) => this.erroCenso.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível calcular o censo.'),
+    });
+  }
+
+  protected fecharCenso(): void {
+    const v = this.censoForm.getRawValue();
+    this.acaoCenso(this.internacaoService.fecharCenso(v.unidadeId, v.data), 'Censo fechado');
+  }
+
+  protected reabrirCenso(): void {
+    const v = this.censoForm.getRawValue();
+    if (!v.motivo.trim()) {
+      this.erroCenso.set('Informe o motivo da reabertura.');
+      return;
+    }
+    this.acaoCenso(this.internacaoService.reabrirCenso(v.unidadeId, v.data, v.motivo.trim()), 'Censo reaberto');
+  }
+
+  private acaoCenso(req: Observable<CensoDiarioDto>, titulo: string): void {
+    this.salvandoCenso.set(true);
+    this.erroCenso.set(null);
+    req.subscribe({
+      next: (c) => {
+        this.salvandoCenso.set(false);
+        this.censo.set(c);
+        this.censoForm.controls.motivo.setValue('');
+        this.mostrarToast(titulo, `${c.unidadeNome} · ${this.data(c.data)}`);
+        this.internacaoService.pendenciasDoCenso().pipe(catchError(() => of([]))).subscribe((p) => this.pendenciasCenso.set(p));
+      },
+      error: (e: HttpErrorResponse) => {
+        this.salvandoCenso.set(false);
+        this.erroCenso.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar o censo.');
+      },
+    });
+  }
+
+  protected numeroCenso(v: number | null | undefined, sufixo = ''): string {
+    return v == null ? '—' : `${v.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}${sufixo}`;
+  }
+
   private enviar(req: Observable<unknown>, titulo: string, detalhe: string): void {
     this.submitting.set(true);
     req.subscribe({
@@ -798,6 +974,22 @@ export class Leitos {
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
   }
+}
+
+function hojeIso(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function ontemIso(): string {
+  return diaIso(-1);
+}
+
+/** A data local daqui a N dias (negativo: no passado). */
+function diaIso(dias: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /** Enfermaria mista recebe qualquer um; masculina ou feminina, só o mesmo sexo (sexo ignorado vai para mista). */

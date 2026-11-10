@@ -4,6 +4,7 @@ Resource    ../../../../pom/ui/assistencia/leitos/leitos_ui_pom.resource
 Resource    ../../../internacao/leito_internacao/leito_internacao_flow.resource
 Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.resource
 Resource    ../../../internacao/regulacao_leito/regulacao_leito_flow.resource
+Resource    ../../../internacao/eletiva_censo/eletiva_censo_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (setor, leito, paciente, internação) são criados pela API; a ação sob teste é feita pela tela.
@@ -284,5 +285,68 @@ UI Leitos - Pedir Vaga Pela Gaveta
     ${lista}=    GET On Session    msp_session    ${BASE_URL}/regulacao-leito/    params=pacienteId=${pacienteId}
     Should Be Equal    ${lista.json()}[0][tipoLeito]    UTI_ADULTO
     Should Be Equal    ${lista.json()}[0][prioridade]    VERMELHO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Leitos - Agendar Eletiva Pela Gaveta
+    [Documentation]    Agenda uma internação eletiva pela gaveta do cabeçalho (ADR-0185).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${leito}    ${unidade}    ${setor}=    Seed Um Leito
+    ${pacienteId}    ${cpf}    ${cartaoSus}    ${nomePaciente}=    Seed A Paciente
+    ${matricula}=    Seed A Profissional Matricula
+    ${data}=    Data Daqui A    7
+    UI Leitos - Abrir Aba    mapa
+    Clicar Botao    Agendar internação eletiva
+    Preencher Campo Da Gaveta    buscaPacienteEletiva    ${nomePaciente}
+    Escolher Opcao Da Gaveta    pacienteEletiva    ${pacienteId}
+    Escolher Opcao Da Gaveta    unidadeEletiva    ${unidade}
+    Preencher Campo Da Gaveta    dataPrevista    ${data}
+    Escolher Opcao Da Gaveta    tipoLeitoEletiva    CLINICO
+    Preencher Campo Da Gaveta    cidEletiva    K80.2
+    Preencher Campo Da Gaveta    procedimento    Colecistectomia videolaparoscópica.
+    Preencher Campo Da Gaveta    medicoEletiva    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Internação eletiva agendada
+    ${ate}=    Data Daqui A    30
+    ${params}=    Create Dictionary    unidadeId=${unidade}    ate=${ate}
+    ${agenda}=    GET Agenda Eletivas    ${params}
+    Should Be Equal    ${agenda.json()}[0][pacienteId]    ${pacienteId}
+    Should Be Equal    ${agenda.json()}[0][dataPrevista]    ${data}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Leitos - Admitir Eletiva Pela Aba
+    [Documentation]    Admite a eletiva do dia pela aba Eletivas, escolhendo o leito livre (ADR-0185).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${eletiva}    ${leito}    ${unidade}    ${matricula}    ${payload}=    Seed Uma Eletiva    0
+    ${detalhe}=    GET Eletiva    ${eletiva}
+    ${nome}=    Set Variable    ${detalhe.json()}[pacienteNome]
+    UI Leitos - Abrir Aba    eletivas
+    Clicar Botao    Admitir ${nome}
+    Escolher Opcao Da Gaveta    leitoEletiva    ${leito}
+    Preencher Campo Da Gaveta    matriculaEletiva    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Paciente admitido
+    UI Leitos - Situacao Do Leito Deve Ser    ${unidade}    ${leito}    OCUPADO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Leitos - Fechar Censo Pela Aba
+    [Documentation]    Vê a prévia do censo de ontem e fecha pela aba Censo diário (ADR-0185).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${leito}    ${unidade}    ${setor}=    Seed Um Leito
+    ${ontem}=    Data Daqui A    -1
+    UI Leitos - Abrir Aba    censo
+    Select Options By    id=f-unidadeCenso    value    ${unidade}
+    Fill Text    id=f-dataCenso    ${ontem}
+    Clicar Botao    Ver censo
+    Get Text    css=#pn-censo    contains    Prévia (não fechado)
+    Clicar Botao    Fechar censo do dia
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Censo fechado
+    ${c}=    GET Censo Do Dia    ${unidade}    ${ontem}
+    Should Be True    ${c.json()}[fechado]
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
