@@ -47,7 +47,7 @@ const MENU: Record<string, string[]> = {
   '/assistencia/urgencia': ['URGENCIA.CONSULTAR', 'URGENCIA.RECEBER', 'URGENCIA.REGULAR'],
   '/assistencia/laboratorio': ['EXAME.SOLICITAR', 'LABORATORIO.COLETAR', 'LABORATORIO.ANALISAR', 'LABORATORIO.LIBERAR', 'LABORATORIO.GERENCIAR',
     'IMAGEM.REALIZAR', 'IMAGEM.LAUDAR'],
-  '/assistencia/leitos': ['INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'LEITO.GERENCIAR'],
+  '/assistencia/leitos': ['INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'LEITO.GERENCIAR', 'INTERNACAO.SOLICITAR_VAGA', 'LEITO.REGULAR'],
   // Catálogo de programas (ADR-0118): aberto a quem está logado.
   '/assistencia/programas': [],
   // Sala de Vacina (ADR-0147): de quem vacina.

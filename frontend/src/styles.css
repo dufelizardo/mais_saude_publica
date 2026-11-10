@@ -1841,3 +1841,4 @@ button.shift--off { text-align: center; }
   body:has(app-relatorios) .app { display: block; }
   body:has(app-relatorios) .content { margin: 0; padding: 0; background: #ffffff; }
 }
+.leito--RESERVADO { border-left-color: var(--purple, #6936c2); background: var(--ink-50); }

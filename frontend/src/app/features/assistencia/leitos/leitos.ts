@@ -9,6 +9,14 @@ import { MODALIDADES_INTERNACAO, ModalidadeInternacao } from '../../../core/mode
 import {
   CaraterInternacao,
   EVENTOS_LEITO,
+  EVENTOS_SOLICITACAO_LEITO,
+  FAIXAS_ETARIAS,
+  FaixaEtariaLeito,
+  PRIORIDADES_LEITO,
+  PrioridadeLeito,
+  STATUS_SOLICITACAO_LEITO,
+  SolicitacaoLeitoDto,
+  VagaLeitoDto,
   IndicadoresLeitosDto,
   InternacaoResponseDto,
   LeitoMapaDto,
@@ -35,7 +43,7 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
 
-type Aba = 'mapa' | 'internacoes' | 'leitos';
+type Aba = 'mapa' | 'internacoes' | 'central' | 'receber' | 'leitos';
 
 type Gaveta =
   | { tipo: 'internar'; leito: LeitoMapaDto | null }
@@ -43,7 +51,11 @@ type Gaveta =
   | { tipo: 'troca'; internacao: InternacaoResponseDto }
   | { tipo: 'alta'; internacao: InternacaoResponseDto }
   | { tipo: 'bloquear'; leito: LeitoMapaDto }
-  | { tipo: 'leito'; leito: LeitoMapaDto | null };
+  | { tipo: 'leito'; leito: LeitoMapaDto | null }
+  | { tipo: 'pedirVaga'; internacao: InternacaoResponseDto | null }
+  | { tipo: 'pedidoLeito'; id: string }
+  | { tipo: 'admitirRegulado'; pedido: SolicitacaoLeitoDto }
+  | { tipo: 'recusarRegulado'; pedido: SolicitacaoLeitoDto };
 
 interface GrupoSetor {
   setorId: string;
@@ -83,6 +95,18 @@ export class Leitos {
   protected readonly tiposAlta = TIPOS_ALTA;
   protected readonly listaTiposAlta = Object.keys(TIPOS_ALTA) as TipoAlta[];
   protected readonly eventos = EVENTOS_LEITO;
+  protected readonly faixas = FAIXAS_ETARIAS;
+  protected readonly listaFaixas = Object.keys(FAIXAS_ETARIAS) as FaixaEtariaLeito[];
+  protected readonly prioridades = PRIORIDADES_LEITO;
+  protected readonly listaPrioridades = Object.keys(PRIORIDADES_LEITO) as PrioridadeLeito[];
+  protected readonly statusPedido = STATUS_SOLICITACAO_LEITO;
+  protected readonly eventosPedido = EVENTOS_SOLICITACAO_LEITO;
+
+  /** Central de regulação de leitos (ADR-0184). */
+  protected readonly fila = signal<SolicitacaoLeitoDto[]>([]);
+  protected readonly aReceber = signal<SolicitacaoLeitoDto[]>([]);
+  protected readonly pedido = signal<SolicitacaoLeitoDto | null>(null);
+  protected readonly vagas = signal<VagaLeitoDto[]>([]);
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
   private readonly matriculaPadrao = signal('');
@@ -120,7 +144,18 @@ export class Leitos {
     motivo: [''],
     carater: ['URGENCIA' as CaraterInternacao],
     previsaoAlta: [''],
+    justificativaFaixaEtaria: [''],
   });
+  protected readonly vagaForm = this.fb.nonNullable.group({
+    buscaPaciente: [''], pacienteId: [''], unidadeOrigemId: [''], atendimentoId: [''], internacaoOrigemId: [''], profissionalMatricula: [''],
+    cid: [''], quadroClinico: [''], tipoLeito: ['CLINICO' as TipoLeito], prioridade: ['AMARELO' as PrioridadeLeito],
+  });
+  protected readonly reservaForm = this.fb.nonNullable.group({
+    modo: ['leito' as 'leito' | 'vagaZero' | 'negar'], leitoId: [''], unidadeDestinoId: [''], justificativa: [''], horas: ['6'],
+    transporte: [''], motivo: [''], profissionalMatricula: [''],
+  });
+  protected readonly admissaoReguladaForm = this.fb.nonNullable.group({ medicoMatricula: [''], leitoId: [''], previsaoAlta: [''], justificativaFaixaEtaria: [''] });
+  protected readonly recusaForm = this.fb.nonNullable.group({ motivo: [''], profissionalMatricula: [''] });
   protected readonly trocaForm = this.fb.nonNullable.group({ leitoId: [''], motivo: [''], profissionalMatricula: [''] });
   protected readonly altaForm = this.fb.nonNullable.group({ tipoAlta: ['MELHORADO' as TipoAlta], sumario: [''], medicoMatricula: [''], altaEm: [''] });
   protected readonly bloqueioForm = this.fb.nonNullable.group({ motivo: [''] });
@@ -138,6 +173,7 @@ export class Leitos {
     identificacao: [''],
     tipo: ['CLINICO' as TipoLeito],
     sexo: ['MISTO' as SexoLeito],
+    faixaEtaria: ['ADULTO' as FaixaEtariaLeito],
     ativo: [true],
   });
 
@@ -146,6 +182,8 @@ export class Leitos {
   protected readonly abas = computed<{ id: Aba; rotulo: string; contagem: number | null }[]>(() => [
     { id: 'mapa', rotulo: 'Mapa de leitos', contagem: this.leitosDoMapa().length },
     { id: 'internacoes', rotulo: 'Internações', contagem: this.internacoes().filter((i) => i.status === 'INTERNADO').length },
+    ...(this.pode('LEITO.REGULAR') ? [{ id: 'central' as Aba, rotulo: 'Central de leitos', contagem: this.fila().filter((s) => s.status === 'SOLICITADA').length }] : []),
+    ...(this.pode('INTERNACAO.GERENCIAR') ? [{ id: 'receber' as Aba, rotulo: 'A receber', contagem: this.aReceber().length }] : []),
     ...(this.pode('LEITO.GERENCIAR') ? [{ id: 'leitos' as Aba, rotulo: 'Cadastro de leitos', contagem: this.leitos().length }] : []),
   ]);
 
@@ -191,6 +229,9 @@ export class Leitos {
     this.setorService.listar().pipe(catchError(() => of([]))).subscribe((s) => this.setores.set(s));
     // "Internar" no atendimento abre a internação com paciente, unidade e atendimento (ADR-0099).
     const q = this.route.snapshot.queryParamMap;
+    if (q.get('acao') === 'vaga') {
+      this.abrirPedirVaga(null, q.get('pacienteId') ?? '', q.get('unidadeId') ?? '', q.get('atendimentoId') ?? '');
+    }
     if (q.get('acao') === 'internar') {
       this.unidadeFiltro.set(q.get('unidadeId') ?? '');
       this.abrirInternar(null, q.get('pacienteId') ?? '', q.get('unidadeId') ?? '', q.get('atendimentoId') ?? '');
@@ -207,7 +248,11 @@ export class Leitos {
     forkJoin({
       leitos: this.internacaoService.mapa(undefined, true).pipe(catchError(() => of([]))),
       internacoes: this.internacaoService.listar().pipe(catchError(() => of([]))),
-    }).subscribe(({ leitos, internacoes }) => {
+      fila: this.pode('LEITO.REGULAR') ? this.internacaoService.filaDeLeitos().pipe(catchError(() => of([]))) : of([]),
+      receber: this.pode('INTERNACAO.GERENCIAR') ? this.internacaoService.aReceber().pipe(catchError(() => of([]))) : of([]),
+    }).subscribe(({ leitos, internacoes, fila, receber }) => {
+      this.fila.set(fila);
+      this.aReceber.set(receber);
       this.leitos.set(leitos);
       this.internacoes.set(internacoes);
       this.carregando.set(false);
@@ -321,6 +366,14 @@ export class Leitos {
         return `Bloquear o leito ${g.leito.identificacao}`;
       case 'leito':
         return g.leito ? 'Editar leito' : 'Novo leito';
+      case 'pedirVaga':
+        return 'Pedir vaga de internação';
+      case 'pedidoLeito':
+        return 'Pedido de leito';
+      case 'admitirRegulado':
+        return 'Admitir paciente regulado';
+      case 'recusarRegulado':
+        return 'Recusar o paciente';
     }
   }
 
@@ -347,6 +400,7 @@ export class Leitos {
       motivo: '',
       carater: 'URGENCIA',
       previsaoAlta: '',
+      justificativaFaixaEtaria: '',
     });
     this.abrir({ tipo: 'internar', leito });
   }
@@ -445,6 +499,7 @@ export class Leitos {
       identificacao: leito?.identificacao ?? '',
       tipo: leito?.tipo ?? 'CLINICO',
       sexo: leito?.sexo ?? 'MISTO',
+      faixaEtaria: leito?.faixaEtaria ?? 'ADULTO',
       ativo: leito?.ativo ?? true,
     });
     this.carregarLimites();
@@ -479,6 +534,14 @@ export class Leitos {
         return this.salvarBloqueio(g.leito);
       case 'leito':
         return this.salvarLeito(g.leito);
+      case 'pedirVaga':
+        return this.salvarPedidoDeVaga();
+      case 'pedidoLeito':
+        return this.salvarDecisao(g.id);
+      case 'admitirRegulado':
+        return this.salvarAdmissaoRegulada(g.pedido);
+      case 'recusarRegulado':
+        return this.salvarRecusa(g.pedido);
       default:
         return;
     }
@@ -515,6 +578,7 @@ export class Leitos {
         motivo: v.motivo.trim(),
         carater: v.carater,
         previsaoAlta: v.previsaoAlta || undefined,
+        justificativaFaixaEtaria: v.justificativaFaixaEtaria.trim() || undefined,
       }),
       'Paciente internado',
       `${paciente?.nome ?? 'Paciente'} · ${leito?.identificacao ?? ''}`,
@@ -568,12 +632,147 @@ export class Leitos {
     if (!v.setorId) erros['setorLeito'] = 'Selecione o setor assistencial.';
     if (!v.identificacao.trim()) erros['identificacao'] = 'Informe a identificação do leito.';
     if (!this.validar(erros)) return;
-    const dto = { unidadeId: v.unidadeId, setorId: v.setorId, identificacao: v.identificacao.trim(), tipo: v.tipo, sexo: v.sexo, ativo: v.ativo };
+    const dto = { unidadeId: v.unidadeId, setorId: v.setorId, identificacao: v.identificacao.trim(), tipo: v.tipo, sexo: v.sexo, faixaEtaria: v.faixaEtaria, ativo: v.ativo };
     this.enviar(
       leito ? this.internacaoService.atualizarLeito(leito.uuid, dto) : this.internacaoService.criarLeito(dto),
       leito ? 'Leito atualizado' : 'Leito cadastrado',
       dto.identificacao,
     );
+  }
+
+  // ── Central de regulação de leitos (ADR-0184) ──────────────────────────────────────────────
+
+  protected abrirPedirVaga(internacao: InternacaoResponseDto | null, pacienteId = '', unidadeId = '', atendimentoId = ''): void {
+    this.vagaForm.reset({
+      buscaPaciente: '', pacienteId: internacao?.pacienteId ?? pacienteId, unidadeOrigemId: internacao?.unidadeId ?? unidadeId,
+      atendimentoId, internacaoOrigemId: internacao?.uuid ?? '', profissionalMatricula: this.matriculaPadrao(), cid: internacao?.cid ?? '',
+      quadroClinico: '', tipoLeito: 'CLINICO', prioridade: 'AMARELO',
+    });
+    this.abrir({ tipo: 'pedirVaga', internacao });
+  }
+
+  protected pacientesParaVaga(): PacienteResponseDto[] {
+    const q = this.vagaForm.controls.buscaPaciente.value.trim().toLowerCase();
+    const selecionado = this.vagaForm.controls.pacienteId.value;
+    const lista = this.pacientes().filter((p) => p.ativo !== false && (!q || p.nome.toLowerCase().includes(q))).slice(0, 50);
+    const atual = this.pacientes().find((p) => p.uuid === selecionado);
+    return atual && !lista.includes(atual) ? [atual, ...lista] : lista;
+  }
+
+  protected abrirPedido(id: string): void {
+    this.pedido.set(null);
+    this.vagas.set([]);
+    this.erroDetalhe.set(null);
+    this.reservaForm.reset({ modo: 'leito', leitoId: '', unidadeDestinoId: '', justificativa: '', horas: '6', transporte: '', motivo: '',
+      profissionalMatricula: this.matriculaPadrao() });
+    this.abrir({ tipo: 'pedidoLeito', id });
+    this.internacaoService.pedidoDeLeito(id).subscribe({
+      next: (p) => {
+        this.pedido.set(p);
+        if (p.status === 'SOLICITADA' && this.pode('LEITO.REGULAR')) {
+          this.internacaoService.vagasCompativeis(id).pipe(catchError(() => of([]))).subscribe((v) => this.vagas.set(v));
+        }
+      },
+      error: (e: HttpErrorResponse) => this.erroDetalhe.set(e.status === 403 ? 'Este pedido é de unidades fora do seu acesso.' : 'Não foi possível abrir o pedido.'),
+    });
+  }
+
+  protected abrirAdmissaoRegulada(pedido: SolicitacaoLeitoDto): void {
+    this.admissaoReguladaForm.reset({ medicoMatricula: this.matriculaPadrao(), leitoId: '', previsaoAlta: '', justificativaFaixaEtaria: '' });
+    this.abrir({ tipo: 'admitirRegulado', pedido });
+  }
+
+  protected abrirRecusa(pedido: SolicitacaoLeitoDto): void {
+    this.recusaForm.reset({ motivo: '', profissionalMatricula: this.matriculaPadrao() });
+    this.abrir({ tipo: 'recusarRegulado', pedido });
+  }
+
+  /** Na vaga zero, os leitos livres da unidade de destino. */
+  protected leitosLivresDe(unidadeId: string | null | undefined): LeitoMapaDto[] {
+    return this.leitos().filter((l) => l.ativo && l.situacao === 'LIVRE' && l.unidadeId === unidadeId);
+  }
+
+  protected cancelarPedido(p: SolicitacaoLeitoDto): void {
+    const motivo = 'Cancelado pela unidade de origem.';
+    this.enviar(this.internacaoService.cancelarPedidoDeLeito(p.uuid, this.matriculaPadrao() || p.solicitadoPorMatricula, motivo),
+      'Pedido de leito cancelado', p.pacienteNome);
+  }
+
+  private salvarPedidoDeVaga(): void {
+    const v = this.vagaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.pacienteId) erros['pacienteVaga'] = 'Selecione o paciente.';
+    if (!v.unidadeOrigemId) erros['unidadeOrigem'] = 'Selecione a unidade de origem.';
+    if (!CID.test(v.cid) || !v.cid.trim()) erros['cidVaga'] = 'Informe o CID-10 principal (ex.: J18.9).';
+    if (!v.quadroClinico.trim()) erros['quadroClinico'] = 'Descreva o quadro clínico.';
+    if (!v.profissionalMatricula.trim()) erros['matriculaVaga'] = 'Informe a matrícula de quem pede.';
+    if (!this.validar(erros)) return;
+    const paciente = this.pacientes().find((p) => p.uuid === v.pacienteId);
+    this.enviar(
+      this.internacaoService.pedirLeito({
+        pacienteId: v.pacienteId, unidadeOrigemId: v.unidadeOrigemId, atendimentoId: v.atendimentoId || undefined,
+        internacaoOrigemId: v.internacaoOrigemId || undefined, profissionalMatricula: v.profissionalMatricula.trim(), cid: v.cid.trim(),
+        quadroClinico: v.quadroClinico.trim(), tipoLeito: v.tipoLeito, prioridade: v.prioridade,
+      }),
+      'Vaga pedida à central de leitos',
+      `${paciente?.nome ?? 'Paciente'} · ${this.tiposLeito[v.tipoLeito]}`,
+    );
+  }
+
+  private salvarDecisao(id: string): void {
+    const v = this.reservaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.profissionalMatricula.trim()) erros['matriculaRegulador'] = 'Informe a matrícula do regulador.';
+    if (v.modo === 'leito' && !v.leitoId) erros['vagaLeito'] = 'Escolha um dos leitos compatíveis.';
+    if (v.modo === 'vagaZero' && !v.unidadeDestinoId) erros['unidadeVagaZero'] = 'Escolha a unidade que recebe.';
+    if (v.modo === 'vagaZero' && !v.justificativa.trim()) erros['justificativaVagaZero'] = 'Justifique a vaga zero.';
+    if (v.modo === 'negar' && !v.motivo.trim()) erros['motivoNegacao'] = 'Informe o motivo.';
+    if (!this.validar(erros)) return;
+    const p = this.pedido();
+    const nome = p?.pacienteNome ?? 'Paciente';
+    if (v.modo === 'negar') {
+      this.enviar(this.internacaoService.negarPedidoDeLeito(id, v.profissionalMatricula.trim(), v.motivo.trim()), 'Pedido negado', nome);
+      return;
+    }
+    const vaga = this.vagas().find((x) => x.leitoId === v.leitoId);
+    this.enviar(
+      this.internacaoService.reservarLeito(id, {
+        profissionalMatricula: v.profissionalMatricula.trim(),
+        leitoId: v.modo === 'leito' ? v.leitoId : undefined,
+        unidadeDestinoId: v.modo === 'vagaZero' ? v.unidadeDestinoId : undefined,
+        justificativaVagaZero: v.modo === 'vagaZero' ? v.justificativa.trim() : undefined,
+        horas: v.modo === 'leito' ? Number(v.horas) || 6 : undefined,
+        transporte: v.transporte.trim() || undefined,
+      }),
+      v.modo === 'leito' ? 'Leito reservado' : 'Vaga zero registrada',
+      v.modo === 'leito' ? `${nome} · ${vaga?.identificacao ?? ''} em ${vaga?.unidadeNome ?? ''}` : nome,
+    );
+  }
+
+  private salvarAdmissaoRegulada(p: SolicitacaoLeitoDto): void {
+    const v = this.admissaoReguladaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.medicoMatricula.trim()) erros['medicoRegulado'] = 'Informe a matrícula do médico responsável.';
+    if (p.vagaZero && !v.leitoId) erros['leitoRegulado'] = 'Escolha o leito livre onde o paciente fica.';
+    if (!this.validar(erros)) return;
+    this.enviar(
+      this.internacaoService.admitirRegulado(p.uuid, {
+        medicoMatricula: v.medicoMatricula.trim(), leitoId: p.vagaZero ? v.leitoId : undefined, previsaoAlta: v.previsaoAlta || undefined,
+        justificativaFaixaEtaria: v.justificativaFaixaEtaria.trim() || undefined,
+      }),
+      'Paciente admitido',
+      `${p.pacienteNome} · vindo de ${p.unidadeOrigemNome}`,
+    );
+  }
+
+  private salvarRecusa(p: SolicitacaoLeitoDto): void {
+    const v = this.recusaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.motivo.trim()) erros['motivoRecusa'] = 'Informe o motivo da recusa.';
+    if (!v.profissionalMatricula.trim()) erros['matriculaRecusa'] = 'Informe a matrícula.';
+    if (!this.validar(erros)) return;
+    this.enviar(this.internacaoService.recusarNoDestino(p.uuid, v.profissionalMatricula.trim(), v.motivo.trim()), 'Paciente recusado',
+      `${p.pacienteNome} · volta para a fila da central`);
   }
 
   private enviar(req: Observable<unknown>, titulo: string, detalhe: string): void {

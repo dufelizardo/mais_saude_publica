@@ -198,6 +198,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0181](./0181-laboratorio-ciencia-critico-entrega.md) | Laboratório: ciência de quem pediu, comunicação do valor crítico e entrega do resultado ao paciente (L2) | Aceita e implementada |
 | [0182](./0182-exames-de-imagem.md) | Laboratório e Diagnóstico: exames de imagem, com realização, laudo do radiologista e adendo (L3) | Aceita e implementada |
 | [0183](./0183-laudo-pdf-assinado-e-insumos.md) | Laboratório e Diagnóstico: laudo em PDF com assinatura eletrônica interna, verificação pública e insumos do Estoque (L4) | Aceita e implementada |
+| [0184](./0184-regulacao-de-leitos.md) | Regulação e Leitos: central de regulação de leitos entre unidades, reserva com prazo, vaga zero e faixa etária do leito (RL1) | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 

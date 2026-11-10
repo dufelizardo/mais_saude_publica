@@ -3,6 +3,7 @@ Library     String
 Resource    ../../../../pom/ui/assistencia/leitos/leitos_ui_pom.resource
 Resource    ../../../internacao/leito_internacao/leito_internacao_flow.resource
 Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.resource
+Resource    ../../../internacao/regulacao_leito/regulacao_leito_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (setor, leito, paciente, internação) são criados pela API; a ação sob teste é feita pela tela.
@@ -216,3 +217,72 @@ UI Leitos - Limite Pela Ficha Da Unidade
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+
+UI Leitos - Regular Pedido Pela Central
+    [Documentation]    O regulador reserva um leito compatível de outra unidade pela aba Central de leitos (ADR-0184).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedido}    ${pacienteId}    ${origem}    ${matricula}=    Seed Um Pedido De Leito    VERMELHO
+    ${leito}    ${unidade}    ${setor}=    Seed Um Leito
+    ${vagas}=    GET Vagas Compativeis    ${pedido}
+    ${identificacao}=    Evaluate    [v['identificacao'] for v in $vagas.json() if v['leitoId'] == $leito][0]
+    ${detalhe}=    GET Pedido De Leito    ${pedido}
+    ${nome}=    Set Variable    ${detalhe.json()}[pacienteNome]
+    UI Leitos - Abrir Aba    central
+    Clicar Botao    Regular o pedido de ${nome}
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Pedido de leito
+    Click    css=app-drawer label:has-text("${identificacao}")
+    Preencher Campo Da Gaveta    matriculaRegulador    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Leito reservado
+    ${depois}=    GET Pedido De Leito    ${pedido}
+    Should Be Equal    ${depois.json()}[status]    RESERVADA
+    Should Be Equal    ${depois.json()}[leitoReservadoId]    ${leito}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Leitos - Admitir Pela Aba A Receber
+    [Documentation]    O destino admite o paciente regulado pela aba A receber (ADR-0184).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedido}    ${pacienteId}    ${origem}    ${matricula}=    Seed Um Pedido De Leito
+    ${leito}    ${unidade}    ${setor}=    Seed Um Leito
+    ${reserva}=    Create Dictionary    profissionalMatricula=${matricula}    leitoId=${leito}
+    ${r}=    POST Reservar Leito    ${pedido}    ${reserva}
+    Should Be Equal As Integers    ${r.status_code}    200
+    ${nome}=    Set Variable    ${r.json()}[pacienteNome]
+    UI Leitos - Abrir Aba    receber
+    Clicar Botao    Admitir ${nome}
+    Preencher Campo Da Gaveta    medicoRegulado    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Paciente admitido
+    UI Leitos - Situacao Do Leito Deve Ser    ${unidade}    ${leito}    OCUPADO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Leitos - Pedir Vaga Pela Gaveta
+    [Documentation]    Pede vaga de internação em outra unidade pela gaveta (ADR-0184).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pacienteId}    ${cpf}    ${cartaoSus}    ${nomePaciente}=    Seed A Paciente
+    ${origem}=    Seed A Unidade De Saude Uuid
+    ${matricula}=    Seed A Profissional Matricula
+    UI Leitos - Abrir Aba    mapa
+    Clicar Botao    Pedir vaga em outra unidade
+    Preencher Campo Da Gaveta    buscaPacienteVaga    ${nomePaciente}
+    Escolher Opcao Da Gaveta    pacienteVaga    ${pacienteId}
+    Escolher Opcao Da Gaveta    unidadeOrigem    ${origem}
+    Escolher Opcao Da Gaveta    tipoLeitoVaga    UTI_ADULTO
+    Escolher Opcao Da Gaveta    prioridadeVaga    VERMELHO
+    Preencher Campo Da Gaveta    cidVaga    A41.9
+    Preencher Campo Da Gaveta    quadroClinico    Choque séptico, em noradrenalina.
+    Preencher Campo Da Gaveta    matriculaVaga    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Vaga pedida à central de leitos
+    Get Mais Saude Publica Session
+    ${lista}=    GET On Session    msp_session    ${BASE_URL}/regulacao-leito/    params=pacienteId=${pacienteId}
+    Should Be Equal    ${lista.json()}[0][tipoLeito]    UTI_ADULTO
+    Should Be Equal    ${lista.json()}[0][prioridade]    VERMELHO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
