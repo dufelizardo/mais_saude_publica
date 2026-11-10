@@ -149,6 +149,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("INTERNACAO.ALTA", new Def("Dar alta da internação (ato médico)", ACESSO_AO_DADO_DE_SAUDE));
         // Central de regulação de leitos (ADR-0184).
         PERMISSOES.put("INTERNACAO.SOLICITAR_VAGA", new Def("Pedir leito de outra unidade à central de regulação de leitos", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("CENSO.FECHAR", new Def("Fechar e reabrir o censo hospitalar diário da unidade", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LEITO.REGULAR", new Def("Regular a fila de leitos: reservar leito em outra unidade, vaga zero e negar", ACESSO_AO_DADO_DE_SAUDE));
         // Documentos (ADR-0172): anexar não dá direito de abrir; abrir segue o prontuário.
         PERMISSOES.put("DOCUMENTO.ANEXAR", new Def("Anexar documentos ao paciente, enviar versões e retirar", OPERACAO));
@@ -229,7 +230,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
                         "EVOLUCAO.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
                         "REGISTRO_CLINICO.RETIFICAR_DE_OUTROS", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR",
-                        "LEITO.GERENCIAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
+                        "LEITO.GERENCIAR", "CENSO.FECHAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
                         "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR", "ESTOQUE.CONSULTAR")));
@@ -259,7 +260,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "LEITO.REGULAR", "TRANSPORTE.CONSULTAR")));
         PAPEIS.put("GESTOR_DE_LEITOS", new PapelPadrao("Gestor de leitos (NIR)",
                 "Núcleo Interno de Regulação: mapa de leitos, internação, troca de leito, bloqueio e liberação (ADR-0098).",
-                List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR")));
+                List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR", "CENSO.FECHAR")));
         // Saúde Mental (ADR-0120): as funções já existiam nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("PSICOLOGO", new PapelPadrao("Psicólogo",
                 "Acolhimento e acompanhamento em saúde mental; lê o prontuário com vínculo.",

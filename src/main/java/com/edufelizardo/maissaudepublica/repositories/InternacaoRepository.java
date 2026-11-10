@@ -21,6 +21,11 @@ public interface InternacaoRepository extends JpaRepository<Internacao, UUID> {
 
     List<Internacao> findAllByOrderByAdmitidaEmDesc();
 
+    /** As internações da unidade que tocam o período: admitidas antes do fim e sem alta até o começo (censo, ADR-0185). */
+    @Query("select i from Internacao i where i.unidade.uuid = :unidade and i.admitidaEm < :fim and (i.altaEm is null or i.altaEm >= :inicio)")
+    List<Internacao> findDaUnidadeNoPeriodo(@Param("unidade") UUID unidadeId, @Param("inicio") java.time.Instant inicio,
+                                             @Param("fim") java.time.Instant fim);
+
     List<Internacao> findByStatusAndLeito_UuidIn(StatusInternacao status, Collection<UUID> leitoIds);
 
     List<Internacao> findByStatusAndAltaEmAfter(StatusInternacao status, Instant depoisDe);

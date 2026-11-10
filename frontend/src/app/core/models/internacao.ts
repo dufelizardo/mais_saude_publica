@@ -157,6 +157,110 @@ export interface AdmissaoRegulacaoLeitoRequestDto {
   justificativaFaixaEtaria?: string;
 }
 
+/** Internação eletiva agendada e censo diário (ADR-0185). */
+export type StatusInternacaoAgendada = 'AGENDADA' | 'RESERVADA' | 'ADMITIDA' | 'FALTA' | 'CANCELADA';
+export type TipoEventoInternacaoAgendada = 'AGENDAMENTO' | 'RESERVA' | 'REMARCACAO' | 'ADMISSAO' | 'FALTA' | 'CANCELAMENTO';
+
+export interface AgendamentoInternacaoRequestDto {
+  pacienteId: string;
+  unidadeId: string;
+  dataPrevista: string;
+  tipoLeito: TipoLeito;
+  medicoMatricula: string;
+  cid: string;
+  procedimento: string;
+  previsaoDias?: number | null;
+  solicitacaoRegulacaoId?: string;
+}
+
+export interface EletivaLeitoRequestDto {
+  profissionalMatricula: string;
+  leitoId?: string;
+  dataPrevista?: string;
+  previsaoAlta?: string;
+  justificativaFaixaEtaria?: string;
+  motivo?: string;
+}
+
+export interface InternacaoAgendadaDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  dataPrevista: string;
+  tipoLeito: TipoLeito;
+  medicoMatricula: string;
+  medicoNome: string;
+  cid: string;
+  procedimento: string;
+  previsaoDias?: number | null;
+  solicitacaoRegulacaoId?: string | null;
+  status: StatusInternacaoAgendada;
+  leitoReservadoId?: string | null;
+  leitoReservadoIdentificacao?: string | null;
+  reservadoAte?: string | null;
+  internacaoId?: string | null;
+  motivoEncerramento?: string | null;
+  aguardandoDesfecho: boolean;
+  podeReservar: boolean;
+  eventos: { tipo: TipoEventoInternacaoAgendada; texto?: string | null; profissionalNome?: string | null; ocorridoEm: string }[];
+}
+
+export interface PacienteDoCensoDto {
+  internacaoId: string;
+  pacienteNome: string;
+  leitoIdentificacao: string;
+  setorNome: string;
+  diasInternado: number;
+}
+
+export interface CensoDiarioDto {
+  uuid?: string | null;
+  unidadeId: string;
+  unidadeNome: string;
+  data: string;
+  versao?: number | null;
+  fechado: boolean;
+  leitosExistentes: number;
+  leitosBloqueados: number;
+  leitosOperacionais: number;
+  internadosInicio: number;
+  admissoes: number;
+  altasMelhorado: number;
+  altasAPedido: number;
+  altasTransferencia: number;
+  evasoes: number;
+  obitos: number;
+  transferenciasInternas: number;
+  internadosFim: number;
+  pacienteDia: number;
+  taxaOcupacao?: number | null;
+  mediaPermanencia?: number | null;
+  fechadoEm?: string | null;
+  reaberto: boolean;
+  motivoReabertura?: string | null;
+  pacientes: PacienteDoCensoDto[];
+}
+
+export interface PendenciaCensoDto {
+  unidadeId: string;
+  unidadeNome: string;
+  data: string;
+}
+
+export const STATUS_ELETIVA: Record<StatusInternacaoAgendada, { rotulo: string; classe: string }> = {
+  AGENDADA: { rotulo: 'Agendada', classe: 'info' },
+  RESERVADA: { rotulo: 'Leito reservado', classe: 'purple' },
+  ADMITIDA: { rotulo: 'Admitida', classe: 'ok' },
+  FALTA: { rotulo: 'Falta', classe: 'warn' },
+  CANCELADA: { rotulo: 'Cancelada', classe: 'muted' },
+};
+
+export const EVENTOS_ELETIVA: Record<TipoEventoInternacaoAgendada, string> = {
+  AGENDAMENTO: 'Agendada', RESERVA: 'Leito reservado', REMARCACAO: 'Remarcada', ADMISSAO: 'Admitida', FALTA: 'Falta', CANCELAMENTO: 'Cancelada',
+};
+
 export const FAIXAS_ETARIAS: Record<FaixaEtariaLeito, string> = { ADULTO: 'Adulto', PEDIATRICO: 'Pediátrico', NEONATAL: 'Neonatal' };
 
 export const PRIORIDADES_LEITO: Record<PrioridadeLeito, { rotulo: string; classe: string }> = {

@@ -108,10 +108,10 @@ const MODULOS: Modulo[] = [
   { nome: 'Escalas', sub: 'turnos, vagas, troca e cópia de semana (ADR-0105)', ver: [], registrar: [], gerenciar: ['ESCALA.GERENCIAR'] },
   {
     nome: 'Leitos e internação',
-    sub: 'mapa, internação, troca de leito e alta (ADR-0098)',
+    sub: 'mapa, internação, eletivas, troca de leito, alta e censo diário (ADR-0098, ADR-0185)',
     ver: ['INTERNACAO.CONSULTAR'],
     registrar: ['INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA'],
-    gerenciar: ['LEITO.GERENCIAR'],
+    gerenciar: ['LEITO.GERENCIAR', 'CENSO.FECHAR'],
   },
   {
     nome: 'Regulação de leitos',
