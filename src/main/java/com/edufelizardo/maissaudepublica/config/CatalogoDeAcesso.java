@@ -149,6 +149,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("INTERNACAO.ALTA", new Def("Dar alta da internação (ato médico)", ACESSO_AO_DADO_DE_SAUDE));
         // Central de regulação de leitos (ADR-0184).
         PERMISSOES.put("INTERNACAO.SOLICITAR_VAGA", new Def("Pedir leito de outra unidade à central de regulação de leitos", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("AIH.SOLICITAR", new Def("Preencher o laudo para solicitação de AIH da internação", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("AIH.AUTORIZAR", new Def("Autorizar, devolver ou negar o laudo de AIH (autorização interna, com o número)", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("AIH.NUMERAR", new Def("Cadastrar as faixas de numeração de AIH recebidas do gestor", OPERACAO));
         PERMISSOES.put("CENSO.FECHAR", new Def("Fechar e reabrir o censo hospitalar diário da unidade", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LEITO.REGULAR", new Def("Regular a fila de leitos: reservar leito em outra unidade, vaga zero e negar", ACESSO_AO_DADO_DE_SAUDE));
         // Documentos (ADR-0172): anexar não dá direito de abrir; abrir segue o prontuário.
@@ -185,7 +188,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR",
                         "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR",
                         "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
-                        "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR")));
+                        "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -196,7 +199,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "Consulta, prescrição e procedimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
                         "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
-                        "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA", "INTERNACAO.SOLICITAR_VAGA",
+                        "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA", "INTERNACAO.SOLICITAR_VAGA", "AIH.SOLICITAR",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
                         "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
@@ -258,6 +261,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("REGULADOR_DE_LEITOS", new PapelPadrao("Regulador de leitos",
                 "Central de regulação de leitos entre unidades: fila, vagas compatíveis, reserva com prazo, vaga zero e negação (ADR-0184).",
                 List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "LEITO.REGULAR", "TRANSPORTE.CONSULTAR")));
+        PAPEIS.put("MEDICO_AUTORIZADOR", new PapelPadrao("Médico autorizador",
+                "Autorização interna das AIH: fila de laudos, autorizar com o número, devolver para correção e negar (ADR-0186).",
+                List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "PRONTUARIO.CONSULTAR", "AIH.AUTORIZAR")));
         PAPEIS.put("GESTOR_DE_LEITOS", new PapelPadrao("Gestor de leitos (NIR)",
                 "Núcleo Interno de Regulação: mapa de leitos, internação, troca de leito, bloqueio e liberação (ADR-0098).",
                 List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR", "CENSO.FECHAR")));

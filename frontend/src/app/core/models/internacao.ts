@@ -157,6 +157,126 @@ export interface AdmissaoRegulacaoLeitoRequestDto {
   justificativaFaixaEtaria?: string;
 }
 
+/** Laudo para solicitação de AIH e autorização interna (ADR-0186). */
+export type StatusLaudoAih = 'SOLICITADO' | 'DEVOLVIDO' | 'AUTORIZADO' | 'NEGADO' | 'CANCELADO';
+export type ClinicaAih =
+  | 'CIRURGICA' | 'OBSTETRICA' | 'CLINICA_MEDICA' | 'CUIDADOS_PROLONGADOS' | 'PSIQUIATRIA' | 'TISIOLOGIA' | 'PEDIATRIA'
+  | 'REABILITACAO' | 'PSIQUIATRIA_HOSPITAL_DIA';
+export type CausaExternaAih = 'ACIDENTE_DE_TRANSITO' | 'ACIDENTE_DE_TRABALHO_TIPICO' | 'ACIDENTE_DE_TRABALHO_TRAJETO' | 'OUTRA_CAUSA_EXTERNA';
+export type TipoEventoLaudoAih = 'SOLICITACAO' | 'CORRECAO' | 'DEVOLUCAO' | 'AUTORIZACAO' | 'NEGACAO' | 'CANCELAMENTO' | 'VINCULO_INTERNACAO';
+
+export interface LaudoAihRequestDto {
+  internacaoId?: string;
+  agendamentoId?: string;
+  profissionalMatricula: string;
+  sinaisSintomas: string;
+  condicoesJustificativas: string;
+  resultadosExames?: string;
+  diagnosticoInicial: string;
+  cidPrincipal: string;
+  cidSecundario?: string;
+  cidCausaAssociada?: string;
+  procedimentoId: string;
+  clinica: ClinicaAih;
+  causaExterna?: CausaExternaAih | null;
+}
+
+export interface LaudoAihDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  pacienteCartaoSus?: string | null;
+  unidadeId: string;
+  unidadeNome: string;
+  internacaoId?: string | null;
+  agendamentoId?: string | null;
+  carater: CaraterInternacao;
+  solicitanteMatricula: string;
+  solicitanteNome: string;
+  sinaisSintomas: string;
+  condicoesJustificativas: string;
+  resultadosExames?: string | null;
+  diagnosticoInicial: string;
+  cidPrincipal: string;
+  cidSecundario?: string | null;
+  cidCausaAssociada?: string | null;
+  procedimentoId: string;
+  procedimentoCodigo: string;
+  procedimentoNome: string;
+  procedimentoSigtap?: string | null;
+  clinica: ClinicaAih;
+  causaExterna?: CausaExternaAih | null;
+  status: StatusLaudoAih;
+  solicitadoEm: string;
+  numeroAih?: string | null;
+  autorizadorNome?: string | null;
+  decididoEm?: string | null;
+  motivoDecisao?: string | null;
+  eventos: { tipo: TipoEventoLaudoAih; texto?: string | null; profissionalNome?: string | null; ocorridoEm: string }[];
+}
+
+export interface FaixaAihDto {
+  uuid: string;
+  ano: number;
+  inicio: number;
+  fim: number;
+  proximo: number;
+  restantes: number;
+  ativa: boolean;
+  esgotada: boolean;
+  primeiroNumero: string;
+  ultimoNumero: string;
+  registradaEm: string;
+}
+
+export interface PendenciaAihDto {
+  internacaoId: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  leitoIdentificacao: string;
+  admitidaEm: string;
+  horasSemLaudo: number;
+}
+
+export const STATUS_LAUDO_AIH: Record<StatusLaudoAih, { rotulo: string; classe: string }> = {
+  SOLICITADO: { rotulo: 'Aguardando autorização', classe: 'info' },
+  DEVOLVIDO: { rotulo: 'Devolvido para correção', classe: 'warn' },
+  AUTORIZADO: { rotulo: 'Autorizado', classe: 'ok' },
+  NEGADO: { rotulo: 'Negado', classe: 'alert' },
+  CANCELADO: { rotulo: 'Cancelado', classe: 'muted' },
+};
+
+export const CLINICAS_AIH: Record<ClinicaAih, string> = {
+  CIRURGICA: 'Cirúrgica',
+  OBSTETRICA: 'Obstétrica',
+  CLINICA_MEDICA: 'Clínica médica',
+  CUIDADOS_PROLONGADOS: 'Cuidados prolongados',
+  PSIQUIATRIA: 'Psiquiatria',
+  TISIOLOGIA: 'Tisiologia',
+  PEDIATRIA: 'Pediatria',
+  REABILITACAO: 'Reabilitação',
+  PSIQUIATRIA_HOSPITAL_DIA: 'Psiquiatria em hospital-dia',
+};
+
+export const CAUSAS_EXTERNAS_AIH: Record<CausaExternaAih, string> = {
+  ACIDENTE_DE_TRANSITO: 'Acidente de trânsito',
+  ACIDENTE_DE_TRABALHO_TIPICO: 'Acidente de trabalho típico',
+  ACIDENTE_DE_TRABALHO_TRAJETO: 'Acidente de trabalho no trajeto',
+  OUTRA_CAUSA_EXTERNA: 'Outra causa externa',
+};
+
+export const EVENTOS_LAUDO_AIH: Record<TipoEventoLaudoAih, string> = {
+  SOLICITACAO: 'Solicitado',
+  CORRECAO: 'Corrigido',
+  DEVOLUCAO: 'Devolvido',
+  AUTORIZACAO: 'Autorizado',
+  NEGACAO: 'Negado',
+  CANCELAMENTO: 'Cancelado',
+  VINCULO_INTERNACAO: 'Passou para a internação',
+};
+
 /** Internação eletiva agendada e censo diário (ADR-0185). */
 export type StatusInternacaoAgendada = 'AGENDADA' | 'RESERVADA' | 'ADMITIDA' | 'FALTA' | 'CANCELADA';
 export type TipoEventoInternacaoAgendada = 'AGENDAMENTO' | 'RESERVA' | 'REMARCACAO' | 'ADMISSAO' | 'FALTA' | 'CANCELAMENTO';
@@ -324,6 +444,8 @@ export interface InternacaoResponseDto {
   comunicacaoMpPendente?: MomentoComunicacaoMp | null;
   prazoComunicacaoMp?: string | null;
   comunicacaoMpVencida?: boolean;
+  /** Número da AIH autorizada (ADR-0186). */
+  numeroAih?: string | null;
 }
 
 export type ModalidadeInternacao = 'VOLUNTARIA' | 'INVOLUNTARIA' | 'COMPULSORIA';

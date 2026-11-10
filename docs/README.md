@@ -37,7 +37,7 @@ correspondente está na ADR indicada.
 | Gestão da Rede de Atenção | [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md) | [0179](./adr/0179-gestao-da-rede-de-atencao.md) | em parte (GR1 funcionando) |
 
 Estão documentados nas próprias ADRs: Laboratório e imagem (0093 a 0095, 0180 a 0183), Regulação do acesso (0087 a 0089), de urgência (0176) e de leitos (0184), Leitos e
-Internação (0098 a 0100, 0171, 0184, 0185), Imunização (0147 a 0150), Indicadores e BI (0142 a 0146, 0167, 0175), Intersetorialidade (0154) e
+Internação (0098 a 0100, 0171, 0184 a 0186), Imunização (0147 a 0150), Indicadores e BI (0142 a 0146, 0167, 0175), Intersetorialidade (0154) e
 Documentos (0172).
 
 ## Acesso, segurança e frontend

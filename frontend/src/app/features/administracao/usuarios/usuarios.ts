@@ -121,6 +121,13 @@ const MODULOS: Modulo[] = [
     gerenciar: ['LEITO.REGULAR'],
   },
   {
+    nome: 'AIH',
+    sub: 'laudo para solicitação de AIH, autorização interna e faixas de numeração (ADR-0186)',
+    ver: [],
+    registrar: ['AIH.SOLICITAR'],
+    gerenciar: ['AIH.AUTORIZAR', 'AIH.NUMERAR'],
+  },
+  {
     nome: 'Farmácia',
     sub: 'estoque, dispensação, transferências',
     ver: ['FARMACIA.CONSULTAR'],

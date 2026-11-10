@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
@@ -19,6 +19,10 @@ import {
   EletivaLeitoRequestDto,
   InternacaoAgendadaDto,
   PendenciaCensoDto,
+  FaixaAihDto,
+  LaudoAihDto,
+  LaudoAihRequestDto,
+  PendenciaAihDto,
 } from '../models/internacao';
 
 /** Leitos e internação (ADR-0098): mapa, indicadores, cadastro de leito, internação, troca de leito e alta. */
@@ -99,6 +103,51 @@ export class InternacaoService {
 
   darAlta(uuid: string, dto: { tipoAlta: TipoAlta; sumario: string; medicoMatricula: string; altaEm?: string }): Observable<InternacaoResponseDto> {
     return this.http.post<InternacaoResponseDto>(`${this.internacaoUrl}/${uuid}/alta`, dto);
+  }
+
+  // ── Laudo de AIH (ADR-0186) ──
+
+  solicitarAih(dto: LaudoAihRequestDto): Observable<LaudoAihDto> {
+    return this.http.post<LaudoAihDto>('/api/v1/laudo-aih/', dto);
+  }
+
+  corrigirAih(uuid: string, dto: LaudoAihRequestDto): Observable<LaudoAihDto> {
+    return this.http.put<LaudoAihDto>(`/api/v1/laudo-aih/${uuid}`, dto);
+  }
+
+  laudosAih(filtro: { internacaoId?: string; agendamentoId?: string }): Observable<LaudoAihDto[]> {
+    let params = new HttpParams();
+    if (filtro.internacaoId) params = params.set('internacaoId', filtro.internacaoId);
+    if (filtro.agendamentoId) params = params.set('agendamentoId', filtro.agendamentoId);
+    return this.http.get<LaudoAihDto[]>('/api/v1/laudo-aih/', { params });
+  }
+
+  laudoAih(uuid: string): Observable<LaudoAihDto> {
+    return this.http.get<LaudoAihDto>(`/api/v1/laudo-aih/${uuid}`);
+  }
+
+  filaAih(): Observable<LaudoAihDto[]> {
+    return this.http.get<LaudoAihDto[]>('/api/v1/laudo-aih/fila');
+  }
+
+  pendenciasAih(): Observable<PendenciaAihDto[]> {
+    return this.http.get<PendenciaAihDto[]>('/api/v1/laudo-aih/pendencias');
+  }
+
+  decidirAih(uuid: string, acao: 'autorizacao' | 'devolucao' | 'negacao' | 'cancelamento', dto: { profissionalMatricula: string; motivo?: string }): Observable<LaudoAihDto> {
+    return this.http.post<LaudoAihDto>(`/api/v1/laudo-aih/${uuid}/${acao}`, dto);
+  }
+
+  baixarLaudoAih(uuid: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`/api/v1/laudo-aih/${uuid}/laudo.pdf`, { observe: 'response', responseType: 'blob' });
+  }
+
+  faixasAih(): Observable<FaixaAihDto[]> {
+    return this.http.get<FaixaAihDto[]>('/api/v1/laudo-aih/faixas');
+  }
+
+  cadastrarFaixaAih(dto: { ano: number; inicio: number; fim: number }): Observable<FaixaAihDto> {
+    return this.http.post<FaixaAihDto>('/api/v1/laudo-aih/faixas', dto);
   }
 
   // ── Internação eletiva e censo diário (ADR-0185) ──

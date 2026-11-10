@@ -81,6 +81,9 @@ public class InternacaoEletivaService {
     @Autowired
     private ControleDeAcesso controleDeAcesso;
 
+    @Autowired
+    private LaudoAihService laudoAihService;
+
     @Transactional
     public EletivaCensoDtos.Agendamento agendar(AgendamentoInternacaoRequestDto dto) {
         UnidadeDeSaude unidade = unidadeRepository.findById(dto.getUnidadeId()).orElseThrow(() -> new ResourceNotFoundException(
@@ -218,6 +221,7 @@ public class InternacaoEletivaService {
         Profissional quem = profissional(dto.getProfissionalMatricula());
         a.setStatus(StatusInternacaoAgendada.ADMITIDA);
         a.setInternacao(nova);
+        laudoAihService.vincularInternacao(a, nova);
         registrar(a, TipoEventoInternacaoAgendada.ADMISSAO, "Leito " + leito.getIdentificacao(), quem);
         return detalhe(agendamentoRepository.save(a));
     }

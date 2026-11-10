@@ -30,6 +30,10 @@ public interface InternacaoRepository extends JpaRepository<Internacao, UUID> {
 
     List<Internacao> findByStatusAndAltaEmAfter(StatusInternacao status, Instant depoisDe);
 
+    /** Internadas do caráter informado admitidas antes do instante (laudo de AIH pendente, ADR-0186). */
+    List<Internacao> findByStatusAndCaraterAndAdmitidaEmBefore(StatusInternacao status,
+            com.edufelizardo.maissaudepublica.models.enuns.CaraterInternacao carater, Instant antesDe);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from Internacao i where i.uuid = :uuid")
     Optional<Internacao> findByIdParaAtualizar(@Param("uuid") UUID uuid);
