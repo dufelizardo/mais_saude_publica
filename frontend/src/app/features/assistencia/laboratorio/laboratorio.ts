@@ -51,6 +51,9 @@ import { AuthService } from '../../../core/services/auth';
 import { LaboratorioService } from '../../../core/services/laboratorio';
 import { PacienteService } from '../../../core/services/paciente';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
+import { EstoqueService } from '../../../core/services/estoque';
+import { MaterialEstoqueDto } from '../../../core/models/estoque';
+import { EmissaoLaudoDto, InsumoExameDto } from '../../../core/models/laboratorio';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
 
@@ -125,6 +128,7 @@ export class Laboratorio {
   private readonly laboratorioService = inject(LaboratorioService);
   private readonly pacienteService = inject(PacienteService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
+  private readonly estoqueService = inject(EstoqueService);
 
   protected readonly formatCpf = formatCpf;
   protected readonly materiais = MATERIAIS;
@@ -244,6 +248,14 @@ export class Laboratorio {
   protected readonly faixaEditando = signal<string | null>(null);
   protected readonly erroFaixa = signal<string | null>(null);
   protected readonly salvandoFaixa = signal(false);
+
+  /** Laudo em PDF e insumos (ADR-0183). */
+  protected readonly emissoes = signal<EmissaoLaudoDto[]>([]);
+  protected readonly baixandoLaudo = signal(false);
+  protected readonly materiaisEstoque = signal<MaterialEstoqueDto[]>([]);
+  protected readonly erroInsumo = signal<string | null>(null);
+  protected readonly salvandoInsumo = signal(false);
+  protected readonly insumoForm = this.fb.nonNullable.group({ materialId: [''], quantidade: ['1'], soComContraste: [false] });
   protected readonly faixaForm = this.fb.nonNullable.group({
     sexo: ['' as Sexo | ''],
     idadeMinima: ['0'],
@@ -539,7 +551,10 @@ export class Laboratorio {
       this.detalhe.set(null);
       this.erroDetalhe.set(null);
       this.laboratorioService.buscarPedido(carregarPedido).subscribe({
-        next: (d) => this.detalhe.set(d),
+        next: (d) => {
+          this.detalhe.set(d);
+          if (g.tipo === 'detalhe') this.carregarEmissoes(d.uuid);
+        },
         error: (e: HttpErrorResponse) => this.erroDetalhe.set(e.status === 403 ? 'Este pedido é de unidades fora do seu acesso.' : 'Não foi possível abrir o pedido.'),
       });
     }
@@ -634,6 +649,9 @@ export class Laboratorio {
     });
     // A categoria não muda depois de criado (ADR-0182).
     if (exame) this.exameForm.controls.categoria.disable();
+    this.erroInsumo.set(null);
+    this.insumoForm.reset({ materialId: '', quantidade: '1', soComContraste: false });
+    if (exame && this.pode('LABORATORIO.GERENCIAR')) this.carregarMateriaisEstoque();
     else this.exameForm.controls.categoria.enable();
     this.faixaEditando.set(null);
     this.erroFaixa.set(null);
@@ -715,6 +733,88 @@ export class Laboratorio {
       error: (e: HttpErrorResponse) => {
         this.salvandoFaixa.set(false);
         this.erroFaixa.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível remover a faixa.');
+      },
+    });
+  }
+
+  // ── Laudo em PDF e insumos (ADR-0183) ──────────────────────────────────────────────────────
+
+  private carregarEmissoes(pedidoId: string): void {
+    this.emissoes.set([]);
+    this.laboratorioService.emissoesDoLaudo(pedidoId).pipe(catchError(() => of([]))).subscribe((e) => this.emissoes.set(e));
+  }
+
+  /** Baixa o PDF da emissão vigente e abre em outra aba; o código de verificação vai no aviso. */
+  protected baixarLaudo(d: PedidoExameResponseDto): void {
+    if (this.baixandoLaudo()) return;
+    this.baixandoLaudo.set(true);
+    this.erroDetalhe.set(null);
+    this.laboratorioService.baixarLaudo(d.uuid).subscribe({
+      next: (r) => {
+        this.baixandoLaudo.set(false);
+        const codigo = r.headers.get('X-Codigo-Verificacao') ?? '';
+        const url = URL.createObjectURL(r.body!);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `laudo-${codigo || d.uuid}.pdf`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        this.mostrarToast('Laudo em PDF emitido', `Código de verificação ${codigo}`);
+        this.carregarEmissoes(d.uuid);
+      },
+      error: () => {
+        this.baixandoLaudo.set(false);
+        this.erroDetalhe.set('Não foi possível emitir o laudo em PDF.');
+      },
+    });
+  }
+
+  protected carregarMateriaisEstoque(): void {
+    if (this.materiaisEstoque().length) return;
+    this.estoqueService.materiais(true).pipe(catchError(() => of([]))).subscribe((m) => this.materiaisEstoque.set(m));
+  }
+
+  protected incluirInsumo(exame: ExameLaboratorialResponseDto): void {
+    const v = this.insumoForm.getRawValue();
+    const qtd = Number(v.quantidade);
+    if (!v.materialId) {
+      this.erroInsumo.set('Escolha o material do estoque.');
+      return;
+    }
+    if (!Number.isInteger(qtd) || qtd < 1 || qtd > 100) {
+      this.erroInsumo.set('A quantidade vai de 1 a 100.');
+      return;
+    }
+    if ((exame.insumos ?? []).some((i) => i.materialId === v.materialId)) {
+      this.erroInsumo.set('Este material já está nos insumos.');
+      return;
+    }
+    const lista = [...(exame.insumos ?? []).map((i) => ({ materialId: i.materialId, quantidade: i.quantidade, soComContraste: i.soComContraste })),
+      { materialId: v.materialId, quantidade: qtd, soComContraste: exame.categoria === 'IMAGEM' && v.soComContraste }];
+    this.salvarInsumos(exame, lista, 'Insumo incluído');
+  }
+
+  protected removerInsumo(exame: ExameLaboratorialResponseDto, insumo: InsumoExameDto): void {
+    const lista = (exame.insumos ?? []).filter((i) => i.uuid !== insumo.uuid)
+      .map((i) => ({ materialId: i.materialId, quantidade: i.quantidade, soComContraste: i.soComContraste }));
+    this.salvarInsumos(exame, lista, 'Insumo removido');
+  }
+
+  private salvarInsumos(exame: ExameLaboratorialResponseDto, lista: { materialId: string; quantidade: number; soComContraste: boolean }[], titulo: string): void {
+    if (this.salvandoInsumo()) return;
+    this.salvandoInsumo.set(true);
+    this.erroInsumo.set(null);
+    this.laboratorioService.definirInsumos(exame.uuid, lista).subscribe({
+      next: (atualizado) => {
+        this.salvandoInsumo.set(false);
+        this.insumoForm.reset({ materialId: '', quantidade: '1', soComContraste: false });
+        this.exames.update((l) => l.map((e) => (e.uuid === atualizado.uuid ? atualizado : e)));
+        this.gaveta.set({ tipo: 'exame', exame: atualizado });
+        this.mostrarToast(titulo, atualizado.nome);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.salvandoInsumo.set(false);
+        this.erroInsumo.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar os insumos.');
       },
     });
   }

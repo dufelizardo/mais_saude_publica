@@ -138,6 +138,12 @@ public class PedidoExameService {
     private ControleDeAcesso controleDeAcesso;
 
     @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.InsumoExameRepository insumoRepository;
+
+    @Autowired
+    private EstoqueService estoqueService;
+
+    @Autowired
     private com.edufelizardo.maissaudepublica.repositories.RealizacaoExameImagemRepository realizacaoRepository;
 
     @Autowired
@@ -235,6 +241,7 @@ public class PedidoExameService {
         Map<MaterialExame, List<ItemPedidoExame>> porMaterial = coletar.stream()
                 .collect(Collectors.groupingBy(i -> i.getExame().getMaterial(), LinkedHashMap::new, Collectors.toList()));
         List<String> codigos = new ArrayList<>();
+        List<String> semSaldo = new ArrayList<>();
         for (Map.Entry<MaterialExame, List<ItemPedidoExame>> e : porMaterial.entrySet()) {
             AmostraExame amostra = new AmostraExame();
             amostra.setPedido(pedido);
@@ -252,8 +259,10 @@ public class PedidoExameService {
                 item.setStatus(StatusItemExame.COLETADO);
                 itemRepository.save(item);
             }
+            semSaldo.addAll(baixarInsumos(e.getValue(), false, unidadeColeta, coletor, "Coleta da amostra " + amostra.getCodigo()));
         }
-        registrar(pedido, null, TipoEventoExame.COLETA, "Amostra(s) " + String.join(", ", codigos) + " para " + laboratorio.getNome(), coletor);
+        registrar(pedido, null, TipoEventoExame.COLETA, "Amostra(s) " + String.join(", ", codigos) + " para " + laboratorio.getNome()
+                + (semSaldo.isEmpty() ? "" : ". Insumo sem saldo no estoque: " + String.join(", ", semSaldo)), coletor);
         return detalhe(pedido);
     }
 
@@ -316,9 +325,11 @@ public class PedidoExameService {
         controleDeAcesso.exigir(LIBERAR, item.getAmostra() != null ? item.getAmostra().getLaboratorio() : null);
         exigirStatus(item, "liberar", StatusItemExame.RESULTADO_REGISTRADO);
         Profissional liberador = buscarProfissional(dto.getProfissionalMatricula());
+        AssinaturaResultado.exigirProprioProfissional(liberador, "liberação");
         ResultadoExame resultado = item.getResultadoAtual();
         resultado.setLiberadoPor(liberador);
         resultado.setLiberadoEm(Instant.now());
+        AssinaturaResultado.assinar(resultado);
         resultadoRepository.save(resultado);
         item.setStatus(StatusItemExame.LIBERADO);
         itemRepository.save(item);
@@ -337,6 +348,7 @@ public class PedidoExameService {
             throw new ResourceUnprocessableEntityException("Laudo de imagem se corrige por adendo do radiologista.");
         }
         Profissional profissional = buscarProfissional(dto.getProfissionalMatricula());
+        AssinaturaResultado.exigirProprioProfissional(profissional, "retificação");
         ResultadoExame anterior = item.getResultadoAtual();
         ResultadoExame novo = novoResultado(item, dto.getValorNumerico(), dto.getValorTexto(), dto.getObservacao(), profissional,
                 anterior, dto.getMotivo().trim());
@@ -706,8 +718,10 @@ public class PedidoExameService {
         realizacaoRepository.save(r);
         item.setStatus(StatusItemExame.REALIZADO);
         itemRepository.save(item);
+        List<String> semSaldo = baixarInsumos(List.of(item), contraste, servico, tecnico, "Realização de " + item.getExame().getNome());
         registrar(item.getPedido(), item, TipoEventoExame.REALIZACAO, "No " + servico.getNome()
-                + (r.getEquipamento() != null ? ", " + r.getEquipamento() : "") + (contraste ? ", com contraste" : ""), tecnico);
+                + (r.getEquipamento() != null ? ", " + r.getEquipamento() : "") + (contraste ? ", com contraste" : "")
+                + (semSaldo.isEmpty() ? "" : ". Insumo sem saldo no estoque: " + String.join(", ", semSaldo)), tecnico);
         return detalhe(item.getPedido());
     }
 
@@ -720,6 +734,7 @@ public class PedidoExameService {
         ItemPedidoExame item = itemDeImagem(itemId);
         exigirStatus(item, "laudar", StatusItemExame.REALIZADO);
         Profissional radiologista = buscarProfissional(dto.getProfissionalMatricula());
+        AssinaturaResultado.exigirProprioProfissional(radiologista, "laudo");
         ResultadoExame laudo = novoLaudo(item, dto, radiologista, null, null);
         item.setResultadoAtual(laudo);
         item.setStatus(StatusItemExame.LIBERADO);
@@ -738,6 +753,7 @@ public class PedidoExameService {
             throw new ResourceBadRequestException("Informe o motivo do adendo.");
         }
         Profissional radiologista = buscarProfissional(dto.getProfissionalMatricula());
+        AssinaturaResultado.exigirProprioProfissional(radiologista, "adendo");
         ResultadoExame laudo = novoLaudo(item, dto, radiologista, item.getResultadoAtual(), dto.getMotivo().trim());
         item.setResultadoAtual(laudo);
         itemRepository.save(item);
@@ -783,7 +799,36 @@ public class PedidoExameService {
         r.setLiberadoEm(agora);
         r.setRetificacaoDe(adendoDe);
         r.setMotivoRetificacao(motivo);
+        r = resultadoRepository.save(r);
+        AssinaturaResultado.assinar(r);
         return resultadoRepository.save(r);
+    }
+
+    // ── Insumos (ADR-0183) ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Baixa os insumos dos exames no estoque da unidade, pelo sistema. Na mesma amostra (ou realização), cada material conta uma
+     * vez, pela maior quantidade entre os exames; "só com contraste" entra só com contraste. Devolve o que ficou sem saldo.
+     */
+    private List<String> baixarInsumos(List<ItemPedidoExame> itens, boolean contraste, UnidadeDeSaude unidade, Profissional quem, String origem) {
+        List<UUID> exames = itens.stream().map(i -> i.getExame().getUuid()).distinct().toList();
+        Map<UUID, com.edufelizardo.maissaudepublica.models.InsumoExame> porMaterial = new LinkedHashMap<>();
+        for (var insumo : insumoRepository.findByExame_UuidIn(exames)) {
+            if (insumo.isSoComContraste() && !contraste) {
+                continue;
+            }
+            porMaterial.merge(insumo.getMaterial().getUuid(), insumo, (a, b) -> a.getQuantidade() >= b.getQuantidade() ? a : b);
+        }
+        String pedido = itens.get(0).getPedido().getUuid().toString().substring(0, 8);
+        List<String> semSaldo = new ArrayList<>();
+        for (var insumo : porMaterial.values()) {
+            int falta = estoqueService.consumirPeloSistema(unidade, insumo.getMaterial(), insumo.getQuantidade(), quem,
+                    origem + " (pedido " + pedido + ")");
+            if (falta > 0) {
+                semSaldo.add(insumo.getMaterial().getNome() + " (" + falta + ")");
+            }
+        }
+        return semSaldo;
     }
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
@@ -840,7 +885,12 @@ public class PedidoExameService {
             r.setLiberadoPor(analista);
             r.setLiberadoEm(Instant.now());
         }
-        return resultadoRepository.save(r);
+        r = resultadoRepository.save(r);
+        if (retificacaoDe != null) {
+            AssinaturaResultado.assinar(r);
+            r = resultadoRepository.save(r);
+        }
+        return r;
     }
 
     static InterpretacaoResultado interpretar(BigDecimal valor, BigDecimal minima, BigDecimal maxima) {

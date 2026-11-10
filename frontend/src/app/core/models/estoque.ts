@@ -100,6 +100,19 @@ export interface SaldoEstoqueDto {
   vencidosComSaldo: number;
   valorTotal: number;
   vencimentos: VencimentoDto[];
+  /** Consumo lançado pelo sistema sem saldo, aguardando conferência (ADR-0183). */
+  consumosSemSaldo?: ConsumoSemSaldoDto[];
+}
+
+export interface ConsumoSemSaldoDto {
+  uuid: string;
+  materialId: string;
+  materialCodigo: string;
+  materialNome: string;
+  quantidadeFaltante: number;
+  origem: string;
+  profissionalNome?: string | null;
+  ocorridoEm: string;
 }
 
 export interface MovimentacaoEstoqueDto {

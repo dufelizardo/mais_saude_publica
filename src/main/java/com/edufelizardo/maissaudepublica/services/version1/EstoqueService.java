@@ -71,6 +71,7 @@ public class EstoqueService {
     @Autowired private SetorRepository setorRepository;
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.ConsumoSemSaldoRepository consumoSemSaldoRepository;
 
     // ── Catálogo ──────────────────────────────────────────────────────────────────────────────────
 
@@ -243,6 +244,54 @@ public class EstoqueService {
         return feitas;
     }
 
+    /**
+     * Consumo lançado pelo sistema (ADR-0183): os insumos da coleta e da realização de exame. Sai pelo FEFO até onde houver saldo
+     * dentro da validade, sem exigir ESTOQUE.MOVIMENTAR de quem coleta; o que faltar vira alerta de consumo sem saldo, porque a
+     * coleta já aconteceu. Devolve a quantidade que faltou.
+     */
+    @Transactional
+    public int consumirPeloSistema(UnidadeDeSaude u, MaterialEstoque m, int quantidade, Profissional quem, String origem) {
+        LocalDate hoje = LocalDate.now();
+        List<LoteMaterial> usar = loteRepository.findDoMaterialNaUnidadeParaAtualizar(m.getUuid(), u.getUuid()).stream()
+                .filter(l -> l.getQuantidade() > 0 && !l.vencido(hoje)).toList();
+        int falta = quantidade;
+        for (LoteMaterial l : usar) {
+            if (falta == 0) {
+                break;
+            }
+            int tirar = Math.min(falta, l.getQuantidade());
+            MovimentacaoEstoque mov = lancar(l, TipoMovimentacaoEstoque.SAIDA_CONSUMO, -tirar, quem);
+            mov.setJustificativa(origem.length() > 500 ? origem.substring(0, 500) : origem);
+            movimentacaoRepository.save(mov);
+            falta -= tirar;
+        }
+        if (falta > 0) {
+            com.edufelizardo.maissaudepublica.models.ConsumoSemSaldo c = new com.edufelizardo.maissaudepublica.models.ConsumoSemSaldo();
+            c.setUnidade(u);
+            c.setMaterial(m);
+            c.setQuantidadeFaltante(falta);
+            c.setOrigem(origem.length() > 300 ? origem.substring(0, 300) : origem);
+            c.setProfissional(quem);
+            c.setOcorridoEm(Instant.now());
+            consumoSemSaldoRepository.save(c);
+        }
+        return falta;
+    }
+
+    /** O almoxarife conferiu o consumo sem saldo (acertou a entrada ou o inventário): sai do alerta. Já conferido: 422. */
+    @Transactional
+    public void conferirConsumoSemSaldo(UUID uuid) {
+        com.edufelizardo.maissaudepublica.models.ConsumoSemSaldo c = consumoSemSaldoRepository.findById(uuid).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar o consumo sem saldo " + uuid + " em nossos registros."));
+        controleDeAcesso.exigir(MOVIMENTAR, c.getUnidade());
+        if (c.getConferidoEm() != null) {
+            throw new ResourceUnprocessableEntityException("Este consumo sem saldo já foi conferido.");
+        }
+        c.setConferidoEm(Instant.now());
+        c.setConferidoPorCpf(UsuarioAutenticado.cpf());
+        consumoSemSaldoRepository.save(c);
+    }
+
     @Transactional
     public EstoqueDtos.Movimentacao perda(PerdaEstoqueRequestDto dto) {
         LoteMaterial l = loteParaMovimentar(dto.getLoteId());
@@ -289,7 +338,10 @@ public class EstoqueService {
         BigDecimal total = itens.stream().map(EstoqueDtos.ItemDeSaldo::valor).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
         return new EstoqueDtos.Saldo(u.getUuid(), u.getNome(), itens, (int) itens.stream().filter(EstoqueDtos.ItemDeSaldo::abaixoDoMinimo).count(),
                 (int) vencimentos.stream().filter(v -> v.diasParaVencer() >= 0).count(), (int) vencimentos.stream().filter(v -> v.diasParaVencer() < 0).count(),
-                total, vencimentos);
+                total, vencimentos, consumoSemSaldoRepository.findByUnidade_UuidAndConferidoEmIsNullOrderByOcorridoEmDesc(u.getUuid()).stream()
+                        .map(c -> new EstoqueDtos.ConsumoSemSaldo(c.getUuid(), c.getMaterial().getUuid(), c.getMaterial().getCodigo(), c.getMaterial().getNome(),
+                                c.getQuantidadeFaltante(), c.getOrigem(), c.getProfissional() != null ? c.getProfissional().getNome() : null, c.getOcorridoEm()))
+                        .toList());
     }
 
     /** O livro, mais recente primeiro: dos últimos dias (padrão 30, até 365). */

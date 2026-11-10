@@ -149,6 +149,8 @@ class LaboratorioAutorizacaoControllerTest {
         for (UUID p : pacientes) {
             for (PedidoExame pedido : pedidoRepository.findByPaciente_UuidOrderBySolicitadoEmDesc(p)) {
                 UUID id = pedido.getUuid();
+                jdbc.update("delete from tb_emissao_laudo_exame_resultado where emissao_id in (select uuid from tb_emissao_laudo_exame where pedido_id = ?)", id);
+                jdbc.update("delete from tb_emissao_laudo_exame where pedido_id = ?", id);
                 jdbc.update("delete from tb_comunicacao_critico_exame where item_id in (select uuid from tb_item_pedido_exame where pedido_id = ?)", id);
                 jdbc.update("delete from tb_realizacao_exame_imagem where item_id in (select uuid from tb_item_pedido_exame where pedido_id = ?)", id);
                 jdbc.update("delete from tb_entrega_resultado_exame where pedido_id = ?", id);
@@ -353,6 +355,28 @@ class LaboratorioAutorizacaoControllerTest {
         mockMvc.perform(como(RADIOLOGISTA, get(URL + pedido))).andExpect(status().isOk());
         mockMvc.perform(como(TECNICO_OUTRO, get(URL + pedido))).andExpect(status().isForbidden());
         mockMvc.perform(como(RECEPCAO, get(URL + "trabalho?etapa=PARA_LAUDAR"))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void liberacaoEAssinadaPeloProprioProfissionalEOLaudoSegueOEscopo() throws Exception {
+        UUID pedido = pedidoColetado();
+        UUID item = itemRepository.findByPedido_Uuid(pedido).get(0).getUuid();
+        mockMvc.perform(como(TECNICO, json(post(URL + "item/" + item + "/resultado"),
+                "{\"profissionalMatricula\": \"LABAUT-%s\", \"valorNumerico\": 13}".formatted(TECNICO.substring(0, 4)))))
+                .andExpect(status().isOk());
+        // O RT não assina a liberação com a matrícula de outro.
+        mockMvc.perform(como(RT, json(post(URL + "item/" + item + "/liberacao"),
+                "{\"profissionalMatricula\": \"LABAUT-%s\"}".formatted(TECNICO.substring(0, 4))))).andExpect(status().isForbidden());
+        mockMvc.perform(como(RT, json(post(URL + "item/" + item + "/liberacao"),
+                "{\"profissionalMatricula\": \"LABAUT-%s\"}".formatted(RT.substring(0, 4))))).andExpect(status().isOk());
+
+        String codigo = mockMvc.perform(como(MEDICO, get(URL + pedido + "/laudo.pdf")))
+                .andExpect(status().isOk()).andReturn().getResponse().getHeader("X-Codigo-Verificacao");
+        mockMvc.perform(como(RECEPCAO, get(URL + pedido + "/laudo.pdf"))).andExpect(status().isForbidden());
+        mockMvc.perform(como(TECNICO_OUTRO, get(URL + pedido + "/laudo.pdf"))).andExpect(status().isForbidden());
+        mockMvc.perform(get(URL + pedido + "/laudo.pdf")).andExpect(status().isUnauthorized());
+        // A verificação pública não pede login.
+        mockMvc.perform(get("/api/v1/publico/laudo/" + codigo)).andExpect(status().isOk()).andExpect(jsonPath("$.valido").value(true));
     }
 
     @Test

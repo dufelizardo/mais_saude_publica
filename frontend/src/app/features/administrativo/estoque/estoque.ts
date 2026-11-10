@@ -15,6 +15,7 @@ import {
   ORIGENS_ENTRADA,
   OrigemEntradaEstoque,
   SaldoEstoqueDto,
+  ConsumoSemSaldoDto,
   TIPOS_MOVIMENTACAO,
   TipoMovimentacaoEstoque,
   UNIDADES_MEDIDA,
@@ -328,6 +329,18 @@ export class Estoque {
         this.enviar(this.service.definirMinimo(unidadeId, v.materialId, qtd!), 'Mínimo definido', (i) => `${i.nome}: ${i.minimo}`);
       }
     }
+  }
+
+  /** Consumo sem saldo conferido pelo almoxarife: sai do alerta (ADR-0183). */
+  protected conferirConsumo(c: ConsumoSemSaldoDto): void {
+    if (this.submitting()) return;
+    this.enviar(this.service.conferirConsumoSemSaldo(c.uuid), 'Consumo conferido', () => `${c.materialNome} · ${c.quantidadeFaltante}`);
+  }
+
+  protected dataHoraBr(iso: string): string {
+    const d = new Date(iso);
+    const p = (v: number) => String(v).padStart(2, '0');
+    return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
   }
 
   private enviar<T>(req: Observable<T>, titulo: string, detalhe: (r: T) => string, catalogo = false): void {

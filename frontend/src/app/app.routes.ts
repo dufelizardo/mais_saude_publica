@@ -13,6 +13,8 @@ export const routes: Routes = [
   // Recuperação de senha por e-mail (ADR-0081): públicas, fora do AppShell.
   { path: 'recuperar-senha', loadComponent: () => import('./features/auth/recuperar-senha/recuperar-senha').then((m) => m.RecuperarSenha) },
   { path: 'redefinir-senha', loadComponent: () => import('./features/auth/redefinir-senha/redefinir-senha').then((m) => m.RedefinirSenha) },
+  // Verificação pública do laudo pelo código (ADR-0183): sem login.
+  { path: 'verificar-laudo', loadComponent: () => import('./features/publico/verificar-laudo/verificar-laudo').then((m) => m.VerificarLaudo) },
   // Laudo de exames (ADR-0095): fora do AppShell, para imprimir limpo.
   {
     path: 'laudo/exame/:pedidoId',

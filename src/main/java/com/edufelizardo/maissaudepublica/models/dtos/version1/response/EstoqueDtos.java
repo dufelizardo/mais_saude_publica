@@ -40,7 +40,12 @@ public final class EstoqueDtos {
 
     /** O estoque da unidade e os alertas: abaixo do mínimo, vencendo e vencidos com saldo. */
     public record Saldo(UUID unidadeId, String unidadeNome, List<ItemDeSaldo> itens, int abaixoDoMinimo, int vencendo, int vencidosComSaldo,
-                        BigDecimal valorTotal, List<Vencimento> vencimentos) {
+                        BigDecimal valorTotal, List<Vencimento> vencimentos, List<ConsumoSemSaldo> consumosSemSaldo) {
+    }
+
+    /** Consumo lançado pelo sistema sem saldo, aguardando a conferência do almoxarife (ADR-0183). */
+    public record ConsumoSemSaldo(UUID uuid, UUID materialId, String materialCodigo, String materialNome, int quantidadeFaltante, String origem,
+                                  String profissionalNome, Instant ocorridoEm) {
     }
 
     public record Movimentacao(UUID uuid, TipoMovimentacaoEstoque tipo, UUID materialId, String materialCodigo, String materialNome,

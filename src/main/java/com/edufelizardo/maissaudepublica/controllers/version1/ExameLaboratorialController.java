@@ -89,6 +89,19 @@ public class ExameLaboratorialController {
     }
 
     @RequerPermissao({"LABORATORIO.GERENCIAR"})
+    @PutMapping(value = "{uuid}/insumos", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Define os insumos do exame", description = "ADR-0183. Substitui a lista: material do Estoque e quantidade por coleta ou "
+            + "realização. Material repetido: 400; fora de uso ou \"só com contraste\" em exame laboratorial: 422. Devolve o exame.", tags = "Exame Laboratorial")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ExameLaboratorialResponseDto.class))
+    })
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<ExameLaboratorialResponseDto> definirInsumos(@PathVariable UUID uuid,
+            @RequestBody List<com.edufelizardo.maissaudepublica.models.dtos.version1.request.InsumoExameRequestDto> insumos) {
+        return ResponseEntity.ok(service.definirInsumos(uuid, insumos));
+    }
+
+    @RequerPermissao({"LABORATORIO.GERENCIAR"})
     @PostMapping(value = "{uuid}/faixa", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Inclui uma faixa de referência por sexo e idade",
             description = "ADR-0180. Só exame numérico (422). Sem sexo, vale para os dois; IGNORADO, 400. Idade com unidade (DIAS, MESES, "

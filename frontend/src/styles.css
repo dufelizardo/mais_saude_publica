@@ -1256,6 +1256,16 @@ tr.row-link:focus-visible { outline: 2px solid var(--blue-700); outline-offset: 
 .senha-mark { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: var(--blue-50); color: var(--blue-700); margin-bottom: var(--s-4); }
 .senha-req { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.8125rem; color: var(--ink-500); }
 .senha-req li.ok { color: var(--ok); }
+/* Verificação pública do laudo (ADR-0183). */
+.verif { margin: var(--s-5) 0; padding: var(--s-4); border-radius: 12px; border: 1.5px solid var(--ink-200); background: var(--ink-50); }
+.verif h2 { margin: 0 0 var(--s-2); font-size: 1rem; }
+.verif--ok { border-color: var(--ok); background: var(--ok-bg); }
+.verif--velho { border-color: var(--warn); background: var(--warn-bg); }
+.verif dl { display: grid; gap: var(--s-2); margin: var(--s-3) 0 0; }
+.verif dt { font-size: 0.75rem; color: var(--ink-500); }
+.verif dd { margin: 0; font-weight: 500; }
+.verif__hash { word-break: break-all; font-size: 0.75rem; }
+.verif__nota { font-size: 0.75rem; color: var(--ink-500); margin: var(--s-3) 0 0; }
 
 /* ====== Auditoria (ver ADR-0071) ====== */
 .aud-cpf { flex: 0 1 200px; min-width: 170px; }

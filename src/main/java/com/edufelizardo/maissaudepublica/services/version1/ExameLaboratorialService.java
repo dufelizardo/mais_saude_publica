@@ -43,6 +43,12 @@ public class ExameLaboratorialService {
     @Autowired
     private FaixaReferenciaExameRepository faixaRepository;
 
+    @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.InsumoExameRepository insumoRepository;
+
+    @Autowired
+    private com.edufelizardo.maissaudepublica.repositories.MaterialEstoqueRepository materialEstoqueRepository;
+
     @Transactional
     public ExameLaboratorialResponseDto criar(ExameLaboratorialRequestDto dto) {
         ExameLaboratorial exame = new ExameLaboratorial();
@@ -71,7 +77,15 @@ public class ExameLaboratorialService {
         Map<UUID, List<FaixaReferenciaExame>> faixas = exames.isEmpty() ? Map.of()
                 : faixaRepository.findByExame_UuidIn(exames.stream().map(ExameLaboratorial::getUuid).toList()).stream()
                 .collect(Collectors.groupingBy(f -> f.getExame().getUuid()));
-        return exames.stream().map(e -> ExameLaboratorialResponseDto.fromExame(e, faixas.getOrDefault(e.getUuid(), List.of()))).toList();
+        Map<UUID, List<com.edufelizardo.maissaudepublica.models.InsumoExame>> insumos = exames.isEmpty() ? Map.of()
+                : insumoRepository.findByExame_UuidIn(exames.stream().map(ExameLaboratorial::getUuid).toList()).stream()
+                .collect(Collectors.groupingBy(i -> i.getExame().getUuid()));
+        return exames.stream().map(e -> {
+            ExameLaboratorialResponseDto d = ExameLaboratorialResponseDto.fromExame(e, faixas.getOrDefault(e.getUuid(), List.of()));
+            d.setInsumos(insumos.getOrDefault(e.getUuid(), List.of()).stream()
+                    .map(com.edufelizardo.maissaudepublica.models.dtos.version1.response.InsumoExameDto::fromInsumo).toList());
+            return d;
+        }).toList();
     }
 
     @Transactional(readOnly = true)
@@ -233,7 +247,50 @@ public class ExameLaboratorialService {
     }
 
     private ExameLaboratorialResponseDto resposta(ExameLaboratorial exame) {
-        return ExameLaboratorialResponseDto.fromExame(exame, faixaRepository.findByExame_Uuid(exame.getUuid()));
+        ExameLaboratorialResponseDto d = ExameLaboratorialResponseDto.fromExame(exame, faixaRepository.findByExame_Uuid(exame.getUuid()));
+        d.setInsumos(insumoRepository.findByExame_Uuid(exame.getUuid()).stream()
+                .map(com.edufelizardo.maissaudepublica.models.dtos.version1.response.InsumoExameDto::fromInsumo).toList());
+        return d;
+    }
+
+    // ── Insumos (ADR-0183) ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Substitui os insumos do exame. Material repetido: 400; material fora de uso: 422; "só com contraste" fora do exame de imagem:
+     * 422. Lista vazia remove todos.
+     */
+    @Transactional
+    public ExameLaboratorialResponseDto definirInsumos(UUID exameId,
+            List<com.edufelizardo.maissaudepublica.models.dtos.version1.request.InsumoExameRequestDto> lista) {
+        ExameLaboratorial exame = buscar(exameId);
+        if (lista.stream().map(com.edufelizardo.maissaudepublica.models.dtos.version1.request.InsumoExameRequestDto::getMaterialId).distinct().count() != lista.size()) {
+            throw new ResourceBadRequestException("O mesmo material aparece mais de uma vez nos insumos.");
+        }
+        List<com.edufelizardo.maissaudepublica.models.InsumoExame> novos = new java.util.ArrayList<>();
+        for (var dto : lista) {
+            if (dto.getMaterialId() == null || dto.getQuantidade() == null || dto.getQuantidade() < 1 || dto.getQuantidade() > 100) {
+                throw new ResourceBadRequestException("Cada insumo precisa do material e de uma quantidade de 1 a 100.");
+            }
+            var material = materialEstoqueRepository.findById(dto.getMaterialId()).orElseThrow(() -> new ResourceNotFoundException(
+                    "Não foi possível encontrar o material " + dto.getMaterialId() + " em nossos registros."));
+            if (!material.isAtivo()) {
+                throw new ResourceUnprocessableEntityException("O material " + material.getNome() + " está fora de uso no Estoque.");
+            }
+            boolean soComContraste = Boolean.TRUE.equals(dto.getSoComContraste());
+            if (soComContraste && exame.getCategoria() != CategoriaExame.IMAGEM) {
+                throw new ResourceUnprocessableEntityException("\"Só com contraste\" vale para exame de imagem.");
+            }
+            var i = new com.edufelizardo.maissaudepublica.models.InsumoExame();
+            i.setExame(exame);
+            i.setMaterial(material);
+            i.setQuantidade(dto.getQuantidade());
+            i.setSoComContraste(soComContraste);
+            novos.add(i);
+        }
+        insumoRepository.deleteAll(insumoRepository.findByExame_Uuid(exameId));
+        insumoRepository.flush();
+        insumoRepository.saveAll(novos);
+        return resposta(exame);
     }
 
     private FaixaReferenciaExame buscarFaixa(UUID uuid) {

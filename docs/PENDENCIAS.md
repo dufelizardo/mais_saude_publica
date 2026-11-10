@@ -110,15 +110,17 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   com os leitos do CNES; restrição de leito por idade (pediátrico e neonatal).
 
 ### Laboratório
-- Depois da ADR-0095: laudo PDF assinado (L4 da ADR-0180, com assinatura eletrônica interna; o ICP-Brasil é integração),
+- Depois da ADR-0095: ~~laudo PDF assinado~~ — ADR-0183 (L4, com assinatura eletrônica interna; o ICP-Brasil é integração),
   ~~envio do resultado ao paciente e aviso ao solicitante quando o resultado é liberado~~ — ADR-0181 (L2; o envio
   eletrônico, com consentimento, fica na C5 e no domínio 20), ~~gráfico da evolução de um exame no tempo~~ — ADR-0180 (L1).
 - A tela (ADR-0094) não tem protótipo próprio: segue o padrão de Farmácia e Regulação.
 - Fora do escopo da ADR-0093: LACEN e vigilância, integração com equipamentos (LIS, HL7, ASTM), controle
-  de qualidade, insumos de coleta (Estoque, #13; L4), ~~exames de imagem~~ — ADR-0182 (L3), laudo PDF assinado (L4), SIGTAP e BPA,
+  de qualidade, ~~insumos de coleta~~ — ADR-0183 (L4), ~~exames de imagem~~ — ADR-0182 (L3), ~~laudo PDF assinado~~ — ADR-0183 (L4), SIGTAP e BPA,
   e ~~valores de referência por sexo e idade~~ — ADR-0180 (L1).
 - Fora do escopo da ADR-0180: gestação e outras condições clínicas como critério da faixa de referência.
 - Fora do escopo da ADR-0181: central de notificações geral; prazo de liberação com alerta de atraso (L4 ou Indicadores).
+- Fora do escopo da ADR-0183: código de barras do tubo; custo do exame pelos insumos (Financeiro, #17); assinatura
+  qualificada com certificado ICP-Brasil (domínio 20).
 - Fora do escopo da ADR-0182: cadastro de aparelhos com dose de radiação (com o RIS, domínio 20); ligação automática da autorização
   da Regulação ao pedido de imagem; laudo comparativo com exames anteriores.
 

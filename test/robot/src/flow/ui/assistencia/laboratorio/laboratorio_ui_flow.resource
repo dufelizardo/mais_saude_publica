@@ -6,6 +6,7 @@ Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.reso
 Resource    ../../../laboratorio/faixa_referencia/faixa_referencia_flow.resource
 Resource    ../../../laboratorio/ciencia_entrega/ciencia_entrega_flow.resource
 Resource    ../../../laboratorio/exame_imagem/exame_imagem_flow.resource
+Resource    ../../../laboratorio/laudo_insumos/laudo_insumos_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (paciente, unidade, profissional, exame, pedido, coleta) são criados pela API; a ação sob
@@ -410,5 +411,54 @@ UI Laboratorio - Realizar E Laudar Pela Tela
     Should Be Equal    ${detalhe.json()}[itens][0][status]    LIBERADO
     Should Be Equal    ${detalhe.json()}[itens][0][resultado][interpretacao]    ALTERADO
     Should Be Equal    ${detalhe.json()}[realizacoes][0][equipamento]    Aparelho da sala 1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Baixar Laudo Em PDF
+    [Documentation]    Baixa o laudo em PDF pelo detalhe do pedido e vê a emissão vigente com o código (ADR-0183).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}=    Seed A Pedido Liberado
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    pedidos
+    Clicar Botao    Ver pedido de ${nomePaciente}
+    Clicar Botao    Baixar laudo (PDF)
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Laudo em PDF emitido
+    Wait For Elements State    css=app-drawer >> text=Laudos emitidos    visible    10s
+    Wait For Elements State    css=app-drawer .badge >> text=Vigente    visible    10s
+    ${emissoes}=    GET Emissoes Laudo    ${pedidoId}
+    Should Contain    ${aviso}    ${emissoes.json()}[0][codigo]
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Verificar Laudo Na Pagina Publica
+    [Documentation]    A página pública confere o código do laudo, sem login (ADR-0183).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}=    Seed A Pedido Liberado
+    ${pdf}=    GET Laudo Pdf    ${pedidoId}
+    ${codigo}=    Set Variable    ${pdf.headers}[X-Codigo-Verificacao]
+    Ir Para Rota Do Frontend    /verificar-laudo?codigo=${codigo}
+    Esperar Texto Aparecer    Laudo autêntico e vigente
+    ${hash}=    Evaluate    hashlib.sha256($pdf.content).hexdigest()    modules=hashlib
+    Esperar Texto Aparecer    ${hash}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Insumo Pela Gaveta Do Exame
+    [Documentation]    Inclui um insumo do estoque na gaveta do exame do catálogo (ADR-0183).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${material}    ${materialNome}=    Seed Material Estoque    ${False}
+    ${exameId}    ${nome}=    Seed A Exame Laboratorial
+    UI Laboratorio - Abrir Aba    catalogo
+    Clicar Botao    Editar ${nome}
+    Wait For Elements State    css=#f-insumoMaterial >> option[value="${material}"]    attached    10s
+    Escolher Opcao Da Gaveta    insumoMaterial    ${material}
+    Preencher Campo Da Gaveta    insumoQuantidade    2
+    Clicar Botao    Incluir insumo
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Insumo incluído
+    Wait For Elements State    css=app-drawer .faixas__item >> text=${materialNome}    visible    10s
+    ${exame}=    GET Exame Laboratorial By Id    ${exameId}
+    Should Be Equal As Integers    ${exame.json()}[insumos][0][quantidade]    2
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

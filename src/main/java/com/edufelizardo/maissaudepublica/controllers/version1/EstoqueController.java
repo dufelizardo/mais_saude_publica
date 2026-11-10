@@ -103,6 +103,16 @@ public class EstoqueController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.ajuste(dto));
     }
 
+    @RequerPermissao({"ESTOQUE.MOVIMENTAR"})
+    @PostMapping(value = "consumo-sem-saldo/{uuid}/conferencia", produces = JSON)
+    @Operation(summary = "Confere um consumo sem saldo", description = "O almoxarife acertou a entrada ou o inventário; o consumo sai do alerta. "
+            + "Já conferido: 422 (ADR-0183).", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<Void> conferirConsumoSemSaldo(@PathVariable UUID uuid) {
+        service.conferirConsumoSemSaldo(uuid);
+        return ResponseEntity.noContent().build();
+    }
+
     @RequerPermissao({"ESTOQUE.CONSULTAR", "ESTOQUE.MOVIMENTAR", "ESTOQUE.GERENCIAR"})
     @GetMapping(value = "saldo", produces = JSON)
     @Operation(summary = "Saldo da unidade", description = "Por material, com os lotes, o mínimo e os alertas (abaixo do mínimo, vencendo em até 90 dias, "
