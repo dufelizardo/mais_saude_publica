@@ -134,6 +134,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("URGENCIA.REGULAR", new Def("Regular as urgências: gravidade, decisão, destino com vaga zero e encerramento",
                 ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("APH.REGISTRAR", new Def("Preencher a ficha clínica do atendimento pré-hospitalar na ocorrência da central", ACESSO_AO_DADO_DE_SAUDE));
         // Laboratório assistencial (ADR-0093).
         PERMISSOES.put("EXAME.SOLICITAR", new Def("Pedir exames laboratoriais e de imagem", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LABORATORIO.COLETAR", new Def("Registrar a coleta de amostras", ACESSO_AO_DADO_DE_SAUDE));
@@ -215,6 +216,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("MEDICO_REGULADOR_URGENCIA", new PapelPadrao("Médico regulador de urgência",
                 "Classifica a gravidade, decide a conduta, indica o destino com vaga zero e encerra as ocorrências (ADR-0176).",
                 List.of("PACIENTE.CONSULTAR", "URGENCIA.CONSULTAR", "URGENCIA.REGULAR", "TRANSPORTE.CONSULTAR", "INTERNACAO.SOLICITAR_VAGA")));
+        PAPEIS.put("EQUIPE_INTERVENCAO_SAMU", new PapelPadrao("Equipe de intervenção do SAMU",
+                "Médico intervencionista, enfermeiro e técnico da viatura: a ficha clínica do atendimento na cena (ADR-0188).",
+                List.of("PACIENTE.CONSULTAR", "URGENCIA.CONSULTAR", "APH.REGISTRAR", "TRANSPORTE.CONSULTAR")));
         // Transporte (ADR-0178).
         PAPEIS.put("COORDENADOR_DE_FROTA", new PapelPadrao("Coordenador de frota",
                 "Frota, manutenção e plantão das viaturas, com a tripulação (ADR-0178).",

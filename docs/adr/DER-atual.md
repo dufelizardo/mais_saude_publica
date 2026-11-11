@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **272 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V72). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **277 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V73). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -198,3 +198,4 @@ listadas aqui pela migração que criou cada uma (até a V72). A fonte de verdad
 | V70 | `tb_internacao_agendada`, `tb_evento_internacao_agendada`, `tb_censo_diario`, `tb_censo_diario_paciente` (e a reserva da eletiva em `tb_leito`) |
 | V71 | `tb_laudo_aih`, `tb_evento_laudo_aih`, `tb_faixa_aih` (e o número da AIH em `tb_internacao`) |
 | V72 | `tb_prescricao_hospitalar`, `tb_item_prescricao`, `tb_horario_prescricao`, `tb_checagem_prescricao` |
+| V73 | `tb_ficha_aph`, `tb_ficha_aph_procedimento`, `tb_sinais_vitais_aph`, `tb_medicamento_aph`, `tb_adendo_ficha_aph` |

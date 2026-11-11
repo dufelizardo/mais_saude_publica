@@ -37,7 +37,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 8 | [Enfermagem](#8-enfermagem) | ✅ | plano de cuidados (SAE); aprazamento feito na RL4 |
 | 9 | [Farmácia](#9-farmácia) | ✅ | — |
 | 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | ✅ | controle de qualidade interno; integrações (LIS, PACS, LACEN, BPA) no domínio 20 |
-| 11 | [Regulação](#11-regulação) | 🟡 | RL1 feita (central de leitos); falta a ficha do APH (RL5) |
+| 11 | [Regulação](#11-regulação) | ✅ | RL1 e RL5 feitas (central de leitos, ficha do APH); SISREG, SIGTAP e telefonia do 192 no domínio 20 |
 | 12 | [Leitos / Internação](#12-leitos--internação) | ✅ | RL1 a RL4 feitas (central de leitos, eletiva e censo, laudo de AIH, prescrição e checagem); SIH e faturamento no domínio 20 |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 feita (catálogo, lotes, livro, mínimo e alertas); ES2 (central, requisição, inventário) e ES3 (emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
@@ -290,7 +290,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 11. Regulação
 
-**Estado:** 🟡
+**Estado:** ✅
 
 **Temos:**
 - Central de Regulação do Acesso: catálogo, solicitação, fila e eventos (ADR-0087).
@@ -304,9 +304,11 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - [x] Regulação de urgência e SAMU, com o acionamento pela crise em saúde mental (domínio 26, SM3) ([ADR-0176](./adr/0176-regulacao-de-urgencia.md)).
 - [x] Viaturas do SAMU com plantão e tripulação no lugar do recurso em texto ([ADR-0178](./adr/0178-transporte-sanitario.md)); o texto segue aceito
   para a central sem frota cadastrada.
-- [ ] Ficha clínica do atendimento pré-hospitalar e telefonia ou integração com o 192.
+- [x] Ficha clínica do atendimento pré-hospitalar ([ADR-0188](./adr/0188-ficha-aph.md), fatia RL5).
+- [ ] Telefonia ou integração com o 192 (domínio 20).
 - [x] Regulação de internação e de leitos entre unidades, com o domínio 12 ([ADR-0184](./adr/0184-regulacao-de-leitos.md), fatia RL1).
-- [ ] RL5: ficha clínica do atendimento pré-hospitalar na ocorrência de urgência.
+- [x] RL5: ficha clínica do atendimento pré-hospitalar na ocorrência de urgência, com sinais vitais em série, procedimentos, medicamentos,
+  desfecho, finalização e adendo ([ADR-0188](./adr/0188-ficha-aph.md)).
 - [x] Cotas por unidade e procedimento (PPI), consumidas na autorização, com extracota justificada (Gestão da Rede, item 30,
   [ADR-0179](./adr/0179-gestao-da-rede-de-atencao.md)).
 - [ ] Integração com SISREG e SIGTAP.

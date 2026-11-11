@@ -23,6 +23,21 @@ import {
   SITUACOES_URGENCIA,
   TipoEventoUrgencia,
   TipoRecursoUrgencia,
+  AtendimentoAphDto,
+  DESFECHOS_APH,
+  DesfechoAph,
+  FichaAphDto,
+  FichaAphRequestDto,
+  MECANISMOS_TRAUMA,
+  MecanismoTrauma,
+  NATUREZAS_APH,
+  NaturezaAph,
+  PROCEDIMENTOS_APH,
+  ProcedimentoAph,
+  RegistroAphRequestDto,
+  SinaisAphDto,
+  VIAS_APH,
+  ViaAph,
 } from '../../../core/models/urgencia';
 import { AuthService } from '../../../core/services/auth';
 import { PacienteService } from '../../../core/services/paciente';
@@ -38,7 +53,15 @@ type Gaveta =
   | { tipo: 'reclassificar'; o: OcorrenciaUrgenciaDto }
   | { tipo: 'encerrar'; o: OcorrenciaUrgenciaDto }
   | { tipo: 'cancelar'; o: OcorrenciaUrgenciaDto }
-  | { tipo: 'paciente'; o: OcorrenciaUrgenciaDto };
+  | { tipo: 'paciente'; o: OcorrenciaUrgenciaDto }
+  | { tipo: 'aph'; atendimento: AtendimentoAphDto };
+
+/** ISO para o valor de um input datetime-local (hora local). */
+function paraLocal(iso: string): string {
+  const d = new Date(iso);
+  const p = (v: number) => String(v).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 /** O próximo passo do deslocamento, na ordem que o serviço exige. */
 const PROXIMO_PASSO: Partial<Record<TipoEventoUrgencia | 'NENHUM', TipoEventoUrgencia>> = {
@@ -81,6 +104,23 @@ export class Urgencia implements OnDestroy {
   protected readonly listaLocais = Object.entries(LOCAIS) as [LocalOcorrencia, string][];
 
   protected readonly painel = signal<PainelUrgenciaDto | null>(null);
+
+  /** Ficha do APH (ADR-0188). */
+  protected readonly naturezasAph = NATUREZAS_APH;
+  protected readonly listaNaturezasAph = Object.keys(NATUREZAS_APH) as NaturezaAph[];
+  protected readonly mecanismosTrauma = MECANISMOS_TRAUMA;
+  protected readonly listaMecanismos = Object.keys(MECANISMOS_TRAUMA) as MecanismoTrauma[];
+  protected readonly procedimentosAph = PROCEDIMENTOS_APH;
+  protected readonly listaProcedimentosAph = Object.keys(PROCEDIMENTOS_APH) as ProcedimentoAph[];
+  protected readonly desfechosAph = DESFECHOS_APH;
+  protected readonly listaDesfechosAph = Object.keys(DESFECHOS_APH) as DesfechoAph[];
+  protected readonly viasAph = VIAS_APH;
+  protected readonly listaViasAph = Object.keys(VIAS_APH) as ViaAph[];
+  protected readonly atendimentosAph = signal<AtendimentoAphDto[]>([]);
+  protected readonly fichaAberta = signal<FichaAphDto | null>(null);
+  protected readonly fichaDaSelecionada = signal<FichaAphDto | null>(null);
+  protected readonly procedimentosSel = signal<Set<ProcedimentoAph>>(new Set());
+  protected readonly matriculaAph = signal('');
   protected readonly centrais = signal<CentralUrgenciaDto[]>([]);
   protected readonly destinos = signal<DestinoUrgenciaDto[]>([]);
   protected readonly unidades = signal<{ uuid: string; nome: string }[]>([]);
@@ -129,6 +169,17 @@ export class Urgencia implements OnDestroy {
   protected readonly encerrarForm = this.fb.nonNullable.group({ profissionalMatricula: [''], desfecho: ['' as DesfechoOcorrenciaUrgencia | ''], observacao: [''] });
   protected readonly motivoForm = this.fb.nonNullable.group({ motivo: [''] });
   protected readonly pacienteForm = this.fb.nonNullable.group({ cpf: [''] });
+  protected readonly fichaForm = this.fb.nonNullable.group({
+    natureza: ['' as NaturezaAph | ''], mecanismoTrauma: ['' as MecanismoTrauma | ''], situacaoEncontrada: [''], hemorragia: ['' as '' | 'SIM' | 'NAO'],
+    viaAerea: [''], respiracao: [''], circulacao: [''], glasgowOcular: [''], glasgowVerbal: [''], glasgowMotor: [''], pupilas: [''], exposicao: [''],
+    procedimentoOutro: [''], impressaoDiagnostica: [''], cid: [''], desfecho: ['' as DesfechoAph | ''], recusaNome: [''], obitoEm: [''],
+    obitoConstatadoPorMatricula: [''], recebidoPor: [''], entregueEm: [''],
+  });
+  protected readonly sinaisForm = this.fb.nonNullable.group({
+    paSistolica: [''], paDiastolica: [''], frequenciaCardiaca: [''], frequenciaRespiratoria: [''], saturacao: [''], temperatura: [''], glicemia: [''], dor: [''], glasgow: [''],
+  });
+  protected readonly medicamentoAphForm = this.fb.nonNullable.group({ nome: [''], dose: [''], via: ['INTRAVENOSA' as ViaAph] });
+  protected readonly adendoForm = this.fb.nonNullable.group({ texto: [''] });
 
   /** A decisão escolhida na gaveta decide se pede recurso e destino. */
   protected readonly decisaoNaGaveta = signal<DecisaoRegulacaoUrgencia>('ENVIO_DE_RECURSO');
@@ -164,6 +215,7 @@ export class Urgencia implements OnDestroy {
       this.carregando.set(false);
     });
     this.service.destinos().pipe(catchError(() => of([]))).subscribe((d) => this.destinos.set(d));
+    this.carregarAtendimentos();
   }
 
   protected mudarCentral(id: string): void {
@@ -178,6 +230,10 @@ export class Urgencia implements OnDestroy {
 
   protected selecionar(uuid: string): void {
     this.service.detalhe(uuid).subscribe({ next: (o) => this.selecionada.set(o), error: () => this.selecionada.set(null) });
+    this.fichaDaSelecionada.set(null);
+    if (this.pode('URGENCIA.REGULAR', 'URGENCIA.RECEBER', 'APH.REGISTRAR', 'ATENDIMENTO.GERENCIAR')) {
+      this.service.fichaAph(uuid).pipe(catchError(() => of(null))).subscribe((f) => this.fichaDaSelecionada.set(f));
+    }
   }
 
   /** "12 min" ou "1 h 05" desde o chamado. */
@@ -375,6 +431,10 @@ export class Urgencia implements OnDestroy {
       this.enviar(this.service.cancelar(g.o.uuid, v.motivo.trim()), 'Ocorrência cancelada');
       return;
     }
+    if (g.tipo === 'aph') {
+      this.salvarFicha(g.atendimento);
+      return;
+    }
     const cpf = this.pacienteForm.getRawValue().cpf.replace(/\D/g, '');
     if (cpf.length !== 11) erros['cpfPaciente'] = 'Informe o CPF com 11 dígitos.';
     if (!this.validar(erros)) return;
@@ -401,6 +461,163 @@ export class Urgencia implements OnDestroy {
 
   protected receber(o: OcorrenciaUrgenciaDto): void {
     this.enviar(this.service.receber(o.uuid), 'Paciente recebido');
+  }
+
+
+  // ── Ficha do APH (ADR-0188) ──
+
+  protected carregarAtendimentos(): void {
+    if (!this.pode('APH.REGISTRAR')) return;
+    this.service.atendimentosAph(this.centralId() || null).pipe(catchError(() => of([]))).subscribe((a) => this.atendimentosAph.set(a));
+  }
+
+  /** Abre a gaveta da ficha: carrega a que existe ou começa uma em branco. */
+  protected abrirFichaAph(a: AtendimentoAphDto): void {
+    this.erros.set({});
+    this.erroApi.set(null);
+    this.fichaAberta.set(null);
+    this.preencherFicha(null);
+    this.sinaisForm.reset({ paSistolica: '', paDiastolica: '', frequenciaCardiaca: '', frequenciaRespiratoria: '', saturacao: '', temperatura: '', glicemia: '', dor: '', glasgow: '' });
+    this.medicamentoAphForm.reset({ nome: '', dose: '', via: 'INTRAVENOSA' });
+    this.adendoForm.reset({ texto: '' });
+    this.matriculaAph.set(this.matriculaPadrao());
+    this.gaveta.set({ tipo: 'aph', atendimento: a });
+    if (a.fichaId) {
+      this.service.fichaAph(a.ocorrenciaId).subscribe({ next: (f) => { this.fichaAberta.set(f); this.preencherFicha(f); }, error: () => this.fichaAberta.set(null) });
+    }
+  }
+
+  private preencherFicha(f: FichaAphDto | null): void {
+    this.fichaForm.reset({
+      natureza: f?.natureza ?? '', mecanismoTrauma: f?.mecanismoTrauma ?? '', situacaoEncontrada: f?.situacaoEncontrada ?? '',
+      hemorragia: f?.hemorragiaExsanguinante == null ? '' : f.hemorragiaExsanguinante ? 'SIM' : 'NAO',
+      viaAerea: f?.viaAerea ?? '', respiracao: f?.respiracao ?? '', circulacao: f?.circulacao ?? '',
+      glasgowOcular: f?.glasgowOcular?.toString() ?? '', glasgowVerbal: f?.glasgowVerbal?.toString() ?? '', glasgowMotor: f?.glasgowMotor?.toString() ?? '',
+      pupilas: f?.pupilas ?? '', exposicao: f?.exposicao ?? '', procedimentoOutro: f?.procedimentoOutro ?? '',
+      impressaoDiagnostica: f?.impressaoDiagnostica ?? '', cid: f?.cid ?? '', desfecho: f?.desfecho ?? '', recusaNome: f?.recusaNome ?? '',
+      obitoEm: f?.obitoEm ? paraLocal(f.obitoEm) : '', obitoConstatadoPorMatricula: '', recebidoPor: f?.recebidoPor ?? '',
+      entregueEm: f?.entregueEm ? paraLocal(f.entregueEm) : '',
+    });
+    this.procedimentosSel.set(new Set(f?.procedimentos ?? []));
+  }
+
+  protected alternarProcedimento(p: ProcedimentoAph, marcado: boolean): void {
+    const s = new Set(this.procedimentosSel());
+    if (marcado) s.add(p); else s.delete(p);
+    this.procedimentosSel.set(s);
+  }
+
+  protected glasgowNaFicha(): number | null {
+    const v = this.fichaForm.getRawValue();
+    return v.glasgowOcular && v.glasgowVerbal && v.glasgowMotor ? Number(v.glasgowOcular) + Number(v.glasgowVerbal) + Number(v.glasgowMotor) : null;
+  }
+
+  private salvarFicha(a: AtendimentoAphDto): void {
+    const v = this.fichaForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (this.procedimentosSel().has('OUTRO') && !v.procedimentoOutro.trim()) erros['procedimentoOutro'] = 'Descreva o outro procedimento.';
+    if (!this.validar(erros)) return;
+    const n = (x: string) => (x ? Number(x) : null);
+    const dto: FichaAphRequestDto = {
+      natureza: v.natureza || null, mecanismoTrauma: v.natureza === 'TRAUMA' ? v.mecanismoTrauma || null : null,
+      situacaoEncontrada: v.situacaoEncontrada.trim() || null, hemorragiaExsanguinante: v.hemorragia === '' ? null : v.hemorragia === 'SIM',
+      viaAerea: v.viaAerea.trim() || null, respiracao: v.respiracao.trim() || null, circulacao: v.circulacao.trim() || null,
+      glasgowOcular: n(v.glasgowOcular), glasgowVerbal: n(v.glasgowVerbal), glasgowMotor: n(v.glasgowMotor),
+      pupilas: v.pupilas.trim() || null, exposicao: v.exposicao.trim() || null, procedimentos: [...this.procedimentosSel()],
+      procedimentoOutro: v.procedimentoOutro.trim() || null, impressaoDiagnostica: v.impressaoDiagnostica.trim() || null, cid: v.cid.trim() || null,
+      desfecho: v.desfecho || null, recusaNome: v.recusaNome.trim() || null, obitoEm: v.obitoEm ? new Date(v.obitoEm).toISOString() : null,
+      obitoConstatadoPorMatricula: v.obitoConstatadoPorMatricula.trim() || (this.fichaAberta()?.obitoConstatadoPorNome ? undefined : null) || null,
+      recebidoPor: v.recebidoPor.trim() || null, entregueEm: v.entregueEm ? new Date(v.entregueEm).toISOString() : null,
+    };
+    this.acaoAph(this.service.salvarFichaAph(a.ocorrenciaId, dto), 'Ficha salva');
+  }
+
+  protected registrarSinais(): void {
+    const f = this.fichaAberta();
+    if (!f) return;
+    const v = this.sinaisForm.getRawValue();
+    const n = (x: string) => (x.trim() ? Number(x.replace(',', '.')) : undefined);
+    const dto: RegistroAphRequestDto = {
+      profissionalMatricula: this.matriculaAph(), paSistolica: n(v.paSistolica), paDiastolica: n(v.paDiastolica), frequenciaCardiaca: n(v.frequenciaCardiaca),
+      frequenciaRespiratoria: n(v.frequenciaRespiratoria), saturacao: n(v.saturacao), temperatura: n(v.temperatura), glicemia: n(v.glicemia),
+      dor: n(v.dor), glasgow: n(v.glasgow),
+    };
+    this.acaoAph(this.service.registroAph(f.uuid, 'sinais-vitais', dto), 'Sinais vitais registrados', () =>
+      this.sinaisForm.reset({ paSistolica: '', paDiastolica: '', frequenciaCardiaca: '', frequenciaRespiratoria: '', saturacao: '', temperatura: '', glicemia: '', dor: '', glasgow: '' }));
+  }
+
+  protected registrarMedicamentoAph(): void {
+    const f = this.fichaAberta();
+    if (!f) return;
+    const v = this.medicamentoAphForm.getRawValue();
+    this.acaoAph(this.service.registroAph(f.uuid, 'medicamentos', { profissionalMatricula: this.matriculaAph(), nome: v.nome.trim(), dose: v.dose.trim(), via: v.via }),
+      'Medicamento registrado', () => this.medicamentoAphForm.reset({ nome: '', dose: '', via: 'INTRAVENOSA' }));
+  }
+
+  protected finalizarFicha(): void {
+    const f = this.fichaAberta();
+    if (!f) return;
+    this.acaoAph(this.service.registroAph(f.uuid, 'finalizacao', { profissionalMatricula: this.matriculaAph() }), 'Ficha finalizada');
+  }
+
+  protected registrarAdendo(): void {
+    const f = this.fichaAberta();
+    if (!f) return;
+    this.acaoAph(this.service.registroAph(f.uuid, 'adendo', { profissionalMatricula: this.matriculaAph(), texto: this.adendoForm.getRawValue().texto.trim() }),
+      'Adendo registrado', () => this.adendoForm.reset({ texto: '' }));
+  }
+
+  /** Ações da ficha: a gaveta fica aberta com a ficha atualizada. */
+  private acaoAph(req: Observable<FichaAphDto>, titulo: string, depois?: () => void): void {
+    if (!this.matriculaAph().trim()) {
+      this.erroApi.set('Informe a sua matrícula no topo da ficha.');
+      return;
+    }
+    this.submitting.set(true);
+    this.erroApi.set(null);
+    req.subscribe({
+      next: (f) => {
+        this.submitting.set(false);
+        this.fichaAberta.set(f);
+        this.preencherFicha(f);
+        depois?.();
+        this.toast.set({ titulo, detalhe: 'Ocorrência ' + f.protocolo });
+        clearTimeout(this.toastTimer);
+        this.toastTimer = setTimeout(() => this.toast.set(null), 4200);
+        this.carregarAtendimentos();
+      },
+      error: (e: HttpErrorResponse) => {
+        this.submitting.set(false);
+        this.erroApi.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar. Tente novamente.');
+      },
+    });
+  }
+
+  protected baixarFichaAph(f: FichaAphDto): void {
+    this.service.baixarFichaAph(f.uuid).subscribe({
+      next: (r) => {
+        const url = URL.createObjectURL(r.body ?? new Blob());
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ficha-aph-${f.protocolo}.pdf`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      },
+      error: () => this.toast.set({ titulo: 'Não foi possível gerar o PDF', detalhe: 'Ocorrência ' + f.protocolo }),
+    });
+  }
+
+  protected resumoSinais(s: SinaisAphDto): string {
+    const p: string[] = [];
+    if (s.paSistolica != null || s.paDiastolica != null) p.push(`PA ${s.paSistolica ?? '?'}/${s.paDiastolica ?? '?'}`);
+    if (s.frequenciaCardiaca != null) p.push(`FC ${s.frequenciaCardiaca}`);
+    if (s.frequenciaRespiratoria != null) p.push(`FR ${s.frequenciaRespiratoria}`);
+    if (s.saturacao != null) p.push(`SpO2 ${s.saturacao}%`);
+    if (s.temperatura != null) p.push(`T ${s.temperatura} °C`);
+    if (s.glicemia != null) p.push(`Glic ${s.glicemia}`);
+    if (s.dor != null) p.push(`Dor ${s.dor}`);
+    if (s.glasgow != null) p.push(`GCS ${s.glasgow}`);
+    return p.join(' · ');
   }
 
   private enviar(req: Observable<OcorrenciaUrgenciaDto>, titulo: string): void {

@@ -104,6 +104,13 @@ const MODULOS: Modulo[] = [
     registrar: ['IMAGEM.REALIZAR'],
     gerenciar: ['IMAGEM.LAUDAR'],
   },
+  {
+    nome: 'Atendimento pré-hospitalar',
+    sub: 'ficha clínica do APH na ocorrência de urgência (ADR-0188)',
+    ver: [],
+    registrar: ['APH.REGISTRAR'],
+    gerenciar: [],
+  },
   { nome: 'Equipes', sub: 'equipes de saúde e membros (ADR-0103)', ver: [], registrar: [], gerenciar: ['EQUIPE.GERENCIAR'] },
   { nome: 'Escalas', sub: 'turnos, vagas, troca e cópia de semana (ADR-0105)', ver: [], registrar: [], gerenciar: ['ESCALA.GERENCIAR'] },
   {
