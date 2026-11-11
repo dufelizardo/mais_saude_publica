@@ -176,7 +176,7 @@ public class EducacaoEmSaudeService {
     // ── Apoio ─────────────────────────────────────────────────────────────────────────────────────
 
     /** O público alcançado: a quantidade informada na realização ou, sem ela, os participantes nominais. */
-    private static Integer publico(AcaoProgramatica a) {
+    static Integer publico(AcaoProgramatica a) {
         if (a.getQuantidadeAtendida() != null) {
             return a.getQuantidadeAtendida();
         }

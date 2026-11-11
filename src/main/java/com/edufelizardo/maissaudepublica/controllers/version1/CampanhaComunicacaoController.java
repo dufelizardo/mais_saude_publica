@@ -3,12 +3,15 @@ package com.edufelizardo.maissaudepublica.controllers.version1;
 import com.edufelizardo.maissaudepublica.config.RequerPermissao;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesListagem;
 import com.edufelizardo.maissaudepublica.controllers.version1.examples.ApiErrorResponsesMutacao;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.AvaliacaoCampanhaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.CampanhaComunicacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EncerramentoCampanhaRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MaterialEducativoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MotivoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AvaliacaoCampanhaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CampanhaComunicacaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.MaterialEducativoDto;
+import com.edufelizardo.maissaudepublica.services.version1.AvaliacaoCampanhaService;
 import com.edufelizardo.maissaudepublica.services.version1.CampanhaComunicacaoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +34,9 @@ public class CampanhaComunicacaoController {
 
     @Autowired
     private CampanhaComunicacaoService service;
+
+    @Autowired
+    private AvaliacaoCampanhaService avaliacaoService;
 
     @RequerPermissao({"COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR", "CONTEUDO.REVISAR"})
     @GetMapping(value = "campanha", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -78,6 +84,22 @@ public class CampanhaComunicacaoController {
     @ApiErrorResponsesMutacao
     public ResponseEntity<CampanhaComunicacaoDto> cancelar(@PathVariable UUID uuid, @Valid @RequestBody MotivoRequestDto dto) {
         return ResponseEntity.ok(service.cancelar(uuid, dto));
+    }
+
+    @RequerPermissao({"COMUNICACAO.PUBLICAR"})
+    @GetMapping(value = "campanha/{uuid}/avaliacao", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Apuração da campanha (ADR-0196)", description = "Canais, ações educativas, cobertura por território, metas, efetividade e a avaliação registrada.", tags = TAG)
+    @ApiErrorResponsesListagem
+    public ResponseEntity<AvaliacaoCampanhaDto> avaliacao(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(avaliacaoService.apuracao(uuid));
+    }
+
+    @RequerPermissao({"COMUNICACAO.PUBLICAR"})
+    @PostMapping(value = "campanha/{uuid}/avaliacao", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Registra a avaliação (ADR-0196)", description = "Só na campanha encerrada (422); congela os números da apuração.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<AvaliacaoCampanhaDto> avaliar(@PathVariable UUID uuid, @Valid @RequestBody AvaliacaoCampanhaRequestDto dto) {
+        return ResponseEntity.ok(avaliacaoService.registrar(uuid, dto));
     }
 
     @RequerPermissao({"COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR", "CONTEUDO.REVISAR"})

@@ -207,7 +207,8 @@ real":
   (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
 - **#28 Comunicação e Educação em Saúde** — desenhado na ADR-0114; ~~C1 (comunicação básica)~~ — ADR-0168 (e-mail só a
   profissionais, sem consentimento para a população); ~~C2 (campanhas)~~ — ADR-0174; ~~C3 (educação em saúde)~~ — ADR-0195;
-  ~~C4 (educação permanente)~~ — ADR-0173; faltam a C6 (avaliação) e a C5 (multicanal, depende de Integrações).
+  ~~C4 (educação permanente)~~ — ADR-0173; ~~C6 (avaliação)~~ — ADR-0196; domínio completo. Falta a C5 (multicanal), que depende de
+  Integrações (domínio 20).
 - **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; ~~E1 (núcleo)~~ — ADR-0156 (sem a escolha
   manual das microáreas na tela); ~~E2 (contingência)~~ — ADR-0157; ~~E3 (coordenação)~~ — ADR-0158 (insumo, equipamento e veículo como necessidade até Estoque e Transporte); ~~E5 (pós-evento)~~ — ADR-0159 (sem o relatório em PDF, que depende de Documentos); ~~E6a (evento de massa e estruturas temporárias)~~ — ADR-0160 (ambulâncias como número até Transporte); ~~E6b (painel da epidemia e exposição ambiental)~~ — ADR-0161 (sem incidência por população); ~~E4a (vulneráveis, deslocados e abrigos)~~ — ADR-0193; ~~E4b (redistribuição e Regulação)~~ — ADR-0194; domínio completo.
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (a notificação pela V1; o SAMU pela

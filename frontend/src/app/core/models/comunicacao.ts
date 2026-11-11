@@ -247,6 +247,9 @@ export interface CampanhaComunicacaoDto {
   encerradaEm?: string | null;
   balanco?: string | null;
   motivoCancelamento?: string | null;
+  /** C6 (ADR-0196): as metas da campanha. */
+  metaPessoas?: number | null;
+  metaAcoes?: number | null;
 }
 
 export interface CampanhaComunicacaoRequestDto {
@@ -262,6 +265,89 @@ export interface CampanhaComunicacaoRequestDto {
   temas: string[];
   canalIds: string[];
   conteudoGrupoIds: string[];
+  metaPessoas?: number | null;
+  metaAcoes?: number | null;
+}
+
+// ── Avaliação da campanha (ADR-0196) ──
+
+export type PublicoAtingido = 'SIM' | 'PARCIAL' | 'NAO';
+export type SituacaoMetaComunicacao = 'ATINGIDA' | 'EM_ANDAMENTO' | 'ABAIXO' | 'SEM_META';
+
+export const PUBLICOS_ATINGIDOS: Record<PublicoAtingido, string> = { SIM: 'Sim', PARCIAL: 'Parcialmente', NAO: 'Não' };
+export const SITUACOES_META_COMUNICACAO: Record<SituacaoMetaComunicacao, string> = {
+  ATINGIDA: 'Atingida',
+  EM_ANDAMENTO: 'Em andamento',
+  ABAIXO: 'Abaixo',
+  SEM_META: 'Sem meta',
+};
+
+export interface MetaComunicacaoDto {
+  meta?: number | null;
+  valor: number;
+  percentual?: number | null;
+  situacao: SituacaoMetaComunicacao;
+}
+
+export interface AvaliacaoCampanhaDto {
+  campanhaId: string;
+  campanhaNome: string;
+  situacao: SituacaoCampanhaComunicacao;
+  inicio: string;
+  fim: string;
+  canais: { nome: string; tipo: TipoCanal; publicacoes: number; enviados: number; falhas: number; taxaEntrega?: number | null; semContagem: boolean; destaque: boolean }[];
+  enviados: number;
+  acoes: {
+    previstas: number;
+    realizadas: number;
+    naoRealizadas: number;
+    canceladas: number;
+    pessoas: number;
+    participacaoAlta: number;
+    participacaoMedia: number;
+    participacaoBaixa: number;
+    semAvaliacao: number;
+    materiais: { titulo: string; quantidade: number }[];
+  };
+  territorios: { uuid: string; nome: string; microareas: number; microareasComAcao: number; cobertura?: number | null; moradores: number; pessoas: number; menor: boolean }[];
+  semTerritorio: { acoes: number; pessoas: number };
+  cobertura?: number | null;
+  metaPessoas: MetaComunicacaoDto;
+  metaAcoes: MetaComunicacaoDto;
+  efetividade?: {
+    campanhaOperacional?: string | null;
+    metaOperacional?: number | null;
+    realizadoOperacional?: number | null;
+    percentualOperacional?: number | null;
+    programa?: string | null;
+    de?: string | null;
+    ate?: string | null;
+    novosNoPeriodo?: number | null;
+    anteriorDe?: string | null;
+    anteriorAte?: string | null;
+    novosNoPeriodoAnterior?: number | null;
+  } | null;
+  avaliacao?: {
+    publicoAtingido: PublicoAtingido;
+    resultados?: string | null;
+    conclusoes: string;
+    recomendacoes?: string | null;
+    pessoasAlcancadas: number;
+    acoesRealizadas: number;
+    enviados: number;
+    cobertura?: number | null;
+    situacaoMetaPessoas: SituacaoMetaComunicacao;
+    situacaoMetaAcoes: SituacaoMetaComunicacao;
+    registradaEm: string;
+    atualizadaEm: string;
+  } | null;
+}
+
+export interface AvaliacaoCampanhaRequestDto {
+  publicoAtingido: PublicoAtingido;
+  resultados?: string | null;
+  conclusoes: string;
+  recomendacoes?: string | null;
 }
 
 export interface MaterialEducativoDto {
