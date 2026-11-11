@@ -5,6 +5,7 @@ Resource    ../../../emergencias/desmobilizacao_flow.resource
 Resource    ../../../emergencias/eventos_especializados_flow.resource
 Resource    ../../../emergencias/epidemia_exposicao_flow.resource
 Resource    ../../../emergencias/pessoas_emergencia_flow.resource
+Resource    ../../../emergencias/rede_emergencia_flow.resource
 Resource    ../../../estoque/central_estoque_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -297,5 +298,23 @@ UI Emergencias - Vulneraveis E Deslocado
     Enviar Gaveta
     Wait For Elements State    css=[aria-label="Pacientes deslocados"] >> text=${dados}[nome]    visible
     Wait For Elements State    css=table[aria-label="Vulneráveis"] >> text=Em Escola Robot    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Priorizar Regulacao
+    [Documentation]    Na emergência: do deslocado, a regulação dele é priorizada pela gaveta e aparece nas priorizadas (ADR-0194).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${matricula}    ${procedimento}    ${paciente}    ${unidade}=    Seed A Solicitacao Regulacao
+    ${em}=    Paciente Deslocado Na Emergencia    ${paciente}
+    ${d}=    GET Pessoas Emergencia    emergencia/${em}/deslocados
+    ${nome}=    Set Variable    ${d.json()}[0][pacienteNome]
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=section.em-detalhe    visible
+    Clicar Botao    Ver deslocados
+    Clicar Botao    Priorizar regulação de ${nome}
+    Wait For Elements State    css=[aria-label="Regulações do paciente"] >> role=button[name^="Priorizar"]    visible
+    Click    css=[aria-label="Regulações do paciente"] >> role=button[name^="Priorizar"]
+    Wait For Elements State    css=[aria-label="Regulações do paciente"] >> text=Priorizada    visible
+    Wait For Elements State    css=[aria-label="Regulações priorizadas"] >> text=${nome}    attached
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

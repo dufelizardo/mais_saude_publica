@@ -65,6 +65,7 @@ public class RelatorioPosEventoService {
     @Autowired private EstoqueEmergenciaService estoqueEmergenciaService;
     @Autowired private FrotaEmergenciaService frotaEmergenciaService;
     @Autowired private PessoasEmergenciaService pessoasService;
+    @Autowired private RedeEmergenciaService redeService;
     @Autowired private AtivacaoCapacidadeRepository capacidadeRepository;
     @Autowired private AvaliacaoImpactoRepository avaliacaoRepository;
     @Autowired private AtivacaoPlanoRepository ativacaoPlanoRepository;
@@ -224,6 +225,7 @@ public class RelatorioPosEventoService {
         linha(sb, "Deslocados ainda fora de casa", i.getDeslocadosAindaFora());
         linha(sb, "Abrigos usados", i.getAbrigosUsados());
         linha(sb, "Encaminhamentos intersetoriais", i.getEncaminhamentosIntersetoriais());
+        linha(sb, "Regulações priorizadas", i.getRegulacoesPriorizadas());
         return sb.toString();
     }
 
@@ -264,7 +266,7 @@ public class RelatorioPosEventoService {
                 massa != null ? massa.getPublicoEstimado() : null, epidemia != null ? epidemia.getNotificados() : null,
                 epidemia != null ? epidemia.getConfirmados() : null, epidemia != null ? epidemia.getObitos() : null, exposicao[0], exposicao[1],
                 estoque.quantidadeConsumida(), estoque.valorConsumido(), (int) frota[0], (double) frota[1], (Integer) frota[2],
-                pessoas[0], pessoas[1], pessoas[2], pessoas[3], pessoas[4]);
+                pessoas[0], pessoas[1], pessoas[2], pessoas[3], pessoas[4], redeService.priorizadas(em));
     }
 
     private static double horas(Instant de, Instant ate) {

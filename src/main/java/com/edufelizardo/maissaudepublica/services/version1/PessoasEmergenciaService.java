@@ -385,6 +385,20 @@ public class PessoasEmergenciaService {
 
     // ── Para a emergência, a desmobilização e o relatório ─────────────────────────────────────────
 
+    /** O paciente é deslocado nesta emergência ou mora na área afetada (E4b, ADR-0194). */
+    boolean pertence(Emergencia em, UUID pacienteId) {
+        if (deslocadoRepository.findDaEmergencia(em.getUuid()).stream().anyMatch(d -> d.getPaciente().getUuid().equals(pacienteId))) {
+            return true;
+        }
+        Set<UUID> microareas = em.getMicroareas().stream().map(Microarea::getUuid).collect(Collectors.toSet());
+        Geometry area = GeometriaTerritorial.jts(em.getGeometria());
+        return membroRepository.findVigentesComImovel().stream().filter(m -> m.getPaciente().getUuid().equals(pacienteId)).anyMatch(m -> {
+            Imovel i = m.getNucleo().getDomicilio().getImovel();
+            return microareas.contains(i.getMicroarea().getUuid())
+                    || (area != null && i.getLatitude() != null && i.getLongitude() != null && GeometriaTerritorial.contem(area, i.getLatitude(), i.getLongitude()));
+        });
+    }
+
     /** A ocupação dos destinos agora (sem nomes de pacientes), as maiores primeiro. */
     List<PessoasEmergenciaDtos.Abrigo> abrigos(Emergencia em) {
         Map<String, PessoasEmergenciaDtos.Abrigo> mapa = new LinkedHashMap<>();

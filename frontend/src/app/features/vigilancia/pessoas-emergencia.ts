@@ -12,6 +12,8 @@ import {
   SITUACOES_DESLOCAMENTO,
   VulneraveisDto,
   VulneravelDto,
+  RedeEmergenciaDto,
+  RegulacaoEmergenciaDto,
 } from '../../core/models/emergencia';
 import { InstituicaoExternaDto } from '../../core/models/intersetorialidade';
 import { ErrorResponseDto } from '../../core/models/profissional';
@@ -26,7 +28,8 @@ type Gaveta =
   | { tipo: 'realocar'; d: DeslocadoDto }
   | { tipo: 'encerrar'; d: DeslocadoDto }
   | { tipo: 'transporte'; d: DeslocadoDto }
-  | { tipo: 'encaminhar'; d: DeslocadoDto };
+  | { tipo: 'encaminhar'; d: DeslocadoDto }
+  | { tipo: 'regulacoes'; d: DeslocadoDto };
 
 /**
  * As pessoas na emergência (ADR-0193): a ocupação dos destinos (sem nomes), os vulneráveis da área afetada (sob demanda, porque é dado
@@ -44,6 +47,7 @@ type Gaveta =
           <div class="row-actions">
             <button type="button" class="btn btn--ghost btn--sm" (click)="carregarVulneraveis()">{{ vulneraveis() ? 'Atualizar vulneráveis' : 'Ver vulneráveis' }}</button>
             <button type="button" class="btn btn--ghost btn--sm" (click)="carregarDeslocados()">{{ deslocados() ? 'Atualizar deslocados' : 'Ver deslocados' }}</button>
+            <button type="button" class="btn btn--ghost btn--sm" (click)="carregarRede()">{{ rede() ? 'Atualizar compromissos' : 'Ver compromissos' }}</button>
             @if (ativa()) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrir({ tipo: 'deslocar', vulneravel: null })">Registrar deslocado</button> }
           </div>
         }
@@ -83,6 +87,24 @@ type Gaveta =
         </table></div>
       }
 
+      @if (rede(); as r) {
+        <h4 class="mo-grupo">Compromissos nas unidades afetadas</h4>
+        <p class="cell-sub">Agendamentos e regulações dos próximos 30 dias nas unidades afetadas fora de operação. Quem redireciona é a Agenda ou a Regulação.</p>
+        <ul class="eq-prof" aria-label="Compromissos nas unidades afetadas">
+          @for (c of r.compromissos; track c.id) {
+            <li class="mo-row"><span><span class="cell-main">{{ c.pacienteNome }} · {{ dataHora(c.dataHora) }}</span><span class="cell-sub">{{ c.tipo === 'AGENDAMENTO' ? 'Agendamento' : 'Regulação' }} · {{ c.descricao }} · {{ c.unidadeNome }}</span></span>
+              <a class="link-btn" [routerLink]="[c.tipo === 'AGENDAMENTO' ? '/assistencia/agenda' : '/assistencia/regulacao']">Abrir {{ c.tipo === 'AGENDAMENTO' ? 'a Agenda' : 'a Regulação' }}</a></li>
+          } @empty { <li><span class="cell-sub">Nenhum compromisso nas unidades afetadas fora de operação.</span></li> }
+        </ul>
+        <h4 class="mo-grupo">Regulações priorizadas</h4>
+        <ul class="eq-prof" aria-label="Regulações priorizadas">
+          @for (g of r.priorizadas; track g.id) {
+            <li class="mo-row"><span><span class="cell-main">{{ g.pacienteNome }} · {{ g.procedimentoNome }}</span><span class="cell-sub">{{ g.prioridade }} · {{ g.status }} · {{ g.unidadeSolicitanteNome }}</span></span>
+              @if (aberta()) { <button type="button" class="link-btn" (click)="retirar(g.id)" [attr.aria-label]="'Retirar a prioridade de ' + g.pacienteNome">Retirar</button> }</li>
+          } @empty { <li><span class="cell-sub">Nenhuma regulação priorizada. Priorize a partir de um deslocado.</span></li> }
+        </ul>
+      }
+
       @if (deslocados(); as lista) {
         <h4 class="mo-grupo">Deslocados</h4>
         <ul class="eq-prof" aria-label="Pacientes deslocados">
@@ -104,6 +126,7 @@ type Gaveta =
                     <a class="link-btn" [routerLink]="['/administrativo/frota']" [queryParams]="{ pedir: 'OUTRO', pacienteId: d.pacienteId }" [attr.aria-label]="'Pedir transporte para ' + d.pacienteNome">Pedir transporte</a>
                     <button type="button" class="link-btn" (click)="abrir({ tipo: 'transporte', d })" [attr.aria-label]="'Ligar transporte de ' + d.pacienteNome">Ligar transporte</button>
                     <button type="button" class="link-btn" (click)="abrir({ tipo: 'encaminhar', d })" [attr.aria-label]="'Encaminhar ' + d.pacienteNome">Encaminhar</button>
+                    @if (ativa()) { <button type="button" class="link-btn" (click)="abrirRegulacoes(d)" [attr.aria-label]="'Priorizar regulação de ' + d.pacienteNome">Priorizar regulação</button> }
                   </span>
                 }
               </div>
@@ -126,6 +149,16 @@ type Gaveta =
               @case ('transporte') {
                 <dl class="ro"><div><dt>Paciente</dt><dd>{{ g.d.pacienteNome }}</dd></div></dl>
                 <div class="dw-field"><label for="f-pe-transporte">Identificador da solicitação de transporte <span class="req" aria-hidden="true">*</span></label><input id="f-pe-transporte" type="text" [value]="f()['transporte'] ?? ''" (input)="set('transporte', $event)" placeholder="Copie de Frota e transporte · Solicitações" /></div>
+              }
+              @case ('regulacoes') {
+                <dl class="ro"><div><dt>Paciente</dt><dd>{{ g.d.pacienteNome }}</dd></div></dl>
+                <p class="cell-sub">A emergência sobe a solicitação dentro da mesma cor na fila; quem decide é o regulador.</p>
+                <ul class="eq-prof" aria-label="Regulações do paciente">
+                  @for (x of regulacoes(); track x.id) {
+                    <li class="mo-row"><span><span class="cell-main">{{ x.procedimentoNome }}</span><span class="cell-sub">{{ x.prioridade }} · {{ x.status }}</span></span>
+                      @if (x.priorizada) { <span class="tag tag--ok">Priorizada</span> } @else { <button type="button" class="link-btn" (click)="priorizar(x.id)" [attr.aria-label]="'Priorizar ' + x.procedimentoNome">Priorizar</button> }</li>
+                  } @empty { <li><span class="cell-sub">Nenhuma solicitação regulada em aberto.</span></li> }
+                </ul>
               }
               @case ('encaminhar') {
                 <dl class="ro"><div><dt>Paciente</dt><dd>{{ g.d.pacienteNome }}</dd></div></dl>
@@ -208,6 +241,8 @@ export class PessoasEmergencia {
   protected readonly aberta = computed(() => this.emergencia().situacao === 'ATIVA' || this.emergencia().situacao === 'EM_DESMOBILIZACAO');
   protected readonly vulneraveis = signal<VulneraveisDto | null>(null);
   protected readonly deslocados = signal<DeslocadoDto[] | null>(null);
+  protected readonly rede = signal<RedeEmergenciaDto | null>(null);
+  protected readonly regulacoes = signal<RegulacaoEmergenciaDto[]>([]);
   protected readonly marcador = signal<MarcadorVulnerabilidade | ''>('');
   protected readonly todos = signal(false);
   protected readonly unidades = signal<{ uuid: string; nome: string }[]>([]);
@@ -232,6 +267,37 @@ export class PessoasEmergencia {
     this.service.deslocados(this.emergencia().uuid).subscribe({ next: (l) => this.deslocados.set(l), error: (e: HttpErrorResponse) => this.erro.set(mensagem(e)) });
   }
 
+  protected carregarRede(): void {
+    this.erro.set(null);
+    this.service.rede(this.emergencia().uuid).subscribe({ next: (r) => this.rede.set(r), error: (e: HttpErrorResponse) => this.erro.set(mensagem(e)) });
+  }
+
+  protected abrirRegulacoes(d: DeslocadoDto): void {
+    this.regulacoes.set([]);
+    this.abrir({ tipo: 'regulacoes', d });
+    this.service.regulacoesDoPaciente(this.emergencia().uuid, d.pacienteId).subscribe({
+      next: (l) => this.regulacoes.set(l),
+      error: (e: HttpErrorResponse) => this.erroGaveta.set(mensagem(e)),
+    });
+  }
+
+  protected priorizar(solicitacaoId: string): void {
+    const g = this.gaveta();
+    this.erroGaveta.set(null);
+    this.service.priorizarRegulacao(this.emergencia().uuid, solicitacaoId).subscribe({
+      next: (r) => {
+        this.rede.set(r);
+        if (g?.tipo === 'regulacoes') this.service.regulacoesDoPaciente(this.emergencia().uuid, g.d.pacienteId).subscribe((l) => this.regulacoes.set(l));
+      },
+      error: (e: HttpErrorResponse) => this.erroGaveta.set(mensagem(e)),
+    });
+  }
+
+  protected retirar(solicitacaoId: string): void {
+    this.erro.set(null);
+    this.service.retirarPrioridade(this.emergencia().uuid, solicitacaoId).subscribe({ next: (r) => this.rede.set(r), error: (e: HttpErrorResponse) => this.erro.set(mensagem(e)) });
+  }
+
   protected baixarCsv(): void {
     this.service.vulneraveisCsv(this.emergencia().uuid, { todos: this.todos(), marcador: this.marcador() }).subscribe((b) => {
       const url = URL.createObjectURL(b);
@@ -249,6 +315,7 @@ export class PessoasEmergencia {
       case 'realocar': return 'Realocar ' + g.d.pacienteNome;
       case 'encerrar': return 'Encerrar o deslocamento';
       case 'transporte': return 'Ligar transporte';
+      case 'regulacoes': return 'Priorizar regulação';
       default: return 'Encaminhar à rede intersetorial';
     }
   }
@@ -285,6 +352,9 @@ export class PessoasEmergencia {
     let falta: string | null = null;
     let req: Observable<DeslocadoDto[]> | null = null;
     switch (g.tipo) {
+      case 'regulacoes':
+        this.gaveta.set(null);
+        return;
       case 'deslocar':
       case 'realocar':
         if (!t('destinoTipo')) falta = 'Escolha o destino.';

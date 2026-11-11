@@ -126,7 +126,7 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 ## Inventário do esquema atual
 
 **Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **289 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V77). A fonte de verdade são as migrações, em
+listadas aqui pela migração que criou cada uma (até a V78). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -203,3 +203,4 @@ listadas aqui pela migração que criou cada uma (até a V77). A fonte de verdad
 | V75 | `tb_solicitacao_transporte`, `tb_viagem_transporte`, `tb_embarque_viagem` |
 | V76 | `tb_reserva_estoque`, `tb_cessao_veiculo` (e as ligações da mobilização ao estoque, a emergência na requisição e no consumo) |
 | V77 | `tb_paciente_deslocado` (e o domínio de origem `EMERGENCIAS` no encaminhamento intersetorial) |
+| V78 | sem tabela nova: o medicamento na mobilização e a emergência na solicitação regulada |

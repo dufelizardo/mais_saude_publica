@@ -77,6 +77,7 @@ class CoordenacaoEmergenciaService {
     @Autowired private EstoqueEmergenciaService estoqueEmergenciaService;
     @Autowired private FrotaEmergenciaService frotaEmergenciaService;
     @Autowired private PessoasEmergenciaService pessoasService;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.MedicamentoRepository medicamentoRepository;
 
     // ── Ações ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -196,6 +197,15 @@ class CoordenacaoEmergenciaService {
             m.setProfissional(p);
             m.setRecurso(texto(dto.getRecurso()) != null ? dto.getRecurso().trim() : p.getNome());
             m.setSituacao(SituacaoMobilizacao.EM_ANDAMENTO);
+        } else if (dto.getMedicamentoId() != null) {
+            if (dto.getTipo() != TipoMobilizacao.MEDICAMENTO) {
+                throw new ResourceUnprocessableEntityException("Só a mobilização de medicamento aponta o medicamento da Farmácia.");
+            }
+            com.edufelizardo.maissaudepublica.models.Medicamento med = medicamentoRepository.findById(dto.getMedicamentoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar o medicamento " + dto.getMedicamentoId() + " em nossos registros."));
+            m.setMedicamento(med);
+            m.setRecurso(texto(dto.getRecurso()) != null ? dto.getRecurso().trim() : med.getNome());
+            m.setSituacao(SituacaoMobilizacao.SOLICITADA);
         } else if (dto.getMaterialId() != null) {
             if (dto.getTipo() != TipoMobilizacao.INSUMO) {
                 throw new ResourceUnprocessableEntityException("Só a mobilização de insumo aponta o material do estoque.");
@@ -464,7 +474,8 @@ class CoordenacaoEmergenciaService {
                     m.getRequisicaoEstoque() != null ? m.getRequisicaoEstoque().getSituacao() : null,
                     m.getTransferenciaEstoque() != null ? m.getTransferenciaEstoque().getUuid() : null,
                     m.getTransferenciaEstoque() != null ? m.getTransferenciaEstoque().getSituacao() : null,
-                    m.getTipo() == TipoMobilizacao.VEICULO ? cessoes.getOrDefault(m.getUuid(), List.of()) : null);
+                    m.getTipo() == TipoMobilizacao.VEICULO ? cessoes.getOrDefault(m.getUuid(), List.of()) : null,
+                    m.getMedicamento() != null ? m.getMedicamento().getUuid() : null, m.getMedicamento() != null ? m.getMedicamento().getNome() : null);
         }).toList());
         d.setCapacidades(ativacaoCapacidadeRepository.findDaEmergencia(em.getUuid()).stream()
                 .sorted(Comparator.comparing((AtivacaoCapacidade a) -> a.getSituacao() != SituacaoAtivacaoCapacidade.ATIVA))

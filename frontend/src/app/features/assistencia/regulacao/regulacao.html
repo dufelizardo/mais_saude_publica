@@ -93,7 +93,7 @@
           @for (s of filaFiltrada(); track s.uuid) {
             <tr>
               <td class="num mono">{{ s.posicaoNaFila ?? '—' }}º</td>
-              <td><span [class]="'risk risk-' + s.prioridade"><span class="sw" aria-hidden="true"></span>{{ prioridades[s.prioridade].rotulo }}</span></td>
+              <td><span [class]="'risk risk-' + s.prioridade"><span class="sw" aria-hidden="true"></span>{{ prioridades[s.prioridade].rotulo }}</span>@if (s.emergenciaNome) { <span class="tag tag--alert" [attr.title]="'Priorizada pela emergência ' + s.emergenciaNome">Emergência</span> }</td>
               <td class="cell-main">{{ s.pacienteNome }}</td>
               <td>{{ s.procedimentoNome }}<span class="cell-sub">{{ tiposProcedimento[s.procedimentoTipo] }}</span></td>
               <td>{{ s.unidadeSolicitanteNome }}<span class="cell-sub">{{ s.profissionalSolicitanteNome }}</span></td>
