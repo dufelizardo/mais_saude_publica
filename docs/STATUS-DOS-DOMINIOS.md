@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-11 (E4a e E4b em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-11 (C3 em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -54,7 +54,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | ✅ | E1 a E6 feitas (núcleo; contingência; coordenação; vulneráveis, deslocados, rede e Regulação; desmobilização e relatório; eventos especializados) |
-| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1, C2 e C4 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação permanente); fatias C3, C5 e C6 |
+| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 a C4 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação em saúde; educação permanente); fatias C5 e C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | 🟡 | GR1 feita (oferta e cotas da PPI na Regulação); GR2 (redes temáticas) e GR3 (cobertura) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
@@ -80,7 +80,7 @@ MO3 ✅ ──► SAMU (com Transporte, 16)
 P1 ✅ ──► P2 ✅ ──► SM1 ✅ · P4 ✅ · P6 ✅ ──► BI3 ✅ (indicadores da rede)
 BI1 ✅ ──► BI2 ✅ (situação operacional) · BI3 ✅ ──► BI4 ✅ (relatórios) · BI5 ✅ (coordenações)
 P1 ✅ ──► P3 ✅ ──► C2 ✅ (campanha de comunicação)
-P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
+P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 ✅ (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 ✅ (área afetada) · Equipamentos com mapa real ✅
 F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4a ✅ (vetores) ──► V4b ✅ (animais) ──► V4c ✅ (ambiental) · E4a ✅ (vulneráveis) · P2 por microárea ✅ · F4 ✅
@@ -91,7 +91,7 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4a ✅ (abrigos e encaminhamento)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4a ✅ ──► E4b ✅ · E5 ✅ ──► E6a ✅ ──► E6b ✅
-C1 ✅ ──► C2 ✅ ──► C3 · C6
+C1 ✅ ──► C2 ✅ ──► C3 ✅ ──► C6
 C1 ✅ ──► C4 ✅ · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
@@ -780,7 +780,8 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 **Falta:**
 - [x] **C2 · Campanhas de comunicação** ([ADR-0174](./adr/0174-campanhas-de-comunicacao.md)): campanha com público, territórios, temas, canais, conteúdos revisados e comunicados, alcance por canal, portal; material educativo com link (arquivo com a D2).
-- [ ] **C3 · Educação em saúde:** conteúdo e material nas ações educativas de Programas (P4).
+- [x] **C3 · Educação em saúde** ([ADR-0195](./adr/0195-educacao-em-saude.md)): a ação coletiva de Programas ganha tema, conteúdos revisados, materiais distribuídos, microáreas
+  alvo, a campanha de comunicação e a avaliação da equipe; a campanha lista as ações e o conteúdo mostra o uso.
 - [x] **C4 · Educação permanente** ([ADR-0173](./adr/0173-educacao-permanente.md)): catálogo de competências, competências e conteúdos revisados no treinamento, competências do profissional pelas participações.
 - [ ] **C5 · Multicanal:** adaptadores de SMS, notificação, aplicativo e painel (Integrações, #20); consentimento e
   descadastro.

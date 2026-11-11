@@ -20,6 +20,9 @@ import java.util.UUID;
 @ToString
 @EqualsAndHashCode
 public class CampanhaComunicacaoDto implements Serializable {
+    /** C3 (ADR-0195): as ações educativas de Programas ligadas à campanha. */
+    private List<AcaoEducativaDto.DaCampanha> acoesEducativas;
+
     @Serial
     private static final long serialVersionUID = 1L;
 

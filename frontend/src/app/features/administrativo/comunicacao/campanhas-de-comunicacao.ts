@@ -92,6 +92,13 @@ const PROFISSIONAIS: PublicoAlvoCampanha[] = ['PROFISSIONAIS_SAUDE', 'ACS'];
               @for (x of c.comunicados; track x.uuid) { <li><span class="cell-main">{{ x.titulo }}</span><span class="cell-sub">{{ situacoesComunicado[x.situacao] }} · {{ dataBr(x.inicio) }} a {{ dataBr(x.fim) }}</span></li> }
               @empty { <li class="cell-sub">Nenhum comunicado. Crie na aba Comunicados, escolhendo esta campanha.</li> }
             </ul>
+            <h3 class="mo-grupo">Ações educativas</h3>
+            <ul class="eq-prof" aria-label="Ações educativas da campanha">
+              @for (x of c.acoesEducativas ?? []; track x.acaoId) {
+                <li><span class="cell-main">{{ x.tema }} · {{ x.local ?? x.unidadeNome ?? '' }}</span><span class="cell-sub">{{ x.realizadaEm ? 'realizada em ' + dataBr(x.realizadaEm) : 'prevista para ' + dataBr(x.dataPrevista) }}@if (x.publicoAlcancado != null) { · {{ x.publicoAlcancado }} pessoa(s) }@if (x.materiaisDistribuidos) { · {{ x.materiaisDistribuidos }} material(is) }@if (x.participacao) { · participação {{ x.participacao.toLowerCase() }} }</span></li>
+              }
+              @empty { <li class="cell-sub">Nenhuma ação educativa. Ligue em Programas, na ação coletiva.</li> }
+            </ul>
             <h3 class="mo-grupo">Alcance por canal</h3>
             <ul class="eq-prof" aria-label="Alcance por canal">
               @for (a of c.alcance; track a.canal) { <li><span class="cell-main">{{ a.canal }}</span><span class="cell-sub">{{ a.publicacoes }} publicação(ões) · {{ a.enviados }} enviado(s) · {{ a.falhas }} falha(s)</span></li> }

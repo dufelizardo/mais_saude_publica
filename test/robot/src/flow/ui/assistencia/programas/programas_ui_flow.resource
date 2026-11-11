@@ -4,6 +4,7 @@ Resource    ../../../../pom/ui/assistencia/programas/programas_ui_pom.resource
 Resource    ../../../programas/programa/programa_flow.resource
 Resource    ../../../programas/acompanhamento/acompanhamento_flow.resource
 Resource    ../../../programas/acao/acao_programatica_flow.resource
+Resource    ../../../comunicacao/educacao_em_saude_flow.resource
 Resource    ../../../programas/campanha/campanha_flow.resource
 Resource    ../../../programas/linha/linha_cuidado_flow.resource
 Resource    ../../../programas/indicador/indicador_programatico_flow.resource
@@ -412,5 +413,29 @@ UI Programas - Editor Da Linha
     Get Selected Options    id=f-et-tipo-1    value    ==    MANUAL
     Get Selected Options    id=f-et-tipo-2    value    ==    VACINA
     Get Selected Options    id=f-et-desde-5    value    ==    ETAPA_ANTERIOR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Programas - Educacao Em Saude Da Acao
+    [Documentation]    Na ação coletiva, a gaveta Educação em saúde com o tema e o conteúdo revisado (ADR-0195).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${local}=    Set Variable    Praça UI Robot
+    ${acao}    ${paciente}    ${unidade}    ${nome}=    Seed Acao Bucal Coletiva    SAUDE_DA_FAMILIA    ${False}    ${local}
+    ${grupo}    ${material}    ${titulo}=    Seed Conteudo Com Material
+    ${lista}=    GET Programas
+    ${ids}=    Evaluate    [p["uuid"] for p in $lista.json() if p["codigo"] == "SAUDE_DA_FAMILIA"]
+    UI Programas - Abrir
+    Clicar Aba    Ações programáticas
+    Select Options By    css=[aria-label="Programa das ações"]    value    ${ids}[0]
+    Click    css=[aria-label="Ações programáticas"] tr:has-text("${local}") button:has-text("Educação em saúde")
+    Wait For Elements State    css=app-drawer >> text=${titulo}    visible
+    Fill Text    id=f-ed-tema    Prevenção da dengue
+    Click    css=app-drawer label:has-text("${titulo}")
+    Wait For Elements State    css=[aria-label="Quantidade de Cartilha ${titulo}"]    visible
+    Fill Text    css=[aria-label="Quantidade de Cartilha ${titulo}"]    25
+    Clicar Botao    Salvar educação em saúde
+    Wait For Elements State    css=app-drawer >> text=Educação em saúde salva.    visible
+    ${d}=    GET Educacao Generico    acao-programatica/${acao}/educacao
+    Should Be Equal As Integers    ${d.json()}[materiais][0][quantidade]    25
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
