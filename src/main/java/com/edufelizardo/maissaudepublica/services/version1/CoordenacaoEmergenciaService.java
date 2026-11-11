@@ -76,6 +76,7 @@ class CoordenacaoEmergenciaService {
     @Autowired private CentralEstoqueService centralEstoqueService;
     @Autowired private EstoqueEmergenciaService estoqueEmergenciaService;
     @Autowired private FrotaEmergenciaService frotaEmergenciaService;
+    @Autowired private PessoasEmergenciaService pessoasService;
 
     // ── Ações ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -408,6 +409,10 @@ class CoordenacaoEmergenciaService {
         int abertas = acoesAbertas(em);
         if (abertas > 0) {
             lista.add(abertas + " ação(ões) em aberto: conclua ou cancele antes de encerrar.");
+        }
+        int fora = pessoasService.totais(em)[2];
+        if (fora > 0) {
+            lista.add(fora + " paciente(s) deslocado(s) ainda fora de casa: registre o retorno ou o encerramento (só aviso).");
         }
         if (ultima != null) {
             ultima.getUnidadesAfetadas().stream()

@@ -57,6 +57,7 @@ import { SaudeBucalService } from '../../../core/services/saude-bucal';
 import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-prontuario';
 import { ExamesPaciente } from '../../../shared/exames-paciente/exames-paciente';
 import { TransportesPaciente } from '../../../shared/transportes-paciente/transportes-paciente';
+import { DeslocamentoPaciente } from '../../../shared/deslocamento-paciente/deslocamento-paciente';
 import { InternacoesPaciente } from '../../../shared/internacoes-paciente/internacoes-paciente';
 import { InternacaoResponseDto } from '../../../core/models/internacao';
 import { Odontograma } from './odontograma';
@@ -142,7 +143,7 @@ const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
  */
 @Component({
   selector: 'app-atendimentos',
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente, Odontograma, PlanoTratamento, TratamentoProteticoSecao, TransportesPaciente],
+  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente, Odontograma, PlanoTratamento, TratamentoProteticoSecao, TransportesPaciente, DeslocamentoPaciente],
   templateUrl: './atendimentos.html',
   styleUrl: './atendimentos.css',
 })

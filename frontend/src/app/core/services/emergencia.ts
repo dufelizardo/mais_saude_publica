@@ -28,6 +28,11 @@ import {
   SugestaoImpactoDto,
   TipoDecretoEmergencia,
   TipoEmergenciaDto,
+  DeslocadoDto,
+  DeslocadoRequestDto,
+  DeslocamentoAbertoDto,
+  MarcadorVulnerabilidade,
+  VulneraveisDto,
 } from '../models/emergencia';
 
 /** Emergências e Desastres, fatia E1 (ADR-0156). */
@@ -182,6 +187,67 @@ export class EmergenciaService {
 
   desativarCapacidade(uuid: string, ativacaoId: string, justificativa: string): Observable<EmergenciaDto> {
     return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/capacidade-ativa/${ativacaoId}/desativacao`, { justificativa });
+  }
+
+  // ── Pessoas na emergência (E4a, ADR-0193) ──
+
+  vulneraveis(uuid: string, filtro: { todos?: boolean; marcador?: MarcadorVulnerabilidade | ''; microareaId?: string }): Observable<VulneraveisDto> {
+    return this.http.get<VulneraveisDto>(`${this.api}/emergencia/${uuid}/vulneraveis`, { params: this.paramsVulneraveis(filtro) });
+  }
+
+  vulneraveisCsv(uuid: string, filtro: { todos?: boolean; marcador?: MarcadorVulnerabilidade | ''; microareaId?: string }): Observable<Blob> {
+    return this.http.get(`${this.api}/emergencia/${uuid}/vulneraveis.csv`, { params: this.paramsVulneraveis(filtro), responseType: 'blob' });
+  }
+
+  private paramsVulneraveis(filtro: { todos?: boolean; marcador?: MarcadorVulnerabilidade | ''; microareaId?: string }): Record<string, string> {
+    const p: Record<string, string> = {};
+    if (filtro.todos) p['todos'] = 'true';
+    if (filtro.marcador) p['marcador'] = filtro.marcador;
+    if (filtro.microareaId) p['microareaId'] = filtro.microareaId;
+    return p;
+  }
+
+  deslocados(uuid: string): Observable<DeslocadoDto[]> {
+    return this.http.get<DeslocadoDto[]>(`${this.api}/emergencia/${uuid}/deslocados`);
+  }
+
+  registrarDeslocado(uuid: string, dto: DeslocadoRequestDto): Observable<DeslocadoDto[]> {
+    return this.http.post<DeslocadoDto[]>(`${this.api}/emergencia/${uuid}/deslocado`, dto);
+  }
+
+  realocar(uuid: string, deslocadoId: string, dto: DeslocadoRequestDto): Observable<DeslocadoDto[]> {
+    return this.http.post<DeslocadoDto[]>(`${this.api}/emergencia/${uuid}/deslocado/${deslocadoId}/realocacao`, dto);
+  }
+
+  retornoDeslocado(uuid: string, deslocadoId: string): Observable<DeslocadoDto[]> {
+    return this.http.post<DeslocadoDto[]>(`${this.api}/emergencia/${uuid}/deslocado/${deslocadoId}/retorno`, {});
+  }
+
+  encerrarDeslocado(uuid: string, deslocadoId: string, motivo: string): Observable<DeslocadoDto[]> {
+    return this.http.post<DeslocadoDto[]>(`${this.api}/emergencia/${uuid}/deslocado/${deslocadoId}/encerramento`, { motivo });
+  }
+
+  ligarTransporteDeslocado(uuid: string, deslocadoId: string, solicitacaoId: string): Observable<DeslocadoDto[]> {
+    return this.http.put<DeslocadoDto[]>(`${this.api}/emergencia/${uuid}/deslocado/${deslocadoId}/transporte`, { solicitacaoId });
+  }
+
+  encaminharDeslocado(uuid: string, deslocadoId: string, dto: { unidadeId: string; instituicaoId: string; motivo: string; retornoEsperadoEm: string }):
+    Observable<DeslocadoDto[]> {
+    return this.http.post<DeslocadoDto[]>(`${this.api}/emergencia/${uuid}/deslocado/${deslocadoId}/encaminhamento`, dto);
+  }
+
+  receberEncaminhamentoDeslocado(uuid: string, deslocadoId: string, encaminhamentoId: string): Observable<DeslocadoDto[]> {
+    return this.http.post<DeslocadoDto[]>(`${this.api}/emergencia/${uuid}/deslocado/${deslocadoId}/encaminhamento/${encaminhamentoId}/recebimento`, {});
+  }
+
+  retornoEncaminhamentoDeslocado(uuid: string, deslocadoId: string, encaminhamentoId: string, desfecho: 'CONCLUIDO' | 'RECUSADO', retorno: string):
+    Observable<DeslocadoDto[]> {
+    return this.http.post<DeslocadoDto[]>(`${this.api}/emergencia/${uuid}/deslocado/${deslocadoId}/encaminhamento/${encaminhamentoId}/retorno`,
+      { desfecho, retorno });
+  }
+
+  deslocamentosDoPaciente(pacienteId: string): Observable<DeslocamentoAbertoDto[]> {
+    return this.http.get<DeslocamentoAbertoDto[]>(`${this.api}/emergencias/deslocamentos`, { params: { pacienteId } });
   }
 
   // ── Desmobilização e relatório pós-evento (E5, ADR-0159) ──

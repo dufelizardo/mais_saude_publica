@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-11 (ES3 e T3 em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-11 (E4a em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -53,7 +53,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
-| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E5 e E6 feitas (núcleo; contingência; coordenação; desmobilização e relatório; eventos especializados); falta a E4 |
+| 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | 🟡 | E1 a E3, E4a, E5 e E6 feitas (núcleo; contingência; coordenação; vulneráveis e deslocados; desmobilização e relatório; eventos especializados); falta a E4b |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1, C2 e C4 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação permanente); fatias C3, C5 e C6 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | 🟡 | GR1 feita (oferta e cotas da PPI na Regulação); GR2 (redes temáticas) e GR3 (cobertura) |
@@ -83,14 +83,14 @@ P1 ✅ ──► P3 ✅ ──► C2 ✅ (campanha de comunicação)
 P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 (educação em saúde)
 
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 ✅ (área afetada) · Equipamentos com mapa real ✅
-F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4a ✅ (vetores) ──► V4b ✅ (animais) ──► V4c ✅ (ambiental) · E4 (vulneráveis) · P2 por microárea ✅ · F4 ✅
+F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4a ✅ (vetores) ──► V4b ✅ (animais) ──► V4c ✅ (ambiental) · E4a ✅ (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
 V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergencial)
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
-IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4 (abrigos)
-E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4 · E5 ✅ ──► E6a ✅ ──► E6b ✅
+IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4a ✅ (abrigos e encaminhamento)
+E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4a ✅ ──► E4b · E5 ✅ ──► E6a ✅ ──► E6b ✅
 C1 ✅ ──► C2 ✅ ──► C3 · C6
 C1 ✅ ──► C4 ✅ · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
@@ -759,8 +759,12 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 **Falta:**
 - [ ] A escolha manual das microáreas na tela (a API aceita a lista).
-- [ ] **E4 · Integração da rede:** redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas,
-  pacientes deslocados (o Estoque e o Transporte já atendem a mobilização: [ADR-0191](./adr/0191-estoque-nas-emergencias.md) e [ADR-0192](./adr/0192-transporte-nas-emergencias.md)).
+- [x] **E4a · Vulneráveis, deslocados e abrigos** ([ADR-0193](./adr/0193-emergencias-vulneraveis-e-deslocados.md)): vulneráveis da área afetada calculados do Território, dos
+  Programas e do Transporte (sigilo dos programas sensíveis, CSV, auditoria); pacientes deslocados com origem, destino (unidade,
+  abrigo da rede intersetorial ou nome, casa de parente), realocação com histórico, retorno, transporte e encaminhamento
+  intersetorial; ocupação dos destinos, pendência na desmobilização, relatório e aviso no prontuário.
+- [ ] **E4b · Redistribuição e Regulação:** onde tem o medicamento e o material na rede, compromissos nas unidades afetadas e a
+  prioridade da emergência na Regulação (o Estoque e o Transporte já atendem a mobilização: [ADR-0191](./adr/0191-estoque-nas-emergencias.md) e [ADR-0192](./adr/0192-transporte-nas-emergencias.md)).
 - [ ] Ambulâncias da estrutura como veículos cedidos (a cessão já existe na T3) e hospital de campanha com leitos próprios.
 - [x] Comunicação de risco à população, pelo comunicado emergencial (domínio 28, [ADR-0168](./adr/0168-comunicacao-basica.md)).
 

@@ -89,6 +89,9 @@ public class EmergenciaDto implements Serializable {
     private UUID agravoId;
     private String agravoNome;
     private List<ExposicaoItem> exposicoes;
+    /** E4a (ADR-0193): a ocupação dos destinos dos deslocados (sem nomes) e quantos seguem fora de casa. */
+    private List<PessoasEmergenciaDtos.Abrigo> abrigos;
+    private int deslocadosEmAberto;
 
     /** Microárea do território afetado. */
     @Getter
