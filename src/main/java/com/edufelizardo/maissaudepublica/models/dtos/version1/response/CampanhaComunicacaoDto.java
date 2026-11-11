@@ -51,6 +51,9 @@ public class CampanhaComunicacaoDto implements Serializable {
     private LocalDateTime encerradaEm;
     private String balanco;
     private String motivoCancelamento;
+    /** C6 (ADR-0196): as metas da campanha. */
+    private Integer metaPessoas;
+    private Integer metaAcoes;
 
     @Getter
     @Setter

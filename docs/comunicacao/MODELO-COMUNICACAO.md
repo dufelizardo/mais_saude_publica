@@ -2,8 +2,8 @@
 
 **Data:** 2026-10-07 (criado)
 **Status:** desenho aprovado na [ADR-0114](../adr/0114-comunicacao-e-educacao-em-saude.md). **C1 implementada**
-([ADR-0168](../adr/0168-comunicacao-basica.md)); C2, C3 e C4 nas ADRs 0174, [0195](../adr/0195-educacao-em-saude.md) e 0173; faltam a C5
-e a C6 (seção 15).
+([ADR-0168](../adr/0168-comunicacao-basica.md)); C2, C3, C4 e C6 nas ADRs 0174, 0195, 0173 e [0196](../adr/0196-avaliacao-da-comunicacao.md);
+falta a C5, que depende de Integrações (seção 15).
 
 O valor do domínio está em **conectar comunicação, educação, campanhas e públicos da saúde**. Não é um "CMS de
 notícias": o portal é só um canal.
@@ -243,6 +243,18 @@ Responde:
 
 **O domínio produz os dados; o #19 Indicadores e BI consolida e analisa.**
 
+**Implementado na C6** ([ADR-0196](../adr/0196-avaliacao-da-comunicacao.md)):
+- **Metas da campanha:** pessoas a alcançar e ações educativas a realizar, opcionais.
+- **Apuração ao vivo, sem tabela:**
+  - canais, com enviados, falhas e taxa de entrega; o que mais entregou em destaque; o Portal sem contagem de pessoas;
+  - ações educativas, com as pessoas, a participação e os materiais das realizadas;
+  - cobertura por território: microáreas com ação realizada sobre as microáreas do território, os moradores e as pessoas; o de menor
+    cobertura primeiro;
+  - metas (atingida, em andamento, abaixo, sem meta) e efetividade associada (campanha operacional e inscrições no programa), sem provar causa.
+- **`AvaliacaoCampanha`:** o julgamento da equipe na campanha encerrada (público atingido, resultados, conclusões, recomendações), com os
+  números da apuração congelados no registro.
+- **No #19:** os relatórios Campanhas de comunicação e Educação em saúde, no catálogo da BI4.
+
 ## 14. Permissões e entidades
 
 | Permissão | Para quê |
@@ -264,7 +276,7 @@ Responde:
 | ligação conteúdo ↔ ação programática | ação de Programas, conteúdos, materiais, tema | C3 |
 | ligação conteúdo ↔ treinamento | `Treinamento` do RH, conteúdos, materiais, competências | C4 |
 | consentimento e descadastro por canal | pessoa, canal, consentido em, descadastrado em | C5 |
-| `AvaliacaoCampanha` | campanha, alcance, participação, cobertura, resultados, conclusões | C6 |
+| `AvaliacaoCampanha` | campanha, público atingido, resultados, conclusões, recomendações e os números congelados | C6 ✅ |
 
 Organização lógica prevista (não se implementa tudo de início):
 
@@ -303,7 +315,7 @@ RH → profissionais e treinamentos → EDUCAÇÃO PERMANENTE (conteúdo e mater
 | **C3** · educação em saúde ✅ ([ADR-0195](../adr/0195-educacao-em-saude.md)) | conteúdo e material nas ações educativas de Programas | C2; Programas P4; Território |
 | **C4** · educação permanente ✅ ([ADR-0173](../adr/0173-educacao-permanente.md)) | conteúdo e material ligados ao `Treinamento` do RH; competências | C1 |
 | **C5** · multicanal | adaptadores de SMS, notificação, aplicativo e painel; consentimento e descadastro | C1; Integrações (#20) |
-| **C6** · avaliação | alcance, participação, efetividade | C2; Indicadores (#19) |
+| **C6** · avaliação ✅ ([ADR-0196](../adr/0196-avaliacao-da-comunicacao.md)) | alcance, participação, efetividade | C2; Indicadores (#19) |
 
 **Prioridade: futuro.** O domínio consome o que Território, Programas, Vigilância, Saúde Mental e Emergências produzem,
 e ganha valor quando consegue dizer "existe uma campanha de prevenção da dengue para este território, com estas

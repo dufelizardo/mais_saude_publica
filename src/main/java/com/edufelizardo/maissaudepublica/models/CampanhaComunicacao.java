@@ -111,6 +111,12 @@ public class CampanhaComunicacao implements Serializable {
     @Column(length = 500)
     private String motivoCancelamento;
 
+    /** C6 (ADR-0196): quantas pessoas alcançar nas ações educativas; opcional. */
+    private Integer metaPessoas;
+
+    /** C6 (ADR-0196): quantas ações educativas realizar; opcional. */
+    private Integer metaAcoes;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime registradaEm;
 

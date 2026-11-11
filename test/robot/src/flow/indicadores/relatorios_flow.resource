@@ -9,13 +9,13 @@ Resource    ../../resource/config/schema/schema.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 Relatorios - Catalogo - Status Code 200
-    [Documentation]    The catalog brings the five reports.
+    [Documentation]    The catalog brings the seven reports.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${response}=    GET Catalogo De Relatorios
     Should Be Equal As Integers    ${response.status_code}    200
     Validate Array Schema    ${response.json()}    ${RELATORIO_CATALOGO_SCHEMA}
     ${codigos}=    Evaluate    [r["codigo"] for r in $response.json()]
-    FOR    ${codigo}    IN    PRODUCAO    SITUACAO    PROGRAMAS    VACINACAO    VIGILANCIA
+    FOR    ${codigo}    IN    PRODUCAO    SITUACAO    PROGRAMAS    VACINACAO    VIGILANCIA    CAMPANHAS_COMUNICACAO    EDUCACAO_EM_SAUDE
         Should Contain    ${codigos}    ${codigo}
     END
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -24,7 +24,7 @@ Relatorios - Catalogo - Status Code 200
 Relatorios - Cada Relatorio - Status Code 200
     [Documentation]    Every report brings a summary and tables.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    FOR    ${codigo}    IN    PRODUCAO    SITUACAO    PROGRAMAS    VACINACAO    VIGILANCIA
+    FOR    ${codigo}    IN    PRODUCAO    SITUACAO    PROGRAMAS    VACINACAO    VIGILANCIA    CAMPANHAS_COMUNICACAO    EDUCACAO_EM_SAUDE
         ${response}=    GET Relatorio    ${codigo}
         Should Be Equal As Integers    ${response.status_code}    200
         Validate Object Schema    ${response.json()}    ${RELATORIO_SCHEMA}

@@ -10,6 +10,8 @@ import {
   ConteudoEducativoDto,
   ConteudoEducativoRequestDto,
   ConteudoPublicoDto,
+  AvaliacaoCampanhaDto,
+  AvaliacaoCampanhaRequestDto,
   CampanhaComunicacaoDto,
   CampanhaComunicacaoPublicaDto,
   CampanhaComunicacaoRequestDto,
@@ -114,6 +116,16 @@ export class ComunicacaoService {
 
   cancelarCampanha(uuid: string, motivo: string): Observable<CampanhaComunicacaoDto> {
     return this.http.post<CampanhaComunicacaoDto>(`${this.api}/campanha/${uuid}/cancelamento`, { motivo });
+  }
+
+  // ── Avaliação da campanha (ADR-0196) ──
+
+  avaliacaoDaCampanha(uuid: string): Observable<AvaliacaoCampanhaDto> {
+    return this.http.get<AvaliacaoCampanhaDto>(`${this.api}/campanha/${uuid}/avaliacao`);
+  }
+
+  avaliarCampanha(uuid: string, dto: AvaliacaoCampanhaRequestDto): Observable<AvaliacaoCampanhaDto> {
+    return this.http.post<AvaliacaoCampanhaDto>(`${this.api}/campanha/${uuid}/avaliacao`, dto);
   }
 
   // ── Educação em saúde (ADR-0195) ──

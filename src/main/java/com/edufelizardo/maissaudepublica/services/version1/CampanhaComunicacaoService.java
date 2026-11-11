@@ -292,6 +292,8 @@ public class CampanhaComunicacaoService {
         c.getTemas().addAll(temas);
         c.setPrograma(programa);
         c.setCampanhaOperacional(operacional);
+        c.setMetaPessoas(dto.getMetaPessoas());
+        c.setMetaAcoes(dto.getMetaAcoes());
     }
 
     private CampanhaComunicacaoDto dto(CampanhaComunicacao c, Map<UUID, ConteudoEducativo> vigentes) {
@@ -314,7 +316,8 @@ public class CampanhaComunicacaoService {
                 c.getPrograma() != null ? c.getPrograma().getUuid() : null, c.getPrograma() != null ? c.getPrograma().getNome() : null,
                 c.getCampanhaOperacional() != null ? c.getCampanhaOperacional().getUuid() : null, c.getCampanhaOperacional() != null ? c.getCampanhaOperacional().getNome() : null,
                 comunicados.stream().map(k -> new CampanhaComunicacaoDto.ComunicadoDaCampanha(k.getUuid(), k.getTitulo(), k.getSituacao(), k.getInicio(), k.getFim())).toList(),
-                new ArrayList<>(alcance.values()), c.getIniciadaEm(), c.getEncerradaEm(), c.getBalanco(), c.getMotivoCancelamento());
+                new ArrayList<>(alcance.values()), c.getIniciadaEm(), c.getEncerradaEm(), c.getBalanco(), c.getMotivoCancelamento(),
+                c.getMetaPessoas(), c.getMetaAcoes());
     }
 
     private static MaterialEducativoDto dto(MaterialEducativo m) {

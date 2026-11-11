@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-11 (C3 em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-11 (C6 em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -54,12 +54,12 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | ✅ | E1 a E6 feitas (núcleo; contingência; coordenação; vulneráveis, deslocados, rede e Regulação; desmobilização e relatório; eventos especializados) |
-| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | 🟡 | C1 a C4 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação em saúde; educação permanente); fatias C5 e C6 |
+| 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | ✅ | C1 a C4 e C6 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação em saúde; educação permanente; avaliação); a C5 (multicanal) no domínio 20 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | 🟡 | GR1 feita (oferta e cotas da PPI na Regulação); GR2 (redes temáticas) e GR3 (cobertura) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 18 ✅ · 10 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 19 ✅ · 9 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -91,7 +91,7 @@ SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a �
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
 IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4a ✅ (abrigos e encaminhamento)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4a ✅ ──► E4b ✅ · E5 ✅ ──► E6a ✅ ──► E6b ✅
-C1 ✅ ──► C2 ✅ ──► C3 ✅ ──► C6
+C1 ✅ ──► C2 ✅ ──► C3 ✅ ──► C6 ✅ (avaliação)
 C1 ✅ ──► C4 ✅ · C5
 I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ (ESAVI na Vigilância) · I5 (domínio 20)
 ```
@@ -447,8 +447,9 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   referência, homogeneidade, abandono e campanhas de vacinação com o andamento, no lugar do bloco "Em breve".
 
 **Falta:**
-- [x] **BI4 · Relatórios** ([ADR-0167](./adr/0167-bi-relatorios.md)): catálogo de cinco relatórios sobre os números dos
-  domínios, com período e unidade, prévia na tela, CSV na trilha de auditoria e impressão. Sem envio agendado.
+- [x] **BI4 · Relatórios** ([ADR-0167](./adr/0167-bi-relatorios.md)): catálogo de relatórios sobre os números dos
+  domínios, com período e unidade, prévia na tela, CSV na trilha de auditoria e impressão. Sem envio agendado. Eram cinco; a C6
+  ([ADR-0196](./adr/0196-avaliacao-da-comunicacao.md)) acrescentou os dois de comunicação e educação.
 - [x] **BI5 · Coordenações e gerência** ([ADR-0175](./adr/0175-coordenacoes-e-gerencia.md)): indicadores somados por regional, estrutura de gestão e quem responde, como histórico.
 - [ ] Cargo gestor no RH, metas por coordenação e exportação do organograma.
 
@@ -771,7 +772,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 28. Comunicação e Educação em Saúde
 
-**Estado:** 🟡. Desenhado na [ADR-0114](./adr/0114-comunicacao-e-educacao-em-saude.md); detalhe em
+**Estado:** ✅. Desenhado na [ADR-0114](./adr/0114-comunicacao-e-educacao-em-saude.md); detalhe em
 [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md).
 
 **Temos:**
@@ -785,7 +786,9 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 - [x] **C4 · Educação permanente** ([ADR-0173](./adr/0173-educacao-permanente.md)): catálogo de competências, competências e conteúdos revisados no treinamento, competências do profissional pelas participações.
 - [ ] **C5 · Multicanal:** adaptadores de SMS, notificação, aplicativo e painel (Integrações, #20); consentimento e
   descadastro.
-- [ ] **C6 · Avaliação:** alcance, participação e efetividade, para o #19.
+- [x] **C6 · Avaliação** ([ADR-0196](./adr/0196-avaliacao-da-comunicacao.md)): metas da campanha; apuração com o alcance por canal, as ações
+  educativas, a cobertura das microáreas por território, as metas e a efetividade associada; avaliação da campanha encerrada com os números
+  congelados; os relatórios Campanhas de comunicação e Educação em saúde no #19.
 
 ### 29. Modelo Operacional dos Equipamentos
 

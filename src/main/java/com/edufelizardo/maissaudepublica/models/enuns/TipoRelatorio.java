@@ -9,7 +9,9 @@ public enum TipoRelatorio {
     SITUACAO("Situação operacional", "Operacional", "Tempo de espera do período, ocupação das agendas e ocorrências da escala nos próximos dias."),
     PROGRAMAS("Indicadores dos programas", "Programas", "Inscritos, novos, saídas, faltosos, acompanhados em dia e metas de cada programa."),
     VACINACAO("Cobertura vacinal", "Epidemiológico", "Doses aplicadas, cobertura das vacinas de referência e campanhas."),
-    VIGILANCIA("Vigilância em saúde", "Epidemiológico", "Notificações por agravo e por semana, oportunidade de encerramento e regularidade.");
+    VIGILANCIA("Vigilância em saúde", "Epidemiológico", "Notificações por agravo e por semana, oportunidade de encerramento e regularidade."),
+    CAMPANHAS_COMUNICACAO("Campanhas de comunicação", "Comunicação e educação", "Alcance, ações educativas, cobertura dos territórios, metas e avaliação de cada campanha."),
+    EDUCACAO_EM_SAUDE("Educação em saúde", "Comunicação e educação", "Ações educativas realizadas por tema e por unidade, pessoas alcançadas, participação e materiais.");
 
     private final String nome;
     private final String categoria;

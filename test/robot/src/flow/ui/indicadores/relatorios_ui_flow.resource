@@ -53,3 +53,16 @@ UI Relatorios - Periodo Invalido
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+
+UI Relatorios - Comunicacao E Educacao
+    [Documentation]    A categoria Comunicação e educação traz os dois relatórios da C6 (ADR-0196).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /relatorios
+    Click    css=.rel-chip:has-text("Comunicação e educação")
+    Wait For Elements State    css=.rel-item:has-text("Produção assistencial")    detached
+    Wait For Elements State    css=.rel-item:has-text("Campanhas de comunicação")    visible
+    Click    css=.rel-item:has-text("Educação em saúde")
+    Wait For Elements State    css=.rel-detalhe h2 >> text=Educação em saúde    visible
+    Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Ações educativas realizadas    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
