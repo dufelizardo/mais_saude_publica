@@ -33,7 +33,7 @@ correspondente está na ADR indicada.
 | Gestão de Emergências e Desastres | [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md) | [0113](./adr/0113-emergencias-e-desastres.md), 0156 a 0161 | em parte (E1 a E3, E5 e E6 funcionando) |
 | Comunicação e Educação em Saúde | [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md) | [0114](./adr/0114-comunicacao-e-educacao-em-saude.md), 0168, 0173, 0174 | em parte (C1, C2 e C4 funcionando) |
 | Estoque e Almoxarifado | [`estoque/MODELO-ESTOQUE.md`](./estoque/MODELO-ESTOQUE.md) | [0177](./adr/0177-estoque-e-almoxarifado.md), [0189](./adr/0189-estoque-central-requisicao-inventario.md) | em parte (ES1 e ES2 funcionando) |
-| Transporte Sanitário | [`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md) | [0178](./adr/0178-transporte-sanitario.md) | em parte (T1 funcionando) |
+| Transporte Sanitário | [`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md) | [0178](./adr/0178-transporte-sanitario.md), [0190](./adr/0190-transporte-eletivo-e-tfd.md) | em parte (T1 e T2 funcionando) |
 | Gestão da Rede de Atenção | [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md) | [0179](./adr/0179-gestao-da-rede-de-atencao.md) | em parte (GR1 funcionando) |
 
 Estão documentados nas próprias ADRs: Laboratório e imagem (0093 a 0095, 0180 a 0183), Regulação do acesso (0087 a 0089), de urgência (0176, 0188) e de leitos (0184), Leitos e

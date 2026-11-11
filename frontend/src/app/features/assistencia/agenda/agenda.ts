@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import {
@@ -108,7 +108,7 @@ const AFASTAMENTOS: Record<string, string> = {
  */
 @Component({
   selector: 'app-agenda',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, Drawer, RouterLink],
   templateUrl: './agenda.html',
 })
 export class Agenda {

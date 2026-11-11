@@ -104,6 +104,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.
         PERMISSOES.put("TRANSPORTE.CONSULTAR", new Def("Consultar a frota, a situação dos veículos e os plantões", OPERACAO));
         PERMISSOES.put("TRANSPORTE.GERENCIAR", new Def("Cadastrar veículos, registrar manutenção e montar os plantões das viaturas", OPERACAO));
+        // Transporte eletivo e TFD (ADR-0190): a unidade pede; a comissão de TFD autoriza (lê o laudo); a frota programa as viagens.
+        PERMISSOES.put("TRANSPORTE.SOLICITAR", new Def("Pedir transporte eletivo para o paciente (consulta, exame, hemodiálise, alta, TFD)", OPERACAO));
+        PERMISSOES.put("TFD.AUTORIZAR", new Def("Autorizar e negar o tratamento fora do domicílio (comissão de TFD)", ACESSO_AO_DADO_DE_SAUDE));
         // Gestão da Rede (ADR-0179): oferta e cotas da PPI; a Regulação consome a cota na autorização.
         PERMISSOES.put("REDE.CONSULTAR", new Def("Consultar a oferta assistencial e as cotas da PPI", OPERACAO));
         PERMISSOES.put("REDE.GERENCIAR", new Def("Cadastrar a oferta da executante e pactuar as cotas da PPI", OPERACAO));
@@ -194,13 +197,15 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR",
                         "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR",
                         "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
-                        "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR")));
+                        "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR", "TFD.AUTORIZAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
                         "REGULACAO.CONSULTAR",
                         // Informar a família onde o paciente está internado (ADR-0098).
-                        "INTERNACAO.CONSULTAR")));
+                        "INTERNACAO.CONSULTAR",
+                        // Pedir o transporte da consulta, do exame ou da sessão (ADR-0190).
+                        "TRANSPORTE.SOLICITAR")));
         PAPEIS.put("MEDICO", new PapelPadrao("Médico",
                 "Consulta, prescrição e procedimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
@@ -225,6 +230,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("COORDENADOR_DE_FROTA", new PapelPadrao("Coordenador de frota",
                 "Frota, manutenção e plantão das viaturas, com a tripulação (ADR-0178).",
                 List.of("TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR")));
+        PAPEIS.put("COMISSAO_TFD", new PapelPadrao("Comissão de TFD",
+                "Analisa o laudo e autoriza ou nega o tratamento fora do domicílio (Portaria SAS 55/1999, ADR-0190).",
+                List.of("PACIENTE.CONSULTAR", "TFD.AUTORIZAR", "TRANSPORTE.CONSULTAR")));
         PAPEIS.put("ENFERMEIRO", new PapelPadrao("Enfermeiro",
                 "Classificação de risco, evolução, procedimentos e medicação.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
@@ -245,7 +253,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "LEITO.GERENCIAR", "CENSO.FECHAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
-                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR", "ESTOQUE.CONSULTAR", "ESTOQUE.REQUISITAR")));
+                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR", "ESTOQUE.CONSULTAR", "ESTOQUE.REQUISITAR",
+                        "TRANSPORTE.SOLICITAR")));
         // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
                 "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",
@@ -289,7 +298,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("ASSISTENTE_SOCIAL", new PapelPadrao("Assistente social",
                 "Acolhimento e acompanhamento psicossocial; lê o prontuário com vínculo e mantém o catálogo intersetorial.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER",
-                        "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR", "INTERSETORIAL.GERENCIAR")));
+                        "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR", "INTERSETORIAL.GERENCIAR",
+                        // A alta hospitalar e o TFD passam pelo serviço social (ADR-0190).
+                        "TRANSPORTE.SOLICITAR")));
         // Vigilância epidemiológica (ADR-0124): investiga com acesso ao prontuário; o detalhe dos agravos sensíveis é dela.
         PAPEIS.put("VIGILANCIA_EPIDEMIOLOGICA", new PapelPadrao("Vigilância epidemiológica",
                 "Investiga, classifica e encerra notificações e mantém o catálogo de agravos.",

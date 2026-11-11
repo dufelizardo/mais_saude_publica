@@ -180,8 +180,9 @@ real":
   - ~~#10 Laboratório e diagnóstico~~ — ADRs 0093 a 0095;
   - ~~#11 Regulação~~ — ADRs 0087 a 0089 (falta a regulação de urgência e de internação);
   - ~~#12 Leitos e internação~~ — ADRs 0098 a 0100;
-  - #16 Transporte sanitário — ~~T1 (frota, plantão, viatura no SAMU)~~ — ADR-0178; T2 (transporte eletivo e TFD) e T3 (emergências)
-    com aprovação; conceder o papel **Coordenador de frota** quando a autorização for ligada;
+  - #16 Transporte sanitário — ~~T1 (frota, plantão, viatura no SAMU)~~ — ADR-0178; ~~T2 (transporte eletivo e TFD)~~ — ADR-0190;
+    T3 (emergências) com aprovação; conceder o papel **Coordenador de frota**, o **Comissão de TFD** e `TRANSPORTE.SOLICITAR` às
+    recepções quando a autorização for ligada; ajuda de custo e diárias do TFD (financeiro);
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
     coletivas e equipe (programas pela ADR-0132; especialidade pela ADR-0134);
   - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);
