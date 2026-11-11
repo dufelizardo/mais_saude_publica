@@ -87,8 +87,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - ~~Vagas por unidade e procedimento (cotas e PPI)~~ — ADR-0179 (Gestão da Rede, GR1).
 - Fora do escopo da ADR-0087: ~~regulação de urgência e SAMU~~ — ADR-0176; internação (depende de Leitos, #12),
   integração com SISREG e SIGTAP, e ~~cotas por unidade (PPI)~~ — ADR-0179.
-- Regulação de urgência (ADR-0176): ~~viaturas no lugar do recurso em texto~~ — ADR-0178; ficha clínica do
-  atendimento pré-hospitalar; telefonia e integração com o 192; reserva de leito na vaga zero; conceder os papéis **Atendente de regulação
+- Regulação de urgência (ADR-0176): ~~viaturas no lugar do recurso em texto~~ — ADR-0178; ~~ficha clínica do
+  atendimento pré-hospitalar~~ — ADR-0188 (RL5); telefonia e integração com o 192; reserva de leito na vaga zero; conceder os papéis **Atendente de regulação
   (TARM)** e **Médico regulador de urgência** na central quando a autorização for ligada.
 - Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
   autorização for ligada.
@@ -117,6 +117,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - Fora do escopo da ADR-0187: dispensação por dose individualizada pela farmácia hospitalar; alerta de interação medicamentosa e
   alergia (base externa, domínio 20); balanço hídrico e sinais vitais estruturados; plano de cuidados da SAE; horários das
   refeições configuráveis por unidade.
+- Fora do escopo da ADR-0188: telefonia e gravação do 192; estoque de medicamentos da viatura (ES3/T3); transmissão de
+  eletrocardiograma; aplicativo off-line para tablet da viatura; conceder o papel **Equipe de intervenção do SAMU** quando a
+  autorização for ligada.
 
 ### Laboratório
 - Depois da ADR-0095: ~~laudo PDF assinado~~ — ADR-0183 (L4, com assinatura eletrônica interna; o ICP-Brasil é integração),

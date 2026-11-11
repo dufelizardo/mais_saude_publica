@@ -202,6 +202,7 @@ Crie um novo ADR quando uma decisão envolver trade-offs (não para escolhas tri
 | [0185](./0185-internacao-eletiva-e-censo.md) | Regulação e Leitos: internação eletiva com reserva de leito na janela de dois dias e censo diário fechado com versões (RL2) | Aceita e implementada |
 | [0186](./0186-laudo-aih.md) | Regulação e Leitos: laudo para solicitação de AIH, autorização interna por outro médico e número da faixa do gestor com dígito verificador (RL3) | Aceita e implementada |
 | [0187](./0187-prescricao-hospitalar.md) | Regulação e Leitos: prescrição hospitalar de 24 horas com medicamentos, dieta e cuidados, aprazamento, checagem pela enfermagem e pela nutrição com baixa opcional do lote, posto de enfermagem (RL4) | Aceita e implementada |
+| [0188](./0188-ficha-aph.md) | Regulação e Leitos: ficha clínica do atendimento pré-hospitalar na ocorrência com recurso, avaliação XABCDE, sinais vitais em série, procedimentos, medicamentos, desfecho, finalização e adendo (RL5) | Aceita e implementada |
 
 As ADRs 0003 a 0008 formam um roadmap de arquitetura futura (não implementado) — ver notas de reconciliação em cada arquivo. A prioridade original (0003, 0006 e 0007 antes de novos domínios de negócio) nunca foi seguida na prática — RH e Administrativo foram construídos inteiros sem ela — e foi formalmente revisitada pela ADR-0039: convenção flat reafirmada (0003 não adotado), segurança conscientemente adiada mesmo para o domínio clínico (0006). 0008 (front-end) é a de menor prioridade e segue parcialmente implementada.
 
