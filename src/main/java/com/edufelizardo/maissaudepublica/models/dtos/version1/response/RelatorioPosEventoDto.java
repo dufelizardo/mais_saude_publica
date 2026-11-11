@@ -129,5 +129,11 @@ public class RelatorioPosEventoDto implements Serializable {
         private int veiculosCedidos;
         private double diasDeVeiculo;
         private Integer kmVeiculos;
+        /** E4a (ADR-0193): os pacientes deslocados, os que retornaram, os que seguem fora, os abrigos usados e os encaminhamentos. */
+        private int pacientesDeslocados;
+        private int deslocadosRetornaram;
+        private int deslocadosAindaFora;
+        private int abrigosUsados;
+        private int encaminhamentosIntersetoriais;
     }
 }

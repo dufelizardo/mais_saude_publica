@@ -1,5 +1,107 @@
 import type { EstoqueDaEmergenciaDto } from './estoque';
 import type { CessaoVeiculoDto, FrotaDaEmergenciaDto } from './transporte';
+import type { EncaminhamentoIntersetorialDto } from './intersetorialidade';
+
+// ── Pessoas na emergência, fatia E4a (ADR-0193): vulneráveis, deslocados e abrigos ──
+
+export type MarcadorVulnerabilidade = 'IDOSO' | 'CRIANCA' | 'GESTANTE' | 'PROGRAMA' | 'DIALISE_TERAPIA' | 'OXIGENIO';
+export type LocalDeslocamento = 'DOMICILIO' | 'UNIDADE_SAUDE' | 'ABRIGO' | 'CASA_PARENTE' | 'OUTRO';
+export type SituacaoDeslocamento = 'DESLOCADO' | 'REALOCADO' | 'RETORNOU' | 'ENCERRADO';
+
+export const MARCADORES_VULNERABILIDADE: Record<MarcadorVulnerabilidade, string> = {
+  IDOSO: 'Idoso (60+)',
+  CRIANCA: 'Criança (menos de 5)',
+  GESTANTE: 'Gestante',
+  PROGRAMA: 'Em programa',
+  DIALISE_TERAPIA: 'Diálise ou terapia seriada',
+  OXIGENIO: 'Oxigênio',
+};
+
+export const LOCAIS_DESLOCAMENTO: Record<LocalDeslocamento, string> = {
+  DOMICILIO: 'Domicílio',
+  UNIDADE_SAUDE: 'Unidade de saúde',
+  ABRIGO: 'Abrigo',
+  CASA_PARENTE: 'Casa de parente',
+  OUTRO: 'Outro',
+};
+
+export const SITUACOES_DESLOCAMENTO: Record<SituacaoDeslocamento, { rotulo: string; classe: string }> = {
+  DESLOCADO: { rotulo: 'Fora de casa', classe: 'warn' },
+  REALOCADO: { rotulo: 'Realocado', classe: 'muted' },
+  RETORNOU: { rotulo: 'Retornou', classe: 'ok' },
+  ENCERRADO: { rotulo: 'Encerrado', classe: 'muted' },
+};
+
+export interface VulneravelDto {
+  pacienteId: string;
+  nome: string;
+  idade: number | null;
+  telefone: string | null;
+  endereco: string | null;
+  microareaId: string;
+  microarea: string;
+  acsNome: string | null;
+  marcadores: MarcadorVulnerabilidade[];
+  programas: string[];
+  deslocado: boolean;
+  deslocadoPara: string | null;
+}
+
+export interface VulneraveisDto {
+  pessoasNaArea: number;
+  vulneraveis: number;
+  lista: VulneravelDto[];
+}
+
+export interface DeslocadoDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  origemTipo: LocalDeslocamento;
+  origem: string | null;
+  destinoTipo: LocalDeslocamento;
+  destinoUnidadeId: string | null;
+  destinoInstituicaoId: string | null;
+  destino: string;
+  saidaEm: string;
+  necessidades: string | null;
+  responsavel: string | null;
+  situacao: SituacaoDeslocamento;
+  fimEm: string | null;
+  motivoFim: string | null;
+  anteriorId: string | null;
+  solicitacaoTransporteId: string | null;
+  solicitacaoTransporteSituacao: string | null;
+  encaminhamentos: EncaminhamentoIntersetorialDto[];
+}
+
+export interface AbrigoEmergenciaDto {
+  tipo: LocalDeslocamento;
+  destino: string;
+  pessoas: number;
+}
+
+export interface DeslocamentoAbertoDto {
+  uuid: string;
+  emergenciaId: string;
+  emergenciaNome: string;
+  destinoTipo: LocalDeslocamento;
+  destino: string;
+  saidaEm: string;
+}
+
+export interface DeslocadoRequestDto {
+  pacienteId?: string | null;
+  origemTipo?: LocalDeslocamento | null;
+  origemUnidadeId?: string | null;
+  destinoTipo: LocalDeslocamento;
+  destinoUnidadeId?: string | null;
+  destinoInstituicaoId?: string | null;
+  destinoDescricao?: string | null;
+  necessidades?: string | null;
+  responsavel?: string | null;
+  solicitacaoTransporteId?: string | null;
+}
 
 // ── Emergências e Desastres, fatia E1 (ADR-0156): evento, emergência, nível, território e impacto ──
 
@@ -129,6 +231,9 @@ export interface EmergenciaDto {
   /** ES3 (ADR-0191) e T3 (ADR-0192). */
   estoque?: EstoqueDaEmergenciaDto | null;
   frota?: FrotaDaEmergenciaDto | null;
+  /** E4a (ADR-0193): a ocupação dos destinos dos deslocados (sem nomes) e quantos seguem fora de casa. */
+  abrigos?: AbrigoEmergenciaDto[] | null;
+  deslocadosEmAberto?: number;
   capacidades: CapacidadeAtivadaDto[];
   unidadesAfetadas: { uuid: string; nome: string; situacaoOperacional: string }[];
   /** A desmobilização (ADR-0159), quando iniciada, e o que falta para encerrar. */

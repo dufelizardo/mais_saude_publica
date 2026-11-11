@@ -4,6 +4,7 @@ Resource    ../../../../pom/ui/vigilancia/emergencias/emergencias_ui_pom.resourc
 Resource    ../../../emergencias/desmobilizacao_flow.resource
 Resource    ../../../emergencias/eventos_especializados_flow.resource
 Resource    ../../../emergencias/epidemia_exposicao_flow.resource
+Resource    ../../../emergencias/pessoas_emergencia_flow.resource
 Resource    ../../../estoque/central_estoque_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -278,5 +279,23 @@ UI Emergencias - Mobilizar Insumo Pela Central
     Fill Text    id=f-co-quantidade    12
     Enviar Gaveta
     Wait For Elements State    css=[aria-label="Mobilizações"] >> text=requisição urgente ao estoque (enviada)    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Vulneraveis E Deslocado
+    [Documentation]    Na emergência: a lista de vulneráveis da área e o registro do deslocado a partir dela (ADR-0193).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}=    Seed Crianca Na Microarea
+    ${em}=    Emergencia Na Microarea    ${dados}[micro]
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=section.em-detalhe    visible
+    Clicar Botao    Ver vulneráveis
+    Wait For Elements State    css=table[aria-label="Vulneráveis"] >> text=${dados}[nome]    visible
+    Clicar Botao    Deslocar ${dados}[nome]
+    Select Options By    id=f-pe-destino    value    OUTRO
+    Fill Text    id=f-pe-descricao    Escola Robot
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Pacientes deslocados"] >> text=${dados}[nome]    visible
+    Wait For Elements State    css=table[aria-label="Vulneráveis"] >> text=Em Escola Robot    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

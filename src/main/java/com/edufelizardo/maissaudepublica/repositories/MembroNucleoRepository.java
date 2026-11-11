@@ -24,6 +24,11 @@ public interface MembroNucleoRepository extends JpaRepository<MembroNucleo, UUID
     @Query("select m from MembroNucleo m where m.fim is null and m.nucleo.domicilio.imovel.uuid = :imovelId")
     List<MembroNucleo> findVigentesDoImovel(UUID imovelId);
 
+    /** As pessoas vigentes com o domicílio, o imóvel e a microárea, para os vulneráveis da emergência (ADR-0193). */
+    @Query("select m from MembroNucleo m join fetch m.paciente join fetch m.nucleo n join fetch n.domicilio d join fetch d.imovel i "
+            + "join fetch i.microarea mi join fetch mi.area where m.fim is null and n.fim is null")
+    List<MembroNucleo> findVigentesComImovel();
+
     /** Pessoas vigentes por microárea: [microareaId, quantidade]. */
     @Query("select m.nucleo.domicilio.imovel.microarea.uuid, count(m) from MembroNucleo m where m.fim is null group by m.nucleo.domicilio.imovel.microarea.uuid")
     List<Object[]> contarVigentesPorMicroarea();

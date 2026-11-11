@@ -368,6 +368,7 @@
         </section>
       }
       @if (!prontuarioCarregando() && !prontuarioBloqueio()) {
+        <app-deslocamento-paciente [pacienteId]="p.uuid" />
         <app-transportes-paciente [pacienteId]="p.uuid" />
       }
       @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.ocorrenciasUrgencia?.length) {
