@@ -5,6 +5,7 @@ import {
   AcaoEmergencialDto,
   CapacidadeAtivadaDto,
   CapacidadeEmergencialDto,
+  DisponibilidadeDto,
   EmergenciaDto,
   MobilizacaoDto,
   PRIORIDADES_ACAO,
@@ -18,6 +19,8 @@ import {
   TipoMobilizacao,
 } from '../../core/models/emergencia';
 import { MaterialEstoqueDto } from '../../core/models/estoque';
+import { MedicamentoResponseDto } from '../../core/models/medicamento';
+import { MedicamentoService } from '../../core/services/medicamento';
 import { ErrorResponseDto } from '../../core/models/profissional';
 import { SITUACOES_VEICULO, TIPOS_VEICULO } from '../../core/models/transporte';
 import { EstoqueService } from '../../core/services/estoque';
@@ -239,9 +242,24 @@ type Gaveta =
                   <div class="dw-field"><label for="f-co-matricula">Matrícula do profissional <span class="req" aria-hidden="true">*</span></label><input id="f-co-matricula" type="text" [value]="f()['matricula'] ?? ''" (input)="set('matricula', $event)" /></div>
                   <div class="box box--info"><div>Enquanto a emergência estiver ativa e a mobilização em andamento, a Escala aceita turnos dele na unidade de destino, sem lotação lá. Os alertas de jornada e descanso continuam.</div></div>
                 } @else {
+                  @if (f()['tipo'] === 'MEDICAMENTO') {
+                    <div class="dw-field"><label for="f-co-medicamento">Medicamento da Farmácia<span class="opt">opcional</span></label>
+                      <select id="f-co-medicamento" (change)="f.set({ ...f(), medicamentoId: $any($event.target).value }); ondeTem()">
+                        <option value="" [selected]="!f()['medicamentoId']">Fora do catálogo (só a necessidade)</option>
+                        @for (md of medicamentos(); track md.uuid) { <option [value]="md.uuid" [selected]="f()['medicamentoId'] === md.uuid">{{ md.nome }}</option> }
+                      </select></div>
+                  }
+                  @if (disponibilidade().length && (f()['medicamentoId'] || f()['materialId'])) {
+                    <div class="dw-field"><span class="cell-main">Onde tem na rede</span>
+                      <ul class="eq-prof" aria-label="Onde tem na rede">
+                        @for (d of disponibilidade(); track d.unidadeId) {
+                          <li class="mo-row"><span><span class="cell-main">{{ d.unidadeNome }}@if (d.afetada) { <span class="tag tag--alert">Afetada</span> }</span><span class="cell-sub">@if (d.reservado) { {{ d.reservado }} reservado(s) · }@if (d.proximaValidade) { vence {{ data(d.proximaValidade) }} }</span></span><span class="mono">{{ d.livre }}</span></li>
+                        }
+                      </ul></div>
+                  }
                   @if (f()['tipo'] === 'INSUMO') {
                     <div class="dw-field"><label for="f-co-material">Material do estoque<span class="opt">opcional</span></label>
-                      <select id="f-co-material" (change)="f.set({ ...f(), materialId: $any($event.target).value })">
+                      <select id="f-co-material" (change)="f.set({ ...f(), materialId: $any($event.target).value }); ondeTem()">
                         <option value="" [selected]="!f()['materialId']">Fora do catálogo (só a necessidade)</option>
                         @for (mt of materiais(); track mt.uuid) { <option [value]="mt.uuid" [selected]="f()['materialId'] === mt.uuid">{{ mt.nome }} · {{ mt.codigo }}</option> }
                       </select></div>
@@ -251,7 +269,7 @@ type Gaveta =
                     <div class="box box--info"><div>A frota cede o veículo em Administrativo · Frota e transporte; cedido, ele fica em serviço até a devolução.</div></div>
                   }
                   <div class="dw-row">
-                    <div class="dw-field"><label for="f-co-recurso">Recurso @if (f()['materialId'] && f()['tipo'] === 'INSUMO') { <span class="opt">opcional</span> } @else { <span class="req" aria-hidden="true">*</span> }</label><input id="f-co-recurso" type="text" maxlength="300" [value]="f()['recurso'] ?? ''" (input)="set('recurso', $event)" placeholder="Ex.: soro de reidratação oral" /></div>
+                    <div class="dw-field"><label for="f-co-recurso">Recurso @if ((f()['materialId'] && f()['tipo'] === 'INSUMO') || (f()['medicamentoId'] && f()['tipo'] === 'MEDICAMENTO')) { <span class="opt">opcional</span> } @else { <span class="req" aria-hidden="true">*</span> }</label><input id="f-co-recurso" type="text" maxlength="300" [value]="f()['recurso'] ?? ''" (input)="set('recurso', $event)" placeholder="Ex.: soro de reidratação oral" /></div>
                     <div class="dw-field"><label for="f-co-quantidade">Quantidade<span class="opt">opcional</span></label><input id="f-co-quantidade" type="number" min="1" [value]="f()['quantidade'] ?? ''" (input)="set('quantidade', $event)" /></div>
                   </div>
                 }
@@ -309,6 +327,7 @@ export class CoordenacaoEmergencia {
   protected readonly service = inject(EmergenciaService);
   private readonly unidadeService = inject(UnidadeSaudeService);
   private readonly estoqueService = inject(EstoqueService);
+  private readonly medicamentoService = inject(MedicamentoService);
 
   readonly emergencia = input.required<EmergenciaDto>();
   readonly podeCoordenar = input(false);
@@ -324,6 +343,8 @@ export class CoordenacaoEmergencia {
   protected readonly tiposVeiculo = TIPOS_VEICULO;
   protected readonly situacoesVeiculo = SITUACOES_VEICULO;
   protected readonly materiais = signal<MaterialEstoqueDto[]>([]);
+  protected readonly medicamentos = signal<MedicamentoResponseDto[]>([]);
+  protected readonly disponibilidade = signal<DisponibilidadeDto[]>([]);
 
   protected readonly ativa = computed(() => this.emergencia().situacao === 'ATIVA');
   /** Ativa ou em desmobilização: o que ficou aberto ainda se conclui (ADR-0159). */
@@ -358,6 +379,8 @@ export class CoordenacaoEmergencia {
 
   protected abrirMobilizar(): void {
     if (!this.materiais().length) this.estoqueService.materiais(true).pipe(catchError(() => of([]))).subscribe((m) => this.materiais.set(m));
+    if (!this.medicamentos().length) this.medicamentoService.listar().pipe(catchError(() => of([]))).subscribe((m) => this.medicamentos.set(m.filter((x) => x.ativo)));
+    this.disponibilidade.set([]);
     this.abrir({ tipo: 'mobilizar' });
   }
 
@@ -400,11 +423,11 @@ export class CoordenacaoEmergencia {
         if (!t('destinoId')) falta = 'Escolha a unidade de destino.';
         else if (tipo === 'PROFISSIONAL' && !t('matricula')) falta = 'Informe a matrícula do profissional.';
         else if (tipo === 'INSUMO' && t('materialId') && !t('quantidade')) falta = 'Informe a quantidade do material.';
-        else if (tipo !== 'PROFISSIONAL' && !(tipo === 'INSUMO' && t('materialId')) && !t('recurso')) falta = 'Descreva o recurso.';
+        else if (tipo !== 'PROFISSIONAL' && !(tipo === 'INSUMO' && t('materialId')) && !(tipo === 'MEDICAMENTO' && t('medicamentoId')) && !t('recurso')) falta = 'Descreva o recurso.';
         req = this.service.mobilizar(id, {
           tipo, origemId: t('origemId'), destinoId: t('destinoId') ?? '', profissionalMatricula: t('matricula'), recurso: t('recurso'),
           quantidade: t('quantidade') ? Number(f['quantidade']) : null, responsavel: t('responsavel'), inicio: null, fim: t('fim'),
-          materialId: tipo === 'INSUMO' ? t('materialId') : null,
+          materialId: tipo === 'INSUMO' ? t('materialId') : null, medicamentoId: tipo === 'MEDICAMENTO' ? t('medicamentoId') : null,
         });
         break;
       }
@@ -444,6 +467,15 @@ export class CoordenacaoEmergencia {
 
   protected situacaoOperacional(s: string): string {
     return ({ EM_OPERACAO: 'Em operação', EM_OBRA: 'Em obra', INOPERANTE: 'Inoperante', EM_MANUTENCAO: 'Em manutenção' } as Record<string, string>)[s] ?? s;
+  }
+
+  /** Onde tem o medicamento ou o material escolhido, por unidade (ADR-0194). */
+  protected ondeTem(): void {
+    const f = this.f();
+    const filtro = f['tipo'] === 'MEDICAMENTO' ? { medicamentoId: f['medicamentoId'] } : { materialId: f['materialId'] };
+    this.disponibilidade.set([]);
+    if (!filtro.medicamentoId && !filtro.materialId) return;
+    this.service.disponibilidade(this.emergencia().uuid, filtro).pipe(catchError(() => of([]))).subscribe((d) => this.disponibilidade.set(d));
   }
 
   /** A situação da requisição ou da transferência do estoque ligada à mobilização. */

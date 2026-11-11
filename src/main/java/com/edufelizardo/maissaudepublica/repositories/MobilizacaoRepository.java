@@ -10,7 +10,7 @@ import java.util.UUID;
 public interface MobilizacaoRepository extends JpaRepository<Mobilizacao, UUID> {
 
     @Query("select m from Mobilizacao m join fetch m.destino left join fetch m.origem left join fetch m.profissional left join fetch m.transferencia "
-            + "left join fetch m.material left join fetch m.requisicaoEstoque left join fetch m.transferenciaEstoque "
+            + "left join fetch m.material left join fetch m.medicamento left join fetch m.requisicaoEstoque left join fetch m.transferenciaEstoque "
             + "where m.emergencia.uuid = ?1 order by m.registradaEm")
     List<Mobilizacao> findDaEmergencia(UUID emergenciaId);
 

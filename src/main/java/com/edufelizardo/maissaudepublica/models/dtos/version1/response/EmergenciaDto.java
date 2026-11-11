@@ -281,6 +281,9 @@ public class EmergenciaDto implements Serializable {
         private com.edufelizardo.maissaudepublica.models.enuns.SituacaoTransferenciaEstoque transferenciaEstoqueSituacao;
         /** T3 (ADR-0192): os veículos cedidos pela frota ao pedido. */
         private List<FrotaEmergenciaDtos.Cessao> cessoes;
+        /** E4b (ADR-0194): o medicamento do catálogo da Farmácia. */
+        private UUID medicamentoId;
+        private String medicamentoNome;
     }
 
     /** Capacidade emergencial ativada na emergência. */

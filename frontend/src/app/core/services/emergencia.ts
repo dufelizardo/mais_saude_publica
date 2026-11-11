@@ -33,6 +33,9 @@ import {
   DeslocamentoAbertoDto,
   MarcadorVulnerabilidade,
   VulneraveisDto,
+  DisponibilidadeDto,
+  RedeEmergenciaDto,
+  RegulacaoEmergenciaDto,
 } from '../models/emergencia';
 
 /** Emergências e Desastres, fatia E1 (ADR-0156). */
@@ -159,7 +162,7 @@ export class EmergenciaService {
   }
 
   mobilizar(uuid: string, dto: { tipo: TipoMobilizacao; origemId: string | null; destinoId: string; profissionalMatricula: string | null; recurso: string | null; quantidade: number | null; responsavel: string | null; inicio: string | null; fim: string | null;
-    materialId?: string | null }): Observable<EmergenciaDto> {
+    materialId?: string | null; medicamentoId?: string | null }): Observable<EmergenciaDto> {
     return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/mobilizacao`, dto);
   }
 
@@ -187,6 +190,31 @@ export class EmergenciaService {
 
   desativarCapacidade(uuid: string, ativacaoId: string, justificativa: string): Observable<EmergenciaDto> {
     return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/capacidade-ativa/${ativacaoId}/desativacao`, { justificativa });
+  }
+
+  // ── A rede na emergência (E4b, ADR-0194) ──
+
+  disponibilidade(uuid: string, filtro: { medicamentoId?: string; materialId?: string }): Observable<DisponibilidadeDto[]> {
+    const params: Record<string, string> = {};
+    if (filtro.medicamentoId) params['medicamentoId'] = filtro.medicamentoId;
+    if (filtro.materialId) params['materialId'] = filtro.materialId;
+    return this.http.get<DisponibilidadeDto[]>(`${this.api}/emergencia/${uuid}/disponibilidade`, { params });
+  }
+
+  rede(uuid: string): Observable<RedeEmergenciaDto> {
+    return this.http.get<RedeEmergenciaDto>(`${this.api}/emergencia/${uuid}/rede`);
+  }
+
+  regulacoesDoPaciente(uuid: string, pacienteId: string): Observable<RegulacaoEmergenciaDto[]> {
+    return this.http.get<RegulacaoEmergenciaDto[]>(`${this.api}/emergencia/${uuid}/regulacoes`, { params: { pacienteId } });
+  }
+
+  priorizarRegulacao(uuid: string, solicitacaoId: string): Observable<RedeEmergenciaDto> {
+    return this.http.post<RedeEmergenciaDto>(`${this.api}/emergencia/${uuid}/regulacao/${solicitacaoId}/prioridade`, {});
+  }
+
+  retirarPrioridade(uuid: string, solicitacaoId: string): Observable<RedeEmergenciaDto> {
+    return this.http.delete<RedeEmergenciaDto>(`${this.api}/emergencia/${uuid}/regulacao/${solicitacaoId}/prioridade`);
   }
 
   // ── Pessoas na emergência (E4a, ADR-0193) ──

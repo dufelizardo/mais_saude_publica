@@ -135,5 +135,7 @@ public class RelatorioPosEventoDto implements Serializable {
         private int deslocadosAindaFora;
         private int abrigosUsados;
         private int encaminhamentosIntersetoriais;
+        /** E4b (ADR-0194): as solicitações reguladas que a emergência priorizou. */
+        private int regulacoesPriorizadas;
     }
 }

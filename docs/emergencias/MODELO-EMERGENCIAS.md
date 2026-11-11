@@ -7,7 +7,8 @@ E3 (coordenação), E5 (desmobilização e relatório) e E6 (eventos especializa
 [ADR-0158](../adr/0158-emergencias-coordenacao.md), [ADR-0159](../adr/0159-emergencias-desmobilizacao-e-relatorio.md),
 [ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md) e
 [ADR-0161](../adr/0161-emergencias-epidemia-e-exposicao-ambiental.md); a E4a (vulneráveis, deslocados e abrigos) na
-[ADR-0193](../adr/0193-emergencias-vulneraveis-e-deslocados.md); falta a E4b (seção 17).
+[ADR-0193](../adr/0193-emergencias-vulneraveis-e-deslocados.md) e a E4b (onde tem, compromissos e Regulação) na
+[ADR-0194](../adr/0194-emergencias-redistribuicao-e-regulacao.md): o domínio está completo.
 
 O domínio é uma **camada de coordenação extraordinária**, ativada quando um evento ultrapassa a operação normal da
 rede. Não substitui Vigilância, Regulação, Estoque, Transporte nem a capacidade da rede.
@@ -330,7 +331,7 @@ EVENTO → DETECÇÃO E REGISTRO → AVALIAÇÃO PRELIMINAR ─┬─ NORMAL ─
 | **E2** · contingência ✅ ([ADR-0157](../adr/0157-emergencias-contingencia.md)) | plano versionado, critérios, ações previstas, ativação com histórico | E1 |
 | **E3** · mobilização ✅ ([ADR-0158](../adr/0158-emergencias-coordenacao.md)) | mobilização (com a exceção da Escala), capacidade emergencial, ações, unidade afetada pela situação operacional | E2 |
 | **E4a** · vulneráveis, deslocados e abrigos ✅ ([ADR-0193](../adr/0193-emergencias-vulneraveis-e-deslocados.md)) | vulneráveis por Território, Programas e Transporte; pacientes deslocados, abrigos e encaminhamento intersetorial | E3 |
-| **E4b** · redistribuição e Regulação | onde tem na rede (Farmácia e Estoque), compromissos nas unidades afetadas, prioridade da emergência na Regulação (Estoque e Transporte já atendem a mobilização: ADRs 0191 e 0192) | E4a |
+| **E4b** · redistribuição e Regulação ✅ ([ADR-0194](../adr/0194-emergencias-redistribuicao-e-regulacao.md)) | onde tem na rede (Farmácia e Estoque), compromissos nas unidades afetadas, prioridade da emergência na Regulação (Estoque e Transporte já atendem a mobilização: ADRs 0191 e 0192) | E4a |
 | **E5** · pós-evento ✅ ([ADR-0159](../adr/0159-emergencias-desmobilizacao-e-relatorio.md)) | desmobilização, relatório, lições, revisão do plano, indicadores | E3 |
 | **E6a** · evento de massa e estruturas ✅ ([ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md)) | perfil do tipo, emergência planejada, dados do evento de massa, estruturas temporárias (hospital de campanha como capacidade) e boletins | E5 |
 | **E6b** · epidemia e desastre ambiental ✅ ([ADR-0161](../adr/0161-emergencias-epidemia-e-exposicao-ambiental.md)) | painel da epidemia a partir da Vigilância e exposição ambiental | E6a |

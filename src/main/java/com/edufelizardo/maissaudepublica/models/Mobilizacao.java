@@ -78,6 +78,11 @@ public class Mobilizacao implements Serializable {
     @JoinColumn(name = "material_id", referencedColumnName = "uuid")
     private MaterialEstoque material;
 
+    /** E4b (ADR-0194): o medicamento do catálogo da Farmácia, para o "onde tem" na rede. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "medicamento_id", referencedColumnName = "uuid")
+    private Medicamento medicamento;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requisicao_estoque_id", referencedColumnName = "uuid")
     private RequisicaoEstoque requisicaoEstoque;

@@ -347,6 +347,52 @@ export interface MobilizacaoDto {
   transferenciaEstoqueSituacao?: string | null;
   /** T3 (ADR-0192): os veículos cedidos pela frota. */
   cessoes?: CessaoVeiculoDto[] | null;
+  /** E4b (ADR-0194): o medicamento do catálogo da Farmácia. */
+  medicamentoId?: string | null;
+  medicamentoNome?: string | null;
+}
+
+// ── A rede na emergência, fatia E4b (ADR-0194): onde tem, compromissos e regulações ──
+
+export interface DisponibilidadeDto {
+  unidadeId: string;
+  unidadeNome: string;
+  situacaoOperacional: string;
+  afetada: boolean;
+  saldo: number;
+  reservado: number;
+  livre: number;
+  proximaValidade: string | null;
+}
+
+export interface CompromissoDto {
+  tipo: 'AGENDAMENTO' | 'REGULACAO';
+  id: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  dataHora: string;
+  descricao: string;
+  situacao: string;
+}
+
+export interface RegulacaoEmergenciaDto {
+  id: string;
+  pacienteId: string;
+  pacienteNome: string;
+  procedimentoNome: string;
+  prioridade: 'VERMELHO' | 'AMARELO' | 'VERDE' | 'AZUL';
+  status: string;
+  unidadeSolicitanteNome: string;
+  unidadeExecutanteNome: string | null;
+  dataHora: string | null;
+  priorizada: boolean;
+}
+
+export interface RedeEmergenciaDto {
+  compromissos: CompromissoDto[];
+  priorizadas: RegulacaoEmergenciaDto[];
 }
 
 export interface CapacidadeAtivadaDto {

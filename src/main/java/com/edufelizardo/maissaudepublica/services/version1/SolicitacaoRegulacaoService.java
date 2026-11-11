@@ -72,9 +72,10 @@ public class SolicitacaoRegulacaoService {
 
     private static final DateTimeFormatter DATA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", new Locale("pt", "BR"));
 
-    /** Fila: prioridade (vermelho primeiro) e, dentro dela, quem pediu antes. */
+    /** Fila: prioridade (vermelho primeiro); dentro dela, a marcada pela emergência aberta (ADR-0194); depois, quem pediu antes. */
     static final Comparator<SolicitacaoRegulacao> ORDEM_DA_FILA = Comparator
             .comparing(SolicitacaoRegulacao::getPrioridade)
+            .thenComparing(s -> !s.daEmergenciaAberta())
             .thenComparing(SolicitacaoRegulacao::getSolicitadoEm);
 
     @Autowired
