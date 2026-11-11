@@ -157,6 +157,162 @@ export interface AdmissaoRegulacaoLeitoRequestDto {
   justificativaFaixaEtaria?: string;
 }
 
+/** Prescrição hospitalar, aprazamento e checagem (ADR-0187). */
+export type TipoItemPrescricao = 'MEDICAMENTO' | 'DIETA' | 'CUIDADO';
+export type TipoDieta = 'ZERO' | 'LIVRE' | 'BRANDA' | 'PASTOSA' | 'LIQUIDA' | 'LIQUIDA_PASTOSA' | 'HIPOSSODICA' | 'PARA_DIABETICO' | 'ENTERAL' | 'PARENTERAL';
+export type ViaAdministracaoHosp = 'ORAL' | 'SUBLINGUAL' | 'INTRAMUSCULAR' | 'INTRAVENOSA' | 'SUBCUTANEA' | 'TOPICA' | 'INALATORIA' | 'RETAL' | 'OUTRA';
+export type SituacaoHorarioPrescricao = 'PENDENTE' | 'FEITO' | 'NAO_FEITO' | 'CANCELADO';
+export type ResultadoChecagem = 'FEITO' | 'NAO_FEITO';
+export type AceitacaoDieta = 'TOTAL' | 'PARCIAL' | 'RECUSOU';
+export type MotivoNaoAdministracaoHosp = 'RECUSA_DO_PACIENTE' | 'PACIENTE_AUSENTE' | 'MEDICAMENTO_EM_FALTA' | 'SUSPENSO_PELO_MEDICO' | 'OUTRO';
+
+export interface ItemPrescricaoRequestDto {
+  tipo: TipoItemPrescricao;
+  medicamentoId?: string;
+  dose?: string;
+  via?: ViaAdministracaoHosp;
+  tipoDieta?: TipoDieta;
+  descricao?: string;
+  intervaloHoras?: number | null;
+  primeiroHorario?: string;
+  seNecessario?: boolean;
+  condicao?: string;
+}
+
+export interface PrescricaoHospitalarRequestDto {
+  internacaoId?: string;
+  medicoMatricula: string;
+  inicio?: string;
+  observacao?: string;
+  itens?: ItemPrescricaoRequestDto[];
+}
+
+export interface AcaoPrescricaoRequestDto {
+  profissionalMatricula: string;
+  motivo?: string;
+  previstoPara?: string;
+  resultado?: ResultadoChecagem;
+  aceitacao?: AceitacaoDieta;
+  motivoNaoAdministracao?: MotivoNaoAdministracaoHosp;
+  observacao?: string;
+  loteId?: string;
+  quantidade?: number;
+  realizadoEm?: string;
+  motivoRetificacao?: string;
+}
+
+export interface ChecagemPrescricaoDto {
+  uuid: string;
+  itemId: string;
+  horarioId?: string | null;
+  resultado: ResultadoChecagem;
+  aceitacao?: AceitacaoDieta | null;
+  motivoNaoAdministracao?: MotivoNaoAdministracaoHosp | null;
+  observacao?: string | null;
+  loteId?: string | null;
+  loteNumero?: string | null;
+  quantidade?: number | null;
+  realizadoEm: string;
+  profissionalNome: string;
+  retificacaoDeId?: string | null;
+  motivoRetificacao?: string | null;
+  retificada: boolean;
+}
+
+export interface HorarioPrescricaoDto {
+  uuid: string;
+  itemId: string;
+  previstoPara: string;
+  situacao: SituacaoHorarioPrescricao;
+  atrasado: boolean;
+  aprazadoOriginalmente?: string | null;
+  motivoReaprazamento?: string | null;
+  checagem?: ChecagemPrescricaoDto | null;
+}
+
+export interface ItemPrescricaoDto {
+  uuid: string;
+  ordem: number;
+  tipo: TipoItemPrescricao;
+  medicamentoId?: string | null;
+  medicamentoNome?: string | null;
+  dose?: string | null;
+  via?: ViaAdministracaoHosp | null;
+  tipoDieta?: TipoDieta | null;
+  descricao?: string | null;
+  intervaloHoras?: number | null;
+  primeiroHorario?: string | null;
+  seNecessario: boolean;
+  condicao?: string | null;
+  suspensoEm?: string | null;
+  motivoSuspensao?: string | null;
+  suspensoPorNome?: string | null;
+  resumo: string;
+  horarios: HorarioPrescricaoDto[];
+  checagens: ChecagemPrescricaoDto[];
+}
+
+export interface PrescricaoHospitalarDto {
+  uuid: string;
+  internacaoId: string;
+  pacienteId: string;
+  pacienteNome: string;
+  leitoIdentificacao: string;
+  medicoMatricula: string;
+  medicoNome: string;
+  inicio: string;
+  fim: string;
+  fimEfetivo: string;
+  encerradaEm?: string | null;
+  vigente: boolean;
+  observacao?: string | null;
+  renovadaDe?: string | null;
+  registradaEm: string;
+  itens: ItemPrescricaoDto[];
+}
+
+export interface HorarioDoPostoDto {
+  horarioId: string;
+  itemId: string;
+  prescricaoId: string;
+  internacaoId: string;
+  pacienteNome: string;
+  leitoIdentificacao: string;
+  setorNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  tipo: TipoItemPrescricao;
+  resumo: string;
+  previstoPara: string;
+  situacao: SituacaoHorarioPrescricao;
+  atrasado: boolean;
+  checagem?: ChecagemPrescricaoDto | null;
+}
+
+export const TIPOS_DIETA: Record<TipoDieta, string> = {
+  ZERO: 'Zero (jejum)', LIVRE: 'Livre', BRANDA: 'Branda', PASTOSA: 'Pastosa', LIQUIDA: 'Líquida', LIQUIDA_PASTOSA: 'Líquida-pastosa',
+  HIPOSSODICA: 'Hipossódica', PARA_DIABETICO: 'Para diabético', ENTERAL: 'Enteral', PARENTERAL: 'Parenteral',
+};
+
+export const VIAS_ADMINISTRACAO_HOSP: Record<ViaAdministracaoHosp, string> = {
+  ORAL: 'Oral', SUBLINGUAL: 'Sublingual', INTRAMUSCULAR: 'Intramuscular', INTRAVENOSA: 'Intravenosa', SUBCUTANEA: 'Subcutânea',
+  TOPICA: 'Tópica', INALATORIA: 'Inalatória', RETAL: 'Retal', OUTRA: 'Outra',
+};
+
+export const SITUACOES_HORARIO: Record<SituacaoHorarioPrescricao, { rotulo: string; classe: string }> = {
+  PENDENTE: { rotulo: 'Pendente', classe: 'info' },
+  FEITO: { rotulo: 'Feito', classe: 'ok' },
+  NAO_FEITO: { rotulo: 'Não feito', classe: 'warn' },
+  CANCELADO: { rotulo: 'Cancelado', classe: 'muted' },
+};
+
+export const MOTIVOS_NAO_ADMINISTRACAO_HOSP: Record<MotivoNaoAdministracaoHosp, string> = {
+  RECUSA_DO_PACIENTE: 'Recusa do paciente', PACIENTE_AUSENTE: 'Paciente ausente', MEDICAMENTO_EM_FALTA: 'Medicamento em falta',
+  SUSPENSO_PELO_MEDICO: 'Suspenso pelo médico', OUTRO: 'Outro',
+};
+
+export const ACEITACOES_DIETA: Record<AceitacaoDieta, string> = { TOTAL: 'Aceitou toda', PARCIAL: 'Aceitou parte', RECUSOU: 'Recusou' };
+
 /** Laudo para solicitação de AIH e autorização interna (ADR-0186). */
 export type StatusLaudoAih = 'SOLICITADO' | 'DEVOLVIDO' | 'AUTORIZADO' | 'NEGADO' | 'CANCELADO';
 export type ClinicaAih =

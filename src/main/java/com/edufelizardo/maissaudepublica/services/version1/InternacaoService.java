@@ -58,6 +58,9 @@ public class InternacaoService {
     private InternacaoRepository internacaoRepository;
 
     @Autowired
+    private PrescricaoHospitalarService prescricaoHospitalarService;
+
+    @Autowired
     private EventoLeitoRepository eventoRepository;
 
     @Autowired
@@ -212,6 +215,7 @@ public class InternacaoService {
         i.setSumarioAlta(dto.getSumario().trim());
         i.setAltaPor(medico);
         internacaoRepository.save(i);
+        prescricaoHospitalarService.encerrarNaAlta(i, altaEm);
         leito.setSituacao(SituacaoLeito.HIGIENIZACAO);
         leitoService.registrar(leito, i, TipoEventoLeito.ALTA, dto.getTipoAlta().toString(), medico);
         return detalhe(i);

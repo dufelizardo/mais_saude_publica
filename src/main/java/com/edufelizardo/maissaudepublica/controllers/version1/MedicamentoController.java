@@ -35,7 +35,7 @@ public class MedicamentoController {
     @Autowired
     private MedicamentoService service;
 
-    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "CONSULTA.REGISTRAR", "MEDICACAO.ADMINISTRAR"})
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "CONSULTA.REGISTRAR", "MEDICACAO.ADMINISTRAR", "PRESCRICAO.HOSPITALAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os medicamentos cadastrados", tags = "Medicamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -54,7 +54,7 @@ public class MedicamentoController {
         return ResponseEntity.ok(responseDtos);
     }
 
-    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "CONSULTA.REGISTRAR", "MEDICACAO.ADMINISTRAR"})
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "CONSULTA.REGISTRAR", "MEDICACAO.ADMINISTRAR", "PRESCRICAO.HOSPITALAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um medicamento pelo id", tags = "Medicamento")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
