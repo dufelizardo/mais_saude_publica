@@ -367,6 +367,9 @@
           <app-internacoes-paciente [internacoes]="prontuario()?.internacoes ?? []" />
         </section>
       }
+      @if (!prontuarioCarregando() && !prontuarioBloqueio()) {
+        <app-transportes-paciente [pacienteId]="p.uuid" />
+      }
       @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.ocorrenciasUrgencia?.length) {
         <section class="pront-exames" aria-labelledby="pront-urgencia-h">
           <h4 id="pront-urgencia-h">Ocorrências de urgência</h4>

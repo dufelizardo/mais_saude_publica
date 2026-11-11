@@ -7,7 +7,7 @@ Desenho na [ADR-0178](../adr/0178-transporte-sanitario.md).
 | Fatia | O que é | Estado |
 |---|---|---|
 | T1 | Frota com situação em histórico, plantão das viaturas com tripulação mínima, viatura empenhada pelo SAMU | ✅ ADR-0178, V63 |
-| T2 | Transporte eletivo: solicitação (consulta, exame, hemodiálise, alta, TFD), agenda de viagens, embarques e quilometragem | ⬜ só com aprovação |
+| T2 | Transporte eletivo: solicitação (consulta, exame, hemodiálise, alta, TFD), agenda de viagens, embarques e quilometragem | ✅ ADR-0190, V75 |
 | T3 | Veículos nas Emergências (E4) | ⬜ só com aprovação |
 
 ## Entidades (T1)
@@ -22,6 +22,20 @@ Veiculo (lotado numa unidade)
               └── TripulantePlantao: profissional · funcao (condutor, técnico, enfermeiro, médico)
 
 OcorrenciaUrgencia ──► Veiculo (a viatura empenhada; ADR-0176)
+```
+
+## Entidades (T2)
+
+```text
+SolicitacaoTransporte (paciente, unidade que pede)
+  motivo · dataHora · enderecoEmbarque · destino (unidade ou texto) · destinoMunicipio · trecho
+  maca · cadeiraDeRodas · oxigenio · acompanhante · situacao · recorrenciaId
+  laudo do TFD: cid · justificativa · profissional
+      ├──► Agendamento | SolicitacaoRegulacao | Internacao (um só, opcional)
+      │
+ViagemTransporte (veiculo eletivo, condutor)
+  saidaPrevista · retornoPrevisto (até 72 h) · destino · situacao · kmSaida · kmChegada
+      └── EmbarqueViagem: solicitacao · situacao (previsto, embarcou, faltou)
 ```
 
 ## Regras
@@ -44,9 +58,22 @@ OcorrenciaUrgencia ──► Veiculo (a viatura empenhada; ADR-0176)
   - o fim da ocorrência a devolve.
 - **Situação manual:** manutenção, disponível e inativo; "em serviço" só pelo SAMU.
 
+## Regras do transporte eletivo (T2)
+
+- **Acompanhante:** obrigatório para menor de 18 anos e para maca; ocupa um lugar.
+- **TFD:** laudo (CID, justificativa, quem pede), outro município, autorização da Comissão de TFD antes da viagem.
+- **Recorrência:** hemodiálise e terapia seriada, dias da semana até 90 dias, uma solicitação por sessão.
+- **Viagem:**
+  - veículo eletivo, lugares, maca e cadeira de rodas;
+  - o compromisso dentro da janela;
+  - sem conflito de veículo ou condutor;
+  - a saída põe o veículo em serviço; a chegada atualiza a quilometragem e o devolve.
+
 ## Permissões
 
 | Permissão | Para quê | Papéis padrão |
 |---|---|---|
 | `TRANSPORTE.CONSULTAR` | Frota, situação e plantões | Coordenador de frota, Gestor, Atendente de regulação, Médico regulador de urgência |
-| `TRANSPORTE.GERENCIAR` | Veículos, manutenção e plantões | Coordenador de frota, Gestor |
+| `TRANSPORTE.GERENCIAR` | Veículos, manutenção, plantões e viagens | Coordenador de frota, Gestor |
+| `TRANSPORTE.SOLICITAR` | Pedir transporte eletivo para o paciente | Recepção, Coordenador de enfermagem, Assistente social |
+| `TFD.AUTORIZAR` | Autorizar e negar o TFD (lê o laudo) | Comissão de TFD, Gestor |

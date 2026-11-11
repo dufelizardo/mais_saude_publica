@@ -42,7 +42,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 e ES2 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário); falta a ES3 (emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
-| 16 | [Transporte Sanitário](#16-transporte-sanitário) | 🟡 | T1 feita (frota, plantão, viatura no SAMU); T2 (transporte eletivo e TFD) e T3 (emergências) |
+| 16 | [Transporte Sanitário](#16-transporte-sanitário) | 🟡 | T1 e T2 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem); falta a T3 (emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
@@ -382,12 +382,14 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - **T1:** frota (placa, prefixo, tipo, lotação; viatura do SAMU só em unidade com o perfil Atenção móvel), situação com histórico
   (manutenção, em serviço, inativo), plantão das viaturas com a tripulação mínima das Portarias 2.048/2002 e 1.010/2012, e a viatura
   empenhada pela regulação de urgência, em serviço no envio e livre no fim. Tela Frota e transporte e o papel Coordenador de frota.
+- **T2:** solicitação de transporte eletivo (consulta, exame, hemodiálise, terapia seriada, alta, TFD) ligada ao agendamento, à
+  regulação ou à internação, com acompanhante e recorrência; TFD com laudo e a Comissão de TFD; viagem com veículo, condutor, lugares,
+  janela, embarques, saída, falta e chegada com a quilometragem; relatório por veículo ([ADR-0190](./adr/0190-transporte-eletivo-e-tfd.md)).
 
 **Falta:**
-- [ ] **T2:** transporte sanitário eletivo: solicitação (consulta, exame, hemodiálise, alta, TFD), agenda de viagens, embarques e
-  quilometragem.
 - [ ] **T3:** consumido pela mobilização em emergência: veículos e ambulâncias (domínio 27, E4).
-- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (domínio 15).
+- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (domínio 15); ajuda de custo e diárias do
+  TFD (domínio 17); roteirização.
 
 ### 17. Financeiro
 

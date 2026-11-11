@@ -882,6 +882,10 @@
               @if (d.status === 'INTERNADO') {
                 @if (pode('INTERNACAO.GERENCIAR')) { <button type="button" class="btn btn--ghost" (click)="abrirTroca(d)">Trocar de leito</button> }
                 @if (pode('INTERNACAO.SOLICITAR_VAGA')) { <button type="button" class="btn btn--ghost" (click)="abrirPedirVaga(d)">Pedir vaga em outra unidade</button> }
+                @if (pode('TRANSPORTE.SOLICITAR')) {
+                  <a class="btn btn--ghost" routerLink="/administrativo/frota"
+                    [queryParams]="{ pedir: 'ALTA_HOSPITALAR', pacienteId: d.pacienteId, internacaoId: d.uuid, unidadeId: d.unidadeId }">Pedir transporte</a>
+                }
                 @if (pode('INTERNACAO.ALTA')) { <button type="button" class="btn" (click)="abrirAlta(d)">Dar alta</button> }
               }
             </footer>
