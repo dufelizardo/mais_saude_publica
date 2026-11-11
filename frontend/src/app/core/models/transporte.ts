@@ -1,6 +1,51 @@
 /** Transporte, frota e plantão (ADR-0178). */
 export type TipoVeiculo = 'USA' | 'USB' | 'MOTOLANCIA' | 'AEROMEDICO' | 'AMBULANCIA_TRANSPORTE' | 'VAN_SANITARIA' | 'MICRO_ONIBUS' | 'CARRO_ADMINISTRATIVO';
 export type SituacaoVeiculo = 'DISPONIVEL' | 'EM_SERVICO' | 'MANUTENCAO' | 'INATIVO';
+
+/** Veículos nas emergências (ADR-0192): o pedido da coordenação, a cessão pela frota e a devolução. */
+export interface CessaoVeiculoDto {
+  uuid: string;
+  mobilizacaoId: string;
+  emergenciaId: string;
+  emergenciaNome: string;
+  veiculoId: string;
+  prefixo: string;
+  placa: string;
+  tipo: TipoVeiculo;
+  unidadeNome: string;
+  cedidaEm: string;
+  devolvidaEm?: string | null;
+  kmInicio?: number | null;
+  kmFim?: number | null;
+  observacao?: string | null;
+}
+
+export interface PedidoVeiculoEmergenciaDto {
+  mobilizacaoId: string;
+  emergenciaId: string;
+  emergenciaNome: string;
+  destinoId: string;
+  destinoNome: string;
+  recurso: string;
+  quantidade?: number | null;
+  responsavel?: string | null;
+  inicio: string;
+  fim?: string | null;
+  situacao: 'SOLICITADA' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'CANCELADA';
+  cessoes: CessaoVeiculoDto[];
+  faltam?: number | null;
+}
+
+export interface CessaoFeitaDto {
+  cessao: CessaoVeiculoDto;
+  avisos: string[];
+}
+
+export interface FrotaDaEmergenciaDto {
+  cedidos: CessaoVeiculoDto[];
+  unidadesAfetadas: { veiculoId: string; prefixo: string; tipo: TipoVeiculo; unidadeNome: string; situacao: SituacaoVeiculo; cedidoA?: string | null }[];
+  disponiveisPorTipo: { tipo: TipoVeiculo; quantidade: number }[];
+}
 export type FuncaoTripulante = 'CONDUTOR' | 'TECNICO_ENFERMAGEM' | 'ENFERMEIRO' | 'MEDICO';
 
 export const TIPOS_VEICULO: Record<TipoVeiculo, string> = {

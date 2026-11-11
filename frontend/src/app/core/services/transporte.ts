@@ -13,6 +13,9 @@ import {
   VeiculoDto,
   VeiculoRequestDto,
   ViagemDto,
+  CessaoFeitaDto,
+  CessaoVeiculoDto,
+  PedidoVeiculoEmergenciaDto,
 } from '../models/transporte';
 
 /** Transporte: frota, situação e plantão das viaturas (ADR-0178); transporte eletivo, TFD e viagens (ADR-0190). */
@@ -111,6 +114,20 @@ export class TransporteService {
 
   cancelarViagem(uuid: string, motivo: string): Observable<ViagemDto> {
     return this.http.post<ViagemDto>(`${this.api}/viagem/${uuid}/cancelamento`, { motivo });
+  }
+
+  // ── Veículos nas emergências (ADR-0192) ──
+
+  pedidosDeEmergencia(): Observable<PedidoVeiculoEmergenciaDto[]> {
+    return this.http.get<PedidoVeiculoEmergenciaDto[]>(`${this.api}/emergencia/pedidos`);
+  }
+
+  ceder(mobilizacaoId: string, veiculoId: string, observacao: string | null): Observable<CessaoFeitaDto> {
+    return this.http.post<CessaoFeitaDto>(`${this.api}/emergencia/mobilizacao/${mobilizacaoId}/cessao`, { veiculoId, observacao });
+  }
+
+  devolver(cessaoId: string, quilometragem: number | null, observacao: string | null): Observable<CessaoVeiculoDto> {
+    return this.http.post<CessaoVeiculoDto>(`${this.api}/emergencia/cessao/${cessaoId}/devolucao`, { quilometragem, observacao });
   }
 
   quilometragem(de?: string | null, ate?: string | null): Observable<QuilometragemDto[]> {

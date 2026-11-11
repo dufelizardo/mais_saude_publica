@@ -29,6 +29,8 @@ import {
   SITUACOES_INVENTARIO,
   SITUACOES_REQUISICAO,
   TransferenciaEstoqueDto,
+  EmergenciaAbertaDto,
+  ReservaEstoqueDto,
 } from '../../../core/models/estoque';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { SetorResponseDto } from '../../../core/models/setor';
@@ -52,7 +54,9 @@ type Gaveta =
   | { tipo: 'motivoRequisicao'; requisicao: RequisicaoEstoqueDto; acao: 'cancelamento' | 'negacao' }
   | { tipo: 'receber'; transferencia: TransferenciaEstoqueDto }
   | { tipo: 'transferir' }
-  | { tipo: 'inventario'; inventario: InventarioEstoqueDto | null };
+  | { tipo: 'inventario'; inventario: InventarioEstoqueDto | null }
+  | { tipo: 'reserva'; item: ItemDeSaldoDto | null }
+  | { tipo: 'liberarReserva'; reserva: ReservaEstoqueDto };
 
 /**
  * Estoque e Almoxarifado (ADR-0177): o saldo da unidade por material, com os lotes; o livro de movimentação; os alertas de mínimo e
@@ -105,6 +109,10 @@ export class Estoque {
   protected readonly motivoAcao = signal('');
   protected readonly matricula = signal('');
   protected readonly moeda = moeda;
+  /** Estoque nas emergências (ADR-0191): as abertas para a reserva e o consumo, e as reservas da unidade. */
+  protected readonly emergenciasAbertas = signal<EmergenciaAbertaDto[]>([]);
+  protected readonly emergenciasAtivas = computed(() => this.emergenciasAbertas().filter((e) => e.situacao === 'ATIVA'));
+  protected readonly reservas = signal<ReservaEstoqueDto[]>([]);
 
   protected readonly aba = signal<Aba>('saldo');
   protected readonly unidades = signal<{ uuid: string; nome: string }[]>([]);
@@ -133,7 +141,8 @@ export class Estoque {
     materialId: [''], quantidade: [''], origem: ['NOTA_FISCAL' as OrigemEntradaEstoque], numeroLote: [''], validade: [''], custoUnitario: [''],
     documento: [''], fornecedor: [''],
   });
-  protected readonly saidaForm = this.fb.nonNullable.group({ quantidade: [''], loteId: [''], setorId: [''], justificativa: [''] });
+  protected readonly saidaForm = this.fb.nonNullable.group({ quantidade: [''], loteId: [''], setorId: [''], justificativa: [''], emergenciaId: [''] });
+  protected readonly reservaForm = this.fb.nonNullable.group({ emergenciaId: [''], materialId: [''], quantidade: [''], justificativa: [''] });
   protected readonly perdaForm = this.fb.nonNullable.group({ quantidade: [''], motivo: ['VENCIMENTO' as MotivoPerdaEstoque], justificativa: [''] });
   protected readonly ajusteForm = this.fb.nonNullable.group({ quantidadeContada: [''], justificativa: [''] });
   protected readonly minimoForm = this.fb.nonNullable.group({ materialId: [''], quantidadeMinima: [''] });
@@ -153,6 +162,7 @@ export class Estoque {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.authService.usuarioAtual().subscribe((u) => this.matricula.set(u?.profissionalMatricula ?? ''));
     this.service.centrais().pipe(catchError(() => of([]))).subscribe((c) => this.centrais.set(c));
+    this.service.emergenciasAbertas().pipe(catchError(() => of([]))).subscribe((e) => this.emergenciasAbertas.set(e));
     this.unidadeService.listar().pipe(catchError(() => of([]))).subscribe((l) => {
       const lista = l.map((u) => ({ uuid: u.uuid, nome: u.nome })).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
       this.unidades.set(lista);
@@ -183,6 +193,7 @@ export class Estoque {
     });
     this.carregarMovimentos();
     this.carregarCentral();
+    this.service.reservas({ unidadeId: id }).pipe(catchError(() => of([]))).subscribe((r) => this.reservas.set(r.filter((x) => x.situacao === 'ATIVA')));
   }
 
   protected carregarMovimentos(): void {
@@ -259,7 +270,7 @@ export class Estoque {
   }
 
   protected abrirSaida(item: ItemDeSaldoDto): void {
-    this.saidaForm.reset({ quantidade: '', loteId: '', setorId: '', justificativa: '' });
+    this.saidaForm.reset({ quantidade: '', loteId: '', setorId: '', justificativa: '', emergenciaId: '' });
     this.abrir({ tipo: 'saida', item });
   }
 
@@ -301,6 +312,7 @@ export class Estoque {
     const erros: Record<string, string> = {};
     const unidadeId = this.unidadeId();
     if (this.salvarCentral(g, erros)) return;
+    if (this.salvarReserva(g, erros)) return;
     switch (g.tipo) {
       case 'material': {
         const v = this.materialForm.getRawValue();
@@ -335,9 +347,11 @@ export class Estoque {
         const qtd = this.inteiro(v.quantidade);
         if (qtd == null || qtd <= 0) erros['quantidadeSaida'] = 'Informe uma quantidade inteira maior que zero.';
         else if (qtd > g.item.total) erros['quantidadeSaida'] = `Há ${g.item.total} em estoque.`;
+        else if (!v.emergenciaId && g.item.reservado > 0 && qtd > g.item.disponivel) erros['quantidadeSaida'] = `${g.item.reservado} estão reservados para emergência; ficam livres ${g.item.disponivel}.`;
         if (!this.validar(erros)) return;
         this.enviar(this.service.saida({ unidadeId, materialId: g.item.materialId, quantidade: qtd!, loteId: v.loteId || null, setorId: v.setorId || null,
-          justificativa: v.justificativa.trim() || null }), 'Saída registrada', (l) => `${g.item.nome} · ${l.length} lote(s)`);
+          justificativa: v.justificativa.trim() || null, emergenciaId: v.emergenciaId || null }), v.emergenciaId ? 'Consumo da emergência registrado' : 'Saída registrada',
+          (l) => `${g.item.nome} · ${l.length} lote(s)`);
         return;
       }
       case 'perda': {
@@ -520,6 +534,46 @@ export class Estoque {
       return;
     }
     this.enviar(req, acao === 'fechamento' ? 'Inventário fechado' : 'Inventário cancelado', (d) => `${d.comDiferenca} lote(s) com diferença`);
+  }
+
+  // ── Reserva para a emergência (ADR-0191) ──
+
+  protected abrirReserva(item: ItemDeSaldoDto | null): void {
+    this.reservaForm.reset({ emergenciaId: this.emergenciasAtivas()[0]?.uuid ?? '', materialId: item?.materialId ?? '', quantidade: '', justificativa: '' });
+    this.abrir({ tipo: 'reserva', item });
+  }
+
+  protected abrirLiberarReserva(r: ReservaEstoqueDto): void {
+    this.motivoAcao.set('');
+    this.abrir({ tipo: 'liberarReserva', reserva: r });
+  }
+
+  protected livreDoMaterial(id: string): number | null {
+    return this.saldo()?.itens.find((i) => i.materialId === id)?.disponivel ?? null;
+  }
+
+  private salvarReserva(g: Gaveta, erros: Record<string, string>): boolean {
+    if (g.tipo === 'reserva') {
+      const v = this.reservaForm.getRawValue();
+      const qtd = this.inteiro(v.quantidade);
+      const livre = this.livreDoMaterial(v.materialId);
+      if (!v.emergenciaId) erros['emergenciaReserva'] = 'Escolha a emergência.';
+      if (!v.materialId) erros['materialReserva'] = 'Escolha o material.';
+      if (qtd == null || qtd <= 0) erros['quantidadeReserva'] = 'Informe uma quantidade inteira maior que zero.';
+      else if (livre != null && qtd > livre) erros['quantidadeReserva'] = `Ficam livres ${livre} dentro da validade.`;
+      if (!v.justificativa.trim()) erros['justificativaReserva'] = 'Justifique a reserva.';
+      if (!this.validar(erros)) return true;
+      this.enviar(this.service.reservar({ emergenciaId: v.emergenciaId, unidadeId: this.unidadeId(), materialId: v.materialId, quantidade: qtd!,
+        justificativa: v.justificativa.trim() }), 'Reserva registrada', (r) => `${r.materialNome}: ${r.quantidade} para ${r.emergenciaNome}`);
+      return true;
+    }
+    if (g.tipo === 'liberarReserva') {
+      if (!this.motivoAcao().trim()) erros['motivoReserva'] = 'Informe o motivo.';
+      if (!this.validar(erros)) return true;
+      this.enviar(this.service.liberarReserva(g.reserva.uuid, this.motivoAcao().trim()), 'Reserva liberada', (r) => `${r.materialNome}: ${r.restante} livre(s) de novo`);
+      return true;
+    }
+    return false;
   }
 
   private salvarCentral(g: Gaveta, erros: Record<string, string>): boolean {

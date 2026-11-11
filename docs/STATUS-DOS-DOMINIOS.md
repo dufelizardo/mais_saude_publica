@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-08 (release 1.12.0)
+- **Atualizado em:** 2026-11-11 (ES3 e T3 em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -39,10 +39,10 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | ✅ | controle de qualidade interno; integrações (LIS, PACS, LACEN, BPA) no domínio 20 |
 | 11 | [Regulação](#11-regulação) | ✅ | RL1 e RL5 feitas (central de leitos, ficha do APH); SISREG, SIGTAP e telefonia do 192 no domínio 20 |
 | 12 | [Leitos / Internação](#12-leitos--internação) | ✅ | RL1 a RL4 feitas (central de leitos, eletiva e censo, laudo de AIH, prescrição e checagem); SIH e faturamento no domínio 20 |
-| 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 e ES2 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário); falta a ES3 (emergências) |
+| 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ✅ | ES1 a ES3 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário; reserva e consumo nas emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
-| 16 | [Transporte Sanitário](#16-transporte-sanitário) | 🟡 | T1 e T2 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem); falta a T3 (emergências) |
+| 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Qualidade não iniciada |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | 🟡 | GR1 feita (oferta e cotas da PPI na Regulação); GR2 (redes temáticas) e GR3 (cobertura) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 15 ✅ · 13 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 17 ✅ · 11 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -102,8 +102,6 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 |---|---|
 | Documentos D2 | V3 (autos da VISA), C2 (arquivos dos materiais) |
 | Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
-| Transporte T3 (16), com aprovação | E4 (veículos) |
-| Estoque ES3 (13), com aprovação | E4 (insumos) |
 
 ## 2. Domínios
 
@@ -343,18 +341,21 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 13. Estoque / Almoxarifado
 
-**Estado:** 🟡. Desenho na [ADR-0177](./adr/0177-estoque-e-almoxarifado.md); detalhe em
+**Estado:** ✅. Desenho na [ADR-0177](./adr/0177-estoque-e-almoxarifado.md); detalhe em
 [`estoque/MODELO-ESTOQUE.md`](./estoque/MODELO-ESTOQUE.md).
 
 **Temos:**
 - **ES1:** catálogo de materiais da rede (com ou sem lote e validade), estoque por unidade em lotes, livro de movimentação (entrada por
   nota fiscal, doação ou saldo inicial; saída por consumo para um setor, pelos lotes que vencem primeiro; perda; ajuste de inventário),
   estoque mínimo, alertas de mínimo e validade e o valor do estoque. Tela em Administrativo e o papel Almoxarife.
+- **ES3:** o insumo mobilizado pela emergência atendido pelo estoque (a requisição urgente à central ou a transferência ligada, com a
+  mobilização seguindo o estoque); a reserva para a emergência, que as saídas comuns não tocam; o consumo extraordinário marcado com a
+  emergência; a liberação na desmobilização e o consumo no relatório pós-evento ([ADR-0191](./adr/0191-estoque-nas-emergencias.md)).
 
 **Falta:**
 - [x] **ES2:** almoxarifado central (capacidade Central de abastecimento), requisição das unidades, transferência em duas etapas com
   divergência e inventário com fechamento ([ADR-0189](./adr/0189-estoque-central-requisicao-inventario.md)).
-- [ ] **ES3:** consumido pela mobilização em emergência: reserva, consumo extraordinário, redistribuição (domínio 27, E4).
+- [x] **ES3:** reserva, requisição urgente e consumo extraordinário nas emergências ([ADR-0191](./adr/0191-estoque-nas-emergencias.md)).
 - [ ] Fornecedor cadastrado e pedido de compra (domínio 14); custo médio e contabilidade (domínio 17); código de barras.
 
 ### 14. Compras / Contratos / Fornecedores
@@ -375,7 +376,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 16. Transporte Sanitário
 
-**Estado:** 🟡. Desenho na [ADR-0178](./adr/0178-transporte-sanitario.md); detalhe em
+**Estado:** ✅. Desenho na [ADR-0178](./adr/0178-transporte-sanitario.md); detalhe em
 [`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md).
 
 **Temos:**
@@ -385,9 +386,12 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - **T2:** solicitação de transporte eletivo (consulta, exame, hemodiálise, terapia seriada, alta, TFD) ligada ao agendamento, à
   regulação ou à internação, com acompanhante e recorrência; TFD com laudo e a Comissão de TFD; viagem com veículo, condutor, lugares,
   janela, embarques, saída, falta e chegada com a quilometragem; relatório por veículo ([ADR-0190](./adr/0190-transporte-eletivo-e-tfd.md)).
+- **T3:** o pedido de veículo da emergência cedido pela frota (em serviço até a devolução, com os avisos das viagens a reprogramar e a
+  viagem nova barrada), a devolução com a quilometragem, a devolução no fim do pedido e na desmobilização, a frota no detalhe da
+  emergência e os veículos no relatório pós-evento ([ADR-0192](./adr/0192-transporte-nas-emergencias.md)).
 
 **Falta:**
-- [ ] **T3:** consumido pela mobilização em emergência: veículos e ambulâncias (domínio 27, E4).
+- [x] **T3:** veículos cedidos às emergências ([ADR-0192](./adr/0192-transporte-nas-emergencias.md)).
 - [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (domínio 15); ajuda de custo e diárias do
   TFD (domínio 17); roteirização.
 
@@ -735,7 +739,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 - [x] **E3 · Coordenação** ([ADR-0158](./adr/0158-emergencias-coordenacao.md)): quadro de ações (geradas das ações
   previstas do plano ou avulsas; atrasadas no alto, também na Sala de Situação); mobilização registrada e executada pelo
   dono (o profissional mobilizado ganha turno na Escala sem lotação na unidade de destino, rastreável; o medicamento segue
-  a transferência da Farmácia; insumo, equipamento e veículo como necessidade); capacidade emergencial cadastrada por
+  a transferência da Farmácia; o insumo, o estoque, pela ES3; o veículo, a frota, pela T3; equipamento como necessidade); capacidade emergencial cadastrada por
   unidade e ativada na emergência até o limite; unidades afetadas com a situação operacional.
 - [x] **E5 · Pós-evento** ([ADR-0159](./adr/0159-emergencias-desmobilizacao-e-relatorio.md)): situação "em
   desmobilização" (libera de uma vez mobilizações, capacidade e planos, bloqueia o que é novo, mostra as pendências);
@@ -756,8 +760,8 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 **Falta:**
 - [ ] A escolha manual das microáreas na tela (a API aceita a lista).
 - [ ] **E4 · Integração da rede:** redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas,
-  pacientes deslocados; Estoque e Transporte quando existirem.
-- [ ] Ambulâncias da estrutura como veículos (depende de Transporte) e hospital de campanha com leitos próprios.
+  pacientes deslocados (o Estoque e o Transporte já atendem a mobilização: [ADR-0191](./adr/0191-estoque-nas-emergencias.md) e [ADR-0192](./adr/0192-transporte-nas-emergencias.md)).
+- [ ] Ambulâncias da estrutura como veículos cedidos (a cessão já existe na T3) e hospital de campanha com leitos próprios.
 - [x] Comunicação de risco à população, pelo comunicado emergencial (domínio 28, [ADR-0168](./adr/0168-comunicacao-basica.md)).
 
 ### 28. Comunicação e Educação em Saúde

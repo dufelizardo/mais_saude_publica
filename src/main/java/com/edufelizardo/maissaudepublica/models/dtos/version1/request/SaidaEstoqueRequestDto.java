@@ -32,4 +32,6 @@ public class SaidaEstoqueRequestDto implements Serializable {
     @Size(max = 500, message = "A observação vai até 500 caracteres.")
     private String justificativa;
     private String profissionalMatricula;
+    /** O consumo extraordinário de uma emergência ativa ou em desmobilização (ADR-0191): pode usar a reserva dela. */
+    private java.util.UUID emergenciaId;
 }

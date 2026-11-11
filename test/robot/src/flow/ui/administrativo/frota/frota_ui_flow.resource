@@ -4,6 +4,7 @@ Library     String
 Resource    ../../../../pom/common/mais_saude_publica_ui_common.resource
 Resource    ../../../transporte/transporte_flow.resource
 Resource    ../../../transporte/transporte_eletivo_flow.resource
+Resource    ../../../transporte/frota_emergencia_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Frota e transporte (ADR-0178) e do transporte eletivo (ADR-0190).
@@ -107,5 +108,37 @@ UI Frota - Programar Viagem Ate A Chegada
     Should Contain    ${aviso}    45 km
     ${s}=    Situacao Da Solicitacao    ${sol}
     Should Be Equal    ${s}    REALIZADA
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Frota - Ceder E Devolver A Emergencia
+    [Documentation]    O pedido de veículo da emergência aparece na aba Frota; a frota cede a van, que fica em serviço, e devolve com a quilometragem (ADR-0192).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${garagem}=    Seed A Unidade De Saude Uuid
+    ${destino}=    Seed A Unidade De Saude Uuid
+    ${van}    ${prefixo}=    Seed Viatura    VAN_SANITARIA    ${garagem}
+    ${em}=    Seed Emergencia
+    ${sufixo}=    Generate Random String    5    [UPPER][NUMBERS]
+    ${recurso}=    Set Variable    Van para remoções ${sufixo}
+    ${pedido}=    Pedido De Veiculo    ${em.json()}[uuid]    ${destino}    ${recurso}    ${1}
+    Ir Para Rota Do Frontend    /administrativo/frota
+    Wait For Elements State    css=h1 >> text=Frota e transporte    visible
+    Click    id=tab-frota
+    Wait For Elements State    css=ul[aria-label="Pedidos de veículo das emergências"] >> text=${recurso}    visible
+    Clicar Botao    Ceder veículo: ${recurso}
+    Wait For Elements State    css=#f-veiculoCessao option[value="${van}"]    attached
+    Select Options By    id=f-veiculoCessao    value    ${van}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Veículo cedido
+    ${s}=    Situacao Do Veiculo    ${van}
+    Should Be Equal    ${s}    EM_SERVICO
+    Clicar Botao    Devolver ${prefixo}
+    Preencher Campo Da Gaveta    kmCessao    120
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Veículo devolvido
+    ${s}=    Situacao Do Veiculo    ${van}
+    Should Be Equal    ${s}    DISPONIVEL
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

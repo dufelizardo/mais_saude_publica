@@ -75,6 +75,9 @@ public class EmergenciaDto implements Serializable {
     private List<MobilizacaoItem> mobilizacoes;
     private List<CapacidadeAtivada> capacidades;
     private List<UnidadeAfetada> unidadesAfetadas;
+    /** ES3 (ADR-0191): as reservas e o consumo extraordinário; T3 (ADR-0192): os veículos cedidos e a frota das unidades afetadas. */
+    private EstoqueEmergenciaDtos.Resumo estoque;
+    private FrotaEmergenciaDtos.Frota frota;
     /** A desmobilização (ADR-0159), quando iniciada, e o que falta para encerrar. */
     private DesmobilizacaoItem desmobilizacao;
     private List<String> pendencias;
@@ -266,6 +269,15 @@ public class EmergenciaDto implements Serializable {
         private StatusTransferenciaFarmacia transferenciaStatus;
         private boolean autorizaEscala;
         private String motivoCancelamento;
+        /** ES3 (ADR-0191): o material do insumo e o que o estoque fez (a requisição urgente ou a transferência ligada). */
+        private UUID materialId;
+        private String materialNome;
+        private UUID requisicaoEstoqueId;
+        private com.edufelizardo.maissaudepublica.models.enuns.SituacaoRequisicaoEstoque requisicaoEstoqueSituacao;
+        private UUID transferenciaEstoqueId;
+        private com.edufelizardo.maissaudepublica.models.enuns.SituacaoTransferenciaEstoque transferenciaEstoqueSituacao;
+        /** T3 (ADR-0192): os veículos cedidos pela frota ao pedido. */
+        private List<FrotaEmergenciaDtos.Cessao> cessoes;
     }
 
     /** Capacidade emergencial ativada na emergência. */

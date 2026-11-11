@@ -1,3 +1,6 @@
+import type { EstoqueDaEmergenciaDto } from './estoque';
+import type { CessaoVeiculoDto, FrotaDaEmergenciaDto } from './transporte';
+
 // ── Emergências e Desastres, fatia E1 (ADR-0156): evento, emergência, nível, território e impacto ──
 
 export type CategoriaTipoEmergencia = 'DESASTRE' | 'SAUDE';
@@ -123,6 +126,9 @@ export interface EmergenciaDto {
   acoes: AcaoEmergencialDto[];
   acoesAtrasadas: number;
   mobilizacoes: MobilizacaoDto[];
+  /** ES3 (ADR-0191) e T3 (ADR-0192). */
+  estoque?: EstoqueDaEmergenciaDto | null;
+  frota?: FrotaDaEmergenciaDto | null;
   capacidades: CapacidadeAtivadaDto[];
   unidadesAfetadas: { uuid: string; nome: string; situacaoOperacional: string }[];
   /** A desmobilização (ADR-0159), quando iniciada, e o que falta para encerrar. */
@@ -227,6 +233,15 @@ export interface MobilizacaoDto {
   transferenciaStatus: string | null;
   autorizaEscala: boolean;
   motivoCancelamento: string | null;
+  /** ES3 (ADR-0191): o material do insumo e o que o estoque fez com ele. */
+  materialId?: string | null;
+  materialNome?: string | null;
+  requisicaoEstoqueId?: string | null;
+  requisicaoEstoqueSituacao?: string | null;
+  transferenciaEstoqueId?: string | null;
+  transferenciaEstoqueSituacao?: string | null;
+  /** T3 (ADR-0192): os veículos cedidos pela frota. */
+  cessoes?: CessaoVeiculoDto[] | null;
 }
 
 export interface CapacidadeAtivadaDto {

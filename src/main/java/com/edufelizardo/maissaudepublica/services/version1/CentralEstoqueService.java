@@ -202,6 +202,8 @@ public class CentralEstoqueService {
                 throw new ResourceUnprocessableEntityException("A central tem " + disponivel + " de " + i.getMaterial().getNome()
                         + " dentro da validade; não dá para atender " + i.getQuantidadeAtendida() + ".");
             }
+            UUID emergenciaId = r.getEmergencia() != null ? r.getEmergencia().getUuid() : null;
+            estoqueService.exigirForaDaReserva(i.getMaterial(), r.getCentral(), lotes, i.getQuantidadeAtendida(), emergenciaId, hoje);
             int falta = i.getQuantidadeAtendida();
             for (LoteMaterial l : lotes) {
                 if (falta == 0) {
@@ -210,6 +212,9 @@ public class CentralEstoqueService {
                 int tirar = Math.min(falta, l.getQuantidade());
                 enviar(t, l, tirar, quem, "Requisição de " + r.getUnidade().getNome());
                 falta -= tirar;
+            }
+            if (emergenciaId != null) {
+                estoqueService.abaterReserva(r.getCentral().getUuid(), i.getMaterial().getUuid(), emergenciaId, i.getQuantidadeAtendida());
             }
             itemRequisicaoRepository.save(i);
         }
@@ -232,6 +237,8 @@ public class CentralEstoqueService {
                 // A central não vê o rascunho da unidade.
                 .filter(r -> visivel(daUnidade, r.getUnidade())
                         || (r.getSituacao() != SituacaoRequisicaoEstoque.RASCUNHO && visivel(daCentral, r.getCentral())))
+                // A requisição urgente da emergência ainda por atender vem no alto da fila (ADR-0191).
+                .sorted(Comparator.comparing((RequisicaoEstoque r) -> !(r.getEmergencia() != null && r.getSituacao() == SituacaoRequisicaoEstoque.ENVIADA)))
                 .toList();
         Map<UUID, List<ItemRequisicaoEstoque>> itens = lista.isEmpty() ? Map.of()
                 : itemRequisicaoRepository.findByRequisicao_UuidIn(lista.stream().map(RequisicaoEstoque::getUuid).toList()).stream()
@@ -271,6 +278,8 @@ public class CentralEstoqueService {
         Profissional quem = estoqueService.profissionalPorMatricula(dto.getProfissionalMatricula());
         TransferenciaEstoque t = novaTransferencia(origem, destino, null, texto(dto.getObservacao()), quem);
         LocalDate hoje = LocalDate.now();
+        Map<UUID, Integer> porMaterial = new HashMap<>();
+        Map<UUID, MaterialEstoque> materiais = new HashMap<>();
         for (OperacaoEstoqueRequestDto.Item i : dto.getItens()) {
             if (i.getLoteId() == null || i.getQuantidade() == null || i.getQuantidade() < 1) {
                 throw new ResourceBadRequestException("Cada item pede o lote e a quantidade.");
@@ -286,6 +295,19 @@ public class CentralEstoqueService {
                 throw new ResourceUnprocessableEntityException("O lote tem " + l.getQuantidade() + "; não dá para transferir " + i.getQuantidade() + ".");
             }
             enviar(t, l, i.getQuantidade(), quem, "Transferência para " + destino.getNome());
+            porMaterial.merge(l.getMaterial().getUuid(), i.getQuantidade(), Integer::sum);
+            materiais.put(l.getMaterial().getUuid(), l.getMaterial());
+        }
+        // Depois do envio o saldo já caiu: o que sobrou dentro da validade precisa cobrir o reservado (a avulsa não usa a reserva).
+        for (Map.Entry<UUID, Integer> e : porMaterial.entrySet()) {
+            MaterialEstoque m = materiais.get(e.getKey());
+            int reservado = estoqueService.reservado(origem.getUuid(), m.getUuid(), null);
+            int sobra = loteRepository.findDoMaterialNaUnidadeParaAtualizar(m.getUuid(), origem.getUuid()).stream()
+                    .filter(l -> !l.vencido(hoje)).mapToInt(LoteMaterial::getQuantidade).sum();
+            if (sobra < reservado) {
+                throw new ResourceUnprocessableEntityException(reservado + " de " + m.getNome() + " estão reservados para emergência na origem; ficam livres "
+                        + Math.max(0, sobra + e.getValue() - reservado) + ", não dá para transferir " + e.getValue() + ".");
+            }
         }
         return transferencia(t);
     }
@@ -379,6 +401,55 @@ public class CentralEstoqueService {
             controleDeAcesso.exigirVisivel(t.getDestino(), VER_UNIDADE);
         }
         return transferencia(t);
+    }
+
+    // ── Emergências (ES3, ADR-0191) ───────────────────────────────────────────────────────────────
+
+    /**
+     * A requisição urgente que a coordenação da emergência gera para a mobilização de insumo, já enviada à central (não é central, 422;
+     * a própria unidade, 422; material inativo, 422). A central atende pelo fluxo de sempre e pode usar a reserva da emergência.
+     */
+    RequisicaoEstoque requisicaoDaEmergencia(com.edufelizardo.maissaudepublica.models.Emergencia em, UnidadeDeSaude unidade, UnidadeDeSaude central,
+                                             MaterialEstoque material, int quantidade, String observacao) {
+        if (!material.isAtivo()) {
+            throw new ResourceUnprocessableEntityException("O material " + material.getNome() + " está inativo no catálogo.");
+        }
+        RequisicaoEstoque r = new RequisicaoEstoque();
+        r.setUnidade(unidade);
+        r.setSituacao(SituacaoRequisicaoEstoque.ENVIADA);
+        r.setSolicitante(estoqueService.profissionalPorMatricula(null));
+        r.setCriadaEm(Instant.now());
+        r.setEnviadaEm(r.getCriadaEm());
+        r.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        r.setEmergencia(em);
+        OperacaoEstoqueRequestDto dto = new OperacaoEstoqueRequestDto();
+        dto.setCentralId(central.getUuid());
+        dto.setPrioridade(PrioridadeRequisicaoEstoque.URGENTE);
+        dto.setObservacao(observacao);
+        preencher(r, dto);
+        r = requisicaoRepository.save(r);
+        ItemRequisicaoEstoque item = new ItemRequisicaoEstoque();
+        item.setRequisicao(r);
+        item.setMaterial(material);
+        item.setQuantidadePedida(quantidade);
+        itemRequisicaoRepository.save(item);
+        return r;
+    }
+
+    /** A mobilização cancelada pela coordenação leva junto a requisição ainda não atendida (atendida, 422). */
+    void cancelarDaEmergencia(RequisicaoEstoque r, String motivo) {
+        RequisicaoEstoque atual = travarRequisicao(r.getUuid());
+        if (atual.getSituacao() != SituacaoRequisicaoEstoque.ENVIADA) {
+            throw new ResourceUnprocessableEntityException("A requisição já está " + atual.getSituacao() + ": a mobilização segue o estoque.");
+        }
+        atual.setSituacao(SituacaoRequisicaoEstoque.CANCELADA);
+        atual.setMotivo(motivo);
+        atual.setDecididaEm(Instant.now());
+        requisicaoRepository.save(atual);
+    }
+
+    TransferenciaEstoque transferenciaPorId(UUID uuid) {
+        return transferenciaRepository.findById(uuid).orElseThrow(() -> naoEncontrada("a transferência de estoque", uuid));
     }
 
     // ── Apoio ─────────────────────────────────────────────────────────────────────────────────────
@@ -475,8 +546,10 @@ public class CentralEstoqueService {
                         saldoUnidade.getOrDefault(i.getMaterial().getUuid(), 0), consumo.getOrDefault(i.getMaterial().getUuid(), 0),
                         saldoCentral.getOrDefault(i.getMaterial().getUuid(), 0))).toList();
         return new CentralEstoqueDtos.Requisicao(r.getUuid(), r.getUnidade().getUuid(), r.getUnidade().getNome(), r.getCentral().getUuid(), r.getCentral().getNome(),
-                r.getPrioridade(), r.getSituacao(), parcial, r.getObservacao(), r.getSolicitante().getNome(), r.getCriadaEm(), r.getEnviadaEm(), r.getDecididaEm(),
-                r.getAtendente() != null ? r.getAtendente().getNome() : null, r.getMotivo(), r.getTransferenciaId(), r.getRecebidaEm(), lista);
+                r.getPrioridade(), r.getSituacao(), parcial, r.getObservacao(),
+                r.getSolicitante() != null ? r.getSolicitante().getNome() : "Coordenação da emergência", r.getCriadaEm(), r.getEnviadaEm(), r.getDecididaEm(),
+                r.getAtendente() != null ? r.getAtendente().getNome() : null, r.getMotivo(), r.getTransferenciaId(), r.getRecebidaEm(), lista,
+                r.getEmergencia() != null ? r.getEmergencia().getUuid() : null, r.getEmergencia() != null ? r.getEmergencia().getNome() : null);
     }
 
     /** Saldo dentro da validade por material na unidade. */

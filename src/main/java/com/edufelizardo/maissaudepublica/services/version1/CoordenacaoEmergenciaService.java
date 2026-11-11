@@ -71,6 +71,11 @@ class CoordenacaoEmergenciaService {
     @Autowired private UnidadeDeSaudeRepository unidadeRepository;
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private TransferenciaFarmaciaRepository transferenciaRepository;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.MaterialEstoqueRepository materialRepository;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.UnidadeCapacidadeAssistencialRepository capacidadeAssistencialRepository;
+    @Autowired private CentralEstoqueService centralEstoqueService;
+    @Autowired private EstoqueEmergenciaService estoqueEmergenciaService;
+    @Autowired private FrotaEmergenciaService frotaEmergenciaService;
 
     // ── Ações ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -190,6 +195,18 @@ class CoordenacaoEmergenciaService {
             m.setProfissional(p);
             m.setRecurso(texto(dto.getRecurso()) != null ? dto.getRecurso().trim() : p.getNome());
             m.setSituacao(SituacaoMobilizacao.EM_ANDAMENTO);
+        } else if (dto.getMaterialId() != null) {
+            if (dto.getTipo() != TipoMobilizacao.INSUMO) {
+                throw new ResourceUnprocessableEntityException("Só a mobilização de insumo aponta o material do estoque.");
+            }
+            if (dto.getQuantidade() == null) {
+                throw new ResourceBadRequestException("Informe a quantidade do material.");
+            }
+            com.edufelizardo.maissaudepublica.models.MaterialEstoque material = materialRepository.findById(dto.getMaterialId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar o material " + dto.getMaterialId() + " em nossos registros."));
+            m.setMaterial(material);
+            m.setRecurso(texto(dto.getRecurso()) != null ? dto.getRecurso().trim() : material.getNome());
+            m.setSituacao(SituacaoMobilizacao.SOLICITADA);
         } else {
             if (texto(dto.getRecurso()) == null) {
                 throw new ResourceBadRequestException("Descreva o recurso mobilizado.");
@@ -211,8 +228,15 @@ class CoordenacaoEmergenciaService {
         m.setFim(dto.getFim());
         m.setRegistradaEm(Instant.now());
         m.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        // ES3: insumo do catálogo com a origem central vira a requisição urgente da emergência, já enviada (ADR-0191).
+        if (m.getMaterial() != null && m.getOrigem() != null && capacidadeAssistencialRepository.existsByUnidade_UuidAndCapacidade_CodigoAndFimIsNull(
+                m.getOrigem().getUuid(), CentralEstoqueService.CAPACIDADE_CENTRAL)) {
+            m.setRequisicaoEstoque(centralEstoqueService.requisicaoDaEmergencia(em, m.getDestino(), m.getOrigem(), m.getMaterial(), m.getQuantidade(),
+                    "Emergência " + em.getNome() + (m.getResponsavel() != null ? " · " + m.getResponsavel() : "")));
+        }
         mobilizacaoRepository.save(m);
-        ContextoAuditoria.detalhe("Mobilização " + m.getTipo() + ": " + m.getRecurso() + " para a " + m.getDestino().getNome() + ".");
+        ContextoAuditoria.detalhe("Mobilização " + m.getTipo() + ": " + m.getRecurso() + " para a " + m.getDestino().getNome()
+                + (m.getRequisicaoEstoque() != null ? " (requisição urgente à " + m.getOrigem().getNome() + ")" : "") + ".");
     }
 
     /**
@@ -224,6 +248,19 @@ class CoordenacaoEmergenciaService {
         Mobilizacao m = mobilizacao(em, id);
         if (m.getTransferencia() != null) {
             throw new ResourceUnprocessableEntityException("A mobilização segue a transferência da Farmácia ligada a ela.");
+        }
+        if (m.getTransferenciaEstoque() != null) {
+            throw new ResourceUnprocessableEntityException("A mobilização segue a transferência do estoque ligada a ela.");
+        }
+        if (m.getRequisicaoEstoque() != null) {
+            // Cancelar a mobilização ainda não atendida leva junto a requisição; o resto segue o estoque (422).
+            if (dto.getSituacao() != SituacaoMobilizacao.CANCELADA) {
+                throw new ResourceUnprocessableEntityException("A mobilização segue a requisição urgente ao estoque.");
+            }
+            if (texto(dto.getMotivo()) == null) {
+                throw new ResourceBadRequestException("Informe o motivo do cancelamento.");
+            }
+            centralEstoqueService.cancelarDaEmergencia(m.getRequisicaoEstoque(), dto.getMotivo().trim());
         }
         if (!aberta(m)) {
             throw new ResourceUnprocessableEntityException("A mobilização já foi " + (m.getSituacao() == SituacaoMobilizacao.CONCLUIDA ? "concluída." : "cancelada."));
@@ -244,14 +281,35 @@ class CoordenacaoEmergenciaService {
         }
         m.setSituacao(dto.getSituacao());
         mobilizacaoRepository.save(m);
+        if (m.getTipo() == TipoMobilizacao.VEICULO && (dto.getSituacao() == SituacaoMobilizacao.CONCLUIDA || dto.getSituacao() == SituacaoMobilizacao.CANCELADA)) {
+            frotaEmergenciaService.devolverDaMobilizacao(m, "Pedido " + (dto.getSituacao() == SituacaoMobilizacao.CONCLUIDA ? "concluído" : "cancelado")
+                    + " pela coordenação.");
+        }
         ContextoAuditoria.detalhe("Mobilização " + dto.getSituacao() + ".");
     }
 
-    /** Liga a mobilização de medicamento (422 nos demais) a uma transferência da Farmácia para a mesma unidade de destino (422). */
+    /**
+     * Liga a mobilização de medicamento a uma transferência da Farmácia, ou a de insumo a uma transferência do estoque (ES3), para a
+     * mesma unidade de destino (422). Os demais tipos, 422; o insumo já ligado à requisição urgente, 422.
+     */
     void ligarTransferencia(Emergencia em, UUID id, TransferenciaMobilizacaoRequestDto dto) {
         Mobilizacao m = mobilizacao(em, id);
+        if (m.getTipo() == TipoMobilizacao.INSUMO) {
+            if (m.getRequisicaoEstoque() != null) {
+                throw new ResourceUnprocessableEntityException("A mobilização já segue a requisição urgente ao estoque.");
+            }
+            com.edufelizardo.maissaudepublica.models.TransferenciaEstoque t = centralEstoqueService.transferenciaPorId(dto.getTransferenciaId());
+            if (!t.getDestino().getUuid().equals(m.getDestino().getUuid())) {
+                throw new ResourceUnprocessableEntityException("A transferência vai para a " + t.getDestino().getNome() + ", não para a "
+                        + m.getDestino().getNome() + ".");
+            }
+            m.setTransferenciaEstoque(t);
+            mobilizacaoRepository.save(m);
+            ContextoAuditoria.detalhe("Mobilização ligada à transferência de estoque " + t.getUuid() + ".");
+            return;
+        }
         if (m.getTipo() != TipoMobilizacao.MEDICAMENTO) {
-            throw new ResourceUnprocessableEntityException("Só a mobilização de medicamento se liga a uma transferência da Farmácia.");
+            throw new ResourceUnprocessableEntityException("Só a mobilização de medicamento ou de insumo se liga a uma transferência.");
         }
         TransferenciaFarmacia t = transferenciaRepository.findById(dto.getTransferenciaId()).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar a transferência " + dto.getTransferenciaId() + " em nossos registros."));
@@ -308,10 +366,13 @@ class CoordenacaoEmergenciaService {
         int mobilizacoes = 0;
         int profissionais = 0;
         for (Mobilizacao m : mobilizacaoRepository.findDaEmergencia(em.getUuid())) {
-            if (!aberta(m) || m.getTransferencia() != null) {
+            if (!aberta(m) || ligada(m)) {
                 continue;
             }
             m.setSituacao(SituacaoMobilizacao.CONCLUIDA);
+            if (m.getTipo() == TipoMobilizacao.VEICULO) {
+                frotaEmergenciaService.devolverDaMobilizacao(m, "Desmobilização da emergência.");
+            }
             if (m.getFim() == null || m.getFim().isAfter(hoje)) {
                 m.setFim(hoje.isBefore(m.getInicio()) ? m.getInicio() : hoje);
             }
@@ -381,7 +442,10 @@ class CoordenacaoEmergenciaService {
                         a.getObservacao())).toList());
         d.setAcoesAtrasadas((int) acoes.stream().filter(a -> a.atrasada(agora)).count());
         LocalDate hoje = LocalDate.now();
-        d.setMobilizacoes(mobilizacaoRepository.findDaEmergencia(em.getUuid()).stream().map(m -> {
+        List<Mobilizacao> mobilizacoes = mobilizacaoRepository.findDaEmergencia(em.getUuid());
+        java.util.Map<UUID, List<com.edufelizardo.maissaudepublica.models.dtos.version1.response.FrotaEmergenciaDtos.Cessao>> cessoes =
+                frotaEmergenciaService.cessoes(mobilizacoes.stream().filter(m -> m.getTipo() == TipoMobilizacao.VEICULO).map(Mobilizacao::getUuid).toList());
+        d.setMobilizacoes(mobilizacoes.stream().map(m -> {
             SituacaoMobilizacao s = situacaoEfetiva(m);
             boolean autoriza = m.getTipo() == TipoMobilizacao.PROFISSIONAL && s == SituacaoMobilizacao.EM_ANDAMENTO && !m.getInicio().isAfter(hoje)
                     && (m.getFim() == null || !m.getFim().isBefore(hoje)) && em.getSituacao() == com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia.ATIVA;
@@ -389,7 +453,13 @@ class CoordenacaoEmergenciaService {
                     m.getDestino().getNome(), m.getProfissional() != null ? m.getProfissional().getMatricula() : null,
                     m.getProfissional() != null ? m.getProfissional().getNome() : null, m.getRecurso(), m.getQuantidade(), m.getResponsavel(), m.getInicio(),
                     m.getFim(), s, m.getTransferencia() != null ? m.getTransferencia().getUuid() : null,
-                    m.getTransferencia() != null ? m.getTransferencia().getStatus() : null, autoriza, m.getMotivoCancelamento());
+                    m.getTransferencia() != null ? m.getTransferencia().getStatus() : null, autoriza, motivo(m),
+                    m.getMaterial() != null ? m.getMaterial().getUuid() : null, m.getMaterial() != null ? m.getMaterial().getNome() : null,
+                    m.getRequisicaoEstoque() != null ? m.getRequisicaoEstoque().getUuid() : null,
+                    m.getRequisicaoEstoque() != null ? m.getRequisicaoEstoque().getSituacao() : null,
+                    m.getTransferenciaEstoque() != null ? m.getTransferenciaEstoque().getUuid() : null,
+                    m.getTransferenciaEstoque() != null ? m.getTransferenciaEstoque().getSituacao() : null,
+                    m.getTipo() == TipoMobilizacao.VEICULO ? cessoes.getOrDefault(m.getUuid(), List.of()) : null);
         }).toList());
         d.setCapacidades(ativacaoCapacidadeRepository.findDaEmergencia(em.getUuid()).stream()
                 .sorted(Comparator.comparing((AtivacaoCapacidade a) -> a.getSituacao() != SituacaoAtivacaoCapacidade.ATIVA))
@@ -399,10 +469,29 @@ class CoordenacaoEmergenciaService {
         d.setUnidadesAfetadas(ultima == null ? List.of() : ultima.getUnidadesAfetadas().stream()
                 .sorted(Comparator.comparing(UnidadeDeSaude::getNome, String.CASE_INSENSITIVE_ORDER))
                 .map(u -> new EmergenciaDto.UnidadeAfetada(u.getUuid(), u.getNome(), u.getSituacaoOperacional())).toList());
+        d.setEstoque(estoqueEmergenciaService.resumo(em));
+        d.setFrota(frotaEmergenciaService.frota(em, mobilizacoes, ultima == null ? List.of() : ultima.getUnidadesAfetadas()));
+    }
+
+    /** Desmobilizar ou encerrar libera as reservas de estoque da emergência (ES3); devolve quantas. */
+    int liberarReservas(Emergencia em, String motivo) {
+        return estoqueEmergenciaService.liberarDaEmergencia(em, motivo);
     }
 
     /** A ligada a uma transferência acompanha a dela: recebida conclui, cancelada cancela, em trânsito anda. */
     private static SituacaoMobilizacao situacaoEfetiva(Mobilizacao m) {
+        if (m.getRequisicaoEstoque() != null) {
+            return switch (m.getRequisicaoEstoque().getSituacao()) {
+                case RASCUNHO, ENVIADA -> SituacaoMobilizacao.SOLICITADA;
+                case ATENDIDA -> SituacaoMobilizacao.EM_ANDAMENTO;
+                case RECEBIDA -> SituacaoMobilizacao.CONCLUIDA;
+                case NEGADA, CANCELADA -> SituacaoMobilizacao.CANCELADA;
+            };
+        }
+        if (m.getTransferenciaEstoque() != null) {
+            return m.getTransferenciaEstoque().getSituacao() == com.edufelizardo.maissaudepublica.models.enuns.SituacaoTransferenciaEstoque.RECEBIDA
+                    ? SituacaoMobilizacao.CONCLUIDA : SituacaoMobilizacao.EM_ANDAMENTO;
+        }
         TransferenciaFarmacia t = m.getTransferencia();
         if (t == null) {
             return m.getSituacao();
@@ -412,6 +501,19 @@ class CoordenacaoEmergenciaService {
             return SituacaoMobilizacao.CANCELADA;
         }
         return s == StatusTransferenciaFarmacia.EM_TRANSITO ? SituacaoMobilizacao.EM_ANDAMENTO : SituacaoMobilizacao.CONCLUIDA;
+    }
+
+    /** A ligada a um dono (Farmácia ou estoque) segue a situação dele. */
+    private static boolean ligada(Mobilizacao m) {
+        return m.getTransferencia() != null || m.getRequisicaoEstoque() != null || m.getTransferenciaEstoque() != null;
+    }
+
+    /** O motivo do cancelamento; a requisição negada ou cancelada traz o motivo do estoque. */
+    private static String motivo(Mobilizacao m) {
+        if (m.getRequisicaoEstoque() != null && m.getRequisicaoEstoque().getMotivo() != null) {
+            return m.getRequisicaoEstoque().getMotivo();
+        }
+        return m.getMotivoCancelamento();
     }
 
     private static boolean aberta(Mobilizacao m) {

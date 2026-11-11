@@ -181,7 +181,7 @@ real":
   - ~~#11 Regulação~~ — ADRs 0087 a 0089 (falta a regulação de urgência e de internação);
   - ~~#12 Leitos e internação~~ — ADRs 0098 a 0100;
   - #16 Transporte sanitário — ~~T1 (frota, plantão, viatura no SAMU)~~ — ADR-0178; ~~T2 (transporte eletivo e TFD)~~ — ADR-0190;
-    T3 (emergências) com aprovação; conceder o papel **Coordenador de frota**, o **Comissão de TFD** e `TRANSPORTE.SOLICITAR` às
+    ~~T3 (veículos nas emergências)~~ — ADR-0192; conceder o papel **Coordenador de frota**, o **Comissão de TFD** e `TRANSPORTE.SOLICITAR` às
     recepções quando a autorização for ligada; ajuda de custo e diárias do TFD (financeiro);
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
     coletivas e equipe (programas pela ADR-0132; especialidade pela ADR-0134);
@@ -189,7 +189,7 @@ real":
   - na Enfermagem, `Cuidado` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
   - #13 Estoque — ~~ES1 (catálogo, lotes, livro, mínimo e alertas)~~ — ADR-0177; ~~ES2 (central, requisição, transferência,
-    inventário)~~ — ADR-0189; ES3 (emergências) com aprovação; ponto de reposição automático; incluir a capacidade Central de
+    inventário)~~ — ADR-0189; ~~ES3 (reserva e consumo nas emergências)~~ — ADR-0191; ponto de reposição automático; incluir a capacidade Central de
     abastecimento no almoxarifado central; conceder o papel **Almoxarife** quando a autorização for ligada;
   - #14 Compras;
   - #15 Patrimônio;

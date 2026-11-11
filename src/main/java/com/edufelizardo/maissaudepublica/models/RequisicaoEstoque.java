@@ -51,7 +51,7 @@ public class RequisicaoEstoque implements Serializable {
     private String observacao;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "solicitante_id", referencedColumnName = "uuid", nullable = false)
+    @JoinColumn(name = "solicitante_id", referencedColumnName = "uuid")
     private Profissional solicitante;
 
     @NotNull
@@ -71,6 +71,13 @@ public class RequisicaoEstoque implements Serializable {
 
     /** A transferência gerada pelo atendimento. */
     private UUID transferenciaId;
+
+    /** A emergência que gerou a requisição urgente (ES3, ADR-0191); o atendimento pode usar a reserva dela na central. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "emergencia_id", referencedColumnName = "uuid", updatable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Emergencia emergencia;
 
     private Instant recebidaEm;
 

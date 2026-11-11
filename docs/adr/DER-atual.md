@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **286 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V75). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **288 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V76). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -201,3 +201,4 @@ listadas aqui pela migração que criou cada uma (até a V75). A fonte de verdad
 | V73 | `tb_ficha_aph`, `tb_ficha_aph_procedimento`, `tb_sinais_vitais_aph`, `tb_medicamento_aph`, `tb_adendo_ficha_aph` |
 | V74 | `tb_requisicao_estoque`, `tb_item_requisicao_estoque`, `tb_transferencia_estoque`, `tb_item_transferencia_estoque`, `tb_inventario_estoque`, `tb_item_inventario_estoque` (e a capacidade Central de abastecimento) |
 | V75 | `tb_solicitacao_transporte`, `tb_viagem_transporte`, `tb_embarque_viagem` |
+| V76 | `tb_reserva_estoque`, `tb_cessao_veiculo` (e as ligações da mobilização ao estoque, a emergência na requisição e no consumo) |

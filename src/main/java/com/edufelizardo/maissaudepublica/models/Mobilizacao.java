@@ -73,6 +73,19 @@ public class Mobilizacao implements Serializable {
     private TransferenciaFarmacia transferencia;
 
     /** A capacidade de leitos ativada que a mobilização de leito usa. */
+    /** ES3 (ADR-0191): o material do insumo e, quando atendido pelo estoque, a requisição urgente ou a transferência ligada. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "material_id", referencedColumnName = "uuid")
+    private MaterialEstoque material;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requisicao_estoque_id", referencedColumnName = "uuid")
+    private RequisicaoEstoque requisicaoEstoque;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transferencia_estoque_id", referencedColumnName = "uuid")
+    private TransferenciaEstoque transferenciaEstoque;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "capacidade_ativacao_id", referencedColumnName = "uuid")
     private AtivacaoCapacidade capacidadeAtivacao;

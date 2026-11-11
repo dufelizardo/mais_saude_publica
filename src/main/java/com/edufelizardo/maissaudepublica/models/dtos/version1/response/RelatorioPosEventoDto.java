@@ -123,5 +123,11 @@ public class RelatorioPosEventoDto implements Serializable {
         private Integer obitosAgravo;
         private int exposicoes;
         private Integer populacaoExpostaMaxima;
+        /** ES3 (ADR-0191): o consumo extraordinário; T3 (ADR-0192): os veículos cedidos, os dias de uso e os quilômetros. */
+        private int insumosConsumidos;
+        private java.math.BigDecimal valorInsumos;
+        private int veiculosCedidos;
+        private double diasDeVeiculo;
+        private Integer kmVeiculos;
     }
 }

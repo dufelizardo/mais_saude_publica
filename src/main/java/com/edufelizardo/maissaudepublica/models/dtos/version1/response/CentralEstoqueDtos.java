@@ -24,7 +24,7 @@ public final class CentralEstoqueDtos {
     public record Requisicao(UUID uuid, UUID unidadeId, String unidadeNome, UUID centralId, String centralNome, PrioridadeRequisicaoEstoque prioridade,
                              SituacaoRequisicaoEstoque situacao, boolean parcial, String observacao, String solicitanteNome, Instant criadaEm,
                              Instant enviadaEm, Instant decididaEm, String atendenteNome, String motivo, UUID transferenciaId, Instant recebidaEm,
-                             List<ItemRequisicao> itens) {
+                             List<ItemRequisicao> itens, UUID emergenciaId, String emergenciaNome) {
     }
 
     /** O item com o saldo e o consumo dos últimos 30 dias da unidade, e o saldo da central, para justificar e atender. */
