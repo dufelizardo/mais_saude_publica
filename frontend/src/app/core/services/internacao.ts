@@ -23,6 +23,10 @@ import {
   LaudoAihDto,
   LaudoAihRequestDto,
   PendenciaAihDto,
+  AcaoPrescricaoRequestDto,
+  HorarioDoPostoDto,
+  PrescricaoHospitalarDto,
+  PrescricaoHospitalarRequestDto,
 } from '../models/internacao';
 
 /** Leitos e internação (ADR-0098): mapa, indicadores, cadastro de leito, internação, troca de leito e alta. */
@@ -103,6 +107,31 @@ export class InternacaoService {
 
   darAlta(uuid: string, dto: { tipoAlta: TipoAlta; sumario: string; medicoMatricula: string; altaEm?: string }): Observable<InternacaoResponseDto> {
     return this.http.post<InternacaoResponseDto>(`${this.internacaoUrl}/${uuid}/alta`, dto);
+  }
+
+  // ── Prescrição hospitalar (ADR-0187) ──
+
+  prescrever(dto: PrescricaoHospitalarRequestDto): Observable<PrescricaoHospitalarDto> {
+    return this.http.post<PrescricaoHospitalarDto>('/api/v1/prescricao-hospitalar/', dto);
+  }
+
+  renovarPrescricao(uuid: string, dto: PrescricaoHospitalarRequestDto): Observable<PrescricaoHospitalarDto> {
+    return this.http.post<PrescricaoHospitalarDto>(`/api/v1/prescricao-hospitalar/${uuid}/renovacao`, dto);
+  }
+
+  prescricoes(internacaoId: string): Observable<PrescricaoHospitalarDto[]> {
+    return this.http.get<PrescricaoHospitalarDto[]>('/api/v1/prescricao-hospitalar/', { params: { internacaoId } });
+  }
+
+  postoDeEnfermagem(filtro: { unidadeId?: string; setorId?: string }): Observable<HorarioDoPostoDto[]> {
+    let params = new HttpParams();
+    if (filtro.unidadeId) params = params.set('unidadeId', filtro.unidadeId);
+    if (filtro.setorId) params = params.set('setorId', filtro.setorId);
+    return this.http.get<HorarioDoPostoDto[]>('/api/v1/prescricao-hospitalar/posto', { params });
+  }
+
+  acaoPrescricao(rota: string, dto: AcaoPrescricaoRequestDto): Observable<PrescricaoHospitalarDto> {
+    return this.http.post<PrescricaoHospitalarDto>(`/api/v1/prescricao-hospitalar/${rota}`, dto);
   }
 
   // ── Laudo de AIH (ADR-0186) ──

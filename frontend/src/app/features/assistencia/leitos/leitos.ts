@@ -11,6 +11,24 @@ import {
   EVENTOS_LEITO,
   EVENTOS_SOLICITACAO_LEITO,
   EVENTOS_ELETIVA,
+  ACEITACOES_DIETA,
+  AcaoPrescricaoRequestDto,
+  HorarioDoPostoDto,
+  HorarioPrescricaoDto,
+  ItemPrescricaoDto,
+  ItemPrescricaoRequestDto,
+  MOTIVOS_NAO_ADMINISTRACAO_HOSP,
+  PrescricaoHospitalarDto,
+  PrescricaoHospitalarRequestDto,
+  SITUACOES_HORARIO,
+  TIPOS_DIETA,
+  TipoDieta,
+  TipoItemPrescricao,
+  VIAS_ADMINISTRACAO_HOSP,
+  ViaAdministracaoHosp,
+  ResultadoChecagem,
+  AceitacaoDieta,
+  MotivoNaoAdministracaoHosp,
   CAUSAS_EXTERNAS_AIH,
   CLINICAS_AIH,
   CausaExternaAih,
@@ -53,13 +71,30 @@ import { AuthService } from '../../../core/services/auth';
 import { InternacaoService } from '../../../core/services/internacao';
 import { PacienteService } from '../../../core/services/paciente';
 import { ProcedimentoService } from '../../../core/services/procedimento';
+import { MedicamentoService } from '../../../core/services/medicamento';
+import { LoteService } from '../../../core/services/lote';
+import { MedicamentoResponseDto } from '../../../core/models/medicamento';
+import { LoteResponseDto } from '../../../core/models/lote';
 import { SetorService } from '../../../core/services/setor';
 import { ModeloOperacionalService } from '../../../core/services/modelo-operacional';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { formatCpf } from '../../../shared/format-mask';
 
-type Aba = 'mapa' | 'internacoes' | 'eletivas' | 'censo' | 'aih' | 'central' | 'receber' | 'leitos';
+type Aba = 'mapa' | 'internacoes' | 'horarios' | 'eletivas' | 'censo' | 'aih' | 'central' | 'receber' | 'leitos';
+
+/** O que a gaveta de checagem precisa saber do horário ou do item (ADR-0187). */
+interface AlvoChecagem {
+  horarioId?: string;
+  itemId: string;
+  checagemId?: string;
+  tipo: TipoItemPrescricao;
+  resumo: string;
+  pacienteNome: string;
+  unidadeId: string;
+  medicamentoId?: string;
+  previstoPara?: string;
+}
 type AcaoAih = 'autorizacao' | 'devolucao' | 'negacao' | 'cancelamento';
 
 type Gaveta =
@@ -77,7 +112,11 @@ type Gaveta =
   | { tipo: 'eletiva'; agendamento: InternacaoAgendadaDto; acao: 'reserva' | 'admissao' | 'outras' }
   | { tipo: 'laudoAih'; internacao: InternacaoResponseDto | null; agendamento: InternacaoAgendadaDto | null; laudo: LaudoAihDto | null }
   | { tipo: 'decisaoAih'; laudo: LaudoAihDto; acao: AcaoAih }
-  | { tipo: 'faixaAih' };
+  | { tipo: 'faixaAih' }
+  | { tipo: 'prescrever'; internacao: InternacaoResponseDto; base: PrescricaoHospitalarDto | null }
+  | { tipo: 'suspenderItem'; item: ItemPrescricaoDto; pacienteNome: string }
+  | { tipo: 'checar'; alvo: AlvoChecagem; modo: 'checar' | 'seNecessario' | 'retificar' }
+  | { tipo: 'reaprazar'; alvo: AlvoChecagem };
 
 interface GrupoSetor {
   setorId: string;
@@ -105,6 +144,8 @@ export class Leitos {
   private readonly internacaoService = inject(InternacaoService);
   private readonly pacienteService = inject(PacienteService);
   private readonly procedimentoService = inject(ProcedimentoService);
+  private readonly medicamentoService = inject(MedicamentoService);
+  private readonly loteService = inject(LoteService);
   private readonly setorService = inject(SetorService);
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
   private readonly modeloOperacionalService = inject(ModeloOperacionalService);
@@ -144,6 +185,36 @@ export class Leitos {
   protected readonly listaCausasExternasAih = Object.keys(CAUSAS_EXTERNAS_AIH) as CausaExternaAih[];
   protected readonly eventosAih = EVENTOS_LAUDO_AIH;
   protected readonly laudosDaInternacao = signal<LaudoAihDto[]>([]);
+
+  /** Prescrição hospitalar e posto de enfermagem (ADR-0187). */
+  protected readonly tiposDieta = TIPOS_DIETA;
+  protected readonly listaTiposDieta = Object.keys(TIPOS_DIETA) as TipoDieta[];
+  protected readonly viasHosp = VIAS_ADMINISTRACAO_HOSP;
+  protected readonly listaViasHosp = Object.keys(VIAS_ADMINISTRACAO_HOSP) as ViaAdministracaoHosp[];
+  protected readonly situacoesHorario = SITUACOES_HORARIO;
+  protected readonly motivosNaoAdm = MOTIVOS_NAO_ADMINISTRACAO_HOSP;
+  protected readonly listaMotivosNaoAdm = Object.keys(MOTIVOS_NAO_ADMINISTRACAO_HOSP) as MotivoNaoAdministracaoHosp[];
+  protected readonly aceitacoesDieta = ACEITACOES_DIETA;
+  protected readonly listaAceitacoes = Object.keys(ACEITACOES_DIETA) as AceitacaoDieta[];
+  protected readonly prescricoesDaInternacao = signal<PrescricaoHospitalarDto[]>([]);
+  protected readonly posto = signal<HorarioDoPostoDto[]>([]);
+  protected readonly postoUnidade = signal('');
+  protected readonly postoSetor = signal('');
+  protected readonly medicamentos = signal<MedicamentoResponseDto[]>([]);
+  protected readonly lotesDoItem = signal<LoteResponseDto[]>([]);
+  protected readonly itensRascunho = signal<ItemPrescricaoRequestDto[]>([]);
+  protected readonly prescricaoForm = this.fb.nonNullable.group({ medicoMatricula: [''], inicio: [''], observacao: [''] });
+  protected readonly itemForm = this.fb.nonNullable.group({
+    tipo: ['MEDICAMENTO' as TipoItemPrescricao], medicamentoId: [''], dose: [''], via: ['ORAL' as ViaAdministracaoHosp], tipoDieta: ['LIVRE' as TipoDieta],
+    descricao: [''], intervaloHoras: [''], seNecessario: [false], condicao: [''],
+  });
+  protected readonly suspensaoForm = this.fb.nonNullable.group({ profissionalMatricula: [''], motivo: [''] });
+  protected readonly checagemForm = this.fb.nonNullable.group({
+    profissionalMatricula: [''], resultado: ['FEITO' as ResultadoChecagem], aceitacao: ['TOTAL' as AceitacaoDieta],
+    motivoNaoAdministracao: ['RECUSA_DO_PACIENTE' as MotivoNaoAdministracaoHosp], observacao: [''], loteId: [''], quantidade: ['1'], motivoRetificacao: [''],
+  });
+  protected readonly reaprazarForm = this.fb.nonNullable.group({ profissionalMatricula: [''], previstoPara: [''], motivo: [''] });
+  protected readonly atrasadosDoPosto = computed(() => this.posto().filter((h) => h.atrasado).length);
   protected readonly filaAih = signal<LaudoAihDto[]>([]);
   protected readonly pendenciasAih = signal<PendenciaAihDto[]>([]);
   protected readonly faixasAih = signal<FaixaAihDto[]>([]);
@@ -244,6 +315,7 @@ export class Leitos {
   protected readonly abas = computed<{ id: Aba; rotulo: string; contagem: number | null }[]>(() => [
     { id: 'mapa', rotulo: 'Mapa de leitos', contagem: this.leitosDoMapa().length },
     { id: 'internacoes', rotulo: 'Internações', contagem: this.internacoes().filter((i) => i.status === 'INTERNADO').length },
+    ...(this.pode('PRESCRICAO.CHECAR', 'DIETA.CHECAR', 'PRESCRICAO.HOSPITALAR') ? [{ id: 'horarios' as Aba, rotulo: 'Horários', contagem: this.atrasadosDoPosto() || null }] : []),
     ...(this.pode('INTERNACAO.GERENCIAR') ? [{ id: 'eletivas' as Aba, rotulo: 'Eletivas', contagem: this.eletivas().filter((e) => e.status === 'AGENDADA' || e.status === 'RESERVADA').length }] : []),
     ...(this.pode('CENSO.FECHAR', 'INTERNACAO.CONSULTAR', 'LEITO.GERENCIAR') ? [{ id: 'censo' as Aba, rotulo: 'Censo diário', contagem: this.pendenciasCenso().length || null }] : []),
     ...(this.pode('AIH.AUTORIZAR', 'AIH.NUMERAR') ? [{ id: 'aih' as Aba, rotulo: 'Autorização de AIH', contagem: this.filaAih().length || null }] : []),
@@ -324,6 +396,7 @@ export class Leitos {
       this.filaAih.set(filaAih);
       this.pendenciasAih.set(pendenciasAih);
       this.faixasAih.set(faixasAih);
+      this.carregarPosto();
       this.eletivas.set(eletivas);
       this.pendenciasCenso.set(pendencias);
       this.fila.set(fila);
@@ -348,6 +421,7 @@ export class Leitos {
 
   protected selecionarAba(aba: Aba, focar = false): void {
     this.aba.set(aba);
+    if (aba === 'horarios') this.carregarPosto();
     if (focar) document.getElementById('tab-' + aba)?.focus();
   }
 
@@ -459,6 +533,14 @@ export class Leitos {
         return { autorizacao: 'Autorizar a AIH', devolucao: 'Devolver para correção', negacao: 'Negar a AIH', cancelamento: 'Cancelar o laudo de AIH' }[g.acao];
       case 'faixaAih':
         return 'Faixa de numeração de AIH';
+      case 'prescrever':
+        return g.base ? 'Renovar a prescrição' : 'Prescrição hospitalar';
+      case 'suspenderItem':
+        return 'Suspender item da prescrição';
+      case 'checar':
+        return g.modo === 'retificar' ? 'Retificar a checagem' : 'Checagem';
+      case 'reaprazar':
+        return 'Reaprazar horário';
     }
   }
 
@@ -495,6 +577,10 @@ export class Leitos {
     this.erroDetalhe.set(null);
     this.abrir({ tipo: 'internacao', internacaoId });
     this.laudosDaInternacao.set([]);
+    this.prescricoesDaInternacao.set([]);
+    if (this.pode('INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'PRESCRICAO.HOSPITALAR', 'PRESCRICAO.CHECAR', 'DIETA.CHECAR')) {
+      this.internacaoService.prescricoes(internacaoId).pipe(catchError(() => of([]))).subscribe((p) => this.prescricoesDaInternacao.set(p));
+    }
     if (this.pode('INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'AIH.SOLICITAR', 'AIH.AUTORIZAR')) {
       this.internacaoService.laudosAih({ internacaoId }).pipe(catchError(() => of([]))).subscribe((l) => this.laudosDaInternacao.set(l));
     }
@@ -641,6 +727,14 @@ export class Leitos {
         return this.salvarDecisaoAih(g.laudo, g.acao);
       case 'faixaAih':
         return this.salvarFaixaAih();
+      case 'prescrever':
+        return this.salvarPrescricao(g.internacao, g.base);
+      case 'suspenderItem':
+        return this.salvarSuspensao(g.item, g.pacienteNome);
+      case 'checar':
+        return this.salvarChecagem(g.alvo, g.modo);
+      case 'reaprazar':
+        return this.salvarReaprazamento(g.alvo);
       default:
         return;
     }
@@ -1011,6 +1105,194 @@ export class Leitos {
     return v == null ? '—' : `${v.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}${sufixo}`;
   }
 
+  // ── Prescrição hospitalar (ADR-0187) ─────────────────────────────────────────────────────────
+
+  /** A prescrição vigente (ou a mais nova) da internação aberta. */
+  protected prescricaoAtual(): PrescricaoHospitalarDto | null {
+    const l = this.prescricoesDaInternacao();
+    return l.find((p) => p.vigente) ?? l[0] ?? null;
+  }
+
+  protected abrirPrescrever(internacao: InternacaoResponseDto, base: PrescricaoHospitalarDto | null): void {
+    this.prescricaoForm.reset({ medicoMatricula: this.matriculaPadrao(), inicio: '', observacao: base?.observacao ?? '' });
+    this.itensRascunho.set([]);
+    this.novoItem('MEDICAMENTO');
+    this.carregarMedicamentos();
+    this.abrir({ tipo: 'prescrever', internacao, base });
+  }
+
+  protected novoItem(tipo: TipoItemPrescricao): void {
+    this.itemForm.reset({ tipo, medicamentoId: '', dose: '', via: 'ORAL', tipoDieta: 'LIVRE', descricao: '', intervaloHoras: '', seNecessario: false, condicao: '' });
+  }
+
+  protected incluirItem(): void {
+    const v = this.itemForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (v.tipo === 'MEDICAMENTO') {
+      if (!v.medicamentoId) erros['medicamentoItem'] = 'Escolha o medicamento.';
+      if (!v.dose.trim()) erros['doseItem'] = 'Informe a dose.';
+      if (v.seNecessario && !v.condicao.trim()) erros['condicaoItem'] = 'Informe a condição de uso.';
+    }
+    if (v.tipo === 'CUIDADO' && !v.descricao.trim()) erros['descricaoItem'] = 'Descreva o cuidado.';
+    if (v.intervaloHoras && !/^\d{1,2}$/.test(v.intervaloHoras)) erros['intervaloItem'] = 'Intervalo de 1 a 48 horas.';
+    if (!this.validar(erros)) return;
+    const item: ItemPrescricaoRequestDto = {
+      tipo: v.tipo,
+      medicamentoId: v.tipo === 'MEDICAMENTO' ? v.medicamentoId : undefined,
+      dose: v.tipo === 'MEDICAMENTO' ? v.dose.trim() : undefined,
+      via: v.tipo === 'MEDICAMENTO' ? v.via : undefined,
+      tipoDieta: v.tipo === 'DIETA' ? v.tipoDieta : undefined,
+      descricao: v.descricao.trim() || undefined,
+      intervaloHoras: v.intervaloHoras ? Number(v.intervaloHoras) : null,
+      seNecessario: v.tipo === 'MEDICAMENTO' && v.seNecessario,
+      condicao: v.tipo === 'MEDICAMENTO' && v.seNecessario ? v.condicao.trim() : undefined,
+    };
+    this.itensRascunho.update((l) => [...l, item]);
+    this.novoItem(v.tipo);
+  }
+
+  protected removerItem(indice: number): void {
+    this.itensRascunho.update((l) => l.filter((_, i) => i !== indice));
+  }
+
+  protected resumoRascunho(i: ItemPrescricaoRequestDto): string {
+    const intervalo = i.seNecessario ? ` se necessário (${i.condicao})` : i.intervaloHoras ? ` de ${i.intervaloHoras}/${i.intervaloHoras} h` : '';
+    if (i.tipo === 'MEDICAMENTO') {
+      const nome = this.medicamentos().find((m) => m.uuid === i.medicamentoId)?.nome ?? 'Medicamento';
+      return `${nome} ${i.dose} ${this.viasHosp[i.via!].toLowerCase()}${intervalo}`;
+    }
+    if (i.tipo === 'DIETA') return `Dieta ${this.tiposDieta[i.tipoDieta!].toLowerCase()}${i.descricao ? ' · ' + i.descricao : ''}${intervalo}`;
+    return `${i.descricao}${intervalo}`;
+  }
+
+  private carregarMedicamentos(): void {
+    if (this.medicamentos().length) return;
+    this.medicamentoService.listar().pipe(catchError(() => of([]))).subscribe((m) => this.medicamentos.set(m.filter((x) => x.ativo)));
+  }
+
+  private salvarPrescricao(internacao: InternacaoResponseDto, base: PrescricaoHospitalarDto | null): void {
+    const v = this.prescricaoForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.medicoMatricula.trim()) erros['medicoPrescricao'] = 'Informe a matrícula do médico.';
+    if (!base && !this.itensRascunho().length) erros['itensPrescricao'] = 'Inclua ao menos um item.';
+    if (!this.validar(erros)) return;
+    const dto: PrescricaoHospitalarRequestDto = {
+      internacaoId: base ? undefined : internacao.uuid,
+      medicoMatricula: v.medicoMatricula.trim(),
+      inicio: v.inicio ? new Date(v.inicio).toISOString() : undefined,
+      observacao: v.observacao.trim() || undefined,
+      itens: base ? [] : this.itensRascunho(),
+    };
+    this.enviar(base ? this.internacaoService.renovarPrescricao(base.uuid, dto) : this.internacaoService.prescrever(dto),
+      base ? 'Prescrição renovada' : 'Prescrição registrada', internacao.pacienteNome);
+  }
+
+  protected abrirSuspenderItem(item: ItemPrescricaoDto, pacienteNome: string): void {
+    this.suspensaoForm.reset({ profissionalMatricula: this.matriculaPadrao(), motivo: '' });
+    this.abrir({ tipo: 'suspenderItem', item, pacienteNome });
+  }
+
+  private salvarSuspensao(item: ItemPrescricaoDto, pacienteNome: string): void {
+    const v = this.suspensaoForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.profissionalMatricula.trim()) erros['matriculaSuspensao'] = 'Informe a matrícula.';
+    if (!v.motivo.trim()) erros['motivoSuspensao'] = 'Informe o motivo.';
+    if (!this.validar(erros)) return;
+    this.enviar(this.internacaoService.acaoPrescricao(`itens/${item.uuid}/suspensao`, { profissionalMatricula: v.profissionalMatricula.trim(), motivo: v.motivo.trim() }),
+      'Item suspenso', `${pacienteNome} · ${item.resumo}`);
+  }
+
+  /** Abre a checagem de um horário do posto, de um horário da internação, do "se necessário" ou a retificação. */
+  protected abrirChecagem(alvo: AlvoChecagem, modo: 'checar' | 'seNecessario' | 'retificar'): void {
+    this.checagemForm.reset({
+      profissionalMatricula: this.matriculaPadrao(), resultado: 'FEITO', aceitacao: 'TOTAL', motivoNaoAdministracao: 'RECUSA_DO_PACIENTE',
+      observacao: '', loteId: '', quantidade: '1', motivoRetificacao: '',
+    });
+    this.lotesDoItem.set([]);
+    if (alvo.tipo === 'MEDICAMENTO' && alvo.medicamentoId && this.pode('PRESCRICAO.CHECAR', 'MEDICACAO.ADMINISTRAR', 'FARMACIA.CONSULTAR')) {
+      this.loteService.listar().pipe(catchError(() => of([]))).subscribe((l) =>
+        this.lotesDoItem.set(l.filter((x) => x.medicamentoUuid === alvo.medicamentoId && x.unidadeUuid === alvo.unidadeId && x.quantidade > 0 && !x.loteIncorporadorId)));
+    }
+    this.abrir({ tipo: 'checar', alvo, modo });
+  }
+
+  protected abrirChecagemDoPosto(h: HorarioDoPostoDto): void {
+    const alvo: AlvoChecagem = { horarioId: h.horarioId, itemId: h.itemId, tipo: h.tipo, resumo: h.resumo, pacienteNome: h.pacienteNome,
+      unidadeId: h.unidadeId, previstoPara: h.previstoPara, checagemId: h.checagem?.uuid };
+    if (h.tipo === 'MEDICAMENTO') {
+      this.internacaoService.prescricoes(h.internacaoId).pipe(catchError(() => of([]))).subscribe((ps) => {
+        alvo.medicamentoId = ps.flatMap((p) => p.itens).find((i) => i.uuid === h.itemId)?.medicamentoId ?? undefined;
+        this.abrirChecagem(alvo, h.situacao === 'PENDENTE' ? 'checar' : 'retificar');
+      });
+      return;
+    }
+    this.abrirChecagem(alvo, h.situacao === 'PENDENTE' ? 'checar' : 'retificar');
+  }
+
+  protected alvoDoItem(d: InternacaoResponseDto, item: ItemPrescricaoDto, h: HorarioPrescricaoDto | null): AlvoChecagem {
+    return { horarioId: h?.uuid, itemId: item.uuid, tipo: item.tipo, resumo: item.resumo, pacienteNome: d.pacienteNome, unidadeId: d.unidadeId,
+      medicamentoId: item.medicamentoId ?? undefined, previstoPara: h?.previstoPara, checagemId: h?.checagem?.uuid };
+  }
+
+  private salvarChecagem(alvo: AlvoChecagem, modo: 'checar' | 'seNecessario' | 'retificar'): void {
+    const v = this.checagemForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.profissionalMatricula.trim()) erros['matriculaChecagem'] = 'Informe a matrícula.';
+    if (alvo.tipo !== 'MEDICAMENTO' && v.resultado === 'NAO_FEITO' && !v.observacao.trim()) erros['observacaoChecagem'] = 'Informe o motivo.';
+    if (v.loteId && !/^\d+$/.test(v.quantidade)) erros['quantidadeChecagem'] = 'Informe a quantidade.';
+    if (modo === 'retificar' && !v.motivoRetificacao.trim()) erros['motivoRetificacao'] = 'Informe o motivo da retificação.';
+    if (!this.validar(erros)) return;
+    const dto: AcaoPrescricaoRequestDto = {
+      profissionalMatricula: v.profissionalMatricula.trim(),
+      resultado: v.resultado,
+      aceitacao: alvo.tipo === 'DIETA' && v.resultado === 'FEITO' ? v.aceitacao : undefined,
+      motivoNaoAdministracao: alvo.tipo === 'MEDICAMENTO' && v.resultado === 'NAO_FEITO' ? v.motivoNaoAdministracao : undefined,
+      observacao: v.observacao.trim() || undefined,
+      loteId: alvo.tipo === 'MEDICAMENTO' && v.resultado === 'FEITO' && v.loteId ? v.loteId : undefined,
+      quantidade: alvo.tipo === 'MEDICAMENTO' && v.resultado === 'FEITO' && v.loteId ? Number(v.quantidade) : undefined,
+      motivoRetificacao: modo === 'retificar' ? v.motivoRetificacao.trim() : undefined,
+    };
+    const rota = modo === 'retificar' ? `checagens/${alvo.checagemId}/retificacao` : modo === 'seNecessario' ? `itens/${alvo.itemId}/checagem` : `horarios/${alvo.horarioId}/checagem`;
+    this.enviar(this.internacaoService.acaoPrescricao(rota, dto), modo === 'retificar' ? 'Checagem retificada' : 'Checagem registrada', `${alvo.pacienteNome} · ${alvo.resumo}`);
+  }
+
+  protected abrirReaprazar(alvo: AlvoChecagem): void {
+    this.reaprazarForm.reset({ profissionalMatricula: this.matriculaPadrao(), previstoPara: alvo.previstoPara ? paraDatetimeLocal(alvo.previstoPara) : '', motivo: '' });
+    this.abrir({ tipo: 'reaprazar', alvo });
+  }
+
+  private salvarReaprazamento(alvo: AlvoChecagem): void {
+    const v = this.reaprazarForm.getRawValue();
+    const erros: Record<string, string> = {};
+    if (!v.profissionalMatricula.trim()) erros['matriculaReaprazar'] = 'Informe a matrícula.';
+    if (!v.previstoPara) erros['novoHorario'] = 'Informe o novo horário.';
+    if (!v.motivo.trim()) erros['motivoReaprazar'] = 'Informe o motivo.';
+    if (!this.validar(erros)) return;
+    this.enviar(this.internacaoService.acaoPrescricao(`horarios/${alvo.horarioId}/reaprazamento`,
+      { profissionalMatricula: v.profissionalMatricula.trim(), previstoPara: new Date(v.previstoPara).toISOString(), motivo: v.motivo.trim() }),
+      'Horário reaprazado', `${alvo.pacienteNome} · ${alvo.resumo}`);
+  }
+
+  protected carregarPosto(): void {
+    if (!this.pode('PRESCRICAO.CHECAR', 'DIETA.CHECAR', 'PRESCRICAO.HOSPITALAR', 'INTERNACAO.GERENCIAR')) return;
+    this.internacaoService.postoDeEnfermagem({ unidadeId: this.postoUnidade() || undefined, setorId: this.postoSetor() || undefined })
+      .pipe(catchError(() => of([]))).subscribe((h) => this.posto.set(h));
+  }
+
+  protected setoresDoPosto(): { uuid: string; nome: string }[] {
+    const vistos = new Map<string, string>();
+    for (const l of this.leitos()) {
+      if (!this.postoUnidade() || l.unidadeId === this.postoUnidade()) vistos.set(l.setorId, `${l.setorNome} · ${l.unidadeNome}`);
+    }
+    return [...vistos].map(([uuid, nome]) => ({ uuid, nome }));
+  }
+
+  protected hora(iso: string | null | undefined): string {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
   // ── Laudo de AIH (ADR-0186) ──────────────────────────────────────────────────────────────────
 
   /** O laudo em andamento ou autorizado da internação (o que bloqueia um novo). */
@@ -1172,6 +1454,12 @@ export class Leitos {
 function hojeIso(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** ISO para o valor de um input datetime-local (hora local). */
+function paraDatetimeLocal(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 function ontemIso(): string {

@@ -36,7 +36,7 @@ public class LoteController {
     @Autowired
     private LoteService service;
 
-    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "MEDICACAO.ADMINISTRAR"})
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "MEDICACAO.ADMINISTRAR", "PRESCRICAO.CHECAR"})
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Lista os lotes cadastrados", tags = "Lote")
     @ApiResponse(responseCode = "200", description = "Success:", content = {
@@ -55,7 +55,7 @@ public class LoteController {
         return ResponseEntity.ok(responseDtos);
     }
 
-    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "MEDICACAO.ADMINISTRAR"})
+    @RequerPermissao({"FARMACIA.CONSULTAR", "FARMACIA.DISPENSAR", "MEDICACAO.ADMINISTRAR", "PRESCRICAO.CHECAR"})
     @GetMapping(value = "{uuid}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Busca um lote pelo id", tags = "Lote")
     @ApiResponse(responseCode = "200", description = "Success:", content = {

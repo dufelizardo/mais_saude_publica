@@ -121,6 +121,13 @@ const MODULOS: Modulo[] = [
     gerenciar: ['LEITO.REGULAR'],
   },
   {
+    nome: 'Prescrição hospitalar',
+    sub: 'prescrição de 24 horas, dieta, cuidados, aprazamento e checagem (ADR-0187)',
+    ver: [],
+    registrar: ['PRESCRICAO.CHECAR', 'DIETA.CHECAR'],
+    gerenciar: ['PRESCRICAO.HOSPITALAR'],
+  },
+  {
     nome: 'AIH',
     sub: 'laudo para solicitação de AIH, autorização interna e faixas de numeração (ADR-0186)',
     ver: [],

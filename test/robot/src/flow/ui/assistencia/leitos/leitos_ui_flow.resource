@@ -6,6 +6,7 @@ Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.reso
 Resource    ../../../internacao/regulacao_leito/regulacao_leito_flow.resource
 Resource    ../../../internacao/eletiva_censo/eletiva_censo_flow.resource
 Resource    ../../../internacao/laudo_aih/laudo_aih_flow.resource
+Resource    ../../../internacao/prescricao_hospitalar/prescricao_hospitalar_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (setor, leito, paciente, internação) são criados pela API; a ação sob teste é feita pela tela.
@@ -416,5 +417,53 @@ UI Leitos - Cadastrar Faixa AIH Pela Gaveta
     ${achou}=    Evaluate    [f for f in $faixas.json() if f["inicio"] == ${inicio}]
     Length Should Be    ${achou}    1
     Should Be Equal As Integers    ${achou}[0][restantes]    5
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Leitos - Prescrever Pela Internacao
+    [Documentation]    Prescreve medicamento e cuidado pela gaveta da internação (ADR-0187).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${internacao}    ${leito}    ${unidade}    ${setor}    ${pacienteId}    ${matricula}=    Seed Uma Internacao
+    ${medicamento}    ${nomeMedicamento}=    Seed Um Medicamento
+    Get Mais Saude Publica Session
+    ${i}=    GET On Session    msp_session    ${BASE_URL}/internacao/${internacao}
+    ${nome}=    Set Variable    ${i.json()}[pacienteNome]
+    UI Leitos - Abrir Aba    internacoes
+    Clicar Botao    Ver a internação de ${nome}
+    Clicar Botao    Nova prescrição
+    Preencher Campo Da Gaveta    medicoPrescricao    ${matricula}
+    Escolher Opcao Da Gaveta    medicamentoItem    ${medicamento}
+    Preencher Campo Da Gaveta    doseItem    1 g
+    Escolher Opcao Da Gaveta    viaItem    INTRAVENOSA
+    Preencher Campo Da Gaveta    intervaloItem    6
+    Clicar Botao    Incluir item
+    Escolher Opcao Da Gaveta    tipoItem    CUIDADO
+    Preencher Campo Da Gaveta    descricaoItem    Sinais vitais
+    Preencher Campo Da Gaveta    intervaloItem    4
+    Clicar Botao    Incluir item
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Prescrição registrada
+    ${lista}=    GET On Session    msp_session    ${BASE_URL}/prescricao-hospitalar/    params=internacaoId=${internacao}
+    Length Should Be    ${lista.json()}[0][itens]    2
+    Should Be Equal    ${lista.json()}[0][itens][0][tipo]    MEDICAMENTO
+    Should Be Equal As Integers    ${lista.json()}[0][itens][1][intervaloHoras]    4
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Leitos - Checar Pelo Posto
+    [Documentation]    Checa um cuidado pela aba Horários, o posto de enfermagem (ADR-0187).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${p}    ${internacao}    ${unidade}    ${medicamento}    ${matricula}=    Seed Uma Prescricao
+    ${d}=    GET Prescricao    ${p}
+    ${nome}=    Set Variable    ${d.json()}[pacienteNome]
+    UI Leitos - Abrir Aba    horarios
+    Clicar Botao    Checar Sinais vitais de 4/4 h de ${nome}
+    Preencher Campo Da Gaveta    matriculaChecagem    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Checagem registrada
+    ${depois}=    GET Prescricao    ${p}
+    Should Be Equal    ${depois.json()}[itens][2][horarios][0][situacao]    FEITO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

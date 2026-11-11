@@ -152,6 +152,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("AIH.SOLICITAR", new Def("Preencher o laudo para solicitação de AIH da internação", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("AIH.AUTORIZAR", new Def("Autorizar, devolver ou negar o laudo de AIH (autorização interna, com o número)", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("AIH.NUMERAR", new Def("Cadastrar as faixas de numeração de AIH recebidas do gestor", OPERACAO));
+        PERMISSOES.put("PRESCRICAO.HOSPITALAR", new Def("Prescrever na internação: medicamentos, dieta e cuidados, por 24 horas", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("PRESCRICAO.CHECAR", new Def("Checar os horários da prescrição hospitalar e reaprazar", ACESSO_AO_DADO_DE_SAUDE));
+        PERMISSOES.put("DIETA.CHECAR", new Def("Checar a aceitação da dieta prescrita na internação", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("CENSO.FECHAR", new Def("Fechar e reabrir o censo hospitalar diário da unidade", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("LEITO.REGULAR", new Def("Regular a fila de leitos: reservar leito em outra unidade, vaga zero e negar", ACESSO_AO_DADO_DE_SAUDE));
         // Documentos (ADR-0172): anexar não dá direito de abrir; abrir segue o prontuário.
@@ -199,7 +202,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "Consulta, prescrição e procedimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR",
                         "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
-                        "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA", "INTERNACAO.SOLICITAR_VAGA", "AIH.SOLICITAR",
+                        "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA", "INTERNACAO.SOLICITAR_VAGA", "AIH.SOLICITAR", "PRESCRICAO.HOSPITALAR",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
                         "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
@@ -223,7 +226,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         // Pedido de exames em protocolos da atenção básica e do pré-natal (ADR-0093).
                         "EXAME.SOLICITAR", "LABORATORIO.COLETAR",
                         // Admissão, troca de leito e liberação depois da higienização (ADR-0098); a alta é do médico.
-                        "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR",
+                        "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "LEITO.GERENCIAR", "PRESCRICAO.CHECAR",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
                         "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         // Cadastro domiciliar e familiar (ADR-0127) e vacinação (ADR-0147).
@@ -232,7 +235,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "O que o enfermeiro faz, mais retificar registro clínico de outro profissional.",
                 List.of("PACIENTE.CONSULTAR", "ATENDIMENTO.GERENCIAR", "PRONTUARIO.CONSULTAR", "TRIAGEM.REGISTRAR",
                         "EVOLUCAO.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
-                        "REGISTRO_CLINICO.RETIFICAR_DE_OUTROS", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR",
+                        "REGISTRO_CLINICO.RETIFICAR_DE_OUTROS", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "PRESCRICAO.CHECAR",
                         "LEITO.GERENCIAR", "CENSO.FECHAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
@@ -244,7 +247,12 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("TECNICO_DE_ENFERMAGEM", new PapelPadrao("Técnico de enfermagem",
                 "Procedimentos e medicação. Sem classificação de risco nem evolução (COFEN 661/2021).",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "PROCEDIMENTO.REGISTRAR", "MEDICACAO.ADMINISTRAR",
-                        "LABORATORIO.COLETAR", "INTERNACAO.CONSULTAR", "VIGILANCIA.NOTIFICAR", "VACINACAO.REGISTRAR")));
+                        "LABORATORIO.COLETAR", "INTERNACAO.CONSULTAR", "VIGILANCIA.NOTIFICAR", "VACINACAO.REGISTRAR",
+                        // Checagem dos horários da prescrição hospitalar (ADR-0187).
+                        "PRESCRICAO.CHECAR")));
+        PAPEIS.put("NUTRICIONISTA", new PapelPadrao("Nutricionista",
+                "Acompanha a dieta prescrita na internação e checa a aceitação (ADR-0187).",
+                List.of("PACIENTE.CONSULTAR", "INTERNACAO.CONSULTAR", "DIETA.CHECAR")));
         PAPEIS.put("TECNICO_DE_LABORATORIO", new PapelPadrao("Técnico de laboratório",
                 "Coleta, recebe e analisa amostras; registra resultados (ADR-0093).",
                 List.of("PACIENTE.CONSULTAR", "LABORATORIO.COLETAR", "LABORATORIO.ANALISAR")));
