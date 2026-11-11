@@ -81,6 +81,9 @@ export interface ItemDeSaldoDto {
   proximaValidade?: string | null;
   valor?: number | null;
   lotes: LoteMaterialDto[];
+  /** Reservado para emergência (ADR-0191) e o que fica livre dentro da validade. */
+  reservado: number;
+  disponivel: number;
 }
 
 export interface VencimentoDto {
@@ -138,6 +141,61 @@ export interface MovimentacaoEstoqueDto {
   justificativa?: string | null;
   profissionalNome?: string | null;
   registradoEm: string;
+  /** O consumo extraordinário de uma emergência (ADR-0191). */
+  emergenciaId?: string | null;
+}
+
+/** Estoque nas emergências (ADR-0191): a reserva e o consumo extraordinário. */
+export type SituacaoReservaEstoque = 'ATIVA' | 'LIBERADA' | 'CONSUMIDA';
+
+export const SITUACOES_RESERVA: Record<SituacaoReservaEstoque, { rotulo: string; classe: string }> = {
+  ATIVA: { rotulo: 'Ativa', classe: 'warn' },
+  LIBERADA: { rotulo: 'Liberada', classe: 'muted' },
+  CONSUMIDA: { rotulo: 'Consumida', classe: 'ok' },
+};
+
+export interface ReservaEstoqueDto {
+  uuid: string;
+  emergenciaId: string;
+  emergenciaNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  materialId: string;
+  materialCodigo: string;
+  materialNome: string;
+  unidadeMedida: UnidadeMedidaMaterial;
+  quantidade: number;
+  consumida: number;
+  restante: number;
+  situacao: SituacaoReservaEstoque;
+  justificativa: string;
+  criadaEm: string;
+  liberadaEm?: string | null;
+  motivoLiberacao?: string | null;
+}
+
+export interface ConsumoEmergenciaDto {
+  unidadeId: string;
+  unidadeNome: string;
+  materialId: string;
+  materialCodigo: string;
+  materialNome: string;
+  unidadeMedida: UnidadeMedidaMaterial;
+  quantidade: number;
+  valor?: number | null;
+}
+
+export interface EstoqueDaEmergenciaDto {
+  reservas: ReservaEstoqueDto[];
+  consumo: ConsumoEmergenciaDto[];
+  quantidadeConsumida: number;
+  valorConsumido: number;
+}
+
+export interface EmergenciaAbertaDto {
+  uuid: string;
+  nome: string;
+  situacao: 'ATIVA' | 'EM_DESMOBILIZACAO';
 }
 
 
@@ -196,6 +254,9 @@ export interface RequisicaoEstoqueDto {
   transferenciaId?: string | null;
   recebidaEm?: string | null;
   itens: ItemRequisicaoEstoqueDto[];
+  /** A requisição urgente gerada pela emergência (ADR-0191). */
+  emergenciaId?: string | null;
+  emergenciaNome?: string | null;
 }
 
 export interface ItemTransferenciaEstoqueDto {

@@ -74,6 +74,10 @@ public class MovimentacaoEstoque implements Serializable {
     @Column(updatable = false)
     private UUID transferenciaId;
 
+    /** O consumo extraordinário de uma emergência (ES3, ADR-0191). */
+    @Column(name = "emergencia_id")
+    private UUID emergenciaId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profissional_id", referencedColumnName = "uuid", updatable = false)
     @ToString.Exclude

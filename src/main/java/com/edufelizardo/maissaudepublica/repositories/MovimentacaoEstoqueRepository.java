@@ -13,4 +13,9 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
     @Query("select m from MovimentacaoEstoque m join fetch m.lote l join fetch l.material join fetch l.unidade left join fetch m.setor "
             + "left join fetch m.profissional where m.registradoEm >= ?1 order by m.registradoEm desc")
     List<MovimentacaoEstoque> findDesde(Instant desde);
+
+    /** O consumo extraordinário da emergência (ADR-0191). */
+    @Query("select m from MovimentacaoEstoque m join fetch m.lote l join fetch l.material join fetch l.unidade where m.emergenciaId = ?1 "
+            + "order by m.registradoEm")
+    List<MovimentacaoEstoque> findDaEmergencia(java.util.UUID emergenciaId);
 }

@@ -91,6 +91,7 @@ public class TransporteEletivoService {
     @Autowired private InternacaoRepository internacaoRepository;
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private TransporteService transporteService;
+    @Autowired private FrotaEmergenciaService frotaEmergenciaService;
     @Autowired private ControleDeAcesso controleDeAcesso;
 
     // ── Solicitação ───────────────────────────────────────────────────────────────────────────────
@@ -246,6 +247,7 @@ public class TransporteEletivoService {
         if (v.getSituacao() == SituacaoVeiculo.INATIVO || v.getSituacao() == SituacaoVeiculo.MANUTENCAO) {
             throw new ResourceUnprocessableEntityException("O veículo " + v.getPrefixo() + " está " + v.getSituacao() + ".");
         }
+        frotaEmergenciaService.exigirNaoCedido(v);
         if (!dto.getRetornoPrevisto().isAfter(dto.getSaidaPrevista())) {
             throw new ResourceBadRequestException("O retorno previsto vem depois da saída.");
         }

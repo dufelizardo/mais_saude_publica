@@ -17,7 +17,10 @@ import {
   TIPOS_MOBILIZACAO,
   TipoMobilizacao,
 } from '../../core/models/emergencia';
+import { MaterialEstoqueDto } from '../../core/models/estoque';
 import { ErrorResponseDto } from '../../core/models/profissional';
+import { SITUACOES_VEICULO, TIPOS_VEICULO } from '../../core/models/transporte';
+import { EstoqueService } from '../../core/services/estoque';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import { EmergenciaService } from '../../core/services/emergencia';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
@@ -88,12 +91,18 @@ type Gaveta =
             <li class="mo-row">
               <span>
                 <span class="cell-main">{{ tipos[m.tipo] }}: {{ m.recurso }}@if (m.quantidade) { · {{ m.quantidade }} } <span [class]="'tag tag--' + situacoesMob[m.situacao].classe">{{ situacoesMob[m.situacao].rotulo }}</span>@if (m.autorizaEscala) { <span class="tag tag--ok">Autoriza turno na Escala</span> }</span>
-                <span class="cell-sub">@if (m.origemNome) { {{ m.origemNome }} → }{{ m.destinoNome }} · desde {{ data(m.inicio) }}@if (m.fim) { até {{ data(m.fim) }} }@if (m.responsavel) { · {{ m.responsavel }} }@if (m.transferenciaId) { · transferência da Farmácia ({{ m.transferenciaStatus }}) }@if (m.motivoCancelamento) { · {{ m.motivoCancelamento }} }</span>
+                <span class="cell-sub">@if (m.origemNome) { {{ m.origemNome }} → }{{ m.destinoNome }} · desde {{ data(m.inicio) }}@if (m.fim) { até {{ data(m.fim) }} }@if (m.responsavel) { · {{ m.responsavel }} }@if (m.transferenciaId) { · transferência da Farmácia ({{ m.transferenciaStatus }}) }@if (m.requisicaoEstoqueId) { · requisição urgente ao estoque ({{ situacaoEstoque(m.requisicaoEstoqueSituacao) }}) }@if (m.transferenciaEstoqueId) { · transferência do estoque ({{ situacaoEstoque(m.transferenciaEstoqueSituacao) }}) }@if (m.motivoCancelamento) { · {{ m.motivoCancelamento }} }</span>
+                @for (c of m.cessoes ?? []; track c.uuid) {
+                  <span class="cell-sub">Veículo {{ c.prefixo }} · {{ tiposVeiculo[c.tipo] }} · {{ c.unidadeNome }} · cedido {{ dataHora(c.cedidaEm) }}@if (c.devolvidaEm) { · devolvido {{ dataHora(c.devolvidaEm) }}@if (c.kmFim != null && c.kmInicio != null) { · {{ c.kmFim - c.kmInicio }} km } } @else { <span class="tag tag--warn">Na emergência</span> }</span>
+                }
               </span>
-              @if (aberta() && podeCoordenar() && !m.transferenciaId && (m.situacao === 'SOLICITADA' || m.situacao === 'EM_ANDAMENTO')) {
+              @if (aberta() && podeCoordenar() && m.requisicaoEstoqueId && m.requisicaoEstoqueSituacao === 'ENVIADA') {
+                <span class="row-actions"><button type="button" class="link-btn" (click)="abrir({ tipo: 'situacaoMobilizacao', mob: m, situacao: 'CANCELADA' })" [attr.aria-label]="'Cancelar: ' + m.recurso">Cancelar</button></span>
+              }
+              @if (aberta() && podeCoordenar() && !m.transferenciaId && !m.requisicaoEstoqueId && !m.transferenciaEstoqueId && (m.situacao === 'SOLICITADA' || m.situacao === 'EM_ANDAMENTO')) {
                 <span class="row-actions">
-                  @if (m.situacao === 'SOLICITADA') { <button type="button" class="link-btn" (click)="abrir({ tipo: 'situacaoMobilizacao', mob: m, situacao: 'EM_ANDAMENTO' })" [attr.aria-label]="'Andamento: ' + m.recurso">Em andamento</button> }
-                  @if (m.tipo === 'MEDICAMENTO') { <button type="button" class="link-btn" (click)="abrir({ tipo: 'transferencia', mob: m })" [attr.aria-label]="'Ligar transferência: ' + m.recurso">Ligar transferência</button> }
+                  @if (m.situacao === 'SOLICITADA' && m.tipo !== 'VEICULO') { <button type="button" class="link-btn" (click)="abrir({ tipo: 'situacaoMobilizacao', mob: m, situacao: 'EM_ANDAMENTO' })" [attr.aria-label]="'Andamento: ' + m.recurso">Em andamento</button> }
+                  @if (m.tipo === 'MEDICAMENTO' || m.tipo === 'INSUMO') { <button type="button" class="link-btn" (click)="abrir({ tipo: 'transferencia', mob: m })" [attr.aria-label]="'Ligar transferência: ' + m.recurso">Ligar transferência</button> }
                   <button type="button" class="link-btn" (click)="abrir({ tipo: 'situacaoMobilizacao', mob: m, situacao: 'CONCLUIDA' })" [attr.aria-label]="'Concluir: ' + m.recurso">Concluir</button>
                   <button type="button" class="link-btn" (click)="abrir({ tipo: 'situacaoMobilizacao', mob: m, situacao: 'CANCELADA' })" [attr.aria-label]="'Cancelar: ' + m.recurso">Cancelar</button>
                 </span>
@@ -123,6 +132,54 @@ type Gaveta =
         </ul>
       } @else { <p class="cell-sub">Nenhuma capacidade emergencial ativada.</p> }
     </div>
+
+    @if (e.estoque; as est) {
+      @if (est.reservas.length || est.consumo.length) {
+        <div class="co-secao">
+          <h3 class="mo-grupo">Estoque</h3>
+          <p class="cell-sub">As reservas são feitas pelo estoque de cada unidade (Administrativo · Estoque); o consumo marcado com a emergência entra aqui.</p>
+          @if (est.reservas.length) {
+            <ul class="eq-prof" aria-label="Reservas de estoque">
+              @for (r of est.reservas; track r.uuid) {
+                <li class="mo-row"><span><span class="cell-main">{{ r.materialNome }} · {{ r.unidadeNome }}: {{ r.quantidade }} <span [class]="'tag tag--' + (r.situacao === 'ATIVA' ? 'warn' : r.situacao === 'CONSUMIDA' ? 'ok' : 'muted')">{{ r.situacao === 'ATIVA' ? 'Reservado' : r.situacao === 'CONSUMIDA' ? 'Consumida' : 'Liberada' }}</span></span>
+                  <span class="cell-sub">consumido {{ r.consumida }} · resta {{ r.restante }} · {{ r.justificativa }}@if (r.motivoLiberacao) { · {{ r.motivoLiberacao }} }</span></span></li>
+              }
+            </ul>
+          }
+          @if (est.consumo.length) {
+            <div class="tbl-wrap"><table class="co-tabela" aria-label="Consumo extraordinário">
+              <thead><tr><th scope="col">Material</th><th scope="col">Unidade</th><th scope="col" class="num">Quantidade</th><th scope="col" class="num">Valor</th></tr></thead>
+              <tbody>
+                @for (c of est.consumo; track c.unidadeId + c.materialId) {
+                  <tr><td>{{ c.materialNome }}</td><td>{{ c.unidadeNome }}</td><td class="num mono">{{ c.quantidade }}</td><td class="num mono">{{ c.valor != null ? moeda(c.valor) : '—' }}</td></tr>
+                }
+              </tbody>
+            </table></div>
+            <p class="cell-sub">Total consumido: {{ est.quantidadeConsumida }} · {{ moeda(est.valorConsumido) }}</p>
+          }
+        </div>
+      }
+    }
+
+    @if (e.frota; as fr) {
+      @if (fr.cedidos.length || fr.unidadesAfetadas.length || fr.disponiveisPorTipo.length) {
+        <div class="co-secao">
+          <h3 class="mo-grupo">Frota</h3>
+          <p class="cell-sub">O veículo é pedido pela mobilização e cedido pela frota (Administrativo · Frota e transporte).</p>
+          @if (fr.disponiveisPorTipo.length) {
+            <p class="cell-sub">Disponíveis na rede: @for (d of fr.disponiveisPorTipo; track d.tipo; let ultimo = $last) { {{ tiposVeiculo[d.tipo] }} {{ d.quantidade }}@if (!ultimo) { · } }</p>
+          }
+          @if (fr.unidadesAfetadas.length) {
+            <ul class="eq-prof" aria-label="Frota das unidades afetadas">
+              @for (v of fr.unidadesAfetadas; track v.veiculoId) {
+                <li class="mo-row"><span><span class="cell-main">{{ v.prefixo }} · {{ tiposVeiculo[v.tipo] }} <span [class]="'tag tag--' + situacoesVeiculo[v.situacao].classe">{{ situacoesVeiculo[v.situacao].rotulo }}</span></span>
+                  <span class="cell-sub">{{ v.unidadeNome }}@if (v.cedidoA) { · cedido à {{ v.cedidoA }} }</span></span></li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    }
 
     @if (e.unidadesAfetadas.length) {
       <div class="co-secao">
@@ -182,8 +239,19 @@ type Gaveta =
                   <div class="dw-field"><label for="f-co-matricula">Matrícula do profissional <span class="req" aria-hidden="true">*</span></label><input id="f-co-matricula" type="text" [value]="f()['matricula'] ?? ''" (input)="set('matricula', $event)" /></div>
                   <div class="box box--info"><div>Enquanto a emergência estiver ativa e a mobilização em andamento, a Escala aceita turnos dele na unidade de destino, sem lotação lá. Os alertas de jornada e descanso continuam.</div></div>
                 } @else {
+                  @if (f()['tipo'] === 'INSUMO') {
+                    <div class="dw-field"><label for="f-co-material">Material do estoque<span class="opt">opcional</span></label>
+                      <select id="f-co-material" (change)="f.set({ ...f(), materialId: $any($event.target).value })">
+                        <option value="" [selected]="!f()['materialId']">Fora do catálogo (só a necessidade)</option>
+                        @for (mt of materiais(); track mt.uuid) { <option [value]="mt.uuid" [selected]="f()['materialId'] === mt.uuid">{{ mt.nome }} · {{ mt.codigo }}</option> }
+                      </select></div>
+                    <div class="box box--info"><div>Com o material e a origem sendo uma central de abastecimento, vira a requisição urgente da emergência, já enviada; a mobilização segue o estoque. A central pode usar a reserva feita para a emergência.</div></div>
+                  }
+                  @if (f()['tipo'] === 'VEICULO') {
+                    <div class="box box--info"><div>A frota cede o veículo em Administrativo · Frota e transporte; cedido, ele fica em serviço até a devolução.</div></div>
+                  }
                   <div class="dw-row">
-                    <div class="dw-field"><label for="f-co-recurso">Recurso <span class="req" aria-hidden="true">*</span></label><input id="f-co-recurso" type="text" maxlength="300" [value]="f()['recurso'] ?? ''" (input)="set('recurso', $event)" placeholder="Ex.: soro de reidratação oral" /></div>
+                    <div class="dw-field"><label for="f-co-recurso">Recurso @if (f()['materialId'] && f()['tipo'] === 'INSUMO') { <span class="opt">opcional</span> } @else { <span class="req" aria-hidden="true">*</span> }</label><input id="f-co-recurso" type="text" maxlength="300" [value]="f()['recurso'] ?? ''" (input)="set('recurso', $event)" placeholder="Ex.: soro de reidratação oral" /></div>
                     <div class="dw-field"><label for="f-co-quantidade">Quantidade<span class="opt">opcional</span></label><input id="f-co-quantidade" type="number" min="1" [value]="f()['quantidade'] ?? ''" (input)="set('quantidade', $event)" /></div>
                   </div>
                 }
@@ -205,8 +273,8 @@ type Gaveta =
                 @if (g.mob.tipo === 'PROFISSIONAL' && g.situacao !== 'EM_ANDAMENTO') { <div class="box box--info"><div>A Escala deixa de aceitar turnos novos dele sem lotação; os já designados ficam.</div></div> }
               }
               @case ('transferencia') {
-                <dl class="ro"><div><dt>Medicamento</dt><dd>{{ g.mob.recurso }} → {{ g.mob.destinoNome }}</dd></div></dl>
-                <div class="dw-field"><label for="f-co-transferencia">Identificador da transferência <span class="req" aria-hidden="true">*</span></label><input id="f-co-transferencia" type="text" [value]="f()['transferencia'] ?? ''" (input)="set('transferencia', $event)" placeholder="Copie da Farmácia · Transferências" /></div>
+                <dl class="ro"><div><dt>{{ g.mob.tipo === 'INSUMO' ? 'Insumo' : 'Medicamento' }}</dt><dd>{{ g.mob.recurso }} → {{ g.mob.destinoNome }}</dd></div></dl>
+                <div class="dw-field"><label for="f-co-transferencia">Identificador da transferência <span class="req" aria-hidden="true">*</span></label><input id="f-co-transferencia" type="text" [value]="f()['transferencia'] ?? ''" (input)="set('transferencia', $event)" [placeholder]="g.mob.tipo === 'INSUMO' ? 'Copie de Estoque · Transferências' : 'Copie da Farmácia · Transferências'" /></div>
                 <div class="box box--info"><div>Ligada, a mobilização segue a transferência: recebida conclui, cancelada cancela.</div></div>
               }
               @case ('capacidade') {
@@ -240,6 +308,7 @@ type Gaveta =
 export class CoordenacaoEmergencia {
   protected readonly service = inject(EmergenciaService);
   private readonly unidadeService = inject(UnidadeSaudeService);
+  private readonly estoqueService = inject(EstoqueService);
 
   readonly emergencia = input.required<EmergenciaDto>();
   readonly podeCoordenar = input(false);
@@ -252,6 +321,9 @@ export class CoordenacaoEmergencia {
   protected readonly listaTipos = Object.keys(TIPOS_MOBILIZACAO) as TipoMobilizacao[];
   protected readonly situacoesMob = SITUACOES_MOBILIZACAO;
   protected readonly recursos = RECURSOS_CAPACIDADE;
+  protected readonly tiposVeiculo = TIPOS_VEICULO;
+  protected readonly situacoesVeiculo = SITUACOES_VEICULO;
+  protected readonly materiais = signal<MaterialEstoqueDto[]>([]);
 
   protected readonly ativa = computed(() => this.emergencia().situacao === 'ATIVA');
   /** Ativa ou em desmobilização: o que ficou aberto ainda se conclui (ADR-0159). */
@@ -271,7 +343,7 @@ export class CoordenacaoEmergencia {
       case 'situacaoAcao': return 'Situação da ação';
       case 'mobilizar': return 'Mobilizar recurso';
       case 'situacaoMobilizacao': return 'Situação da mobilização';
-      case 'transferencia': return 'Ligar à transferência da Farmácia';
+      case 'transferencia': return g.mob.tipo === 'INSUMO' ? 'Ligar à transferência do estoque' : 'Ligar à transferência da Farmácia';
       case 'capacidade': return 'Ativar capacidade emergencial';
       default: return 'Desativar a capacidade';
     }
@@ -285,6 +357,7 @@ export class CoordenacaoEmergencia {
   }
 
   protected abrirMobilizar(): void {
+    if (!this.materiais().length) this.estoqueService.materiais(true).pipe(catchError(() => of([]))).subscribe((m) => this.materiais.set(m));
     this.abrir({ tipo: 'mobilizar' });
   }
 
@@ -326,10 +399,12 @@ export class CoordenacaoEmergencia {
         const tipo = (t('tipo') ?? 'PROFISSIONAL') as TipoMobilizacao;
         if (!t('destinoId')) falta = 'Escolha a unidade de destino.';
         else if (tipo === 'PROFISSIONAL' && !t('matricula')) falta = 'Informe a matrícula do profissional.';
-        else if (tipo !== 'PROFISSIONAL' && !t('recurso')) falta = 'Descreva o recurso.';
+        else if (tipo === 'INSUMO' && t('materialId') && !t('quantidade')) falta = 'Informe a quantidade do material.';
+        else if (tipo !== 'PROFISSIONAL' && !(tipo === 'INSUMO' && t('materialId')) && !t('recurso')) falta = 'Descreva o recurso.';
         req = this.service.mobilizar(id, {
           tipo, origemId: t('origemId'), destinoId: t('destinoId') ?? '', profissionalMatricula: t('matricula'), recurso: t('recurso'),
           quantidade: t('quantidade') ? Number(f['quantidade']) : null, responsavel: t('responsavel'), inicio: null, fim: t('fim'),
+          materialId: tipo === 'INSUMO' ? t('materialId') : null,
         });
         break;
       }
@@ -369,6 +444,16 @@ export class CoordenacaoEmergencia {
 
   protected situacaoOperacional(s: string): string {
     return ({ EM_OPERACAO: 'Em operação', EM_OBRA: 'Em obra', INOPERANTE: 'Inoperante', EM_MANUTENCAO: 'Em manutenção' } as Record<string, string>)[s] ?? s;
+  }
+
+  /** A situação da requisição ou da transferência do estoque ligada à mobilização. */
+  protected situacaoEstoque(s: string | null | undefined): string {
+    return ({ ENVIADA: 'enviada', ATENDIDA: 'atendida, em trânsito', RECEBIDA: 'recebida', NEGADA: 'negada', CANCELADA: 'cancelada',
+      EM_TRANSITO: 'em trânsito' } as Record<string, string>)[s ?? ''] ?? (s ?? '').toLowerCase();
+  }
+
+  protected moeda(v: number): string {
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
   protected data(iso: string): string {

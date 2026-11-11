@@ -28,6 +28,8 @@ import {
   TrechoTransporte,
   VeiculoDto,
   ViagemDto,
+  CessaoVeiculoDto,
+  PedidoVeiculoEmergenciaDto,
 } from '../../../core/models/transporte';
 import { AuthService } from '../../../core/services/auth';
 import { PacienteService } from '../../../core/services/paciente';
@@ -47,7 +49,9 @@ type Gaveta =
   | { tipo: 'motivo'; acao: 'cancelarViagem'; item: ViagemDto }
   | { tipo: 'viagem'; item: ViagemDto | null }
   | { tipo: 'km'; acao: 'saida' | 'chegada'; item: ViagemDto }
-  | { tipo: 'embarque'; item: ViagemDto };
+  | { tipo: 'embarque'; item: ViagemDto }
+  | { tipo: 'ceder'; pedido: PedidoVeiculoEmergenciaDto }
+  | { tipo: 'devolver'; cessao: CessaoVeiculoDto };
 
 /** "2026-11-08T10:00" no fuso do navegador, para o input datetime-local. */
 function localIso(d: Date): string {
@@ -94,6 +98,9 @@ export class Frota {
 
   protected readonly aba = signal<Aba>('frota');
   protected readonly veiculos = signal<VeiculoDto[]>([]);
+  /** Os pedidos de veículo das emergências (ADR-0192). */
+  protected readonly pedidosEmergencia = signal<PedidoVeiculoEmergenciaDto[]>([]);
+  protected readonly disponiveisParaCeder = computed(() => this.veiculos().filter((v) => v.situacao === 'DISPONIVEL'));
   protected readonly plantoes = signal<PlantaoDto[]>([]);
   protected readonly solicitacoes = signal<SolicitacaoTransporteDto[]>([]);
   protected readonly viagens = signal<ViagemDto[]>([]);
@@ -139,6 +146,7 @@ export class Frota {
   protected readonly motivoForm = this.fb.nonNullable.group({ motivo: [''], recorrencia: [false] });
   protected readonly viagemForm = this.fb.nonNullable.group({ veiculoId: [''], condutorMatricula: [''], saida: [''], retorno: [''], destino: [''], observacao: [''] });
   protected readonly kmForm = this.fb.nonNullable.group({ quilometragem: [''] });
+  protected readonly cessaoForm = this.fb.nonNullable.group({ veiculoId: [''], quilometragem: [''], observacao: [''] });
   /** Os escolhidos na gaveta de viagem e quem embarcou na gaveta de embarque. */
   protected readonly escolhidas = signal<Set<string>>(new Set());
   protected readonly presencas = signal<Record<string, { embarcou: boolean; motivo: string }>>({});
@@ -246,6 +254,7 @@ export class Frota {
         this.carregando.set(false);
       });
       this.service.plantoes().pipe(catchError(() => of([]))).subscribe((p) => this.plantoes.set(p));
+      this.service.pedidosDeEmergencia().pipe(catchError(() => of([]))).subscribe((p) => this.pedidosEmergencia.set(p));
       this.carregarViagens();
     } else {
       this.carregando.set(false);
@@ -313,6 +322,8 @@ export class Frota {
       case 'viagem': return g.item ? 'Embarques de ' + g.item.prefixo : 'Programar viagem';
       case 'km': return (g.acao === 'saida' ? 'Saída de ' : 'Chegada de ') + g.item.prefixo;
       case 'embarque': return 'Embarque · ' + g.item.prefixo;
+      case 'ceder': return 'Ceder veículo · ' + g.pedido.emergenciaNome;
+      case 'devolver': return 'Devolver ' + g.cessao.prefixo;
     }
   }
 
@@ -433,6 +444,16 @@ export class Frota {
     this.escolhidas.set(s);
   }
 
+  protected abrirCeder(pedido: PedidoVeiculoEmergenciaDto): void {
+    this.cessaoForm.reset({ veiculoId: '', quilometragem: '', observacao: '' });
+    this.abrir({ tipo: 'ceder', pedido });
+  }
+
+  protected abrirDevolver(cessao: CessaoVeiculoDto): void {
+    this.cessaoForm.reset({ veiculoId: '', quilometragem: cessao.kmInicio != null ? String(cessao.kmInicio) : '', observacao: '' });
+    this.abrir({ tipo: 'devolver', cessao });
+  }
+
   protected abrirKm(acao: 'saida' | 'chegada', item: ViagemDto): void {
     const sugestao = acao === 'saida' ? this.veiculos().find((v) => v.uuid === item.veiculoId)?.quilometragem : item.kmSaida;
     this.kmForm.reset({ quilometragem: sugestao != null ? String(sugestao) : '' });
@@ -546,6 +567,23 @@ export class Frota {
         if (!this.validar(erros)) return;
         this.enviar(g.acao === 'saida' ? this.service.sair(g.item.uuid, km!) : this.service.chegar(g.item.uuid, km!),
           g.acao === 'saida' ? 'Saída registrada' : 'Chegada registrada', (r) => r.kmPercorridos != null ? `${r.prefixo} · ${r.kmPercorridos} km` : r.prefixo, false);
+        return;
+      }
+      case 'ceder': {
+        const v = this.cessaoForm.getRawValue();
+        if (!v.veiculoId) erros['veiculoCessao'] = 'Escolha o veículo.';
+        if (!this.validar(erros)) return;
+        this.enviar(this.service.ceder(g.pedido.mobilizacaoId, v.veiculoId, v.observacao.trim() || null), 'Veículo cedido',
+          (r) => (r.avisos.length ? r.avisos.join(' ') : `${r.cessao.prefixo} em serviço na emergência ${r.cessao.emergenciaNome}.`), false);
+        return;
+      }
+      case 'devolver': {
+        const v = this.cessaoForm.getRawValue();
+        const km = this.numero(v.quilometragem);
+        if (km != null && g.cessao.kmInicio != null && km < g.cessao.kmInicio) erros['kmCessao'] = `Na cessão estava em ${g.cessao.kmInicio}.`;
+        if (!this.validar(erros)) return;
+        this.enviar(this.service.devolver(g.cessao.uuid, km, v.observacao.trim() || null), 'Veículo devolvido',
+          (c) => `${c.prefixo} disponível de novo.`, false);
         return;
       }
       case 'embarque': {

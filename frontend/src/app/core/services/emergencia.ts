@@ -153,7 +153,8 @@ export class EmergenciaService {
     return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/acao/${acaoId}/situacao`, { situacao, observacao, motivo });
   }
 
-  mobilizar(uuid: string, dto: { tipo: TipoMobilizacao; origemId: string | null; destinoId: string; profissionalMatricula: string | null; recurso: string | null; quantidade: number | null; responsavel: string | null; inicio: string | null; fim: string | null }): Observable<EmergenciaDto> {
+  mobilizar(uuid: string, dto: { tipo: TipoMobilizacao; origemId: string | null; destinoId: string; profissionalMatricula: string | null; recurso: string | null; quantidade: number | null; responsavel: string | null; inicio: string | null; fim: string | null;
+    materialId?: string | null }): Observable<EmergenciaDto> {
     return this.http.post<EmergenciaDto>(`${this.api}/emergencia/${uuid}/mobilizacao`, dto);
   }
 

@@ -35,4 +35,6 @@ public class MobilizacaoRequestDto implements Serializable {
     private LocalDate inicio;
     private LocalDate fim;
     private UUID capacidadeAtivacaoId;
+    /** O material do insumo (ES3, ADR-0191); com a origem central, gera a requisição urgente. */
+    private UUID materialId;
 }

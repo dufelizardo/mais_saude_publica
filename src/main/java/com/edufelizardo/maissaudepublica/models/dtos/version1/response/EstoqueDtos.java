@@ -30,7 +30,7 @@ public final class EstoqueDtos {
     /** O material na unidade: o total, o mínimo, a próxima validade e os lotes com saldo. */
     public record ItemDeSaldo(UUID materialId, String codigo, String nome, CategoriaMaterial categoria, UnidadeMedidaMaterial unidadeMedida,
                               boolean controlaLote, int total, Integer minimo, boolean abaixoDoMinimo, LocalDate proximaValidade,
-                              BigDecimal valor, List<Lote> lotes) {
+                              BigDecimal valor, List<Lote> lotes, int reservado, int disponivel) {
     }
 
     /** Lote que vence em até 90 dias ou já venceu, com saldo. */
@@ -51,6 +51,7 @@ public final class EstoqueDtos {
     public record Movimentacao(UUID uuid, TipoMovimentacaoEstoque tipo, UUID materialId, String materialCodigo, String materialNome,
                                UUID unidadeId, String unidadeNome, UUID loteId, String numeroLote, LocalDate validade, int quantidade,
                                int saldoApos, OrigemEntradaEstoque origem, String documento, String fornecedor, String setorNome,
-                               MotivoPerdaEstoque motivoPerda, String justificativa, String profissionalNome, Instant registradoEm) {
+                               MotivoPerdaEstoque motivoPerda, String justificativa, String profissionalNome, Instant registradoEm,
+                               UUID emergenciaId) {
     }
 }

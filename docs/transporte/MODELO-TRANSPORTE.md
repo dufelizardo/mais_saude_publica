@@ -8,7 +8,7 @@ Desenho na [ADR-0178](../adr/0178-transporte-sanitario.md).
 |---|---|---|
 | T1 | Frota com situação em histórico, plantão das viaturas com tripulação mínima, viatura empenhada pelo SAMU | ✅ ADR-0178, V63 |
 | T2 | Transporte eletivo: solicitação (consulta, exame, hemodiálise, alta, TFD), agenda de viagens, embarques e quilometragem | ✅ ADR-0190, V75 |
-| T3 | Veículos nas Emergências (E4) | ⬜ só com aprovação |
+| T3 | Veículos nas Emergências: pedido, cessão e devolução | ✅ ADR-0192, V76 |
 
 ## Entidades (T1)
 
@@ -68,6 +68,17 @@ ViagemTransporte (veiculo eletivo, condutor)
   - o compromisso dentro da janela;
   - sem conflito de veículo ou condutor;
   - a saída põe o veículo em serviço; a chegada atualiza a quilometragem e o devolve.
+
+## Veículos nas emergências (T3)
+
+```text
+Mobilizacao (veículo, E3)
+  └── CessaoVeiculo: veiculo · cedidaEm · devolvidaEm · kmInicio · kmFim
+```
+
+- A coordenação pede; a frota cede (`TRANSPORTE.GERENCIAR` na unidade do veículo), até a quantidade pedida.
+- Cedido: em serviço (mecanismo da T1), sem viagem eletiva nova (409); as programadas voltam como aviso.
+- Devolvido pela frota com a quilometragem, ou no fim do pedido, na desmobilização e no encerramento.
 
 ## Permissões
 

@@ -15,6 +15,8 @@ import {
   OperacaoEstoqueRequestDto,
   RequisicaoEstoqueDto,
   TransferenciaEstoqueDto,
+  EmergenciaAbertaDto,
+  ReservaEstoqueDto,
 } from '../models/estoque';
 
 /** Estoque e Almoxarifado (ADR-0177): catálogo, saldo por unidade, livro de movimentação e alertas. */
@@ -59,7 +61,8 @@ export class EstoqueService {
     return this.http.post<MovimentacaoEstoqueDto>(`${this.api}/entrada`, dto);
   }
 
-  saida(dto: { unidadeId: string; materialId: string; quantidade: number; loteId?: string | null; setorId?: string | null; justificativa?: string | null }): Observable<MovimentacaoEstoqueDto[]> {
+  saida(dto: { unidadeId: string; materialId: string; quantidade: number; loteId?: string | null; setorId?: string | null; justificativa?: string | null;
+    emergenciaId?: string | null }): Observable<MovimentacaoEstoqueDto[]> {
     return this.http.post<MovimentacaoEstoqueDto[]>(`${this.api}/saida`, dto);
   }
 
@@ -72,6 +75,27 @@ export class EstoqueService {
   }
 
   // ── Central, requisição, transferência e inventário (ADR-0189) ──
+
+  // ── Emergências (ADR-0191) ──
+
+  emergenciasAbertas(): Observable<EmergenciaAbertaDto[]> {
+    return this.http.get<EmergenciaAbertaDto[]>(`${this.api}/emergencias`);
+  }
+
+  reservas(filtro: { unidadeId?: string; emergenciaId?: string }): Observable<ReservaEstoqueDto[]> {
+    let params = new HttpParams();
+    if (filtro.unidadeId) params = params.set('unidadeId', filtro.unidadeId);
+    if (filtro.emergenciaId) params = params.set('emergenciaId', filtro.emergenciaId);
+    return this.http.get<ReservaEstoqueDto[]>(`${this.api}/reserva`, { params });
+  }
+
+  reservar(dto: { emergenciaId: string; unidadeId: string; materialId: string; quantidade: number; justificativa: string }): Observable<ReservaEstoqueDto> {
+    return this.http.post<ReservaEstoqueDto>(`${this.api}/reserva`, dto);
+  }
+
+  liberarReserva(uuid: string, motivo: string): Observable<ReservaEstoqueDto> {
+    return this.http.post<ReservaEstoqueDto>(`${this.api}/reserva/${uuid}/liberacao`, { motivo });
+  }
 
   centrais(): Observable<CentralEstoqueDto[]> {
     return this.http.get<CentralEstoqueDto[]>(`${this.api}/centrais`);

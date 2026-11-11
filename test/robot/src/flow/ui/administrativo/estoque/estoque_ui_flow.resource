@@ -4,6 +4,7 @@ Library     String
 Resource    ../../../../pom/common/mais_saude_publica_ui_common.resource
 Resource    ../../../estoque/estoque_flow.resource
 Resource    ../../../estoque/central_estoque_flow.resource
+Resource    ../../../estoque/estoque_emergencia_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Estoque e almoxarifado (ADR-0177).
@@ -108,5 +109,41 @@ UI Estoque - Abrir E Fechar Inventario
     ${lista}=    GET Estoque Central    inventario?unidadeId=${central}
     Should Be Equal    ${lista.json()}[0][situacao]    FECHADO
     Should Be Equal As Integers    ${lista.json()}[0][comDiferenca]    2
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Estoque - Reservar E Consumir Pela Emergencia
+    [Documentation]    Reserva para a emergência pela gaveta; a saída comum acima do livre mostra o erro; o consumo da emergência usa a reserva (ADR-0191).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${material}    ${nome}=    Seed Material Estoque
+    ${sufixo}=    Generate Random String    6    [UPPER][NUMBERS]
+    ${e}=    Entrada De Lote    ${unidade}    ${material}    ${20}    EMG${sufixo}    200
+    Should Be Equal As Integers    ${e.status_code}    201
+    ${em}=    Seed Emergencia
+    ${emergencia}=    Set Variable    ${em.json()}[uuid]
+    UI Estoque - Abrir Na Unidade    ${unidade}
+    Wait For Elements State    css=ul[aria-label="Materiais em estoque"] >> text=${nome}    visible
+    Clicar Botao    Reservar para emergência
+    Wait For Elements State    css=#f-emergenciaReserva option[value="${emergencia}"]    attached
+    Select Options By    id=f-emergenciaReserva    value    ${emergencia}
+    Select Options By    id=f-materialReserva    value    ${material}
+    Preencher Campo Da Gaveta    quantidadeReserva    15
+    Preencher Campo Da Gaveta    justificativaReserva    Kits para os abrigos
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Reserva registrada
+    Wait For Elements State    css=ul[aria-label="Reservas para emergências"] >> text=${nome}    visible
+    Click    css=button[aria-label="Saída de ${nome}"]
+    Preencher Campo Da Gaveta    quantidadeSaida    10
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    quantidadeSaida
+    Should Contain    ${erro}    reservados
+    Select Options By    id=f-emergenciaSaida    value    ${emergencia}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Consumo da emergência registrado
+    ${lista}=    GET Estoque Emergencia    reserva?emergenciaId=${emergencia}
+    Should Be Equal As Integers    ${lista.json()}[0][consumida]    10
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
