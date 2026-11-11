@@ -8,7 +8,7 @@ Vacina.
 | Fatia | O que é | Estado |
 |---|---|---|
 | ES1 | Catálogo, estoque por unidade em lotes, livro (entrada, saída por consumo, perda, ajuste), mínimo e alertas | ✅ ADR-0177, V62 |
-| ES2 | Almoxarifado central, requisição das unidades, transferência em duas etapas com divergência, inventário com fechamento | ⬜ só com aprovação |
+| ES2 | Almoxarifado central, requisição das unidades, transferência em duas etapas com divergência, inventário com fechamento | ✅ ADR-0189, V74 |
 | ES3 | Emergências (E4): necessidade de insumo da E3 atendida pelo estoque, reserva e consumo extraordinário | ⬜ só com aprovação |
 
 ## Entidades (ES1)

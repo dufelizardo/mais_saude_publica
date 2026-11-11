@@ -111,6 +111,13 @@ const MODULOS: Modulo[] = [
     registrar: ['APH.REGISTRAR'],
     gerenciar: [],
   },
+  {
+    nome: 'Estoque e almoxarifado',
+    sub: 'saldo, entradas, consumo, requisição à central, transferência e inventário (ADR-0177, ADR-0189)',
+    ver: ['ESTOQUE.CONSULTAR'],
+    registrar: ['ESTOQUE.MOVIMENTAR', 'ESTOQUE.REQUISITAR'],
+    gerenciar: ['ESTOQUE.GERENCIAR', 'ESTOQUE.ATENDER'],
+  },
   { nome: 'Equipes', sub: 'equipes de saúde e membros (ADR-0103)', ver: [], registrar: [], gerenciar: ['EQUIPE.GERENCIAR'] },
   { nome: 'Escalas', sub: 'turnos, vagas, troca e cópia de semana (ADR-0105)', ver: [], registrar: [], gerenciar: ['ESCALA.GERENCIAR'] },
   {
