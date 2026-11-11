@@ -32,7 +32,7 @@ correspondente está na ADR indicada.
 | Saúde Mental | [`saude-mental/MODELO-SAUDE-MENTAL.md`](./saude-mental/MODELO-SAUDE-MENTAL.md) | [0112](./adr/0112-saude-mental.md), 0120 a 0123, 0153, 0155 | funcionando (SM1 a SM6) |
 | Gestão de Emergências e Desastres | [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md) | [0113](./adr/0113-emergencias-e-desastres.md), 0156 a 0161 | em parte (E1 a E3, E5 e E6 funcionando) |
 | Comunicação e Educação em Saúde | [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md) | [0114](./adr/0114-comunicacao-e-educacao-em-saude.md), 0168, 0173, 0174 | em parte (C1, C2 e C4 funcionando) |
-| Estoque e Almoxarifado | [`estoque/MODELO-ESTOQUE.md`](./estoque/MODELO-ESTOQUE.md) | [0177](./adr/0177-estoque-e-almoxarifado.md) | em parte (ES1 funcionando) |
+| Estoque e Almoxarifado | [`estoque/MODELO-ESTOQUE.md`](./estoque/MODELO-ESTOQUE.md) | [0177](./adr/0177-estoque-e-almoxarifado.md), [0189](./adr/0189-estoque-central-requisicao-inventario.md) | em parte (ES1 e ES2 funcionando) |
 | Transporte Sanitário | [`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md) | [0178](./adr/0178-transporte-sanitario.md) | em parte (T1 funcionando) |
 | Gestão da Rede de Atenção | [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md) | [0179](./adr/0179-gestao-da-rede-de-atencao.md) | em parte (GR1 funcionando) |
 

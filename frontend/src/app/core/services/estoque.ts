@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
@@ -10,6 +10,11 @@ import {
   OrigemEntradaEstoque,
   SaldoEstoqueDto,
   TipoMovimentacaoEstoque,
+  CentralEstoqueDto,
+  InventarioEstoqueDto,
+  OperacaoEstoqueRequestDto,
+  RequisicaoEstoqueDto,
+  TransferenciaEstoqueDto,
 } from '../models/estoque';
 
 /** Estoque e Almoxarifado (ADR-0177): catálogo, saldo por unidade, livro de movimentação e alertas. */
@@ -64,5 +69,58 @@ export class EstoqueService {
 
   ajuste(dto: { loteId: string; quantidadeContada: number; justificativa: string }): Observable<MovimentacaoEstoqueDto> {
     return this.http.post<MovimentacaoEstoqueDto>(`${this.api}/ajuste`, dto);
+  }
+
+  // ── Central, requisição, transferência e inventário (ADR-0189) ──
+
+  centrais(): Observable<CentralEstoqueDto[]> {
+    return this.http.get<CentralEstoqueDto[]>(`${this.api}/centrais`);
+  }
+
+  requisicoes(filtro: { unidadeId?: string; centralId?: string }): Observable<RequisicaoEstoqueDto[]> {
+    let params = new HttpParams();
+    if (filtro.unidadeId) params = params.set('unidadeId', filtro.unidadeId);
+    if (filtro.centralId) params = params.set('centralId', filtro.centralId);
+    return this.http.get<RequisicaoEstoqueDto[]>(`${this.api}/requisicao`, { params });
+  }
+
+  requisicao(uuid: string): Observable<RequisicaoEstoqueDto> {
+    return this.http.get<RequisicaoEstoqueDto>(`${this.api}/requisicao/${uuid}`);
+  }
+
+  criarRequisicao(dto: OperacaoEstoqueRequestDto): Observable<RequisicaoEstoqueDto> {
+    return this.http.post<RequisicaoEstoqueDto>(`${this.api}/requisicao`, dto);
+  }
+
+  acaoRequisicao(uuid: string, acao: 'envio' | 'cancelamento' | 'negacao' | 'atendimento', dto: OperacaoEstoqueRequestDto): Observable<RequisicaoEstoqueDto> {
+    return this.http.post<RequisicaoEstoqueDto>(`${this.api}/requisicao/${uuid}/${acao}`, dto);
+  }
+
+  transferencias(unidadeId: string): Observable<TransferenciaEstoqueDto[]> {
+    return this.http.get<TransferenciaEstoqueDto[]>(`${this.api}/transferencia`, { params: { unidadeId } });
+  }
+
+  transferir(dto: OperacaoEstoqueRequestDto): Observable<TransferenciaEstoqueDto> {
+    return this.http.post<TransferenciaEstoqueDto>(`${this.api}/transferencia`, dto);
+  }
+
+  receber(uuid: string, dto: OperacaoEstoqueRequestDto): Observable<TransferenciaEstoqueDto> {
+    return this.http.post<TransferenciaEstoqueDto>(`${this.api}/transferencia/${uuid}/recebimento`, dto);
+  }
+
+  inventarios(unidadeId: string): Observable<InventarioEstoqueDto[]> {
+    return this.http.get<InventarioEstoqueDto[]>(`${this.api}/inventario`, { params: { unidadeId } });
+  }
+
+  inventario(uuid: string): Observable<InventarioEstoqueDto> {
+    return this.http.get<InventarioEstoqueDto>(`${this.api}/inventario/${uuid}`);
+  }
+
+  abrirInventario(dto: OperacaoEstoqueRequestDto): Observable<InventarioEstoqueDto> {
+    return this.http.post<InventarioEstoqueDto>(`${this.api}/inventario`, dto);
+  }
+
+  acaoInventario(uuid: string, acao: 'contagem' | 'fechamento' | 'cancelamento', dto: OperacaoEstoqueRequestDto): Observable<InventarioEstoqueDto> {
+    return this.http.post<InventarioEstoqueDto>(`${this.api}/inventario/${uuid}/${acao}`, dto);
   }
 }

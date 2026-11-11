@@ -39,7 +39,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 10 | [Laboratório / Diagnóstico](#10-laboratório--diagnóstico) | ✅ | controle de qualidade interno; integrações (LIS, PACS, LACEN, BPA) no domínio 20 |
 | 11 | [Regulação](#11-regulação) | ✅ | RL1 e RL5 feitas (central de leitos, ficha do APH); SISREG, SIGTAP e telefonia do 192 no domínio 20 |
 | 12 | [Leitos / Internação](#12-leitos--internação) | ✅ | RL1 a RL4 feitas (central de leitos, eletiva e censo, laudo de AIH, prescrição e checagem); SIH e faturamento no domínio 20 |
-| 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 feita (catálogo, lotes, livro, mínimo e alertas); ES2 (central, requisição, inventário) e ES3 (emergências) |
+| 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | 🟡 | ES1 e ES2 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário); falta a ES3 (emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | 🟡 | T1 feita (frota, plantão, viatura no SAMU); T2 (transporte eletivo e TFD) e T3 (emergências) |
@@ -352,7 +352,8 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   estoque mínimo, alertas de mínimo e validade e o valor do estoque. Tela em Administrativo e o papel Almoxarife.
 
 **Falta:**
-- [ ] **ES2:** almoxarifado central, requisição das unidades, transferência em duas etapas com divergência e inventário com fechamento.
+- [x] **ES2:** almoxarifado central (capacidade Central de abastecimento), requisição das unidades, transferência em duas etapas com
+  divergência e inventário com fechamento ([ADR-0189](./adr/0189-estoque-central-requisicao-inventario.md)).
 - [ ] **ES3:** consumido pela mobilização em emergência: reserva, consumo extraordinário, redistribuição (domínio 27, E4).
 - [ ] Fornecedor cadastrado e pedido de compra (domínio 14); custo médio e contabilidade (domínio 17); código de barras.
 

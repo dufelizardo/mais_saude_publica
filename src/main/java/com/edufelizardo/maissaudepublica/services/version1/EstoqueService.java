@@ -72,6 +72,7 @@ public class EstoqueService {
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
     @Autowired private com.edufelizardo.maissaudepublica.repositories.ConsumoSemSaldoRepository consumoSemSaldoRepository;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.InventarioEstoqueRepository inventarioRepository;
 
     // ── Catálogo ──────────────────────────────────────────────────────────────────────────────────
 
@@ -260,7 +261,7 @@ public class EstoqueService {
                 break;
             }
             int tirar = Math.min(falta, l.getQuantidade());
-            MovimentacaoEstoque mov = lancar(l, TipoMovimentacaoEstoque.SAIDA_CONSUMO, -tirar, quem);
+            MovimentacaoEstoque mov = lancar(l, TipoMovimentacaoEstoque.SAIDA_CONSUMO, -tirar, quem, true);
             mov.setJustificativa(origem.length() > 500 ? origem.substring(0, 500) : origem);
             movimentacaoRepository.save(mov);
             falta -= tirar;
@@ -363,6 +364,19 @@ public class EstoqueService {
     // ── Apoio ─────────────────────────────────────────────────────────────────────────────────────
 
     private MovimentacaoEstoque lancar(LoteMaterial l, TipoMovimentacaoEstoque tipo, int variacao, Profissional quem) {
+        return lancar(l, tipo, variacao, quem, false);
+    }
+
+    /**
+     * Lança no livro. Com inventário aberto na unidade, a movimentação para (422), menos o consumo lançado pelo sistema e o próprio
+     * fechamento do inventário (ADR-0189), que passam {@code livre}.
+     */
+    MovimentacaoEstoque lancar(LoteMaterial l, TipoMovimentacaoEstoque tipo, int variacao, Profissional quem, boolean livre) {
+        if (!livre && inventarioRepository.existsByUnidade_UuidAndSituacao(l.getUnidade().getUuid(),
+                com.edufelizardo.maissaudepublica.models.enuns.SituacaoInventarioEstoque.ABERTO)) {
+            throw new ResourceUnprocessableEntityException("A unidade " + l.getUnidade().getNome()
+                    + " está com inventário aberto: a movimentação volta quando ele for fechado ou cancelado.");
+        }
         int saldo = l.getQuantidade() + variacao;
         if (saldo < 0) {
             throw new ResourceUnprocessableEntityException("O saldo do lote ficaria negativo.");
@@ -380,6 +394,27 @@ public class EstoqueService {
         mov.setRegistradoEm(Instant.now());
         mov.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         return mov;
+    }
+
+    MovimentacaoEstoque salvar(MovimentacaoEstoque m) {
+        return movimentacaoRepository.save(m);
+    }
+
+    /** O lote do mesmo número (e validade) no destino, travado, ou um lote novo (ADR-0189). */
+    LoteMaterial loteDeEntrada(MaterialEstoque m, UnidadeDeSaude u, String numero, LocalDate validade, BigDecimal custo) {
+        List<LoteMaterial> existentes = loteRepository.findDoMaterialNaUnidadeParaAtualizar(m.getUuid(), u.getUuid());
+        LoteMaterial lote = existentes.stream().filter(l -> Objects.equals(normalizar(l.getNumeroLote()), normalizar(numero))).findFirst().orElse(null);
+        if (lote != null && !Objects.equals(lote.getValidade(), validade)) {
+            throw new ResourceUnprocessableEntityException("O lote " + numero + " já está no destino com a validade " + lote.getValidade() + ".");
+        }
+        if (lote == null) {
+            lote = loteRepository.save(new LoteMaterial(null, m, u, numero, validade, 0, custo, Instant.now()));
+        }
+        return lote;
+    }
+
+    Profissional profissionalPorMatricula(String matricula) {
+        return profissional(matricula);
     }
 
     private LoteMaterial loteParaMovimentar(UUID loteId) {

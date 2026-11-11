@@ -35,7 +35,7 @@ public class MovimentacaoEstoque implements Serializable {
     private LoteMaterial lote;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20, updatable = false)
+    @Column(nullable = false, length = 30, updatable = false)
     private TipoMovimentacaoEstoque tipo;
 
     /** Positiva na entrada, negativa na saída; no ajuste, a diferença contada. */
@@ -69,6 +69,10 @@ public class MovimentacaoEstoque implements Serializable {
 
     @Column(length = 500, updatable = false)
     private String justificativa;
+
+    /** A transferência que originou a saída, a entrada ou o estorno (ADR-0189). */
+    @Column(updatable = false)
+    private UUID transferenciaId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profissional_id", referencedColumnName = "uuid", updatable = false)

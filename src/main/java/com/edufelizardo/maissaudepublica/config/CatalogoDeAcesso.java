@@ -98,6 +98,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Estoque e almoxarifado (ADR-0177): materiais gerais; medicamento é da Farmácia e vacina, da Sala de Vacina.
         PERMISSOES.put("ESTOQUE.CONSULTAR", new Def("Consultar o saldo, o livro e os alertas do estoque de materiais", OPERACAO));
         PERMISSOES.put("ESTOQUE.MOVIMENTAR", new Def("Registrar entrada, saída por consumo, perda e ajuste de materiais", OPERACAO));
+        PERMISSOES.put("ESTOQUE.REQUISITAR", new Def("Pedir materiais ao almoxarifado central para a unidade", OPERACAO));
+        PERMISSOES.put("ESTOQUE.ATENDER", new Def("Atender e negar as requisições na central de abastecimento", OPERACAO));
         PERMISSOES.put("ESTOQUE.GERENCIAR", new Def("Manter o catálogo de materiais e o estoque mínimo", OPERACAO));
         // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.
         PERMISSOES.put("TRANSPORTE.CONSULTAR", new Def("Consultar a frota, a situação dos veículos e os plantões", OPERACAO));
@@ -243,7 +245,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "LEITO.GERENCIAR", "CENSO.FECHAR", "EQUIPE.GERENCIAR", "ESCALA.GERENCIAR", "PROGRAMA.ACOMPANHAR",
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
-                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR", "ESTOQUE.CONSULTAR")));
+                        "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR", "ESTOQUE.CONSULTAR", "ESTOQUE.REQUISITAR")));
         // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
                 "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",
@@ -312,7 +314,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Estoque e almoxarifado (ADR-0177).
         PAPEIS.put("ALMOXARIFE", new PapelPadrao("Almoxarife",
                 "Entrada, saída por consumo, perda e ajuste de materiais e insumos gerais (ADR-0177).",
-                List.of("ESTOQUE.CONSULTAR", "ESTOQUE.MOVIMENTAR")));
+                List.of("ESTOQUE.CONSULTAR", "ESTOQUE.MOVIMENTAR", "ESTOQUE.REQUISITAR", "ESTOQUE.ATENDER")));
         PAPEIS.put("FARMACEUTICO", new PapelPadrao("Farmacêutico",
                 "Estoque, dispensação e transferências; lê a prescrição.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "FARMACIA.CONSULTAR", "FARMACIA.GERENCIAR_ESTOQUE",

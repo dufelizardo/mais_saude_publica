@@ -187,8 +187,9 @@ real":
   - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);
   - na Enfermagem, `Cuidado` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
-  - #13 Estoque — ~~ES1 (catálogo, lotes, livro, mínimo e alertas)~~ — ADR-0177; ES2 (central, requisição, transferência,
-    inventário) e ES3 (emergências) com aprovação; conceder o papel **Almoxarife** quando a autorização for ligada;
+  - #13 Estoque — ~~ES1 (catálogo, lotes, livro, mínimo e alertas)~~ — ADR-0177; ~~ES2 (central, requisição, transferência,
+    inventário)~~ — ADR-0189; ES3 (emergências) com aprovação; ponto de reposição automático; incluir a capacidade Central de
+    abastecimento no almoxarifado central; conceder o papel **Almoxarife** quando a autorização for ligada;
   - #14 Compras;
   - #15 Patrimônio;
   - #17 Financeiro;
