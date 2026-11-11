@@ -35,6 +35,7 @@ public class EducacaoPermanenteService {
     /** Versões que passaram pela revisão técnica. */
     private static final Set<SituacaoConteudo> REVISADOS = EnumSet.of(SituacaoConteudo.APROVADO, SituacaoConteudo.PUBLICADO);
 
+    @Autowired @org.springframework.context.annotation.Lazy private EducacaoEmSaudeService educacaoEmSaude;
     @Autowired private CompetenciaRepository competenciaRepository;
     @Autowired private TreinamentoRepository treinamentoRepository;
     @Autowired private ConteudoEducativoRepository conteudoRepository;
@@ -140,7 +141,12 @@ public class EducacaoPermanenteService {
                 uso.computeIfAbsent(g, k -> new ArrayList<>()).add(t.getNome());
             }
         }
-        return uso.entrySet().stream().map(e -> new EducacaoPermanenteDto.UsoDoConteudo(e.getKey(), e.getValue().stream().sorted().toList())).toList();
+        Map<UUID, int[]> acoes = educacaoEmSaude.usoDosConteudos();
+        acoes.keySet().forEach(g -> uso.computeIfAbsent(g, k -> new ArrayList<>()));
+        return uso.entrySet().stream().map(e -> {
+            int[] a = acoes.getOrDefault(e.getKey(), new int[2]);
+            return new EducacaoPermanenteDto.UsoDoConteudo(e.getKey(), e.getValue().stream().sorted().toList(), a[0], a[1]);
+        }).toList();
     }
 
     // ── Profissional ───────────────────────────────────────────────────────────────────────────────

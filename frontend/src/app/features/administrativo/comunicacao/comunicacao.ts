@@ -80,6 +80,8 @@ export class Comunicacao {
   protected readonly materiaisDe = signal<ConteudoEducativoDto | null>(null);
   /** Treinamentos que usam cada conteúdo, pelo grupo (ADR-0173). */
   protected readonly usoNosTreinamentos = signal<Record<string, string[]>>({});
+  /** C3 (ADR-0195): em quantas ações educativas o conteúdo foi usado e quantas pessoas alcançou. */
+  protected readonly usoNasAcoes = signal<Record<string, { acoes: number; pessoas: number }>>({});
   protected readonly canais = signal<CanalComunicacaoDto[]>([]);
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
   protected readonly carregando = signal(true);
@@ -133,7 +135,8 @@ export class Comunicacao {
       campanhas: this.service.campanhas().pipe(catchError(() => of([]))),
     }).subscribe((r) => {
       this.campanhas.set(r.campanhas);
-      this.usoNosTreinamentos.set(Object.fromEntries(r.uso.map((u) => [u.grupoId, u.treinamentos])));
+      this.usoNosTreinamentos.set(Object.fromEntries(r.uso.filter((u) => u.treinamentos.length).map((u) => [u.grupoId, u.treinamentos])));
+      this.usoNasAcoes.set(Object.fromEntries(r.uso.filter((u) => u.acoesEducativas).map((u) => [u.grupoId, { acoes: u.acoesEducativas, pessoas: u.pessoasAlcancadas }])));
       this.comunicados.set(r.comunicados);
       this.conteudos.set(r.conteudos);
       this.canais.set(r.canais);

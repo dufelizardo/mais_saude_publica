@@ -41,4 +41,7 @@ export interface CompetenciaDoProfissionalDto {
 export interface UsoDoConteudoDto {
   grupoId: string;
   treinamentos: string[];
+  /** C3 (ADR-0195): em quantas ações educativas e quantas pessoas alcançou. */
+  acoesEducativas: number;
+  pessoasAlcancadas: number;
 }

@@ -50,6 +50,7 @@ public class CampanhaComunicacaoService {
     @Autowired private CampanhaRepository campanhaOperacionalRepository;
     @Autowired private ConteudoEducativoRepository conteudoRepository;
     @Autowired private EducacaoPermanenteService educacaoPermanenteService;
+    @Autowired private EducacaoEmSaudeService educacaoEmSaudeService;
     @Autowired private ControleDeAcesso controleDeAcesso;
 
     // ── Campanhas ──────────────────────────────────────────────────────────────────────────────────
@@ -304,7 +305,7 @@ public class CampanhaComunicacaoService {
                 a.setFalhas(a.getFalhas() + p.getFalhas());
             }
         }
-        return new CampanhaComunicacaoDto(c.getUuid(), c.getNome(), c.getObjetivo(), c.getDescricao(), c.getInicio(), c.getFim(), c.getSituacao(), c.getPublicoAlvo(),
+        return new CampanhaComunicacaoDto(educacaoEmSaudeService.daCampanha(c.getUuid()), c.getUuid(), c.getNome(), c.getObjetivo(), c.getDescricao(), c.getInicio(), c.getFim(), c.getSituacao(), c.getPublicoAlvo(),
                 c.getFaixaEtaria(), c.getUnidade() != null ? c.getUnidade().getUuid() : null, c.getUnidade() != null ? c.getUnidade().getNome() : null,
                 c.getTerritorios().stream().map(t -> new CampanhaComunicacaoDto.Item(t.getUuid(), t.getNome())).sorted(Comparator.comparing(CampanhaComunicacaoDto.Item::getNome)).toList(),
                 c.getTemas().stream().sorted().toList(), new ArrayList<>(c.getCanais().stream().map(CanalComunicacao::getUuid).toList()),

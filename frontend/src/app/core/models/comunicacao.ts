@@ -177,8 +177,52 @@ export interface ConteudoDaCampanhaDto {
   vencido: boolean;
 }
 
+/** Educação em saúde (ADR-0195): o detalhe educativo da ação coletiva de Programas. */
+export type NivelParticipacao = 'BAIXA' | 'MEDIA' | 'ALTA';
+
+export const NIVEIS_PARTICIPACAO: Record<NivelParticipacao, string> = { BAIXA: 'Baixa', MEDIA: 'Média', ALTA: 'Alta' };
+
+export interface AcaoEducativaDto {
+  acaoId: string;
+  situacao: string;
+  tema: string | null;
+  campanhaComunicacaoId: string | null;
+  campanhaComunicacaoNome: string | null;
+  conteudos: { grupoId: string; uuid: string; titulo: string; versao: number; validade: string; vencido: boolean }[];
+  materiais: { materialId: string; titulo: string; formato: string; quantidade: number; retirado: boolean }[];
+  microareas: { microareaId: string; codigo: string; areaNome: string }[];
+  publicoAlcancado: number | null;
+  participacao: NivelParticipacao | null;
+  avaliacao: string | null;
+  avaliadoEm: string | null;
+}
+
+export interface AcaoEducativaRequestDto {
+  tema: string;
+  conteudoGrupoIds: string[];
+  materiais: { materialId: string; quantidade: number }[];
+  microareaIds: string[];
+  campanhaComunicacaoId: string | null;
+}
+
+export interface AcaoEducativaDaCampanhaDto {
+  acaoId: string;
+  descricao: string | null;
+  local: string | null;
+  unidadeNome: string | null;
+  dataPrevista: string;
+  realizadaEm: string | null;
+  situacao: string;
+  tema: string;
+  publicoAlcancado: number | null;
+  materiaisDistribuidos: number;
+  participacao: NivelParticipacao | null;
+}
+
 export interface CampanhaComunicacaoDto {
   uuid: string;
+  /** C3 (ADR-0195): as ações educativas de Programas ligadas à campanha. */
+  acoesEducativas?: AcaoEducativaDaCampanhaDto[];
   nome: string;
   objetivo: string;
   descricao?: string | null;
