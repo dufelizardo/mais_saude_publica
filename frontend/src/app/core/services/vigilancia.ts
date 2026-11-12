@@ -74,6 +74,12 @@ export class VigilanciaService {
     return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/encerramento`, { evolucao, ...(esavi ?? {}) });
   }
 
+  /** As comunicações obrigatórias da violência ainda não feitas (ADR-0201). */
+  comunicacoesPendentes(): Observable<{ notificacaoId: string; pacienteNome: string; unidadeNome: string; dataNotificacao: string; destino: string; prazo: string; vencida: boolean }[]> {
+    return this.http.get<{ notificacaoId: string; pacienteNome: string; unidadeNome: string; dataNotificacao: string; destino: string; prazo: string; vencida: boolean }[]>(
+      `${this.api}/comunicacoes-pendentes`);
+  }
+
   sugestoes(unidadeId?: string): Observable<SugestaoNotificacaoDto[]> {
     let params = new HttpParams();
     if (unidadeId) params = params.set('unidadeId', unidadeId);

@@ -3,6 +3,7 @@ Resource    ../../../pom/ui/vigilancia/vigilancia_ui_pom.resource
 Resource    ../../vigilancia/vigilancia_flow.resource
 Resource    ../../vigilancia/vigilancia_contatos_flow.resource
 Resource    ../../vigilancia/vigilancia_surto_flow.resource
+Resource    ../../vigilancia/comunicacao_violencia_flow.resource
 Resource    ../../../pom/ui/administrativo/territorio/territorio_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -233,5 +234,21 @@ UI Vigilancia - Medida Do Caso
     Clicar Botao    Salvar medida
     Wait For Elements State    css=[aria-label="Medidas de controle"] >> text=Isolamento domiciliar    visible
     Wait For Elements State    css=[aria-label="Linha do tempo do caso"] >> text=Medida    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Comunicar Violencia
+    [Documentation]    A notificação de violência contra a mulher aparece nas comunicações pendentes; pelo detalhe, a comunicação à delegacia (ADR-0201).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${nome}=    Seed Paciente Com Idade    30    FEMININO
+    ${n}=    Notificar Violencia    ${paciente}    ${unidade}
+    ${delegacia}=    Seed Instituicao Externa    Delegacia Robot UI    SEGURANCA_PUBLICA    SEGURANCA_PUBLICA
+    UI Vigilancia - Abrir
+    Click    css=[aria-label="Comunicações obrigatórias pendentes"] button[aria-label="Abrir notificação de ${nome}"]
+    Wait For Elements State    css=[aria-label="Comunicação obrigatória"] >> text=Autoridade policial    visible
+    Select Options By    id=f-cv-inst    value    ${delegacia}
+    Click    css=[aria-label="Comunicação obrigatória"] button >> text=Comunicar
+    Wait For Elements State    css=[aria-label="Comunicação obrigatória"] >> text=Feita    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

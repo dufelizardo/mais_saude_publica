@@ -78,6 +78,19 @@
   <div style="padding: var(--s-5);">
     @switch (aba()) {
       @case ('notificacoes') {
+        @if (comunicacoesPendentes().length) {
+          <section class="box box--warn" aria-label="Comunicações obrigatórias pendentes">
+            <strong>Comunicações obrigatórias da violência pendentes</strong>
+            <ul class="eq-prof">
+              @for (c of comunicacoesPendentes(); track c.notificacaoId) {
+                <li class="mo-row">
+                  <span><span class="cell-main">{{ c.pacienteNome }} · {{ c.destino }}</span><span class="cell-sub">{{ c.unidadeNome }} · notificada em {{ data(c.dataNotificacao) }} · prazo {{ dataHora(c.prazo) }}@if (c.vencida) { · <span class="tag tag--alert">Vencida</span> }</span></span>
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="abrirNotificacao(c.notificacaoId)" [attr.aria-label]="'Abrir notificação de ' + c.pacienteNome">Abrir</button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
         @if (notificacoes()?.lista?.length) {
           <div class="tbl-wrap">
             <table aria-label="Notificações">
@@ -337,6 +350,7 @@
               }
               <app-local-do-caso [notificacao]="n" [podeInvestigar]="podeInvestigar()" (atualizada)="notificacaoAtualizada($event)" />
               @if (n.agravoCodigo === 'ATENDIMENTO_ANTIRRABICO' && podeInvestigar()) { <app-animal-agressor [notificacaoId]="n.uuid" /> }
+              @if (n.agravoCodigo === 'VIOLENCIA_INTERPESSOAL_AUTOPROVOCADA') { <app-comunicacao-violencia [notificacaoId]="n.uuid" /> }
               @if (n.contatos.length || podeInvestigar()) {
                 <app-contatos-da-notificacao [notificacao]="n" [podeInvestigar]="podeInvestigar() && n.situacao !== 'ENCERRADA'"
                   (atualizada)="notificacaoAtualizada($event)" (notificar)="notificarContato(n, $event)" />

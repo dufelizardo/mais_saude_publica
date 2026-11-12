@@ -4,6 +4,7 @@ import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ContagemProducaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AvaliacaoCampanhaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CoberturaRedeDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ComunicacaoViolenciaDtos;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CoberturaVacinalDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EsperaAtendimentoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EstatisticaEsperaDto;
@@ -43,6 +44,7 @@ public class RelatorioService {
     @Autowired private CoberturaVacinalService coberturaService;
     @Autowired private AvaliacaoCampanhaService avaliacaoCampanhaService;
     @Autowired private CoberturaRedeService coberturaRedeService;
+    @Autowired private ComunicacaoViolenciaService comunicacaoViolenciaService;
     @Autowired private ProcessoSanitarioService processoSanitarioService;
 
     public List<RelatorioCatalogoDto> catalogo() {
@@ -179,12 +181,20 @@ public class RelatorioService {
         if (d.getSensiveisOcultas() > 0) {
             notas.add(d.getSensiveisOcultas() + " notificação(ões) sensível(is) oculta(s) pelo seu acesso.");
         }
+        // V3c (ADR-0201): as comunicações obrigatórias da violência notificada, só os totais.
+        List<ComunicacaoViolenciaDtos.Resumo> comunicacoes = comunicacaoViolenciaService.resumo(d.getDe(), d.getAte(), unidadeId);
+        long obrigatorias = comunicacoes.stream().mapToLong(ComunicacaoViolenciaDtos.Resumo::obrigatorias).sum();
+        long noPrazo = comunicacoes.stream().mapToLong(ComunicacaoViolenciaDtos.Resumo::noPrazo).sum();
+        notas.add("Comunicação obrigatória da violência: Conselho Tutelar (ECA), pessoa idosa (Estatuto, art. 19) e mulher (Lei 13.931/2019), em 24 horas.");
         return relatorio(TipoRelatorio.VIGILANCIA, d.getDe(), d.getAte(), d.getAbrangencia(), List.of(
                 new RelatorioDto.Indicador("Notificadas", n(d.getNotificadas())),
                 new RelatorioDto.Indicador("Confirmadas", n(d.getConfirmadas())),
                 new RelatorioDto.Indicador("Em aberto", n(d.getEmAberto())),
-                new RelatorioDto.Indicador("Encerradas no prazo (%)", n(d.getOportunidadeEncerramento()))),
-                List.of(new RelatorioDto.Secao("Por agravo", List.of("Agravo", "Notificadas", "Confirmadas", "Descartadas", "Em aberto", "Encerradas", "No prazo (%)"),
+                new RelatorioDto.Indicador("Encerradas no prazo (%)", n(d.getOportunidadeEncerramento())),
+                new RelatorioDto.Indicador("Comunicações de violência no prazo (%)", obrigatorias == 0 ? "" : n(Math.round(noPrazo * 1000.0 / obrigatorias) / 10.0))),
+                List.of(new RelatorioDto.Secao("Comunicações obrigatórias da violência", List.of("Destino", "Obrigatórias", "Feitas", "No prazo"),
+                                comunicacoes.stream().map(x -> List.of(x.destino(), n(x.obrigatorias()), n(x.feitas()), n(x.noPrazo()))).toList()),
+                        new RelatorioDto.Secao("Por agravo", List.of("Agravo", "Notificadas", "Confirmadas", "Descartadas", "Em aberto", "Encerradas", "No prazo (%)"),
                                 d.getAgravos().stream().map(a -> List.of(a.getNome(), n(a.getNotificadas()), n(a.getConfirmadas()), n(a.getDescartadas()), n(a.getEmAberto()),
                                         n(a.getEncerradas()), n(a.getOportunidadeEncerramento()))).toList()),
                         new RelatorioDto.Secao("Por semana epidemiológica", List.of("Ano", "Semana", "Início", "Notificações"),

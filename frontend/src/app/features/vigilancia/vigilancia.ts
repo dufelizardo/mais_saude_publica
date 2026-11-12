@@ -43,6 +43,7 @@ import { PacienteService } from '../../core/services/paciente';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 import { VigilanciaService } from '../../core/services/vigilancia';
 import { Drawer } from '../../shared/drawer/drawer';
+import { ComunicacaoViolencia } from './comunicacao-violencia';
 import { AnimalAgressor } from './animal-agressor';
 import { ContatosDaNotificacao } from './contatos-da-notificacao';
 import { LocalDoCaso } from './local-do-caso';
@@ -74,7 +75,7 @@ interface CampoEdicao {
  */
 @Component({
   selector: 'app-vigilancia',
-  imports: [ReactiveFormsModule, Drawer, MapaVigilancia, ContatosDaNotificacao, LocalDoCaso, Surtos, MedidasDeControle, LinhaDoTempo, AnimalAgressor],
+  imports: [ReactiveFormsModule, Drawer, MapaVigilancia, ContatosDaNotificacao, LocalDoCaso, Surtos, MedidasDeControle, LinhaDoTempo, AnimalAgressor, ComunicacaoViolencia],
   templateUrl: './vigilancia.html',
 })
 export class Vigilancia {
@@ -158,6 +159,8 @@ export class Vigilancia {
 
   protected readonly podeNotificar = computed(() => this.pode('VIGILANCIA.NOTIFICAR'));
   protected readonly podeInvestigar = computed(() => this.pode('VIGILANCIA.INVESTIGAR'));
+  /** As comunicações obrigatórias da violência ainda não feitas (ADR-0201), para quem investiga. */
+  protected readonly comunicacoesPendentes = signal<{ notificacaoId: string; pacienteNome: string; unidadeNome: string; dataNotificacao: string; destino: string; prazo: string; vencida: boolean }[]>([]);
   protected readonly podeGerenciar = computed(() => this.pode('VIGILANCIA.GERENCIAR'));
 
   /** A ficha vigente do agravo escolhido na notificação. */
@@ -214,6 +217,9 @@ export class Vigilancia {
     this.service.boletim(unidadeId).pipe(catchError(() => of(null))).subscribe((b) => this.boletim.set(b));
     if (this.podeNotificar() || this.podeInvestigar()) {
       this.service.surtos({ unidadeId }).pipe(catchError(() => of(null))).subscribe((s) => this.surtos.set(s));
+    }
+    if (this.podeInvestigar()) {
+      this.service.comunicacoesPendentes().pipe(catchError(() => of([]))).subscribe((l) => this.comunicacoesPendentes.set(l));
     }
   }
 

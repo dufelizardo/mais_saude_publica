@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-12 (V3b em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-12 (V3c em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -49,7 +49,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
-| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1, V2, V3a e V3b (sanitária: licença, inspeção, processo e medidas) e V4 feitas; V3c e trabalhador (V5) |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 a V4 feitas (com a sanitária e a comunicação da violência); falta a V5 (trabalhador e integrações) |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
@@ -89,7 +89,7 @@ V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergencial)
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
-IS1 ✅ ──► SM6 ✅ · V3c (violência) · E4a ✅ (abrigos e encaminhamento)
+IS1 ✅ ──► SM6 ✅ · V3c ✅ (violência) · E4a ✅ (abrigos e encaminhamento)
 V3a ✅ (estabelecimento, licença, denúncia, inspeção) ──► V3b ✅ (auto, processo, medidas e o relatório no #19)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4a ✅ ──► E4b ✅ · E5 ✅ ──► E6a ✅ ──► E6b ✅
 C1 ✅ ──► C2 ✅ ──► C3 ✅ ──► C6 ✅ (avaliação)
@@ -598,11 +598,14 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   agravantes e penalidades do art. 2º, recurso em 15 dias com efeito suspensivo, encerramento com os efeitos (licença suspensa ou
   cassada, interdição); interdição cautelar até 90 dias, apreensão e desinterdição; termos em PDF com código e QR code e a verificação
   pública do termo e da licença; pendências do rito; interdições na Sala de Situação; o relatório Vigilância sanitária no #19.
+- [x] **V3c · Violência na rede intersetorial** ([ADR-0201](./adr/0201-violencia-comunicacao-intersetorial.md)): a obrigação calculada
+  pela idade, pelo sexo e pela ficha (Conselho Tutelar pelo ECA; pessoa idosa pelo Estatuto; mulher pela Lei 13.931/2019), em 24 horas;
+  a comunicação como encaminhamento intersetorial com o motivo mínimo; o tipo Conselho de direitos; as pendentes para quem investiga; o
+  indicador no relatório Vigilância do #19.
 
 **Falta:**
 - [ ] Sugestão de notificação por exame positivo (o catálogo de exames não liga exame a agravo).
-- [ ] **V3c · Violência na rede intersetorial:** a notificação de violência sugere o encaminhamento ao Conselho Tutelar (ECA) ou ao
-  Conselho do Idoso e ao CREAS (Estatuto da Pessoa Idosa).
+- [ ] A comunicação da violência contra a pessoa com deficiência (Lei 13.146/2015, art. 26): o cadastro do paciente não tem o dado.
 - [ ] O plano de amostragem mínimo da água e os demais parâmetros da portaria (agrotóxicos, metais).
 - [ ] A cobertura da vacinação antirrábica animal (precisa da população animal estimada).
 - [ ] O quarteirão como unidade de trabalho do agente de endemias.
@@ -858,8 +861,8 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   Primeiro uso: a Saúde Mental (SM6).
 
 **Falta:**
-- [ ] O encaminhamento pela Vigilância (violência: Conselho Tutelar, CREAS) e pelas Emergências (abrigos), com as
-  próprias fatias.
+- [x] O encaminhamento pelas Emergências (abrigos, ADR-0193) e pela Vigilância (a comunicação obrigatória da violência,
+  [ADR-0201](./adr/0201-violencia-comunicacao-intersetorial.md), com o tipo Conselho de direitos).
 - [ ] O painel de encaminhamentos por instituição, para a gestão da rede intersetorial.
 - [ ] A guia de encaminhamento para imprimir (Documentos) e a integração com o CadÚnico e o prontuário SUAS
   (domínio 20, adiado).
