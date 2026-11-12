@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-12 (GR3 em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-12 (V3a em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -49,7 +49,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
-| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1, V2 e V4 (vetores, animais e ambiental) feitas; sanitária e trabalhador (V3, V5) |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1, V2, V3a (sanitária: estabelecimento, licença, denúncia e inspeção) e V4 feitas; V3b, V3c e trabalhador (V5) |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
@@ -89,7 +89,8 @@ V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
 V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergencial)
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
-IS1 ✅ ──► SM6 ✅ · V3 (denúncia e violência) · E4a ✅ (abrigos e encaminhamento)
+IS1 ✅ ──► SM6 ✅ · V3c (violência) · E4a ✅ (abrigos e encaminhamento)
+V3a ✅ (estabelecimento, licença, denúncia, inspeção) ──► V3b (auto, processo, medidas e o relatório no #19)
 E1 ✅ ──► E2 ✅ ──► E3 ✅ ──► E4a ✅ ──► E4b ✅ · E5 ✅ ──► E6a ✅ ──► E6b ✅
 C1 ✅ ──► C2 ✅ ──► C3 ✅ ──► C6 ✅ (avaliação)
 C1 ✅ ──► C4 ✅ · C5
@@ -100,7 +101,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 | Pré-requisito ainda sem desenho | Fatias que espera |
 |---|---|
-| Documentos D2 | V3 (autos da VISA), C2 (arquivos dos materiais) |
+| Documentos D2 (o resto) | C2 (arquivos dos materiais); os donos da VISA já entraram na V3a |
 | Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
 
 ## 2. Domínios
@@ -122,7 +123,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 - [ ] Vagas semanais da unidade.
 - [ ] Acessibilidade.
 - [ ] Exportação.
-- [ ] Inspeção sanitária.
+- [x] Inspeção sanitária: a unidade pública entra como estabelecimento regulado ligado ([ADR-0199](./adr/0199-vigilancia-sanitaria-fundacao.md)).
 - [x] Componentes da RAPS no catálogo do modelo operacional e o acolhimento noturno do CAPS (domínio 26, SM5,
   [ADR-0153](./adr/0153-saude-mental-caps-e-raps.md)).
 - [x] Perfis operacionais e capacidades assistenciais da unidade (item 29, MO1, [ADR-0117](./adr/0117-modelo-operacional-perfis-e-capacidades.md)).
@@ -586,11 +587,19 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   qualidade da água com a conformidade calculada pela Portaria GM/MS 888/2021 (E. coli, coliformes, cloro residual,
   turbidez, fluoreto) e a medida da fora do padrão; risco ambiental permanente, ativo ou controlado; a água fora do padrão
   na Sala de Situação.
+- [x] **V3a · Sanitária** ([ADR-0199](./adr/0199-vigilancia-sanitaria-fundacao.md)): papéis Fiscal sanitário e Coordenação da
+  vigilância sanitária; estabelecimento regulado (CPF ou CNPJ conferido) com as atividades CNAE e o grau de risco da RDC 153/2017;
+  licença como histórico (dispensa do risco I, risco III só com inspeção satisfatória, renovação a 60 dias do vencimento); denúncia
+  anônima ou identificada (o denunciante só para a coordenação); roteiro de inspeção versionado; inspeção assinada pelo fiscal, com o
+  roteiro, as irregularidades e o prazo de correção, e o retorno que confirma as correções; termo em PDF; pendências; documentos do
+  estabelecimento e da inspeção; tela Vigilância sanitária.
 
 **Falta:**
 - [ ] Sugestão de notificação por exame positivo (o catálogo de exames não liga exame a agravo).
-- [ ] **V3 · Sanitária:** estabelecimento regulado, inspeção, irregularidade, medida, licença (os autos dependem
-  do domínio Documentos).
+- [ ] **V3b · Sanitária, processo:** auto de infração, processo administrativo sanitário (defesa e recurso em 15 dias), penalidades,
+  medidas cautelares, termos assinados com verificação pública e o relatório no #19.
+- [ ] **V3c · Violência na rede intersetorial:** a notificação de violência sugere o encaminhamento ao Conselho Tutelar (ECA) ou ao
+  Conselho do Idoso e ao CREAS (Estatuto da Pessoa Idosa).
 - [ ] O plano de amostragem mínimo da água e os demais parâmetros da portaria (agrotóxicos, metais).
 - [ ] A cobertura da vacinação antirrábica animal (precisa da população animal estimada).
 - [ ] O quarteirão como unidade de trabalho do agente de endemias.
@@ -862,7 +871,8 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 **Domínio "Documentos"** (🟡): anexos e documentos formais reaproveitáveis por qualquer domínio, com versão,
 aprovação e assinatura.
 - [x] **D1 · Anexos do paciente** ([ADR-0172](./adr/0172-documentos-anexos.md)): tipos, versões com hash, retirada, volume próprio e aba Anexos.
-- [ ] **D2:** outros donos (materiais da C2, autos da Vigilância). **D3:** guias para imprimir. **D4:** aprovação e assinatura digital.
+- [x] **D2 parcial** ([ADR-0199](./adr/0199-vigilancia-sanitaria-fundacao.md)): o estabelecimento e a inspeção da VISA como donos, sem unidade.
+- [ ] **D2 (o resto):** materiais da C2. **D3:** guias para imprimir. **D4:** aprovação e assinatura digital.
 - [ ] Backup do volume de documentos, antes de dado real.
 
 **Testes:**

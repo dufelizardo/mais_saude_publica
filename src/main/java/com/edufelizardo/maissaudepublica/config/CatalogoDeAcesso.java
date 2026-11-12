@@ -76,6 +76,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Controle de vetores (ADR-0162): a vistoria é do agente de endemias; as ações e os bloqueios, da coordenação de zoonoses.
         PERMISSOES.put("ZOONOSES.VISTORIAR", new Def("Registrar vistorias de controle vetorial, focos e o tratamento", OPERACAO));
         PERMISSOES.put("ZOONOSES.GERENCIAR", new Def("Planejar e registrar ações de controle vetorial e ver os casos sem bloqueio", OPERACAO));
+        // Vigilância Sanitária (ADR-0199): o fiscal inspeciona; a coordenação licencia, recebe denúncias e mantém os roteiros.
+        PERMISSOES.put("VISA.INSPECIONAR", new Def("Cadastrar estabelecimentos regulados e registrar inspeções sanitárias com as irregularidades", OPERACAO));
+        PERMISSOES.put("VISA.GERENCIAR", new Def("Conceder licenças sanitárias, registrar e concluir denúncias e manter os roteiros de inspeção", OPERACAO));
         // Intersetorialidade (ADR-0154): o catálogo de instituições externas é cadastro, sem paciente.
         PERMISSOES.put("INTERSETORIAL.GERENCIAR", new Def("Manter o catálogo de instituições externas (CRAS, CREAS, escolas, Conselho Tutelar...)",
                 OPERACAO));
@@ -197,7 +200,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "EMERGENCIA.COORDENAR", "CONTINGENCIA.GERENCIAR", "ZOONOSES.GERENCIAR", "COMUNICACAO.PUBLICAR", "CONTEUDO.EDITAR",
                         "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR",
                         "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
-                        "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR", "TFD.AUTORIZAR")));
+                        "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR", "TFD.AUTORIZAR",
+                        "VISA.GERENCIAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -313,6 +317,13 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("VIGILANCIA_AMBIENTAL", new PapelPadrao("Vigilância ambiental",
                 "Coordenação de zoonoses e vetores: vistorias, índices do ciclo, ações de controle e bloqueios.",
                 List.of("ZOONOSES.VISTORIAR", "ZOONOSES.GERENCIAR", "EMERGENCIA.REGISTRAR")));
+        // Vigilância Sanitária (ADR-0199): a autoridade sanitária fiscaliza; a coordenação licencia e julga (a decisão do processo, na V3b).
+        PAPEIS.put("FISCAL_SANITARIO", new PapelPadrao("Fiscal sanitário",
+                "Autoridade sanitária: inspeciona estabelecimentos, registra irregularidades e intima a corrigir (Lei 6.437/1977).",
+                List.of("VISA.INSPECIONAR")));
+        PAPEIS.put("COORDENACAO_VISA", new PapelPadrao("Coordenação da vigilância sanitária",
+                "Licenciamento sanitário, denúncias, roteiros de inspeção e acompanhamento das inspeções.",
+                List.of("VISA.INSPECIONAR", "VISA.GERENCIAR", "EMERGENCIA.REGISTRAR")));
         // Saúde Bucal (ADR-0134): as funções já existiam na eSB (ADR-0103); faltavam os papéis de acesso.
         PAPEIS.put("CIRURGIAO_DENTISTA", new PapelPadrao("Cirurgião-dentista",
                 "Avaliação, diagnóstico e procedimentos odontológicos (Lei 5.081/1966); lê o prontuário com vínculo.",

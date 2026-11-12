@@ -41,9 +41,10 @@ public class Documento implements Serializable {
     private TipoDocumento tipo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "unidade_id", referencedColumnName = "uuid", nullable = false, updatable = false)
+    @JoinColumn(name = "unidade_id", referencedColumnName = "uuid", updatable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
+    /** Obrigatória no documento do paciente; o estabelecimento e a inspeção sanitária não têm unidade (ADR-0199). */
     private UnidadeDeSaude unidade;
 
     @Column(nullable = false, length = 150)

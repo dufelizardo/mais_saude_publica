@@ -33,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -154,7 +155,7 @@ public class DocumentoService {
     /** Envia a versão seguinte; documento retirado não recebe versão (422). */
     @Transactional
     public DocumentosDoPacienteDto novaVersao(UUID documentoId, MultipartFile arquivo) {
-        Documento d = documento(documentoId);
+        Documento d = doDono(documentoId, Set.of(DonoDocumento.PACIENTE));
         controleDeAcesso.exigir(ANEXAR, d.getUnidade());
         if (d.retirado()) {
             throw new ResourceUnprocessableEntityException("Este documento foi retirado.");
@@ -169,7 +170,7 @@ public class DocumentoService {
     /** Retira da lista, com o motivo; nada se apaga. */
     @Transactional
     public DocumentosDoPacienteDto retirar(UUID documentoId, MotivoRequestDto dto) {
-        Documento d = documento(documentoId);
+        Documento d = doDono(documentoId, Set.of(DonoDocumento.PACIENTE));
         controleDeAcesso.exigir(ANEXAR, d.getUnidade());
         if (d.retirado()) {
             throw new ResourceUnprocessableEntityException("Este documento já foi retirado.");
@@ -187,12 +188,99 @@ public class DocumentoService {
     /** O arquivo da versão, com o vínculo do prontuário. Retirado não abre (422); hash diferente é arquivo alterado (409). */
     @Transactional
     public ArquivoDoDocumento abrir(UUID versaoId) {
-        VersaoDocumento v = versaoRepository.findById(versaoId).orElseThrow(() -> new ResourceNotFoundException(
-                "Não foi possível encontrar a versão " + versaoId + " em nossos registros."));
+        VersaoDocumento v = versaoRepository.findById(versaoId).filter(x -> x.getDocumento().getDonoTipo() == DonoDocumento.PACIENTE)
+                .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar a versão " + versaoId + " em nossos registros."));
         Documento d = v.getDocumento();
         ContextoAuditoria.paciente(d.getDonoId());
         ContextoAuditoria.registro(d.getUuid());
         vinculoAssistencialService.exigirVinculo(d.getDonoId());
+        if (d.retirado()) {
+            throw new ResourceUnprocessableEntityException("Este documento foi retirado.");
+        }
+        byte[] conteudo = armazenamento.ler(v.getChave());
+        if (!sha256(conteudo).equals(v.getSha256())) {
+            throw new ResourceConflictException("O arquivo não confere com o registro: foi alterado fora do sistema.");
+        }
+        return new ArquivoDoDocumento(v, conteudo);
+    }
+
+    // ── Outros donos (D2 parcial, ADR-0199) ────────────────────────────────────────────────────────
+
+    /**
+     * Anexa ao dono de outro domínio, sem unidade. Quem chama confere o acesso; aqui ficam as mesmas regras do arquivo: tipo
+     * ativo (422), título (400), data não futura (400), PDF, JPG ou PNG de até 10 MB (400).
+     */
+    @Transactional
+    public Documento anexarAoDono(DonoDocumento dono, UUID donoId, UUID tipoId, String titulo, LocalDate dataDocumento, MultipartFile arquivo) {
+        if (dono == DonoDocumento.PACIENTE) {
+            throw new IllegalArgumentException("O documento do paciente passa por anexar, com a unidade.");
+        }
+        TipoDocumento tipo = tipoRepository.findById(tipoId).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar o tipo de documento " + tipoId + " em nossos registros."));
+        if (!tipo.isAtivo()) {
+            throw new ResourceUnprocessableEntityException("O tipo " + tipo.getNome() + " está inativo.");
+        }
+        String tituloLimpo = titulo == null ? "" : titulo.trim();
+        if (tituloLimpo.isEmpty() || tituloLimpo.length() > 150) {
+            throw new ResourceBadRequestException("Informe o título, com até 150 caracteres.");
+        }
+        LocalDate data = dataDocumento != null ? dataDocumento : LocalDate.now();
+        if (data.isAfter(LocalDate.now())) {
+            throw new ResourceBadRequestException("A data do documento não pode ser no futuro.");
+        }
+        Documento d = new Documento();
+        d.setDonoTipo(dono);
+        d.setDonoId(donoId);
+        d.setTipo(tipo);
+        d.setTitulo(tituloLimpo);
+        d.setDataDocumento(data);
+        d.setRegistradoEm(LocalDateTime.now());
+        d.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        documentoRepository.save(d);
+        guardar(d, 1, arquivo);
+        ContextoAuditoria.registro(d.getUuid());
+        ContextoAuditoria.detalhe("Documento anexado: " + tipo.getNome() + ".");
+        return d;
+    }
+
+    /** Os documentos ativos do dono, mais recentes primeiro. Quem chama confere o acesso. */
+    @Transactional(readOnly = true)
+    public List<DocumentosDoPacienteDto.Item> doDono(DonoDocumento dono, UUID donoId) {
+        return documentoRepository.findDoDono(dono, donoId).stream().filter(d -> !d.retirado()).map(this::item).toList();
+    }
+
+    /** O documento, só se for de um dos donos aceitos (404 nos outros, para não revelar o documento do paciente). */
+    @Transactional(readOnly = true)
+    public Documento doDono(UUID documentoId, Set<DonoDocumento> donos) {
+        Documento d = documento(documentoId);
+        if (!donos.contains(d.getDonoTipo())) {
+            throw new ResourceNotFoundException("Não foi possível encontrar o documento " + documentoId + " em nossos registros.");
+        }
+        return d;
+    }
+
+    /** Retira o documento de um dos donos aceitos, com o motivo (422 se já retirado). */
+    @Transactional
+    public void retirarDoDono(UUID documentoId, Set<DonoDocumento> donos, String motivo) {
+        Documento d = doDono(documentoId, donos);
+        if (d.retirado()) {
+            throw new ResourceUnprocessableEntityException("Este documento já foi retirado.");
+        }
+        d.setRetiradoEm(LocalDateTime.now());
+        d.setMotivoRetirada(motivo.trim());
+        d.setRetiradoPorCpf(UsuarioAutenticado.cpf());
+        documentoRepository.save(d);
+        ContextoAuditoria.registro(d.getUuid());
+        ContextoAuditoria.detalhe("Documento retirado.");
+    }
+
+    /** O arquivo da versão de um dos donos aceitos (404 nos outros). Retirado não abre (422); hash diferente, 409. */
+    @Transactional(readOnly = true)
+    public ArquivoDoDocumento abrirDoDono(UUID versaoId, Set<DonoDocumento> donos) {
+        VersaoDocumento v = versaoRepository.findById(versaoId).filter(x -> donos.contains(x.getDocumento().getDonoTipo()))
+                .orElseThrow(() -> new ResourceNotFoundException("Não foi possível encontrar a versão " + versaoId + " em nossos registros."));
+        Documento d = v.getDocumento();
+        ContextoAuditoria.registro(d.getUuid());
         if (d.retirado()) {
             throw new ResourceUnprocessableEntityException("Este documento foi retirado.");
         }
@@ -266,7 +354,8 @@ public class DocumentoService {
     }
 
     private DocumentosDoPacienteDto.Item item(Documento d) {
-        return new DocumentosDoPacienteDto.Item(d.getUuid(), d.getTipo().getNome(), d.getTitulo(), d.getDataDocumento(), d.getUnidade().getUuid(), d.getUnidade().getNome(),
+        UnidadeDeSaude u = d.getUnidade();
+        return new DocumentosDoPacienteDto.Item(d.getUuid(), d.getTipo().getNome(), d.getTitulo(), d.getDataDocumento(), u != null ? u.getUuid() : null, u != null ? u.getNome() : null,
                 d.getRetiradoEm(), d.getMotivoRetirada(), versaoRepository.findByDocumento_UuidOrderByNumeroDesc(d.getUuid()).stream()
                 .map(v -> new DocumentosDoPacienteDto.Versao(v.getUuid(), v.getNumero(), v.getNomeArquivo(), v.getTipoConteudo(), v.getTamanho(), v.getEnviadoEm())).toList());
     }
