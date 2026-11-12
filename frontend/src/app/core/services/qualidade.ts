@@ -1,7 +1,10 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { GrauDano, IncidenteDto, NaturezaIncidente, PainelSegurancaDto, ProtocoloIncidenteDto, SituacaoIncidente, TipoIncidente } from '../models/qualidade';
+import {
+  GrauDano, IncidenteDto, MinhaAcaoDto, NaoConformidadeDto, NaturezaIncidente, PainelNcDto, PainelSegurancaDto, ProtocoloIncidenteDto, SituacaoIncidente,
+  SituacaoNaoConformidade, SugestaoNcDto, TipoIncidente, AcaoQualidadeDto,
+} from '../models/qualidade';
 
 /** Qualidade, fatia Q1: segurança do paciente (ADR-0203). */
 @Injectable({ providedIn: 'root' })
@@ -41,5 +44,44 @@ export class QualidadeService {
 
   painel(): Observable<PainelSegurancaDto> {
     return this.http.get<PainelSegurancaDto>(`${this.api}/seguranca/painel`);
+  }
+
+  // ── Não conformidades (ADR-0204) ──
+
+  naoConformidades(situacao?: SituacaoNaoConformidade): Observable<NaoConformidadeDto[]> {
+    const params = situacao ? new HttpParams().set('situacao', situacao) : new HttpParams();
+    return this.http.get<NaoConformidadeDto[]>(`${this.api}/nao-conformidades`, { params });
+  }
+
+  naoConformidade(uuid: string): Observable<NaoConformidadeDto> {
+    return this.http.get<NaoConformidadeDto>(`${this.api}/nao-conformidade/${uuid}`);
+  }
+
+  registrarNc(dto: object): Observable<NaoConformidadeDto> {
+    return this.http.post<NaoConformidadeDto>(`${this.api}/nao-conformidade`, dto);
+  }
+
+  acaoNc(uuid: string, acao: 'analise' | 'acao' | 'verificacao' | 'cancelamento', corpo: object): Observable<NaoConformidadeDto> {
+    return this.http.post<NaoConformidadeDto>(`${this.api}/nao-conformidade/${uuid}/${acao}`, corpo);
+  }
+
+  andamento(acaoId: string, corpo: { situacao: string; evidencia: string | null }): Observable<AcaoQualidadeDto> {
+    return this.http.post<AcaoQualidadeDto>(`${this.api}/acao/${acaoId}/andamento`, corpo);
+  }
+
+  cancelarAcao(acaoId: string, motivo: string): Observable<NaoConformidadeDto> {
+    return this.http.post<NaoConformidadeDto>(`${this.api}/acao/${acaoId}/cancelamento`, { motivo });
+  }
+
+  minhasAcoes(): Observable<MinhaAcaoDto[]> {
+    return this.http.get<MinhaAcaoDto[]>(`${this.api}/minhas-acoes`);
+  }
+
+  sugestoesNc(): Observable<SugestaoNcDto[]> {
+    return this.http.get<SugestaoNcDto[]>(`${this.api}/nao-conformidades/sugestoes`);
+  }
+
+  painelNc(): Observable<PainelNcDto> {
+    return this.http.get<PainelNcDto>(`${this.api}/nao-conformidades/painel`);
   }
 }

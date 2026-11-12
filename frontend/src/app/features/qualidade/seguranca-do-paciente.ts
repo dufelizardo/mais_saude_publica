@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Observable, catchError, of } from 'rxjs';
 import { AcessoDaInterface } from '../../core/models/auth';
 import { PacienteResponseDto } from '../../core/models/paciente';
@@ -35,7 +36,7 @@ type Aba = 'notificar' | 'incidentes' | 'painel';
  */
 @Component({
   selector: 'app-seguranca-do-paciente',
-  imports: [Drawer],
+  imports: [Drawer, RouterLink],
   template: `
     <header class="page-head">
       <div>
@@ -151,6 +152,7 @@ type Aba = 'notificar' | 'incidentes' | 'painel';
             @if (i.fatores.length) { <div><dt>Fatores</dt><dd>{{ rotulosFatores(i) }}</dd></div> }
             @if (i.causaRaiz) { <div><dt>Causa raiz</dt><dd>{{ i.causaRaiz }}</dd></div> }
             @if (i.licoes) { <div><dt>Lições</dt><dd>{{ i.licoes }}</dd></div> }
+            @if (i.situacao === 'CONCLUIDA' && pode('QUALIDADE.GERIR')) { <div><dt>Não conformidade</dt><dd><a class="link-btn" [routerLink]="['/qualidade/nao-conformidades']" [queryParams]="{ origem: 'INCIDENTE', incidente: i.uuid, unidade: i.unidadeId, referencia: 'Incidente ' + i.numero }">Abrir não conformidade</a></dd></div> }
             @if (i.notivisaObrigatoria) { <div><dt>Notivisa</dt><dd>@if (i.numeroNotivisa) { {{ i.numeroNotivisa }} em {{ dataHora(i.notivisaEm!) }} } @else { até {{ dataHora(i.prazoNotivisa!) }}@if (i.notivisaVencida) { <span class="tag tag--alert">Vencido</span> } }</dd></div> }
           </dl>
 

@@ -67,6 +67,8 @@ const MENU: Record<string, string[]> = {
   '/relatorios': ['INDICADOR.CONSULTAR'],
   // Segurança do paciente (ADR-0203): quem notifica, o núcleo e quem consulta os indicadores.
   '/qualidade/seguranca-do-paciente': ['QUALIDADE.NOTIFICAR', 'QUALIDADE.ANALISAR', 'INDICADOR.CONSULTAR'],
+  // Não conformidades (ADR-0204): quem gere, quem tem ação a cumprir (todo papel que notifica) e quem consulta indicadores.
+  '/qualidade/nao-conformidades': ['QUALIDADE.GERIR', 'QUALIDADE.NOTIFICAR', 'INDICADOR.CONSULTAR'],
   // Comunicação (ADR-0168): quem publica, escreve ou revisa.
   '/administrativo/comunicacao': ['COMUNICACAO.PUBLICAR', 'CONTEUDO.EDITAR', 'CONTEUDO.REVISAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],

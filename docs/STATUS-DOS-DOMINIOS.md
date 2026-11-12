@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-12 (Q1 em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-12 (Q2 em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -44,7 +44,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
-| 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Auditoria feita; Qualidade com a Q1 (segurança do paciente); Q2 e Q3 |
+| 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Auditoria feita; Qualidade com a Q1 (segurança do paciente) e a Q2 (não conformidades e planos); Q3 |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
@@ -421,7 +421,10 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   [ADR-0202](./adr/0202-qualidade-do-servico.md)): notificação de incidente por qualquer profissional, anônima ou identificada; papel
   Núcleo de Segurança do Paciente; classificação ICPS (natureza e dano); análise com fatores e causa raiz no dano grave, no óbito e no
   never event; prazo do Notivisa (72 horas; 15º dia útil do mês seguinte) e o registro; painel só com totais; tela Segurança do paciente.
-- [ ] **Qualidade · Q2:** não conformidades e planos de ação 5W2H com verificação de eficácia.
+- [x] **Qualidade · Q2 · Não conformidades e planos de ação** ([ADR-0204](./adr/0204-nao-conformidades-e-planos-de-acao.md)): origem com o
+  vínculo (incidente, irregularidade da VISA na unidade da rede, auditoria interna, reclamação), análise 6M, plano 5W2H por ciclo, o
+  responsável atualiza a própria ação, verificação de eficácia que encerra ou abre o ciclo seguinte; minhas ações, sugestões, painel com a
+  eficácia na primeira verificação; atalhos no incidente e na irregularidade.
 - [ ] **Qualidade · Q3:** indicadores de qualidade com metas e auditoria de adesão aos protocolos.
 - [ ] Alertas em tempo real, regras configuráveis pela tela e integração com SIEM.
 - [ ] Calibrar os limites dos alertas com o volume real de cada rede.
