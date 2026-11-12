@@ -132,6 +132,11 @@ public class RedeTematicaService {
             throw new ResourceForbiddenException("Seu acesso não inclui a gestão da rede em nenhuma unidade.");
         }
         Predicate<UnidadeDeSaude> naAbrangencia = u -> u.isAtivo() && (visiveis.isEmpty() || visiveis.get().contains(u.getUuid()));
+        return montar(rede, naAbrangencia, visiveis.isEmpty() ? "Rede municipal" : "Unidades do seu acesso");
+    }
+
+    /** O painel numa abrangência já decidida: a tela usa o acesso de rede; o relatório da GR3, o escopo dos indicadores (ADR-0198). */
+    RedeTematicaDtos.Painel montar(RedeTematica rede, Predicate<UnidadeDeSaude> naAbrangencia, String abrangencia) {
         Map<UUID, Set<ComponenteRedeTematica>> porPerfil = new HashMap<>();
         Map<UUID, Set<ComponenteRedeTematica>> porCapacidade = new HashMap<>();
         for (ComponenteRedeItem i : itemRepository.findTodos()) {
@@ -176,7 +181,7 @@ public class RedeTematicaService {
             }).sorted(Comparator.comparing(RedeTematicaDtos.Ponto::unidadeNome, String.CASE_INSENSITIVE_ORDER)).toList()));
         }
         lacunas.addAll(lacunasPorMunicipio(daRede, pontos, unidades, naAbrangencia));
-        return new RedeTematicaDtos.Painel(rede, rede.rotulo(), visiveis.isEmpty() ? "Rede municipal" : "Unidades do seu acesso", componentes, lacunas);
+        return new RedeTematicaDtos.Painel(rede, rede.rotulo(), abrangencia, componentes, lacunas);
     }
 
     /**

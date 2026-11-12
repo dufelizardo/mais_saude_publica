@@ -9,7 +9,7 @@ quanto cada unidade oferta, como a oferta se reparte e, depois, como as unidades
 |---|---|---|
 | GR1 | Oferta assistencial por executante, procedimento e mês; cotas da PPI; a Regulação consome a cota | ✅ ADR-0179, V64 |
 | GR2 | Redes temáticas (Urgência, Cegonha/Alyne, Pessoa com Deficiência, Doenças Crônicas) e referência estrutural | ✅ ADR-0197, V81 |
-| GR3 | Cobertura da rede e indicadores de pactuação no BI | ⬜ só com aprovação |
+| GR3 | Cobertura da rede e indicadores de pactuação no BI | ✅ ADR-0198, sem migração |
 
 ## Entidades (GR1)
 
@@ -64,3 +64,13 @@ SolicitacaoRegulacao: foraDaReferencia (nulo sem referência; sugestão na gavet
 - **Referência é histórico:** a nova encerra a vigente na véspera; a mesma executante é conflito; encerrar fecha hoje.
 - **Sugestão, não obrigação:** o regulador autoriza onde decidir; a autorização guarda se foi fora da referência do dia, e o painel mostra o
   percentual dos últimos 90 dias por procedimento.
+
+## Cobertura e indicadores de pactuação (GR3, [ADR-0198](../adr/0198-cobertura-da-rede.md))
+
+- **Só leitura:** junta a PPI, as referências, a fila e as autorizações da Regulação e a população adscrita (Território).
+- **Por procedimento:** % da oferta pactuada, % da cota usada, % de extracota, % fora da referência, fila de hoje e medianas de espera.
+- **Por origem** (a beneficiária mais específica que cobre a solicitante, ou ela mesma sem cota): população adscrita (na esfera, a soma
+  das unidades abaixo), cota por mil, demanda, saldo e referência.
+- **Alertas:** cota esgotada com fila; cota ociosa (só na competência fechada, uso abaixo da metade); demanda sem cota; sem referência;
+  e as lacunas das redes temáticas.
+- **No #19:** o relatório `PACTUACAO_REDE`, com o escopo dos indicadores.

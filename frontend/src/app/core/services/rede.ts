@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  CoberturaRedeDto,
   CopiaPpiDto,
   OfertaAssistencialDto,
   PainelPpiDto,
@@ -71,5 +72,11 @@ export class RedeService {
 
   sugestaoDeReferencia(procedimentoId: string, solicitanteId: string): Observable<SugestaoReferenciaDto> {
     return this.http.get<SugestaoReferenciaDto>(`${this.api}/referencia/sugestao`, { params: { procedimentoId, solicitanteId } });
+  }
+
+  // ── Cobertura da rede (ADR-0198) ──
+
+  cobertura(competencia: string): Observable<CoberturaRedeDto> {
+    return this.http.get<CoberturaRedeDto>(`${this.api}/cobertura`, { params: { competencia } });
   }
 }

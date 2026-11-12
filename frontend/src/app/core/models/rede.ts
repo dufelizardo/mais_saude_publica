@@ -98,3 +98,60 @@ export interface SugestaoReferenciaDto {
   executanteNome?: string | null;
   origemNome?: string | null;
 }
+
+// ── Cobertura da rede (ADR-0198) ──
+
+export interface OrigemCoberturaDto {
+  unidadeId: string;
+  unidadeNome: string;
+  unidadeTipo?: string | null;
+  populacaoAdscrita: number;
+  cota?: number | null;
+  cotaPorMil?: number | null;
+  solicitadas: number;
+  autorizadas: number;
+  extracotas: number;
+  aguardando: number;
+  saldo?: number | null;
+  comReferencia: boolean;
+  alertas: string[];
+}
+
+export interface ProcedimentoCoberturaDto {
+  procedimentoId: string;
+  procedimentoNome: string;
+  ofertado: number;
+  pactuado: number;
+  utilizado: number;
+  extracotas: number;
+  percentualPactuado?: number | null;
+  percentualCotaUsada?: number | null;
+  percentualExtracota?: number | null;
+  percentualForaDaReferencia?: number | null;
+  naFila: number;
+  esperaNaFilaDias?: number | null;
+  esperaAteAutorizacaoDias?: number | null;
+  origens: OrigemCoberturaDto[];
+}
+
+export interface CoberturaRedeDto {
+  de: string;
+  ate: string;
+  fechada: boolean;
+  abrangencia: string;
+  resumo: {
+    ofertado: number;
+    pactuado: number;
+    utilizado: number;
+    extracotas: number;
+    percentualPactuado?: number | null;
+    percentualCotaUsada?: number | null;
+    percentualExtracota?: number | null;
+    percentualForaDaReferencia?: number | null;
+    cotasEsgotadasComFila: number;
+    lacunasDasRedes: number;
+  };
+  procedimentos: ProcedimentoCoberturaDto[];
+  alertas: string[];
+  lacunas: { rede: string; lacuna: string }[];
+}

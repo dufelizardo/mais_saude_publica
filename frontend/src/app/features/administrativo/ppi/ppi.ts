@@ -13,6 +13,7 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { ReferenciasRede } from './referencias-rede';
 import { RedesTematicas } from './redes-tematicas';
+import { CoberturaRede } from './cobertura-rede';
 
 type Gaveta =
   | { tipo: 'oferta'; item: OfertaAssistencialDto | null }
@@ -30,11 +31,12 @@ function mesAnterior(m: string): string {
 
 /**
  * Rede e pactuação (ADR-0179): a oferta de cada executante por procedimento e as cotas da PPI que a repartem entre unidades e esferas, com o
- * usado e o saldo. A Regulação consome a cota na autorização. A GR2 (ADR-0197) acrescenta as abas Redes temáticas e Referências.
+ * usado e o saldo. A Regulação consome a cota na autorização. A GR2 (ADR-0197) acrescenta as abas Redes temáticas e Referências; a GR3
+ * (ADR-0198), a aba Cobertura.
  */
 @Component({
   selector: 'app-ppi',
-  imports: [ReactiveFormsModule, Drawer, RedesTematicas, ReferenciasRede],
+  imports: [ReactiveFormsModule, Drawer, RedesTematicas, ReferenciasRede, CoberturaRede],
   templateUrl: './ppi.html',
 })
 export class Ppi {
@@ -48,8 +50,9 @@ export class Ppi {
     { id: 'ppi', rotulo: 'PPI' },
     { id: 'redes', rotulo: 'Redes temáticas' },
     { id: 'referencias', rotulo: 'Referências' },
+    { id: 'cobertura', rotulo: 'Cobertura' },
   ] as const;
-  protected readonly aba = signal<'ppi' | 'redes' | 'referencias'>('ppi');
+  protected readonly aba = signal<'ppi' | 'redes' | 'referencias' | 'cobertura'>('ppi');
   protected readonly competencia = signal(mesAtual());
   protected readonly painel = signal<PainelPpiDto | null>(null);
   protected readonly procedimentos = signal<ProcedimentoReguladoResponseDto[]>([]);
@@ -89,7 +92,7 @@ export class Ppi {
     this.carregar();
   }
 
-  protected selecionarAba(id: 'ppi' | 'redes' | 'referencias'): void {
+  protected selecionarAba(id: 'ppi' | 'redes' | 'referencias' | 'cobertura'): void {
     this.aba.set(id);
   }
 

@@ -99,3 +99,23 @@ UI Ppi - Regulacao Sugere A Referencia
     Get Selected Options    id=f-unidadeExecutanteId    value    ==    ${executante}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Ppi - Cobertura
+    [Documentation]    A aba Cobertura mostra os indicadores da competência e as origens do procedimento ofertado (ADR-0198).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${oferta}    ${procedimento}    ${executante}    ${mes}=    Seed Oferta    ${8}
+    ${ubs}=    Seed A Unidade De Saude Uuid
+    ${cota}=    Create Dictionary    beneficiariaId=${ubs}    quantidade=${3}
+    ${r}=    POST Cota Ppi    ${oferta}    ${cota}
+    Should Be Equal As Integers    ${r.status_code}    201
+    ${lista}=    GET List Procedimento Regulado
+    ${nome}=    Evaluate    [p['nome'] for p in $lista.json() if p['uuid'] == $procedimento][0]
+    Ir Para Rota Do Frontend    /administrativo/ppi
+    Click    css=#tab-cobertura
+    Fill Text    css=input[aria-label="Competência"]    ${mes}
+    Evaluate JavaScript    css=input[aria-label="Competência"]    (e) => e.dispatchEvent(new Event("change", { bubbles: true }))
+    Wait For Elements State    css=[aria-label="Indicadores de pactuação"] >> text=Oferta pactuada    visible
+    Click    css=button[aria-label="Origens de ${nome}"]
+    Wait For Elements State    css=table[aria-label="Origens de ${nome}"] tbody tr    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-11 (GR2 em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-12 (GR3 em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -56,10 +56,10 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | ✅ | E1 a E6 feitas (núcleo; contingência; coordenação; vulneráveis, deslocados, rede e Regulação; desmobilização e relatório; eventos especializados) |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | ✅ | C1 a C4 e C6 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação em saúde; educação permanente; avaliação); a C5 (multicanal) no domínio 20 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
-| 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | 🟡 | GR1 e GR2 feitas (oferta e cotas da PPI; redes temáticas e referência estrutural na Regulação); GR3 (cobertura) |
+| 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 19 ✅ · 9 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
+**Resumo:** 31 itens mais Documentos: 20 ✅ · 8 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
 iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -817,7 +817,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 30. Gestão da Rede de Atenção
 
-**Estado:** 🟡. Desenho na [ADR-0179](./adr/0179-gestao-da-rede-de-atencao.md); detalhe em [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md).
+**Estado:** ✅. Desenho na [ADR-0179](./adr/0179-gestao-da-rede-de-atencao.md); detalhe em [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md).
 
 **Temos:**
 - **GR1:** oferta assistencial por executante, procedimento e mês, cotas da PPI para unidades e esferas, a Regulação consumindo a cota
@@ -828,7 +828,9 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 - [x] **GR2** ([ADR-0197](./adr/0197-redes-tematicas-e-referencia.md)): redes temáticas (Urgência, Cegonha/Alyne, Pessoa com Deficiência,
   Doenças Crônicas) com os componentes ligados aos perfis e às capacidades, painel com as lacunas; referência estrutural com vigência e
   histórico, sugerida na gaveta Autorizar da Regulação, com a autorização fora dela marcada e o percentual no painel.
-- [ ] **GR3:** cobertura da rede e indicadores de pactuação no BI.
+- [x] **GR3** ([ADR-0198](./adr/0198-cobertura-da-rede.md)): cobertura por procedimento e por origem (população adscrita, cota por mil,
+  fila e esperas, fora da referência), alertas (cota esgotada com fila, ociosa, demanda sem cota, sem referência), lacunas das redes;
+  aba Cobertura e o relatório Pactuação e cobertura da rede no #19.
 - [ ] Teto financeiro (MAC) e programação físico-orçamentária (domínio 17); SISREG e SIGTAP (domínio 20).
 
 ### 31. Intersetorialidade e Proteção Social

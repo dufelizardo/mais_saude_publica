@@ -19,4 +19,8 @@ public interface AdscricaoRepository extends JpaRepository<Adscricao, UUID> {
     @Query("select a from Adscricao a join fetch a.paciente join fetch a.equipe e join fetch e.unidade left join fetch a.microarea "
             + "where a.fim is null")
     List<Adscricao> findVigentesCompletas();
+
+    /** Pessoas adscritas vigentes por unidade da equipe: [unidadeId, quantidade] (a cobertura da rede, ADR-0198). */
+    @Query("select a.equipe.unidade.uuid, count(a) from Adscricao a where a.fim is null group by a.equipe.unidade.uuid")
+    List<Object[]> contarVigentesPorUnidade();
 }

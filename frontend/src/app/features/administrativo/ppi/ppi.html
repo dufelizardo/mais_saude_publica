@@ -3,10 +3,10 @@
     <h1>Rede e pactuação (PPI)</h1>
     <p>Quanto cada executante oferta por procedimento no mês e como a oferta se reparte entre unidades e esferas. A Regulação consome a cota ao autorizar.</p>
   </div>
-  @if (aba() === 'ppi') {
+  @if (aba() === 'ppi' || aba() === 'cobertura') {
     <div class="page-actions">
       <input class="sel" type="month" aria-label="Competência" [value]="competencia()" (change)="mudarCompetencia($any($event.target).value)" />
-      @if (pode('REDE.GERENCIAR')) {
+      @if (aba() === 'ppi' && pode('REDE.GERENCIAR')) {
         <button type="button" class="btn btn--ghost" (click)="copiarMesAnterior()" [disabled]="submitting()">Copiar do mês anterior</button>
         <button type="button" class="btn" (click)="abrirOferta(null)">Nova oferta</button>
       }
@@ -22,6 +22,8 @@
 
 @if (aba() === 'redes') {
   <app-redes-tematicas />
+} @else if (aba() === 'cobertura') {
+  <app-cobertura-rede [competencia]="competencia()" />
 } @else if (aba() === 'referencias') {
   <app-referencias-rede [procedimentos]="procedimentos()" [unidades]="unidades()" [podeGerenciar]="pode('REDE.GERENCIAR')" (aviso)="avisar($event)" />
 } @else {
