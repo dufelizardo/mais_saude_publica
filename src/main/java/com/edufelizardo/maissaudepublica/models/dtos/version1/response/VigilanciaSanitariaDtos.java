@@ -74,6 +74,7 @@ public final class VigilanciaSanitariaDtos {
     public record PendenciaLicenca(UUID estabelecimentoId, String estabelecimentoNome, GrauRiscoSanitario risco, String motivo, LocalDate validade) {
     }
 
-    public record Pendencias(List<PendenciaLicenca> licencas, List<Irregularidade> prazosVencidos, List<Denuncia> denunciasParadas) {
+    public record Pendencias(List<PendenciaLicenca> licencas, List<Irregularidade> prazosVencidos, List<Denuncia> denunciasParadas,
+                             List<ProcessoSanitarioDtos.PendenciaProcesso> processos, List<ProcessoSanitarioDtos.PendenciaMedida> medidas) {
     }
 }

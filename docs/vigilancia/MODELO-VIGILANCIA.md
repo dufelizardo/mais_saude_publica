@@ -177,9 +177,18 @@ Estabelecimento regulado → Inspeção → Achados → Irregularidade → Medid
 | Irregularidade | gravidade (art. 4º da Lei 6.437/1977), enquadramento e prazo de correção; corrigida só no retorno; prazo vencido calculado |
 | Documentos | o estabelecimento e a inspeção como donos (D2 parcial), sem unidade |
 
-Ficam para a **V3b** o auto de infração, o processo administrativo sanitário (defesa e recurso em 15 dias, arts. 22 e 30), as
-penalidades do art. 2º, as medidas cautelares (interdição de até 90 dias, apreensão), os termos assinados com verificação pública e o
-relatório no #19.
+**Feito na V3b** ([ADR-0200](../adr/0200-processo-sanitario-e-medidas.md)): o rito da Lei 6.437/1977.
+
+```text
+Auto de infração → ciência → defesa (15 dias; intempestiva ou revelia) → decisão (arquivamento ou penalidades)
+  → ciência → recurso (15 dias, efeito suspensivo) → julgamento → encerramento (as penalidades passam a valer)
+```
+
+- **Penalidades** do art. 2º, com atenuantes (art. 7º) e agravantes (art. 8º); a suspensão e a cassação mudam a licença; a interdição
+  vira medida.
+- **Medidas imediatas:** interdição cautelar até 90 dias (art. 23, §4º) e apreensão; desinterdição e destinação.
+- **Termos em PDF** com código e QR code; verificação pública do termo e da licença, sem dado de pessoa.
+- **No #19:** o relatório Vigilância sanitária; as interdições vigentes na Sala de Situação.
 
 ## 5. Vigilância Ambiental
 

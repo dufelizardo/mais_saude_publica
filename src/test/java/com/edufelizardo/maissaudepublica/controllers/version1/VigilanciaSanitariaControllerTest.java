@@ -71,7 +71,16 @@ class VigilanciaSanitariaControllerTest {
     static void limparDados(JdbcTemplate jdbc, String prefixo, String matriculas) {
         String estabs = "(select uuid from tb_estabelecimento_regulado where razao_social like '" + prefixo + "%')";
         String inspecoes = "(select uuid from tb_inspecao_sanitaria where estabelecimento_id in " + estabs + ")";
-        String docs = "(select uuid from tb_documento where dono_id in " + estabs + " or dono_id in " + inspecoes + ")";
+        String processos = "(select uuid from tb_processo_sanitario where estabelecimento_id in " + estabs + ")";
+        String docs = "(select uuid from tb_documento where dono_id in " + estabs + " or dono_id in " + inspecoes + " or dono_id in " + processos + ")";
+        jdbc.update("delete from tb_termo_sanitario where estabelecimento_id in " + estabs);
+        jdbc.update("delete from tb_versao_documento where documento_id in " + docs);
+        jdbc.update("delete from tb_documento where uuid in " + docs);
+        jdbc.update("delete from tb_medida_sanitaria where estabelecimento_id in " + estabs);
+        jdbc.update("delete from tb_penalidade_sanitaria where processo_id in " + processos);
+        jdbc.update("delete from tb_processo_sanitario_fiscal where processo_id in " + processos);
+        jdbc.update("update tb_irregularidade_sanitaria set processo_id = null where estabelecimento_id in " + estabs);
+        jdbc.update("delete from tb_processo_sanitario where estabelecimento_id in " + estabs);
         jdbc.update("delete from tb_versao_documento where documento_id in " + docs);
         jdbc.update("delete from tb_documento where uuid in " + docs);
         jdbc.update("delete from tb_licenca_sanitaria where estabelecimento_id in " + estabs);

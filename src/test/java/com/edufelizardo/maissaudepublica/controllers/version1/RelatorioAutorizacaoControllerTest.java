@@ -114,7 +114,7 @@ class RelatorioAutorizacaoControllerTest {
         mockMvc.perform(get(URL)).andExpect(status().isUnauthorized());
         mockMvc.perform(como(ENFERMEIRO, get(URL))).andExpect(status().isForbidden());
         mockMvc.perform(como(GESTOR, get(URL))).andExpect(status().isOk());
-        for (String codigo : List.of("PRODUCAO", "SITUACAO", "PROGRAMAS", "VACINACAO", "VIGILANCIA", "CAMPANHAS_COMUNICACAO", "EDUCACAO_EM_SAUDE", "PACTUACAO_REDE")) {
+        for (String codigo : List.of("PRODUCAO", "SITUACAO", "PROGRAMAS", "VACINACAO", "VIGILANCIA", "CAMPANHAS_COMUNICACAO", "EDUCACAO_EM_SAUDE", "PACTUACAO_REDE", "VIGILANCIA_SANITARIA")) {
             mockMvc.perform(como(GESTOR, get(URL + "/" + codigo + "?unidadeId=" + ubs.getUuid()))).andExpect(status().isOk());
             mockMvc.perform(como(GESTOR, get(URL + "/" + codigo + "?unidadeId=" + outra.getUuid()))).andExpect(status().isForbidden());
             mockMvc.perform(como(ENFERMEIRO, get(URL + "/" + codigo))).andExpect(status().isForbidden());

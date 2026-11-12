@@ -69,4 +69,11 @@ public class IrregularidadeSanitaria implements Serializable {
 
     @Column(nullable = false, updatable = false)
     private Instant registradoEm;
+
+    /** O processo que a autuou (ADR-0200). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "processo_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private ProcessoSanitario processo;
 }

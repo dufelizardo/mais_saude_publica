@@ -62,3 +62,60 @@ UI Vigilancia Sanitaria - Registrar Inspecao Com Roteiro
     Wait For Elements State    css=[aria-label="Inspeções sanitárias"] tr:has-text("${nome}") >> text=Com ressalvas    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia Sanitaria - Lavrar Auto E Ciencia
+    [Documentation]    Pela tela: lavra o auto sobre a irregularidade aberta e registra a ciência; o processo passa a em defesa.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [NUMBERS]
+    ${nome}=    Set Variable    Robot UI Auto ${sufixo}
+    ${id}=    Seed Estabelecimento Visa    MEDIO    ${nome}
+    ${matricula}=    Seed A Profissional Matricula
+    ${irreg}=    Create Dictionary    descricao=Lixo exposto    gravidade=LEVE
+    ${irregs}=    Create List    ${irreg}
+    ${fiscais}=    Create List    ${matricula}
+    ${insp}=    Create Dictionary    estabelecimentoId=${id}    motivo=PROGRAMADA    resultado=COM_RESSALVAS    relatorio=Lixo exposto.    fiscais=${fiscais}    irregularidades=${irregs}
+    ${r}=    POST Inspecao Visa    ${insp}
+    Should Be Equal As Integers    ${r.status_code}    201
+    UI Vigilancia Sanitaria - Abrir Tela
+    Click    id=tab-processos
+    Click    css=button >> text=Lavrar auto de infração
+    Select Options By    id=f-ps-estab    value    ${id}
+    Wait For Elements State    css=input[aria-label="Autuar: Lixo exposto"]    visible
+    Fill Text    id=f-ps-disp    Lei 6.437/1977, art. 10
+    Fill Text    id=f-ps-desc    Lixo exposto na área de preparo.
+    Fill Text    id=f-ps-fiscais    ${matricula}
+    Enviar Gaveta
+    Wait For Elements State    css=app-drawer >> text=Ciência do auto    visible
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Andamento do processo"] >> text=/Ciência do auto em/    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia Sanitaria - Interdicao Cautelar
+    [Documentation]    Pela tela: a interdição cautelar aparece vigente na aba Medidas.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [NUMBERS]
+    ${nome}=    Set Variable    Robot UI Interdito ${sufixo}
+    ${id}=    Seed Estabelecimento Visa    MEDIO    ${nome}
+    UI Vigilancia Sanitaria - Abrir Tela
+    Click    id=tab-medidas
+    Click    css=button >> text=Interdição cautelar
+    Select Options By    id=f-ps-mestab    value    ${id}
+    Fill Text    id=f-ps-mdesc    Câmara fria sem refrigeração.
+    Enviar Gaveta
+    Wait For Elements State    css=app-drawer    detached
+    Wait For Elements State    css=[aria-label="Medidas sanitárias"] tr:has-text("${nome}") >> text=Vigente    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia Sanitaria - Verificar Licenca Publica
+    [Documentation]    A página pública confere a licença pelo número, sem login.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${id}=    Seed Estabelecimento Visa    MEDIO
+    ${vazio}=    Create Dictionary
+    ${r}=    POST Licenca Visa    ${id}    ${vazio}
+    Should Be Equal As Integers    ${r.status_code}    201
+    Ir Para Rota Do Frontend    /verificar-visa?licenca=${r.json()}[numero]
+    Wait For Elements State    css=section.verif >> text=/Licença sanitária: Vigente/    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

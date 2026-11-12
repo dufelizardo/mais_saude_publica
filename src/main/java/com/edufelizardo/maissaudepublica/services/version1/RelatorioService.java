@@ -43,6 +43,7 @@ public class RelatorioService {
     @Autowired private CoberturaVacinalService coberturaService;
     @Autowired private AvaliacaoCampanhaService avaliacaoCampanhaService;
     @Autowired private CoberturaRedeService coberturaRedeService;
+    @Autowired private ProcessoSanitarioService processoSanitarioService;
 
     public List<RelatorioCatalogoDto> catalogo() {
         return Arrays.stream(TipoRelatorio.values()).map(t -> new RelatorioCatalogoDto(t.name(), t.getNome(), t.getCategoria(), t.getDescricao())).toList();
@@ -58,6 +59,7 @@ public class RelatorioService {
             case CAMPANHAS_COMUNICACAO -> campanhasComunicacao(de, ate, unidadeId);
             case EDUCACAO_EM_SAUDE -> educacaoEmSaude(de, ate, unidadeId);
             case PACTUACAO_REDE -> pactuacaoRede(de, ate, unidadeId);
+            case VIGILANCIA_SANITARIA -> processoSanitarioService.relatorio(TipoRelatorio.VIGILANCIA_SANITARIA, de, ate, unidadeId);
         };
     }
 

@@ -77,3 +77,14 @@ UI Relatorios - Gestao Da Rede
     Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Oferta pactuada (%)    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Relatorios - Vigilancia Sanitaria
+    [Documentation]    A categoria Vigilância traz o relatório da vigilância sanitária (ADR-0200).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /relatorios
+    Click    css=.rel-chip:has-text("Vigilância")
+    Click    css=.rel-item:has-text("Vigilância sanitária")
+    Wait For Elements State    css=.rel-detalhe h2 >> text=Vigilância sanitária    visible
+    Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Interdições vigentes    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -15,4 +15,6 @@ public interface IrregularidadeSanitariaRepository extends JpaRepository<Irregul
     List<IrregularidadeSanitaria> findByEstabelecimento_UuidOrderByRegistradoEmAsc(UUID estabelecimentoId);
 
     List<IrregularidadeSanitaria> findByInspecao_UuidOrderByRegistradoEmAsc(UUID inspecaoId);
+
+    List<IrregularidadeSanitaria> findByProcesso_UuidOrderByRegistradoEmAsc(UUID processoId);
 }

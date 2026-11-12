@@ -18,6 +18,7 @@ import {
   LicencaSanitariaDto,
   MOTIVOS_INSPECAO,
   MOTIVOS_PENDENCIA_LICENCA,
+  MOTIVOS_PENDENCIA_PROCESSO,
   MotivoInspecao,
   PendenciasVisaDto,
   RESPOSTAS_ROTEIRO,
@@ -35,8 +36,9 @@ import { AuthService } from '../../core/services/auth';
 import { DocumentoService } from '../../core/services/documento';
 import { VigilanciaSanitariaService } from '../../core/services/vigilancia-sanitaria';
 import { Drawer } from '../../shared/drawer/drawer';
+import { ProcessosSanitarios } from './processos-sanitarios';
 
-type Aba = 'estabelecimentos' | 'inspecoes' | 'denuncias' | 'licencas' | 'pendencias';
+type Aba = 'estabelecimentos' | 'inspecoes' | 'denuncias' | 'licencas' | 'processos' | 'medidas' | 'pendencias';
 type Gaveta =
   | { tipo: 'estabelecimento'; atual: EstabelecimentoReguladoDto | null }
   | { tipo: 'detalhe'; id: string }
@@ -52,7 +54,7 @@ type IrregularidadeNova = { itemCodigo: string | null; descricao: string; enquad
  */
 @Component({
   selector: 'app-vigilancia-sanitaria',
-  imports: [Drawer],
+  imports: [Drawer, ProcessosSanitarios],
   template: `
     <header class="page-head">
       <div>
@@ -73,6 +75,7 @@ type IrregularidadeNova = { itemCodigo: string | null; descricao: string; enquad
         <div class="stat"><div><div class="stat__lbl">Licenças pendentes</div><div class="stat__val mono">{{ p.licencas.length }}</div><div class="stat__sub">sem licença, vencida ou vencendo</div></div></div>
         <div class="stat"><div><div class="stat__lbl">Prazos de correção vencidos</div><div class="stat__val mono">{{ p.prazosVencidos.length }}</div><div class="stat__sub">irregularidades abertas</div></div></div>
         <div class="stat"><div><div class="stat__lbl">Denúncias paradas</div><div class="stat__val mono">{{ p.denunciasParadas.length }}</div><div class="stat__sub">há mais de 30 dias</div></div></div>
+        <div class="stat"><div><div class="stat__lbl">Processos com pendência</div><div class="stat__val mono">{{ p.processos.length }}</div><div class="stat__sub">ciência, revelia, decisão ou encerramento</div></div></div>
       </section>
     }
 
@@ -81,6 +84,8 @@ type IrregularidadeNova = { itemCodigo: string | null; descricao: string; enquad
       <button type="button" role="tab" id="tab-inspecoes" [attr.aria-selected]="aba() === 'inspecoes'" (click)="aba.set('inspecoes')">Inspeções</button>
       <button type="button" role="tab" id="tab-denuncias" [attr.aria-selected]="aba() === 'denuncias'" (click)="aba.set('denuncias')">Denúncias @if (denunciasAbertas().length) { <span class="cnt">{{ denunciasAbertas().length }}</span> }</button>
       <button type="button" role="tab" id="tab-licencas" [attr.aria-selected]="aba() === 'licencas'" (click)="aba.set('licencas')">Licenças</button>
+      <button type="button" role="tab" id="tab-processos" [attr.aria-selected]="aba() === 'processos'" (click)="aba.set('processos')">Processos</button>
+      <button type="button" role="tab" id="tab-medidas" [attr.aria-selected]="aba() === 'medidas'" (click)="aba.set('medidas')">Medidas</button>
       <button type="button" role="tab" id="tab-pendencias" [attr.aria-selected]="aba() === 'pendencias'" (click)="aba.set('pendencias')">Pendências</button>
     </div>
 
@@ -171,6 +176,8 @@ type IrregularidadeNova = { itemCodigo: string | null; descricao: string; enquad
           </table>
         </div>
       }
+      @case ('processos') { <app-processos-sanitarios secao="processos" [estabelecimentos]="estabelecimentosAtivos()" [autuar]="autuar()" [podeInspecionar]="pode('VISA.INSPECIONAR')" [podeGerenciar]="pode('VISA.GERENCIAR')" [podeJulgar]="pode('VISA.JULGAR')" (alterou)="carregar()" /> }
+      @case ('medidas') { <app-processos-sanitarios secao="medidas" [estabelecimentos]="estabelecimentosAtivos()" [podeInspecionar]="pode('VISA.INSPECIONAR')" [podeGerenciar]="pode('VISA.GERENCIAR')" [podeJulgar]="pode('VISA.JULGAR')" (alterou)="carregar()" /> }
       @case ('pendencias') {
         @if (pendencias(); as p) {
           <h3 class="mo-grupo">Licenciamento</h3>
@@ -192,6 +199,28 @@ type IrregularidadeNova = { itemCodigo: string | null; descricao: string; enquad
                 @for (r of p.prazosVencidos; track r.uuid) {
                   <tr><td class="cell-main">{{ r.estabelecimentoNome }}</td><td>{{ r.descricao }} <span class="cell-sub">{{ gravidades[r.gravidade] }}</span></td><td class="mono">{{ data(r.prazoCorrecao!) }}</td></tr>
                 } @empty { <tr><td colspan="3" class="cell-sub">Nenhum prazo vencido.</td></tr> }
+              </tbody>
+            </table>
+          </div>
+          <h3 class="mo-grupo vs-titulo">Processos sanitários</h3>
+          <div class="tbl-wrap card">
+            <table class="vs-tabela" aria-label="Pendências dos processos">
+              <thead><tr><th scope="col">Processo</th><th scope="col">Estabelecimento</th><th scope="col">Pendência</th></tr></thead>
+              <tbody>
+                @for (x of p.processos; track x.processoId) {
+                  <tr><td class="mono">{{ x.numero }}</td><td>{{ x.estabelecimentoNome }}</td><td><span class="tag tag--alert">{{ motivosProcesso[x.motivo] }}</span><span class="cell-sub">desde {{ data(x.desde) }}</span></td></tr>
+                } @empty { <tr><td colspan="3" class="cell-sub">Nenhum processo pendente.</td></tr> }
+              </tbody>
+            </table>
+          </div>
+          <h3 class="mo-grupo vs-titulo">Interdições cautelares no fim</h3>
+          <div class="tbl-wrap card">
+            <table class="vs-tabela" aria-label="Interdições cautelares no fim">
+              <thead><tr><th scope="col">Medida</th><th scope="col">Estabelecimento</th><th scope="col">Até</th></tr></thead>
+              <tbody>
+                @for (x of p.medidas; track x.medidaId) {
+                  <tr><td class="mono">{{ x.numero }}</td><td>{{ x.estabelecimentoNome }}</td><td><span [class]="'tag tag--' + (x.motivo === 'CAUTELAR_VENCIDA' ? 'alert' : 'warn')">{{ x.motivo === 'CAUTELAR_VENCIDA' ? 'Vencida' : 'Vence em breve' }}</span> <span class="mono">{{ data(x.fimPrevisto) }}</span></td></tr>
+                } @empty { <tr><td colspan="3" class="cell-sub">Nenhuma interdição cautelar perto do fim.</td></tr> }
               </tbody>
             </table>
           </div>
@@ -222,7 +251,10 @@ type IrregularidadeNova = { itemCodigo: string | null; descricao: string; enquad
                 <div><dt>Atividades</dt><dd>@for (a of d.estabelecimento.atividades; track a.cnae) { <span class="cell-sub">{{ a.cnae }} · {{ a.descricao }} ({{ riscos[a.risco] }})</span> }</dd></div>
                 @if (d.estabelecimento.responsavelTecnico) { <div><dt>Responsável técnico</dt><dd>{{ d.estabelecimento.responsavelTecnico }} {{ d.estabelecimento.registroConselhoRt ?? '' }}</dd></div> }
               </dl>
-              @if (podeAlguma('VISA.INSPECIONAR', 'VISA.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEstabelecimento(d.estabelecimento)">Alterar cadastro</button> }
+              <div class="row-actions">
+                @if (podeAlguma('VISA.INSPECIONAR', 'VISA.GERENCIAR')) { <button type="button" class="btn btn--ghost btn--sm" (click)="abrirEstabelecimento(d.estabelecimento)">Alterar cadastro</button> }
+                @if (pode('VISA.INSPECIONAR') && temAberta(d)) { <button type="button" class="btn btn--sm" (click)="lavrarAuto(d.estabelecimento.uuid)">Lavrar auto de infração</button> }
+              </div>
               <h3 class="mo-grupo vs-titulo">Licenças</h3>
               <ul class="vs-lista" aria-label="Histórico de licenças">
                 @for (l of d.licencas; track l.uuid) { <li><span class="mono">{{ l.numero }}</span> · {{ situacoesLicenca[l.situacao] }} · {{ data(l.emitidaEm) }}@if (l.validade) { a {{ data(l.validade) }} }</li> } @empty { <li class="cell-sub">Nenhuma.</li> }
@@ -450,6 +482,9 @@ export class VigilanciaSanitaria {
   protected readonly situacoesIrregularidade = SITUACOES_IRREGULARIDADE;
   protected readonly situacoesLicenca = SITUACOES_LICENCA;
   protected readonly motivosPendencia = MOTIVOS_PENDENCIA_LICENCA;
+  protected readonly motivosProcesso = MOTIVOS_PENDENCIA_PROCESSO;
+  /** O estabelecimento a autuar na aba Processos (ADR-0200). */
+  protected readonly autuar = signal<string | null>(null);
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
   protected readonly aba = signal<Aba>('estabelecimentos');
@@ -530,6 +565,17 @@ export class VigilanciaSanitaria {
 
   protected set(chave: string, ev: Event): void {
     this.f.set({ ...this.f(), [chave]: (ev.target as HTMLInputElement).value });
+  }
+
+  protected temAberta(d: EstabelecimentoDetalheDto): boolean {
+    return d.irregularidades.some((r) => r.situacao === 'ABERTA');
+  }
+
+  protected lavrarAuto(estabelecimentoId: string): void {
+    this.fechar();
+    this.autuar.set(null);
+    this.aba.set('processos');
+    setTimeout(() => this.autuar.set(estabelecimentoId));
   }
 
   // ── Estabelecimento ──
@@ -784,7 +830,7 @@ export class VigilanciaSanitaria {
     return new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   }
 
-  private carregar(): void {
+  protected carregar(): void {
     this.erro.set(null);
     const falhou = (x: HttpErrorResponse) => this.erro.set(mensagem(x));
     this.service.estabelecimentos().subscribe({ next: (l) => this.estabelecimentos.set(l), error: falhou });

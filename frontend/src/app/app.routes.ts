@@ -15,6 +15,8 @@ export const routes: Routes = [
   { path: 'redefinir-senha', loadComponent: () => import('./features/auth/redefinir-senha/redefinir-senha').then((m) => m.RedefinirSenha) },
   // Verificação pública do laudo pelo código (ADR-0183): sem login.
   { path: 'verificar-laudo', loadComponent: () => import('./features/publico/verificar-laudo/verificar-laudo').then((m) => m.VerificarLaudo) },
+  // Verificação pública dos termos e da licença sanitária (ADR-0200): sem login.
+  { path: 'verificar-visa', loadComponent: () => import('./features/publico/verificar-visa/verificar-visa').then((m) => m.VerificarVisa) },
   // Laudo de exames (ADR-0095): fora do AppShell, para imprimir limpo.
   {
     path: 'laudo/exame/:pedidoId',

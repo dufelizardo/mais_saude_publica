@@ -4,5 +4,6 @@ package com.edufelizardo.maissaudepublica.models.enuns;
 public enum DonoDocumento {
     PACIENTE,
     ESTABELECIMENTO,
-    INSPECAO_SANITARIA
+    INSPECAO_SANITARIA,
+    PROCESSO_SANITARIO
 }

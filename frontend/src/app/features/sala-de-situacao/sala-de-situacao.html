@@ -55,6 +55,20 @@
   </section>
 }
 
+@if (interdicoes().length) {
+  <section class="ss-alertas" aria-label="Interdições sanitárias">
+    @for (x of interdicoes().slice(0, 3); track x.uuid) {
+      <article class="ss-alerta ss-alerta--media" [attr.aria-label]="'Interdição sanitária: ' + x.estabelecimentoNome">
+        <div>
+          <div class="ss-alerta__titulo">Interditado: {{ x.estabelecimentoNome }}</div>
+          <div class="ss-alerta__detalhe">{{ x.tipo === 'INTERDICAO_CAUTELAR' ? 'Cautelar' : 'Pela decisão' }} {{ x.total ? 'total' : 'parcial' }} · desde {{ desde(x.inicio + 'T12:00:00') }}@if (x.fimPrevisto) { · até {{ x.fimPrevisto.split('-').reverse().join('/') }} }</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/vigilancia/sanitaria">Ver medidas</a>
+      </article>
+    }
+  </section>
+}
+
 @if (aguaForaDoPadrao().length) {
   <section class="ss-alertas" aria-label="Água fora do padrão">
     @for (a of aguaForaDoPadrao().slice(0, 3); track a.uuid) {

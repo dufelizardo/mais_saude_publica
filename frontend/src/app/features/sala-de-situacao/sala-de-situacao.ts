@@ -24,6 +24,8 @@ import { ProducaoService } from '../../core/services/producao';
 import { EmergenciaService } from '../../core/services/emergencia';
 import { ControleVetorialService } from '../../core/services/controle-vetorial';
 import { VigilanciaAmbientalService } from '../../core/services/vigilancia-ambiental';
+import { VigilanciaSanitariaService } from '../../core/services/vigilancia-sanitaria';
+import { InterdicaoDto } from '../../core/models/vigilancia-sanitaria';
 import { AmostraAguaDto } from '../../core/models/vigilancia-ambiental';
 import { LinhaIndiceVetorial } from '../../core/models/controle-vetorial';
 import { EmergenciaDto, classeDoNivel } from '../../core/models/emergencia';
@@ -54,6 +56,9 @@ export class SalaDeSituacao {
   private readonly ambientalService = inject(VigilanciaAmbientalService);
   /** As amostras de água fora do padrão do mês, ainda sem medida (ADR-0164). */
   protected readonly aguaForaDoPadrao = signal<AmostraAguaDto[]>([]);
+  private readonly sanitariaService = inject(VigilanciaSanitariaService);
+  /** As interdições sanitárias vigentes (ADR-0200). */
+  protected readonly interdicoes = signal<InterdicaoDto[]>([]);
   /** As emergências ativas (ADR-0156), no alto da tela; sem acesso, nada. */
   protected readonly emergencias = signal<EmergenciaDto[]>([]);
   /** Os eventos de massa planejados para os próximos 7 dias, ou já previstos e ainda sem operação (ADR-0160). */
@@ -339,6 +344,7 @@ export class SalaDeSituacao {
     this.service.escala(u).pipe(catchError(() => of([]))).subscribe((l) => this.escala.set(l));
     const mes = new Date();
     const desde = `${mes.getFullYear()}-${String(mes.getMonth() + 1).padStart(2, '0')}-01`;
+    this.sanitariaService.interdicoes().pipe(catchError(() => of([]))).subscribe((l) => this.interdicoes.set(l));
     this.ambientalService.amostras({ naoConformes: true, desde }).pipe(catchError(() => of([])))
       .subscribe((l) => this.aguaForaDoPadrao.set(l.filter((a) => !a.medida)));
     this.vetorialService.indices().pipe(catchError(() => of(null))).subscribe((ix) => {

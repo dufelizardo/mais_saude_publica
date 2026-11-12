@@ -52,6 +52,9 @@ public class LicencaSanitaria implements Serializable {
     @Column(length = 500)
     private String observacao;
 
+    /** Na suspensão por penalidade, até quando (ADR-0200); depois disso a licença volta a valer até a validade. */
+    private LocalDate suspensaAte;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inspecao_id", referencedColumnName = "uuid", updatable = false)
     @ToString.Exclude
