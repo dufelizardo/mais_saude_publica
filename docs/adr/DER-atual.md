@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **310 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V84). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **311 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V85). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -210,3 +210,4 @@ listadas aqui pela migração que criou cada uma (até a V84). A fonte de verdad
 | V82 | `tb_estabelecimento_regulado`, `tb_atividade_estabelecimento`, `tb_roteiro_inspecao`, `tb_versao_roteiro_inspecao`, `tb_denuncia_sanitaria`, `tb_inspecao_sanitaria`, `tb_inspecao_sanitaria_fiscal`, `tb_licenca_sanitaria`, `tb_irregularidade_sanitaria` (e o dono do documento sem unidade fora do paciente) |
 | V83 | `tb_processo_sanitario`, `tb_processo_sanitario_fiscal`, `tb_penalidade_sanitaria`, `tb_medida_sanitaria`, `tb_termo_sanitario` (e `processo_id` na irregularidade, `suspensa_ate` na licença) |
 | V84 | sem tabela nova: `VIGILANCIA` na origem do encaminhamento intersetorial e `CONSELHO_DE_DIREITOS` no tipo da instituição |
+| V85 | `tb_incidente_seguranca` |

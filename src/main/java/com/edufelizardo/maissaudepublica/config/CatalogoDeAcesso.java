@@ -76,6 +76,10 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Controle de vetores (ADR-0162): a vistoria é do agente de endemias; as ações e os bloqueios, da coordenação de zoonoses.
         PERMISSOES.put("ZOONOSES.VISTORIAR", new Def("Registrar vistorias de controle vetorial, focos e o tratamento", OPERACAO));
         PERMISSOES.put("ZOONOSES.GERENCIAR", new Def("Planejar e registrar ações de controle vetorial e ver os casos sem bloqueio", OPERACAO));
+        // Segurança do paciente (ADR-0203): qualquer profissional notifica; o Núcleo de Segurança do Paciente analisa.
+        PERMISSOES.put("QUALIDADE.NOTIFICAR", new Def("Notificar incidentes de segurança do paciente, inclusive de forma anônima", OPERACAO));
+        PERMISSOES.put("QUALIDADE.ANALISAR", new Def("Classificar e analisar os incidentes de segurança do paciente e registrar o Notivisa (núcleo de segurança)",
+                ACESSO_AO_DADO_DE_SAUDE));
         // Vigilância Sanitária (ADR-0199): o fiscal inspeciona; a coordenação licencia, recebe denúncias e mantém os roteiros.
         PERMISSOES.put("VISA.INSPECIONAR", new Def("Cadastrar estabelecimentos regulados e registrar inspeções sanitárias com as irregularidades", OPERACAO));
         PERMISSOES.put("VISA.GERENCIAR", new Def("Conceder licenças sanitárias, registrar e concluir denúncias e manter os roteiros de inspeção", OPERACAO));
@@ -320,6 +324,10 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "Coordenação de zoonoses e vetores: vistorias, índices do ciclo, ações de controle e bloqueios.",
                 List.of("ZOONOSES.VISTORIAR", "ZOONOSES.GERENCIAR", "EMERGENCIA.REGISTRAR")));
         // Vigilância Sanitária (ADR-0199): a autoridade sanitária fiscaliza; a coordenação licencia e julga (a decisão do processo, na V3b).
+        // Núcleo de Segurança do Paciente (RDC 36/2013; ADR-0203).
+        PAPEIS.put("NUCLEO_SEGURANCA_PACIENTE", new PapelPadrao("Núcleo de Segurança do Paciente",
+                "Recebe, classifica e analisa os incidentes de segurança do paciente e notifica o evento adverso ao SNVS (RDC 36/2013).",
+                List.of("QUALIDADE.NOTIFICAR", "QUALIDADE.ANALISAR", "PACIENTE.CONSULTAR", "INDICADOR.CONSULTAR")));
         PAPEIS.put("FISCAL_SANITARIO", new PapelPadrao("Fiscal sanitário",
                 "Autoridade sanitária: inspeciona estabelecimentos, registra irregularidades e intima a corrigir (Lei 6.437/1977).",
                 List.of("VISA.INSPECIONAR")));
@@ -343,6 +351,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "Estoque, dispensação e transferências; lê a prescrição.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "FARMACIA.CONSULTAR", "FARMACIA.GERENCIAR_ESTOQUE",
                         "FARMACIA.DISPENSAR", "FARMACIA.TRANSFERIR")));
+        // Segurança do paciente (ADR-0203): todo papel da rede notifica incidente; o administrador da plataforma não atua no cuidado.
+        PAPEIS.replaceAll((codigo, p) -> codigo.equals(ADMINISTRADOR_PLATAFORMA) || p.permissoes().contains("QUALIDADE.NOTIFICAR") ? p
+                : new PapelPadrao(p.nome(), p.descricao(), java.util.stream.Stream.concat(p.permissoes().stream(), java.util.stream.Stream.of("QUALIDADE.NOTIFICAR")).toList()));
     }
 
     /** Papel semeado por este catálogo (os demais foram criados pela administração). */
