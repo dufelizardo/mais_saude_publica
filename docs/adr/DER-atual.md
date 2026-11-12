@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **296 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V81). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **305 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V82). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -207,3 +207,4 @@ listadas aqui pela migração que criou cada uma (até a V81). A fonte de verdad
 | V79 | `tb_acao_educativa`, `tb_acao_educativa_conteudo`, `tb_acao_educativa_material`, `tb_acao_educativa_microarea` |
 | V80 | `tb_avaliacao_campanha` (e as metas em `tb_campanha_comunicacao`) |
 | V81 | `tb_componente_rede_item`, `tb_referencia_rede` (e `fora_da_referencia` em `tb_solicitacao_regulacao`) |
+| V82 | `tb_estabelecimento_regulado`, `tb_atividade_estabelecimento`, `tb_roteiro_inspecao`, `tb_versao_roteiro_inspecao`, `tb_denuncia_sanitaria`, `tb_inspecao_sanitaria`, `tb_inspecao_sanitaria_fiscal`, `tb_licenca_sanitaria`, `tb_irregularidade_sanitaria` (e o dono do documento sem unidade fora do paciente) |

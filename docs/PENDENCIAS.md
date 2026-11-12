@@ -99,7 +99,7 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   acessibilidade. As equipes da unidade aparecem na aba Equipes desde a ADR-0104. Mapa, coordenadas e
   microáreas vêm pelo domínio Território (ADR-0108, fatias F1 e F2).
 - Fora do escopo da ADR-0101: sincronização com o CNES; coordenadas e mapa; microáreas e famílias; equipes de
-  Saúde da Família; inspeção sanitária; capacidade de consultórios; exportação; horário de atendimento
+  Saúde da Família; ~~inspeção sanitária~~ (ADR-0199, a unidade pública como estabelecimento ligado); capacidade de consultórios; exportação; horário de atendimento
   estruturado.
 
 ### Leitos e internação
@@ -218,7 +218,8 @@ real":
 - **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134, ~~SB2 (odontograma)~~ — ADR-0135, ~~SB3a (catálogo e procedimento odontológico)~~ — ADR-0136, ~~SB3b (plano de tratamento)~~ — ADR-0137; ~~SB4a (encaminhamento pela Regulação)~~ — ADR-0138; ~~SB4b (prótese)~~ — ADR-0139; ~~SB5 (coletiva)~~ — ADR-0140. Domínio completo; CPO-D e indicadores ficam para a P6 e o BI.
 - **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias ~~V1 (fundação)~~ — ADR-0124,
   ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131, ~~V4a (controle de vetores)~~ —
-  ADR-0162 (sem o quarteirão), ~~V4b (animais)~~ — ADR-0163 (sem a cobertura antirrábica), ~~V4c (água e risco)~~ — ADR-0164 (sem o plano de amostragem); faltam V3 (sanitária) e V5 (trabalhador e integrações).
+  ADR-0162 (sem o quarteirão), ~~V4b (animais)~~ — ADR-0163 (sem a cobertura antirrábica), ~~V4c (água e risco)~~ — ADR-0164 (sem o plano de amostragem), ~~V3a (estabelecimento, licença, denúncia e inspeção)~~ — ADR-0199; faltam V3b (auto,
+  processo e medidas), V3c (violência na rede intersetorial) e V5 (trabalhador e integrações).
 - **#24 Imunização** — desenhado na ADR-0147; ~~I1 (fundação: catálogo, calendário, dose, caderneta e Sala de Vacina)~~
   — ADR-0147; ~~I2 (sala de vacina e cadeia de frio)~~ — ADR-0148 (sem o remanejamento entre unidades, o pedido à rede
   de frio e o termômetro automático); ~~I3 (cobertura e campanhas)~~ — ADR-0149 (sem o SINASC e sem a cobertura de

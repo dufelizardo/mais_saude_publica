@@ -10,6 +10,6 @@ import java.util.UUID;
 
 public interface DocumentoRepository extends JpaRepository<Documento, UUID> {
 
-    @Query("select d from Documento d join fetch d.tipo join fetch d.unidade where d.donoTipo = ?1 and d.donoId = ?2 order by d.dataDocumento desc, d.registradoEm desc")
+    @Query("select d from Documento d join fetch d.tipo left join fetch d.unidade where d.donoTipo = ?1 and d.donoId = ?2 order by d.dataDocumento desc, d.registradoEm desc")
     List<Documento> findDoDono(DonoDocumento tipo, UUID donoId);
 }

@@ -165,6 +165,22 @@ Estabelecimento regulado → Inspeção → Achados → Irregularidade → Medid
 - **As medidas seguem um rito:** auto de infração, processo administrativo sanitário e prazos de defesa (Lei
   6.437/1977). Os autos são documentos formais, e por isso a sanitária depende do domínio Documentos.
 
+**Feito na V3a** ([ADR-0199](../adr/0199-vigilancia-sanitaria-fundacao.md)):
+
+| Parte | Como ficou |
+|---|---|
+| Estabelecimento | CPF ou CNPJ conferido e único; atividades CNAE com o grau de risco (RDC 153/2017); o risco é o maior entre elas; a unidade pública liga-se opcionalmente |
+| Licença | histórico com número do ano; dispensa no risco I (Lei 13.874/2019); risco III só com inspeção satisfatória em 12 meses; renovação a 60 dias do vencimento; gravíssima aberta impede |
+| Denúncia | protocolo, canal, anônima ou identificada (o denunciante só para a coordenação); em apuração na primeira inspeção; procedente só com inspeção |
+| Roteiro | itens como dado, versionados (alimentos pela RDC 216/2004, farmácias pela RDC 44/2009); a inspeção guarda a versão |
+| Inspeção | motivo com o vínculo (denúncia, surto, retorno); roteiro respondido por inteiro; item não conforme com a irregularidade; fiscais pela matrícula e assinatura do fiscal logado (CPF e SHA-256); termo em PDF |
+| Irregularidade | gravidade (art. 4º da Lei 6.437/1977), enquadramento e prazo de correção; corrigida só no retorno; prazo vencido calculado |
+| Documentos | o estabelecimento e a inspeção como donos (D2 parcial), sem unidade |
+
+Ficam para a **V3b** o auto de infração, o processo administrativo sanitário (defesa e recurso em 15 dias, arts. 22 e 30), as
+penalidades do art. 2º, as medidas cautelares (interdição de até 90 dias, apreensão), os termos assinados com verificação pública e o
+relatório no #19.
+
 ## 5. Vigilância Ambiental
 
 Riscos ligados ao ambiente: água, ar, solo, contaminantes, desastres, fatores ambientais, vetores e animais. Liga-se
