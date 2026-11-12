@@ -35,6 +35,11 @@ public interface SolicitacaoRegulacaoRepository extends JpaRepository<Solicitaca
 
     List<SolicitacaoRegulacao> findByPaciente_Uuid(UUID pacienteId);
 
+    /** As solicitações dos procedimentos, com a solicitante, a executante e a cota, para a cobertura da rede (ADR-0198). */
+    @org.springframework.data.jpa.repository.Query("select s from SolicitacaoRegulacao s join fetch s.procedimento join fetch s.unidadeSolicitante "
+            + "left join fetch s.unidadeExecutante left join fetch s.cota c left join fetch c.beneficiaria where s.procedimento.uuid in ?1")
+    List<SolicitacaoRegulacao> findDosProcedimentos(java.util.Collection<UUID> procedimentos);
+
     boolean existsByPaciente_UuidAndProcedimento_UuidAndStatusIn(UUID pacienteId, UUID procedimentoId,
                                                                  Collection<StatusSolicitacaoRegulacao> status);
 

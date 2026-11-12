@@ -66,3 +66,14 @@ UI Relatorios - Comunicacao E Educacao
     Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Ações educativas realizadas    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Relatorios - Gestao Da Rede
+    [Documentation]    A categoria Gestão da rede traz a pactuação e a cobertura (ADR-0198).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /relatorios
+    Click    css=.rel-chip:has-text("Gestão da rede")
+    Click    css=.rel-item:has-text("Pactuação e cobertura da rede")
+    Wait For Elements State    css=.rel-detalhe h2 >> text=Pactuação e cobertura da rede    visible
+    Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Oferta pactuada (%)    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -11,7 +11,8 @@ public enum TipoRelatorio {
     VACINACAO("Cobertura vacinal", "Epidemiológico", "Doses aplicadas, cobertura das vacinas de referência e campanhas."),
     VIGILANCIA("Vigilância em saúde", "Epidemiológico", "Notificações por agravo e por semana, oportunidade de encerramento e regularidade."),
     CAMPANHAS_COMUNICACAO("Campanhas de comunicação", "Comunicação e educação", "Alcance, ações educativas, cobertura dos territórios, metas e avaliação de cada campanha."),
-    EDUCACAO_EM_SAUDE("Educação em saúde", "Comunicação e educação", "Ações educativas realizadas por tema e por unidade, pessoas alcançadas, participação e materiais.");
+    EDUCACAO_EM_SAUDE("Educação em saúde", "Comunicação e educação", "Ações educativas realizadas por tema e por unidade, pessoas alcançadas, participação e materiais."),
+    PACTUACAO_REDE("Pactuação e cobertura da rede", "Gestão da rede", "Oferta pactuada, uso das cotas, extracotas, fora da referência, fila, cota por mil adscritos, alertas e lacunas das redes.");
 
     private final String nome;
     private final String categoria;

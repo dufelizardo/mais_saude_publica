@@ -3,6 +3,7 @@ package com.edufelizardo.maissaudepublica.services.version1;
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ContagemProducaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AvaliacaoCampanhaDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CoberturaRedeDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CoberturaVacinalDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EsperaAtendimentoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EstatisticaEsperaDto;
@@ -41,6 +42,7 @@ public class RelatorioService {
     @Autowired private IndicadoresDaRedeService redeService;
     @Autowired private CoberturaVacinalService coberturaService;
     @Autowired private AvaliacaoCampanhaService avaliacaoCampanhaService;
+    @Autowired private CoberturaRedeService coberturaRedeService;
 
     public List<RelatorioCatalogoDto> catalogo() {
         return Arrays.stream(TipoRelatorio.values()).map(t -> new RelatorioCatalogoDto(t.name(), t.getNome(), t.getCategoria(), t.getDescricao())).toList();
@@ -55,6 +57,7 @@ public class RelatorioService {
             case VIGILANCIA -> vigilancia(de, ate, unidadeId);
             case CAMPANHAS_COMUNICACAO -> campanhasComunicacao(de, ate, unidadeId);
             case EDUCACAO_EM_SAUDE -> educacaoEmSaude(de, ate, unidadeId);
+            case PACTUACAO_REDE -> pactuacaoRede(de, ate, unidadeId);
         };
     }
 
@@ -219,6 +222,33 @@ public class RelatorioService {
                 new RelatorioDto.Indicador("Pessoas alcançadas", n(d.pessoas())),
                 new RelatorioDto.Indicador("Temas", n(d.temas().size())),
                 new RelatorioDto.Indicador("Materiais distribuídos", n(d.materiais().stream().mapToLong(AvaliacaoCampanhaDto.Material::quantidade).sum()))), secoes, List.of());
+    }
+
+    /** GR3 (ADR-0198): a pactuação e a cobertura da rede no período, com os alertas e as lacunas das redes temáticas. */
+    private RelatorioDto pactuacaoRede(LocalDate de, LocalDate ate, UUID unidadeId) {
+        CoberturaRedeDto d = coberturaRedeService.paraRelatorio(de, ate, unidadeId);
+        CoberturaRedeDto.Resumo r = d.resumo();
+        List<RelatorioDto.Secao> secoes = new ArrayList<>();
+        secoes.add(new RelatorioDto.Secao("Por procedimento", List.of("Procedimento", "Ofertado", "Pactuado", "Utilizado", "Extracotas", "Pactuado (%)",
+                "Cota usada (%)", "Extracota (%)", "Fora da referência (%)", "Na fila", "Espera na fila (dias)", "Até a autorização (dias)"),
+                d.procedimentos().stream().map(p -> List.of(p.procedimentoNome(), n(p.ofertado()), n(p.pactuado()), n(p.utilizado()), n(p.extracotas()),
+                        n(p.percentualPactuado()), n(p.percentualCotaUsada()), n(p.percentualExtracota()), n(p.percentualForaDaReferencia()), n(p.naFila()),
+                        n(p.esperaNaFilaDias()), n(p.esperaAteAutorizacaoDias()))).toList()));
+        secoes.add(new RelatorioDto.Secao("Por origem", List.of("Procedimento", "Origem", "População adscrita", "Cota", "Cota por mil", "Solicitadas",
+                "Autorizadas", "Aguardando", "Saldo", "Referência"),
+                d.procedimentos().stream().flatMap(p -> p.origens().stream().map(o -> List.of(p.procedimentoNome(), o.unidadeNome(), n(o.populacaoAdscrita()),
+                        n(o.cota()), n(o.cotaPorMil()), n(o.solicitadas()), n(o.autorizadas()), n(o.aguardando()), n(o.saldo()), o.comReferencia() ? "Sim" : "Não"))).toList()));
+        secoes.add(new RelatorioDto.Secao("Alertas", List.of("Alerta"), d.alertas().stream().map(List::of).toList()));
+        secoes.add(new RelatorioDto.Secao("Lacunas das redes temáticas", List.of("Rede", "Lacuna"), d.lacunas().stream().map(l -> List.of(l.rede(), l.lacuna())).toList()));
+        return relatorio(TipoRelatorio.PACTUACAO_REDE, d.de(), d.ate(), d.abrangencia(), List.of(
+                        new RelatorioDto.Indicador("Oferta pactuada (%)", n(r.percentualPactuado())),
+                        new RelatorioDto.Indicador("Cota usada (%)", n(r.percentualCotaUsada())),
+                        new RelatorioDto.Indicador("Extracotas (%)", n(r.percentualExtracota())),
+                        new RelatorioDto.Indicador("Fora da referência (%)", n(r.percentualForaDaReferencia())),
+                        new RelatorioDto.Indicador("Cotas esgotadas com fila", n(r.cotasEsgotadasComFila())),
+                        new RelatorioDto.Indicador("Lacunas das redes", n(r.lacunasDasRedes()))), secoes,
+                List.of("A fila e a espera na fila são as de hoje; o resto, do período. A população é a adscrita às equipes; a cota ociosa só aparece em "
+                        + "competência fechada."));
     }
 
     private static String meta(AvaliacaoCampanhaDto.Meta m) {
