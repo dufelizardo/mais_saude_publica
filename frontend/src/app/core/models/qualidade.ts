@@ -68,7 +68,8 @@ export interface NaoConformidadeDto {
   incidenteId: string | null; incidenteNumero: string | null; irregularidadeId: string | null; irregularidadeDescricao: string | null; descricao: string;
   correcaoImediata: string | null; gravidade: GravidadeNaoConformidade; identificadaEm: string; responsavelMatricula: string; responsavelNome: string;
   analiseCausa: string | null; categoriasCausa: CategoriaCausa[]; situacao: SituacaoNaoConformidade; ciclo: number; verificacaoPrevista: string | null;
-  encerradaEm: string | null; motivoCancelamento: string | null; acoesAtrasadas: number; acoes: AcaoQualidadeDto[];
+  encerradaEm: string | null; motivoCancelamento: string | null; indicador: IndicadorQualidade | null; competencia: string | null;
+  checklistNome: string | null; acoesAtrasadas: number; acoes: AcaoQualidadeDto[];
   verificacoes: { ciclo: number; eficaz: boolean; verificadaEm: string; observacao: string | null }[]; registradoEm: string;
 }
 
@@ -76,10 +77,42 @@ export interface MinhaAcaoDto { naoConformidadeId: string; numero: string; unida
 
 export interface SugestaoNcDto {
   origem: OrigemNaoConformidade; referenciaId: string; referencia: string; unidadeId: string; unidadeNome: string; descricao: string; data: string;
+  indicador: IndicadorQualidade | null; checklistId: string | null;
 }
 
 export interface PainelNcDto {
   total: number; emAberto: number; acoesAtrasadas: number; verificadas: number; eficaciaNaPrimeira: number | null;
   porOrigem: { codigo: OrigemNaoConformidade; quantidade: number }[]; porGravidade: { codigo: GravidadeNaoConformidade; quantidade: number }[];
   porSituacao: { codigo: SituacaoNaoConformidade; quantidade: number }[];
+}
+
+// ── Indicadores de qualidade e auditoria de protocolos (ADR-0205) ──
+
+export type IndicadorQualidade = 'TAXA_QUEDAS' | 'INCIDENCIA_LESAO_PRESSAO' | 'REINTERNACAO_30_DIAS' | 'EVENTOS_ADVERSOS_GRAVES' | 'TEMPO_ATE_MEDICO'
+  | 'ABSENTEISMO' | 'ADESAO_PROTOCOLO';
+export type SituacaoIndicador = 'DENTRO' | 'FORA' | 'SEM_META' | 'SEM_BASE';
+export type RespostaItem = 'CONFORME' | 'NAO_CONFORME' | 'NAO_SE_APLICA';
+
+export const INDICADORES_QUALIDADE: Record<IndicadorQualidade, string> = {
+  TAXA_QUEDAS: 'Taxa de quedas', INCIDENCIA_LESAO_PRESSAO: 'Incidência de lesão por pressão', REINTERNACAO_30_DIAS: 'Reinternação em 30 dias',
+  EVENTOS_ADVERSOS_GRAVES: 'Eventos adversos graves', TEMPO_ATE_MEDICO: 'Tempo até o médico', ABSENTEISMO: 'Absenteísmo',
+  ADESAO_PROTOCOLO: 'Adesão ao protocolo',
+};
+export const SITUACOES_INDICADOR: Record<SituacaoIndicador, string> = { DENTRO: 'Dentro da meta', FORA: 'Fora da meta', SEM_META: 'Sem meta', SEM_BASE: 'Sem base' };
+export const RESPOSTAS_ITEM: Record<RespostaItem, string> = { CONFORME: 'Conforme', NAO_CONFORME: 'Não conforme', NAO_SE_APLICA: 'Não se aplica' };
+
+export interface LinhaIndicadorDto {
+  indicador: IndicadorQualidade; checklistId: string | null; nome: string; medida: string; menorMelhor: boolean; valor: number | null;
+  numerador: number | null; denominador: number | null; meta: number | null; situacao: SituacaoIndicador; serie: { competencia: string; valor: number | null }[];
+}
+export interface PainelQualidadeDto { unidadeId: string | null; abrangencia: string; competencia: string; linhas: LinhaIndicadorDto[] }
+export interface MetaQualidadeDto {
+  uuid: string; unidadeId: string; unidadeNome: string; indicador: IndicadorQualidade; indicadorNome: string; checklistId: string | null;
+  checklistNome: string | null; valor: number; vigenteDesde: string; vigenteAte: string | null;
+}
+export interface ChecklistDto { uuid: string; codigo: string; nome: string; ativo: boolean; versaoId: string; versao: number; itens: { codigo: string; texto: string }[] }
+export interface AuditoriaProtocoloDto {
+  uuid: string; unidadeId: string; unidadeNome: string; setorNome: string | null; checklistId: string; checklistNome: string; versao: number;
+  dataAuditoria: string; conformes: number; aplicaveis: number; adesao: number; observacao: string | null; respostas: Record<string, RespostaItem>;
+  registradoEm: string;
 }

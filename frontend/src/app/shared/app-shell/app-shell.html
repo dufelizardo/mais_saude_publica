@@ -37,6 +37,12 @@
           <span class="nav-item__label">Não conformidades</span>
         </a>
       }
+      @if (podeVer('/qualidade/indicadores')) {
+        <a routerLink="/qualidade/indicadores" routerLinkActive #rlaIq="routerLinkActive" [attr.aria-current]="rlaIq.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"></path><path d="m7 15 4-4 3 3 5-6"></path></svg>
+          <span class="nav-item__label">Indicadores de qualidade</span>
+        </a>
+      }
       <div class="nav-group">
         <button type="button" class="nav-group__label" (click)="toggleGrupo('Recursos Humanos')" [attr.aria-expanded]="estaExpandido('Recursos Humanos')">
           <span>Recursos Humanos</span>

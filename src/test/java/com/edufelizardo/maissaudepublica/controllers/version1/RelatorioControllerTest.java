@@ -64,12 +64,12 @@ class RelatorioControllerTest {
     void catalogoTrazOsCincoRelatorios() throws Exception {
         mockMvc.perform(get(URL))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].codigo", containsInAnyOrder("PRODUCAO", "SITUACAO", "PROGRAMAS", "VACINACAO", "VIGILANCIA", "CAMPANHAS_COMUNICACAO", "EDUCACAO_EM_SAUDE", "PACTUACAO_REDE", "VIGILANCIA_SANITARIA")))
+                .andExpect(jsonPath("$[*].codigo", containsInAnyOrder("PRODUCAO", "SITUACAO", "PROGRAMAS", "VACINACAO", "VIGILANCIA", "CAMPANHAS_COMUNICACAO", "EDUCACAO_EM_SAUDE", "PACTUACAO_REDE", "VIGILANCIA_SANITARIA", "QUALIDADE")))
                 .andExpect(jsonPath("$[?(@.codigo == 'VACINACAO')].categoria").value("Epidemiológico"));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"PRODUCAO", "SITUACAO", "PROGRAMAS", "VACINACAO", "VIGILANCIA", "CAMPANHAS_COMUNICACAO", "EDUCACAO_EM_SAUDE", "PACTUACAO_REDE", "VIGILANCIA_SANITARIA"})
+    @ValueSource(strings = {"PRODUCAO", "SITUACAO", "PROGRAMAS", "VACINACAO", "VIGILANCIA", "CAMPANHAS_COMUNICACAO", "EDUCACAO_EM_SAUDE", "PACTUACAO_REDE", "VIGILANCIA_SANITARIA", "QUALIDADE"})
     void cadaRelatorioTrazResumoETabelasDaUnidade(String codigo) throws Exception {
         LocalDate hoje = LocalDate.now();
         mockMvc.perform(get(URL + "/" + codigo).param("de", hoje.minusDays(9).toString()).param("ate", hoje.toString()).param("unidadeId", ubs.getUuid().toString()))

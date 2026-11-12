@@ -207,6 +207,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/qualidade/nao-conformidades').then((m) => m.NaoConformidades),
         data: { breadcrumb: 'Não conformidades', area: 'Qualidade' },
       },
+      // Indicadores de qualidade e auditoria de protocolos (ADR-0205).
+      {
+        path: 'qualidade/indicadores',
+        loadComponent: () => import('./features/qualidade/indicadores-qualidade').then((m) => m.IndicadoresQualidade),
+        data: { breadcrumb: 'Indicadores de qualidade', area: 'Qualidade' },
+      },
       // Segurança do paciente (ADR-0203).
       {
         path: 'qualidade/seguranca-do-paciente',

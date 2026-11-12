@@ -16,7 +16,7 @@ Metadata    Project                       Layered Keyword Driven Framework (LKDF
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Test Cases ***
 CT-001 - Validate Origem Indicador - HTTP 400
-    [Documentation]    O indicador como origem chega com a Q3.
+    [Documentation]    A origem indicador sem o indicador e a competência dá 400 (ADR-0205).
     [Tags]    POST    NaoConformidade    HTTP400
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     NAO CONFORMIDADE    INDICADOR

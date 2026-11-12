@@ -100,6 +100,18 @@ public class NaoConformidade implements Serializable {
     @Column(length = 1000)
     private String motivoCancelamento;
 
+    /** Na origem indicador (ADR-0205): o indicador, a competência (primeiro dia do mês) e, na adesão, o protocolo. */
+    @Enumerated(EnumType.STRING)
+    private com.edufelizardo.maissaudepublica.models.enuns.IndicadorQualidade indicador;
+
+    private java.time.LocalDate competencia;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "checklist_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private ChecklistProtocolo checklist;
+
     @Column(nullable = false, updatable = false)
     private Instant registradoEm;
 

@@ -88,3 +88,14 @@ UI Relatorios - Vigilancia Sanitaria
     Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Interdições vigentes    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Relatorios - Qualidade
+    [Documentation]    A categoria Qualidade traz o relatório da qualidade do serviço (ADR-0205).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /relatorios
+    Click    css=.rel-chip:has-text("Qualidade")
+    Click    css=.rel-item:has-text("Qualidade do serviço")
+    Wait For Elements State    css=.rel-detalhe h2 >> text=Qualidade do serviço    visible
+    Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Não conformidades em aberto    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

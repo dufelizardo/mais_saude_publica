@@ -22,7 +22,8 @@ Aceita e implementada. Fatia **Q2** da Qualidade ([ADR-0202](./0202-qualidade-do
      (404);
    - **origem:** incidente, inspeção sanitária, auditoria interna, reclamação ou outra. O incidente e a inspeção pedem o vínculo e só eles
      o aceitam (400); o incidente é da mesma unidade e a irregularidade é de estabelecimento ligado à unidade (422); **uma em aberto por
-     vínculo** (409; a cancelada e a encerrada liberam). A origem indicador fica reservada para a Q3 (400);
+     vínculo** (409; a cancelada e a encerrada liberam). A origem indicador ficou reservada para a Q3 (400) e chegou com ela ([ADR-0205](./0205-indicadores-de-qualidade-e-auditoria-de-protocolos.md)):
+     o indicador e a competência;
    - **análise de causa** em texto, com as categorias dos 6M (método, máquina, mão de obra, material, medição, meio ambiente), enquanto não
      fechou (422);
    - situação: ABERTA → EM_TRATAMENTO (com a primeira ação) → EM_VERIFICACAO → ENCERRADA; ou CANCELADA, com o motivo, levando as ações
@@ -71,7 +72,7 @@ Aceita e implementada. Fatia **Q2** da Qualidade ([ADR-0202](./0202-qualidade-do
 ## Consequências
 
 - **STATUS-DOS-DOMINIOS:** item 18 com a Q1 e a Q2; falta a Q3.
-- **Fora do escopo:** anexo de evidência, aviso ao responsável por e-mail, a origem indicador (Q3).
+- **Fora do escopo:** anexo de evidência, aviso ao responsável por e-mail. A origem indicador chegou com a Q3 (ADR-0205).
 
 ## Testes
 

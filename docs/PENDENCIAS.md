@@ -195,7 +195,7 @@ real":
   - #15 Patrimônio;
   - #17 Financeiro;
   - #18 Qualidade — desenhada na ADR-0202; ~~Q1 (segurança do paciente)~~ — ADR-0203 (Notivisa à mão, sem feriados no prazo mensal);
-    ~~Q2 (não conformidades e planos de ação)~~ — ADR-0204 (evidência em texto, sem anexo); falta a Q3 (indicadores com metas e auditoria de protocolos);
+    ~~Q2 (não conformidades e planos de ação)~~ — ADR-0204 (evidência em texto, sem anexo); ~~Q3 (indicadores com metas e auditoria de protocolos)~~ — ADR-0205 (sem IRAS, sem meta por setor); Qualidade completa;
   - #19 Indicadores e BI — desenhado na ADR-0142; ~~BI1 (produção assistencial e Sala de Situação)~~ — ADR-0143;
     ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; ~~BI4 (relatórios)~~ — ADR-0167 (sem envio agendado); ~~BI5 (coordenações e gerência)~~ — ADR-0175.
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —

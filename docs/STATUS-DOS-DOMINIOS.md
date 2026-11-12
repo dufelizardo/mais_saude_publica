@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-12 (Q2 em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-12 (Q3 em developer, Qualidade completa; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -44,7 +44,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
-| 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | 🟡 | Auditoria feita; Qualidade com a Q1 (segurança do paciente) e a Q2 (não conformidades e planos); Q3 |
+| 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | ✅ | Auditoria feita; Qualidade completa: Q1 (segurança do paciente), Q2 (não conformidades e planos) e Q3 (indicadores com metas e auditoria de protocolos) |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
@@ -59,8 +59,8 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 20 ✅ · 8 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
-iniciada do domínio 18; as Integrações, a parte não iniciada do domínio 20.
+**Resumo:** 31 itens mais Documentos: 21 ✅ · 7 🟡 · 3 ⬜ (e Documentos 🟡). As Integrações são a parte não
+iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
 
@@ -408,7 +408,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 18. Qualidade / Segurança / Auditoria
 
-**Estado:** 🟡
+**Estado:** ✅
 
 **Temos:**
 - Trilha de auditoria imutável: alterações, leitura de dado de saúde, recusas e login (ADR-0070).
@@ -425,7 +425,10 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   vínculo (incidente, irregularidade da VISA na unidade da rede, auditoria interna, reclamação), análise 6M, plano 5W2H por ciclo, o
   responsável atualiza a própria ação, verificação de eficácia que encerra ou abre o ciclo seguinte; minhas ações, sugestões, painel com a
   eficácia na primeira verificação; atalhos no incidente e na irregularidade.
-- [ ] **Qualidade · Q3:** indicadores de qualidade com metas e auditoria de adesão aos protocolos.
+- [x] **Qualidade · Q3 · Indicadores com metas e auditoria de protocolos** ([ADR-0205](./adr/0205-indicadores-de-qualidade-e-auditoria-de-protocolos.md)): quedas, lesão por pressão e eventos
+  graves por mil pacientes-dia, reinternação em 30 dias na rede, mediana do tempo até o médico, absenteísmo e adesão por checklist; sem
+  base, nunca zero; meta por unidade com histórico; série de 12 meses; checklists versionados (higiene das mãos, cirurgia segura) e
+  auditoria por observação; o fora da meta sugere a não conformidade de origem indicador; relatório "Qualidade do serviço".
 - [ ] Alertas em tempo real, regras configuráveis pela tela e integração com SIEM.
 - [ ] Calibrar os limites dos alertas com o volume real de cada rede.
 - [ ] O contador de alertas não se atualiza sozinho.

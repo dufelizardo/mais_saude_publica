@@ -39,4 +39,8 @@ public class NaoConformidadeRequestDto implements Serializable {
     private LocalDate identificadaEm;
     @NotBlank(message = "Informe a matrícula do responsável.")
     private String responsavelMatricula;
+    /** Na origem indicador (ADR-0205): o indicador, a competência (qualquer dia do mês) e, na adesão, o protocolo. */
+    private com.edufelizardo.maissaudepublica.models.enuns.IndicadorQualidade indicador;
+    private LocalDate competencia;
+    private UUID checklistId;
 }

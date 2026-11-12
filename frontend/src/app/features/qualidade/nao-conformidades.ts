@@ -7,6 +7,9 @@ import { ErrorResponseDto } from '../../core/models/profissional';
 import {
   AcaoQualidadeDto,
   CATEGORIAS_CAUSA,
+  ChecklistDto,
+  INDICADORES_QUALIDADE,
+  IndicadorQualidade,
   CategoriaCausa,
   GRAVIDADES_NC,
   GravidadeNaoConformidade,
@@ -116,7 +119,7 @@ type Aba = 'lista' | 'minhas' | 'sugestoes' | 'painel';
           <table class="nc-tabela" aria-label="Sugestões de não conformidade">
             <thead><tr><th scope="col">Origem</th><th scope="col">Unidade</th><th scope="col">O que foi visto</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
             <tbody>
-              @for (s of sugestoes(); track s.referenciaId) {
+              @for (s of sugestoes(); track s.referenciaId + s.data) {
                 <tr>
                   <td>{{ s.referencia }}<span class="cell-sub">{{ data(s.data) }}</span></td>
                   <td>{{ s.unidadeNome }}</td>
@@ -161,6 +164,23 @@ type Aba = 'lista' | 'minhas' | 'sugestoes' | 'painel';
                 </select></div>
             </div>
             @if (f()['referencia']) { <p class="cell-sub">Vinculada a: {{ f()['referencia'] }}</p> }
+            @if (f()['origem'] === 'INDICADOR') {
+              <div class="dw-row">
+                <div class="dw-field"><label for="f-nc-ind">Indicador <span class="req" aria-hidden="true">*</span></label>
+                  <select id="f-nc-ind" (change)="set('indicador', $event)">
+                    <option value="" [selected]="!f()['indicador']">Escolha…</option>
+                    @for (i of listaIndicadores; track i) { <option [value]="i" [selected]="f()['indicador'] === i">{{ indicadores[i] }}</option> }
+                  </select></div>
+                <div class="dw-field"><label for="f-nc-comp">Competência <span class="req" aria-hidden="true">*</span></label><input id="f-nc-comp" type="month" [value]="f()['competencia'] ?? ''" (input)="set('competencia', $event)" /></div>
+              </div>
+              @if (f()['indicador'] === 'ADESAO_PROTOCOLO') {
+                <div class="dw-field"><label for="f-nc-check">Protocolo <span class="req" aria-hidden="true">*</span></label>
+                  <select id="f-nc-check" (change)="set('checklistId', $event)">
+                    <option value="" [selected]="!f()['checklistId']">Escolha…</option>
+                    @for (c of checklists(); track c.uuid) { <option [value]="c.uuid" [selected]="f()['checklistId'] === c.uuid">{{ c.nome }}</option> }
+                  </select></div>
+              }
+            }
             <div class="dw-field"><label for="f-nc-desc">Não conformidade <span class="req" aria-hidden="true">*</span></label><textarea id="f-nc-desc" rows="3" maxlength="4000" [value]="f()['descricao'] ?? ''" (input)="set('descricao', $event)"></textarea></div>
             <div class="dw-field"><label for="f-nc-correcao">Correção imediata<span class="opt">opcional</span></label><input id="f-nc-correcao" type="text" maxlength="2000" [value]="f()['correcao'] ?? ''" (input)="set('correcao', $event)" /></div>
             <div class="dw-row">
@@ -183,7 +203,7 @@ type Aba = 'lista' | 'minhas' | 'sugestoes' | 'painel';
           @if (erroGaveta()) { <div class="box box--err" role="alert"><strong>{{ erroGaveta() }}</strong></div> }
           <dl class="ro">
             <div><dt>Situação</dt><dd>{{ situacoes[n.situacao] }} · ciclo {{ n.ciclo }}@if (n.verificacaoPrevista) { · verificar em {{ data(n.verificacaoPrevista) }} }@if (n.motivoCancelamento) { · {{ n.motivoCancelamento }} }</dd></div>
-            <div><dt>Origem</dt><dd>{{ origens[n.origem] }}@if (n.incidenteNumero) { · incidente {{ n.incidenteNumero }} }@if (n.irregularidadeDescricao) { · {{ n.irregularidadeDescricao }} }</dd></div>
+            <div><dt>Origem</dt><dd>{{ origens[n.origem] }}@if (n.incidenteNumero) { · incidente {{ n.incidenteNumero }} }@if (n.irregularidadeDescricao) { · {{ n.irregularidadeDescricao }} }@if (n.indicador) { · {{ indicadores[n.indicador] }}@if (n.checklistNome) { ({{ n.checklistNome }}) } em {{ competenciaRot(n.competencia) }} }</dd></div>
             <div><dt>Unidade</dt><dd>{{ n.unidadeNome }}@if (n.setorNome) { · {{ n.setorNome }} }</dd></div>
             <div><dt>Não conformidade</dt><dd>{{ n.descricao }}</dd></div>
             @if (n.correcaoImediata) { <div><dt>Correção imediata</dt><dd>{{ n.correcaoImediata }}</dd></div> }
@@ -284,7 +304,9 @@ export class NaoConformidades {
   private readonly rota = inject(ActivatedRoute).snapshot.queryParamMap;
 
   protected readonly origens = ORIGENS_NC;
-  protected readonly listaOrigens = (Object.keys(ORIGENS_NC) as OrigemNaoConformidade[]).filter((o) => o !== 'INDICADOR');
+  protected readonly listaOrigens = Object.keys(ORIGENS_NC) as OrigemNaoConformidade[];
+  protected readonly indicadores = INDICADORES_QUALIDADE;
+  protected readonly listaIndicadores = Object.keys(INDICADORES_QUALIDADE) as IndicadorQualidade[];
   protected readonly gravidades = GRAVIDADES_NC;
   protected readonly listaGravidades = Object.keys(GRAVIDADES_NC) as GravidadeNaoConformidade[];
   protected readonly situacoes = SITUACOES_NC;
@@ -305,6 +327,7 @@ export class NaoConformidades {
   protected readonly sugestoes = signal<SugestaoNcDto[]>([]);
   protected readonly painel = signal<PainelNcDto | null>(null);
   protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
+  protected readonly checklists = signal<ChecklistDto[]>([]);
   protected readonly registrando = signal(false);
   protected readonly detalhe = signal<NaoConformidadeDto | null>(null);
   protected readonly categorias = signal<Set<string>>(new Set());
@@ -320,7 +343,8 @@ export class NaoConformidades {
       const origem = this.rota.get('origem');
       if (origem && this.pode('QUALIDADE.GERIR')) {
         this.abrirRegistro({ origem, unidadeId: this.rota.get('unidade') ?? '', incidenteId: this.rota.get('incidente') ?? '',
-          irregularidadeId: this.rota.get('irregularidade') ?? '', referencia: this.rota.get('referencia') ?? '' });
+          irregularidadeId: this.rota.get('irregularidade') ?? '', referencia: this.rota.get('referencia') ?? '', indicador: this.rota.get('indicador') ?? '',
+          competencia: this.rota.get('competencia') ?? '', checklistId: this.rota.get('checklist') ?? '', descricao: this.rota.get('descricao') ?? '' });
       }
     });
     this.unidadeService.listar().pipe(catchError(() => of([]))).subscribe((l) => this.unidades.set(l));
@@ -352,7 +376,8 @@ export class NaoConformidades {
 
   protected registrarDaSugestao(s: SugestaoNcDto): void {
     this.abrirRegistro({ origem: s.origem, unidadeId: s.unidadeId, referencia: s.referencia + ': ' + s.descricao, descricao: s.descricao,
-      incidenteId: s.origem === 'INCIDENTE' ? s.referenciaId : '', irregularidadeId: s.origem === 'INSPECAO_SANITARIA' ? s.referenciaId : '' });
+      incidenteId: s.origem === 'INCIDENTE' ? s.referenciaId : '', irregularidadeId: s.origem === 'INSPECAO_SANITARIA' ? s.referenciaId : '',
+      indicador: s.indicador ?? '', competencia: s.indicador ? s.data.slice(0, 7) : '', checklistId: s.checklistId ?? '' });
   }
 
   protected registrar(): void {
@@ -362,8 +387,15 @@ export class NaoConformidades {
       this.erroGaveta.set('Informe a unidade, a não conformidade e a matrícula do responsável.');
       return;
     }
+    const indicador = c['origem'] === 'INDICADOR';
+    if (indicador && (!t('indicador') || !t('competencia') || (c['indicador'] === 'ADESAO_PROTOCOLO' && !t('checklistId')))) {
+      this.erroGaveta.set('Informe o indicador, a competência e, na adesão, o protocolo.');
+      return;
+    }
     this.executar(this.service.registrarNc({ unidadeId: t('unidadeId'), origem: c['origem'], incidenteId: t('incidenteId'), irregularidadeId: t('irregularidadeId'),
-      descricao: t('descricao'), correcaoImediata: t('correcao'), gravidade: c['gravidade'], identificadaEm: t('identificadaEm'), responsavelMatricula: t('responsavel') }),
+      descricao: t('descricao'), correcaoImediata: t('correcao'), gravidade: c['gravidade'], identificadaEm: t('identificadaEm'), responsavelMatricula: t('responsavel'),
+      indicador: indicador ? t('indicador') : null, competencia: indicador ? t('competencia') + '-01' : null,
+      checklistId: indicador && c['indicador'] === 'ADESAO_PROTOCOLO' ? t('checklistId') : null }),
       (n) => {
         this.registrando.set(false);
         this.mostrar(n);
@@ -478,6 +510,10 @@ export class NaoConformidades {
     return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
+  protected competenciaRot(iso: string | null): string {
+    return iso ? `${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '';
+  }
+
   protected data(iso: string): string {
     const [a, m, d] = iso.slice(0, 10).split('-');
     return `${d}/${m}/${a}`;
@@ -491,6 +527,7 @@ export class NaoConformidades {
         next: (l) => this.lista.set(l), error: (x: HttpErrorResponse) => this.erro.set(mensagem(x)),
       });
       this.service.sugestoesNc().pipe(catchError(() => of([]))).subscribe((l) => this.sugestoes.set(l));
+      if (!this.checklists().length) this.service.checklists().pipe(catchError(() => of([]))).subscribe((l) => this.checklists.set(l));
     }
     if (this.podeAlguma('QUALIDADE.GERIR', 'INDICADOR.CONSULTAR')) {
       this.service.painelNc().pipe(catchError(() => of(null))).subscribe((p) => this.painel.set(p));
