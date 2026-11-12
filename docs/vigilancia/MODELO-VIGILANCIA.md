@@ -190,6 +190,10 @@ Auto de infração → ciência → defesa (15 dias; intempestiva ou revelia) �
 - **Termos em PDF** com código e QR code; verificação pública do termo e da licença, sem dado de pessoa.
 - **No #19:** o relatório Vigilância sanitária; as interdições vigentes na Sala de Situação.
 
+**Feito na V3c** ([ADR-0201](../adr/0201-violencia-comunicacao-intersetorial.md)): a violência notificada gera a comunicação que a lei
+exige, calculada pela idade, pelo sexo e pela ficha (Conselho Tutelar, pessoa idosa, mulher), em 24 horas, registrada como encaminhamento
+intersetorial (ADR-0154) com o motivo mínimo; pendências para quem investiga e o indicador no relatório Vigilância.
+
 ## 5. Vigilância Ambiental
 
 Riscos ligados ao ambiente: água, ar, solo, contaminantes, desastres, fatores ambientais, vetores e animais. Liga-se
