@@ -11,6 +11,8 @@ import { RedeService } from '../../../core/services/rede';
 import { RegulacaoService } from '../../../core/services/regulacao';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { ReferenciasRede } from './referencias-rede';
+import { RedesTematicas } from './redes-tematicas';
 
 type Gaveta =
   | { tipo: 'oferta'; item: OfertaAssistencialDto | null }
@@ -28,11 +30,11 @@ function mesAnterior(m: string): string {
 
 /**
  * Rede e pactuação (ADR-0179): a oferta de cada executante por procedimento e as cotas da PPI que a repartem entre unidades e esferas, com o
- * usado e o saldo. A Regulação consome a cota na autorização.
+ * usado e o saldo. A Regulação consome a cota na autorização. A GR2 (ADR-0197) acrescenta as abas Redes temáticas e Referências.
  */
 @Component({
   selector: 'app-ppi',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, Drawer, RedesTematicas, ReferenciasRede],
   templateUrl: './ppi.html',
 })
 export class Ppi {
@@ -42,6 +44,12 @@ export class Ppi {
   private readonly regulacaoService = inject(RegulacaoService);
   private readonly unidadeService = inject(UnidadeSaudeService);
 
+  protected readonly abas = [
+    { id: 'ppi', rotulo: 'PPI' },
+    { id: 'redes', rotulo: 'Redes temáticas' },
+    { id: 'referencias', rotulo: 'Referências' },
+  ] as const;
+  protected readonly aba = signal<'ppi' | 'redes' | 'referencias'>('ppi');
   protected readonly competencia = signal(mesAtual());
   protected readonly painel = signal<PainelPpiDto | null>(null);
   protected readonly procedimentos = signal<ProcedimentoReguladoResponseDto[]>([]);
@@ -79,6 +87,23 @@ export class Ppi {
     if (!m) return;
     this.competencia.set(m);
     this.carregar();
+  }
+
+  protected selecionarAba(id: 'ppi' | 'redes' | 'referencias'): void {
+    this.aba.set(id);
+  }
+
+  /** Setas esquerda e direita entre as abas, como no padrão de abas. */
+  protected navegarAbas(e: KeyboardEvent): void {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    const i = this.abas.findIndex((a) => a.id === this.aba());
+    const proxima = this.abas[(i + (e.key === 'ArrowRight' ? 1 : this.abas.length - 1)) % this.abas.length];
+    this.aba.set(proxima.id);
+    setTimeout(() => document.getElementById('tab-' + proxima.id)?.focus());
+  }
+
+  protected avisar(a: { titulo: string; detalhe: string }): void {
+    this.mostrar(a.titulo, a.detalhe);
   }
 
   protected pode(...permissoes: string[]): boolean {

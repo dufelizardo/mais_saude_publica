@@ -3,15 +3,29 @@
     <h1>Rede e pactuação (PPI)</h1>
     <p>Quanto cada executante oferta por procedimento no mês e como a oferta se reparte entre unidades e esferas. A Regulação consome a cota ao autorizar.</p>
   </div>
-  <div class="page-actions">
-    <input class="sel" type="month" aria-label="Competência" [value]="competencia()" (change)="mudarCompetencia($any($event.target).value)" />
-    @if (pode('REDE.GERENCIAR')) {
-      <button type="button" class="btn btn--ghost" (click)="copiarMesAnterior()" [disabled]="submitting()">Copiar do mês anterior</button>
-      <button type="button" class="btn" (click)="abrirOferta(null)">Nova oferta</button>
-    }
-  </div>
+  @if (aba() === 'ppi') {
+    <div class="page-actions">
+      <input class="sel" type="month" aria-label="Competência" [value]="competencia()" (change)="mudarCompetencia($any($event.target).value)" />
+      @if (pode('REDE.GERENCIAR')) {
+        <button type="button" class="btn btn--ghost" (click)="copiarMesAnterior()" [disabled]="submitting()">Copiar do mês anterior</button>
+        <button type="button" class="btn" (click)="abrirOferta(null)">Nova oferta</button>
+      }
+    </div>
+  }
 </header>
 
+<div class="page-tabs" role="tablist" aria-label="Seções da rede">
+  @for (a of abas; track a.id) {
+    <button type="button" role="tab" [id]="'tab-' + a.id" [attr.aria-controls]="'pn-' + a.id" [attr.aria-selected]="aba() === a.id" [tabIndex]="aba() === a.id ? 0 : -1" (click)="selecionarAba(a.id)" (keydown)="navegarAbas($event)">{{ a.rotulo }}</button>
+  }
+</div>
+
+@if (aba() === 'redes') {
+  <app-redes-tematicas />
+} @else if (aba() === 'referencias') {
+  <app-referencias-rede [procedimentos]="procedimentos()" [unidades]="unidades()" [podeGerenciar]="pode('REDE.GERENCIAR')" (aviso)="avisar($event)" />
+} @else {
+<div id="pn-ppi" role="tabpanel" aria-labelledby="tab-ppi">
 <section class="stats" aria-label="Resumo da competência">
   <div class="stat"><div><div class="stat__lbl">Ofertado</div><div class="stat__val mono">{{ painel()?.ofertado ?? 0 }}</div><div class="stat__sub">vagas em {{ rotuloMes(competencia()) }}</div></div></div>
   <div class="stat"><div><div class="stat__lbl">Pactuado</div><div class="stat__val mono">{{ painel()?.pactuado ?? 0 }}</div><div class="stat__sub">em cotas da PPI</div></div></div>
@@ -58,6 +72,8 @@
     }
   </ul>
 </section>
+</div>
+}
 
 @if (gaveta(); as g) {
   <app-drawer [titulo]="g.tipo === 'oferta' ? (g.item ? 'Ajustar oferta' : 'Nova oferta · ' + rotuloMes(competencia())) : (g.item ? 'Ajustar cota' : 'Pactuar cota')" (fechar)="gaveta.set(null)">

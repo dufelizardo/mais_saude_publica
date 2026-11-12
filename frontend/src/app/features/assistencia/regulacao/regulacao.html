@@ -382,6 +382,9 @@
                             <option value="">Selecione…</option>
                             @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
                           </select>
+                          @if (referencia(); as r) {
+                            <p class="dw-hint" id="h-referenciaRede">Referência da rede: <b>{{ r.executanteNome }}</b> (pactuada para {{ r.origemNome }}).@if (foraDaReferencia()) { <span class="badge badge--warn">Fora da referência</span> }</p>
+                          }
                           @if (erro('unidadeExecutanteId')) { <p class="dw-err" id="e-unidadeExecutanteId">{{ erro('unidadeExecutanteId') }}</p> }
                         </div>
                         <div class="dw-field">

@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-11 (C6 em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-11 (GR2 em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -56,7 +56,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | ✅ | E1 a E6 feitas (núcleo; contingência; coordenação; vulneráveis, deslocados, rede e Regulação; desmobilização e relatório; eventos especializados) |
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | ✅ | C1 a C4 e C6 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação em saúde; educação permanente; avaliação); a C5 (multicanal) no domínio 20 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
-| 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | 🟡 | GR1 feita (oferta e cotas da PPI na Regulação); GR2 (redes temáticas) e GR3 (cobertura) |
+| 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | 🟡 | GR1 e GR2 feitas (oferta e cotas da PPI; redes temáticas e referência estrutural na Regulação); GR3 (cobertura) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
 **Resumo:** 31 itens mais Documentos: 19 ✅ · 9 🟡 · 3 ⬜ (e Documentos 🟡). A Qualidade é a parte não
@@ -825,8 +825,9 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   de competência e o saldo na gaveta de autorização.
 
 **Falta:**
-- [ ] **GR2:** redes temáticas (Rede de Urgência, Rede Cegonha/Alyne, Pessoa com Deficiência, Doenças Crônicas) e referência estrutural, no
-  padrão da RAPS (ADR-0153).
+- [x] **GR2** ([ADR-0197](./adr/0197-redes-tematicas-e-referencia.md)): redes temáticas (Urgência, Cegonha/Alyne, Pessoa com Deficiência,
+  Doenças Crônicas) com os componentes ligados aos perfis e às capacidades, painel com as lacunas; referência estrutural com vigência e
+  histórico, sugerida na gaveta Autorizar da Regulação, com a autorização fora dela marcada e o percentual no painel.
 - [ ] **GR3:** cobertura da rede e indicadores de pactuação no BI.
 - [ ] Teto financeiro (MAC) e programação físico-orçamentária (domínio 17); SISREG e SIGTAP (domínio 20).
 

@@ -131,6 +131,12 @@ public class SolicitacaoRegulacao implements Serializable {
     @Column(length = 500)
     private String justificativaExtraCota;
 
+    /**
+     * Na autorização (ADR-0197): nulo sem referência da rede vigente para a solicitante; verdadeiro quando a executante escolhida não é a da
+     * referência. Guardado porque a referência muda com o tempo.
+     */
+    private Boolean foraDaReferencia;
+
     public SolicitacaoRegulacao(Paciente paciente, ProcedimentoRegulado procedimento, UnidadeDeSaude unidadeSolicitante,
                                 Profissional profissionalSolicitante, String cid, String justificativa,
                                 PrioridadeRegulacao prioridade, Instant solicitadoEm, String solicitadoPorCpf) {

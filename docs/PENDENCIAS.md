@@ -200,8 +200,8 @@ real":
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —
   perfis e capacidades, ADR-0117; ~~MO2~~ — serviços da unidade, ADR-0165 (sem o leito apontar direto para o serviço). ~~MO3~~ — ponto operacional, ADR-0166 (sem GPS, sem agendar pelo ponto ou pela rota e sem
   indicadores por local). ~~MO4~~ — domínios consultam capacidades, ADR-0170. Camada completa.
-- **#30 Gestão da Rede de Atenção** — desenhado na ADR-0179; ~~GR1 (oferta e cotas da PPI)~~ — ADR-0179; GR2 (redes temáticas) e GR3
-  (cobertura) com aprovação.
+- **#30 Gestão da Rede de Atenção** — desenhado na ADR-0179; ~~GR1 (oferta e cotas da PPI)~~ — ADR-0179; ~~GR2 (redes temáticas e
+  referência estrutural)~~ — ADR-0197 (catálogo das redes editável só pela API); GR3 (cobertura) com aprovação.
 - **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
   ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir
   (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
