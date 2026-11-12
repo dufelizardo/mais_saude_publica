@@ -1,7 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CopiaPpiDto, OfertaAssistencialDto, PainelPpiDto, SaldoPpiDto } from '../models/rede';
+import {
+  CopiaPpiDto,
+  OfertaAssistencialDto,
+  PainelPpiDto,
+  PainelRedeTematicaDto,
+  PainelReferenciasDto,
+  RedeTematica,
+  ReferenciaRedeDto,
+  SaldoPpiDto,
+  SugestaoReferenciaDto,
+} from '../models/rede';
 
 /** Gestão da Rede (ADR-0179): oferta, cotas da PPI e o saldo que a Regulação consulta. */
 @Injectable({ providedIn: 'root' })
@@ -39,5 +49,27 @@ export class RedeService {
 
   copiar(origem: string, destino: string): Observable<CopiaPpiDto> {
     return this.http.post<CopiaPpiDto>(`${this.api}/ppi/copia`, { origem, destino });
+  }
+
+  // ── Redes temáticas e referência (ADR-0197) ──
+
+  redeTematica(rede: RedeTematica): Observable<PainelRedeTematicaDto> {
+    return this.http.get<PainelRedeTematicaDto>(`${this.api}/tematica/${rede}`);
+  }
+
+  referencias(procedimentoId: string | null): Observable<PainelReferenciasDto> {
+    return this.http.get<PainelReferenciasDto>(`${this.api}/referencia`, { params: procedimentoId ? { procedimentoId } : {} });
+  }
+
+  registrarReferencia(dto: { origemId: string; procedimentoId: string; executanteId: string; inicio?: string | null; observacao?: string | null }): Observable<ReferenciaRedeDto> {
+    return this.http.post<ReferenciaRedeDto>(`${this.api}/referencia`, dto);
+  }
+
+  encerrarReferencia(uuid: string): Observable<ReferenciaRedeDto> {
+    return this.http.post<ReferenciaRedeDto>(`${this.api}/referencia/${uuid}/encerramento`, {});
+  }
+
+  sugestaoDeReferencia(procedimentoId: string, solicitanteId: string): Observable<SugestaoReferenciaDto> {
+    return this.http.get<SugestaoReferenciaDto>(`${this.api}/referencia/sugestao`, { params: { procedimentoId, solicitanteId } });
   }
 }

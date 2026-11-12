@@ -21,6 +21,12 @@ public interface SolicitacaoRegulacaoRepository extends JpaRepository<Solicitaca
     /** Quantas autorizações usam a cota (ADR-0179). */
     long countByCota_UuidAndStatusIn(UUID cotaId, java.util.Collection<StatusSolicitacaoRegulacao> status);
 
+    /** As autorizações desde o instante em que havia referência da rede (ADR-0197), para o painel das referências. */
+    @org.springframework.data.jpa.repository.Query("select s from SolicitacaoRegulacao s join fetch s.procedimento join fetch s.unidadeSolicitante "
+            + "left join fetch s.unidadeExecutante where s.foraDaReferencia is not null and s.solicitadoEm >= ?1 and s.status in ?2")
+    List<SolicitacaoRegulacao> findAvaliadasPelaReferenciaDesde(java.time.Instant desde,
+                                                               java.util.Collection<com.edufelizardo.maissaudepublica.models.enuns.StatusSolicitacaoRegulacao> status);
+
     /** As autorizações que consumiram oferta (com cota ou extracota) na executante, no procedimento e no período. */
     @org.springframework.data.jpa.repository.Query("select s from SolicitacaoRegulacao s left join fetch s.cota where s.unidadeExecutante.uuid = ?1 "
             + "and s.procedimento.uuid = ?2 and s.dataHoraPrevista >= ?3 and s.dataHoraPrevista < ?4 and s.status in ?5")

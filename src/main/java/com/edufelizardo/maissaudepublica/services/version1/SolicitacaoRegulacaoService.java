@@ -10,6 +10,7 @@ import com.edufelizardo.maissaudepublica.models.Agendamento;
 import com.edufelizardo.maissaudepublica.models.EventoRegulacao;
 import com.edufelizardo.maissaudepublica.models.Paciente;
 import com.edufelizardo.maissaudepublica.models.ProcedimentoRegulado;
+import com.edufelizardo.maissaudepublica.models.ReferenciaRede;
 import com.edufelizardo.maissaudepublica.models.Profissional;
 import com.edufelizardo.maissaudepublica.models.SolicitacaoRegulacao;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
@@ -39,6 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
@@ -110,6 +112,9 @@ public class SolicitacaoRegulacaoService {
 
     @Autowired
     private RedeService redeService;
+
+    @Autowired
+    private RedeTematicaService redeTematicaService;
 
     // ── Solicitante ────────────────────────────────────────────────────────────────────────────────
 
@@ -231,10 +236,23 @@ public class SolicitacaoRegulacaoService {
                 textoPpi = "Extracota (" + ppi.descricao() + "): " + justificativa + ".";
             }
         }
+        // A referência da rede (ADR-0197) é sugestão: o regulador pode escolher outra executante, e a autorização fica marcada.
+        ReferenciaRede referencia = redeTematicaService.vigentePara(solicitacao.getUnidadeSolicitante(), solicitacao.getProcedimento().getUuid(), LocalDate.now());
+        String textoReferencia = null;
+        if (referencia == null) {
+            solicitacao.setForaDaReferencia(null);
+        } else {
+            boolean fora = !referencia.getExecutante().getUuid().equals(executante.getUuid());
+            solicitacao.setForaDaReferencia(fora);
+            if (fora) {
+                textoReferencia = "Fora da referência da rede (" + referencia.getExecutante().getNome() + ").";
+            }
+        }
         solicitacao.setUnidadeExecutante(executante);
         solicitacao.setDataHoraPrevista(dto.getDataHoraPrevista());
         solicitacao.setStatus(StatusSolicitacaoRegulacao.AUTORIZADA);
-        String vaga = executante.getNome() + ", " + DATA_HORA.format(dto.getDataHoraPrevista()) + (textoPpi != null ? ". " + textoPpi : "");
+        String vaga = executante.getNome() + ", " + DATA_HORA.format(dto.getDataHoraPrevista()) + (textoPpi != null ? ". " + textoPpi : "")
+                + (textoReferencia != null ? " " + textoReferencia : "");
         String observacao = textoOuNulo(dto.getObservacao());
         Profissional profissionalExecutante = textoOuNulo(dto.getProfissionalExecutanteMatricula()) == null ? null
                 : buscarProfissional(dto.getProfissionalExecutanteMatricula().trim());
