@@ -15,4 +15,6 @@ public interface LicencaSanitariaRepository extends JpaRepository<LicencaSanitar
     List<LicencaSanitaria> findByEstabelecimento_UuidOrderByEmitidaEmDescRegistradoEmDesc(UUID estabelecimentoId);
 
     long countByNumeroStartingWith(String prefixo);
+
+    java.util.Optional<LicencaSanitaria> findByNumero(String numero);
 }

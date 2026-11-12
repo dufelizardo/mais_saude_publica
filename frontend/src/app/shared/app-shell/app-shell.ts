@@ -61,7 +61,7 @@ const MENU: Record<string, string[]> = {
   // Zoonoses e vetores (ADR-0162): o agente de endemias, a coordenação de zoonoses e quem lê os índices.
   '/vigilancia/vetores': ['ZOONOSES.VISTORIAR', 'ZOONOSES.GERENCIAR', 'VIGILANCIA.INVESTIGAR', 'INDICADOR.CONSULTAR'],
   // Vigilância sanitária (ADR-0199): o fiscal e a coordenação da VISA.
-  '/vigilancia/sanitaria': ['VISA.INSPECIONAR', 'VISA.GERENCIAR'],
+  '/vigilancia/sanitaria': ['VISA.INSPECIONAR', 'VISA.GERENCIAR', 'VISA.JULGAR'],
   // Sala de Situação (ADR-0143): só agregados, para quem consulta indicadores.
   '/sala-de-situacao': ['INDICADOR.CONSULTAR'],
   '/relatorios': ['INDICADOR.CONSULTAR'],

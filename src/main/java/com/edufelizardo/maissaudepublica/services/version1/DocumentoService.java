@@ -243,6 +243,36 @@ public class DocumentoService {
         return d;
     }
 
+    /** Guarda o PDF gerado pelo sistema (um termo, por exemplo) como documento do dono, com o tipo do catálogo pelo código. */
+    @Transactional
+    public VersaoDocumento guardarGerado(DonoDocumento dono, UUID donoId, String tipoCodigo, String titulo, byte[] conteudo, String nomeArquivo) {
+        TipoDocumento tipo = tipoRepository.findByCodigo(tipoCodigo).orElseThrow(() -> new IllegalStateException("Tipo de documento " + tipoCodigo + " fora da carga."));
+        Documento d = new Documento();
+        d.setDonoTipo(dono);
+        d.setDonoId(donoId);
+        d.setTipo(tipo);
+        d.setTitulo(titulo.length() > 150 ? titulo.substring(0, 150) : titulo);
+        d.setDataDocumento(LocalDate.now());
+        d.setRegistradoEm(LocalDateTime.now());
+        d.setRegistradoPorCpf(UsuarioAutenticado.cpf());
+        documentoRepository.save(d);
+        return guardar(d, 1, conteudo, nomeArquivo);
+    }
+
+    /** Se a versão mais recente do documento confere com o hash registrado (o arquivo não foi alterado fora do sistema). */
+    @Transactional(readOnly = true)
+    public boolean integro(UUID documentoId, String hashEsperado) {
+        List<VersaoDocumento> versoes = versaoRepository.findByDocumento_UuidOrderByNumeroDesc(documentoId);
+        if (versoes.isEmpty() || !versoes.get(0).getSha256().equals(hashEsperado)) {
+            return false;
+        }
+        try {
+            return sha256(armazenamento.ler(versoes.get(0).getChave())).equals(hashEsperado);
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
     /** Os documentos ativos do dono, mais recentes primeiro. Quem chama confere o acesso. */
     @Transactional(readOnly = true)
     public List<DocumentosDoPacienteDto.Item> doDono(DonoDocumento dono, UUID donoId) {
@@ -294,13 +324,15 @@ public class DocumentoService {
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
 
     private void guardar(Documento d, int numero, MultipartFile arquivo) {
-        byte[] conteudo = conteudo(arquivo);
+        guardar(d, numero, conteudo(arquivo), nomeDoArquivo(arquivo.getOriginalFilename()));
+    }
+
+    private VersaoDocumento guardar(Documento d, int numero, byte[] conteudo, String nome) {
         String tipoConteudo = tipoPeloConteudo(conteudo);
         String chave = UUID.randomUUID().toString();
         armazenamento.gravar(chave, conteudo);
-        String nome = nomeDoArquivo(arquivo.getOriginalFilename());
         VersaoDocumento v = new VersaoDocumento(null, d, numero, nome, tipoConteudo, conteudo.length, sha256(conteudo), chave, LocalDateTime.now(), UsuarioAutenticado.cpf());
-        versaoRepository.save(v);
+        return versaoRepository.save(v);
     }
 
     private static byte[] conteudo(MultipartFile arquivo) {

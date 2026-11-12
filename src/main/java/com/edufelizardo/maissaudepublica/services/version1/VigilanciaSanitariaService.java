@@ -36,6 +36,8 @@ import com.edufelizardo.maissaudepublica.models.enuns.ResultadoInspecao;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoDenuncia;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoIrregularidade;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoLicencaSanitaria;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoMedidaSanitaria;
+import com.edufelizardo.maissaudepublica.models.enuns.TipoMedidaSanitaria;
 import com.edufelizardo.maissaudepublica.repositories.DenunciaSanitariaRepository;
 import com.edufelizardo.maissaudepublica.repositories.EstabelecimentoReguladoRepository;
 import com.edufelizardo.maissaudepublica.repositories.InspecaoSanitariaRepository;
@@ -92,7 +94,7 @@ public class VigilanciaSanitariaService {
     static final int DIAS_VENCENDO = 30;
     /** Denúncia sem conclusão há mais de 30 dias entra nas pendências. */
     static final int DIAS_DENUNCIA_PARADA = 30;
-    static final Set<DonoDocumento> DONOS = Set.of(DonoDocumento.ESTABELECIMENTO, DonoDocumento.INSPECAO_SANITARIA);
+    static final Set<DonoDocumento> DONOS = Set.of(DonoDocumento.ESTABELECIMENTO, DonoDocumento.INSPECAO_SANITARIA, DonoDocumento.PROCESSO_SANITARIO);
     private static final ObjectMapper JSON = new ObjectMapper();
 
     @Autowired private EstabelecimentoReguladoRepository estabelecimentoRepository;
@@ -107,6 +109,8 @@ public class VigilanciaSanitariaService {
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private SurtoRepository surtoRepository;
     @Autowired private DocumentoService documentoService;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.MedidaSanitariaRepository medidaRepository;
+    @Autowired private ProcessoSanitarioService processoSanitarioService;
     @Autowired private ControleDeAcesso controleDeAcesso;
 
     // ── Estabelecimentos ───────────────────────────────────────────────────────────────────────────
@@ -246,8 +250,12 @@ public class VigilanciaSanitariaService {
         boolean dispensa = risco == GrauRiscoSanitario.BAIXO;
         List<LicencaSanitaria> historico = licencaRepository.findByEstabelecimento_UuidOrderByEmitidaEmDescRegistradoEmDesc(e.getUuid());
         LicencaSanitaria atual = historico.isEmpty() ? null : historico.get(0);
-        if (atual != null && atual.getSituacao() == SituacaoLicencaSanitaria.SUSPENSA) {
-            throw new ResourceUnprocessableEntityException("A licença está suspensa: só a decisão do processo sanitário a libera.");
+        if (atual != null && "SUSPENSA".equals(situacao(atual, emitida))) {
+            throw new ResourceUnprocessableEntityException("A licença está suspensa até " + atual.getSuspensaAte() + " pela decisão do processo sanitário.");
+        }
+        if (medidaRepository.findByEstabelecimento_Uuid(e.getUuid()).stream().anyMatch(m -> m.getSituacao() == SituacaoMedidaSanitaria.VIGENTE
+                && m.getTipo() != TipoMedidaSanitaria.APREENSAO)) {
+            throw new ResourceUnprocessableEntityException("O estabelecimento está interditado: a licença espera a desinterdição.");
         }
         LocalDate validade = null;
         InspecaoSanitaria base = ultimaSatisfatoria(e, emitida);
@@ -263,7 +271,7 @@ public class VigilanciaSanitariaService {
             if (!validade.isAfter(emitida)) {
                 throw new ResourceBadRequestException("A validade precisa ser depois da emissão.");
             }
-            if (atual != null && !atual.isDispensa() && atual.getSituacao() == SituacaoLicencaSanitaria.VIGENTE
+            if (atual != null && !atual.isDispensa() && "VIGENTE".equals(situacao(atual, emitida))
                     && atual.getValidade().isAfter(emitida.plusDays(DIAS_RENOVACAO))) {
                 throw new ResourceConflictException("A licença " + atual.getNumero() + " vale até " + atual.getValidade()
                         + ": a renovação é a partir de " + DIAS_RENOVACAO + " dias do vencimento.");
@@ -604,7 +612,7 @@ public class VigilanciaSanitariaService {
         for (InspecaoSanitariaRequestDto.Irregularidade x : irregs) {
             String item = limpo(x.getItemCodigo());
             IrregularidadeSanitaria r = new IrregularidadeSanitaria(null, i, e, item == null ? null : item.toUpperCase(Locale.ROOT), x.getDescricao().trim(),
-                    limpo(x.getEnquadramento()), x.getGravidade(), x.getPrazoCorrecao(), SituacaoIrregularidade.ABERTA, null, null, agora);
+                    limpo(x.getEnquadramento()), x.getGravidade(), x.getPrazoCorrecao(), SituacaoIrregularidade.ABERTA, null, null, agora, null);
             novas.add(irregularidadeRepository.save(r));
         }
         for (IrregularidadeSanitaria r : corrigidas) {
@@ -694,7 +702,8 @@ public class VigilanciaSanitariaService {
         List<VigilanciaSanitariaDtos.Denuncia> paradas = denunciaRepository.findTodas().stream()
                 .filter(d -> (d.getSituacao() == SituacaoDenuncia.RECEBIDA || d.getSituacao() == SituacaoDenuncia.EM_APURACAO) && d.getRecebidaEm().isBefore(limite))
                 .map(d -> dto(d, inspecoes, gerencia)).toList();
-        return new VigilanciaSanitariaDtos.Pendencias(licencas, prazos, paradas);
+        return new VigilanciaSanitariaDtos.Pendencias(licencas, prazos, paradas, processoSanitarioService.pendenciasProcessos(),
+                processoSanitarioService.pendenciasMedidas());
     }
 
     // ── Documentos (D2 parcial) ────────────────────────────────────────────────────────────────────
@@ -765,8 +774,10 @@ public class VigilanciaSanitariaService {
         return e.getAtividades().stream().map(AtividadeEstabelecimento::getRisco).max(Comparator.naturalOrder()).orElse(GrauRiscoSanitario.BAIXO);
     }
 
+    /** A suspensa com prazo volta a valer depois da data (ADR-0200). */
     static String situacao(LicencaSanitaria l, LocalDate hoje) {
-        if (l.getSituacao() != SituacaoLicencaSanitaria.VIGENTE) {
+        boolean suspensaoAcabou = l.getSituacao() == SituacaoLicencaSanitaria.SUSPENSA && l.getSuspensaAte() != null && l.getSuspensaAte().isBefore(hoje);
+        if (l.getSituacao() != SituacaoLicencaSanitaria.VIGENTE && !suspensaoAcabou) {
             return l.getSituacao().name();
         }
         if (l.isDispensa()) {
@@ -891,7 +902,7 @@ public class VigilanciaSanitariaService {
                 Duration.between(d.getRecebidaEm(), fim).toDays(), inspecoes.getOrDefault(d.getUuid(), 0));
     }
 
-    private static VigilanciaSanitariaDtos.Irregularidade dto(IrregularidadeSanitaria r, LocalDate hoje) {
+    static VigilanciaSanitariaDtos.Irregularidade dto(IrregularidadeSanitaria r, LocalDate hoje) {
         return new VigilanciaSanitariaDtos.Irregularidade(r.getUuid(), r.getInspecao().getUuid(), r.getInspecao().getDataInspecao(), r.getEstabelecimento().getUuid(),
                 nome(r.getEstabelecimento()), r.getItemCodigo(), r.getDescricao(), r.getEnquadramento(), r.getGravidade(), r.getPrazoCorrecao(), r.getSituacao(),
                 vencida(r, hoje), r.getCorrigidaEm(), r.getInspecaoCorrecao() != null ? r.getInspecaoCorrecao().getUuid() : null);

@@ -79,6 +79,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Vigilância Sanitária (ADR-0199): o fiscal inspeciona; a coordenação licencia, recebe denúncias e mantém os roteiros.
         PERMISSOES.put("VISA.INSPECIONAR", new Def("Cadastrar estabelecimentos regulados e registrar inspeções sanitárias com as irregularidades", OPERACAO));
         PERMISSOES.put("VISA.GERENCIAR", new Def("Conceder licenças sanitárias, registrar e concluir denúncias e manter os roteiros de inspeção", OPERACAO));
+        // Processo sanitário (ADR-0200): a decisão e o julgamento do recurso são da autoridade julgadora.
+        PERMISSOES.put("VISA.JULGAR", new Def("Decidir o processo administrativo sanitário e julgar o recurso (Lei 6.437/1977)", OPERACAO));
         // Intersetorialidade (ADR-0154): o catálogo de instituições externas é cadastro, sem paciente.
         PERMISSOES.put("INTERSETORIAL.GERENCIAR", new Def("Manter o catálogo de instituições externas (CRAS, CREAS, escolas, Conselho Tutelar...)",
                 OPERACAO));
@@ -322,8 +324,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                 "Autoridade sanitária: inspeciona estabelecimentos, registra irregularidades e intima a corrigir (Lei 6.437/1977).",
                 List.of("VISA.INSPECIONAR")));
         PAPEIS.put("COORDENACAO_VISA", new PapelPadrao("Coordenação da vigilância sanitária",
-                "Licenciamento sanitário, denúncias, roteiros de inspeção e acompanhamento das inspeções.",
-                List.of("VISA.INSPECIONAR", "VISA.GERENCIAR", "EMERGENCIA.REGISTRAR")));
+                "Licenciamento sanitário, denúncias, roteiros de inspeção, acompanhamento das inspeções e julgamento dos processos.",
+                List.of("VISA.INSPECIONAR", "VISA.GERENCIAR", "VISA.JULGAR", "EMERGENCIA.REGISTRAR")));
         // Saúde Bucal (ADR-0134): as funções já existiam na eSB (ADR-0103); faltavam os papéis de acesso.
         PAPEIS.put("CIRURGIAO_DENTISTA", new PapelPadrao("Cirurgião-dentista",
                 "Avaliação, diagnóstico e procedimentos odontológicos (Lei 5.081/1966); lê o prontuário com vínculo.",

@@ -147,7 +147,74 @@ export interface PendenciasVisaDto {
   licencas: { estabelecimentoId: string; estabelecimentoNome: string; risco: GrauRiscoSanitario; motivo: MotivoPendenciaLicenca; validade: string | null }[];
   prazosVencidos: IrregularidadeSanitariaDto[];
   denunciasParadas: DenunciaSanitariaDto[];
+  processos: { processoId: string; numero: string; estabelecimentoNome: string; motivo: MotivoPendenciaProcesso; desde: string }[];
+  medidas: { medidaId: string; numero: string; estabelecimentoNome: string; motivo: 'CAUTELAR_VENCENDO' | 'CAUTELAR_VENCIDA'; fimPrevisto: string }[];
 }
+
+// ── Processo sanitário e medidas (ADR-0200) ──
+
+export type FaseProcessoSanitario = 'AGUARDANDO_CIENCIA' | 'EM_DEFESA' | 'AGUARDANDO_DECISAO' | 'DECIDIDO' | 'EM_RECURSO' | 'ENCERRADO';
+export type FormaCiencia = 'PESSOAL' | 'POSTAL' | 'EDITAL' | 'RECUSA';
+export type ResultadoDecisaoSanitaria = 'ARQUIVAMENTO' | 'PENALIDADE';
+export type ResultadoRecursoSanitario = 'PROVIDO' | 'PARCIALMENTE_PROVIDO' | 'IMPROVIDO';
+export type TipoPenalidadeSanitaria = 'ADVERTENCIA' | 'MULTA' | 'APREENSAO' | 'INUTILIZACAO' | 'INTERDICAO_PARCIAL' | 'INTERDICAO_TOTAL' | 'SUSPENSAO_VENDAS' | 'SUSPENSAO_LICENCA' | 'CANCELAMENTO_LICENCA';
+export type TipoMedidaSanitaria = 'INTERDICAO_CAUTELAR' | 'INTERDICAO' | 'APREENSAO';
+export type TipoTermoSanitario = 'AUTO_INFRACAO' | 'DECISAO' | 'DECISAO_RECURSO' | 'INTERDICAO' | 'APREENSAO' | 'DESINTERDICAO';
+export type AtenuanteSanitaria = 'ACAO_NAO_FUNDAMENTAL' | 'ERRADA_COMPREENSAO' | 'PROCUROU_REPARAR' | 'SOFREU_COACAO' | 'PRIMARIO';
+export type AgravanteSanitaria = 'REINCIDENCIA' | 'VANTAGEM_PECUNIARIA' | 'COAGIU_OUTREM' | 'CONSEQUENCIA_CALAMITOSA' | 'NAO_TOMOU_PROVIDENCIAS' | 'FRAUDE_OU_MA_FE';
+export type MotivoPendenciaProcesso = 'CIENCIA_DO_AUTO' | 'REVELIA' | 'DECISAO_PARADA' | 'CIENCIA_DA_DECISAO' | 'A_ENCERRAR';
+
+export const FASES_PROCESSO: Record<FaseProcessoSanitario, string> = {
+  AGUARDANDO_CIENCIA: 'Aguardando ciência', EM_DEFESA: 'Em defesa', AGUARDANDO_DECISAO: 'Aguardando decisão', DECIDIDO: 'Decidido', EM_RECURSO: 'Em recurso', ENCERRADO: 'Encerrado',
+};
+export const FORMAS_CIENCIA: Record<FormaCiencia, string> = { PESSOAL: 'Pessoal', POSTAL: 'Por AR', EDITAL: 'Por edital', RECUSA: 'Recusa certificada' };
+export const PENALIDADES: Record<TipoPenalidadeSanitaria, string> = {
+  ADVERTENCIA: 'Advertência', MULTA: 'Multa', APREENSAO: 'Apreensão', INUTILIZACAO: 'Inutilização', INTERDICAO_PARCIAL: 'Interdição parcial',
+  INTERDICAO_TOTAL: 'Interdição total', SUSPENSAO_VENDAS: 'Suspensão de vendas', SUSPENSAO_LICENCA: 'Suspensão da licença', CANCELAMENTO_LICENCA: 'Cancelamento da licença',
+};
+export const TIPOS_MEDIDA: Record<TipoMedidaSanitaria, string> = { INTERDICAO_CAUTELAR: 'Interdição cautelar', INTERDICAO: 'Interdição', APREENSAO: 'Apreensão' };
+export const TIPOS_TERMO: Record<TipoTermoSanitario, string> = {
+  AUTO_INFRACAO: 'Auto de infração', DECISAO: 'Decisão', DECISAO_RECURSO: 'Julgamento do recurso', INTERDICAO: 'Termo de interdição', APREENSAO: 'Termo de apreensão',
+  DESINTERDICAO: 'Termo de desinterdição',
+};
+export const ATENUANTES: Record<AtenuanteSanitaria, string> = {
+  ACAO_NAO_FUNDAMENTAL: 'Ação não fundamental para o evento', ERRADA_COMPREENSAO: 'Errada compreensão da norma', PROCUROU_REPARAR: 'Procurou reparar o dano',
+  SOFREU_COACAO: 'Sofreu coação', PRIMARIO: 'Infrator primário',
+};
+export const AGRAVANTES: Record<AgravanteSanitaria, string> = {
+  REINCIDENCIA: 'Reincidência', VANTAGEM_PECUNIARIA: 'Vantagem pecuniária', COAGIU_OUTREM: 'Coagiu outrem', CONSEQUENCIA_CALAMITOSA: 'Consequência calamitosa',
+  NAO_TOMOU_PROVIDENCIAS: 'Não tomou providências', FRAUDE_OU_MA_FE: 'Fraude ou má-fé',
+};
+export const MOTIVOS_PENDENCIA_PROCESSO: Record<MotivoPendenciaProcesso, string> = {
+  CIENCIA_DO_AUTO: 'Ciência do auto por registrar', REVELIA: 'Prazo de defesa vencido (revelia)', DECISAO_PARADA: 'Decisão parada há mais de 30 dias',
+  CIENCIA_DA_DECISAO: 'Ciência da decisão por registrar', A_ENCERRAR: 'Prazo de recurso vencido: encerrar',
+};
+
+export interface TermoSanitarioDto { uuid: string; codigo: string; tipo: TipoTermoSanitario; numero: string; emitidoEm: string; versaoId: string | null }
+export interface PenalidadeSanitariaDto { uuid: string; tipo: TipoPenalidadeSanitaria; valorMulta: number | null; suspensaoAte: string | null; descricao: string | null; revogada: boolean }
+
+export interface MedidaSanitariaDto {
+  uuid: string; numero: string; estabelecimentoId: string; estabelecimentoNome: string; processoId: string | null; processoNumero: string | null;
+  tipo: TipoMedidaSanitaria; total: boolean; descricao: string; produto: string | null; lote: string | null; quantidade: string | null; localGuarda: string | null;
+  inicio: string; fimPrevisto: string | null; situacao: 'VIGENTE' | 'ENCERRADA'; encerradaEm: string | null; motivoEncerramento: string | null; vencida: boolean;
+  termos: TermoSanitarioDto[];
+}
+
+export interface ProcessoSanitarioDto {
+  uuid: string; numero: string; estabelecimentoId: string; estabelecimentoNome: string; documento: string; inspecaoId: string | null;
+  dispositivoLegal: string; descricao: string; gravidade: GravidadeIrregularidade; fase: FaseProcessoSanitario; dataLavratura: string;
+  fiscais: { matricula: string; nome: string }[]; irregularidades: IrregularidadeSanitariaDto[];
+  cienciaAutoEm: string | null; formaCienciaAuto: FormaCiencia | null; prazoDefesa: string | null; defesaEm: string | null; defesaTexto: string | null;
+  defesaIntempestiva: boolean | null; revelia: boolean; decisaoResultado: ResultadoDecisaoSanitaria | null; dataDecisao: string | null; decisaoFundamentacao: string | null;
+  atenuantes: AtenuanteSanitaria[]; agravantes: AgravanteSanitaria[]; cienciaDecisaoEm: string | null; formaCienciaDecisao: FormaCiencia | null; prazoRecurso: string | null;
+  recursoEm: string | null; recursoTexto: string | null; recursoResultado: ResultadoRecursoSanitario | null; dataJulgamentoRecurso: string | null;
+  recursoFundamentacao: string | null; encerradoEm: string | null; penalidades: PenalidadeSanitariaDto[]; termos: TermoSanitarioDto[]; medidas: MedidaSanitariaDto[];
+}
+
+export interface InterdicaoDto { uuid: string; numero: string; estabelecimentoNome: string; tipo: TipoMedidaSanitaria; total: boolean; inicio: string; fimPrevisto: string | null }
+
+export interface VerificacaoTermoDto { codigo: string; tipo: TipoTermoSanitario; numero: string; emitidoEm: string; estabelecimento: string; documento: string; integro: boolean; hashPdf: string }
+export interface VerificacaoLicencaDto { numero: string; estabelecimento: string; documento: string; dispensa: boolean; emitidaEm: string; validade: string | null; situacao: SituacaoLicenca }
 
 export interface EstabelecimentoRequest {
   documento: string;

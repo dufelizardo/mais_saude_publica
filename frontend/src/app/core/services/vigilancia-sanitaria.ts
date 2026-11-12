@@ -11,7 +11,15 @@ import {
   InspecaoRequest,
   InspecaoSanitariaDto,
   LicencaSanitariaDto,
+  FaseProcessoSanitario,
+  FormaCiencia,
+  InterdicaoDto,
+  MedidaSanitariaDto,
   PendenciasVisaDto,
+  ProcessoSanitarioDto,
+  TipoMedidaSanitaria,
+  VerificacaoLicencaDto,
+  VerificacaoTermoDto,
   RoteiroInspecaoDto,
   SituacaoDenuncia,
 } from '../models/vigilancia-sanitaria';
@@ -91,6 +99,56 @@ export class VigilanciaSanitariaService {
     if (dados.dataDocumento) corpo.set('dataDocumento', dados.dataDocumento);
     corpo.set('arquivo', arquivo);
     return this.http.post<DocumentoDto[]>(`${this.api}/${dono}/${uuid}/documento`, corpo);
+  }
+
+  // ── Processo sanitário e medidas (ADR-0200) ──
+
+  processos(filtro: { estabelecimentoId?: string; fase?: FaseProcessoSanitario } = {}): Observable<ProcessoSanitarioDto[]> {
+    let params = new HttpParams();
+    if (filtro.estabelecimentoId) params = params.set('estabelecimentoId', filtro.estabelecimentoId);
+    if (filtro.fase) params = params.set('fase', filtro.fase);
+    return this.http.get<ProcessoSanitarioDto[]>(`${this.api}/processos`, { params });
+  }
+
+  processo(uuid: string): Observable<ProcessoSanitarioDto> {
+    return this.http.get<ProcessoSanitarioDto>(`${this.api}/processo/${uuid}`);
+  }
+
+  lavrar(dto: { estabelecimentoId: string; inspecaoId: string | null; irregularidades: string[]; dispositivoLegal: string; descricao: string; gravidade: string | null;
+    dataLavratura: string | null; fiscais: string[] }): Observable<ProcessoSanitarioDto> {
+    return this.http.post<ProcessoSanitarioDto>(`${this.api}/processo`, dto);
+  }
+
+  acao(uuid: string, acao: 'ciencia' | 'defesa' | 'decisao' | 'recurso' | 'julgamento-recurso' | 'encerramento', corpo: object = {}): Observable<ProcessoSanitarioDto> {
+    return this.http.post<ProcessoSanitarioDto>(`${this.api}/processo/${uuid}/${acao}`, corpo);
+  }
+
+  medidas(filtro: { estabelecimentoId?: string; situacao?: 'VIGENTE' | 'ENCERRADA' } = {}): Observable<MedidaSanitariaDto[]> {
+    let params = new HttpParams();
+    if (filtro.estabelecimentoId) params = params.set('estabelecimentoId', filtro.estabelecimentoId);
+    if (filtro.situacao) params = params.set('situacao', filtro.situacao);
+    return this.http.get<MedidaSanitariaDto[]>(`${this.api}/medidas`, { params });
+  }
+
+  registrarMedida(dto: { estabelecimentoId: string; tipo: TipoMedidaSanitaria; total: boolean | null; descricao: string; produto: string | null; lote: string | null;
+    quantidade: string | null; localGuarda: string | null; inicio: string | null; fimPrevisto: string | null }): Observable<MedidaSanitariaDto> {
+    return this.http.post<MedidaSanitariaDto>(`${this.api}/medida`, dto);
+  }
+
+  encerrarMedida(uuid: string, motivo: string, data: string | null): Observable<MedidaSanitariaDto> {
+    return this.http.post<MedidaSanitariaDto>(`${this.api}/medida/${uuid}/encerramento`, { motivo, data });
+  }
+
+  interdicoes(): Observable<InterdicaoDto[]> {
+    return this.http.get<InterdicaoDto[]>(`${this.api}/interdicoes`);
+  }
+
+  verificarTermo(codigo: string): Observable<VerificacaoTermoDto> {
+    return this.http.get<VerificacaoTermoDto>(`/api/v1/publico/visa/verificacao/${encodeURIComponent(codigo)}`);
+  }
+
+  verificarLicenca(numero: string): Observable<VerificacaoLicencaDto> {
+    return this.http.get<VerificacaoLicencaDto>('/api/v1/publico/visa/licenca', { params: new HttpParams().set('numero', numero) });
   }
 
   abrirDocumento(versaoId: string): Observable<HttpResponse<Blob>> {
