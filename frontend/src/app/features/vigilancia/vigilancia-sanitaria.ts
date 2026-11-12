@@ -1,5 +1,6 @@
 import { HttpErrorResponse, HttpResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Observable, catchError, of } from 'rxjs';
 import { AcessoDaInterface } from '../../core/models/auth';
 import { TipoDocumentoDto } from '../../core/models/documento';
@@ -54,7 +55,7 @@ type IrregularidadeNova = { itemCodigo: string | null; descricao: string; enquad
  */
 @Component({
   selector: 'app-vigilancia-sanitaria',
-  imports: [Drawer, ProcessosSanitarios],
+  imports: [Drawer, ProcessosSanitarios, RouterLink],
   template: `
     <header class="page-head">
       <div>
@@ -262,7 +263,8 @@ type IrregularidadeNova = { itemCodigo: string | null; descricao: string; enquad
               <h3 class="mo-grupo vs-titulo">Irregularidades</h3>
               <ul class="vs-lista" aria-label="Irregularidades do estabelecimento">
                 @for (r of d.irregularidades; track r.uuid) {
-                  <li><span [class]="'tag tag--' + (r.situacao === 'ABERTA' ? (r.prazoVencido ? 'alert' : 'warn') : 'ok')">{{ situacoesIrregularidade[r.situacao] }}</span> {{ r.descricao }} <span class="cell-sub">{{ gravidades[r.gravidade] }}@if (r.prazoCorrecao) { · corrigir até {{ data(r.prazoCorrecao) }} }</span></li>
+                  <li><span [class]="'tag tag--' + (r.situacao === 'ABERTA' ? (r.prazoVencido ? 'alert' : 'warn') : 'ok')">{{ situacoesIrregularidade[r.situacao] }}</span> {{ r.descricao }} <span class="cell-sub">{{ gravidades[r.gravidade] }}@if (r.prazoCorrecao) { · corrigir até {{ data(r.prazoCorrecao) }} }</span>
+                    @if (r.situacao === 'ABERTA' && d.estabelecimento.unidadeId && pode('QUALIDADE.GERIR')) { <a class="link-btn" [routerLink]="['/qualidade/nao-conformidades']" [queryParams]="{ origem: 'INSPECAO_SANITARIA', irregularidade: r.uuid, unidade: d.estabelecimento.unidadeId, referencia: r.descricao }">Abrir não conformidade</a> }</li>
                 } @empty { <li class="cell-sub">Nenhuma.</li> }
               </ul>
               <h3 class="mo-grupo vs-titulo">Inspeções</h3>

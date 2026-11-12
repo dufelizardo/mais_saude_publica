@@ -3,8 +3,8 @@
 ## Status
 
 Aceita. **Desenho** da parte Qualidade do item 18 do mapa (Qualidade / Segurança / Auditoria). A Auditoria já está implementada
-(ADRs 0070, 0071, 0082, 0096 e 0097). Cada fatia tem ADR própria. Implementada: Q1 (segurança do paciente,
-[ADR-0203](./0203-seguranca-do-paciente.md)). Detalhe em [`qualidade/MODELO-QUALIDADE.md`](../qualidade/MODELO-QUALIDADE.md).
+(ADRs 0070, 0071, 0082, 0096 e 0097). Cada fatia tem ADR própria. Implementadas: Q1 (segurança do paciente,
+[ADR-0203](./0203-seguranca-do-paciente.md)) e Q2 (não conformidades e planos de ação, [ADR-0204](./0204-nao-conformidades-e-planos-de-acao.md)). Detalhe em [`qualidade/MODELO-QUALIDADE.md`](../qualidade/MODELO-QUALIDADE.md).
 
 ## Contexto
 

@@ -35,3 +35,51 @@ export interface PainelSegurancaDto {
   porTipo: { codigo: TipoIncidente; quantidade: number }[]; porDano: { codigo: GrauDano; quantidade: number }[];
   porNatureza: { codigo: NaturezaIncidente; quantidade: number }[];
 }
+
+// ── Não conformidades e planos de ação (ADR-0204) ──
+
+export type OrigemNaoConformidade = 'INCIDENTE' | 'INSPECAO_SANITARIA' | 'AUDITORIA_INTERNA' | 'RECLAMACAO' | 'INDICADOR' | 'OUTRA';
+export type GravidadeNaoConformidade = 'MENOR' | 'MAIOR' | 'CRITICA';
+export type SituacaoNaoConformidade = 'ABERTA' | 'EM_TRATAMENTO' | 'EM_VERIFICACAO' | 'ENCERRADA' | 'CANCELADA';
+export type SituacaoAcaoQualidade = 'PENDENTE' | 'EM_ANDAMENTO' | 'CONCLUIDA' | 'CANCELADA';
+export type CategoriaCausa = 'METODO' | 'MAQUINA' | 'MAO_DE_OBRA' | 'MATERIAL' | 'MEDICAO' | 'MEIO_AMBIENTE';
+
+export const ORIGENS_NC: Record<OrigemNaoConformidade, string> = {
+  INCIDENTE: 'Incidente de segurança', INSPECAO_SANITARIA: 'Inspeção sanitária', AUDITORIA_INTERNA: 'Auditoria interna', RECLAMACAO: 'Reclamação',
+  INDICADOR: 'Indicador fora da meta', OUTRA: 'Outra',
+};
+export const GRAVIDADES_NC: Record<GravidadeNaoConformidade, string> = { MENOR: 'Menor', MAIOR: 'Maior', CRITICA: 'Crítica' };
+export const SITUACOES_NC: Record<SituacaoNaoConformidade, string> = {
+  ABERTA: 'Aberta', EM_TRATAMENTO: 'Em tratamento', EM_VERIFICACAO: 'Em verificação', ENCERRADA: 'Encerrada', CANCELADA: 'Cancelada',
+};
+export const SITUACOES_ACAO: Record<SituacaoAcaoQualidade, string> = { PENDENTE: 'Pendente', EM_ANDAMENTO: 'Em andamento', CONCLUIDA: 'Concluída', CANCELADA: 'Cancelada' };
+export const CATEGORIAS_CAUSA: Record<CategoriaCausa, string> = {
+  METODO: 'Método', MAQUINA: 'Máquina', MAO_DE_OBRA: 'Mão de obra', MATERIAL: 'Material', MEDICAO: 'Medição', MEIO_AMBIENTE: 'Meio ambiente',
+};
+
+export interface AcaoQualidadeDto {
+  uuid: string; ciclo: number; oQue: string; porQue: string; responsavelMatricula: string; responsavelNome: string; onde: string | null; prazo: string;
+  como: string | null; custo: number | null; situacao: SituacaoAcaoQualidade; atrasada: boolean; evidencia: string | null; concluidaEm: string | null;
+  motivoCancelamento: string | null;
+}
+
+export interface NaoConformidadeDto {
+  uuid: string; numero: string; unidadeId: string; unidadeNome: string; setorId: string | null; setorNome: string | null; origem: OrigemNaoConformidade;
+  incidenteId: string | null; incidenteNumero: string | null; irregularidadeId: string | null; irregularidadeDescricao: string | null; descricao: string;
+  correcaoImediata: string | null; gravidade: GravidadeNaoConformidade; identificadaEm: string; responsavelMatricula: string; responsavelNome: string;
+  analiseCausa: string | null; categoriasCausa: CategoriaCausa[]; situacao: SituacaoNaoConformidade; ciclo: number; verificacaoPrevista: string | null;
+  encerradaEm: string | null; motivoCancelamento: string | null; acoesAtrasadas: number; acoes: AcaoQualidadeDto[];
+  verificacoes: { ciclo: number; eficaz: boolean; verificadaEm: string; observacao: string | null }[]; registradoEm: string;
+}
+
+export interface MinhaAcaoDto { naoConformidadeId: string; numero: string; unidadeNome: string; naoConformidadeDescricao: string; acao: AcaoQualidadeDto }
+
+export interface SugestaoNcDto {
+  origem: OrigemNaoConformidade; referenciaId: string; referencia: string; unidadeId: string; unidadeNome: string; descricao: string; data: string;
+}
+
+export interface PainelNcDto {
+  total: number; emAberto: number; acoesAtrasadas: number; verificadas: number; eficaciaNaPrimeira: number | null;
+  porOrigem: { codigo: OrigemNaoConformidade; quantidade: number }[]; porGravidade: { codigo: GravidadeNaoConformidade; quantidade: number }[];
+  porSituacao: { codigo: SituacaoNaoConformidade; quantidade: number }[];
+}

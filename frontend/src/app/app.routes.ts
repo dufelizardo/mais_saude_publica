@@ -201,6 +201,12 @@ export const routes: Routes = [
       },
       // Saúde Mental (ADR-0120), carregada sob demanda.
       // Sala de Situação (BI1, ADR-0143), carregada sob demanda.
+      // Não conformidades e planos de ação (ADR-0204).
+      {
+        path: 'qualidade/nao-conformidades',
+        loadComponent: () => import('./features/qualidade/nao-conformidades').then((m) => m.NaoConformidades),
+        data: { breadcrumb: 'Não conformidades', area: 'Qualidade' },
+      },
       // Segurança do paciente (ADR-0203).
       {
         path: 'qualidade/seguranca-do-paciente',

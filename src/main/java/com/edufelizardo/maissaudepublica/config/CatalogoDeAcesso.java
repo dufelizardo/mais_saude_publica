@@ -78,6 +78,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("ZOONOSES.GERENCIAR", new Def("Planejar e registrar ações de controle vetorial e ver os casos sem bloqueio", OPERACAO));
         // Segurança do paciente (ADR-0203): qualquer profissional notifica; o Núcleo de Segurança do Paciente analisa.
         PERMISSOES.put("QUALIDADE.NOTIFICAR", new Def("Notificar incidentes de segurança do paciente, inclusive de forma anônima", OPERACAO));
+        PERMISSOES.put("QUALIDADE.GERIR", new Def("Registrar não conformidades, montar os planos de ação e verificar a eficácia (ADR-0204)", OPERACAO));
         PERMISSOES.put("QUALIDADE.ANALISAR", new Def("Classificar e analisar os incidentes de segurança do paciente e registrar o Notivisa (núcleo de segurança)",
                 ACESSO_AO_DADO_DE_SAUDE));
         // Vigilância Sanitária (ADR-0199): o fiscal inspeciona; a coordenação licencia, recebe denúncias e mantém os roteiros.
@@ -207,7 +208,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR",
                         "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
                         "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR", "TFD.AUTORIZAR",
-                        "VISA.GERENCIAR")));
+                        "VISA.GERENCIAR", "QUALIDADE.GERIR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -327,7 +328,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Núcleo de Segurança do Paciente (RDC 36/2013; ADR-0203).
         PAPEIS.put("NUCLEO_SEGURANCA_PACIENTE", new PapelPadrao("Núcleo de Segurança do Paciente",
                 "Recebe, classifica e analisa os incidentes de segurança do paciente e notifica o evento adverso ao SNVS (RDC 36/2013).",
-                List.of("QUALIDADE.NOTIFICAR", "QUALIDADE.ANALISAR", "PACIENTE.CONSULTAR", "INDICADOR.CONSULTAR")));
+                List.of("QUALIDADE.NOTIFICAR", "QUALIDADE.ANALISAR", "QUALIDADE.GERIR", "PACIENTE.CONSULTAR", "INDICADOR.CONSULTAR")));
         PAPEIS.put("FISCAL_SANITARIO", new PapelPadrao("Fiscal sanitário",
                 "Autoridade sanitária: inspeciona estabelecimentos, registra irregularidades e intima a corrigir (Lei 6.437/1977).",
                 List.of("VISA.INSPECIONAR")));

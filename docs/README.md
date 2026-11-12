@@ -34,7 +34,7 @@ correspondente está na ADR indicada.
 | Comunicação e Educação em Saúde | [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md) | [0114](./adr/0114-comunicacao-e-educacao-em-saude.md), 0168, 0173, 0174, 0195, [0196](./adr/0196-avaliacao-da-comunicacao.md) | sim (C1 a C4 e C6; a C5 depende de Integrações) |
 | Estoque e Almoxarifado | [`estoque/MODELO-ESTOQUE.md`](./estoque/MODELO-ESTOQUE.md) | [0177](./adr/0177-estoque-e-almoxarifado.md), [0189](./adr/0189-estoque-central-requisicao-inventario.md), [0191](./adr/0191-estoque-nas-emergencias.md) | funcionando (ES1 a ES3) |
 | Transporte Sanitário | [`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md) | [0178](./adr/0178-transporte-sanitario.md), [0190](./adr/0190-transporte-eletivo-e-tfd.md), [0192](./adr/0192-transporte-nas-emergencias.md) | funcionando (T1 a T3) |
-| Qualidade do serviço | [`qualidade/MODELO-QUALIDADE.md`](./qualidade/MODELO-QUALIDADE.md) | [0202](./adr/0202-qualidade-do-servico.md), [0203](./adr/0203-seguranca-do-paciente.md) | em parte (Q1 funcionando) |
+| Qualidade do serviço | [`qualidade/MODELO-QUALIDADE.md`](./qualidade/MODELO-QUALIDADE.md) | [0202](./adr/0202-qualidade-do-servico.md), [0203](./adr/0203-seguranca-do-paciente.md), [0204](./adr/0204-nao-conformidades-e-planos-de-acao.md) | em parte (Q1 e Q2 funcionando) |
 | Gestão da Rede de Atenção | [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md) | [0179](./adr/0179-gestao-da-rede-de-atencao.md), 0197, [0198](./adr/0198-cobertura-da-rede.md) | sim (GR1 a GR3) |
 
 Estão documentados nas próprias ADRs: Laboratório e imagem (0093 a 0095, 0180 a 0183), Regulação do acesso (0087 a 0089), de urgência (0176, 0188) e de leitos (0184), Leitos e
