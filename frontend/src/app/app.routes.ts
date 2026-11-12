@@ -201,6 +201,12 @@ export const routes: Routes = [
       },
       // Saúde Mental (ADR-0120), carregada sob demanda.
       // Sala de Situação (BI1, ADR-0143), carregada sob demanda.
+      // Segurança do paciente (ADR-0203).
+      {
+        path: 'qualidade/seguranca-do-paciente',
+        loadComponent: () => import('./features/qualidade/seguranca-do-paciente').then((m) => m.SegurancaDoPaciente),
+        data: { breadcrumb: 'Segurança do paciente', area: 'Qualidade' },
+      },
       {
         path: 'sala-de-situacao',
         loadComponent: () => import('./features/sala-de-situacao/sala-de-situacao').then((m) => m.SalaDeSituacao),

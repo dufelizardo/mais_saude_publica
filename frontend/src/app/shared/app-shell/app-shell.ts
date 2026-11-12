@@ -65,6 +65,8 @@ const MENU: Record<string, string[]> = {
   // Sala de Situação (ADR-0143): só agregados, para quem consulta indicadores.
   '/sala-de-situacao': ['INDICADOR.CONSULTAR'],
   '/relatorios': ['INDICADOR.CONSULTAR'],
+  // Segurança do paciente (ADR-0203): quem notifica, o núcleo e quem consulta os indicadores.
+  '/qualidade/seguranca-do-paciente': ['QUALIDADE.NOTIFICAR', 'QUALIDADE.ANALISAR', 'INDICADOR.CONSULTAR'],
   // Comunicação (ADR-0168): quem publica, escreve ou revisa.
   '/administrativo/comunicacao': ['COMUNICACAO.PUBLICAR', 'CONTEUDO.EDITAR', 'CONTEUDO.REVISAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],

@@ -25,6 +25,12 @@
           <span class="nav-item__label">Relatórios</span>
         </a>
       }
+      @if (podeVer('/qualidade/seguranca-do-paciente')) {
+        <a routerLink="/qualidade/seguranca-do-paciente" routerLinkActive #rlaSeguranca="routerLinkActive" [attr.aria-current]="rlaSeguranca.isActive ? 'page' : null" class="nav-item">
+          <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+          <span class="nav-item__label">Segurança do paciente</span>
+        </a>
+      }
       <div class="nav-group">
         <button type="button" class="nav-group__label" (click)="toggleGrupo('Recursos Humanos')" [attr.aria-expanded]="estaExpandido('Recursos Humanos')">
           <span>Recursos Humanos</span>
