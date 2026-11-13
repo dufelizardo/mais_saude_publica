@@ -46,7 +46,7 @@ class NaoConformidadeControllerTest {
     @Autowired private UnidadeDeSaudeRepository unidadeDeSaudeRepository;
     @Autowired private ProfissionalRepository profissionalRepository;
 
-    private final LocalDate hoje = LocalDate.now();
+    private final LocalDate hoje = LocalDate.now(java.time.ZoneId.of("America/Sao_Paulo"));
     private UnidadeDeSaude hospital;
     private UnidadeDeSaude outra;
 
