@@ -237,6 +237,17 @@ Trabalhador → Evento relacionado ao trabalho → Notificação → Investigaç
   investigação.
 - **CEREST:** a referência técnica em saúde do trabalhador já está no Mapa de Equipamentos.
 
+**Implementado na V5a** ([ADR-0207](../adr/0207-vigilancia-saude-do-trabalhador.md)):
+- **Catálogo:** a marca `relacionadoAoTrabalho` no agravo; o acidente grave (Y96), o material biológico (compulsório, com a ficha) e os
+  da vigilância sentinela (LER/DORT, PAIR, pneumoconioses, dermatoses, câncer e transtorno mental relacionados ao trabalho).
+- **`EventoTrabalho`** (1:1 com a notificação): a ocupação pela CBO na data do evento, a situação no mercado de trabalho, o empregador
+  (CPF ou CNPJ, CNAE e o estabelecimento da VISA pelo documento), o local do evento e, só no acidente, o tipo, a jornada, a CAT, os
+  atingidos e o óbito. Obrigatório no agravo marcado, opcional nos demais; a investigação completa ou corrige.
+- **Acompanhamento sorológico** do material biológico: 6 semanas, 3 e 6 meses a partir do acidente, com a data realizada e as vencidas.
+- **Servidor:** o evento liga-se ao `AcidenteTrabalho` do RH do mesmo CPF; a lista dos acidentes sem notificação é da vigilância da rede;
+  o RH vê só a marca "Notificado à vigilância".
+- **Falta (V5b):** `InvestigacaoTrabalho` (visita, nexo, medidas) e `RiscoOcupacional`, e os indicadores.
+
 ## 8. Território
 
 A pergunta central da vigilância é: **onde estão acontecendo os eventos?**
@@ -372,7 +383,8 @@ Assim o modelo dos sistemas externos não contamina o domínio interno.
 | **V4a** · controle de vetores ✅ ([ADR-0162](../adr/0162-vigilancia-controle-de-vetores.md)) | vistoria, foco, índices do ciclo, ação de controle | Território F3 (imóvel) |
 | **V4b** · animais ✅ ([ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md)) | animal, observação do agressor, exames, vacinação antirrábica | V4a |
 | **V4c** · ambiental ✅ ([ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md)) | qualidade da água, risco ambiental | V4a |
-| **V5** · trabalhador e integrações | evento do trabalho, risco ocupacional, investigação; adaptadores (SINAN primeiro) | V1; Integrações (#20) |
+| **V5a** · trabalhador na notificação ✅ ([ADR-0207](../adr/0207-vigilancia-saude-do-trabalhador.md)) | evento do trabalho, agravos do trabalho, acompanhamento sorológico, acidente do servidor | V1 |
+| **V5b** · investigação do trabalho | investigação do ambiente, nexo, medidas, risco ocupacional, indicadores | V5a |
 
 **Fora do escopo agora:**
 - reproduzir o SINAN ou o SIVEP;

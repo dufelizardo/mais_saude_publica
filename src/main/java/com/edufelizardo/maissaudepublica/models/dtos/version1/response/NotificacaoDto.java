@@ -83,6 +83,8 @@ public class NotificacaoDto implements Serializable {
     private CausalidadeEsavi causalidadeEsavi;
     private CondutaEsquemaEsavi condutaEsavi;
     private List<Dose> doses;
+    /** O bloco do trabalho (ADR-0207); nulo sem bloco. */
+    private SaudeTrabalhadorDtos.Trabalho trabalho;
 
     @Getter
     @Setter

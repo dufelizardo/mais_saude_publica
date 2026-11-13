@@ -118,6 +118,9 @@ class VigilanciaControllerTest {
         jdbc.update("delete from tb_investigacao_exame where investigacao_id in (select uuid from tb_investigacao_epidemiologica where notificacao_id in "
                 + notificacoes + ")");
         jdbc.update("delete from tb_investigacao_epidemiologica where notificacao_id in " + notificacoes);
+        // Saúde do Trabalhador (ADR-0207): o bloco do trabalho e os acidentes do RH dos profissionais do teste.
+        jdbc.update("delete from tb_evento_trabalho where notificacao_id in " + notificacoes);
+        jdbc.update("delete from tb_acidente_trabalho where profissional_id in (select uuid from tb_profissional where nome like '" + prefixo + "%')");
         jdbc.update("delete from tb_notificacao where unidade_id in " + unidades);
         jdbc.update("delete from tb_notificacao_negativa where unidade_id in " + unidades);
         jdbc.update("delete from tb_etapa_crise where crise_id in (select uuid from tb_evento_crise where unidade_id in " + unidades + ")");

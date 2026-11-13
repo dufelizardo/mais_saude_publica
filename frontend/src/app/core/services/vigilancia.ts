@@ -20,6 +20,10 @@ import {
   SurtoDto,
   SurtoRequestDto,
   SurtosDto,
+  AcidenteSemNotificacaoDto,
+  EtapaAcompanhamentoSorologico,
+  EventoTrabalhoRequestDto,
+  PainelTrabalhadorDto,
 } from '../models/vigilancia';
 
 /** Vigilância epidemiológica, fatia V1 (ADR-0124). */
@@ -164,5 +168,25 @@ export class VigilanciaService {
 
   atualizarMedida(uuid: string, dto: MedidaControleRequestDto): Observable<MedidaControleDto> {
     return this.http.patch<MedidaControleDto>(`${this.api}/medida/${uuid}`, dto);
+  }
+
+  // ── Saúde do Trabalhador (ADR-0207) ───────────────────────────────────────────────────────
+
+  atualizarTrabalho(uuid: string, dto: EventoTrabalhoRequestDto): Observable<NotificacaoDto> {
+    return this.http.put<NotificacaoDto>(`${this.api}/notificacao/${uuid}/trabalho`, dto);
+  }
+
+  registrarAcompanhamento(uuid: string, etapa: EtapaAcompanhamentoSorologico, realizadoEm: string): Observable<NotificacaoDto> {
+    return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/trabalho/acompanhamento`, { etapa, realizadoEm });
+  }
+
+  painelTrabalhador(unidadeId?: string): Observable<PainelTrabalhadorDto> {
+    let params = new HttpParams();
+    if (unidadeId) params = params.set('unidadeId', unidadeId);
+    return this.http.get<PainelTrabalhadorDto>(`${this.api}/saude-trabalhador/painel`, { params });
+  }
+
+  acidentesSemNotificacao(): Observable<AcidenteSemNotificacaoDto[]> {
+    return this.http.get<AcidenteSemNotificacaoDto[]>(`${this.api}/saude-trabalhador/acidentes-sem-notificacao`);
   }
 }

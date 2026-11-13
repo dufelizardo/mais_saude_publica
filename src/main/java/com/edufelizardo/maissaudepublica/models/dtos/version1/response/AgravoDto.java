@@ -35,4 +35,6 @@ public class AgravoDto implements Serializable {
     private Integer fichaVersao;
     private List<CampoFichaDto> ficha;
     private Integer periodoMonitoramentoContatoDias;
+    /** Relacionado ao trabalho (ADR-0207). */
+    private boolean relacionadoAoTrabalho;
 }

@@ -76,4 +76,8 @@ public class NotificacaoRequestDto implements Serializable {
 
     /** Só no ESAVI, e obrigatória nele. */
     private GravidadeEsavi gravidade;
+
+    /** O bloco do trabalho (ADR-0207): obrigatório no agravo relacionado ao trabalho, opcional nos demais. */
+    @jakarta.validation.Valid
+    private EventoTrabalhoRequestDto trabalho;
 }
