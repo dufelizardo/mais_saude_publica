@@ -16,7 +16,12 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Acompanham
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EventoTrabalhoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SaudeTrabalhadorDtos;
 import com.edufelizardo.maissaudepublica.models.enuns.EtapaAcompanhamentoSorologico;
+import com.edufelizardo.maissaudepublica.models.enuns.NexoTrabalho;
 import com.edufelizardo.maissaudepublica.models.enuns.SituacaoNotificacao;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoRiscoOcupacional;
+import com.edufelizardo.maissaudepublica.repositories.InvestigacaoTrabalhoRepository;
+import com.edufelizardo.maissaudepublica.repositories.MedidaTrabalhoRepository;
+import com.edufelizardo.maissaudepublica.repositories.RiscoOcupacionalRepository;
 import com.edufelizardo.maissaudepublica.repositories.AcidenteTrabalhoRepository;
 import com.edufelizardo.maissaudepublica.repositories.EstabelecimentoReguladoRepository;
 import com.edufelizardo.maissaudepublica.repositories.EventoTrabalhoRepository;
@@ -68,6 +73,22 @@ public class SaudeTrabalhadorService {
 
     @Autowired
     private AutorizacaoService autorizacaoService;
+
+    /** V5b (ADR-0208): a investigação, as medidas e os riscos. */
+    @Autowired
+    private InvestigacaoTrabalhoService investigacaoService;
+
+    @Autowired
+    private InvestigacaoTrabalhoRepository investigacaoRepository;
+
+    @Autowired
+    private MedidaTrabalhoRepository medidaRepository;
+
+    @Autowired
+    private RiscoOcupacionalRepository riscoRepository;
+
+    @Autowired
+    private EscopoDosIndicadores escopo;
 
     // ── Na notificação ─────────────────────────────────────────────────────────────────────────────
 
@@ -197,7 +218,174 @@ public class SaudeTrabalhadorService {
         long acidentes = eventos.stream().filter(e -> ACIDENTES.contains(e.getNotificacao().getAgravo().getCodigo())).count();
         long obitos = eventos.stream().filter(EventoTrabalho::isObito).count();
         long biologico = eventos.stream().filter(e -> MATERIAL_BIOLOGICO.equals(e.getNotificacao().getAgravo().getCodigo())).count();
-        return new SaudeTrabalhadorDtos.Painel(eventos.size(), acidentes, obitos, biologico, lista, pendentes);
+        // V5b (ADR-0208): as medidas recomendadas com o prazo vencido, nas notificações do escopo.
+        Set<UUID> doEscopo = eventos.stream().map(e -> e.getNotificacao().getUuid()).collect(java.util.stream.Collectors.toSet());
+        List<SaudeTrabalhadorDtos.MedidaVencida> vencidas = medidaRepository.findTodas().stream()
+                .filter(m -> doEscopo.contains(m.getInvestigacao().getNotificacao().getUuid()) && InvestigacaoTrabalhoService.vencida(m, hoje))
+                .sorted(Comparator.comparing(com.edufelizardo.maissaudepublica.models.MedidaTrabalho::getPrazo))
+                .map(m -> new SaudeTrabalhadorDtos.MedidaVencida(m.getInvestigacao().getNotificacao().getUuid(),
+                        m.getInvestigacao().getNotificacao().getPaciente().getNome(), m.getInvestigacao().getNotificacao().getUnidade().getNome(),
+                        m.getTipo(), m.getDescricao(), m.getPrazo())).toList();
+        return new SaudeTrabalhadorDtos.Painel(eventos.size(), acidentes, obitos, biologico, lista, pendentes, vencidas);
+    }
+
+    /**
+     * A semana da saúde do trabalhador para a Sala de Situação (ADR-0208): os acidentes de trabalho dos últimos 7 dias pela data do evento,
+     * os óbitos, as investigações abertas, as medidas vencidas e os riscos ativos. Os alertas não levam o nome do trabalhador.
+     */
+    @Transactional(readOnly = true)
+    public SaudeTrabalhadorDtos.Semana semana() {
+        controleDeAcesso.exigirAlguma(VigilanciaService.NOTIFICAR, VigilanciaService.INVESTIGAR);
+        LocalDate hoje = LocalDate.now();
+        LocalDate desde = hoje.minusDays(6);
+        List<EventoTrabalho> eventos = controleDeAcesso.filtrar(eventoRepository.findTodos().stream(),
+                e -> java.util.stream.Stream.of(e.getNotificacao().getUnidade()), VigilanciaService.NOTIFICAR, VigilanciaService.INVESTIGAR).toList();
+        List<SaudeTrabalhadorDtos.AlertaSemana> alertas = eventos.stream()
+                .filter(e -> ACIDENTES.contains(e.getNotificacao().getAgravo().getCodigo()))
+                .filter(e -> {
+                    LocalDate d = dataEvento(e.getNotificacao());
+                    return !d.isBefore(desde) && !d.isAfter(hoje);
+                })
+                .sorted(Comparator.comparing((EventoTrabalho e) -> !e.isObito()).thenComparing(e -> dataEvento(e.getNotificacao()), Comparator.reverseOrder()))
+                .map(e -> new SaudeTrabalhadorDtos.AlertaSemana(e.getNotificacao().getAgravo().getNome(), e.getNotificacao().getUnidade().getNome(),
+                        dataEvento(e.getNotificacao()), e.isObito(), e.getEmpregadorNome())).toList();
+        Set<UUID> doEscopo = eventos.stream().map(e -> e.getNotificacao().getUuid()).collect(java.util.stream.Collectors.toSet());
+        long abertas = investigacaoRepository.findTodas().stream().filter(i -> doEscopo.contains(i.getNotificacao().getUuid())
+                && i.getNotificacao().getSituacao() != SituacaoNotificacao.ENCERRADA).count();
+        long vencidas = medidaRepository.findTodas().stream().filter(m -> doEscopo.contains(m.getInvestigacao().getNotificacao().getUuid())
+                && InvestigacaoTrabalhoService.vencida(m, hoje)).count();
+        long riscos = riscoRepository.findTodos().stream().filter(r -> r.getSituacao() == SituacaoRiscoOcupacional.ATIVO).count();
+        return new SaudeTrabalhadorDtos.Semana(alertas.size(), alertas.stream().filter(SaudeTrabalhadorDtos.AlertaSemana::obito).count(), abertas,
+                vencidas, riscos, alertas);
+    }
+
+    /**
+     * Os números do período para o relatório Vigilância do #19 (ADR-0208), pela data da notificação e no escopo dos indicadores. As de nexo
+     * descartado saem das contagens do trabalho (só aparecem no total de descartadas).
+     */
+    @Transactional(readOnly = true)
+    public SaudeTrabalhadorDtos.Resumo resumo(LocalDate de, LocalDate ate, UUID unidadeId) {
+        EscopoDosIndicadores.Escopo esc = escopo.de(unidadeId);
+        LocalDate hoje = LocalDate.now();
+        java.util.Map<UUID, com.edufelizardo.maissaudepublica.models.InvestigacaoTrabalho> investigacoes = investigacaoRepository.findTodas().stream()
+                .collect(java.util.stream.Collectors.toMap(i -> i.getNotificacao().getUuid(), i -> i));
+        List<EventoTrabalho> doPeriodo = eventoRepository.findTodos().stream()
+                .filter(e -> !e.getNotificacao().getDataNotificacao().isBefore(de) && !e.getNotificacao().getDataNotificacao().isAfter(ate))
+                .filter(e -> esc.unidades() == null || esc.contem(e.getNotificacao().getUnidade().getUuid())).toList();
+        long descartadas = doPeriodo.stream().filter(e -> nexo(investigacoes, e) == NexoTrabalho.DESCARTADO).count();
+        List<EventoTrabalho> validos = doPeriodo.stream().filter(e -> nexo(investigacoes, e) != NexoTrabalho.DESCARTADO).toList();
+        long concluido = doPeriodo.stream().filter(e -> nexo(investigacoes, e) != null && nexo(investigacoes, e) != NexoTrabalho.EM_ANALISE).count();
+        long confirmado = validos.stream().filter(e -> nexo(investigacoes, e) == NexoTrabalho.CONFIRMADO).count();
+        long obitos = validos.stream().filter(EventoTrabalho::isObito).count();
+        long menores = validos.stream().filter(this::menor).count();
+        long biologicoSaude = validos.stream().filter(e -> MATERIAL_BIOLOGICO.equals(e.getNotificacao().getAgravo().getCodigo()) && daSaude(e)).count();
+        Set<UUID> ids = doPeriodo.stream().map(e -> e.getNotificacao().getUuid()).collect(java.util.stream.Collectors.toSet());
+        long vencidas = medidaRepository.findTodas().stream().filter(m -> ids.contains(m.getInvestigacao().getNotificacao().getUuid())
+                && InvestigacaoTrabalhoService.vencida(m, hoje)).count();
+        java.util.Map<String, long[]> porAgravo = new java.util.TreeMap<>();
+        java.util.Map<String, Long> porCnae = new java.util.TreeMap<>();
+        java.util.Map<String, Long> porCbo = new java.util.TreeMap<>();
+        for (EventoTrabalho e : validos) {
+            long[] c = porAgravo.computeIfAbsent(e.getNotificacao().getAgravo().getNome(), k -> new long[4]);
+            c[0]++;
+            if (nexo(investigacoes, e) == NexoTrabalho.CONFIRMADO) {
+                c[1]++;
+            }
+            if (e.isObito()) {
+                c[2]++;
+            }
+            if (menor(e)) {
+                c[3]++;
+            }
+            porCnae.merge(secaoCnae(e.getEmpregadorCnae()), 1L, Long::sum);
+            porCbo.merge(grandeGrupoCbo(e.getOcupacaoCbo()), 1L, Long::sum);
+        }
+        return new SaudeTrabalhadorDtos.Resumo(validos.size(), concluido, confirmado, descartadas, obitos, menores, biologicoSaude, vencidas,
+                porAgravo.entrySet().stream().map(x -> new SaudeTrabalhadorDtos.LinhaAgravo(x.getKey(), x.getValue()[0], x.getValue()[1], x.getValue()[2],
+                        x.getValue()[3])).toList(),
+                porCnae.entrySet().stream().map(x -> new SaudeTrabalhadorDtos.Contagem(x.getKey(), x.getValue())).toList(),
+                porCbo.entrySet().stream().map(x -> new SaudeTrabalhadorDtos.Contagem(x.getKey(), x.getValue())).toList());
+    }
+
+    private static NexoTrabalho nexo(java.util.Map<UUID, com.edufelizardo.maissaudepublica.models.InvestigacaoTrabalho> investigacoes, EventoTrabalho e) {
+        var i = investigacoes.get(e.getNotificacao().getUuid());
+        return i == null ? null : i.getNexo();
+    }
+
+    private static LocalDate dataEvento(Notificacao n) {
+        return n.getDataPrimeirosSintomas() != null ? n.getDataPrimeirosSintomas() : n.getDataNotificacao();
+    }
+
+    /** Menor de 18 anos na data do evento. */
+    private boolean menor(EventoTrabalho e) {
+        LocalDate nascimento = e.getNotificacao().getPaciente().getDataNascimento();
+        return nascimento != null && java.time.Period.between(nascimento, dataEvento(e.getNotificacao())).getYears() < 18;
+    }
+
+    /** Trabalhador da saúde: empregador da seção Q do CNAE ou ocupação da saúde na CBO (22, 322, 515). */
+    static boolean daSaude(EventoTrabalho e) {
+        String cnae = e.getEmpregadorCnae();
+        String cbo = e.getOcupacaoCbo();
+        return "Q".equals(letraCnae(cnae)) || cbo.startsWith("22") || cbo.startsWith("322") || cbo.startsWith("515");
+    }
+
+    /** A seção do CNAE 2.0 pela divisão (dois primeiros dígitos). */
+    static String letraCnae(String cnae) {
+        if (cnae == null || cnae.length() < 2) {
+            return null;
+        }
+        int d = Integer.parseInt(cnae.substring(0, 2));
+        if (d <= 3) return "A";
+        if (d <= 9) return "B";
+        if (d <= 33) return "C";
+        if (d == 35) return "D";
+        if (d <= 39) return "E";
+        if (d <= 43) return "F";
+        if (d <= 47) return "G";
+        if (d <= 53) return "H";
+        if (d <= 56) return "I";
+        if (d <= 63) return "J";
+        if (d <= 66) return "K";
+        if (d == 68) return "L";
+        if (d <= 75) return "M";
+        if (d <= 82) return "N";
+        if (d == 84) return "O";
+        if (d == 85) return "P";
+        if (d <= 88) return "Q";
+        if (d <= 93) return "R";
+        if (d <= 96) return "S";
+        if (d == 97) return "T";
+        if (d == 99) return "U";
+        return null;
+    }
+
+    static final java.util.Map<String, String> SECOES_CNAE = java.util.Map.ofEntries(
+            java.util.Map.entry("A", "Agropecuária e pesca"), java.util.Map.entry("B", "Indústrias extrativas"),
+            java.util.Map.entry("C", "Indústrias de transformação"), java.util.Map.entry("D", "Eletricidade e gás"),
+            java.util.Map.entry("E", "Água, esgoto e resíduos"), java.util.Map.entry("F", "Construção"),
+            java.util.Map.entry("G", "Comércio"), java.util.Map.entry("H", "Transporte e armazenagem"),
+            java.util.Map.entry("I", "Alojamento e alimentação"), java.util.Map.entry("J", "Informação e comunicação"),
+            java.util.Map.entry("K", "Atividades financeiras"), java.util.Map.entry("L", "Atividades imobiliárias"),
+            java.util.Map.entry("M", "Atividades profissionais e técnicas"), java.util.Map.entry("N", "Atividades administrativas"),
+            java.util.Map.entry("O", "Administração pública"), java.util.Map.entry("P", "Educação"),
+            java.util.Map.entry("Q", "Saúde humana e serviços sociais"), java.util.Map.entry("R", "Artes, cultura e esporte"),
+            java.util.Map.entry("S", "Outros serviços"), java.util.Map.entry("T", "Serviços domésticos"),
+            java.util.Map.entry("U", "Organismos internacionais"));
+
+    static String secaoCnae(String cnae) {
+        String l = letraCnae(cnae);
+        return l == null ? "Sem CNAE" : l + " · " + SECOES_CNAE.get(l);
+    }
+
+    static final String[] GRANDES_GRUPOS_CBO = {"Forças armadas, policiais e bombeiros militares", "Dirigentes e gerentes",
+            "Profissionais das ciências e das artes", "Técnicos de nível médio", "Trabalhadores de serviços administrativos",
+            "Trabalhadores dos serviços e vendedores", "Trabalhadores agropecuários, florestais e da pesca",
+            "Trabalhadores da produção de bens e serviços industriais", "Trabalhadores da produção de bens e serviços industriais (contínuos)",
+            "Trabalhadores de reparação e manutenção"};
+
+    static String grandeGrupoCbo(String cbo) {
+        int g = cbo.charAt(0) - '0';
+        return g + " · " + GRANDES_GRUPOS_CBO[g];
     }
 
     /**
@@ -308,7 +496,7 @@ public class SaudeTrabalhadorService {
                 e.getEstabelecimento() != null ? e.getEstabelecimento().getUuid() : null, e.getLocalEvento(), e.getLatitude(), e.getLongitude(),
                 e.getTipoAcidente(), e.getHorasAposInicioJornada(), e.getCat(), e.getOutrosTrabalhadoresAtingidos(), e.isObito(),
                 a != null ? a.getUuid() : null, a != null ? a.getDataHora() : null, ACIDENTES.contains(codigo), biologico,
-                biologico ? acompanhamentos(e, n, hoje) : List.of(), e.getAtualizadoEm());
+                biologico ? acompanhamentos(e, n, hoje) : List.of(), e.getAtualizadoEm(), investigacaoService.dto(n, hoje));
     }
 
     /** As três etapas, previstas a partir da data do acidente (6 semanas, 3 e 6 meses). */

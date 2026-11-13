@@ -339,3 +339,65 @@ UI Vigilancia - Notificar Acidente Do Servidor
     Wait For Elements State    css=[aria-label="Bloco do trabalho"] >> text=Acidente registrado no RH em    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Investigar O Trabalho
+    [Documentation]    Pela tela: a visita, o nexo confirmado, a medida recomendada e verificada (ADR-0208).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nomePaciente}=    Seed A Paciente
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${prazo}=    Evaluate    (datetime.date.today() + datetime.timedelta(days=10)).isoformat()    modules=datetime
+    UI Vigilancia - Abrir
+    Click    css=[role="tab"]:has-text("Saúde do trabalhador")
+    Clicar Botao    Abrir notificação: ${nomePaciente} Acidente de trabalho grave, fatal ou com crianças e adolescentes
+    Fill Text    id=f-inv-visita    ${hoje}
+    Fill Text    id=f-inv-achados    Andaime sem guarda-corpo
+    Clicar Botao    Iniciar a investigação
+    Wait For Elements State    css=[aria-label="Visita ao local de trabalho"] >> text=Nexo em análise    visible
+    Select Options By    id=f-inv-nexo    value    CONFIRMADO
+    Fill Text    id=f-inv-justificativa    Queda do andaime
+    Clicar Botao    Concluir o nexo
+    Wait For Elements State    css=[aria-label="Visita ao local de trabalho"] >> text=Nexo confirmado    visible
+    Select Options By    id=f-med-tipo    value    PROTECAO_COLETIVA
+    Fill Text    id=f-med-prazo    ${prazo}
+    Fill Text    id=f-med-descricao    Instalar guarda-corpo
+    Clicar Botao    Recomendar a medida
+    Wait For Elements State    css=[aria-label="Medidas do trabalho"] >> text=Recomendada    visible
+    Clicar Botao    Verificar medida: Instalar guarda-corpo
+    Click    css=[aria-label="Medidas do trabalho"] button.btn
+    Wait For Elements State    css=[aria-label="Medidas do trabalho"] >> text=Cumprida    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Risco Ocupacional
+    [Documentation]    Na aba Saúde do trabalhador: registrar o risco do empregador e marcá-lo como controlado (ADR-0208).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [NUMBERS]
+    UI Vigilancia - Abrir
+    Click    css=[role="tab"]:has-text("Saúde do trabalhador")
+    Fill Text    id=f-rn-empregador    Metalurgica Robot ${sufixo}
+    Select Options By    id=f-rn-tipo    value    FISICO
+    Fill Text    id=f-rn-agente    Ruído ${sufixo}
+    Clicar Botao    Registrar o risco
+    Wait For Elements State    css=[aria-label="Riscos ocupacionais"] >> text=Metalurgica Robot ${sufixo} · Físico · Ruído ${sufixo}    visible
+    Clicar Botao    Marcar como controlado: Ruído ${sufixo}
+    Fill Text    id=f-risco-motivo    Enclausuramento da prensa
+    Click    css=[aria-label="Riscos ocupacionais"] button.btn
+    Wait For Elements State    css=[aria-label="Riscos ocupacionais"] li:has-text("Ruído ${sufixo}") >> text=Enclausuramento da prensa    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Trabalho Na Sala De Situacao
+    [Documentation]    O acidente de trabalho da semana aparece como alerta na Sala de Situação (ADR-0208).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nomePaciente}=    Seed A Paciente
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    Ir Para Rota Do Frontend    /sala-de-situacao
+    Wait For Elements State    css=[aria-label="Saúde do trabalhador na semana"]    visible
+    ${texto}=    Get Text    css=[aria-label="Saúde do trabalhador na semana"]
+    Should Contain    ${texto}    nos últimos 7 dias
+    Should Not Contain    ${texto}    ${nomePaciente}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

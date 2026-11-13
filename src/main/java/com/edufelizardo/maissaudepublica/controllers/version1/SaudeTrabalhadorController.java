@@ -8,12 +8,23 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.Acompanham
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EventoTrabalhoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.NotificacaoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SaudeTrabalhadorDtos;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ComunicacaoVisaRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.ControleRiscoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.EncaminhamentoTrabalhoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.InvestigacaoTrabalhoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MedidaTrabalhoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.NexoTrabalhoRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RiscoOcupacionalRequestDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.request.VerificacaoMedidaTrabalhoRequestDto;
+import com.edufelizardo.maissaudepublica.models.enuns.SituacaoRiscoOcupacional;
+import com.edufelizardo.maissaudepublica.services.version1.InvestigacaoTrabalhoService;
 import com.edufelizardo.maissaudepublica.services.version1.SaudeTrabalhadorService;
 import com.edufelizardo.maissaudepublica.services.version1.VigilanciaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +46,9 @@ public class SaudeTrabalhadorController {
 
     @Autowired
     private VigilanciaService vigilanciaService;
+
+    @Autowired
+    private InvestigacaoTrabalhoService investigacaoService;
 
     @RequerPermissao("VIGILANCIA.INVESTIGAR")
     @PutMapping(value = "notificacao/{uuid}/trabalho", produces = JSON, consumes = JSON)
@@ -75,5 +89,93 @@ public class SaudeTrabalhadorController {
     @ApiErrorResponsesBusca
     public ResponseEntity<List<SaudeTrabalhadorDtos.AcidenteSemNotificacao>> acidentesSemNotificacao() {
         return ResponseEntity.ok(service.acidentesSemNotificacao());
+    }
+
+    // ── V5b: investigação do trabalho (ADR-0208) ──
+
+    @RequerPermissao("VIGILANCIA.INVESTIGAR")
+    @PutMapping(value = "notificacao/{uuid}/trabalho/investigacao", produces = JSON, consumes = JSON)
+    @Operation(summary = "Registra a visita ao local de trabalho", description = "Inicia ou atualiza a investigação do ambiente (visita, local e achados); sem o bloco do trabalho ou encerrada, 422; visita no futuro ou antes do evento, 400.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<NotificacaoDto> investigar(@PathVariable UUID uuid, @Valid @RequestBody InvestigacaoTrabalhoRequestDto dto) {
+        investigacaoService.investigar(uuid, dto);
+        return ResponseEntity.ok(vigilanciaService.notificacao(uuid));
+    }
+
+    @RequerPermissao("VIGILANCIA.INVESTIGAR")
+    @PostMapping(value = "notificacao/{uuid}/trabalho/investigacao/nexo", produces = JSON, consumes = JSON)
+    @Operation(summary = "Conclui o nexo com o trabalho", description = "Confirmado, descartado ou inconclusivo, com a justificativa (400); sem a investigação, 422. O descartado sai dos indicadores do trabalho.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<NotificacaoDto> nexo(@PathVariable UUID uuid, @Valid @RequestBody NexoTrabalhoRequestDto dto) {
+        investigacaoService.concluirNexo(uuid, dto);
+        return ResponseEntity.ok(vigilanciaService.notificacao(uuid));
+    }
+
+    @RequerPermissao("VIGILANCIA.INVESTIGAR")
+    @PostMapping(value = "notificacao/{uuid}/trabalho/investigacao/medida", produces = JSON, consumes = JSON)
+    @Operation(summary = "Recomenda uma medida", description = "Com tipo, descrição e prazo (no passado, 400); sem a investigação, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<NotificacaoDto> medida(@PathVariable UUID uuid, @Valid @RequestBody MedidaTrabalhoRequestDto dto) {
+        investigacaoService.recomendarMedida(uuid, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(vigilanciaService.notificacao(uuid));
+    }
+
+    @RequerPermissao("VIGILANCIA.INVESTIGAR")
+    @PostMapping(value = "medida-trabalho/{uuid}/verificacao", produces = JSON, consumes = JSON)
+    @Operation(summary = "Verifica a medida", description = "Cumprida ou não cumprida (com a observação, 400); já verificada, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<NotificacaoDto> verificar(@PathVariable UUID uuid, @Valid @RequestBody VerificacaoMedidaTrabalhoRequestDto dto) {
+        UUID notificacao = investigacaoService.verificarMedida(uuid, dto);
+        return ResponseEntity.ok(vigilanciaService.notificacao(notificacao));
+    }
+
+    @RequerPermissao("VIGILANCIA.INVESTIGAR")
+    @PostMapping(value = "notificacao/{uuid}/trabalho/investigacao/comunicacao-visa", produces = JSON, consumes = JSON)
+    @Operation(summary = "Comunica a vigilância sanitária", description = "Abre a denúncia de canal Vigilância contra o empregador, sem os dados do trabalhador; uma por investigação (409); sem empregador, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<NotificacaoDto> comunicarVisa(@PathVariable UUID uuid, @Valid @RequestBody ComunicacaoVisaRequestDto dto) {
+        investigacaoService.comunicarVisa(uuid, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(vigilanciaService.notificacao(uuid));
+    }
+
+    @RequerPermissao("VIGILANCIA.INVESTIGAR")
+    @PostMapping(value = "notificacao/{uuid}/trabalho/investigacao/encaminhamento", produces = JSON, consumes = JSON)
+    @Operation(summary = "Encaminha à rede intersetorial", description = "Superintendência do Trabalho, MPT ou sindicato, com a investigação como origem; instituição inativa, 422; em aberto para a mesma, 409.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<NotificacaoDto> encaminhar(@PathVariable UUID uuid, @Valid @RequestBody EncaminhamentoTrabalhoRequestDto dto) {
+        investigacaoService.encaminhar(uuid, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(vigilanciaService.notificacao(uuid));
+    }
+
+    @RequerPermissao("VIGILANCIA.INVESTIGAR")
+    @PostMapping(value = "saude-trabalhador/risco", produces = JSON, consumes = JSON)
+    @Operation(summary = "Registra um risco ocupacional", description = "Do empregador (CPF ou CNPJ válido, 400; sem empregador, 400); pela investigação, com a notificação, o empregador vem do bloco.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SaudeTrabalhadorDtos.Risco> registrarRisco(@Valid @RequestBody RiscoOcupacionalRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(investigacaoService.registrarRisco(dto));
+    }
+
+    @RequerPermissao("VIGILANCIA.INVESTIGAR")
+    @PostMapping(value = "risco-ocupacional/{uuid}/controle", produces = JSON, consumes = JSON)
+    @Operation(summary = "Marca o risco como controlado", description = "Com o motivo; já controlado, 422.", tags = TAG)
+    @ApiErrorResponsesMutacao
+    public ResponseEntity<SaudeTrabalhadorDtos.Risco> controlarRisco(@PathVariable UUID uuid, @Valid @RequestBody ControleRiscoRequestDto dto) {
+        return ResponseEntity.ok(investigacaoService.controlarRisco(uuid, dto));
+    }
+
+    @RequerPermissao("VIGILANCIA.INVESTIGAR")
+    @GetMapping(value = "saude-trabalhador/riscos", produces = JSON)
+    @Operation(summary = "Os riscos ocupacionais", description = "Ativos primeiro; filtra pela situação.", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<List<SaudeTrabalhadorDtos.Risco>> riscos(@RequestParam(required = false) SituacaoRiscoOcupacional situacao) {
+        return ResponseEntity.ok(investigacaoService.riscos(situacao));
+    }
+
+    @RequerPermissao({"VIGILANCIA.NOTIFICAR", "VIGILANCIA.INVESTIGAR"})
+    @GetMapping(value = "saude-trabalhador/semana", produces = JSON)
+    @Operation(summary = "A semana da saúde do trabalhador", description = "Para a Sala de Situação: acidentes de trabalho dos últimos 7 dias (sem o nome do trabalhador), óbitos, investigações abertas, medidas vencidas e riscos ativos.", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<SaudeTrabalhadorDtos.Semana> semana() {
+        return ResponseEntity.ok(service.semana());
     }
 }

@@ -83,6 +83,20 @@
   </section>
 }
 
+@if (semanaTrabalho(); as t) {
+  @if (t.acidentes || t.medidasVencidas) {
+    <section class="ss-alertas" aria-label="Saúde do trabalhador">
+      <article [class]="'ss-alerta ' + (t.obitos ? 'ss-alerta--alta' : 'ss-alerta--media')" aria-label="Saúde do trabalhador na semana">
+        <div>
+          <div class="ss-alerta__titulo">Saúde do trabalhador: {{ t.acidentes }} {{ t.acidentes === 1 ? 'acidente de trabalho' : 'acidentes de trabalho' }} nos últimos 7 dias@if (t.obitos) { · {{ t.obitos }} {{ t.obitos === 1 ? 'óbito' : 'óbitos' }} }</div>
+          <div class="ss-alerta__detalhe">{{ t.investigacoesAbertas }} {{ t.investigacoesAbertas === 1 ? 'investigação aberta' : 'investigações abertas' }} · {{ t.medidasVencidas }} {{ t.medidasVencidas === 1 ? 'medida vencida' : 'medidas vencidas' }} · {{ t.riscosAtivos }} {{ t.riscosAtivos === 1 ? 'risco ocupacional ativo' : 'riscos ocupacionais ativos' }}@if (t.alertas.length) { · {{ t.alertas[0].agravoNome }} em {{ t.alertas[0].unidadeNome }}@if (t.alertas[0].empregadorNome) { ({{ t.alertas[0].empregadorNome }}) } }</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/vigilancia">Ver na vigilância</a>
+      </article>
+    </section>
+  }
+}
+
 @if (eventosPlanejados().length) {
   <section class="ss-alertas" aria-label="Eventos de massa planejados">
     @for (e of eventosPlanejados().slice(0, 3); track e.uuid) {

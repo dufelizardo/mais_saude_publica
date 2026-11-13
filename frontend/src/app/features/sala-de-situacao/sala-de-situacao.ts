@@ -1,3 +1,5 @@
+import { SemanaTrabalhadorDto } from '../../core/models/vigilancia';
+import { VigilanciaService } from '../../core/services/vigilancia';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -59,6 +61,9 @@ export class SalaDeSituacao {
   private readonly sanitariaService = inject(VigilanciaSanitariaService);
   /** As interdições sanitárias vigentes (ADR-0200). */
   protected readonly interdicoes = signal<InterdicaoDto[]>([]);
+  private readonly vigilanciaTrabalhoService = inject(VigilanciaService);
+  /** A semana da saúde do trabalhador (ADR-0208): acidentes, óbitos, investigações, medidas vencidas e riscos ativos. */
+  protected readonly semanaTrabalho = signal<SemanaTrabalhadorDto | null>(null);
   /** As emergências ativas (ADR-0156), no alto da tela; sem acesso, nada. */
   protected readonly emergencias = signal<EmergenciaDto[]>([]);
   /** Os eventos de massa planejados para os próximos 7 dias, ou já previstos e ainda sem operação (ADR-0160). */
@@ -345,6 +350,7 @@ export class SalaDeSituacao {
     const mes = new Date();
     const desde = `${mes.getFullYear()}-${String(mes.getMonth() + 1).padStart(2, '0')}-01`;
     this.sanitariaService.interdicoes().pipe(catchError(() => of([]))).subscribe((l) => this.interdicoes.set(l));
+    this.vigilanciaTrabalhoService.semanaTrabalhador().pipe(catchError(() => of(null))).subscribe((s) => this.semanaTrabalho.set(s));
     this.ambientalService.amostras({ naoConformes: true, desde }).pipe(catchError(() => of([])))
       .subscribe((l) => this.aguaForaDoPadrao.set(l.filter((a) => !a.medida)));
     this.vetorialService.indices().pipe(catchError(() => of(null))).subscribe((ix) => {

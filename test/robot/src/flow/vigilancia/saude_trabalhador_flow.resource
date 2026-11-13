@@ -5,6 +5,7 @@ Resource    ../../pom/vigilancia/saude_trabalhador_pom.resource
 Resource    ./vigilancia_flow.resource
 Resource    ../paciente/create_paciente/create_paciente_flow.resource
 Resource    ../profissional/get_profissional_by_matricula/get_profissional_by_matricula_flow.resource
+Resource    ../intersetorialidade/intersetorialidade_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Saúde do Trabalhador (ADR-0207): o bloco do trabalho na notificação, o acompanhamento sorológico do material biológico e o
@@ -190,6 +191,156 @@ Trabalhador - By Cenario
         Trabalhador - Servidor Do RH - Status Code 201
     ELSE
         Fail    Caso '${caso}' não suportado no cenário Saúde do Trabalhador.
+    END
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Investigacao - Ciclo - Status Code 200
+    [Documentation]    Visit, confirmed relatedness, measure verified once (422 the second time).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nome}=    Seed A Paciente
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${visita}=    Create Dictionary    visitaEm=${hoje}    achados=Andaime sem guarda-corpo
+    ${r}=    PUT Investigacao Do Trabalho    ${n}    ${visita}
+    Should Be Equal As Integers    ${r.status_code}    200
+    Should Be Equal    ${r.json()}[trabalho][investigacao][nexo]    EM_ANALISE
+    ${nexo}=    Create Dictionary    nexo=CONFIRMADO    justificativa=Queda do andaime
+    ${r}=    POST Nexo Do Trabalho    ${n}    ${nexo}
+    Should Be Equal    ${r.json()}[trabalho][investigacao][nexo]    CONFIRMADO
+    ${prazo}=    Evaluate    (datetime.date.today() + datetime.timedelta(days=15)).isoformat()    modules=datetime
+    ${medida}=    Create Dictionary    tipo=PROTECAO_COLETIVA    descricao=Guarda-corpo    prazo=${prazo}
+    ${r}=    POST Medida Do Trabalho    ${n}    ${medida}
+    Should Be Equal As Integers    ${r.status_code}    201
+    ${m}=    Set Variable    ${r.json()}[trabalho][investigacao][medidas][0][uuid]
+    ${ver}=    Create Dictionary    situacao=CUMPRIDA
+    ${r}=    POST Verificacao Da Medida Do Trabalho    ${m}    ${ver}
+    Should Be Equal As Integers    ${r.status_code}    200
+    ${r}=    POST Verificacao Da Medida Do Trabalho    ${m}    ${ver}
+    Should Be Equal As Integers    ${r.status_code}    422
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Investigacao - Sem Bloco E Visita Futura - Status Code 422
+    [Documentation]    Without the work block, 422; visit in the future, 400.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nome}=    Seed A Paciente
+    ${dengue}=    Id Do Agravo    DENGUE
+    ${respostas}=    Create Dictionary    febre=${True}
+    ${payload}=    Create Dictionary    pacienteId=${paciente}    agravoId=${dengue}    unidadeId=${unidade}    origem=ATENDIMENTO    respostas=${respostas}
+    ${r}=    POST Notificacao    ${payload}
+    ${nd}=    Set Variable    ${r.json()}[uuid]
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${visita}=    Create Dictionary    visitaEm=${hoje}
+    ${r}=    PUT Investigacao Do Trabalho    ${nd}    ${visita}
+    Should Be Equal As Integers    ${r.status_code}    422
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    ${amanha}=    Evaluate    (datetime.date.today() + datetime.timedelta(days=1)).isoformat()    modules=datetime
+    ${visita}=    Create Dictionary    visitaEm=${amanha}
+    ${r}=    PUT Investigacao Do Trabalho    ${n}    ${visita}
+    Should Be Equal As Integers    ${r.status_code}    400
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Investigacao - Comunicacao Visa - Status Code 201
+    [Documentation]    The health inspection receives a complaint against the employer; the second one, 409.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nome}=    Seed A Paciente
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${visita}=    Create Dictionary    visitaEm=${hoje}    achados=Andaime sem guarda-corpo
+    ${r}=    PUT Investigacao Do Trabalho    ${n}    ${visita}
+    Should Be Equal As Integers    ${r.status_code}    200
+    ${corpo}=    Create Dictionary    descricao=Verificar a proteção contra quedas
+    ${r}=    POST Comunicacao Visa    ${n}    ${corpo}
+    Should Be Equal As Integers    ${r.status_code}    201
+    Should Not Be Empty    ${r.json()}[trabalho][investigacao][denunciaProtocolo]
+    ${r}=    POST Comunicacao Visa    ${n}    ${corpo}
+    Should Be Equal As Integers    ${r.status_code}    409
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Investigacao - Encaminhamento - Status Code 201
+    [Documentation]    The referral to the labour inspection, with a 30-day return.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nome}=    Seed A Paciente
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${visita}=    Create Dictionary    visitaEm=${hoje}    achados=Andaime sem guarda-corpo
+    ${r}=    PUT Investigacao Do Trabalho    ${n}    ${visita}
+    Should Be Equal As Integers    ${r.status_code}    200
+    ${inst}=    Seed Instituicao Externa    Superintendencia Robot    TRABALHO_E_RENDA    SERVICO_DE_EMPREGO
+    ${corpo}=    Create Dictionary    instituicaoId=${inst}    motivo=Fiscalização da obra
+    ${r}=    POST Encaminhamento Do Trabalho    ${n}    ${corpo}
+    Should Be Equal As Integers    ${r.status_code}    201
+    Length Should Be    ${r.json()}[trabalho][investigacao][encaminhamentos]    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Investigacao - Risco Ocupacional - Status Code 201
+    [Documentation]    The risk inherits the employer from the block; controlled once; without employer, 400.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nome}=    Seed A Paciente
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${visita}=    Create Dictionary    visitaEm=${hoje}    achados=Andaime sem guarda-corpo
+    ${r}=    PUT Investigacao Do Trabalho    ${n}    ${visita}
+    Should Be Equal As Integers    ${r.status_code}    200
+    ${corpo}=    Create Dictionary    tipo=ACIDENTE    agente=Trabalho em altura    trabalhadoresExpostos=${12}    notificacaoId=${n}
+    ${r}=    POST Risco Ocupacional    ${corpo}
+    Should Be Equal As Integers    ${r.status_code}    201
+    Should Be Equal    ${r.json()}[empregadorNome]    Construtora Robot
+    ${risco}=    Set Variable    ${r.json()}[uuid]
+    ${motivo}=    Create Dictionary    motivo=Guarda-corpo instalado
+    ${r}=    POST Controle Do Risco Ocupacional    ${risco}    ${motivo}
+    Should Be Equal    ${r.json()}[situacao]    CONTROLADO
+    ${r}=    POST Controle Do Risco Ocupacional    ${risco}    ${motivo}
+    Should Be Equal As Integers    ${r.status_code}    422
+    ${sem}=    Create Dictionary    tipo=QUIMICO    agente=Sílica
+    ${r}=    POST Risco Ocupacional    ${sem}
+    Should Be Equal As Integers    ${r.status_code}    400
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Investigacao - Semana E Relatorio - Status Code 200
+    [Documentation]    The week for the situation room and the report of the unit with the work indicators.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nome}=    Seed A Paciente
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    ${r}=    GET Semana Da Saude Do Trabalhador
+    Should Be Equal As Integers    ${r.status_code}    200
+    Should Be True    ${r.json()}[acidentes] >= 1
+    ${r}=    GET Relatorio Vigilancia    ${unidade}
+    Should Be Equal As Integers    ${r.status_code}    200
+    ${valor}=    Evaluate    [x['valor'] for x in $r.json()['resumo'] if x['rotulo'] == 'Relacionadas ao trabalho'][0]
+    Should Be Equal    ${valor}    1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Investigacao - By Cenario
+    [Documentation]    Executes the work investigation scenario for the given case.
+    [Arguments]    ${caso}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    IF    '${caso}' == 'CICLO'
+        Investigacao - Ciclo - Status Code 200
+    ELSE IF    '${caso}' == 'SEM_BLOCO'
+        Investigacao - Sem Bloco E Visita Futura - Status Code 422
+    ELSE IF    '${caso}' == 'VISA'
+        Investigacao - Comunicacao Visa - Status Code 201
+    ELSE IF    '${caso}' == 'ENCAMINHAMENTO'
+        Investigacao - Encaminhamento - Status Code 201
+    ELSE IF    '${caso}' == 'RISCO'
+        Investigacao - Risco Ocupacional - Status Code 201
+    ELSE IF    '${caso}' == 'SEMANA'
+        Investigacao - Semana E Relatorio - Status Code 200
+    ELSE
+        Fail    Caso '${caso}' não suportado no cenário Investigação do Trabalho.
     END
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -12,6 +12,7 @@ import {
   TIPOS_ACIDENTE,
 } from '../../core/models/vigilancia';
 import { VigilanciaService } from '../../core/services/vigilancia';
+import { InvestigacaoTrabalho } from './investigacao-trabalho';
 import { TrabalhoForm } from './trabalho-form';
 
 /**
@@ -20,7 +21,7 @@ import { TrabalhoForm } from './trabalho-form';
  */
 @Component({
   selector: 'app-trabalho-notificacao',
-  imports: [TrabalhoForm],
+  imports: [TrabalhoForm, InvestigacaoTrabalho],
   template: `
     @if (notificacao().trabalho || (podeInvestigar() && aberta())) {
       <section aria-label="Saúde do trabalhador">
@@ -70,6 +71,7 @@ import { TrabalhoForm } from './trabalho-form';
             </ul>
           }
           @if (podeInvestigar() && aberta()) { <button type="button" class="link-btn" (click)="editando.set(true)">Corrigir o bloco do trabalho</button> }
+          <app-investigacao-trabalho [notificacao]="notificacao()" [podeInvestigar]="podeInvestigar()" (atualizada)="atualizada.emit($event)" />
         } @else {
           <p class="cell-sub">Sem o bloco do trabalho. Se o caso tem relação com o trabalho, inclua.</p>
           <button type="button" class="link-btn" (click)="editando.set(true)">Incluir o bloco do trabalho</button>

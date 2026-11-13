@@ -22,6 +22,13 @@ import {
   SurtosDto,
   AcidenteSemNotificacaoDto,
   EtapaAcompanhamentoSorologico,
+  NexoTrabalho,
+  RiscoOcupacionalDto,
+  RiscoOcupacionalRequestDto,
+  SemanaTrabalhadorDto,
+  SituacaoMedidaTrabalho,
+  SituacaoRiscoOcupacional,
+  TipoMedidaTrabalho,
   EventoTrabalhoRequestDto,
   PainelTrabalhadorDto,
 } from '../models/vigilancia';
@@ -188,5 +195,49 @@ export class VigilanciaService {
 
   acidentesSemNotificacao(): Observable<AcidenteSemNotificacaoDto[]> {
     return this.http.get<AcidenteSemNotificacaoDto[]>(`${this.api}/saude-trabalhador/acidentes-sem-notificacao`);
+  }
+
+  // ── Investigação do trabalho (ADR-0208) ───────────────────────────────────────────────────
+
+  investigarTrabalho(uuid: string, dto: { visitaEm?: string | null; localVisitado?: string | null; achados?: string | null }): Observable<NotificacaoDto> {
+    return this.http.put<NotificacaoDto>(`${this.api}/notificacao/${uuid}/trabalho/investigacao`, dto);
+  }
+
+  concluirNexo(uuid: string, nexo: NexoTrabalho, justificativa: string): Observable<NotificacaoDto> {
+    return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/trabalho/investigacao/nexo`, { nexo, justificativa });
+  }
+
+  recomendarMedidaTrabalho(uuid: string, dto: { tipo: TipoMedidaTrabalho; descricao: string; prazo: string }): Observable<NotificacaoDto> {
+    return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/trabalho/investigacao/medida`, dto);
+  }
+
+  verificarMedidaTrabalho(medida: string, dto: { situacao: SituacaoMedidaTrabalho; observacao?: string | null }): Observable<NotificacaoDto> {
+    return this.http.post<NotificacaoDto>(`${this.api}/medida-trabalho/${medida}/verificacao`, dto);
+  }
+
+  comunicarVisa(uuid: string, descricao: string): Observable<NotificacaoDto> {
+    return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/trabalho/investigacao/comunicacao-visa`, { descricao });
+  }
+
+  encaminharTrabalho(uuid: string, dto: { instituicaoId: string; motivo: string }): Observable<NotificacaoDto> {
+    return this.http.post<NotificacaoDto>(`${this.api}/notificacao/${uuid}/trabalho/investigacao/encaminhamento`, dto);
+  }
+
+  registrarRisco(dto: RiscoOcupacionalRequestDto): Observable<RiscoOcupacionalDto> {
+    return this.http.post<RiscoOcupacionalDto>(`${this.api}/saude-trabalhador/risco`, dto);
+  }
+
+  controlarRisco(uuid: string, motivo: string): Observable<RiscoOcupacionalDto> {
+    return this.http.post<RiscoOcupacionalDto>(`${this.api}/risco-ocupacional/${uuid}/controle`, { motivo });
+  }
+
+  riscosOcupacionais(situacao?: SituacaoRiscoOcupacional): Observable<RiscoOcupacionalDto[]> {
+    let params = new HttpParams();
+    if (situacao) params = params.set('situacao', situacao);
+    return this.http.get<RiscoOcupacionalDto[]>(`${this.api}/saude-trabalhador/riscos`, { params });
+  }
+
+  semanaTrabalhador(): Observable<SemanaTrabalhadorDto> {
+    return this.http.get<SemanaTrabalhadorDto>(`${this.api}/saude-trabalhador/semana`);
   }
 }

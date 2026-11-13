@@ -2,7 +2,7 @@ import { DocumentoDto } from './documento';
 
 /** Vigilância Sanitária, fatia V3a (ADR-0199). */
 export type GrauRiscoSanitario = 'BAIXO' | 'MEDIO' | 'ALTO';
-export type CanalDenuncia = 'TELEFONE' | 'PRESENCIAL' | 'OUVIDORIA' | 'INTERNET' | 'OUTRO';
+export type CanalDenuncia = 'TELEFONE' | 'PRESENCIAL' | 'OUVIDORIA' | 'INTERNET' | 'OUTRO' | 'VIGILANCIA';
 export type SituacaoDenuncia = 'RECEBIDA' | 'EM_APURACAO' | 'PROCEDENTE' | 'IMPROCEDENTE';
 export type MotivoInspecao = 'LICENCIAMENTO' | 'PROGRAMADA' | 'DENUNCIA' | 'RETORNO' | 'SURTO' | 'OUTRO';
 export type ResultadoInspecao = 'SATISFATORIA' | 'COM_RESSALVAS' | 'INSATISFATORIA';
@@ -13,7 +13,7 @@ export type SituacaoLicenca = 'VIGENTE' | 'VENCIDA' | 'DISPENSADA' | 'SUSPENSA' 
 export type MotivoPendenciaLicenca = 'SEM_LICENCA' | 'VENCIDA' | 'VENCENDO' | 'SUSPENSA' | 'CASSADA';
 
 export const RISCOS: Record<GrauRiscoSanitario, string> = { BAIXO: 'I · baixo', MEDIO: 'II · médio', ALTO: 'III · alto' };
-export const CANAIS_DENUNCIA: Record<CanalDenuncia, string> = { TELEFONE: 'Telefone', PRESENCIAL: 'Presencial', OUVIDORIA: 'Ouvidoria', INTERNET: 'Internet', OUTRO: 'Outro' };
+export const CANAIS_DENUNCIA: Record<CanalDenuncia, string> = { TELEFONE: 'Telefone', PRESENCIAL: 'Presencial', OUVIDORIA: 'Ouvidoria', INTERNET: 'Internet', OUTRO: 'Outro', VIGILANCIA: 'Vigilância (saúde do trabalhador)' };
 export const SITUACOES_DENUNCIA: Record<SituacaoDenuncia, string> = { RECEBIDA: 'Recebida', EM_APURACAO: 'Em apuração', PROCEDENTE: 'Procedente', IMPROCEDENTE: 'Improcedente' };
 export const MOTIVOS_INSPECAO: Record<MotivoInspecao, string> = {
   LICENCIAMENTO: 'Licenciamento', PROGRAMADA: 'Programada', DENUNCIA: 'Denúncia', RETORNO: 'Retorno', SURTO: 'Surto', OUTRO: 'Outro',

@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-13 (V5a da Vigilância em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-13 (V5b da Vigilância em developer, domínio 23 completo; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -49,7 +49,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
-| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 a V4 e V5a feitas (com a sanitária, a comunicação da violência e o bloco do trabalho); falta a V5b (investigação do trabalho, risco ocupacional e indicadores) |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | ✅ | V1 a V5 feitas (epidemiológica, sanitária, ambiental e zoonoses, saúde do trabalhador); integrações no domínio 20 |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 e I6 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas, ESAVI, remanejamento, alerta por lote e CRIE); SINASC e I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 21 ✅ · 7 🟡 · 3 ⬜ (e Documentos 🟡). As Integrações são a parte não
+**Resumo:** 31 itens mais Documentos: 25 ✅ · 3 🟡 · 3 ⬜ (e Documentos 🟡). As Integrações são a parte não
 iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -85,7 +85,7 @@ P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 ✅ (educação em saúde
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 ✅ (área afetada) · Equipamentos com mapa real ✅
 F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4a ✅ (vetores) ──► V4b ✅ (animais) ──► V4c ✅ (ambiental) · E4a ✅ (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
-V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5a ✅ ──► V5b
+V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5a ✅ ──► V5b ✅
 V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergencial)
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
@@ -436,7 +436,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 19. Indicadores / BI
 
-**Estado:** 🟡. Desenhado na [ADR-0142](./adr/0142-indicadores-bi-e-gestao.md): camada de leitura, só agregados,
+**Estado:** ✅. Desenhado na [ADR-0142](./adr/0142-indicadores-bi-e-gestao.md): camada de leitura, só agregados,
 calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 
 **Temos:**
@@ -566,7 +566,7 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 
 ### 23. Vigilância em Saúde
 
-**Estado:** 🟡. Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md); detalhe em
+**Estado:** ✅. Desenhado na [ADR-0110](./adr/0110-vigilancia-em-saude.md); detalhe em
 [`vigilancia/MODELO-VIGILANCIA.md`](./vigilancia/MODELO-VIGILANCIA.md).
 
 **Temos:**
@@ -621,15 +621,19 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   investigação; o acompanhamento sorológico do material biológico (6 semanas, 3 e 6 meses) com as etapas vencidas; o acidente do servidor
   no RH ligado à notificação, a lista dos sem notificação para a vigilância da rede e a marca no RH; aba Saúde do trabalhador.
 
+- [x] **V5b · Investigação do trabalho** ([ADR-0208](./adr/0208-vigilancia-investigacao-do-trabalho.md)): visita ao local, achados e o nexo (confirmado, descartado ou
+  inconclusivo) com a justificativa; medidas com prazo e verificação (cumprida ou não), as vencidas no painel; a comunicação à VISA como
+  denúncia do canal Vigilância contra o empregador, sem os dados do trabalhador; o encaminhamento intersetorial à fiscalização do trabalho;
+  o risco ocupacional por empregador (ativo ou controlado); os indicadores e as tabelas por agravo, seção do CNAE e grande grupo da CBO no
+  relatório Vigilância, sem as de nexo descartado; o alerta da semana na Sala de Situação.
+
 **Falta:**
 - [ ] Sugestão de notificação por exame positivo (o catálogo de exames não liga exame a agravo).
 - [ ] A comunicação da violência contra a pessoa com deficiência (Lei 13.146/2015, art. 26): o cadastro do paciente não tem o dado.
 - [ ] O plano de amostragem mínimo da água e os demais parâmetros da portaria (agrotóxicos, metais).
 - [ ] A cobertura da vacinação antirrábica animal (precisa da população animal estimada).
 - [ ] O quarteirão como unidade de trabalho do agente de endemias.
-- [ ] **V5b · Investigação do trabalho:** a visita ao local de trabalho, o nexo (confirmado, descartado ou inconclusivo), as medidas
-  com prazo, a denúncia à VISA e o encaminhamento intersetorial; o risco ocupacional por empregador; os indicadores no #19 e o bloco na
-  Sala de Situação.
+- [ ] A vigilância programada de ambientes de trabalho por ramo e os coeficientes por população economicamente ativa.
 
 ### 24. Imunização
 
@@ -831,7 +835,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 29. Modelo Operacional dos Equipamentos
 
-**Estado:** 🟡 (camada transversal, não domínio de negócio). Desenhado na
+**Estado:** ✅ (camada transversal, não domínio de negócio). Desenhado na
 [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md), que aceita e completa a ADR-0053; matriz e detalhe em
 [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md).
 

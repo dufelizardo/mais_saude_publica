@@ -119,6 +119,16 @@ class VigilanciaControllerTest {
                 + notificacoes + ")");
         jdbc.update("delete from tb_investigacao_epidemiologica where notificacao_id in " + notificacoes);
         // Saúde do Trabalhador (ADR-0207): o bloco do trabalho e os acidentes do RH dos profissionais do teste.
+        // V5b (ADR-0208): as medidas, os riscos, a investigação e a denúncia que ela abriu na VISA.
+        String investigacoes = "(select uuid from tb_investigacao_trabalho where notificacao_id in " + notificacoes + ")";
+        jdbc.update("delete from tb_medida_trabalho where investigacao_id in " + investigacoes);
+        jdbc.update("delete from tb_risco_ocupacional where investigacao_id in " + investigacoes);
+        java.util.List<java.util.UUID> denuncias = jdbc.queryForList("select denuncia_id from tb_investigacao_trabalho where denuncia_id is not null "
+                + "and notificacao_id in " + notificacoes, java.util.UUID.class);
+        jdbc.update("delete from tb_investigacao_trabalho where notificacao_id in " + notificacoes);
+        for (java.util.UUID d : denuncias) {
+            jdbc.update("delete from tb_denuncia_sanitaria where uuid = ?", d);
+        }
         jdbc.update("delete from tb_evento_trabalho where notificacao_id in " + notificacoes);
         jdbc.update("delete from tb_acidente_trabalho where profissional_id in (select uuid from tb_profissional where nome like '" + prefixo + "%')");
         jdbc.update("delete from tb_notificacao where unidade_id in " + unidades);

@@ -471,7 +471,8 @@ export class VigilanciaSanitaria {
   protected readonly riscos = RISCOS;
   protected readonly listaRiscos = Object.keys(RISCOS) as GrauRiscoSanitario[];
   protected readonly canais = CANAIS_DENUNCIA;
-  protected readonly listaCanais = Object.keys(CANAIS_DENUNCIA) as CanalDenuncia[];
+  /** O canal Vigilância é só da investigação do trabalho (ADR-0208), não se escolhe aqui. */
+  protected readonly listaCanais = (Object.keys(CANAIS_DENUNCIA) as CanalDenuncia[]).filter((c) => c !== 'VIGILANCIA');
   protected readonly situacoesDenuncia = SITUACOES_DENUNCIA;
   protected readonly motivos = MOTIVOS_INSPECAO;
   protected readonly listaMotivos = (Object.keys(MOTIVOS_INSPECAO) as MotivoInspecao[]).filter((m) => m !== 'SURTO');
