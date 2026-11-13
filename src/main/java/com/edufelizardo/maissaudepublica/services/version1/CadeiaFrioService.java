@@ -183,12 +183,21 @@ public class CadeiaFrioService {
                     continue;
                 }
                 lote.setSituacao(SituacaoLoteImunobiologico.SOB_SUSPEITA);
+                lote.setMotivoSuspeita(com.edufelizardo.maissaudepublica.models.enuns.MotivoSuspeitaLote.EXCURSAO_TEMPERATURA);
                 lote.setSobSuspeitaDesde(Instant.now());
                 lote.setParecer(null);
                 lote.setAvaliadoEm(null);
                 lote.setAvaliadoPorCpf(null);
                 loteRepository.save(lote);
                 suspeitos++;
+            }
+            // O lote já suspenso pela rede também passou pela excursão: depois da decisão da rede, a avaliação é da unidade (ADR-0206).
+            for (LoteImunobiologico lote : loteRepository.findByCamara_UuidAndSituacao(c.getUuid(), SituacaoLoteImunobiologico.SOB_SUSPEITA)) {
+                if (lote.getMotivoSuspeita() == com.edufelizardo.maissaudepublica.models.enuns.MotivoSuspeitaLote.ESAVI_LOTE && lote.getDoses() > 0) {
+                    lote.setMotivoSuspeita(com.edufelizardo.maissaudepublica.models.enuns.MotivoSuspeitaLote.EXCURSAO_TEMPERATURA);
+                    loteRepository.save(lote);
+                    suspeitos++;
+                }
             }
         }
         ContextoAuditoria.registro(l.getUuid());
@@ -212,11 +221,16 @@ public class CadeiaFrioService {
         if (l.getSituacao() != SituacaoLoteImunobiologico.SOB_SUSPEITA) {
             throw new ResourceUnprocessableEntityException("O lote " + l.getNumeroLote() + " não está sob suspeita.");
         }
+        if (l.getSuspensaoRede() != null && l.getSuspensaoRede().getSituacao() == com.edufelizardo.maissaudepublica.models.enuns.SituacaoSuspensaoLote.VIGENTE) {
+            throw new ResourceUnprocessableEntityException("O lote " + l.getNumeroLote() + " está suspenso na rede pelo alerta de ESAVI: a decisão é da "
+                    + "coordenação da rede.");
+        }
         l.setParecer(dto.getParecer().trim());
         l.setAvaliadoEm(Instant.now());
         l.setAvaliadoPorCpf(UsuarioAutenticado.cpf());
         if (decisao.equals("LIBERAR")) {
             l.setSituacao(SituacaoLoteImunobiologico.DISPONIVEL);
+            l.setMotivoSuspeita(null);
         } else {
             LocalDateTime agora = LocalDateTime.now();
             for (FrascoAberto f : frascoRepository.findByLote_UuidAndEncerradoEmIsNullOrderByAbertoEmAsc(l.getUuid())) {

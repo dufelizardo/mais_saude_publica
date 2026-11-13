@@ -1,12 +1,15 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { catchError, of } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import {
   CamaraRefrigeracaoDto,
   EstoqueSalaVacinaDto,
   ImunobiologicoDto,
   LoteImunobiologicoDto,
   MOTIVOS_PERDA,
+  MOTIVOS_REMANEJAMENTO,
+  MOTIVOS_SUSPEITA,
+  MotivoRemanejamento,
   MotivoPerdaImunobiologico,
   MovimentacaoImunobiologicoDto,
   SITUACOES_LOTE,
@@ -15,10 +18,12 @@ import {
   prazoTexto,
 } from '../../../core/models/imunizacao';
 import { ErrorResponseDto } from '../../../core/models/profissional';
+import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
+import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { ImunizacaoService } from '../../../core/services/imunizacao';
 import { Drawer } from '../../../shared/drawer/drawer';
 
-type Gaveta = { tipo: 'entrada' } | { tipo: 'perda' | 'ajuste' | 'livro'; lote: LoteImunobiologicoDto } | null;
+type Gaveta = { tipo: 'entrada' } | { tipo: 'perda' | 'ajuste' | 'livro' | 'remanejar'; lote: LoteImunobiologicoDto } | null;
 
 /**
  * Estoque da sala de vacina (ADR-0148): o saldo aplicável por vacina, os lotes com a validade e a situação, os frascos
@@ -67,10 +72,11 @@ type Gaveta = { tipo: 'entrada' } | { tipo: 'perda' | 'ajuste' | 'livro'; lote: 
                       @if (l.vencido) { <span class="tag tag--alert">Vencido</span> } @else if (l.venceEm30Dias) { <span class="tag tag--warn">Vence em 30 dias</span> }</td>
                     <td class="mono">{{ l.doses }}</td>
                     <td>{{ l.camaraNome ?? '—' }}</td>
-                    <td><span class="tag tag--{{ situacoes[l.situacao].classe }}">{{ situacoes[l.situacao].rotulo }}</span></td>
+                    <td><span class="tag tag--{{ situacoes[l.situacao].classe }}">{{ situacoes[l.situacao].rotulo }}</span>@if (l.situacao === 'SOB_SUSPEITA' && l.motivoSuspeita) { <span class="cell-sub">{{ l.suspensoNaRede ? 'Suspenso na rede (ESAVI)' : suspeitas[l.motivoSuspeita] }}</span> }</td>
                     <td class="est-acoes">
                       <button type="button" class="link-btn" (click)="abrir({ tipo: 'perda', lote: l })" [attr.aria-label]="'Perda do lote ' + l.numeroLote">Perda</button>
                       <button type="button" class="link-btn" (click)="abrir({ tipo: 'ajuste', lote: l })" [attr.aria-label]="'Ajuste do lote ' + l.numeroLote">Ajuste</button>
+                      @if (l.aplicavel) { <button type="button" class="link-btn" (click)="abrir({ tipo: 'remanejar', lote: l })" [attr.aria-label]="'Remanejar o lote ' + l.numeroLote">Remanejar</button> }
                       <button type="button" class="link-btn" (click)="abrir({ tipo: 'livro', lote: l })" [attr.aria-label]="'Livro do lote ' + l.numeroLote">Livro</button>
                     </td>
                   </tr>
@@ -148,6 +154,26 @@ type Gaveta = { tipo: 'entrada' } | { tipo: 'perda' | 'ajuste' | 'livro'; lote: 
               <dl class="ro"><div><dt>Lote</dt><dd>{{ g.lote.sigla }} · {{ g.lote.numeroLote }}</dd></div><div><dt>Saldo no sistema</dt><dd>{{ g.lote.doses }} doses</dd></div></dl>
               <div class="dw-field"><label for="f-aj-saldo">Saldo contado <span class="req" aria-hidden="true">*</span></label><input id="f-aj-saldo" type="number" min="0" [value]="quantidade()" (input)="quantidade.set($any($event.target).value)" /></div>
               <div class="dw-field"><label for="f-aj-just">Justificativa <span class="req" aria-hidden="true">*</span></label><textarea id="f-aj-just" rows="2" maxlength="500" [value]="justificativa()" (input)="justificativa.set($any($event.target).value)"></textarea></div>
+            } @else if (g.tipo === 'remanejar') {
+              <dl class="ro"><div><dt>Lote</dt><dd>{{ g.lote.sigla }} · {{ g.lote.numeroLote }} ({{ g.lote.doses }} doses, validade {{ data(g.lote.validade) }})</dd></div></dl>
+              <div class="dw-field">
+                <label for="f-rem-destino">Sala de vacina de destino <span class="req" aria-hidden="true">*</span></label>
+                <select id="f-rem-destino" [value]="destinoId()" (change)="destinoId.set($any($event.target).value)">
+                  <option value="">Escolha…</option>
+                  @for (u of outrasUnidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
+                </select>
+              </div>
+              <div class="dw-row">
+                <div class="dw-field"><label for="f-rem-doses">Doses <span class="req" aria-hidden="true">*</span></label><input id="f-rem-doses" type="number" min="1" [value]="quantidade()" (input)="quantidade.set($any($event.target).value)" /></div>
+                <div class="dw-field">
+                  <label for="f-rem-motivo">Motivo <span class="req" aria-hidden="true">*</span></label>
+                  <select id="f-rem-motivo" [value]="motivoRemanejamento()" (change)="motivoRemanejamento.set($any($event.target).value)">
+                    @for (m of motivosRemanejamentoLista; track m) { <option [value]="m">{{ motivosRemanejamento[m] }}</option> }
+                  </select>
+                </div>
+              </div>
+              <div class="dw-field"><label for="f-rem-obs">Observação@if (motivoRemanejamento() !== 'OUTRO') { <span class="opt">opcional</span> }</label><textarea id="f-rem-obs" rows="2" maxlength="500" [value]="justificativa()" (input)="justificativa.set($any($event.target).value)"></textarea></div>
+              <p class="dw-hint">As doses saem do estoque agora e ficam em trânsito até o destino receber, com a temperatura da caixa, ou recusar.</p>
             } @else {
               <div class="tbl-wrap est-tabela">
                 <table aria-label="Livro do lote">
@@ -185,6 +211,7 @@ type Gaveta = { tipo: 'entrada' } | { tipo: 'perda' | 'ajuste' | 'livro'; lote: 
 })
 export class EstoqueSalaVacina {
   private readonly service = inject(ImunizacaoService);
+  private readonly unidadeService = inject(UnidadeSaudeService);
 
   readonly unidadeId = input.required<string>();
   /** Muda quando uma dose é registrada fora daqui: recarrega. */
@@ -194,6 +221,13 @@ export class EstoqueSalaVacina {
   protected readonly tipos = TIPOS_MOVIMENTACAO;
   protected readonly motivos = MOTIVOS_PERDA;
   protected readonly motivosLista = Object.keys(MOTIVOS_PERDA) as MotivoPerdaImunobiologico[];
+  protected readonly suspeitas = MOTIVOS_SUSPEITA;
+  protected readonly motivosRemanejamento = MOTIVOS_REMANEJAMENTO;
+  protected readonly motivosRemanejamentoLista = Object.keys(MOTIVOS_REMANEJAMENTO) as MotivoRemanejamento[];
+  protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
+  protected readonly destinoId = signal('');
+  protected readonly motivoRemanejamento = signal<MotivoRemanejamento>('EXCESSO');
+  protected readonly outrasUnidades = computed(() => this.unidades().filter((u) => u.uuid !== this.unidadeId()));
 
   protected readonly estoque = signal<EstoqueSalaVacinaDto | null>(null);
   protected readonly camaras = signal<CamaraRefrigeracaoDto[]>([]);
@@ -216,6 +250,7 @@ export class EstoqueSalaVacina {
 
   constructor() {
     this.service.imunobiologicos().pipe(catchError(() => of([]))).subscribe((l) => this.imunos.set(l));
+    this.unidadeService.listar().pipe(catchError(() => of([]))).subscribe((l) => this.unidades.set(l));
     effect(() => {
       const u = this.unidadeId();
       this.versao();
@@ -237,7 +272,8 @@ export class EstoqueSalaVacina {
   }
 
   protected titulo(g: NonNullable<Gaveta>): string {
-    return g.tipo === 'entrada' ? 'Entrada de lote' : g.tipo === 'perda' ? 'Registrar perda' : g.tipo === 'ajuste' ? 'Ajuste de inventário' : `Livro do lote ${g.lote.numeroLote}`;
+    return g.tipo === 'entrada' ? 'Entrada de lote' : g.tipo === 'perda' ? 'Registrar perda' : g.tipo === 'ajuste' ? 'Ajuste de inventário'
+      : g.tipo === 'remanejar' ? 'Remanejar para outra sala' : `Livro do lote ${g.lote.numeroLote}`;
   }
 
   protected abrir(g: NonNullable<Gaveta>): void {
@@ -249,6 +285,8 @@ export class EstoqueSalaVacina {
     this.camaraId.set('');
     this.motivo.set('QUEBRA');
     this.justificativa.set('');
+    this.destinoId.set('');
+    this.motivoRemanejamento.set('EXCESSO');
     this.quantidade.set(g.tipo === 'ajuste' ? String(g.lote.doses) : '');
     this.livro.set([]);
     if (g.tipo === 'livro') {
@@ -259,7 +297,7 @@ export class EstoqueSalaVacina {
 
   protected salvar(g: NonNullable<Gaveta>): void {
     const n = Number(this.quantidade());
-    let chamada;
+    let chamada: Observable<unknown>;
     if (g.tipo === 'entrada') {
       if (!this.imunoId() || !this.numero().trim() || !this.validade() || !(n > 0)) {
         this.erroGaveta.set('Preencha a vacina, o lote, a validade e as doses.');
@@ -286,6 +324,13 @@ export class EstoqueSalaVacina {
         return;
       }
       chamada = this.service.ajuste(g.lote.uuid, n, this.justificativa().trim());
+    } else if (g.tipo === 'remanejar') {
+      if (!this.destinoId() || !(n > 0) || (this.motivoRemanejamento() === 'OUTRO' && !this.justificativa().trim())) {
+        this.erroGaveta.set('Informe o destino, as doses e o motivo (no "outro", a observação).');
+        return;
+      }
+      chamada = this.service.remanejar({ loteId: g.lote.uuid, unidadeDestinoId: this.destinoId(), doses: n, motivo: this.motivoRemanejamento(),
+        observacao: this.justificativa().trim() || null });
     } else {
       return;
     }
