@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PrioridadeRegulacao } from '../models/regulacao';
@@ -12,6 +12,10 @@ import {
   RegulacaoUrgenciaRequestDto,
   SituacaoOcorrenciaUrgencia,
   TipoEventoUrgencia,
+  AtendimentoAphDto,
+  FichaAphDto,
+  FichaAphRequestDto,
+  RegistroAphRequestDto,
 } from '../models/urgencia';
 
 /** Regulação de urgência (ADR-0176): central do 192, regulação médica, deslocamentos e recebimento no destino. */
@@ -83,5 +87,27 @@ export class UrgenciaService {
 
   acionarSamu(criseId: string, dto: { centralId: string; motivo: string; endereco?: string | null; telefone?: string | null }): Observable<OcorrenciaUrgenciaDto> {
     return this.http.post<OcorrenciaUrgenciaDto>(`/api/v1/saude-mental/crise/${criseId}/acionamento-samu`, dto);
+  }
+
+  // ── Ficha do APH (ADR-0188) ──
+
+  atendimentosAph(centralId?: string | null): Observable<AtendimentoAphDto[]> {
+    return this.http.get<AtendimentoAphDto[]>('/api/v1/aph/atendimentos', { params: centralId ? { centralId } : {} });
+  }
+
+  fichaAph(ocorrenciaId: string): Observable<FichaAphDto> {
+    return this.http.get<FichaAphDto>(`/api/v1/aph/ocorrencia/${ocorrenciaId}/ficha`);
+  }
+
+  salvarFichaAph(ocorrenciaId: string, dto: FichaAphRequestDto): Observable<FichaAphDto> {
+    return this.http.put<FichaAphDto>(`/api/v1/aph/ocorrencia/${ocorrenciaId}/ficha`, dto);
+  }
+
+  registroAph(fichaId: string, rota: 'sinais-vitais' | 'medicamentos' | 'finalizacao' | 'adendo', dto: RegistroAphRequestDto): Observable<FichaAphDto> {
+    return this.http.post<FichaAphDto>(`/api/v1/aph/ficha/${fichaId}/${rota}`, dto);
+  }
+
+  baixarFichaAph(fichaId: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`/api/v1/aph/ficha/${fichaId}/ficha.pdf`, { observe: 'response', responseType: 'blob' });
   }
 }

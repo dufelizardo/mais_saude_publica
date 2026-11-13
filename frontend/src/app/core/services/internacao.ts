@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
@@ -9,6 +9,24 @@ import {
   LeitoRequestDto,
   StatusInternacao,
   TipoAlta,
+  AdmissaoRegulacaoLeitoRequestDto,
+  ReservaLeitoRequestDto,
+  SolicitacaoLeitoDto,
+  SolicitacaoLeitoRequestDto,
+  VagaLeitoDto,
+  AgendamentoInternacaoRequestDto,
+  CensoDiarioDto,
+  EletivaLeitoRequestDto,
+  InternacaoAgendadaDto,
+  PendenciaCensoDto,
+  FaixaAihDto,
+  LaudoAihDto,
+  LaudoAihRequestDto,
+  PendenciaAihDto,
+  AcaoPrescricaoRequestDto,
+  HorarioDoPostoDto,
+  PrescricaoHospitalarDto,
+  PrescricaoHospitalarRequestDto,
 } from '../models/internacao';
 
 /** Leitos e internação (ADR-0098): mapa, indicadores, cadastro de leito, internação, troca de leito e alta. */
@@ -89,5 +107,154 @@ export class InternacaoService {
 
   darAlta(uuid: string, dto: { tipoAlta: TipoAlta; sumario: string; medicoMatricula: string; altaEm?: string }): Observable<InternacaoResponseDto> {
     return this.http.post<InternacaoResponseDto>(`${this.internacaoUrl}/${uuid}/alta`, dto);
+  }
+
+  // ── Prescrição hospitalar (ADR-0187) ──
+
+  prescrever(dto: PrescricaoHospitalarRequestDto): Observable<PrescricaoHospitalarDto> {
+    return this.http.post<PrescricaoHospitalarDto>('/api/v1/prescricao-hospitalar/', dto);
+  }
+
+  renovarPrescricao(uuid: string, dto: PrescricaoHospitalarRequestDto): Observable<PrescricaoHospitalarDto> {
+    return this.http.post<PrescricaoHospitalarDto>(`/api/v1/prescricao-hospitalar/${uuid}/renovacao`, dto);
+  }
+
+  prescricoes(internacaoId: string): Observable<PrescricaoHospitalarDto[]> {
+    return this.http.get<PrescricaoHospitalarDto[]>('/api/v1/prescricao-hospitalar/', { params: { internacaoId } });
+  }
+
+  postoDeEnfermagem(filtro: { unidadeId?: string; setorId?: string }): Observable<HorarioDoPostoDto[]> {
+    let params = new HttpParams();
+    if (filtro.unidadeId) params = params.set('unidadeId', filtro.unidadeId);
+    if (filtro.setorId) params = params.set('setorId', filtro.setorId);
+    return this.http.get<HorarioDoPostoDto[]>('/api/v1/prescricao-hospitalar/posto', { params });
+  }
+
+  acaoPrescricao(rota: string, dto: AcaoPrescricaoRequestDto): Observable<PrescricaoHospitalarDto> {
+    return this.http.post<PrescricaoHospitalarDto>(`/api/v1/prescricao-hospitalar/${rota}`, dto);
+  }
+
+  // ── Laudo de AIH (ADR-0186) ──
+
+  solicitarAih(dto: LaudoAihRequestDto): Observable<LaudoAihDto> {
+    return this.http.post<LaudoAihDto>('/api/v1/laudo-aih/', dto);
+  }
+
+  corrigirAih(uuid: string, dto: LaudoAihRequestDto): Observable<LaudoAihDto> {
+    return this.http.put<LaudoAihDto>(`/api/v1/laudo-aih/${uuid}`, dto);
+  }
+
+  laudosAih(filtro: { internacaoId?: string; agendamentoId?: string }): Observable<LaudoAihDto[]> {
+    let params = new HttpParams();
+    if (filtro.internacaoId) params = params.set('internacaoId', filtro.internacaoId);
+    if (filtro.agendamentoId) params = params.set('agendamentoId', filtro.agendamentoId);
+    return this.http.get<LaudoAihDto[]>('/api/v1/laudo-aih/', { params });
+  }
+
+  laudoAih(uuid: string): Observable<LaudoAihDto> {
+    return this.http.get<LaudoAihDto>(`/api/v1/laudo-aih/${uuid}`);
+  }
+
+  filaAih(): Observable<LaudoAihDto[]> {
+    return this.http.get<LaudoAihDto[]>('/api/v1/laudo-aih/fila');
+  }
+
+  pendenciasAih(): Observable<PendenciaAihDto[]> {
+    return this.http.get<PendenciaAihDto[]>('/api/v1/laudo-aih/pendencias');
+  }
+
+  decidirAih(uuid: string, acao: 'autorizacao' | 'devolucao' | 'negacao' | 'cancelamento', dto: { profissionalMatricula: string; motivo?: string }): Observable<LaudoAihDto> {
+    return this.http.post<LaudoAihDto>(`/api/v1/laudo-aih/${uuid}/${acao}`, dto);
+  }
+
+  baixarLaudoAih(uuid: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(`/api/v1/laudo-aih/${uuid}/laudo.pdf`, { observe: 'response', responseType: 'blob' });
+  }
+
+  faixasAih(): Observable<FaixaAihDto[]> {
+    return this.http.get<FaixaAihDto[]>('/api/v1/laudo-aih/faixas');
+  }
+
+  cadastrarFaixaAih(dto: { ano: number; inicio: number; fim: number }): Observable<FaixaAihDto> {
+    return this.http.post<FaixaAihDto>('/api/v1/laudo-aih/faixas', dto);
+  }
+
+  // ── Internação eletiva e censo diário (ADR-0185) ──
+
+  agendarEletiva(dto: AgendamentoInternacaoRequestDto): Observable<InternacaoAgendadaDto> {
+    return this.http.post<InternacaoAgendadaDto>('/api/v1/internacao-eletiva/', dto);
+  }
+
+  agendaEletivas(unidadeId?: string, de?: string, ate?: string): Observable<InternacaoAgendadaDto[]> {
+    let params = new HttpParams();
+    if (unidadeId) params = params.set('unidadeId', unidadeId);
+    if (de) params = params.set('de', de);
+    if (ate) params = params.set('ate', ate);
+    return this.http.get<InternacaoAgendadaDto[]>('/api/v1/internacao-eletiva/', { params });
+  }
+
+  acaoEletiva(uuid: string, acao: 'reserva' | 'admissao' | 'falta' | 'remarcacao' | 'cancelamento', dto: EletivaLeitoRequestDto): Observable<InternacaoAgendadaDto> {
+    return this.http.post<InternacaoAgendadaDto>(`/api/v1/internacao-eletiva/${uuid}/${acao}`, dto);
+  }
+
+  censoDoDia(unidadeId: string, data: string): Observable<CensoDiarioDto> {
+    return this.http.get<CensoDiarioDto>('/api/v1/censo-diario/', { params: { unidadeId, data } });
+  }
+
+  pendenciasDoCenso(unidadeId?: string): Observable<PendenciaCensoDto[]> {
+    const params = unidadeId ? new HttpParams().set('unidadeId', unidadeId) : undefined;
+    return this.http.get<PendenciaCensoDto[]>('/api/v1/censo-diario/pendencias', { params });
+  }
+
+  fecharCenso(unidadeId: string, data: string): Observable<CensoDiarioDto> {
+    return this.http.post<CensoDiarioDto>('/api/v1/censo-diario/fechamento', { unidadeId, data });
+  }
+
+  reabrirCenso(unidadeId: string, data: string, motivo: string): Observable<CensoDiarioDto> {
+    return this.http.post<CensoDiarioDto>('/api/v1/censo-diario/reabertura', { unidadeId, data, motivo });
+  }
+
+  // ── Central de regulação de leitos (ADR-0184) ──
+
+  private readonly regulacaoUrl = '/api/v1/regulacao-leito';
+
+  pedirLeito(dto: SolicitacaoLeitoRequestDto): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/`, dto);
+  }
+
+  filaDeLeitos(): Observable<SolicitacaoLeitoDto[]> {
+    return this.http.get<SolicitacaoLeitoDto[]>(`${this.regulacaoUrl}/fila`);
+  }
+
+  aReceber(): Observable<SolicitacaoLeitoDto[]> {
+    return this.http.get<SolicitacaoLeitoDto[]>(`${this.regulacaoUrl}/a-receber`);
+  }
+
+  pedidoDeLeito(uuid: string): Observable<SolicitacaoLeitoDto> {
+    return this.http.get<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}`);
+  }
+
+  vagasCompativeis(uuid: string): Observable<VagaLeitoDto[]> {
+    return this.http.get<VagaLeitoDto[]>(`${this.regulacaoUrl}/${uuid}/vagas`);
+  }
+
+  reservarLeito(uuid: string, dto: ReservaLeitoRequestDto): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/reserva`, dto);
+  }
+
+  negarPedidoDeLeito(uuid: string, profissionalMatricula: string, motivo: string): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/negacao`, { profissionalMatricula, motivo });
+  }
+
+  cancelarPedidoDeLeito(uuid: string, profissionalMatricula: string, motivo: string): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/cancelamento`, { profissionalMatricula, motivo });
+  }
+
+  admitirRegulado(uuid: string, dto: AdmissaoRegulacaoLeitoRequestDto): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/admissao`, dto);
+  }
+
+  recusarNoDestino(uuid: string, profissionalMatricula: string, motivo: string): Observable<SolicitacaoLeitoDto> {
+    return this.http.post<SolicitacaoLeitoDto>(`${this.regulacaoUrl}/${uuid}/recusa`, { profissionalMatricula, motivo });
   }
 }

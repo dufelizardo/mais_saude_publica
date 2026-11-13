@@ -92,6 +92,7 @@ public class EmergenciaService {
     @Autowired private AtivacaoPlanoService ativacao;
     @Autowired private CoordenacaoEmergenciaService coordenacao;
     @Autowired private com.edufelizardo.maissaudepublica.repositories.DesmobilizacaoRepository desmobilizacaoRepository;
+    @Autowired private PessoasEmergenciaService pessoas;
     @Autowired private EventoEspecializadoService especializado;
 
     // ── Catálogos ──────────────────────────────────────────────────────────────────────────────────
@@ -436,6 +437,7 @@ public class EmergenciaService {
         int capacidades = coordenacao.desativarCapacidades(em, justificativa);
         int planos = ativacao.desativarTodas(em, justificativa);
         int estruturas = especializado.desativarTodas(em, justificativa);
+        coordenacao.liberarReservas(em, justificativa);
         return new int[]{mob[0], mob[1], capacidades, planos, estruturas};
     }
 
@@ -820,6 +822,8 @@ public class EmergenciaService {
         d.setAgravoId(agravo != null ? agravo.getUuid() : null);
         d.setAgravoNome(agravo != null ? agravo.getNome() : null);
         d.setExposicoes(especializado.exposicoes(em));
+        d.setAbrigos(pessoas.abrigos(em));
+        d.setDeslocadosEmAberto(d.getAbrigos().stream().mapToInt(com.edufelizardo.maissaudepublica.models.dtos.version1.response.PessoasEmergenciaDtos.Abrigo::pessoas).sum());
         return d;
     }
 
@@ -831,8 +835,8 @@ public class EmergenciaService {
                 n.getUuid(), n.getOrdem(), n.getNome(), em.getSituacao(), em.getInicio(), em.getFim(), em.getMotivoEncerramento(),
                 r != null ? r.getMatricula() : null, r != null ? r.getNome() : null, ultima != null ? ultima.getNivelImpacto() : null,
                 ultima != null ? ultima.getAvaliadaEm() : null, null, List.of(), em.getEspinNumero(), em.getEspinData(), em.getDecretoTipo(),
-                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of(), List.of(), 0, List.of(), List.of(), List.of(), null, List.of(),
-                t.getPerfil(), null, List.of(), null, null, List.of());
+                em.getDecretoNumero(), em.getDecretoData(), List.of(), List.of(), List.of(), List.of(), 0, List.of(), List.of(), List.of(), null, null, null, List.of(),
+                t.getPerfil(), null, List.of(), null, null, List.of(), List.of(), 0);
     }
 
     private static EventoEmergencialDto dto(EventoEmergencial e, UUID emergenciaId) {

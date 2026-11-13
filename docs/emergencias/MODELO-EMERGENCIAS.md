@@ -6,7 +6,9 @@ E3 (coordenação), E5 (desmobilização e relatório) e E6 (eventos especializa
 [ADR-0156](../adr/0156-emergencias-nucleo.md), [ADR-0157](../adr/0157-emergencias-contingencia.md),
 [ADR-0158](../adr/0158-emergencias-coordenacao.md), [ADR-0159](../adr/0159-emergencias-desmobilizacao-e-relatorio.md),
 [ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md) e
-[ADR-0161](../adr/0161-emergencias-epidemia-e-exposicao-ambiental.md); falta a E4 (seção 17).
+[ADR-0161](../adr/0161-emergencias-epidemia-e-exposicao-ambiental.md); a E4a (vulneráveis, deslocados e abrigos) na
+[ADR-0193](../adr/0193-emergencias-vulneraveis-e-deslocados.md) e a E4b (onde tem, compromissos e Regulação) na
+[ADR-0194](../adr/0194-emergencias-redistribuicao-e-regulacao.md): o domínio está completo.
 
 O domínio é uma **camada de coordenação extraordinária**, ativada quando um evento ultrapassa a operação normal da
 rede. Não substitui Vigilância, Regulação, Estoque, Transporte nem a capacidade da rede.
@@ -188,8 +190,8 @@ Mobilizacao
 |---|---|---|
 | Profissional (médico, enfermeiro, técnico, ACS, motorista, administrativo) | Escala (ADR-0105) | a mobilização **autoriza turnos fora da lotação** na unidade de destino enquanto a emergência estiver ativa: uma exceção controlada à regra da Escala, sem lotação falsa; os alertas de jornada e de descanso continuam valendo |
 | Medicamento | Farmácia (ADR-0059) | vira transferência entre unidades, com recebimento |
-| Insumos, EPI, kits | Estoque (13), quando existir | até lá, a mobilização registra a necessidade |
-| Veículos, ambulâncias | Transporte (16), quando existir | até lá, registra a necessidade |
+| Insumos, EPI, kits | Estoque (13), [ADR-0191](../adr/0191-estoque-nas-emergencias.md) | a requisição urgente à central ou a transferência ligada; a reserva e o consumo extraordinário |
+| Veículos, ambulâncias | Transporte (16), [ADR-0192](../adr/0192-transporte-nas-emergencias.md) | a frota cede o veículo, que fica em serviço até a devolução |
 | Leito extra | Leitos (ADR-0098) | ativação do leito marcado como extra |
 | Unidade afetada | Organização (ADR-0101) | **situação operacional** (inoperante, em obra), que já fecha a agenda; sem estado novo |
 
@@ -219,6 +221,12 @@ coordenação.
 - **Pacientes deslocados:** registram o paciente, a origem, o destino (unidade, abrigo, domicílio de parente) e a
   situação.
 - **Abrigo não é domínio:** é um local de destino.
+- **Feito na E4a** ([ADR-0193](../adr/0193-emergencias-vulneraveis-e-deslocados.md)):
+  - **vulneráveis** calculados: membros dos domicílios nas microáreas afetadas ou dentro do polígono, com os marcadores idoso,
+    criança, gestante, programa não sensível, diálise ou terapia seriada e oxigênio (do transporte); CSV para a busca ativa;
+  - **deslocado** com origem, destino (unidade, abrigo da rede intersetorial ou nome do local, casa de parente, outro), realocação
+    que guarda o caminho, retorno e encerramento; transporte da T2 e encaminhamento intersetorial;
+  - **ocupação dos destinos** sem nomes, pendência na desmobilização, números no relatório e aviso no prontuário.
 
 ## 12. Desmobilização e relatório pós-evento
 
@@ -322,7 +330,8 @@ EVENTO → DETECÇÃO E REGISTRO → AVALIAÇÃO PRELIMINAR ─┬─ NORMAL ─
 | **E1** · núcleo ✅ ([ADR-0156](../adr/0156-emergencias-nucleo.md)) | evento, emergência, tipo (COBRADE), nível, situação, avaliação de impacto, território afetado | Território (opcional) |
 | **E2** · contingência ✅ ([ADR-0157](../adr/0157-emergencias-contingencia.md)) | plano versionado, critérios, ações previstas, ativação com histórico | E1 |
 | **E3** · mobilização ✅ ([ADR-0158](../adr/0158-emergencias-coordenacao.md)) | mobilização (com a exceção da Escala), capacidade emergencial, ações, unidade afetada pela situação operacional | E2 |
-| **E4** · integração da rede | redistribuição pela Farmácia, Regulação, vulneráveis por Território e Programas, pacientes deslocados; Estoque e Transporte quando existirem | E3 |
+| **E4a** · vulneráveis, deslocados e abrigos ✅ ([ADR-0193](../adr/0193-emergencias-vulneraveis-e-deslocados.md)) | vulneráveis por Território, Programas e Transporte; pacientes deslocados, abrigos e encaminhamento intersetorial | E3 |
+| **E4b** · redistribuição e Regulação ✅ ([ADR-0194](../adr/0194-emergencias-redistribuicao-e-regulacao.md)) | onde tem na rede (Farmácia e Estoque), compromissos nas unidades afetadas, prioridade da emergência na Regulação (Estoque e Transporte já atendem a mobilização: ADRs 0191 e 0192) | E4a |
 | **E5** · pós-evento ✅ ([ADR-0159](../adr/0159-emergencias-desmobilizacao-e-relatorio.md)) | desmobilização, relatório, lições, revisão do plano, indicadores | E3 |
 | **E6a** · evento de massa e estruturas ✅ ([ADR-0160](../adr/0160-emergencias-evento-de-massa-e-estruturas-temporarias.md)) | perfil do tipo, emergência planejada, dados do evento de massa, estruturas temporárias (hospital de campanha como capacidade) e boletins | E5 |
 | **E6b** · epidemia e desastre ambiental ✅ ([ADR-0161](../adr/0161-emergencias-epidemia-e-exposicao-ambiental.md)) | painel da epidemia a partir da Vigilância e exposição ambiental | E6a |

@@ -88,6 +88,33 @@ public class VacinacaoService {
     @Autowired private ContraindicacaoVacinalRepository contraindicacaoRepository;
     @Autowired private NotificacaoRepository notificacaoRepository;
 
+    public static final String REAVALIAR = "IMUNIZACAO.REAVALIAR";
+
+    // ── Revogação da contraindicação pelo CRIE (ADR-0206) ──────────────────────────────────────
+
+    /**
+     * O CRIE reavalia e revoga a contraindicação, com o parecer: a dose dessa vacina volta a entrar sem justificativa. A revogada fica
+     * no histórico da caderneta; revogar de novo é 422. Segue o vínculo assistencial do prontuário.
+     */
+    @Transactional
+    public CadernetaVacinacaoDto revogarContraindicacao(UUID contraindicacaoId, com.edufelizardo.maissaudepublica.models.dtos.version1.request.RevogacaoContraindicacaoRequestDto dto) {
+        controleDeAcesso.exigirAlguma(REAVALIAR);
+        ContraindicacaoVacinal c = contraindicacaoRepository.findById(contraindicacaoId).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar a contraindicação " + contraindicacaoId + " em nossos registros."));
+        UUID pacienteId = c.getPaciente().getUuid();
+        vinculoService.exigirVinculo(pacienteId);
+        if (!c.vigente()) {
+            throw new ResourceUnprocessableEntityException("A contraindicação já foi revogada em " + c.getRevogadaEm() + ".");
+        }
+        c.setRevogadaEm(java.time.Instant.now());
+        c.setRevogadaPorCpf(com.edufelizardo.maissaudepublica.config.UsuarioAutenticado.cpf());
+        c.setParecerRevogacao(dto.getParecer().trim());
+        contraindicacaoRepository.save(c);
+        ContextoAuditoria.registro(c.getUuid());
+        ContextoAuditoria.paciente(pacienteId);
+        return caderneta(pacienteId);
+    }
+
     // ── Registro ───────────────────────────────────────────────────────────────────────────────
 
     @Transactional
@@ -155,7 +182,8 @@ public class VacinacaoService {
         // As contraindicações por ESAVI e as doses já notificadas (ADR-0150).
         List<CadernetaVacinacaoDto.Contraindicacao> contraindicacoes = contraindicacaoRepository.findDoPaciente(pacienteId).stream()
                 .map(c -> new CadernetaVacinacaoDto.Contraindicacao(c.getImunobiologico().getUuid(), c.getImunobiologico().getSigla(),
-                        c.getImunobiologico().getNome(), c.getDesde(), c.getMotivo(), c.getNotificacao() != null ? c.getNotificacao().getUuid() : null))
+                        c.getImunobiologico().getNome(), c.getDesde(), c.getMotivo(), c.getNotificacao() != null ? c.getNotificacao().getUuid() : null,
+                        c.getUuid(), c.getRevogadaEm(), c.getParecerRevogacao()))
                 .toList();
         List<UUID> notificadas = doses.isEmpty() ? List.of()
                 : notificacaoRepository.findDosesNotificadas(doses.stream().map(RegistroVacinacao::getUuid).toList()).stream().distinct().toList();
@@ -323,6 +351,11 @@ public class VacinacaoService {
         if (aplicada && !sala && (dto.getLote() == null || dto.getLote().isBlank())) {
             throw new ResourceBadRequestException("Informe o lote da dose aplicada.");
         }
+        // O lote digitado de um lote suspenso na rede pelo alerta de ESAVI não se aplica (ADR-0206).
+        if (aplicada && !sala && estoqueService.suspensaoVigente(imuno.getUuid(), dto.getLote()).isPresent()) {
+            throw new ResourceUnprocessableEntityException("O lote " + dto.getLote().trim() + " de " + imuno.getSigla() + " está suspenso na rede "
+                    + "pelo alerta de ESAVI: não se aplica até a decisão da coordenação.");
+        }
         Campanha campanha = null;
         if (dto.getCampanhaId() != null) {
             campanha = campanhaRepository.findById(dto.getCampanhaId()).orElseThrow(() -> new ResourceNotFoundException(
@@ -357,7 +390,7 @@ public class VacinacaoService {
         String justificativa = dto.getJustificativa() == null || dto.getJustificativa().isBlank() ? null : dto.getJustificativa().trim();
         // A vacina contraindicada por ESAVI só entra com a justificativa: a decisão do CRIE (ADR-0150).
         Optional<ContraindicacaoVacinal> contraindicada = aplicada
-                ? contraindicacaoRepository.findByPaciente_UuidAndImunobiologico_Uuid(paciente.getUuid(), imuno.getUuid()) : Optional.empty();
+                ? contraindicacaoRepository.findByPaciente_UuidAndImunobiologico_UuidAndRevogadaEmIsNull(paciente.getUuid(), imuno.getUuid()) : Optional.empty();
         if (contraindicada.isPresent() && justificativa == null) {
             throw new ResourceUnprocessableEntityException(imuno.getSigla() + " está contraindicada para o paciente desde "
                     + contraindicada.get().getDesde() + " (ESAVI): informe a justificativa, a decisão do CRIE, para registrar.");

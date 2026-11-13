@@ -123,10 +123,10 @@ public class TransporteService {
         Veiculo v = travar(uuid);
         controleDeAcesso.exigir(GERENCIAR, v.getUnidade());
         if (dto.getSituacao() == SituacaoVeiculo.EM_SERVICO) {
-            throw new ResourceBadRequestException("Em serviço vem do empenho pelo SAMU, não se marca à mão.");
+            throw new ResourceBadRequestException("Em serviço vem do empenho pelo SAMU, da saída da viagem ou da cessão à emergência, não se marca à mão.");
         }
         if (v.getSituacao() == SituacaoVeiculo.EM_SERVICO) {
-            throw new ResourceUnprocessableEntityException("O veículo está em serviço numa ocorrência; espere o fim dela.");
+            throw new ResourceUnprocessableEntityException("O veículo está em serviço numa ocorrência, viagem ou emergência; espere o fim dela.");
         }
         if (v.getSituacao() == dto.getSituacao()) {
             throw new ResourceUnprocessableEntityException("O veículo já está " + dto.getSituacao() + ".");

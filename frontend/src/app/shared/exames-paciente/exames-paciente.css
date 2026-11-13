@@ -1,0 +1,22 @@
+/* Exames do paciente e a evolução do exame no tempo (ADR-0180). */
+.lab-acoes { display: inline-flex; gap: var(--s-2); justify-content: flex-end; flex-wrap: wrap; }
+.lab-valor--critico { color: var(--alert); font-weight: 600; }
+
+.evo { margin: 0 0 var(--s-4); }
+.evo__svg { width: 100%; height: auto; display: block; background: var(--white); border: 1px solid var(--ink-100); border-radius: var(--r-md); }
+.evo__grade { stroke: var(--ink-100); stroke-width: 1; }
+.evo__eixo { fill: var(--ink-500); font-size: 11px; font-family: inherit; }
+.evo__faixa { fill: var(--ok-bg); stroke: none; }
+.evo__linha { fill: none; stroke: var(--blue-700); stroke-width: 2; stroke-linejoin: round; }
+.evo__ponto { fill: var(--blue-700); stroke: var(--white); stroke-width: 2; }
+.evo__ponto--fora { fill: var(--warn); }
+.evo__ponto--critico { fill: var(--alert); }
+
+.evo__legenda { display: flex; flex-wrap: wrap; gap: var(--s-4); margin-top: var(--s-2); color: var(--ink-500); font-size: 0.75rem; }
+.evo__legenda > span { display: inline-flex; align-items: center; gap: var(--s-2); }
+.evo__amostra { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.evo__amostra--faixa { background: var(--ok-bg); border: 1px solid var(--ok); }
+.evo__amostra--fora { background: var(--warn); border-radius: 50%; }
+.evo__amostra--critico { background: var(--alert); border-radius: 50%; }
+
+.tbl-wrap .evo__tabela { min-width: 480px; }

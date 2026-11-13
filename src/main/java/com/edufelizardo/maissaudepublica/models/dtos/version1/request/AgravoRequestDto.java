@@ -57,4 +57,7 @@ public class AgravoRequestDto implements Serializable {
 
     /** Sem valor, ativo. */
     private Boolean ativo;
+
+    /** Relacionado ao trabalho (ADR-0207): a notificação pede o bloco do trabalho. Sem valor, não. */
+    private Boolean relacionadoAoTrabalho;
 }

@@ -21,6 +21,9 @@ import {
   RegistroVacinacaoDto,
   RegistroVacinacaoRequestDto,
   VacinacaoDoDiaDto,
+  AlertaLoteDto,
+  RemanejamentoDto,
+  SuspensaoLoteDto,
 } from '../models/imunizacao';
 
 /**
@@ -137,5 +140,47 @@ export class ImunizacaoService {
 
   leitura(camaraId: string, dto: LeituraTemperaturaRequestDto): Observable<LeituraTemperaturaDto> {
     return this.http.post<LeituraTemperaturaDto>(`${this.api}/camara-refrigeracao/${camaraId}/leitura`, dto);
+  }
+
+  // ── Remanejamento, lote na rede e CRIE (ADR-0206) ──
+
+  remanejamentos(unidadeId: string): Observable<RemanejamentoDto[]> {
+    return this.http.get<RemanejamentoDto[]>(`${this.api}/sala-de-vacina/remanejamentos`, { params: new HttpParams().set('unidadeId', unidadeId) });
+  }
+
+  remanejar(dto: { loteId: string; unidadeDestinoId: string; doses: number; motivo: string; observacao: string | null }): Observable<RemanejamentoDto> {
+    return this.http.post<RemanejamentoDto>(`${this.api}/sala-de-vacina/remanejamento`, dto);
+  }
+
+  receberRemanejamento(id: string, temperaturaChegada: number, camaraId: string | null): Observable<RemanejamentoDto> {
+    return this.http.post<RemanejamentoDto>(`${this.api}/remanejamento-imunobiologico/${id}/recebimento`, { temperaturaChegada, camaraId });
+  }
+
+  recusarRemanejamento(id: string, motivo: string): Observable<RemanejamentoDto> {
+    return this.http.post<RemanejamentoDto>(`${this.api}/remanejamento-imunobiologico/${id}/recusa`, { motivo });
+  }
+
+  cancelarRemanejamento(id: string): Observable<RemanejamentoDto> {
+    return this.http.post<RemanejamentoDto>(`${this.api}/remanejamento-imunobiologico/${id}/cancelamento`, {});
+  }
+
+  alertasLote(): Observable<AlertaLoteDto[]> {
+    return this.http.get<AlertaLoteDto[]>(`${this.api}/imunizacao/alertas-lote`);
+  }
+
+  suspensoesLote(): Observable<SuspensaoLoteDto[]> {
+    return this.http.get<SuspensaoLoteDto[]>(`${this.api}/imunizacao/suspensoes-lote`);
+  }
+
+  suspenderLote(dto: { imunobiologicoId: string; numeroLote: string; motivo: string }): Observable<SuspensaoLoteDto> {
+    return this.http.post<SuspensaoLoteDto>(`${this.api}/imunizacao/suspensao-lote`, dto);
+  }
+
+  decidirSuspensao(id: string, decisao: 'LIBERAR' | 'INUTILIZAR', parecer: string): Observable<SuspensaoLoteDto> {
+    return this.http.post<SuspensaoLoteDto>(`${this.api}/imunizacao/suspensao-lote/${id}/decisao`, { decisao, parecer });
+  }
+
+  revogarContraindicacao(id: string, parecer: string): Observable<CadernetaVacinacaoDto> {
+    return this.http.post<CadernetaVacinacaoDto>(`${this.api}/contraindicacao-vacinal/${id}/revogacao`, { parecer });
   }
 }

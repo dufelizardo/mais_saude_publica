@@ -29,3 +29,4 @@
   .laudo { box-shadow: none; border-radius: 0; padding: 0; max-width: none; }
   @page { size: A4; margin: 16mm; }
 }
+.laudo__achados { white-space: pre-line; }

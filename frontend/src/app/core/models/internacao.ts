@@ -11,7 +11,12 @@ export type TipoLeito =
   | 'OBSERVACAO'
   | 'ISOLAMENTO';
 export type SexoLeito = 'MASCULINO' | 'FEMININO' | 'MISTO';
-export type SituacaoLeito = 'LIVRE' | 'OCUPADO' | 'HIGIENIZACAO' | 'BLOQUEADO';
+export type SituacaoLeito = 'LIVRE' | 'OCUPADO' | 'HIGIENIZACAO' | 'BLOQUEADO' | 'RESERVADO';
+/** Central de regulação de leitos (ADR-0184). */
+export type FaixaEtariaLeito = 'ADULTO' | 'PEDIATRICO' | 'NEONATAL';
+export type PrioridadeLeito = 'VERMELHO' | 'AMARELO' | 'VERDE' | 'AZUL';
+export type StatusSolicitacaoLeito = 'SOLICITADA' | 'RESERVADA' | 'ADMITIDA' | 'NEGADA' | 'CANCELADA';
+export type TipoEventoSolicitacaoLeito = 'SOLICITACAO' | 'RESERVA' | 'VAGA_ZERO' | 'EXPIRACAO' | 'RECUSA_DESTINO' | 'NEGACAO' | 'CANCELAMENTO' | 'ADMISSAO';
 export type CaraterInternacao = 'ELETIVA' | 'URGENCIA';
 export type StatusInternacao = 'INTERNADO' | 'ALTA';
 export type TipoAlta = 'MELHORADO' | 'A_PEDIDO' | 'TRANSFERENCIA' | 'EVASAO' | 'OBITO';
@@ -24,6 +29,7 @@ export interface LeitoRequestDto {
   tipo: TipoLeito;
   sexo: SexoLeito;
   ativo?: boolean;
+  faixaEtaria?: FaixaEtariaLeito;
 }
 
 export interface LeitoMapaDto {
@@ -45,6 +51,9 @@ export interface LeitoMapaDto {
   diasInternado?: number | null;
   previsaoAlta?: string | null;
   medicoResponsavelNome?: string | null;
+  faixaEtaria: FaixaEtariaLeito;
+  reservadoAte?: string | null;
+  reservaSolicitacaoId?: string | null;
 }
 
 export interface IndicadoresLeitosDto {
@@ -67,7 +76,488 @@ export interface InternacaoRequestDto {
   motivo: string;
   carater: CaraterInternacao;
   previsaoAlta?: string;
+  /** Leito de outra faixa etária: só com justificativa (ADR-0184). */
+  justificativaFaixaEtaria?: string;
 }
+
+export interface SolicitacaoLeitoRequestDto {
+  pacienteId: string;
+  unidadeOrigemId: string;
+  atendimentoId?: string;
+  internacaoOrigemId?: string;
+  profissionalMatricula: string;
+  cid: string;
+  quadroClinico: string;
+  tipoLeito: TipoLeito;
+  prioridade: PrioridadeLeito;
+}
+
+export interface EventoSolicitacaoLeitoDto {
+  tipo: TipoEventoSolicitacaoLeito;
+  texto?: string | null;
+  profissionalNome?: string | null;
+  ocorridoEm: string;
+}
+
+export interface SolicitacaoLeitoDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeOrigemId: string;
+  unidadeOrigemNome: string;
+  internacaoOrigemId?: string | null;
+  atendimentoId?: string | null;
+  ocorrenciaUrgenciaId?: string | null;
+  solicitadoPorMatricula: string;
+  solicitadoPorNome: string;
+  cid: string;
+  quadroClinico: string;
+  tipoLeito: TipoLeito;
+  prioridade: PrioridadeLeito;
+  status: StatusSolicitacaoLeito;
+  solicitadaEm: string;
+  posicaoNaFila?: number | null;
+  leitoReservadoId?: string | null;
+  leitoReservadoIdentificacao?: string | null;
+  unidadeDestinoId?: string | null;
+  unidadeDestinoNome?: string | null;
+  reservadoAte?: string | null;
+  vagaZero: boolean;
+  justificativaVagaZero?: string | null;
+  transporte?: string | null;
+  motivoEncerramento?: string | null;
+  internacaoDestinoId?: string | null;
+  eventos: EventoSolicitacaoLeitoDto[];
+}
+
+export interface VagaLeitoDto {
+  leitoId: string;
+  identificacao: string;
+  unidadeId: string;
+  unidadeNome: string;
+  setorNome: string;
+  tipo: TipoLeito;
+  sexo: SexoLeito;
+  faixaEtaria: FaixaEtariaLeito;
+}
+
+export interface ReservaLeitoRequestDto {
+  profissionalMatricula: string;
+  leitoId?: string;
+  unidadeDestinoId?: string;
+  justificativaVagaZero?: string;
+  horas?: number;
+  transporte?: string;
+}
+
+export interface AdmissaoRegulacaoLeitoRequestDto {
+  medicoMatricula: string;
+  leitoId?: string;
+  previsaoAlta?: string;
+  justificativaFaixaEtaria?: string;
+}
+
+/** Prescrição hospitalar, aprazamento e checagem (ADR-0187). */
+export type TipoItemPrescricao = 'MEDICAMENTO' | 'DIETA' | 'CUIDADO';
+export type TipoDieta = 'ZERO' | 'LIVRE' | 'BRANDA' | 'PASTOSA' | 'LIQUIDA' | 'LIQUIDA_PASTOSA' | 'HIPOSSODICA' | 'PARA_DIABETICO' | 'ENTERAL' | 'PARENTERAL';
+export type ViaAdministracaoHosp = 'ORAL' | 'SUBLINGUAL' | 'INTRAMUSCULAR' | 'INTRAVENOSA' | 'SUBCUTANEA' | 'TOPICA' | 'INALATORIA' | 'RETAL' | 'OUTRA';
+export type SituacaoHorarioPrescricao = 'PENDENTE' | 'FEITO' | 'NAO_FEITO' | 'CANCELADO';
+export type ResultadoChecagem = 'FEITO' | 'NAO_FEITO';
+export type AceitacaoDieta = 'TOTAL' | 'PARCIAL' | 'RECUSOU';
+export type MotivoNaoAdministracaoHosp = 'RECUSA_DO_PACIENTE' | 'PACIENTE_AUSENTE' | 'MEDICAMENTO_EM_FALTA' | 'SUSPENSO_PELO_MEDICO' | 'OUTRO';
+
+export interface ItemPrescricaoRequestDto {
+  tipo: TipoItemPrescricao;
+  medicamentoId?: string;
+  dose?: string;
+  via?: ViaAdministracaoHosp;
+  tipoDieta?: TipoDieta;
+  descricao?: string;
+  intervaloHoras?: number | null;
+  primeiroHorario?: string;
+  seNecessario?: boolean;
+  condicao?: string;
+}
+
+export interface PrescricaoHospitalarRequestDto {
+  internacaoId?: string;
+  medicoMatricula: string;
+  inicio?: string;
+  observacao?: string;
+  itens?: ItemPrescricaoRequestDto[];
+}
+
+export interface AcaoPrescricaoRequestDto {
+  profissionalMatricula: string;
+  motivo?: string;
+  previstoPara?: string;
+  resultado?: ResultadoChecagem;
+  aceitacao?: AceitacaoDieta;
+  motivoNaoAdministracao?: MotivoNaoAdministracaoHosp;
+  observacao?: string;
+  loteId?: string;
+  quantidade?: number;
+  realizadoEm?: string;
+  motivoRetificacao?: string;
+}
+
+export interface ChecagemPrescricaoDto {
+  uuid: string;
+  itemId: string;
+  horarioId?: string | null;
+  resultado: ResultadoChecagem;
+  aceitacao?: AceitacaoDieta | null;
+  motivoNaoAdministracao?: MotivoNaoAdministracaoHosp | null;
+  observacao?: string | null;
+  loteId?: string | null;
+  loteNumero?: string | null;
+  quantidade?: number | null;
+  realizadoEm: string;
+  profissionalNome: string;
+  retificacaoDeId?: string | null;
+  motivoRetificacao?: string | null;
+  retificada: boolean;
+}
+
+export interface HorarioPrescricaoDto {
+  uuid: string;
+  itemId: string;
+  previstoPara: string;
+  situacao: SituacaoHorarioPrescricao;
+  atrasado: boolean;
+  aprazadoOriginalmente?: string | null;
+  motivoReaprazamento?: string | null;
+  checagem?: ChecagemPrescricaoDto | null;
+}
+
+export interface ItemPrescricaoDto {
+  uuid: string;
+  ordem: number;
+  tipo: TipoItemPrescricao;
+  medicamentoId?: string | null;
+  medicamentoNome?: string | null;
+  dose?: string | null;
+  via?: ViaAdministracaoHosp | null;
+  tipoDieta?: TipoDieta | null;
+  descricao?: string | null;
+  intervaloHoras?: number | null;
+  primeiroHorario?: string | null;
+  seNecessario: boolean;
+  condicao?: string | null;
+  suspensoEm?: string | null;
+  motivoSuspensao?: string | null;
+  suspensoPorNome?: string | null;
+  resumo: string;
+  horarios: HorarioPrescricaoDto[];
+  checagens: ChecagemPrescricaoDto[];
+}
+
+export interface PrescricaoHospitalarDto {
+  uuid: string;
+  internacaoId: string;
+  pacienteId: string;
+  pacienteNome: string;
+  leitoIdentificacao: string;
+  medicoMatricula: string;
+  medicoNome: string;
+  inicio: string;
+  fim: string;
+  fimEfetivo: string;
+  encerradaEm?: string | null;
+  vigente: boolean;
+  observacao?: string | null;
+  renovadaDe?: string | null;
+  registradaEm: string;
+  itens: ItemPrescricaoDto[];
+}
+
+export interface HorarioDoPostoDto {
+  horarioId: string;
+  itemId: string;
+  prescricaoId: string;
+  internacaoId: string;
+  pacienteNome: string;
+  leitoIdentificacao: string;
+  setorNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  tipo: TipoItemPrescricao;
+  resumo: string;
+  previstoPara: string;
+  situacao: SituacaoHorarioPrescricao;
+  atrasado: boolean;
+  checagem?: ChecagemPrescricaoDto | null;
+}
+
+export const TIPOS_DIETA: Record<TipoDieta, string> = {
+  ZERO: 'Zero (jejum)', LIVRE: 'Livre', BRANDA: 'Branda', PASTOSA: 'Pastosa', LIQUIDA: 'Líquida', LIQUIDA_PASTOSA: 'Líquida-pastosa',
+  HIPOSSODICA: 'Hipossódica', PARA_DIABETICO: 'Para diabético', ENTERAL: 'Enteral', PARENTERAL: 'Parenteral',
+};
+
+export const VIAS_ADMINISTRACAO_HOSP: Record<ViaAdministracaoHosp, string> = {
+  ORAL: 'Oral', SUBLINGUAL: 'Sublingual', INTRAMUSCULAR: 'Intramuscular', INTRAVENOSA: 'Intravenosa', SUBCUTANEA: 'Subcutânea',
+  TOPICA: 'Tópica', INALATORIA: 'Inalatória', RETAL: 'Retal', OUTRA: 'Outra',
+};
+
+export const SITUACOES_HORARIO: Record<SituacaoHorarioPrescricao, { rotulo: string; classe: string }> = {
+  PENDENTE: { rotulo: 'Pendente', classe: 'info' },
+  FEITO: { rotulo: 'Feito', classe: 'ok' },
+  NAO_FEITO: { rotulo: 'Não feito', classe: 'warn' },
+  CANCELADO: { rotulo: 'Cancelado', classe: 'muted' },
+};
+
+export const MOTIVOS_NAO_ADMINISTRACAO_HOSP: Record<MotivoNaoAdministracaoHosp, string> = {
+  RECUSA_DO_PACIENTE: 'Recusa do paciente', PACIENTE_AUSENTE: 'Paciente ausente', MEDICAMENTO_EM_FALTA: 'Medicamento em falta',
+  SUSPENSO_PELO_MEDICO: 'Suspenso pelo médico', OUTRO: 'Outro',
+};
+
+export const ACEITACOES_DIETA: Record<AceitacaoDieta, string> = { TOTAL: 'Aceitou toda', PARCIAL: 'Aceitou parte', RECUSOU: 'Recusou' };
+
+/** Laudo para solicitação de AIH e autorização interna (ADR-0186). */
+export type StatusLaudoAih = 'SOLICITADO' | 'DEVOLVIDO' | 'AUTORIZADO' | 'NEGADO' | 'CANCELADO';
+export type ClinicaAih =
+  | 'CIRURGICA' | 'OBSTETRICA' | 'CLINICA_MEDICA' | 'CUIDADOS_PROLONGADOS' | 'PSIQUIATRIA' | 'TISIOLOGIA' | 'PEDIATRIA'
+  | 'REABILITACAO' | 'PSIQUIATRIA_HOSPITAL_DIA';
+export type CausaExternaAih = 'ACIDENTE_DE_TRANSITO' | 'ACIDENTE_DE_TRABALHO_TIPICO' | 'ACIDENTE_DE_TRABALHO_TRAJETO' | 'OUTRA_CAUSA_EXTERNA';
+export type TipoEventoLaudoAih = 'SOLICITACAO' | 'CORRECAO' | 'DEVOLUCAO' | 'AUTORIZACAO' | 'NEGACAO' | 'CANCELAMENTO' | 'VINCULO_INTERNACAO';
+
+export interface LaudoAihRequestDto {
+  internacaoId?: string;
+  agendamentoId?: string;
+  profissionalMatricula: string;
+  sinaisSintomas: string;
+  condicoesJustificativas: string;
+  resultadosExames?: string;
+  diagnosticoInicial: string;
+  cidPrincipal: string;
+  cidSecundario?: string;
+  cidCausaAssociada?: string;
+  procedimentoId: string;
+  clinica: ClinicaAih;
+  causaExterna?: CausaExternaAih | null;
+}
+
+export interface LaudoAihDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  pacienteCartaoSus?: string | null;
+  unidadeId: string;
+  unidadeNome: string;
+  internacaoId?: string | null;
+  agendamentoId?: string | null;
+  carater: CaraterInternacao;
+  solicitanteMatricula: string;
+  solicitanteNome: string;
+  sinaisSintomas: string;
+  condicoesJustificativas: string;
+  resultadosExames?: string | null;
+  diagnosticoInicial: string;
+  cidPrincipal: string;
+  cidSecundario?: string | null;
+  cidCausaAssociada?: string | null;
+  procedimentoId: string;
+  procedimentoCodigo: string;
+  procedimentoNome: string;
+  procedimentoSigtap?: string | null;
+  clinica: ClinicaAih;
+  causaExterna?: CausaExternaAih | null;
+  status: StatusLaudoAih;
+  solicitadoEm: string;
+  numeroAih?: string | null;
+  autorizadorNome?: string | null;
+  decididoEm?: string | null;
+  motivoDecisao?: string | null;
+  eventos: { tipo: TipoEventoLaudoAih; texto?: string | null; profissionalNome?: string | null; ocorridoEm: string }[];
+}
+
+export interface FaixaAihDto {
+  uuid: string;
+  ano: number;
+  inicio: number;
+  fim: number;
+  proximo: number;
+  restantes: number;
+  ativa: boolean;
+  esgotada: boolean;
+  primeiroNumero: string;
+  ultimoNumero: string;
+  registradaEm: string;
+}
+
+export interface PendenciaAihDto {
+  internacaoId: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  leitoIdentificacao: string;
+  admitidaEm: string;
+  horasSemLaudo: number;
+}
+
+export const STATUS_LAUDO_AIH: Record<StatusLaudoAih, { rotulo: string; classe: string }> = {
+  SOLICITADO: { rotulo: 'Aguardando autorização', classe: 'info' },
+  DEVOLVIDO: { rotulo: 'Devolvido para correção', classe: 'warn' },
+  AUTORIZADO: { rotulo: 'Autorizado', classe: 'ok' },
+  NEGADO: { rotulo: 'Negado', classe: 'alert' },
+  CANCELADO: { rotulo: 'Cancelado', classe: 'muted' },
+};
+
+export const CLINICAS_AIH: Record<ClinicaAih, string> = {
+  CIRURGICA: 'Cirúrgica',
+  OBSTETRICA: 'Obstétrica',
+  CLINICA_MEDICA: 'Clínica médica',
+  CUIDADOS_PROLONGADOS: 'Cuidados prolongados',
+  PSIQUIATRIA: 'Psiquiatria',
+  TISIOLOGIA: 'Tisiologia',
+  PEDIATRIA: 'Pediatria',
+  REABILITACAO: 'Reabilitação',
+  PSIQUIATRIA_HOSPITAL_DIA: 'Psiquiatria em hospital-dia',
+};
+
+export const CAUSAS_EXTERNAS_AIH: Record<CausaExternaAih, string> = {
+  ACIDENTE_DE_TRANSITO: 'Acidente de trânsito',
+  ACIDENTE_DE_TRABALHO_TIPICO: 'Acidente de trabalho típico',
+  ACIDENTE_DE_TRABALHO_TRAJETO: 'Acidente de trabalho no trajeto',
+  OUTRA_CAUSA_EXTERNA: 'Outra causa externa',
+};
+
+export const EVENTOS_LAUDO_AIH: Record<TipoEventoLaudoAih, string> = {
+  SOLICITACAO: 'Solicitado',
+  CORRECAO: 'Corrigido',
+  DEVOLUCAO: 'Devolvido',
+  AUTORIZACAO: 'Autorizado',
+  NEGACAO: 'Negado',
+  CANCELAMENTO: 'Cancelado',
+  VINCULO_INTERNACAO: 'Passou para a internação',
+};
+
+/** Internação eletiva agendada e censo diário (ADR-0185). */
+export type StatusInternacaoAgendada = 'AGENDADA' | 'RESERVADA' | 'ADMITIDA' | 'FALTA' | 'CANCELADA';
+export type TipoEventoInternacaoAgendada = 'AGENDAMENTO' | 'RESERVA' | 'REMARCACAO' | 'ADMISSAO' | 'FALTA' | 'CANCELAMENTO';
+
+export interface AgendamentoInternacaoRequestDto {
+  pacienteId: string;
+  unidadeId: string;
+  dataPrevista: string;
+  tipoLeito: TipoLeito;
+  medicoMatricula: string;
+  cid: string;
+  procedimento: string;
+  previsaoDias?: number | null;
+  solicitacaoRegulacaoId?: string;
+}
+
+export interface EletivaLeitoRequestDto {
+  profissionalMatricula: string;
+  leitoId?: string;
+  dataPrevista?: string;
+  previsaoAlta?: string;
+  justificativaFaixaEtaria?: string;
+  motivo?: string;
+}
+
+export interface InternacaoAgendadaDto {
+  uuid: string;
+  pacienteId: string;
+  pacienteNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  dataPrevista: string;
+  tipoLeito: TipoLeito;
+  medicoMatricula: string;
+  medicoNome: string;
+  cid: string;
+  procedimento: string;
+  previsaoDias?: number | null;
+  solicitacaoRegulacaoId?: string | null;
+  status: StatusInternacaoAgendada;
+  leitoReservadoId?: string | null;
+  leitoReservadoIdentificacao?: string | null;
+  reservadoAte?: string | null;
+  internacaoId?: string | null;
+  motivoEncerramento?: string | null;
+  aguardandoDesfecho: boolean;
+  podeReservar: boolean;
+  eventos: { tipo: TipoEventoInternacaoAgendada; texto?: string | null; profissionalNome?: string | null; ocorridoEm: string }[];
+}
+
+export interface PacienteDoCensoDto {
+  internacaoId: string;
+  pacienteNome: string;
+  leitoIdentificacao: string;
+  setorNome: string;
+  diasInternado: number;
+}
+
+export interface CensoDiarioDto {
+  uuid?: string | null;
+  unidadeId: string;
+  unidadeNome: string;
+  data: string;
+  versao?: number | null;
+  fechado: boolean;
+  leitosExistentes: number;
+  leitosBloqueados: number;
+  leitosOperacionais: number;
+  internadosInicio: number;
+  admissoes: number;
+  altasMelhorado: number;
+  altasAPedido: number;
+  altasTransferencia: number;
+  evasoes: number;
+  obitos: number;
+  transferenciasInternas: number;
+  internadosFim: number;
+  pacienteDia: number;
+  taxaOcupacao?: number | null;
+  mediaPermanencia?: number | null;
+  fechadoEm?: string | null;
+  reaberto: boolean;
+  motivoReabertura?: string | null;
+  pacientes: PacienteDoCensoDto[];
+}
+
+export interface PendenciaCensoDto {
+  unidadeId: string;
+  unidadeNome: string;
+  data: string;
+}
+
+export const STATUS_ELETIVA: Record<StatusInternacaoAgendada, { rotulo: string; classe: string }> = {
+  AGENDADA: { rotulo: 'Agendada', classe: 'info' },
+  RESERVADA: { rotulo: 'Leito reservado', classe: 'purple' },
+  ADMITIDA: { rotulo: 'Admitida', classe: 'ok' },
+  FALTA: { rotulo: 'Falta', classe: 'warn' },
+  CANCELADA: { rotulo: 'Cancelada', classe: 'muted' },
+};
+
+export const EVENTOS_ELETIVA: Record<TipoEventoInternacaoAgendada, string> = {
+  AGENDAMENTO: 'Agendada', RESERVA: 'Leito reservado', REMARCACAO: 'Remarcada', ADMISSAO: 'Admitida', FALTA: 'Falta', CANCELAMENTO: 'Cancelada',
+};
+
+export const FAIXAS_ETARIAS: Record<FaixaEtariaLeito, string> = { ADULTO: 'Adulto', PEDIATRICO: 'Pediátrico', NEONATAL: 'Neonatal' };
+
+export const PRIORIDADES_LEITO: Record<PrioridadeLeito, { rotulo: string; classe: string }> = {
+  VERMELHO: { rotulo: 'Vermelho · emergência', classe: 'alert' },
+  AMARELO: { rotulo: 'Amarelo · urgente', classe: 'warn' },
+  VERDE: { rotulo: 'Verde · não urgente', classe: 'ok' },
+  AZUL: { rotulo: 'Azul · eletivo', classe: 'info' },
+};
+
+export const STATUS_SOLICITACAO_LEITO: Record<StatusSolicitacaoLeito, { rotulo: string; classe: string }> = {
+  SOLICITADA: { rotulo: 'Aguardando vaga', classe: 'warn' },
+  RESERVADA: { rotulo: 'Leito reservado', classe: 'info' },
+  ADMITIDA: { rotulo: 'Admitido', classe: 'ok' },
+  NEGADA: { rotulo: 'Negado', classe: 'muted' },
+  CANCELADA: { rotulo: 'Cancelado', classe: 'muted' },
+};
+
+export const EVENTOS_SOLICITACAO_LEITO: Record<TipoEventoSolicitacaoLeito, string> = {
+  SOLICITACAO: 'Pedido de leito', RESERVA: 'Leito reservado', VAGA_ZERO: 'Vaga zero', EXPIRACAO: 'Reserva vencida',
+  RECUSA_DESTINO: 'Recusado no destino', NEGACAO: 'Negado pela central', CANCELAMENTO: 'Cancelado pela origem', ADMISSAO: 'Admitido no destino',
+};
 
 export interface EventoLeitoDto {
   tipo: TipoEventoLeito;
@@ -110,6 +600,8 @@ export interface InternacaoResponseDto {
   comunicacaoMpPendente?: MomentoComunicacaoMp | null;
   prazoComunicacaoMp?: string | null;
   comunicacaoMpVencida?: boolean;
+  /** Número da AIH autorizada (ADR-0186). */
+  numeroAih?: string | null;
 }
 
 export type ModalidadeInternacao = 'VOLUNTARIA' | 'INVOLUNTARIA' | 'COMPULSORIA';
@@ -149,6 +641,7 @@ export const SITUACOES_LEITO: Record<SituacaoLeito, { rotulo: string; classe: st
   OCUPADO: { rotulo: 'Ocupado', classe: 'info' },
   HIGIENIZACAO: { rotulo: 'Em higienização', classe: 'warn' },
   BLOQUEADO: { rotulo: 'Bloqueado', classe: 'muted' },
+  RESERVADO: { rotulo: 'Reservado', classe: 'purple' },
 };
 
 export const TIPOS_ALTA: Record<TipoAlta, string> = {

@@ -28,6 +28,10 @@ public class ResultadoExameDto implements Serializable {
     private BigDecimal referenciaMinima;
     private BigDecimal referenciaMaxima;
     private String referenciaTexto;
+    private BigDecimal criticoMinimo;
+    private BigDecimal criticoMaximo;
+    /** Qual faixa de referência valeu (ADR-0180). */
+    private String faixaDescricao;
     private InterpretacaoResultado interpretacao;
     private String observacao;
     private String analisadoPorMatricula;
@@ -38,13 +42,27 @@ public class ResultadoExameDto implements Serializable {
     private Instant liberadoEm;
     private UUID retificacaoDeId;
     private String motivoRetificacao;
+    /** Ciência do solicitante (ADR-0181). */
+    private String cienciaPorMatricula;
+    private String cienciaPorNome;
+    private Instant cienciaEm;
+    /** Laudo de imagem (ADR-0182). */
+    private String laudoTecnica;
+    private String laudoAchados;
+    private String laudoConclusao;
+    private String imagemUrl;
+    /** Assinatura eletrônica interna (ADR-0183): o SHA-256 do conteúdo assinado. */
+    private String hashConteudo;
 
     public static ResultadoExameDto fromResultado(ResultadoExame r) {
         return new ResultadoExameDto(r.getUuid(), r.getValorNumerico(), r.getValorTexto(), r.getUnidadeMedida(), r.getReferenciaMinima(),
-                r.getReferenciaMaxima(), r.getReferenciaTexto(), r.getInterpretacao(), r.getObservacao(),
+                r.getReferenciaMaxima(), r.getReferenciaTexto(), r.getCriticoMinimo(), r.getCriticoMaximo(), r.getFaixaDescricao(), r.getInterpretacao(), r.getObservacao(),
                 r.getAnalisadoPor().getMatricula(), r.getAnalisadoPor().getNome(), r.getRegistradoEm(),
                 r.getLiberadoPor() != null ? r.getLiberadoPor().getMatricula() : null,
                 r.getLiberadoPor() != null ? r.getLiberadoPor().getNome() : null, r.getLiberadoEm(),
-                r.getRetificacaoDe() != null ? r.getRetificacaoDe().getUuid() : null, r.getMotivoRetificacao());
+                r.getRetificacaoDe() != null ? r.getRetificacaoDe().getUuid() : null, r.getMotivoRetificacao(),
+                r.getCienciaPor() != null ? r.getCienciaPor().getMatricula() : null,
+                r.getCienciaPor() != null ? r.getCienciaPor().getNome() : null, r.getCienciaEm(),
+                r.getLaudoTecnica(), r.getLaudoAchados(), r.getLaudoConclusao(), r.getImagemUrl(), r.getHashConteudo());
     }
 }

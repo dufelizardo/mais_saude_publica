@@ -5,7 +5,9 @@
 Aceita. **Desenho**; cada fatia tem ADR própria. Implementadas: V1 (vigilância epidemiológica) na
 [ADR-0124](./0124-vigilancia-epidemiologica-fundacao.md), V2a (contatos, local e mapa) na
 [ADR-0130](./0130-vigilancia-contatos-local-e-mapa.md) e V2b (surto e medidas) na
-[ADR-0131](./0131-vigilancia-surto-e-medidas.md); V3 a V5 vêm depois. O detalhe está em
+[ADR-0131](./0131-vigilancia-surto-e-medidas.md); V3 a V5 vêm depois (a V5a, saúde do trabalhador na notificação, na
+[ADR-0207](./0207-vigilancia-saude-do-trabalhador.md), e a V5b, investigação do trabalho e risco ocupacional, na
+[ADR-0208](./0208-vigilancia-investigacao-do-trabalho.md); o SINAN saiu da V5 para o domínio 20). O detalhe está em
 [`vigilancia/MODELO-VIGILANCIA.md`](../vigilancia/MODELO-VIGILANCIA.md).
 
 ## Contexto

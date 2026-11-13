@@ -86,7 +86,7 @@
               <tr>
                 <td>
                   <span class="cell-main">{{ c.titulo }} <span class="cell-sub mono" style="display: inline;">v{{ c.versao }}</span></span>
-                  <span class="cell-sub">{{ c.tema }}@if (c.motivoDevolucao) { · devolvido: {{ c.motivoDevolucao }} }@if (usoNosTreinamentos()[c.grupoId]; as t) { · em treinamento: {{ t.join(', ') }} }</span>
+                  <span class="cell-sub">{{ c.tema }}@if (c.motivoDevolucao) { · devolvido: {{ c.motivoDevolucao }} }@if (usoNosTreinamentos()[c.grupoId]; as t) { · em treinamento: {{ t.join(', ') }} }@if (usoNasAcoes()[c.grupoId]; as u) { · em {{ u.acoes }} ação(ões) educativa(s), {{ u.pessoas }} pessoa(s) }</span>
                 </td>
                 <td>{{ publicos[c.publico] }}</td>
                 <td>{{ dataBr(c.validade) }}</td>

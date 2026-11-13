@@ -184,3 +184,157 @@ export interface RegulacaoUrgenciaRequestDto {
   vagaZero?: boolean;
   justificativaVagaZero?: string | null;
 }
+
+/** Ficha clínica do atendimento pré-hospitalar (ADR-0188). */
+export type NaturezaAph = 'CLINICA' | 'TRAUMA' | 'OBSTETRICA' | 'PSIQUIATRICA' | 'PEDIATRICA';
+export type MecanismoTrauma =
+  | 'QUEDA' | 'COLISAO_AUTOMOVEL' | 'ACIDENTE_MOTO' | 'ATROPELAMENTO' | 'ARMA_DE_FOGO' | 'ARMA_BRANCA' | 'AGRESSAO' | 'QUEIMADURA'
+  | 'AFOGAMENTO' | 'OUTRO';
+export type ProcedimentoAph =
+  | 'OXIGENIO' | 'INTUBACAO' | 'ACESSO_VENOSO' | 'COLAR_CERVICAL' | 'PRANCHA_IMOBILIZACAO' | 'TALA' | 'CURATIVO_COMPRESSAO' | 'TORNIQUETE'
+  | 'RCP' | 'DESFIBRILACAO' | 'MONITORIZACAO' | 'PARTO' | 'OUTRO';
+export type DesfechoAph = 'REMOVIDO_AO_DESTINO' | 'LIBERADO_NO_LOCAL' | 'RECUSA_DE_REMOCAO' | 'OBITO_NO_LOCAL' | 'EVASAO';
+export type ViaAph = 'ORAL' | 'SUBLINGUAL' | 'INTRAMUSCULAR' | 'INTRAVENOSA' | 'SUBCUTANEA' | 'TOPICA' | 'INALATORIA' | 'RETAL' | 'OUTRA';
+
+export interface AtendimentoAphDto {
+  ocorrenciaId: string;
+  protocolo: string;
+  centralId: string;
+  centralNome: string;
+  situacao: SituacaoOcorrenciaUrgencia;
+  prioridade?: string | null;
+  pacienteNome: string;
+  queixa: string;
+  endereco?: string | null;
+  tipoRecurso?: TipoRecursoUrgencia | null;
+  recurso: string;
+  destinoNome?: string | null;
+  recebidaEm: string;
+  fichaId?: string | null;
+  fichaFinalizada: boolean;
+}
+
+export interface FichaAphRequestDto {
+  natureza?: NaturezaAph | null;
+  mecanismoTrauma?: MecanismoTrauma | null;
+  situacaoEncontrada?: string | null;
+  hemorragiaExsanguinante?: boolean | null;
+  viaAerea?: string | null;
+  respiracao?: string | null;
+  circulacao?: string | null;
+  glasgowOcular?: number | null;
+  glasgowVerbal?: number | null;
+  glasgowMotor?: number | null;
+  pupilas?: string | null;
+  exposicao?: string | null;
+  procedimentos?: ProcedimentoAph[];
+  procedimentoOutro?: string | null;
+  impressaoDiagnostica?: string | null;
+  cid?: string | null;
+  desfecho?: DesfechoAph | null;
+  recusaNome?: string | null;
+  obitoEm?: string | null;
+  obitoConstatadoPorMatricula?: string | null;
+  recebidoPor?: string | null;
+  entregueEm?: string | null;
+}
+
+export interface RegistroAphRequestDto {
+  profissionalMatricula: string;
+  em?: string;
+  paSistolica?: number;
+  paDiastolica?: number;
+  frequenciaCardiaca?: number;
+  frequenciaRespiratoria?: number;
+  saturacao?: number;
+  temperatura?: number;
+  glicemia?: number;
+  dor?: number;
+  glasgow?: number;
+  nome?: string;
+  dose?: string;
+  via?: ViaAph;
+  texto?: string;
+}
+
+export interface SinaisAphDto {
+  uuid: string;
+  medidoEm: string;
+  paSistolica?: number | null;
+  paDiastolica?: number | null;
+  frequenciaCardiaca?: number | null;
+  frequenciaRespiratoria?: number | null;
+  saturacao?: number | null;
+  temperatura?: number | null;
+  glicemia?: number | null;
+  dor?: number | null;
+  glasgow?: number | null;
+  profissionalNome: string;
+}
+
+export interface FichaAphDto {
+  uuid: string;
+  ocorrenciaId: string;
+  protocolo: string;
+  centralNome: string;
+  pacienteNome: string;
+  recurso: string;
+  destinoNome?: string | null;
+  natureza?: NaturezaAph | null;
+  mecanismoTrauma?: MecanismoTrauma | null;
+  situacaoEncontrada?: string | null;
+  hemorragiaExsanguinante?: boolean | null;
+  viaAerea?: string | null;
+  respiracao?: string | null;
+  circulacao?: string | null;
+  glasgowOcular?: number | null;
+  glasgowVerbal?: number | null;
+  glasgowMotor?: number | null;
+  glasgowTotal?: number | null;
+  pupilas?: string | null;
+  exposicao?: string | null;
+  procedimentos: ProcedimentoAph[];
+  procedimentoOutro?: string | null;
+  impressaoDiagnostica?: string | null;
+  cid?: string | null;
+  desfecho?: DesfechoAph | null;
+  recusaNome?: string | null;
+  obitoEm?: string | null;
+  obitoConstatadoPorNome?: string | null;
+  recebidoPor?: string | null;
+  entregueEm?: string | null;
+  abertaEm: string;
+  atualizadaEm?: string | null;
+  finalizadaEm?: string | null;
+  finalizadaPorNome?: string | null;
+  finalizada: boolean;
+  sinaisVitais: SinaisAphDto[];
+  medicamentos: { uuid: string; nome: string; dose: string; via: ViaAph; administradoEm: string; profissionalNome: string }[];
+  adendos: { uuid: string; texto: string; profissionalNome: string; registradoEm: string }[];
+}
+
+export const NATUREZAS_APH: Record<NaturezaAph, string> = {
+  CLINICA: 'Clínica', TRAUMA: 'Trauma', OBSTETRICA: 'Obstétrica', PSIQUIATRICA: 'Psiquiátrica', PEDIATRICA: 'Pediátrica',
+};
+
+export const MECANISMOS_TRAUMA: Record<MecanismoTrauma, string> = {
+  QUEDA: 'Queda', COLISAO_AUTOMOVEL: 'Colisão de automóvel', ACIDENTE_MOTO: 'Acidente de moto', ATROPELAMENTO: 'Atropelamento',
+  ARMA_DE_FOGO: 'Ferimento por arma de fogo', ARMA_BRANCA: 'Ferimento por arma branca', AGRESSAO: 'Agressão', QUEIMADURA: 'Queimadura',
+  AFOGAMENTO: 'Afogamento', OUTRO: 'Outro',
+};
+
+export const PROCEDIMENTOS_APH: Record<ProcedimentoAph, string> = {
+  OXIGENIO: 'Oxigênio', INTUBACAO: 'Intubação', ACESSO_VENOSO: 'Acesso venoso', COLAR_CERVICAL: 'Colar cervical',
+  PRANCHA_IMOBILIZACAO: 'Prancha e imobilização', TALA: 'Tala', CURATIVO_COMPRESSAO: 'Curativo ou compressão', TORNIQUETE: 'Torniquete',
+  RCP: 'Reanimação (RCP)', DESFIBRILACAO: 'Desfibrilação', MONITORIZACAO: 'Monitorização', PARTO: 'Parto', OUTRO: 'Outro',
+};
+
+export const DESFECHOS_APH: Record<DesfechoAph, string> = {
+  REMOVIDO_AO_DESTINO: 'Removido ao destino', LIBERADO_NO_LOCAL: 'Atendido e liberado no local', RECUSA_DE_REMOCAO: 'Recusa de remoção',
+  OBITO_NO_LOCAL: 'Óbito no local', EVASAO: 'Evasão',
+};
+
+export const VIAS_APH: Record<ViaAph, string> = {
+  ORAL: 'Oral', SUBLINGUAL: 'Sublingual', INTRAMUSCULAR: 'Intramuscular', INTRAVENOSA: 'Intravenosa', SUBCUTANEA: 'Subcutânea',
+  TOPICA: 'Tópica', INALATORIA: 'Inalatória', RETAL: 'Retal', OUTRA: 'Outra',
+};

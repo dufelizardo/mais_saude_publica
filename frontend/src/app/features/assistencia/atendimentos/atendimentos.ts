@@ -52,9 +52,12 @@ import { MedicamentoService } from '../../../core/services/medicamento';
 import { PacienteService } from '../../../core/services/paciente';
 import { ProcedimentoService } from '../../../core/services/procedimento';
 import { ProntuarioService, semVinculo } from '../../../core/services/prontuario';
+import { UrgenciaService } from '../../../core/services/urgencia';
 import { SaudeBucalService } from '../../../core/services/saude-bucal';
 import { AcessoProntuario } from '../../../shared/acesso-prontuario/acesso-prontuario';
 import { ExamesPaciente } from '../../../shared/exames-paciente/exames-paciente';
+import { TransportesPaciente } from '../../../shared/transportes-paciente/transportes-paciente';
+import { DeslocamentoPaciente } from '../../../shared/deslocamento-paciente/deslocamento-paciente';
 import { InternacoesPaciente } from '../../../shared/internacoes-paciente/internacoes-paciente';
 import { InternacaoResponseDto } from '../../../core/models/internacao';
 import { Odontograma } from './odontograma';
@@ -140,7 +143,7 @@ const MOTIVOS_NAO: { valor: MotivoNaoAdministracao; rotulo: string }[] = [
  */
 @Component({
   selector: 'app-atendimentos',
-  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente, Odontograma, PlanoTratamento, TratamentoProteticoSecao],
+  imports: [ReactiveFormsModule, RouterLink, NgTemplateOutlet, Drawer, AcessoProntuario, ExamesPaciente, InternacoesPaciente, Odontograma, PlanoTratamento, TratamentoProteticoSecao, TransportesPaciente, DeslocamentoPaciente],
   templateUrl: './atendimentos.html',
   styleUrl: './atendimentos.css',
 })
@@ -159,6 +162,7 @@ export class Atendimentos {
   private readonly unidadeSaudeService = inject(UnidadeSaudeService);
   private readonly setorService = inject(SetorService);
   private readonly prontuarioService = inject(ProntuarioService);
+  private readonly urgenciaService = inject(UrgenciaService);
   private readonly saudeBucalService = inject(SaudeBucalService);
 
   /** Especialidades (ADR-0134) e a avaliação odontológica do atendimento de odontologia. */
@@ -1507,6 +1511,25 @@ export class Atendimentos {
         this.submitting.set(false);
         this.erroApi.set(mensagem(e, 'Não foi possível salvar. Tente novamente.'));
       },
+    });
+  }
+
+  /** A ficha do APH da ocorrência (ADR-0188), em PDF; quem não é da central nem do destino recebe o aviso. */
+  protected baixarFichaAph(ocorrenciaId: string, protocolo: string): void {
+    this.urgenciaService.fichaAph(ocorrenciaId).subscribe({
+      next: (f) => this.urgenciaService.baixarFichaAph(f.uuid).subscribe({
+        next: (r) => {
+          const url = URL.createObjectURL(r.body ?? new Blob());
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `ficha-aph-${protocolo}.pdf`;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(url), 60_000);
+        },
+        error: () => this.mostrarToast('Não foi possível gerar o PDF', 'Ocorrência ' + protocolo),
+      }),
+      error: (e: HttpErrorResponse) => this.mostrarToast(e.status === 404 ? 'Sem ficha do APH' : 'Ficha do APH indisponível',
+        e.status === 404 ? 'A ocorrência ' + protocolo + ' não teve ficha preenchida.' : 'Só a central e a unidade de destino veem a ficha.'),
     });
   }
 

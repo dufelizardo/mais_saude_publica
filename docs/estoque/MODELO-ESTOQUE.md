@@ -8,8 +8,8 @@ Vacina.
 | Fatia | O que é | Estado |
 |---|---|---|
 | ES1 | Catálogo, estoque por unidade em lotes, livro (entrada, saída por consumo, perda, ajuste), mínimo e alertas | ✅ ADR-0177, V62 |
-| ES2 | Almoxarifado central, requisição das unidades, transferência em duas etapas com divergência, inventário com fechamento | ⬜ só com aprovação |
-| ES3 | Emergências (E4): necessidade de insumo da E3 atendida pelo estoque, reserva e consumo extraordinário | ⬜ só com aprovação |
+| ES2 | Almoxarifado central, requisição das unidades, transferência em duas etapas com divergência, inventário com fechamento | ✅ ADR-0189, V74 |
+| ES3 | Emergências: necessidade de insumo da E3 atendida pelo estoque, reserva e consumo extraordinário | ✅ ADR-0191, V76 |
 
 ## Entidades (ES1)
 
@@ -37,6 +37,23 @@ MovimentacaoEstoque (livro, só inclusão)
 - **Validade:** lote vencido não entra e não sai por consumo; sai como perda.
 - **Saída:** sem lote escolhido, sai dos que vencem primeiro (FEFO), em quantos lotes precisar.
 - **Alertas:** abaixo do mínimo; vencendo em até 90 dias; vencido com saldo.
+
+## Estoque nas emergências (ES3)
+
+```text
+Mobilizacao (insumo, E3) ──► MaterialEstoque
+      ├──► RequisicaoEstoque (urgente, emergencia_id; origem central)    ou
+      └──► TransferenciaEstoque (avulsa, mesmo destino)
+
+ReservaEstoque (emergência, unidade, material)
+  quantidade · consumida · situacao (ativa, liberada, consumida) · justificativa
+MovimentacaoEstoque.emergencia_id (o consumo extraordinário)
+```
+
+- **Livre** = saldo dentro da validade − reservas ativas. A saída comum, a perda de lote válido, a transferência avulsa e a requisição de
+  fora da emergência não passam do livre (422).
+- **Usam a reserva:** a requisição urgente da emergência e o consumo marcado com ela; abatem das reservas dela, as mais antigas primeiro.
+- **Fim:** a desmobilização e o encerramento liberam o que resta.
 
 ## Permissões
 

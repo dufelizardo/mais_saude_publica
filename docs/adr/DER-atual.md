@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **251 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V64). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **324 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V90). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -190,3 +190,29 @@ listadas aqui pela migração que criou cada uma (até a V64). A fonte de verdad
 | V62 | `tb_material_estoque`, `tb_lote_material`, `tb_movimentacao_estoque`, `tb_estoque_minimo` |
 | V63 | `tb_veiculo`, `tb_situacao_veiculo`, `tb_plantao_viatura`, `tb_tripulante_plantao` (e `veiculo_id` em `tb_ocorrencia_urgencia`) |
 | V64 | `tb_oferta_assistencial`, `tb_cota_ppi` (e a cota e a extracota em `tb_solicitacao_regulacao`) |
+| V65 | `tb_faixa_referencia_exame` (e os críticos em `tb_exame_laboratorial` e em `tb_resultado_exame`, com a descrição da faixa usada) |
+| V66 | `tb_comunicacao_critico_exame`, `tb_entrega_resultado_exame` (e a ciência de quem pediu em `tb_resultado_exame`) |
+| V67 | `tb_realizacao_exame_imagem` (e a categoria e a modalidade no catálogo, o serviço de imagem no pedido e o laudo em `tb_resultado_exame`) |
+| V68 | `tb_emissao_laudo_exame`, `tb_emissao_laudo_exame_resultado`, `tb_insumo_exame`, `tb_consumo_sem_saldo` (e a assinatura em `tb_resultado_exame`) |
+| V69 | `tb_solicitacao_leito`, `tb_evento_solicitacao_leito` (e a faixa etária e a reserva em `tb_leito`) |
+| V70 | `tb_internacao_agendada`, `tb_evento_internacao_agendada`, `tb_censo_diario`, `tb_censo_diario_paciente` (e a reserva da eletiva em `tb_leito`) |
+| V71 | `tb_laudo_aih`, `tb_evento_laudo_aih`, `tb_faixa_aih` (e o número da AIH em `tb_internacao`) |
+| V72 | `tb_prescricao_hospitalar`, `tb_item_prescricao`, `tb_horario_prescricao`, `tb_checagem_prescricao` |
+| V73 | `tb_ficha_aph`, `tb_ficha_aph_procedimento`, `tb_sinais_vitais_aph`, `tb_medicamento_aph`, `tb_adendo_ficha_aph` |
+| V74 | `tb_requisicao_estoque`, `tb_item_requisicao_estoque`, `tb_transferencia_estoque`, `tb_item_transferencia_estoque`, `tb_inventario_estoque`, `tb_item_inventario_estoque` (e a capacidade Central de abastecimento) |
+| V75 | `tb_solicitacao_transporte`, `tb_viagem_transporte`, `tb_embarque_viagem` |
+| V76 | `tb_reserva_estoque`, `tb_cessao_veiculo` (e as ligações da mobilização ao estoque, a emergência na requisição e no consumo) |
+| V77 | `tb_paciente_deslocado` (e o domínio de origem `EMERGENCIAS` no encaminhamento intersetorial) |
+| V78 | sem tabela nova: o medicamento na mobilização e a emergência na solicitação regulada |
+| V79 | `tb_acao_educativa`, `tb_acao_educativa_conteudo`, `tb_acao_educativa_material`, `tb_acao_educativa_microarea` |
+| V80 | `tb_avaliacao_campanha` (e as metas em `tb_campanha_comunicacao`) |
+| V81 | `tb_componente_rede_item`, `tb_referencia_rede` (e `fora_da_referencia` em `tb_solicitacao_regulacao`) |
+| V82 | `tb_estabelecimento_regulado`, `tb_atividade_estabelecimento`, `tb_roteiro_inspecao`, `tb_versao_roteiro_inspecao`, `tb_denuncia_sanitaria`, `tb_inspecao_sanitaria`, `tb_inspecao_sanitaria_fiscal`, `tb_licenca_sanitaria`, `tb_irregularidade_sanitaria` (e o dono do documento sem unidade fora do paciente) |
+| V83 | `tb_processo_sanitario`, `tb_processo_sanitario_fiscal`, `tb_penalidade_sanitaria`, `tb_medida_sanitaria`, `tb_termo_sanitario` (e `processo_id` na irregularidade, `suspensa_ate` na licença) |
+| V84 | sem tabela nova: `VIGILANCIA` na origem do encaminhamento intersetorial e `CONSELHO_DE_DIREITOS` no tipo da instituição |
+| V85 | `tb_incidente_seguranca` |
+| V86 | `tb_nao_conformidade`, `tb_acao_qualidade`, `tb_verificacao_eficacia` |
+| V87 | `tb_checklist_protocolo`, `tb_versao_checklist_protocolo`, `tb_auditoria_protocolo`, `tb_meta_qualidade` |
+| V88 | `tb_suspensao_lote_rede`, `tb_remanejamento_imunobiologico` |
+| V89 | `tb_evento_trabalho` |
+| V90 | `tb_investigacao_trabalho`, `tb_medida_trabalho`, `tb_risco_ocupacional` |

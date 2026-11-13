@@ -93,7 +93,7 @@
           @for (s of filaFiltrada(); track s.uuid) {
             <tr>
               <td class="num mono">{{ s.posicaoNaFila ?? '—' }}º</td>
-              <td><span [class]="'risk risk-' + s.prioridade"><span class="sw" aria-hidden="true"></span>{{ prioridades[s.prioridade].rotulo }}</span></td>
+              <td><span [class]="'risk risk-' + s.prioridade"><span class="sw" aria-hidden="true"></span>{{ prioridades[s.prioridade].rotulo }}</span>@if (s.emergenciaNome) { <span class="tag tag--alert" [attr.title]="'Priorizada pela emergência ' + s.emergenciaNome">Emergência</span> }</td>
               <td class="cell-main">{{ s.pacienteNome }}</td>
               <td>{{ s.procedimentoNome }}<span class="cell-sub">{{ tiposProcedimento[s.procedimentoTipo] }}</span></td>
               <td>{{ s.unidadeSolicitanteNome }}<span class="cell-sub">{{ s.profissionalSolicitanteNome }}</span></td>
@@ -382,6 +382,9 @@
                             <option value="">Selecione…</option>
                             @for (u of unidades(); track u.uuid) { <option [value]="u.uuid">{{ u.nome }}</option> }
                           </select>
+                          @if (referencia(); as r) {
+                            <p class="dw-hint" id="h-referenciaRede">Referência da rede: <b>{{ r.executanteNome }}</b> (pactuada para {{ r.origemNome }}).@if (foraDaReferencia()) { <span class="badge badge--warn">Fora da referência</span> }</p>
+                          }
                           @if (erro('unidadeExecutanteId')) { <p class="dw-err" id="e-unidadeExecutanteId">{{ erro('unidadeExecutanteId') }}</p> }
                         </div>
                         <div class="dw-field">

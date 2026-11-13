@@ -11,5 +11,11 @@ public enum TipoMovimentacaoEstoque {
     /** Vencimento, avaria ou extravio. */
     PERDA,
     /** Diferença da contagem, com justificativa. */
-    AJUSTE_INVENTARIO
+    AJUSTE_INVENTARIO,
+    /** Saída para outra unidade, pela transferência (ADR-0189). */
+    TRANSFERENCIA_SAIDA,
+    /** Entrada vinda de outra unidade, no recebimento da transferência. */
+    TRANSFERENCIA_ENTRADA,
+    /** O que não chegou volta ao lote de origem. */
+    TRANSFERENCIA_ESTORNO
 }

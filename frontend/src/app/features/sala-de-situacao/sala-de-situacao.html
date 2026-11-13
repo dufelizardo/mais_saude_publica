@@ -55,6 +55,20 @@
   </section>
 }
 
+@if (interdicoes().length) {
+  <section class="ss-alertas" aria-label="Interdições sanitárias">
+    @for (x of interdicoes().slice(0, 3); track x.uuid) {
+      <article class="ss-alerta ss-alerta--media" [attr.aria-label]="'Interdição sanitária: ' + x.estabelecimentoNome">
+        <div>
+          <div class="ss-alerta__titulo">Interditado: {{ x.estabelecimentoNome }}</div>
+          <div class="ss-alerta__detalhe">{{ x.tipo === 'INTERDICAO_CAUTELAR' ? 'Cautelar' : 'Pela decisão' }} {{ x.total ? 'total' : 'parcial' }} · desde {{ desde(x.inicio + 'T12:00:00') }}@if (x.fimPrevisto) { · até {{ x.fimPrevisto.split('-').reverse().join('/') }} }</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/vigilancia/sanitaria">Ver medidas</a>
+      </article>
+    }
+  </section>
+}
+
 @if (aguaForaDoPadrao().length) {
   <section class="ss-alertas" aria-label="Água fora do padrão">
     @for (a of aguaForaDoPadrao().slice(0, 3); track a.uuid) {
@@ -67,6 +81,20 @@
       </article>
     }
   </section>
+}
+
+@if (semanaTrabalho(); as t) {
+  @if (t.acidentes || t.medidasVencidas) {
+    <section class="ss-alertas" aria-label="Saúde do trabalhador">
+      <article [class]="'ss-alerta ' + (t.obitos ? 'ss-alerta--alta' : 'ss-alerta--media')" aria-label="Saúde do trabalhador na semana">
+        <div>
+          <div class="ss-alerta__titulo">Saúde do trabalhador: {{ t.acidentes }} {{ t.acidentes === 1 ? 'acidente de trabalho' : 'acidentes de trabalho' }} nos últimos 7 dias@if (t.obitos) { · {{ t.obitos }} {{ t.obitos === 1 ? 'óbito' : 'óbitos' }} }</div>
+          <div class="ss-alerta__detalhe">{{ t.investigacoesAbertas }} {{ t.investigacoesAbertas === 1 ? 'investigação aberta' : 'investigações abertas' }} · {{ t.medidasVencidas }} {{ t.medidasVencidas === 1 ? 'medida vencida' : 'medidas vencidas' }} · {{ t.riscosAtivos }} {{ t.riscosAtivos === 1 ? 'risco ocupacional ativo' : 'riscos ocupacionais ativos' }}@if (t.alertas.length) { · {{ t.alertas[0].agravoNome }} em {{ t.alertas[0].unidadeNome }}@if (t.alertas[0].empregadorNome) { ({{ t.alertas[0].empregadorNome }}) } }</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/vigilancia">Ver na vigilância</a>
+      </article>
+    </section>
+  }
 }
 
 @if (eventosPlanejados().length) {

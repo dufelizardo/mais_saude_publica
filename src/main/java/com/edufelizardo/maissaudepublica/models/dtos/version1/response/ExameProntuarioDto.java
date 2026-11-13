@@ -29,6 +29,8 @@ public class ExameProntuarioDto implements Serializable {
     private UUID pedidoId;
     /** O atendimento em que o exame foi pedido; nulo no pedido avulso. */
     private UUID atendimentoId;
+    /** O exame do catálogo: chave da evolução do exame no tempo (ADR-0180). */
+    private UUID exameId;
     private String exameNome;
     private MaterialExame material;
     private StatusItemExame status;
@@ -37,13 +39,17 @@ public class ExameProntuarioDto implements Serializable {
     private String unidadeSolicitanteNome;
     private String profissionalSolicitanteNome;
     private ResultadoExameDto resultado;
+    /** Categoria do exame: o de imagem mostra o laudo (ADR-0182). */
+    private com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame categoria;
+    private com.edufelizardo.maissaudepublica.models.enuns.ModalidadeImagem modalidade;
 
     public static ExameProntuarioDto fromItem(ItemPedidoExame i) {
         var p = i.getPedido();
         return new ExameProntuarioDto(i.getUuid(), p.getUuid(), p.getAtendimento() != null ? p.getAtendimento().getUuid() : null,
-                i.getExame().getNome(), i.getExame().getMaterial(), i.getStatus(), p.getPrioridade(), p.getSolicitadoEm(),
+                i.getExame().getUuid(), i.getExame().getNome(), i.getExame().getMaterial(), i.getStatus(), p.getPrioridade(), p.getSolicitadoEm(),
                 p.getUnidadeSolicitante().getNome(), p.getProfissionalSolicitante().getNome(),
                 i.getStatus() == StatusItemExame.LIBERADO && i.getResultadoAtual() != null
-                        ? ResultadoExameDto.fromResultado(i.getResultadoAtual()) : null);
+                        ? ResultadoExameDto.fromResultado(i.getResultadoAtual()) : null, i.getExame().getCategoria(),
+                i.getExame().getModalidade());
     }
 }

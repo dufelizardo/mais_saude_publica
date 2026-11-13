@@ -8,5 +8,11 @@ public enum TipoEventoExame {
     RESULTADO,
     LIBERACAO,
     RETIFICACAO,
-    CANCELAMENTO
+    CANCELAMENTO,
+    COMUNICACAO_CRITICO,
+    CIENCIA,
+    ENTREGA,
+    REALIZACAO,
+    LAUDO,
+    ADENDO
 }

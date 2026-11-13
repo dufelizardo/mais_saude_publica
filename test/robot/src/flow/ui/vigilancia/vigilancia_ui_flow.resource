@@ -3,6 +3,8 @@ Resource    ../../../pom/ui/vigilancia/vigilancia_ui_pom.resource
 Resource    ../../vigilancia/vigilancia_flow.resource
 Resource    ../../vigilancia/vigilancia_contatos_flow.resource
 Resource    ../../vigilancia/vigilancia_surto_flow.resource
+Resource    ../../vigilancia/comunicacao_violencia_flow.resource
+Resource    ../../vigilancia/saude_trabalhador_flow.resource
 Resource    ../../../pom/ui/administrativo/territorio/territorio_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -233,5 +235,169 @@ UI Vigilancia - Medida Do Caso
     Clicar Botao    Salvar medida
     Wait For Elements State    css=[aria-label="Medidas de controle"] >> text=Isolamento domiciliar    visible
     Wait For Elements State    css=[aria-label="Linha do tempo do caso"] >> text=Medida    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Comunicar Violencia
+    [Documentation]    A notificação de violência contra a mulher aparece nas comunicações pendentes; pelo detalhe, a comunicação à delegacia (ADR-0201).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${nome}=    Seed Paciente Com Idade    30    FEMININO
+    ${n}=    Notificar Violencia    ${paciente}    ${unidade}
+    ${delegacia}=    Seed Instituicao Externa    Delegacia Robot UI    SEGURANCA_PUBLICA    SEGURANCA_PUBLICA
+    UI Vigilancia - Abrir
+    Click    css=[aria-label="Comunicações obrigatórias pendentes"] button[aria-label="Abrir notificação de ${nome}"]
+    Wait For Elements State    css=[aria-label="Comunicação obrigatória"] >> text=Autoridade policial    visible
+    Select Options By    id=f-cv-inst    value    ${delegacia}
+    Click    css=[aria-label="Comunicação obrigatória"] button >> text=Comunicar
+    Wait For Elements State    css=[aria-label="Comunicação obrigatória"] >> text=Feita    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Notificar Acidente De Trabalho
+    [Documentation]    O acidente grave pede a data e o bloco do trabalho; preenchido, a notificação mostra o bloco (ADR-0207).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nomePaciente}=    Seed A Paciente
+    ${grave}=    Id Do Agravo    ACIDENTE_TRABALHO_GRAVE
+    ${ontem}=    Evaluate    (datetime.date.today() - datetime.timedelta(days=1)).isoformat()    modules=datetime
+    UI Vigilancia - Abrir
+    Clicar Botao    Notificar
+    Preencher Campo Da Gaveta    buscaPaciente    ${nomePaciente}
+    Click    css=app-drawer [role="listbox"] >> role=option[name="${nomePaciente}"]
+    Escolher Opcao Da Gaveta    agravo    ${grave}
+    Escolher Opcao Da Gaveta    unidadeNotificante    ${unidade}
+    Wait For Elements State    id=f-ocupacaoCbo    visible
+    Enviar Gaveta
+    Wait For Elements State    css=app-drawer >> text=Informe a data do acidente.    visible
+    Preencher Campo Da Gaveta    dataPrimeirosSintomas    ${ontem}
+    Enviar Gaveta
+    Wait For Elements State    css=app-drawer >> text=O código da CBO tem seis dígitos (ex.: 7152-10).    visible
+    Preencher Campo Da Gaveta    ocupacaoCbo    7152-10
+    Preencher Campo Da Gaveta    ocupacaoDescricao    Pedreiro
+    Escolher Opcao Da Gaveta    situacaoTrabalho    EMPREGADO_REGISTRADO
+    Preencher Campo Da Gaveta    empregadorNome    Construtora Robot UI
+    Escolher Opcao Da Gaveta    tipoAcidente    TIPICO
+    Escolher Opcao Da Gaveta    cat    NAO
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Notificação registrada
+    Wait For Elements State    css=[aria-label="Bloco do trabalho"] >> text=Pedreiro    visible
+    Wait For Elements State    css=[aria-label="Bloco do trabalho"] >> text=Construtora Robot UI    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Acompanhamento Sorologico
+    [Documentation]    Na aba Saúde do trabalhador, a etapa de 6 semanas vencida; pelo detalhe, a etapa registrada (ADR-0207).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nomePaciente}=    Seed A Paciente
+    ${bloco}=    Bloco Do Trabalho    ocupacaoCbo=322205    ocupacaoDescricao=Técnico de enfermagem    situacaoTrabalho=SERVIDOR_ESTATUTARIO
+    ${respostas}=    Respostas Material Biologico
+    ${payload}=    Payload Notificacao Do Trabalho    ${paciente}    ${unidade}    ACIDENTE_TRABALHO_MATERIAL_BIOLOGICO    50    ${bloco}    ${respostas}
+    ${r}=    POST Notificacao    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    201
+    UI Vigilancia - Abrir
+    Click    css=[role="tab"]:has-text("Saúde do trabalhador")
+    Wait For Elements State    css=[aria-label="Acompanhamentos sorológicos a fazer"] >> text=${nomePaciente} · 6 semanas    visible
+    Click    css=[aria-label="Acompanhamentos sorológicos a fazer"] button[aria-label="Abrir notificação de ${nomePaciente}"]
+    Clicar Botao    Registrar etapa 6 semanas
+    Click    css=[aria-label="Acompanhamento sorológico"] button.btn
+    Wait For Elements State    css=[aria-label="Acompanhamento sorológico"] >> text=Feita    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Notificar Acidente Do Servidor
+    [Documentation]    O acidente do servidor no RH aparece sem notificação; pelo botão, a notificação já ligada a ele (ADR-0207).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${cpf}=    Seed A Profissional Unit
+    ${prof}=    Call GET Get Profissional By Cpf    ${cpf}
+    ${matricula}=    Set Variable    ${prof.json()}[matricula]
+    ${nomeProf}=    Set Variable    ${prof.json()}[nome]
+    ${suffix}=    Generate Random String    8    [NUMBERS]
+    ${pac}=    Build Paciente Payload    Robot Servidor UI ${suffix}    ${cpf}
+    ${r}=    POST Create Paciente    ${pac}
+    Should Be Equal As Integers    ${r.status_code}    201
+    ${quando}=    Evaluate    (datetime.datetime.now() - datetime.timedelta(days=1)).replace(microsecond=0).isoformat()    modules=datetime
+    ${acidente}=    Create Dictionary    matriculaProfissional=${matricula}    dataHora=${quando}    descricao=Queda da escada    catEmitida=${True}    diasAfastamento=${2}
+    ${r}=    POST Acidente De Trabalho Do RH    ${acidente}
+    Should Be Equal As Integers    ${r.status_code}    201
+    UI Vigilancia - Abrir
+    Click    css=[role="tab"]:has-text("Saúde do trabalhador")
+    Clicar Botao    Notificar acidente de ${nomeProf}
+    Wait For Elements State    id=f-ocupacaoCbo    visible
+    Escolher Opcao Da Gaveta    unidadeNotificante    ${unidade}
+    Preencher Campo Da Gaveta    ocupacaoCbo    4110-05
+    Preencher Campo Da Gaveta    ocupacaoDescricao    Auxiliar administrativo
+    Escolher Opcao Da Gaveta    situacaoTrabalho    SERVIDOR_ESTATUTARIO
+    Escolher Opcao Da Gaveta    tipoAcidente    TIPICO
+    Wait For Elements State    css=app-drawer >> text=Ligada ao acidente do servidor registrado no RH (a CAT continua com o RH).    visible
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Notificação registrada
+    Wait For Elements State    css=[aria-label="Bloco do trabalho"] >> text=Acidente registrado no RH em    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Investigar O Trabalho
+    [Documentation]    Pela tela: a visita, o nexo confirmado, a medida recomendada e verificada (ADR-0208).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nomePaciente}=    Seed A Paciente
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    ${hoje}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${prazo}=    Evaluate    (datetime.date.today() + datetime.timedelta(days=10)).isoformat()    modules=datetime
+    UI Vigilancia - Abrir
+    Click    css=[role="tab"]:has-text("Saúde do trabalhador")
+    Clicar Botao    Abrir notificação: ${nomePaciente} Acidente de trabalho grave, fatal ou com crianças e adolescentes
+    Fill Text    id=f-inv-visita    ${hoje}
+    Fill Text    id=f-inv-achados    Andaime sem guarda-corpo
+    Clicar Botao    Iniciar a investigação
+    Wait For Elements State    css=[aria-label="Visita ao local de trabalho"] >> text=Nexo em análise    visible
+    Select Options By    id=f-inv-nexo    value    CONFIRMADO
+    Fill Text    id=f-inv-justificativa    Queda do andaime
+    Clicar Botao    Concluir o nexo
+    Wait For Elements State    css=[aria-label="Visita ao local de trabalho"] >> text=Nexo confirmado    visible
+    Select Options By    id=f-med-tipo    value    PROTECAO_COLETIVA
+    Fill Text    id=f-med-prazo    ${prazo}
+    Fill Text    id=f-med-descricao    Instalar guarda-corpo
+    Clicar Botao    Recomendar a medida
+    Wait For Elements State    css=[aria-label="Medidas do trabalho"] >> text=Recomendada    visible
+    Clicar Botao    Verificar medida: Instalar guarda-corpo
+    Click    css=[aria-label="Medidas do trabalho"] button.btn
+    Wait For Elements State    css=[aria-label="Medidas do trabalho"] >> text=Cumprida    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Risco Ocupacional
+    [Documentation]    Na aba Saúde do trabalhador: registrar o risco do empregador e marcá-lo como controlado (ADR-0208).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [NUMBERS]
+    UI Vigilancia - Abrir
+    Click    css=[role="tab"]:has-text("Saúde do trabalhador")
+    Fill Text    id=f-rn-empregador    Metalurgica Robot ${sufixo}
+    Select Options By    id=f-rn-tipo    value    FISICO
+    Fill Text    id=f-rn-agente    Ruído ${sufixo}
+    Clicar Botao    Registrar o risco
+    Wait For Elements State    css=[aria-label="Riscos ocupacionais"] >> text=Metalurgica Robot ${sufixo} · Físico · Ruído ${sufixo}    visible
+    Clicar Botao    Marcar como controlado: Ruído ${sufixo}
+    Fill Text    id=f-risco-motivo    Enclausuramento da prensa
+    Click    css=[aria-label="Riscos ocupacionais"] button.btn
+    Wait For Elements State    css=[aria-label="Riscos ocupacionais"] li:has-text("Ruído ${sufixo}") >> text=Enclausuramento da prensa    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vigilancia - Trabalho Na Sala De Situacao
+    [Documentation]    O acidente de trabalho da semana aparece como alerta na Sala de Situação (ADR-0208).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${paciente}    ${cpf}    ${cns}    ${nomePaciente}=    Seed A Paciente
+    ${n}=    Notificar Acidente Grave    ${paciente}    ${unidade}
+    Ir Para Rota Do Frontend    /sala-de-situacao
+    Wait For Elements State    css=[aria-label="Saúde do trabalhador na semana"]    visible
+    ${texto}=    Get Text    css=[aria-label="Saúde do trabalhador na semana"]
+    Should Contain    ${texto}    nos últimos 7 dias
+    Should Not Contain    ${texto}    ${nomePaciente}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

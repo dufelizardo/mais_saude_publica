@@ -62,6 +62,10 @@ public class RelatorioPosEventoService {
     @Autowired private MudancaNivelEmergenciaRepository mudancaRepository;
     @Autowired private AcaoEmergencialRepository acaoRepository;
     @Autowired private MobilizacaoRepository mobilizacaoRepository;
+    @Autowired private EstoqueEmergenciaService estoqueEmergenciaService;
+    @Autowired private FrotaEmergenciaService frotaEmergenciaService;
+    @Autowired private PessoasEmergenciaService pessoasService;
+    @Autowired private RedeEmergenciaService redeService;
     @Autowired private AtivacaoCapacidadeRepository capacidadeRepository;
     @Autowired private AvaliacaoImpactoRepository avaliacaoRepository;
     @Autowired private AtivacaoPlanoRepository ativacaoPlanoRepository;
@@ -211,6 +215,17 @@ public class RelatorioPosEventoService {
         linha(sb, "Óbitos pelo agravo", i.getObitosAgravo());
         linha(sb, "Exposições ambientais", i.getExposicoes());
         linha(sb, "Maior população exposta", i.getPopulacaoExpostaMaxima());
+        linha(sb, "Insumos consumidos (unidades)", i.getInsumosConsumidos());
+        linha(sb, "Valor dos insumos consumidos (R$)", i.getValorInsumos());
+        linha(sb, "Veículos cedidos", i.getVeiculosCedidos());
+        linha(sb, "Dias de veículo", i.getDiasDeVeiculo());
+        linha(sb, "Quilômetros dos veículos cedidos", i.getKmVeiculos());
+        linha(sb, "Pacientes deslocados", i.getPacientesDeslocados());
+        linha(sb, "Deslocados que retornaram", i.getDeslocadosRetornaram());
+        linha(sb, "Deslocados ainda fora de casa", i.getDeslocadosAindaFora());
+        linha(sb, "Abrigos usados", i.getAbrigosUsados());
+        linha(sb, "Encaminhamentos intersetoriais", i.getEncaminhamentosIntersetoriais());
+        linha(sb, "Regulações priorizadas", i.getRegulacoesPriorizadas());
         return sb.toString();
     }
 
@@ -238,6 +253,9 @@ public class RelatorioPosEventoService {
         var epidemia = em.getTipo().getPerfil() == com.edufelizardo.maissaudepublica.models.enuns.PerfilTipoEmergencia.EPIDEMIA
                 && especializado.agravo(em) != null && !especializado.agravo(em).isSensivel() ? especializado.painel(em) : null;
         Integer[] exposicao = especializado.totaisDeExposicao(em);
+        var estoque = estoqueEmergenciaService.resumo(em);
+        Object[] frota = frotaEmergenciaService.totais(em, mobs);
+        int[] pessoas = pessoasService.totais(em);
         return new RelatorioPosEventoDto.Indicadores(horas(em.getInicio(), fim), horas(em.getEvento().getOcorridoEm(), em.getInicio()), maximo,
                 Math.max(0, niveis.size() - 1), acoes.size(), concluidas, canceladas, comPrazo.size(), noPrazo,
                 comPrazo.isEmpty() ? null : BigDecimal.valueOf(noPrazo * 100.0 / comPrazo.size()).setScale(1, RoundingMode.HALF_UP).doubleValue(),
@@ -246,7 +264,9 @@ public class RelatorioPosEventoService {
                 ultima != null ? ultima.getPopulacaoAfetada() : null, ultima != null ? ultima.getUnidadesAfetadas().size() : 0,
                 ultima != null ? ultima.getLeitosIndisponiveis() : null, estruturas[0], estruturas[1], estruturas[2], estruturas[3], estruturas[4],
                 massa != null ? massa.getPublicoEstimado() : null, epidemia != null ? epidemia.getNotificados() : null,
-                epidemia != null ? epidemia.getConfirmados() : null, epidemia != null ? epidemia.getObitos() : null, exposicao[0], exposicao[1]);
+                epidemia != null ? epidemia.getConfirmados() : null, epidemia != null ? epidemia.getObitos() : null, exposicao[0], exposicao[1],
+                estoque.quantidadeConsumida(), estoque.valorConsumido(), (int) frota[0], (double) frota[1], (Integer) frota[2],
+                pessoas[0], pessoas[1], pessoas[2], pessoas[3], pessoas[4], redeService.priorizadas(em));
     }
 
     private static double horas(Instant de, Instant ate) {

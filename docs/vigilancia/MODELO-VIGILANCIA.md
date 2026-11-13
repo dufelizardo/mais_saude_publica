@@ -165,6 +165,35 @@ Estabelecimento regulado → Inspeção → Achados → Irregularidade → Medid
 - **As medidas seguem um rito:** auto de infração, processo administrativo sanitário e prazos de defesa (Lei
   6.437/1977). Os autos são documentos formais, e por isso a sanitária depende do domínio Documentos.
 
+**Feito na V3a** ([ADR-0199](../adr/0199-vigilancia-sanitaria-fundacao.md)):
+
+| Parte | Como ficou |
+|---|---|
+| Estabelecimento | CPF ou CNPJ conferido e único; atividades CNAE com o grau de risco (RDC 153/2017); o risco é o maior entre elas; a unidade pública liga-se opcionalmente |
+| Licença | histórico com número do ano; dispensa no risco I (Lei 13.874/2019); risco III só com inspeção satisfatória em 12 meses; renovação a 60 dias do vencimento; gravíssima aberta impede |
+| Denúncia | protocolo, canal, anônima ou identificada (o denunciante só para a coordenação); em apuração na primeira inspeção; procedente só com inspeção |
+| Roteiro | itens como dado, versionados (alimentos pela RDC 216/2004, farmácias pela RDC 44/2009); a inspeção guarda a versão |
+| Inspeção | motivo com o vínculo (denúncia, surto, retorno); roteiro respondido por inteiro; item não conforme com a irregularidade; fiscais pela matrícula e assinatura do fiscal logado (CPF e SHA-256); termo em PDF |
+| Irregularidade | gravidade (art. 4º da Lei 6.437/1977), enquadramento e prazo de correção; corrigida só no retorno; prazo vencido calculado |
+| Documentos | o estabelecimento e a inspeção como donos (D2 parcial), sem unidade |
+
+**Feito na V3b** ([ADR-0200](../adr/0200-processo-sanitario-e-medidas.md)): o rito da Lei 6.437/1977.
+
+```text
+Auto de infração → ciência → defesa (15 dias; intempestiva ou revelia) → decisão (arquivamento ou penalidades)
+  → ciência → recurso (15 dias, efeito suspensivo) → julgamento → encerramento (as penalidades passam a valer)
+```
+
+- **Penalidades** do art. 2º, com atenuantes (art. 7º) e agravantes (art. 8º); a suspensão e a cassação mudam a licença; a interdição
+  vira medida.
+- **Medidas imediatas:** interdição cautelar até 90 dias (art. 23, §4º) e apreensão; desinterdição e destinação.
+- **Termos em PDF** com código e QR code; verificação pública do termo e da licença, sem dado de pessoa.
+- **No #19:** o relatório Vigilância sanitária; as interdições vigentes na Sala de Situação.
+
+**Feito na V3c** ([ADR-0201](../adr/0201-violencia-comunicacao-intersetorial.md)): a violência notificada gera a comunicação que a lei
+exige, calculada pela idade, pelo sexo e pela ficha (Conselho Tutelar, pessoa idosa, mulher), em 24 horas, registrada como encaminhamento
+intersetorial (ADR-0154) com o motivo mínimo; pendências para quem investiga e o indicador no relatório Vigilância.
+
 ## 5. Vigilância Ambiental
 
 Riscos ligados ao ambiente: água, ar, solo, contaminantes, desastres, fatores ambientais, vetores e animais. Liga-se
@@ -207,6 +236,25 @@ Trabalhador → Evento relacionado ao trabalho → Notificação → Investigaç
 - **Sem duplicar:** o RH cuida da gestão do servidor (afastamento, CAT); a vigilância cuida da notificação e da
   investigação.
 - **CEREST:** a referência técnica em saúde do trabalhador já está no Mapa de Equipamentos.
+
+**Implementado na V5a** ([ADR-0207](../adr/0207-vigilancia-saude-do-trabalhador.md)):
+- **Catálogo:** a marca `relacionadoAoTrabalho` no agravo; o acidente grave (Y96), o material biológico (compulsório, com a ficha) e os
+  da vigilância sentinela (LER/DORT, PAIR, pneumoconioses, dermatoses, câncer e transtorno mental relacionados ao trabalho).
+- **`EventoTrabalho`** (1:1 com a notificação): a ocupação pela CBO na data do evento, a situação no mercado de trabalho, o empregador
+  (CPF ou CNPJ, CNAE e o estabelecimento da VISA pelo documento), o local do evento e, só no acidente, o tipo, a jornada, a CAT, os
+  atingidos e o óbito. Obrigatório no agravo marcado, opcional nos demais; a investigação completa ou corrige.
+- **Acompanhamento sorológico** do material biológico: 6 semanas, 3 e 6 meses a partir do acidente, com a data realizada e as vencidas.
+- **Servidor:** o evento liga-se ao `AcidenteTrabalho` do RH do mesmo CPF; a lista dos acidentes sem notificação é da vigilância da rede;
+  o RH vê só a marca "Notificado à vigilância".
+
+**Implementado na V5b** ([ADR-0208](../adr/0208-vigilancia-investigacao-do-trabalho.md)):
+- **`InvestigacaoTrabalho`** (1:1 com a notificação com bloco): visita, achados e o nexo (em análise, confirmado, descartado,
+  inconclusivo) com a justificativa.
+- **`MedidaTrabalho`:** recomendada com prazo, verificada cumprida ou não; vencida no painel e na Sala de Situação.
+- **Escalonamento:** a denúncia sanitária do canal Vigilância contra o empregador (sem os dados do trabalhador) e o encaminhamento
+  intersetorial à fiscalização do trabalho.
+- **`RiscoOcupacional`** por empregador (tipo, agente, expostos; ativo ou controlado), pela investigação ou pelo cadastro.
+- **Indicadores** no relatório Vigilância (sem as de nexo descartado), por agravo, seção do CNAE e grande grupo da CBO.
 
 ## 8. Território
 
@@ -343,7 +391,8 @@ Assim o modelo dos sistemas externos não contamina o domínio interno.
 | **V4a** · controle de vetores ✅ ([ADR-0162](../adr/0162-vigilancia-controle-de-vetores.md)) | vistoria, foco, índices do ciclo, ação de controle | Território F3 (imóvel) |
 | **V4b** · animais ✅ ([ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md)) | animal, observação do agressor, exames, vacinação antirrábica | V4a |
 | **V4c** · ambiental ✅ ([ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md)) | qualidade da água, risco ambiental | V4a |
-| **V5** · trabalhador e integrações | evento do trabalho, risco ocupacional, investigação; adaptadores (SINAN primeiro) | V1; Integrações (#20) |
+| **V5a** · trabalhador na notificação ✅ ([ADR-0207](../adr/0207-vigilancia-saude-do-trabalhador.md)) | evento do trabalho, agravos do trabalho, acompanhamento sorológico, acidente do servidor | V1 |
+| **V5b** · investigação do trabalho ✅ ([ADR-0208](../adr/0208-vigilancia-investigacao-do-trabalho.md)) | investigação do ambiente, nexo, medidas, risco ocupacional, indicadores | V5a |
 
 **Fora do escopo agora:**
 - reproduzir o SINAN ou o SIVEP;

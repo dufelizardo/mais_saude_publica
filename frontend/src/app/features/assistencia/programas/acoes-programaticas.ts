@@ -21,6 +21,7 @@ import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { ProgramaService } from '../../../core/services/programa';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { PROGRAMAS_SAUDE_BUCAL } from '../../../core/models/saude-bucal';
+import { EducacaoDaAcao } from './educacao-da-acao';
 import { SaudeBucalDaAcao } from './saude-bucal-da-acao';
 
 type Periodo = 'semana' | 'quatro' | 'mes';
@@ -33,7 +34,7 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
  */
 @Component({
   selector: 'app-acoes-programaticas',
-  imports: [ReactiveFormsModule, Drawer, SaudeBucalDaAcao],
+  imports: [ReactiveFormsModule, Drawer, SaudeBucalDaAcao, EducacaoDaAcao],
   template: `
     <div class="filters" style="margin-bottom: var(--s-3); flex-wrap: wrap;">
       @if (!programaFixo() && !campanhaFixa()) {
@@ -77,6 +78,9 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
                     @if (a.sugestao) { <span class="cell-sub" style="color: var(--warn);">{{ a.sugestao }}</span> }
                   </td>
                   <td class="num">
+                    @if (temEducacao(a)) {
+                      <button type="button" class="btn btn--ghost btn--sm" (click)="educacao.set(a)" [attr.aria-label]="'Educação em saúde: ' + rotulo(a)">Educação em saúde</button>
+                    }
                     @if (temSaudeBucal(a)) {
                       <button type="button" class="btn btn--ghost btn--sm" (click)="saudeBucal.set(a)" [attr.aria-label]="'Saúde bucal: ' + rotulo(a)">Saúde bucal</button>
                     }
@@ -103,6 +107,14 @@ type Gaveta = { tipo: 'nova' } | { tipo: 'realizar'; acao: AcaoProgramaticaDto }
       <div class="box box--err" role="alert"><strong>Não foi possível carregar as ações.</strong></div>
     } @else {
       <p class="cell-sub">Carregando as ações…</p>
+    }
+
+    @if (educacao(); as ed) {
+      <app-drawer titulo="Educação em saúde da ação" (fechar)="educacao.set(null)">
+        <div class="dw-form"><div class="dw-body">
+          <app-educacao-da-acao [acao]="ed" [podeAcompanhar]="podeAcompanhar()" />
+        </div></div>
+      </app-drawer>
     }
 
     @if (saudeBucal(); as sb) {
@@ -290,6 +302,7 @@ export class AcoesProgramaticas {
   readonly podeAvaliarBucal = input(false);
   /** A ação aberta na gaveta de saúde bucal (ADR-0140). */
   protected readonly saudeBucal = signal<AcaoProgramaticaDto | null>(null);
+  protected readonly educacao = signal<AcaoProgramaticaDto | null>(null);
   /** Muda para recarregar (ex.: uma busca ativa gerada na lista de inscritos). */
   readonly versao = input(0);
 
@@ -473,6 +486,11 @@ export class AcoesProgramaticas {
         this.erro.set((e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível salvar a ação.');
       },
     });
+  }
+
+  /** A ação coletiva de grupo, orientação, mobilização ou outra, prevista ou realizada, ganha a educação em saúde (ADR-0195). */
+  protected temEducacao(a: AcaoProgramaticaDto): boolean {
+    return a.coletiva && ['GRUPO', 'ORIENTACAO', 'MOBILIZACAO', 'OUTRA'].includes(a.tipo) && (a.situacao === 'PENDENTE' || a.situacao === 'REALIZADA');
   }
 
   /** A ação coletiva dos programas Saúde Bucal e PSE, prevista ou realizada, ganha o detalhe de saúde bucal (ADR-0140). */

@@ -296,7 +296,7 @@ public class CampanhaService {
      * O atendido nas ações realizadas da campanha. Na de vacinação, as pessoas vacinadas com a campanha na dose
      * (ADR-0149): as ações dela não somam, para a mesma vacinação não contar duas vezes.
      */
-    private int realizado(Campanha c) {
+    int realizado(Campanha c) {
         if (c.getTipo() == TipoCampanha.VACINACAO) {
             return (int) vacinacaoRepository.countPessoasDaCampanha(c.getUuid());
         }

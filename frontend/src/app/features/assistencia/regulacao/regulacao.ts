@@ -21,7 +21,7 @@ import { AuthService } from '../../../core/services/auth';
 import { PacienteService } from '../../../core/services/paciente';
 import { RegulacaoService } from '../../../core/services/regulacao';
 import { RedeService } from '../../../core/services/rede';
-import { SaldoPpiDto } from '../../../core/models/rede';
+import { SaldoPpiDto, SugestaoReferenciaDto } from '../../../core/models/rede';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { AgendaService } from '../../../core/services/agenda';
 import { ItemAgendaDto } from '../../../core/models/agenda';
@@ -177,6 +177,28 @@ export class Regulacao {
   private readonly redeService = inject(RedeService);
   /** O saldo da cota da PPI para a executante e o mês escolhidos (ADR-0179); nulo sem os dois. */
   protected readonly saldoPpi = signal<SaldoPpiDto | null>(null);
+  /** A referência da rede para a solicitante e o procedimento (ADR-0197): sugestão, não obrigação. */
+  protected readonly referencia = signal<SugestaoReferenciaDto | null>(null);
+
+  /** Busca a referência e, com a executante ainda vazia, já a escolhe. */
+  private sugerirExecutante(d: { procedimentoId: string; unidadeSolicitanteId: string }): void {
+    this.redeService.sugestaoDeReferencia(d.procedimentoId, d.unidadeSolicitanteId).subscribe({
+      next: (r) => {
+        this.referencia.set(r.executanteId ? r : null);
+        if (r.executanteId && !this.decisaoForm.controls.unidadeExecutanteId.value) {
+          this.decisaoForm.controls.unidadeExecutanteId.setValue(r.executanteId);
+          this.consultarSaldoPpi();
+        }
+      },
+      error: () => this.referencia.set(null),
+    });
+  }
+
+  protected foraDaReferencia(): boolean {
+    const r = this.referencia();
+    const v = this.decisaoForm.controls.unidadeExecutanteId.value;
+    return !!r?.executanteId && !!v && v !== r.executanteId;
+  }
 
   protected consultarSaldoPpi(): void {
     const d = this.detalhe();
@@ -425,6 +447,7 @@ export class Regulacao {
     this.detalhe.set(null);
     this.erroDetalhe.set(null);
     this.saldoPpi.set(null);
+    this.referencia.set(null);
     this.decisaoForm.reset({
       decisao: 'AUTORIZAR',
       unidadeExecutanteId: '',
@@ -440,7 +463,10 @@ export class Regulacao {
     this.complementoForm.reset({ complemento: '', profissionalMatricula: this.matriculaPadrao() });
     this.abrir({ tipo: 'detalhe', uuid: s.uuid });
     this.regulacaoService.buscar(s.uuid).subscribe({
-      next: (d) => this.detalhe.set(d),
+      next: (d) => {
+        this.detalhe.set(d);
+        this.sugerirExecutante(d);
+      },
       error: (e: HttpErrorResponse) =>
         this.erroDetalhe.set(e.status === 403 ? 'Esta solicitação é de uma unidade fora do seu acesso.' : 'Não foi possível abrir a solicitação.'),
     });

@@ -44,7 +44,8 @@ type Gaveta = { tipo: 'camara'; camara: CamaraRefrigeracaoDto | null } | { tipo:
             @for (l of p.lotesSobSuspeita; track l.uuid) {
               <li class="mo-row">
                 <span><span class="cell-main">{{ l.sigla }} · {{ l.numeroLote }}</span><span class="cell-sub">{{ l.doses }} doses · {{ l.camaraNome ?? 'sem câmara' }} · validade {{ fmt(l.validade) }}</span></span>
-                <button type="button" class="btn btn--sm" (click)="abrir({ tipo: 'avaliacao', lote: l })" [attr.aria-label]="'Avaliar o lote ' + l.numeroLote">Avaliar</button>
+                @if (l.suspensoNaRede) { <span class="tag tag--alert" title="A decisão é da coordenação da rede (ADR-0206)">Suspenso na rede (ESAVI)</span> }
+                @else { <button type="button" class="btn btn--sm" (click)="abrir({ tipo: 'avaliacao', lote: l })" [attr.aria-label]="'Avaliar o lote ' + l.numeroLote">Avaliar</button> }
               </li>
             }
           </ul>

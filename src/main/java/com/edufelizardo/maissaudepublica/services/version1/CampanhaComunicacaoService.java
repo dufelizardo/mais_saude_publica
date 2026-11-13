@@ -50,6 +50,7 @@ public class CampanhaComunicacaoService {
     @Autowired private CampanhaRepository campanhaOperacionalRepository;
     @Autowired private ConteudoEducativoRepository conteudoRepository;
     @Autowired private EducacaoPermanenteService educacaoPermanenteService;
+    @Autowired private EducacaoEmSaudeService educacaoEmSaudeService;
     @Autowired private ControleDeAcesso controleDeAcesso;
 
     // ── Campanhas ──────────────────────────────────────────────────────────────────────────────────
@@ -291,6 +292,8 @@ public class CampanhaComunicacaoService {
         c.getTemas().addAll(temas);
         c.setPrograma(programa);
         c.setCampanhaOperacional(operacional);
+        c.setMetaPessoas(dto.getMetaPessoas());
+        c.setMetaAcoes(dto.getMetaAcoes());
     }
 
     private CampanhaComunicacaoDto dto(CampanhaComunicacao c, Map<UUID, ConteudoEducativo> vigentes) {
@@ -304,7 +307,7 @@ public class CampanhaComunicacaoService {
                 a.setFalhas(a.getFalhas() + p.getFalhas());
             }
         }
-        return new CampanhaComunicacaoDto(c.getUuid(), c.getNome(), c.getObjetivo(), c.getDescricao(), c.getInicio(), c.getFim(), c.getSituacao(), c.getPublicoAlvo(),
+        return new CampanhaComunicacaoDto(educacaoEmSaudeService.daCampanha(c.getUuid()), c.getUuid(), c.getNome(), c.getObjetivo(), c.getDescricao(), c.getInicio(), c.getFim(), c.getSituacao(), c.getPublicoAlvo(),
                 c.getFaixaEtaria(), c.getUnidade() != null ? c.getUnidade().getUuid() : null, c.getUnidade() != null ? c.getUnidade().getNome() : null,
                 c.getTerritorios().stream().map(t -> new CampanhaComunicacaoDto.Item(t.getUuid(), t.getNome())).sorted(Comparator.comparing(CampanhaComunicacaoDto.Item::getNome)).toList(),
                 c.getTemas().stream().sorted().toList(), new ArrayList<>(c.getCanais().stream().map(CanalComunicacao::getUuid).toList()),
@@ -313,7 +316,8 @@ public class CampanhaComunicacaoService {
                 c.getPrograma() != null ? c.getPrograma().getUuid() : null, c.getPrograma() != null ? c.getPrograma().getNome() : null,
                 c.getCampanhaOperacional() != null ? c.getCampanhaOperacional().getUuid() : null, c.getCampanhaOperacional() != null ? c.getCampanhaOperacional().getNome() : null,
                 comunicados.stream().map(k -> new CampanhaComunicacaoDto.ComunicadoDaCampanha(k.getUuid(), k.getTitulo(), k.getSituacao(), k.getInicio(), k.getFim())).toList(),
-                new ArrayList<>(alcance.values()), c.getIniciadaEm(), c.getEncerradaEm(), c.getBalanco(), c.getMotivoCancelamento());
+                new ArrayList<>(alcance.values()), c.getIniciadaEm(), c.getEncerradaEm(), c.getBalanco(), c.getMotivoCancelamento(),
+                c.getMetaPessoas(), c.getMetaAcoes());
     }
 
     private static MaterialEducativoDto dto(MaterialEducativo m) {

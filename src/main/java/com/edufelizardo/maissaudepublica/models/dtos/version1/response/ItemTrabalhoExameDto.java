@@ -39,6 +39,9 @@ public class ItemTrabalhoExameDto implements Serializable {
     private String laboratorioNome;
     /** Na coleta: o motivo da rejeição da amostra anterior, quando o exame é recoleta (ADR-0095). Senão, nulo. */
     private MotivoRejeicaoAmostra motivoRecoleta;
+    /** Categoria e modalidade; no exame de imagem, "laboratório" é o serviço de imagem do pedido (ADR-0182). */
+    private com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame categoria;
+    private com.edufelizardo.maissaudepublica.models.enuns.ModalidadeImagem modalidade;
 
     public static ItemTrabalhoExameDto fromItem(ItemPedidoExame i, MotivoRejeicaoAmostra motivoRecoleta) {
         var p = i.getPedido();
@@ -46,6 +49,8 @@ public class ItemTrabalhoExameDto implements Serializable {
         return new ItemTrabalhoExameDto(i.getUuid(), p.getUuid(), p.getPaciente().getUuid(), p.getPaciente().getNome(), i.getExame().getNome(),
                 i.getExame().getMaterial(), i.getExame().getPreparo(), i.getStatus(), p.getPrioridade(), p.getSolicitadoEm(),
                 p.getUnidadeSolicitante().getNome(), a != null ? a.getCodigo() : null,
-                a != null ? a.getLaboratorio().getUuid() : null, a != null ? a.getLaboratorio().getNome() : null, motivoRecoleta);
+                a != null ? a.getLaboratorio().getUuid() : p.getUnidadeExecutanteImagem() != null ? p.getUnidadeExecutanteImagem().getUuid() : null,
+                a != null ? a.getLaboratorio().getNome() : p.getUnidadeExecutanteImagem() != null ? p.getUnidadeExecutanteImagem().getNome() : null,
+                motivoRecoleta, i.getExame().getCategoria(), i.getExame().getModalidade());
     }
 }
