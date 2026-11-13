@@ -37,4 +37,7 @@ public class LeitoRequestDto implements Serializable {
     private SexoLeito sexo;
 
     private Boolean ativo;
+
+    /** Sem ela, vem do tipo: neonatal na UTI neonatal, pediátrica no pediátrico e na UTI pediátrica, adulta nos demais (ADR-0184). */
+    private com.edufelizardo.maissaudepublica.models.enuns.FaixaEtariaLeito faixaEtaria;
 }

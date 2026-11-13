@@ -1,11 +1,11 @@
 # Pendências e estado dos ambientes
 
-Documento vivo, com **o que falta** no projeto (revisto na release **v1.12.0**, 2026-11-08). Cada item aponta
+Documento vivo, com **o que falta** no projeto (revisto na release **v1.13.0**, 2026-11-13). Cada item aponta
 para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou abrir uma pendência.
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.12.0, promovida em 2026-11-08). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.13.0, promovida em 2026-11-13). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -87,8 +87,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - ~~Vagas por unidade e procedimento (cotas e PPI)~~ — ADR-0179 (Gestão da Rede, GR1).
 - Fora do escopo da ADR-0087: ~~regulação de urgência e SAMU~~ — ADR-0176; internação (depende de Leitos, #12),
   integração com SISREG e SIGTAP, e ~~cotas por unidade (PPI)~~ — ADR-0179.
-- Regulação de urgência (ADR-0176): ~~viaturas no lugar do recurso em texto~~ — ADR-0178; ficha clínica do
-  atendimento pré-hospitalar; telefonia e integração com o 192; reserva de leito na vaga zero; conceder os papéis **Atendente de regulação
+- Regulação de urgência (ADR-0176): ~~viaturas no lugar do recurso em texto~~ — ADR-0178; ~~ficha clínica do
+  atendimento pré-hospitalar~~ — ADR-0188 (RL5); telefonia e integração com o 192; reserva de leito na vaga zero; conceder os papéis **Atendente de regulação
   (TARM)** e **Médico regulador de urgência** na central quando a autorização for ligada.
 - Conceder o papel **Médico regulador** a alguém no escopo do município ou da regional, quando a
   autorização for ligada.
@@ -99,23 +99,42 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   acessibilidade. As equipes da unidade aparecem na aba Equipes desde a ADR-0104. Mapa, coordenadas e
   microáreas vêm pelo domínio Território (ADR-0108, fatias F1 e F2).
 - Fora do escopo da ADR-0101: sincronização com o CNES; coordenadas e mapa; microáreas e famílias; equipes de
-  Saúde da Família; inspeção sanitária; capacidade de consultórios; exportação; horário de atendimento
+  Saúde da Família; ~~inspeção sanitária~~ (ADR-0199, a unidade pública como estabelecimento ligado); capacidade de consultórios; exportação; horário de atendimento
   estruturado.
 
 ### Leitos e internação
 - ~~Internações no prontuário e vínculo de quem cuida do internado~~ — feitos pela ADR-0100. A tela (ADR-0099)
   não tem protótipo próprio.
-- Fora do escopo da ADR-0098: AIH, SIH e faturamento; central de regulação de leitos entre unidades;
-  reserva de leito para cirurgia eletiva; censo diário formal; prescrição e dieta hospitalar; sincronização
-  com os leitos do CNES; restrição de leito por idade (pediátrico e neonatal).
+- Fora do escopo da ADR-0098: ~~AIH interna~~ — ADR-0186 (RL3); SIH e faturamento no domínio 20; ~~central de regulação de leitos
+  entre unidades~~ — ADR-0184 (RL1); ~~reserva de leito para cirurgia eletiva e censo diário formal~~ — ADR-0185 (RL2); ~~prescrição e dieta
+  hospitalar~~ — ADR-0187 (RL4); sincronização com os leitos do CNES (domínio 20); ~~restrição de leito por idade~~ — ADR-0184.
+- Fora do escopo da ADR-0184: rotina agendada para vencer reservas (o vencimento é visto na consulta); pedido de leito gerado
+  sozinho pela transferência da urgência; faixa etária na troca de leito.
+- Fora do escopo da ADR-0185: histórico do cadastro de leitos para o censo (os leitos contam como estão no fechamento); reserva
+  da eletiva antes da janela de dois dias; fechamento automático do censo; envio do censo a sistemas externos (domínio 20).
+- Fora do escopo da ADR-0186: laudo de mudança de procedimento e de prorrogação de permanência; espelho e faturamento da AIH;
+  envio ao SIH e validação no SIGTAP (domínio 20); página pública de verificação do laudo de AIH.
+- Fora do escopo da ADR-0187: dispensação por dose individualizada pela farmácia hospitalar; alerta de interação medicamentosa e
+  alergia (base externa, domínio 20); balanço hídrico e sinais vitais estruturados; plano de cuidados da SAE; horários das
+  refeições configuráveis por unidade.
+- Fora do escopo da ADR-0188: telefonia e gravação do 192; estoque de medicamentos da viatura (ES3/T3); transmissão de
+  eletrocardiograma; aplicativo off-line para tablet da viatura; conceder o papel **Equipe de intervenção do SAMU** quando a
+  autorização for ligada.
 
 ### Laboratório
-- Depois da ADR-0095: laudo PDF assinado digitalmente (ICP-Brasil), envio do resultado ao paciente, gráfico
-  da evolução de um exame no tempo e aviso ao solicitante quando o resultado é liberado.
+- Depois da ADR-0095: ~~laudo PDF assinado~~ — ADR-0183 (L4, com assinatura eletrônica interna; o ICP-Brasil é integração),
+  ~~envio do resultado ao paciente e aviso ao solicitante quando o resultado é liberado~~ — ADR-0181 (L2; o envio
+  eletrônico, com consentimento, fica na C5 e no domínio 20), ~~gráfico da evolução de um exame no tempo~~ — ADR-0180 (L1).
 - A tela (ADR-0094) não tem protótipo próprio: segue o padrão de Farmácia e Regulação.
 - Fora do escopo da ADR-0093: LACEN e vigilância, integração com equipamentos (LIS, HL7, ASTM), controle
-  de qualidade, insumos de coleta (Estoque, #13), exames de imagem, laudo PDF assinado, SIGTAP e BPA,
-  e valores de referência por sexo e idade.
+  de qualidade, ~~insumos de coleta~~ — ADR-0183 (L4), ~~exames de imagem~~ — ADR-0182 (L3), ~~laudo PDF assinado~~ — ADR-0183 (L4), SIGTAP e BPA,
+  e ~~valores de referência por sexo e idade~~ — ADR-0180 (L1).
+- Fora do escopo da ADR-0180: gestação e outras condições clínicas como critério da faixa de referência.
+- Fora do escopo da ADR-0181: central de notificações geral; prazo de liberação com alerta de atraso (L4 ou Indicadores).
+- Fora do escopo da ADR-0183: código de barras do tubo; custo do exame pelos insumos (Financeiro, #17); assinatura
+  qualificada com certificado ICP-Brasil (domínio 20).
+- Fora do escopo da ADR-0182: cadastro de aparelhos com dose de radiação (com o RIS, domínio 20); ligação automática da autorização
+  da Regulação ao pedido de imagem; laudo comparativo com exames anteriores.
 
 ### Agenda (diferenças com o protótipo `Agenda.html`, ADR-0092)
 - Visão Mês e exportação ("Em breve"). ~~Filtro de especialidade~~ — feito pela ADR-0134 (SB1).
@@ -161,45 +180,54 @@ real":
   - ~~#10 Laboratório e diagnóstico~~ — ADRs 0093 a 0095;
   - ~~#11 Regulação~~ — ADRs 0087 a 0089 (falta a regulação de urgência e de internação);
   - ~~#12 Leitos e internação~~ — ADRs 0098 a 0100;
-  - #16 Transporte sanitário — ~~T1 (frota, plantão, viatura no SAMU)~~ — ADR-0178; T2 (transporte eletivo e TFD) e T3 (emergências)
-    com aprovação; conceder o papel **Coordenador de frota** quando a autorização for ligada;
+  - #16 Transporte sanitário — ~~T1 (frota, plantão, viatura no SAMU)~~ — ADR-0178; ~~T2 (transporte eletivo e TFD)~~ — ADR-0190;
+    ~~T3 (veículos nas emergências)~~ — ADR-0192; conceder o papel **Coordenador de frota**, o **Comissão de TFD** e `TRANSPORTE.SOLICITAR` às
+    recepções quando a autorização for ligada; ajuda de custo e diárias do TFD (financeiro);
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
     coletivas e equipe (programas pela ADR-0132; especialidade pela ADR-0134);
   - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);
   - na Enfermagem, `Cuidado` e prescrição com aprazamento.
 - **Gestão e Inteligência:**
-  - #13 Estoque — ~~ES1 (catálogo, lotes, livro, mínimo e alertas)~~ — ADR-0177; ES2 (central, requisição, transferência,
-    inventário) e ES3 (emergências) com aprovação; conceder o papel **Almoxarife** quando a autorização for ligada;
+  - #13 Estoque — ~~ES1 (catálogo, lotes, livro, mínimo e alertas)~~ — ADR-0177; ~~ES2 (central, requisição, transferência,
+    inventário)~~ — ADR-0189; ~~ES3 (reserva e consumo nas emergências)~~ — ADR-0191; ponto de reposição automático; incluir a capacidade Central de
+    abastecimento no almoxarifado central; conceder o papel **Almoxarife** quando a autorização for ligada;
   - #14 Compras;
   - #15 Patrimônio;
   - #17 Financeiro;
-  - #18 Qualidade;
+  - #18 Qualidade — desenhada na ADR-0202; ~~Q1 (segurança do paciente)~~ — ADR-0203 (Notivisa à mão, sem feriados no prazo mensal);
+    ~~Q2 (não conformidades e planos de ação)~~ — ADR-0204 (evidência em texto, sem anexo); ~~Q3 (indicadores com metas e auditoria de protocolos)~~ — ADR-0205 (sem IRAS, sem meta por setor); Qualidade completa;
   - #19 Indicadores e BI — desenhado na ADR-0142; ~~BI1 (produção assistencial e Sala de Situação)~~ — ADR-0143;
     ~~BI2 (situação operacional)~~ — ADR-0144; ~~BI3 (indicadores da rede)~~ — ADR-0146; ~~BI4 (relatórios)~~ — ADR-0167 (sem envio agendado); ~~BI5 (coordenações e gerência)~~ — ADR-0175.
 - **#29 Modelo Operacional dos Equipamentos** (camada) — desenhado na ADR-0115, que aceita a ADR-0053. ~~MO1~~ —
   perfis e capacidades, ADR-0117; ~~MO2~~ — serviços da unidade, ADR-0165 (sem o leito apontar direto para o serviço). ~~MO3~~ — ponto operacional, ADR-0166 (sem GPS, sem agendar pelo ponto ou pela rota e sem
   indicadores por local). ~~MO4~~ — domínios consultam capacidades, ADR-0170. Camada completa.
-- **#30 Gestão da Rede de Atenção** — desenhado na ADR-0179; ~~GR1 (oferta e cotas da PPI)~~ — ADR-0179; GR2 (redes temáticas) e GR3
-  (cobertura) com aprovação.
+- **#30 Gestão da Rede de Atenção** — desenhado na ADR-0179; ~~GR1 (oferta e cotas da PPI)~~ — ADR-0179; ~~GR2 (redes temáticas e
+  referência estrutural)~~ — ADR-0197 (catálogo das redes editável só pela API); ~~GR3 (cobertura e indicadores de pactuação)~~ —
+  ADR-0198; domínio completo. Ficam o teto financeiro (domínio 17) e SISREG/SIGTAP (domínio 20).
 - **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
   ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir
   (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
 - **#28 Comunicação e Educação em Saúde** — desenhado na ADR-0114; ~~C1 (comunicação básica)~~ — ADR-0168 (e-mail só a
-  profissionais, sem consentimento para a população); faltam C2 a C6 (avaliação).
+  profissionais, sem consentimento para a população); ~~C2 (campanhas)~~ — ADR-0174; ~~C3 (educação em saúde)~~ — ADR-0195;
+  ~~C4 (educação permanente)~~ — ADR-0173; ~~C6 (avaliação)~~ — ADR-0196; domínio completo. Falta a C5 (multicanal), que depende de
+  Integrações (domínio 20).
 - **#27 Gestão de Emergências e Desastres** — desenhado na ADR-0113; ~~E1 (núcleo)~~ — ADR-0156 (sem a escolha
-  manual das microáreas na tela); ~~E2 (contingência)~~ — ADR-0157; ~~E3 (coordenação)~~ — ADR-0158 (insumo, equipamento e veículo como necessidade até Estoque e Transporte); ~~E5 (pós-evento)~~ — ADR-0159 (sem o relatório em PDF, que depende de Documentos); ~~E6a (evento de massa e estruturas temporárias)~~ — ADR-0160 (ambulâncias como número até Transporte); ~~E6b (painel da epidemia e exposição ambiental)~~ — ADR-0161 (sem incidência por população); falta a E4 (integração da rede, depende de Estoque e Transporte).
+  manual das microáreas na tela); ~~E2 (contingência)~~ — ADR-0157; ~~E3 (coordenação)~~ — ADR-0158 (insumo, equipamento e veículo como necessidade até Estoque e Transporte); ~~E5 (pós-evento)~~ — ADR-0159 (sem o relatório em PDF, que depende de Documentos); ~~E6a (evento de massa e estruturas temporárias)~~ — ADR-0160 (ambulâncias como número até Transporte); ~~E6b (painel da epidemia e exposição ambiental)~~ — ADR-0161 (sem incidência por população); ~~E4a (vulneráveis, deslocados e abrigos)~~ — ADR-0193; ~~E4b (redistribuição e Regulação)~~ — ADR-0194; domínio completo.
 - **#26 Saúde Mental** — desenhado na ADR-0112; fatias ~~SM1 (base)~~ — ADR-0120; ~~SM2 (PTS)~~ — ADR-0121; ~~SM4 (rede)~~ — ADR-0122; ~~SM3 (risco e crise)~~ — ADR-0123 (a notificação pela V1; o SAMU pela
   regulação de urgência, ADR-0176); ~~SM5 (CAPS e RAPS)~~ — ADR-0153 (sem o CAPS de referência por território e a RAAS); ~~SM6
   (intersetorialidade e indicadores)~~ — ADR-0155. Domínio completo.
 - **#25 Saúde Bucal** — desenhado na ADR-0111; fatias ~~SB1 (base)~~ — ADR-0134, ~~SB2 (odontograma)~~ — ADR-0135, ~~SB3a (catálogo e procedimento odontológico)~~ — ADR-0136, ~~SB3b (plano de tratamento)~~ — ADR-0137; ~~SB4a (encaminhamento pela Regulação)~~ — ADR-0138; ~~SB4b (prótese)~~ — ADR-0139; ~~SB5 (coletiva)~~ — ADR-0140. Domínio completo; CPO-D e indicadores ficam para a P6 e o BI.
 - **#23 Vigilância em Saúde** — desenhado na ADR-0110; fatias ~~V1 (fundação)~~ — ADR-0124,
   ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131, ~~V4a (controle de vetores)~~ —
-  ADR-0162 (sem o quarteirão), ~~V4b (animais)~~ — ADR-0163 (sem a cobertura antirrábica), ~~V4c (água e risco)~~ — ADR-0164 (sem o plano de amostragem); faltam V3 (sanitária) e V5 (trabalhador e integrações).
+  ADR-0162 (sem o quarteirão), ~~V4b (animais)~~ — ADR-0163 (sem a cobertura antirrábica), ~~V4c (água e risco)~~ — ADR-0164 (sem o plano de amostragem), ~~V3a (estabelecimento, licença, denúncia e inspeção)~~ — ADR-0199, ~~V3b (auto,
+  processo e medidas)~~ — ADR-0200, ~~V3c (violência na rede intersetorial)~~ — ADR-0201 (sem a pessoa com deficiência, que pede o dado no
+  cadastro), ~~V5a (bloco do trabalho, material biológico e acidente do servidor)~~ — ADR-0207, ~~V5b (investigação do trabalho, risco
+  ocupacional e indicadores)~~ — ADR-0208. Domínio completo; o SINAN foi para o domínio 20.
 - **#24 Imunização** — desenhado na ADR-0147; ~~I1 (fundação: catálogo, calendário, dose, caderneta e Sala de Vacina)~~
-  — ADR-0147; ~~I2 (sala de vacina e cadeia de frio)~~ — ADR-0148 (sem o remanejamento entre unidades, o pedido à rede
-  de frio e o termômetro automático); ~~I3 (cobertura e campanhas)~~ — ADR-0149 (sem o SINASC e sem a cobertura de
-  adolescentes, adultos e gestantes); ~~I4 (ESAVI)~~ — ADR-0150 (sem o alerta por lote e a revogação da
-  contraindicação); falta I5 (SI-PNI).
+  — ADR-0147; ~~I2 (sala de vacina e cadeia de frio)~~ — ADR-0148 (sem o pedido à rede de frio e o termômetro
+  automático); ~~I3 (cobertura e campanhas)~~ — ADR-0149 (sem o SINASC e sem a cobertura de adolescentes, adultos e
+  gestantes); ~~I4 (ESAVI)~~ — ADR-0150; ~~I6 (remanejamento, alerta de ESAVI por lote e revogação pelo CRIE)~~ — ADR-0206
+  (o recebimento fora da faixa põe o lote inteiro do destino sob suspeita); falta I5 (SI-PNI).
 - **#22 Programas, Ações e Linhas de Cuidado** — desenhado na ADR-0109; programas e campanhas cadastráveis.
   Fatias: ~~P1 (catálogo)~~ — ADR-0118; ~~P2 (acompanhamento)~~ — ADR-0119 (elegíveis por idade e sexo na
   ADR-0128; os critérios clínicos ficam para depois); ~~P4 (ações e programa na Agenda)~~ — ADR-0132; ~~P3 (campanhas e consulta pública)~~ — ADR-0133; ~~P6 (metas e indicadores)~~ — ADR-0141; ~~P5 (linhas de cuidado)~~ — ADR-0152 (sem linhas recorrentes e

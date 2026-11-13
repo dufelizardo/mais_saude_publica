@@ -97,4 +97,8 @@ public class Internacao implements Serializable {
     /** Na compulsória: o número do processo ou da ordem judicial. */
     @Column(length = 60)
     private String ordemJudicial;
+
+    /** Número da AIH autorizada (ADR-0186), copiado do laudo na autorização. */
+    @Column(length = 13)
+    private String numeroAih;
 }

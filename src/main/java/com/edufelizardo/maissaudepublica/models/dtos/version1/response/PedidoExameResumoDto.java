@@ -36,6 +36,9 @@ public class PedidoExameResumoDto implements Serializable {
     private int totalExames;
     private int liberados;
     private List<ItemPedidoExameDto> itens;
+    /** O serviço de imagem do pedido (ADR-0182). */
+    private UUID unidadeExecutanteImagemId;
+    private String unidadeExecutanteImagemNome;
 
     public static PedidoExameResumoDto fromPedido(PedidoExame p, List<ItemPedidoExame> itens) {
         PedidoExameResumoDto dto = new PedidoExameResumoDto();
@@ -57,6 +60,10 @@ public class PedidoExameResumoDto implements Serializable {
         dto.setLiberados((int) itens.stream().filter(i -> i.getStatus() == StatusItemExame.LIBERADO).count());
         dto.setSituacao(situacao(itens));
         dto.setItens(itens.stream().map(i -> ItemPedidoExameDto.fromItem(i, comResultado)).toList());
+        if (p.getUnidadeExecutanteImagem() != null) {
+            dto.setUnidadeExecutanteImagemId(p.getUnidadeExecutanteImagem().getUuid());
+            dto.setUnidadeExecutanteImagemNome(p.getUnidadeExecutanteImagem().getNome());
+        }
     }
 
     static String situacao(List<ItemPedidoExame> itens) {

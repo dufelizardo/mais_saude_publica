@@ -102,6 +102,9 @@ export interface MotivoRegulacaoRequestDto {
 /** Sem dado clínico: listagem, fila e andamento para a recepção. */
 export interface SolicitacaoRegulacaoResumoDto {
   uuid: string;
+  /** A emergência que pediu prioridade, enquanto aberta (ADR-0194). */
+  emergenciaId?: string | null;
+  emergenciaNome?: string | null;
   status: StatusSolicitacaoRegulacao;
   prioridade: PrioridadeRegulacao;
   posicaoNaFila?: number | null;

@@ -16,9 +16,17 @@ public interface NotificacaoRepository extends JpaRepository<Notificacao, UUID> 
 
     List<Notificacao> findByPaciente_Uuid(UUID pacienteId);
 
+    @Query("select n from Notificacao n join fetch n.paciente join fetch n.agravo a join fetch n.unidade left join fetch n.profissional where a.codigo = ?1")
+    List<Notificacao> findDoAgravo(String codigo);
+
     List<Notificacao> findBySurto_Uuid(UUID surtoId);
 
     boolean existsByUnidade_UuidAndDataNotificacaoBetween(UUID unidadeId, LocalDate inicio, LocalDate fim);
+
+    /** Os ESAVI com as doses ligadas, para o alerta por lote (ADR-0206). */
+    @Query("select distinct n from Notificacao n join fetch n.agravo a join fetch n.unidade join fetch n.doses d join fetch d.imunobiologico "
+            + "left join fetch d.loteEstoque where a.codigo = 'ESAVI'")
+    List<Notificacao> findEsaviComDoses();
 
     /** As doses ligadas a alguma notificação, entre as informadas (a caderneta e as sugestões, ADR-0150). */
     @Query("select d.uuid from Notificacao n join n.doses d where d.uuid in ?1")

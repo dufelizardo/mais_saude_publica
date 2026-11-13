@@ -59,6 +59,8 @@ public class InternacaoResponseDto implements Serializable {
     private MomentoComunicacaoMp comunicacaoMpPendente;
     private Instant prazoComunicacaoMp;
     private boolean comunicacaoMpVencida;
+    /** Número da AIH autorizada (ADR-0186). */
+    private String numeroAih;
 
 
     /** {@code completo} falso nas listagens: sem motivo, sumário e eventos. */
@@ -72,6 +74,6 @@ public class InternacaoResponseDto implements Serializable {
                 i.getTipoAlta(), completo ? i.getSumarioAlta() : null, i.getAltaPor() != null ? i.getAltaPor().getNome() : null,
                 Duration.between(i.getAdmitidaEm(), fim).toDays(),
                 completo ? eventos.stream().map(EventoLeitoDto::fromEvento).toList() : null,
-                i.getModalidade(), i.getOrdemJudicial(), List.of(), null, null, false);
+                i.getModalidade(), i.getOrdemJudicial(), List.of(), null, null, false, i.getNumeroAih());
     }
 }

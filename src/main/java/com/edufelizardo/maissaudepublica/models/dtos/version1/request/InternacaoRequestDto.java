@@ -43,4 +43,8 @@ public class InternacaoRequestDto implements Serializable {
     private CaraterInternacao carater;
 
     private LocalDate previsaoAlta;
+
+    /** Leito de outra faixa etária que a idade do paciente: só com a justificativa do médico (ADR-0184). */
+    @jakarta.validation.constraints.Size(max = 500, message = "A justificativa vai até 500 caracteres.")
+    private String justificativaFaixaEtaria;
 }

@@ -30,12 +30,16 @@ public class ItemPedidoExameDto implements Serializable {
     private String amostraCodigo;
     private String motivoCancelamento;
     private ResultadoExameDto resultado;
+    /** Categoria e modalidade do exame (ADR-0182). */
+    private com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame categoria;
+    private com.edufelizardo.maissaudepublica.models.enuns.ModalidadeImagem modalidade;
 
     /** {@code comResultado} falso nas listagens: o valor só sai no detalhe, que é auditado. */
     public static ItemPedidoExameDto fromItem(ItemPedidoExame i, boolean comResultado) {
         return new ItemPedidoExameDto(i.getUuid(), i.getExame().getUuid(), i.getExame().getNome(), i.getExame().getMaterial(),
                 i.getExame().getTipoResultado(), i.getStatus(), i.getAmostra() != null ? i.getAmostra().getCodigo() : null,
                 i.getMotivoCancelamento(),
-                comResultado && i.getResultadoAtual() != null ? ResultadoExameDto.fromResultado(i.getResultadoAtual()) : null);
+                comResultado && i.getResultadoAtual() != null ? ResultadoExameDto.fromResultado(i.getResultadoAtual()) : null,
+                i.getExame().getCategoria(), i.getExame().getModalidade());
     }
 }

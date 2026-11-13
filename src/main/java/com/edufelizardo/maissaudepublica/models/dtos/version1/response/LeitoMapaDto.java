@@ -45,15 +45,21 @@ public class LeitoMapaDto implements Serializable {
     private Long diasInternado;
     private LocalDate previsaoAlta;
     private String medicoResponsavelNome;
+    /** Faixa etária e reserva da central de leitos (ADR-0184). */
+    private com.edufelizardo.maissaudepublica.models.enuns.FaixaEtariaLeito faixaEtaria;
+    private Instant reservadoAte;
+    private UUID reservaSolicitacaoId;
 
 
     public static LeitoMapaDto fromLeito(Leito l, Internacao i) {
         return new LeitoMapaDto(l.getUuid(), l.getUnidade().getUuid(), l.getUnidade().getNome(), l.getSetor().getUuid(),
-                l.getSetor().getNome(), l.getIdentificacao(), l.getTipo(), l.getSexo(), l.getSituacao(), l.getMotivoBloqueio(),
+                l.getSetor().getNome(), l.getIdentificacao(), l.getTipo(), l.getSexo(), l.situacaoEm(Instant.now()), l.getMotivoBloqueio(),
                 l.isAtivo(), i != null ? i.getUuid() : null, i != null ? i.getPaciente().getUuid() : null,
                 i != null ? i.getPaciente().getNome() : null, i != null ? i.getPaciente().getSexo() : null,
                 i != null ? i.getAdmitidaEm() : null,
                 i != null ? Duration.between(i.getAdmitidaEm(), Instant.now()).toDays() : null,
-                i != null ? i.getPrevisaoAlta() : null, i != null ? i.getMedicoResponsavel().getNome() : null);
+                i != null ? i.getPrevisaoAlta() : null, i != null ? i.getMedicoResponsavel().getNome() : null, l.getFaixaEtaria(),
+                l.situacaoEm(Instant.now()) == SituacaoLeito.RESERVADO ? l.getReservadoAte() : null,
+                l.situacaoEm(Instant.now()) == SituacaoLeito.RESERVADO ? l.getReservaSolicitacaoId() : null);
     }
 }

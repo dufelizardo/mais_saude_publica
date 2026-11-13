@@ -31,6 +31,7 @@ import { EdicaoMapa, Mapa, PinoMapa, PoligonoMapa } from '../../shared/mapa/mapa
 import { CapacidadeEmergencial } from './capacidade-emergencial';
 import { CatalogosEmergencia } from './catalogos-emergencia';
 import { CoordenacaoEmergencia } from './coordenacao-emergencia';
+import { PessoasEmergencia } from './pessoas-emergencia';
 import { EventoEspecializado } from './evento-especializado';
 import { PlanosContingencia } from './planos-contingencia';
 import { RelatorioPosEvento } from './relatorio-pos-evento';
@@ -51,7 +52,7 @@ type Gaveta =
  */
 @Component({
   selector: 'app-emergencias',
-  imports: [Drawer, Mapa, PlanosContingencia, CatalogosEmergencia, CapacidadeEmergencial, CoordenacaoEmergencia, EventoEspecializado, RelatorioPosEvento],
+  imports: [Drawer, Mapa, PlanosContingencia, CatalogosEmergencia, CapacidadeEmergencial, CoordenacaoEmergencia, EventoEspecializado, RelatorioPosEvento, PessoasEmergencia],
   template: `
     <header class="page-head">
       <div>
@@ -208,6 +209,7 @@ type Gaveta =
         <app-evento-especializado [emergencia]="d" [podeCoordenar]="pode('EMERGENCIA.COORDENAR', 'EMERGENCIA.ATIVAR')" [podeRegistrar]="pode('EMERGENCIA.REGISTRAR')" (alterada)="aposCoordenacao($event)" />
         @if (d.situacao !== 'PLANEJADA') {
           <app-coordenacao-emergencia [emergencia]="d" [podeCoordenar]="pode('EMERGENCIA.COORDENAR')" (alterada)="aposCoordenacao($event)" />
+          <app-pessoas-emergencia [emergencia]="d" [podeVer]="pode('EMERGENCIA.COORDENAR') && pode('PACIENTE.CONSULTAR')" />
         }
         @if (d.situacao === 'EM_DESMOBILIZACAO' || d.situacao === 'ENCERRADA') {
           <app-relatorio-pos-evento [emergencia]="d" [podeEscrever]="pode('EMERGENCIA.COORDENAR', 'EMERGENCIA.ATIVAR')" [podeFinalizar]="pode('EMERGENCIA.ATIVAR')" [podeRevisarPlano]="pode('CONTINGENCIA.GERENCIAR')" />

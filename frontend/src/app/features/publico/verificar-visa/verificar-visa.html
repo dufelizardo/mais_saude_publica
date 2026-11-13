@@ -1,0 +1,62 @@
+<a href="#main" class="skip-link">Pular para a verificação</a>
+
+<div class="login-shell login-shell--solo">
+  <section class="form-panel" aria-labelledby="form-title">
+    <main id="main" class="form-wrap" role="main">
+      <span class="bp-brand__mark senha-mark" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V8l7-5 7 5v13"></path><path d="m9 14 2 2 4-4"></path></svg>
+      </span>
+      <h1 id="form-title">Verificar documento da vigilância sanitária</h1>
+      <p class="lead">Confira um termo (auto de infração, decisão, interdição, apreensão ou desinterdição) pelo código do rodapé, ou uma licença sanitária pelo número.</p>
+
+      <form novalidate [formGroup]="form" (ngSubmit)="verificarTermo()">
+        <div class="field" [class.has-error]="!!erro()">
+          <label for="f-codigo">Código do termo</label>
+          <div class="input-wrap" [class.has-error]="!!erro()">
+            <input id="f-codigo" formControlName="codigo" class="mono" autocomplete="off" maxlength="14" placeholder="ABCD-EFGH-JKLM" aria-describedby="e-codigo" />
+          </div>
+          @if (erro()) { <span class="error-msg" id="e-codigo" role="alert" style="display: inline-flex;">{{ erro() }}</span> }
+        </div>
+        <button type="submit" class="btn btn--block" [disabled]="consultando()">{{ consultando() ? 'Verificando…' : 'Verificar termo' }}</button>
+      </form>
+
+      @if (termo(); as t) {
+        <section class="verif" [class.verif--ok]="t.integro" [class.verif--velho]="!t.integro" role="status" aria-live="polite">
+          <h2>{{ t.integro ? 'Termo autêntico' : 'Termo registrado, mas o arquivo não confere' }}</h2>
+          <dl>
+            <div><dt>Tipo</dt><dd>{{ tiposTermo[t.tipo] }} nº {{ t.numero }}</dd></div>
+            <div><dt>Emitido em</dt><dd>{{ dataHora(t.emitidoEm) }}</dd></div>
+            <div><dt>Estabelecimento</dt><dd>{{ t.estabelecimento }} · {{ t.documento }}</dd></div>
+            <div><dt>Hash do PDF (SHA-256)</dt><dd class="mono verif__hash">{{ t.hashPdf }}</dd></div>
+          </dl>
+          <p class="verif__nota">Para conferir o arquivo, calcule o SHA-256 do PDF recebido: ele precisa ser igual ao hash acima.</p>
+        </section>
+      }
+
+      <form novalidate [formGroup]="form" (ngSubmit)="verificarLicenca()" style="margin-top: var(--s-4);">
+        <div class="field" [class.has-error]="!!erroLicenca()">
+          <label for="f-licenca">Número da licença sanitária</label>
+          <div class="input-wrap" [class.has-error]="!!erroLicenca()">
+            <input id="f-licenca" formControlName="licenca" class="mono" autocomplete="off" maxlength="11" placeholder="2026/000123" aria-describedby="e-licenca" />
+          </div>
+          @if (erroLicenca()) { <span class="error-msg" id="e-licenca" role="alert" style="display: inline-flex;">{{ erroLicenca() }}</span> }
+        </div>
+        <button type="submit" class="btn btn--ghost btn--block">Verificar licença</button>
+      </form>
+
+      @if (licenca(); as l) {
+        <section class="verif" [class.verif--ok]="l.situacao === 'VIGENTE' || l.situacao === 'DISPENSADA'" [class.verif--velho]="l.situacao !== 'VIGENTE' && l.situacao !== 'DISPENSADA'" role="status" aria-live="polite">
+          <h2>{{ l.dispensa ? 'Dispensa de licenciamento' : 'Licença sanitária' }}: {{ situacoesLicenca[l.situacao] }}</h2>
+          <dl>
+            <div><dt>Número</dt><dd class="mono">{{ l.numero }}</dd></div>
+            <div><dt>Estabelecimento</dt><dd>{{ l.estabelecimento }} · {{ l.documento }}</dd></div>
+            <div><dt>Emitida em</dt><dd>{{ data(l.emitidaEm) }}</dd></div>
+            @if (l.validade) { <div><dt>Validade</dt><dd>{{ data(l.validade) }}</dd></div> }
+          </dl>
+        </section>
+      }
+
+      <a class="btn btn--ghost btn--block" routerLink="/">Voltar à página inicial</a>
+    </main>
+  </section>
+</div>

@@ -32,8 +32,8 @@ const MENU: Record<string, string[]> = {
   '/administrativo/necessidades-de-pessoal': [...ADMINISTRATIVO, ...RH],
   // Coordenações e gerência (ADR-0175): a estrutura e os indicadores da regional.
   '/administrativo/coordenacoes': [...ADMINISTRATIVO, 'INDICADOR.CONSULTAR'],
-  '/administrativo/estoque': ['ESTOQUE.CONSULTAR', 'ESTOQUE.MOVIMENTAR', 'ESTOQUE.GERENCIAR'],
-  '/administrativo/frota': ['TRANSPORTE.CONSULTAR', 'TRANSPORTE.GERENCIAR'],
+  '/administrativo/estoque': ['ESTOQUE.CONSULTAR', 'ESTOQUE.MOVIMENTAR', 'ESTOQUE.GERENCIAR', 'ESTOQUE.REQUISITAR', 'ESTOQUE.ATENDER'],
+  '/administrativo/frota': ['TRANSPORTE.CONSULTAR', 'TRANSPORTE.GERENCIAR', 'TRANSPORTE.SOLICITAR', 'TFD.AUTORIZAR'],
   '/administrativo/ppi': ['REDE.CONSULTAR', 'REDE.GERENCIAR'],
   // Território (ADR-0125): o recorte geográfico é aberto a quem está logado.
   '/administrativo/territorio': [],
@@ -44,9 +44,10 @@ const MENU: Record<string, string[]> = {
   '/assistencia/atendimentos': ['ATENDIMENTO.GERENCIAR', 'PRONTUARIO.CONSULTAR', 'AGENDAMENTO.GERENCIAR'],
   '/assistencia/farmacia': ['FARMACIA.CONSULTAR', 'FARMACIA.DISPENSAR', 'FARMACIA.TRANSFERIR', 'FARMACIA.GERENCIAR_ESTOQUE'],
   '/assistencia/regulacao': ['REGULACAO.CONSULTAR', 'REGULACAO.SOLICITAR', 'REGULACAO.REGULAR'],
-  '/assistencia/urgencia': ['URGENCIA.CONSULTAR', 'URGENCIA.RECEBER', 'URGENCIA.REGULAR'],
-  '/assistencia/laboratorio': ['EXAME.SOLICITAR', 'LABORATORIO.COLETAR', 'LABORATORIO.ANALISAR', 'LABORATORIO.LIBERAR', 'LABORATORIO.GERENCIAR'],
-  '/assistencia/leitos': ['INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'LEITO.GERENCIAR'],
+  '/assistencia/urgencia': ['URGENCIA.CONSULTAR', 'URGENCIA.RECEBER', 'URGENCIA.REGULAR', 'APH.REGISTRAR'],
+  '/assistencia/laboratorio': ['EXAME.SOLICITAR', 'LABORATORIO.COLETAR', 'LABORATORIO.ANALISAR', 'LABORATORIO.LIBERAR', 'LABORATORIO.GERENCIAR',
+    'IMAGEM.REALIZAR', 'IMAGEM.LAUDAR'],
+  '/assistencia/leitos': ['INTERNACAO.CONSULTAR', 'INTERNACAO.GERENCIAR', 'INTERNACAO.ALTA', 'LEITO.GERENCIAR', 'INTERNACAO.SOLICITAR_VAGA', 'LEITO.REGULAR', 'CENSO.FECHAR', 'AIH.SOLICITAR', 'AIH.AUTORIZAR', 'AIH.NUMERAR', 'PRESCRICAO.HOSPITALAR', 'PRESCRICAO.CHECAR', 'DIETA.CHECAR'],
   // Catálogo de programas (ADR-0118): aberto a quem está logado.
   '/assistencia/programas': [],
   // Sala de Vacina (ADR-0147): de quem vacina.
@@ -59,9 +60,17 @@ const MENU: Record<string, string[]> = {
   '/vigilancia/emergencias': ['EMERGENCIA.REGISTRAR', 'EMERGENCIA.ATIVAR', 'CONTINGENCIA.GERENCIAR', 'INDICADOR.CONSULTAR'],
   // Zoonoses e vetores (ADR-0162): o agente de endemias, a coordenação de zoonoses e quem lê os índices.
   '/vigilancia/vetores': ['ZOONOSES.VISTORIAR', 'ZOONOSES.GERENCIAR', 'VIGILANCIA.INVESTIGAR', 'INDICADOR.CONSULTAR'],
+  // Vigilância sanitária (ADR-0199): o fiscal e a coordenação da VISA.
+  '/vigilancia/sanitaria': ['VISA.INSPECIONAR', 'VISA.GERENCIAR', 'VISA.JULGAR'],
   // Sala de Situação (ADR-0143): só agregados, para quem consulta indicadores.
   '/sala-de-situacao': ['INDICADOR.CONSULTAR'],
   '/relatorios': ['INDICADOR.CONSULTAR'],
+  // Segurança do paciente (ADR-0203): quem notifica, o núcleo e quem consulta os indicadores.
+  '/qualidade/seguranca-do-paciente': ['QUALIDADE.NOTIFICAR', 'QUALIDADE.ANALISAR', 'INDICADOR.CONSULTAR'],
+  // Não conformidades (ADR-0204): quem gere, quem tem ação a cumprir (todo papel que notifica) e quem consulta indicadores.
+  '/qualidade/nao-conformidades': ['QUALIDADE.GERIR', 'QUALIDADE.NOTIFICAR', 'INDICADOR.CONSULTAR'],
+  // Indicadores de qualidade (ADR-0205): a gestão da qualidade, o núcleo que audita e quem consulta indicadores.
+  '/qualidade/indicadores': ['QUALIDADE.GERIR', 'QUALIDADE.ANALISAR', 'INDICADOR.CONSULTAR'],
   // Comunicação (ADR-0168): quem publica, escreve ou revisa.
   '/administrativo/comunicacao': ['COMUNICACAO.PUBLICAR', 'CONTEUDO.EDITAR', 'CONTEUDO.REVISAR'],
   '/administracao/usuarios': ['ACESSO.GERENCIAR', 'USUARIO.GERENCIAR'],
@@ -71,7 +80,7 @@ const MENU: Record<string, string[]> = {
 /** Itens de cada grupo, para esconder o grupo inteiro quando nenhum item aparece. */
 const GRUPOS: Record<string, string[]> = {
   Assistência: ['/assistencia/pacientes', '/assistencia/agenda', '/assistencia/atendimentos', '/assistencia/farmacia', '/assistencia/regulacao', '/assistencia/urgencia', '/assistencia/laboratorio', '/assistencia/leitos', '/assistencia/programas', '/assistencia/sala-de-vacina', '/assistencia/saude-mental'],
-  Vigilância: ['/vigilancia', '/vigilancia/vetores', '/vigilancia/emergencias'],
+  Vigilância: ['/vigilancia', '/vigilancia/vetores', '/vigilancia/sanitaria', '/vigilancia/emergencias'],
   Administração: ['/administracao/usuarios', '/administracao/auditoria'],
 };
 

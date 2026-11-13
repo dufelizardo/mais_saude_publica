@@ -72,4 +72,8 @@ public class Agravo implements Serializable {
 
     @Column(nullable = false)
     private boolean ativo;
+
+    /** Agravo relacionado ao trabalho (ADR-0207): a notificação pede o bloco do trabalho. */
+    @Column(nullable = false)
+    private boolean relacionadoAoTrabalho;
 }

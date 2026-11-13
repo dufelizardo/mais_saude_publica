@@ -10,4 +10,8 @@ public interface EventoLeitoRepository extends JpaRepository<EventoLeito, UUID> 
     List<EventoLeito> findByInternacao_UuidOrderByOcorridoEmAsc(UUID internacaoId);
 
     List<EventoLeito> findByLeito_UuidOrderByOcorridoEmDesc(UUID leitoId);
+
+    /** Os eventos da unidade no período (censo, ADR-0185). */
+    List<EventoLeito> findByLeito_Unidade_UuidAndTipoAndOcorridoEmBetween(UUID unidadeId, com.edufelizardo.maissaudepublica.models.enuns.TipoEventoLeito tipo,
+                                                                       java.time.Instant de, java.time.Instant ate);
 }

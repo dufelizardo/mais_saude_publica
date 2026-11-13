@@ -686,6 +686,7 @@
                           <span class="badge badge--info">Emitida</span>
                           @if (item.catUrl) { <a [href]="item.catUrl" target="_blank" rel="noopener">Ver CAT</a> }
                         } @else { <span class="badge badge--muted">Não emitida</span> }
+                        @if (item.notificadoVigilancia) { <span class="badge badge--info">Notificado à vigilância</span> }
                       </td>
                       <td class="num mono">{{ item.diasAfastamento ?? '—' }}</td>
                     </tr>

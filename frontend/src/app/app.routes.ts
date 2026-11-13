@@ -13,6 +13,10 @@ export const routes: Routes = [
   // Recuperação de senha por e-mail (ADR-0081): públicas, fora do AppShell.
   { path: 'recuperar-senha', loadComponent: () => import('./features/auth/recuperar-senha/recuperar-senha').then((m) => m.RecuperarSenha) },
   { path: 'redefinir-senha', loadComponent: () => import('./features/auth/redefinir-senha/redefinir-senha').then((m) => m.RedefinirSenha) },
+  // Verificação pública do laudo pelo código (ADR-0183): sem login.
+  { path: 'verificar-laudo', loadComponent: () => import('./features/publico/verificar-laudo/verificar-laudo').then((m) => m.VerificarLaudo) },
+  // Verificação pública dos termos e da licença sanitária (ADR-0200): sem login.
+  { path: 'verificar-visa', loadComponent: () => import('./features/publico/verificar-visa/verificar-visa').then((m) => m.VerificarVisa) },
   // Laudo de exames (ADR-0095): fora do AppShell, para imprimir limpo.
   {
     path: 'laudo/exame/:pedidoId',
@@ -181,7 +185,7 @@ export const routes: Routes = [
       {
         path: 'assistencia/laboratorio',
         loadComponent: () => import('./features/assistencia/laboratorio/laboratorio').then((m) => m.Laboratorio),
-        data: { breadcrumb: 'Laboratório', area: 'Assistência' },
+        data: { breadcrumb: 'Laboratório e imagem', area: 'Assistência' },
       },
       // Leitos e internação (ADR-0099), carregados sob demanda.
       {
@@ -197,6 +201,24 @@ export const routes: Routes = [
       },
       // Saúde Mental (ADR-0120), carregada sob demanda.
       // Sala de Situação (BI1, ADR-0143), carregada sob demanda.
+      // Não conformidades e planos de ação (ADR-0204).
+      {
+        path: 'qualidade/nao-conformidades',
+        loadComponent: () => import('./features/qualidade/nao-conformidades').then((m) => m.NaoConformidades),
+        data: { breadcrumb: 'Não conformidades', area: 'Qualidade' },
+      },
+      // Indicadores de qualidade e auditoria de protocolos (ADR-0205).
+      {
+        path: 'qualidade/indicadores',
+        loadComponent: () => import('./features/qualidade/indicadores-qualidade').then((m) => m.IndicadoresQualidade),
+        data: { breadcrumb: 'Indicadores de qualidade', area: 'Qualidade' },
+      },
+      // Segurança do paciente (ADR-0203).
+      {
+        path: 'qualidade/seguranca-do-paciente',
+        loadComponent: () => import('./features/qualidade/seguranca-do-paciente').then((m) => m.SegurancaDoPaciente),
+        data: { breadcrumb: 'Segurança do paciente', area: 'Qualidade' },
+      },
       {
         path: 'sala-de-situacao',
         loadComponent: () => import('./features/sala-de-situacao/sala-de-situacao').then((m) => m.SalaDeSituacao),
@@ -220,6 +242,12 @@ export const routes: Routes = [
         path: 'vigilancia/emergencias',
         loadComponent: () => import('./features/vigilancia/emergencias').then((m) => m.Emergencias),
         data: { breadcrumb: 'Emergências e desastres', area: 'Vigilância' },
+      },
+      // Vigilância sanitária (ADR-0199).
+      {
+        path: 'vigilancia/sanitaria',
+        loadComponent: () => import('./features/vigilancia/vigilancia-sanitaria').then((m) => m.VigilanciaSanitaria),
+        data: { breadcrumb: 'Vigilância sanitária', area: 'Vigilância' },
       },
       // Zoonoses e vetores (ADR-0162).
       {

@@ -1,9 +1,12 @@
 package com.edufelizardo.maissaudepublica.models.dtos.version1.response;
 
 import com.edufelizardo.maissaudepublica.models.ExameLaboratorial;
+import com.edufelizardo.maissaudepublica.models.FaixaReferenciaExame;
 import com.edufelizardo.maissaudepublica.models.enuns.MaterialExame;
 import com.edufelizardo.maissaudepublica.models.enuns.TipoResultadoExame;
 import java.math.BigDecimal;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 import lombok.*;
 
@@ -28,13 +31,26 @@ public class ExameLaboratorialResponseDto implements Serializable {
     private String unidadeMedida;
     private BigDecimal referenciaMinima;
     private BigDecimal referenciaMaxima;
+    private BigDecimal criticoMinimo;
+    private BigDecimal criticoMaximo;
     private String referenciaTexto;
     private String preparo;
     private Integer prazoDias;
     private boolean ativo;
+    /** Faixas por sexo e idade (ADR-0180), da mais nova para a mais velha; a faixa geral vale quando nenhuma se aplica. */
+    private List<FaixaReferenciaExameDto> faixas;
+    /** Categoria e modalidade (ADR-0182). */
+    private com.edufelizardo.maissaudepublica.models.enuns.CategoriaExame categoria;
+    private com.edufelizardo.maissaudepublica.models.enuns.ModalidadeImagem modalidade;
+    /** Insumos de coleta ou de realização (ADR-0183). */
+    private List<InsumoExameDto> insumos;
 
-    public static ExameLaboratorialResponseDto fromExame(ExameLaboratorial e) {
+    public static ExameLaboratorialResponseDto fromExame(ExameLaboratorial e, List<FaixaReferenciaExame> faixas) {
         return new ExameLaboratorialResponseDto(e.getUuid(), e.getNome(), e.getMaterial(), e.getTipoResultado(), e.getUnidadeMedida(),
-                e.getReferenciaMinima(), e.getReferenciaMaxima(), e.getReferenciaTexto(), e.getPreparo(), e.getPrazoDias(), e.isAtivo());
+                e.getReferenciaMinima(), e.getReferenciaMaxima(), e.getCriticoMinimo(), e.getCriticoMaximo(), e.getReferenciaTexto(),
+                e.getPreparo(), e.getPrazoDias(), e.isAtivo(), faixas.stream()
+                .sorted(Comparator.comparing((FaixaReferenciaExame f) -> f.inicioAproximado())
+                        .thenComparing(f -> f.getSexo() == null ? "" : f.getSexo().name()))
+                .map(FaixaReferenciaExameDto::fromFaixa).toList(), e.getCategoria(), e.getModalidade(), List.of());
     }
 }

@@ -105,5 +105,8 @@ public final class EducacaoPermanenteDto {
 
         private UUID grupoId;
         private List<String> treinamentos;
+        /** C3 (ADR-0195): em quantas ações educativas e quantas pessoas alcançou nas realizadas. */
+        private int acoesEducativas;
+        private int pessoasAlcancadas;
     }
 }

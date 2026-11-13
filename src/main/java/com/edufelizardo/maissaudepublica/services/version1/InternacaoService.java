@@ -58,6 +58,9 @@ public class InternacaoService {
     private InternacaoRepository internacaoRepository;
 
     @Autowired
+    private PrescricaoHospitalarService prescricaoHospitalarService;
+
+    @Autowired
     private EventoLeitoRepository eventoRepository;
 
     @Autowired
@@ -82,6 +85,39 @@ public class InternacaoService {
     public InternacaoResponseDto internar(InternacaoRequestDto dto) {
         Leito leito = leitoService.travar(dto.getLeitoId());
         controleDeAcesso.exigir(GERENCIAR, leito.getUnidade());
+        leitoService.liberarReservaVencida(leito);
+        return detalhe(admitir(dto, leito, null));
+    }
+
+    /**
+     * Admissão pela central de leitos (ADR-0184): aceita o leito reservado para este pedido. Se o paciente estava internado na
+     * origem, a internação de lá fecha com alta por transferência.
+     */
+    @Transactional
+    public Internacao internarRegulado(InternacaoRequestDto dto, Leito leito, UUID solicitacaoId, Internacao naOrigem) {
+        if (naOrigem != null && naOrigem.getStatus() == StatusInternacao.INTERNADO) {
+            Internacao origem = travar(naOrigem.getUuid());
+            Leito leitoOrigem = leitoService.travar(origem.getLeito().getUuid());
+            Profissional medico = buscarProfissional(dto.getMedicoMatricula());
+            origem.setStatus(StatusInternacao.ALTA);
+            origem.setTipoAlta(com.edufelizardo.maissaudepublica.models.enuns.TipoAlta.TRANSFERENCIA);
+            origem.setAltaEm(Instant.now());
+            origem.setSumarioAlta("Transferido pela central de regulação de leitos para " + leito.getUnidade().getNome() + ".");
+            origem.setAltaPor(medico);
+            internacaoRepository.save(origem);
+            leitoOrigem.setSituacao(SituacaoLeito.HIGIENIZACAO);
+            leitoService.registrar(leitoOrigem, origem, TipoEventoLeito.ALTA, "TRANSFERENCIA para " + leito.getUnidade().getNome(), medico);
+        }
+        return admitir(dto, leito, solicitacaoId);
+    }
+
+    /** Admissão da internação eletiva agendada (ADR-0185): aceita o leito reservado para o agendamento. */
+    @Transactional
+    public Internacao internarAgendada(InternacaoRequestDto dto, Leito leito, UUID agendamentoId) {
+        return admitir(dto, leito, agendamentoId);
+    }
+
+    private Internacao admitir(InternacaoRequestDto dto, Leito leito, UUID solicitacaoReservada) {
         Paciente paciente = pacienteRepository.findById(dto.getPacienteId()).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar um paciente com o id " + dto.getPacienteId() + " em nossos registros."));
         ContextoAuditoria.paciente(paciente.getUuid());
@@ -99,8 +135,13 @@ public class InternacaoService {
                 throw new ResourceBadRequestException("O atendimento informado é de outro paciente.");
             }
         }
-        exigirLivre(leito);
+        if (leito.reservadoPara(solicitacaoReservada)) {
+            leito.limparReserva();
+        } else {
+            exigirLivre(leito);
+        }
         exigirSexo(leito, paciente);
+        String foraDaFaixa = conferirFaixaEtaria(leito, paciente, dto.getJustificativaFaixaEtaria());
         if (dto.getPrevisaoAlta() != null && dto.getPrevisaoAlta().isBefore(java.time.LocalDate.now())) {
             throw new ResourceBadRequestException("A previsão de alta não pode ser no passado.");
         }
@@ -121,8 +162,9 @@ public class InternacaoService {
         i.setRegistradoPorCpf(UsuarioAutenticado.cpf());
         i = internacaoRepository.save(i);
         leito.setSituacao(SituacaoLeito.OCUPADO);
-        leitoService.registrar(leito, i, TipoEventoLeito.ADMISSAO, dto.getCarater() + " · CID " + i.getCid(), medico);
-        return detalhe(i);
+        leitoService.registrar(leito, i, TipoEventoLeito.ADMISSAO, dto.getCarater() + " · CID " + i.getCid()
+                + (foraDaFaixa != null ? " · fora da faixa etária: " + foraDaFaixa : ""), medico);
+        return i;
     }
 
     @Transactional
@@ -134,6 +176,7 @@ public class InternacaoService {
             throw new ResourceBadRequestException("O paciente já está neste leito.");
         }
         Leito destino = leitoService.travar(dto.getLeitoId());
+        leitoService.liberarReservaVencida(destino);
         if (!destino.getUnidade().getUuid().equals(i.getUnidade().getUuid())) {
             throw new ResourceUnprocessableEntityException("A troca é na mesma unidade; para outra unidade, dê alta por transferência.");
         }
@@ -172,6 +215,7 @@ public class InternacaoService {
         i.setSumarioAlta(dto.getSumario().trim());
         i.setAltaPor(medico);
         internacaoRepository.save(i);
+        prescricaoHospitalarService.encerrarNaAlta(i, altaEm);
         leito.setSituacao(SituacaoLeito.HIGIENIZACAO);
         leitoService.registrar(leito, i, TipoEventoLeito.ALTA, dto.getTipoAlta().toString(), medico);
         return detalhe(i);
@@ -297,7 +341,7 @@ public class InternacaoService {
                 comunicacaoMpRepository.findDasInternacoes(List.of(i.getUuid())));
     }
 
-    private Internacao travar(UUID uuid) {
+    Internacao travar(UUID uuid) {
         Internacao i = internacaoRepository.findByIdParaAtualizar(uuid).orElseThrow(() -> naoEncontrada(uuid));
         ContextoAuditoria.paciente(i.getPaciente().getUuid());
         return i;
@@ -318,8 +362,34 @@ public class InternacaoService {
         }
     }
 
+    /**
+     * Faixa etária do leito (ADR-0184): neonatal até 28 dias, pediátrico até 13 anos incompletos, adulto a partir de 13. Fora dela,
+     * 422, a não ser com a justificativa do médico, que vai para o evento. Sem data de nascimento, não confere.
+     */
+    static String conferirFaixaEtaria(Leito l, Paciente p, String justificativa) {
+        if (p.getDataNascimento() == null || l.getFaixaEtaria() == null) {
+            return null;
+        }
+        java.time.LocalDate hoje = java.time.LocalDate.now();
+        long dias = java.time.temporal.ChronoUnit.DAYS.between(p.getDataNascimento(), hoje);
+        int anos = java.time.Period.between(p.getDataNascimento(), hoje).getYears();
+        boolean cabe = switch (l.getFaixaEtaria()) {
+            case NEONATAL -> dias <= 28;
+            case PEDIATRICO -> anos < 13;
+            case ADULTO -> anos >= 13;
+        };
+        if (cabe) {
+            return null;
+        }
+        if (justificativa == null || justificativa.isBlank()) {
+            throw new ResourceUnprocessableEntityException("O leito " + l.getIdentificacao() + " é " + l.getFaixaEtaria().name().toLowerCase(Locale.ROOT)
+                    + " e não cabe a idade do paciente; escolha outro leito ou justifique.");
+        }
+        return justificativa.trim();
+    }
+
     /** Enfermaria masculina ou feminina só recebe paciente do mesmo sexo; sexo ignorado vai para leito misto. */
-    private static void exigirSexo(Leito l, Paciente p) {
+    static void exigirSexo(Leito l, Paciente p) {
         if (l.getSexo() == SexoLeito.MISTO) {
             return;
         }

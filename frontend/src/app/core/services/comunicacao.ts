@@ -10,10 +10,15 @@ import {
   ConteudoEducativoDto,
   ConteudoEducativoRequestDto,
   ConteudoPublicoDto,
+  AvaliacaoCampanhaDto,
+  AvaliacaoCampanhaRequestDto,
   CampanhaComunicacaoDto,
   CampanhaComunicacaoPublicaDto,
   CampanhaComunicacaoRequestDto,
   MaterialEducativoDto,
+  AcaoEducativaDto,
+  AcaoEducativaRequestDto,
+  NivelParticipacao,
   MaterialEducativoRequestDto,
 } from '../models/comunicacao';
 
@@ -111,6 +116,30 @@ export class ComunicacaoService {
 
   cancelarCampanha(uuid: string, motivo: string): Observable<CampanhaComunicacaoDto> {
     return this.http.post<CampanhaComunicacaoDto>(`${this.api}/campanha/${uuid}/cancelamento`, { motivo });
+  }
+
+  // ── Avaliação da campanha (ADR-0196) ──
+
+  avaliacaoDaCampanha(uuid: string): Observable<AvaliacaoCampanhaDto> {
+    return this.http.get<AvaliacaoCampanhaDto>(`${this.api}/campanha/${uuid}/avaliacao`);
+  }
+
+  avaliarCampanha(uuid: string, dto: AvaliacaoCampanhaRequestDto): Observable<AvaliacaoCampanhaDto> {
+    return this.http.post<AvaliacaoCampanhaDto>(`${this.api}/campanha/${uuid}/avaliacao`, dto);
+  }
+
+  // ── Educação em saúde (ADR-0195) ──
+
+  educacaoDaAcao(acaoId: string): Observable<AcaoEducativaDto> {
+    return this.http.get<AcaoEducativaDto>(`/api/v1/acao-programatica/${acaoId}/educacao`);
+  }
+
+  salvarEducacaoDaAcao(acaoId: string, dto: AcaoEducativaRequestDto): Observable<AcaoEducativaDto> {
+    return this.http.put<AcaoEducativaDto>(`/api/v1/acao-programatica/${acaoId}/educacao`, dto);
+  }
+
+  avaliarAcaoEducativa(acaoId: string, participacao: NivelParticipacao, avaliacao: string | null): Observable<AcaoEducativaDto> {
+    return this.http.post<AcaoEducativaDto>(`/api/v1/acao-programatica/${acaoId}/educacao/avaliacao`, { participacao, avaliacao });
   }
 
   materiais(conteudoGrupoId: string): Observable<MaterialEducativoDto[]> {

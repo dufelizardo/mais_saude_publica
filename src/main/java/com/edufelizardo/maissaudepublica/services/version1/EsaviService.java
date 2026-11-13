@@ -121,7 +121,7 @@ public class EsaviService {
             Map<UUID, Imunobiologico> vacinas = new LinkedHashMap<>();
             n.getDoses().forEach(r -> vacinas.putIfAbsent(r.getImunobiologico().getUuid(), r.getImunobiologico()));
             for (Imunobiologico i : vacinas.values()) {
-                if (contraindicacaoRepository.findByPaciente_UuidAndImunobiologico_Uuid(n.getPaciente().getUuid(), i.getUuid()).isPresent()) {
+                if (contraindicacaoRepository.findByPaciente_UuidAndImunobiologico_UuidAndRevogadaEmIsNull(n.getPaciente().getUuid(), i.getUuid()).isPresent()) {
                     continue;
                 }
                 ContraindicacaoVacinal c = new ContraindicacaoVacinal();

@@ -8,6 +8,8 @@ public enum TipoInstituicaoExterna {
     ACOLHIMENTO_INSTITUCIONAL(SetorIntersetorial.ASSISTENCIA_SOCIAL),
     ESCOLA(SetorIntersetorial.EDUCACAO),
     CONSELHO_TUTELAR(SetorIntersetorial.GARANTIA_DE_DIREITOS),
+    /** Conselho de direitos: da pessoa idosa, da mulher, da pessoa com deficiência (ADR-0201). */
+    CONSELHO_DE_DIREITOS(SetorIntersetorial.GARANTIA_DE_DIREITOS),
     DEFENSORIA_PUBLICA(SetorIntersetorial.GARANTIA_DE_DIREITOS),
     MINISTERIO_PUBLICO(SetorIntersetorial.GARANTIA_DE_DIREITOS),
     JUDICIARIO(SetorIntersetorial.GARANTIA_DE_DIREITOS),

@@ -3,6 +3,8 @@ Library     Browser
 Library     String
 Resource    ../../../../pom/common/mais_saude_publica_ui_common.resource
 Resource    ../../../estoque/estoque_flow.resource
+Resource    ../../../estoque/central_estoque_flow.resource
+Resource    ../../../estoque/estoque_emergencia_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Estoque e almoxarifado (ADR-0177).
@@ -49,5 +51,99 @@ UI Estoque - Material, Entrada E Saida
     Preencher Campo Da Gaveta    quantidadeSaida    5
     Enviar Gaveta
     Wait For Elements State    css=table[aria-label="Lotes de ${nome}"] >> text=15    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Estoque - Abrir Na Unidade
+    [Documentation]    Abre a tela Estoque na unidade pedida.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    [Arguments]    ${unidade}
+    Ir Para Rota Do Frontend    /administrativo/estoque
+    Wait For Elements State    css=h1 >> text=Estoque e almoxarifado    visible
+    Wait For Elements State    css=select[aria-label="Unidade"] option[value="${unidade}"]    attached
+    Select Options By    css=select[aria-label="Unidade"]    value    ${unidade}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Estoque - Atender Requisicao Pela Central
+    [Documentation]    A central atende a requisição enviada pela aba Requisições (ADR-0189).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${central}    ${unidade}    ${material}    ${matricula}=    Seed Central De Abastecimento
+    ${id}=    Requisicao Enviada    ${central}    ${unidade}    ${material}    ${matricula}    ${10}
+    ${u}=    GET Estoque Central    requisicao/${id}
+    UI Estoque - Abrir Na Unidade    ${central}
+    Click    id=tab-requisicoes
+    Clicar Botao    Atender a requisição de ${u.json()}[unidadeNome]
+    Fill Text    id=f-matriculaCentral    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Requisição atendida
+    ${d}=    GET Estoque Central    requisicao/${id}
+    Should Be Equal    ${d.json()}[situacao]    ATENDIDA
+    Should Be Equal As Integers    ${d.json()}[itens][0][quantidadeAtendida]    10
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Estoque - Abrir E Fechar Inventario
+    [Documentation]    Abre o inventário, conta os lotes e fecha pela aba Inventário (ADR-0189).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${central}    ${unidade}    ${material}    ${matricula}=    Seed Central De Abastecimento
+    UI Estoque - Abrir Na Unidade    ${central}
+    Click    id=tab-inventario
+    Clicar Botao    Abrir inventário
+    Fill Text    id=f-matriculaCentral    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Inventário aberto
+    Click    css=button[aria-label^="Abrir o inventário de"]
+    ${campos}=    Get Elements    css=app-drawer input[aria-label^="Contagem de"]
+    FOR    ${c}    IN    @{campos}
+        Fill Text    ${c}    7
+    END
+    Fill Text    id=f-matriculaCentral    ${matricula}
+    Clicar Botao    Salvar contagem
+    Wait For Elements State    css=app-drawer >> text=2 de 2 contado(s)    visible
+    Clicar Botao    Fechar inventário
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Inventário fechado
+    ${lista}=    GET Estoque Central    inventario?unidadeId=${central}
+    Should Be Equal    ${lista.json()}[0][situacao]    FECHADO
+    Should Be Equal As Integers    ${lista.json()}[0][comDiferenca]    2
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Estoque - Reservar E Consumir Pela Emergencia
+    [Documentation]    Reserva para a emergência pela gaveta; a saída comum acima do livre mostra o erro; o consumo da emergência usa a reserva (ADR-0191).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    ${material}    ${nome}=    Seed Material Estoque
+    ${sufixo}=    Generate Random String    6    [UPPER][NUMBERS]
+    ${e}=    Entrada De Lote    ${unidade}    ${material}    ${20}    EMG${sufixo}    200
+    Should Be Equal As Integers    ${e.status_code}    201
+    ${em}=    Seed Emergencia
+    ${emergencia}=    Set Variable    ${em.json()}[uuid]
+    UI Estoque - Abrir Na Unidade    ${unidade}
+    Wait For Elements State    css=ul[aria-label="Materiais em estoque"] >> text=${nome}    visible
+    Clicar Botao    Reservar para emergência
+    Wait For Elements State    css=#f-emergenciaReserva option[value="${emergencia}"]    attached
+    Select Options By    id=f-emergenciaReserva    value    ${emergencia}
+    Select Options By    id=f-materialReserva    value    ${material}
+    Preencher Campo Da Gaveta    quantidadeReserva    15
+    Preencher Campo Da Gaveta    justificativaReserva    Kits para os abrigos
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Reserva registrada
+    Wait For Elements State    css=ul[aria-label="Reservas para emergências"] >> text=${nome}    visible
+    Click    css=button[aria-label="Saída de ${nome}"]
+    Preencher Campo Da Gaveta    quantidadeSaida    10
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    quantidadeSaida
+    Should Contain    ${erro}    reservados
+    Select Options By    id=f-emergenciaSaida    value    ${emergencia}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Consumo da emergência registrado
+    ${lista}=    GET Estoque Emergencia    reserva?emergenciaId=${emergencia}
+    Should Be Equal As Integers    ${lista.json()}[0][consumida]    10
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

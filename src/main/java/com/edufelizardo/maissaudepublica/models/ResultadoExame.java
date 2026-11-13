@@ -54,12 +54,37 @@ public class ResultadoExame implements Serializable {
     @Column(length = 200, updatable = false)
     private String referenciaTexto;
 
+    /** Os valores de pânico da faixa usada, copiados no registro (ADR-0180). */
+    @Column(precision = 14, scale = 4, updatable = false)
+    private BigDecimal criticoMinimo;
+
+    @Column(precision = 14, scale = 4, updatable = false)
+    private BigDecimal criticoMaximo;
+
+    /** Qual faixa valeu, por exemplo "Feminino, 12 a 59 anos" ou "Faixa geral" (ADR-0180). */
+    @Column(length = 200, updatable = false)
+    private String faixaDescricao;
+
     @Enumerated(EnumType.STRING)
     @Column(updatable = false)
     private InterpretacaoResultado interpretacao;
 
     @Column(length = 1000, updatable = false)
     private String observacao;
+
+    /** Laudo de imagem (ADR-0182): técnica, achados e conclusão; a conclusão também vai em valorTexto. */
+    @Column(length = 1000, updatable = false)
+    private String laudoTecnica;
+
+    @Column(length = 4000, updatable = false)
+    private String laudoAchados;
+
+    @Column(length = 2000, updatable = false)
+    private String laudoConclusao;
+
+    /** Link para as imagens (visualizador do PACS), só https; o PACS é integração do domínio 20. */
+    @Column(length = 500, updatable = false)
+    private String imagemUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "analisado_por_id", referencedColumnName = "uuid", nullable = false, updatable = false)
@@ -85,4 +110,20 @@ public class ResultadoExame implements Serializable {
     private Profissional liberadoPor;
 
     private Instant liberadoEm;
+
+    /**
+     * Assinatura eletrônica interna (ADR-0183): o CPF de quem liberou autenticado e o SHA-256 do conteúdo assinado. Gravados na
+     * liberação, no laudo, na retificação e no adendo.
+     */
+    private String assinadoPorCpf;
+
+    @Column(length = 64)
+    private String hashConteudo;
+
+    /** Ciência do solicitante (ADR-0181): o resultado retificado é outro, então a ciência volta a ficar pendente. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ciencia_por_id", referencedColumnName = "uuid")
+    private Profissional cienciaPor;
+
+    private Instant cienciaEm;
 }

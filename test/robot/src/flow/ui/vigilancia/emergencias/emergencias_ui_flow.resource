@@ -4,6 +4,9 @@ Resource    ../../../../pom/ui/vigilancia/emergencias/emergencias_ui_pom.resourc
 Resource    ../../../emergencias/desmobilizacao_flow.resource
 Resource    ../../../emergencias/eventos_especializados_flow.resource
 Resource    ../../../emergencias/epidemia_exposicao_flow.resource
+Resource    ../../../emergencias/pessoas_emergencia_flow.resource
+Resource    ../../../emergencias/rede_emergencia_flow.resource
+Resource    ../../../estoque/central_estoque_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Emergências e desastres (ADR-0156); as bases vêm pela API.
@@ -257,5 +260,61 @@ UI Emergencias - Exposicao Ambiental
     Fill Text    id=f-es-recomendacao    Não usar a água da torneira
     Enviar Gaveta
     Wait For Elements State    css=[aria-label="Exposições ambientais"] >> text=Benzeno    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Mobilizar Insumo Pela Central
+    [Documentation]    Na emergência: o insumo do catálogo com a origem central vira a requisição urgente ao estoque (ADR-0191).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${central}    ${unidade}    ${material}    ${matricula}=    Seed Central De Abastecimento
+    ${em}=    Seed Emergencia
+    UI Emergencias - Abrir Tela    ${em.json()}[uuid]
+    Wait For Elements State    css=section.em-detalhe    visible
+    Clicar Botao    Mobilizar
+    Select Options By    id=f-co-tipo    value    INSUMO
+    Wait For Elements State    css=#f-co-material option[value="${material}"]    attached
+    Select Options By    id=f-co-material    value    ${material}
+    Wait For Elements State    css=#f-co-destino option[value="${unidade}"]    attached
+    Select Options By    id=f-co-destino    value    ${unidade}
+    Select Options By    id=f-co-origem    value    ${central}
+    Fill Text    id=f-co-quantidade    12
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Mobilizações"] >> text=requisição urgente ao estoque (enviada)    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Vulneraveis E Deslocado
+    [Documentation]    Na emergência: a lista de vulneráveis da área e o registro do deslocado a partir dela (ADR-0193).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}=    Seed Crianca Na Microarea
+    ${em}=    Emergencia Na Microarea    ${dados}[micro]
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=section.em-detalhe    visible
+    Clicar Botao    Ver vulneráveis
+    Wait For Elements State    css=table[aria-label="Vulneráveis"] >> text=${dados}[nome]    visible
+    Clicar Botao    Deslocar ${dados}[nome]
+    Select Options By    id=f-pe-destino    value    OUTRO
+    Fill Text    id=f-pe-descricao    Escola Robot
+    Enviar Gaveta
+    Wait For Elements State    css=[aria-label="Pacientes deslocados"] >> text=${dados}[nome]    visible
+    Wait For Elements State    css=table[aria-label="Vulneráveis"] >> text=Em Escola Robot    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Emergencias - Priorizar Regulacao
+    [Documentation]    Na emergência: do deslocado, a regulação dele é priorizada pela gaveta e aparece nas priorizadas (ADR-0194).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}    ${matricula}    ${procedimento}    ${paciente}    ${unidade}=    Seed A Solicitacao Regulacao
+    ${em}=    Paciente Deslocado Na Emergencia    ${paciente}
+    ${d}=    GET Pessoas Emergencia    emergencia/${em}/deslocados
+    ${nome}=    Set Variable    ${d.json()}[0][pacienteNome]
+    UI Emergencias - Abrir Tela    ${em}
+    Wait For Elements State    css=section.em-detalhe    visible
+    Clicar Botao    Ver deslocados
+    Clicar Botao    Priorizar regulação de ${nome}
+    Wait For Elements State    css=[aria-label="Regulações do paciente"] >> role=button[name^="Priorizar"]    visible
+    Click    css=[aria-label="Regulações do paciente"] >> role=button[name^="Priorizar"]
+    Wait For Elements State    css=[aria-label="Regulações do paciente"] >> text=Priorizada    visible
+    Wait For Elements State    css=[aria-label="Regulações priorizadas"] >> text=${nome}    attached
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -2,6 +2,10 @@ package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ContagemProducaoDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AvaliacaoCampanhaDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CoberturaRedeDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ComunicacaoViolenciaDtos;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SaudeTrabalhadorDtos;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CoberturaVacinalDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EsperaAtendimentoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EstatisticaEsperaDto;
@@ -39,6 +43,12 @@ public class RelatorioService {
     @Autowired private SituacaoOperacionalService situacaoService;
     @Autowired private IndicadoresDaRedeService redeService;
     @Autowired private CoberturaVacinalService coberturaService;
+    @Autowired private AvaliacaoCampanhaService avaliacaoCampanhaService;
+    @Autowired private CoberturaRedeService coberturaRedeService;
+    @Autowired private ComunicacaoViolenciaService comunicacaoViolenciaService;
+    @Autowired private SaudeTrabalhadorService saudeTrabalhadorService;
+    @Autowired private ProcessoSanitarioService processoSanitarioService;
+    @Autowired private IndicadoresQualidadeService indicadoresQualidadeService;
 
     public List<RelatorioCatalogoDto> catalogo() {
         return Arrays.stream(TipoRelatorio.values()).map(t -> new RelatorioCatalogoDto(t.name(), t.getNome(), t.getCategoria(), t.getDescricao())).toList();
@@ -51,6 +61,11 @@ public class RelatorioService {
             case PROGRAMAS -> programas(de, ate, unidadeId);
             case VACINACAO -> vacinacao(de, ate, unidadeId);
             case VIGILANCIA -> vigilancia(de, ate, unidadeId);
+            case CAMPANHAS_COMUNICACAO -> campanhasComunicacao(de, ate, unidadeId);
+            case EDUCACAO_EM_SAUDE -> educacaoEmSaude(de, ate, unidadeId);
+            case PACTUACAO_REDE -> pactuacaoRede(de, ate, unidadeId);
+            case VIGILANCIA_SANITARIA -> processoSanitarioService.relatorio(TipoRelatorio.VIGILANCIA_SANITARIA, de, ate, unidadeId);
+            case QUALIDADE -> indicadoresQualidadeService.relatorio(TipoRelatorio.QUALIDADE, de, ate, unidadeId);
         };
     }
 
@@ -170,18 +185,106 @@ public class RelatorioService {
         if (d.getSensiveisOcultas() > 0) {
             notas.add(d.getSensiveisOcultas() + " notificação(ões) sensível(is) oculta(s) pelo seu acesso.");
         }
+        // V3c (ADR-0201): as comunicações obrigatórias da violência notificada, só os totais.
+        List<ComunicacaoViolenciaDtos.Resumo> comunicacoes = comunicacaoViolenciaService.resumo(d.getDe(), d.getAte(), unidadeId);
+        long obrigatorias = comunicacoes.stream().mapToLong(ComunicacaoViolenciaDtos.Resumo::obrigatorias).sum();
+        long noPrazo = comunicacoes.stream().mapToLong(ComunicacaoViolenciaDtos.Resumo::noPrazo).sum();
+        notas.add("Comunicação obrigatória da violência: Conselho Tutelar (ECA), pessoa idosa (Estatuto, art. 19) e mulher (Lei 13.931/2019), em 24 horas.");
+        // V5b (ADR-0208): a saúde do trabalhador, sem as de nexo descartado.
+        SaudeTrabalhadorDtos.Resumo t = saudeTrabalhadorService.resumo(d.getDe(), d.getAte(), unidadeId);
+        long comBloco = t.total() + t.nexoDescartado();
+        notas.add("Saúde do trabalhador: " + n(t.nexoDescartado()) + " notificação(ões) com nexo descartado fora das contagens; " + n(t.medidasVencidas())
+                + " medida(s) com o prazo vencido. Trabalhador da saúde: empregador da seção Q do CNAE ou ocupação da saúde na CBO.");
         return relatorio(TipoRelatorio.VIGILANCIA, d.getDe(), d.getAte(), d.getAbrangencia(), List.of(
                 new RelatorioDto.Indicador("Notificadas", n(d.getNotificadas())),
                 new RelatorioDto.Indicador("Confirmadas", n(d.getConfirmadas())),
                 new RelatorioDto.Indicador("Em aberto", n(d.getEmAberto())),
-                new RelatorioDto.Indicador("Encerradas no prazo (%)", n(d.getOportunidadeEncerramento()))),
-                List.of(new RelatorioDto.Secao("Por agravo", List.of("Agravo", "Notificadas", "Confirmadas", "Descartadas", "Em aberto", "Encerradas", "No prazo (%)"),
+                new RelatorioDto.Indicador("Encerradas no prazo (%)", n(d.getOportunidadeEncerramento())),
+                new RelatorioDto.Indicador("Comunicações de violência no prazo (%)", obrigatorias == 0 ? "" : n(Math.round(noPrazo * 1000.0 / obrigatorias) / 10.0)),
+                new RelatorioDto.Indicador("Relacionadas ao trabalho", n(t.total())),
+                new RelatorioDto.Indicador("Nexo do trabalho investigado (%)", comBloco == 0 ? "" : n(Math.round(t.nexoConcluido() * 1000.0 / comBloco) / 10.0)),
+                new RelatorioDto.Indicador("Acidentes de trabalho fatais", n(t.obitos())),
+                new RelatorioDto.Indicador("Trabalho com menores de 18 anos", n(t.menores())),
+                new RelatorioDto.Indicador("Material biológico em trabalhadores da saúde", n(t.biologicoSaude()))),
+                List.of(new RelatorioDto.Secao("Comunicações obrigatórias da violência", List.of("Destino", "Obrigatórias", "Feitas", "No prazo"),
+                                comunicacoes.stream().map(x -> List.of(x.destino(), n(x.obrigatorias()), n(x.feitas()), n(x.noPrazo()))).toList()),
+                        new RelatorioDto.Secao("Saúde do trabalhador por agravo", List.of("Agravo", "Notificadas", "Nexo confirmado", "Óbitos", "Menores de 18"),
+                                t.porAgravo().stream().map(x -> List.of(x.agravo(), n(x.notificadas()), n(x.nexoConfirmado()), n(x.obitos()), n(x.menores()))).toList()),
+                        new RelatorioDto.Secao("Saúde do trabalhador por seção do CNAE", List.of("Seção", "Notificações"),
+                                t.porCnae().stream().map(x -> List.of(x.rotulo(), n(x.total()))).toList()),
+                        new RelatorioDto.Secao("Saúde do trabalhador por grande grupo da CBO", List.of("Grande grupo", "Notificações"),
+                                t.porOcupacao().stream().map(x -> List.of(x.rotulo(), n(x.total()))).toList()),
+                        new RelatorioDto.Secao("Por agravo", List.of("Agravo", "Notificadas", "Confirmadas", "Descartadas", "Em aberto", "Encerradas", "No prazo (%)"),
                                 d.getAgravos().stream().map(a -> List.of(a.getNome(), n(a.getNotificadas()), n(a.getConfirmadas()), n(a.getDescartadas()), n(a.getEmAberto()),
                                         n(a.getEncerradas()), n(a.getOportunidadeEncerramento()))).toList()),
                         new RelatorioDto.Secao("Por semana epidemiológica", List.of("Ano", "Semana", "Início", "Notificações"),
                                 d.getSemanas().stream().map(x -> List.of(String.valueOf(x.getAno()), String.valueOf(x.getSemana()), String.valueOf(x.getInicio()), n(x.getNotificacoes()))).toList()),
                         new RelatorioDto.Secao("Por território", List.of("Território", "Área", "Microárea", "Notificações"),
                                 d.getTerritorio().stream().map(x -> List.of(vazio(x.getTerritorio()), vazio(x.getArea()), vazio(x.getMicroarea()), n(x.getNotificacoes()))).toList())), notas);
+    }
+
+    /** C6 (ADR-0196): as campanhas de comunicação do período, com os números da apuração. */
+    private RelatorioDto campanhasComunicacao(LocalDate de, LocalDate ate, UUID unidadeId) {
+        AvaliacaoCampanhaDto.NoPeriodo d = avaliacaoCampanhaService.campanhasNoPeriodo(de, ate, unidadeId);
+        List<AvaliacaoCampanhaDto> cs = d.campanhas();
+        return relatorio(TipoRelatorio.CAMPANHAS_COMUNICACAO, d.de(), d.ate(), d.abrangencia(), List.of(
+                        new RelatorioDto.Indicador("Campanhas", n(cs.size())),
+                        new RelatorioDto.Indicador("Ações educativas realizadas", n(cs.stream().mapToLong(c -> c.acoes().realizadas()).sum())),
+                        new RelatorioDto.Indicador("Pessoas alcançadas", n(cs.stream().mapToLong(c -> c.acoes().pessoas()).sum())),
+                        new RelatorioDto.Indicador("Mensagens enviadas", n(cs.stream().mapToLong(AvaliacaoCampanhaDto::enviados).sum()))),
+                List.of(new RelatorioDto.Secao("Campanhas", List.of("Campanha", "Situação", "Início", "Fim", "Ações realizadas", "Pessoas", "Enviados",
+                        "Cobertura (%)", "Meta de pessoas", "Meta de ações", "Público atingido"), cs.stream().map(c -> List.of(c.campanhaNome(), c.situacao().name(),
+                        String.valueOf(c.inicio()), String.valueOf(c.fim()), n(c.acoes().realizadas()), n(c.acoes().pessoas()), n(c.enviados()), n(c.cobertura()),
+                        meta(c.metaPessoas()), meta(c.metaAcoes()), c.avaliacao() == null ? "" : c.avaliacao().publicoAtingido().name())).toList())),
+                List.of("Os números de cada campanha são os do período inteiro dela. As campanhas da rede, sem unidade, entram só sem o filtro de unidade."));
+    }
+
+    /** C6 (ADR-0196): as ações educativas realizadas no período. */
+    private RelatorioDto educacaoEmSaude(LocalDate de, LocalDate ate, UUID unidadeId) {
+        AvaliacaoCampanhaDto.EducacaoNoPeriodo d = avaliacaoCampanhaService.educacaoNoPeriodo(de, ate, unidadeId);
+        List<RelatorioDto.Secao> secoes = new ArrayList<>();
+        secoes.add(new RelatorioDto.Secao("Por tema", List.of("Tema", "Ações", "Pessoas", "Participação alta", "Média", "Baixa", "Sem avaliação"),
+                d.temas().stream().map(t -> List.of(t.tema(), n(t.acoes()), n(t.pessoas()), n(t.alta()), n(t.media()), n(t.baixa()), n(t.semAvaliacao()))).toList()));
+        secoes.add(new RelatorioDto.Secao("Por unidade", List.of("Unidade", "Ações", "Pessoas"),
+                d.unidades().stream().map(u -> List.of(u.nome(), n(u.acoes()), n(u.pessoas()))).toList()));
+        secoes.add(new RelatorioDto.Secao("Materiais distribuídos", List.of("Material", "Quantidade"),
+                d.materiais().stream().map(m -> List.of(m.titulo(), n(m.quantidade()))).toList()));
+        return relatorio(TipoRelatorio.EDUCACAO_EM_SAUDE, d.de(), d.ate(), d.abrangencia(), List.of(
+                new RelatorioDto.Indicador("Ações educativas realizadas", n(d.acoes())),
+                new RelatorioDto.Indicador("Pessoas alcançadas", n(d.pessoas())),
+                new RelatorioDto.Indicador("Temas", n(d.temas().size())),
+                new RelatorioDto.Indicador("Materiais distribuídos", n(d.materiais().stream().mapToLong(AvaliacaoCampanhaDto.Material::quantidade).sum()))), secoes, List.of());
+    }
+
+    /** GR3 (ADR-0198): a pactuação e a cobertura da rede no período, com os alertas e as lacunas das redes temáticas. */
+    private RelatorioDto pactuacaoRede(LocalDate de, LocalDate ate, UUID unidadeId) {
+        CoberturaRedeDto d = coberturaRedeService.paraRelatorio(de, ate, unidadeId);
+        CoberturaRedeDto.Resumo r = d.resumo();
+        List<RelatorioDto.Secao> secoes = new ArrayList<>();
+        secoes.add(new RelatorioDto.Secao("Por procedimento", List.of("Procedimento", "Ofertado", "Pactuado", "Utilizado", "Extracotas", "Pactuado (%)",
+                "Cota usada (%)", "Extracota (%)", "Fora da referência (%)", "Na fila", "Espera na fila (dias)", "Até a autorização (dias)"),
+                d.procedimentos().stream().map(p -> List.of(p.procedimentoNome(), n(p.ofertado()), n(p.pactuado()), n(p.utilizado()), n(p.extracotas()),
+                        n(p.percentualPactuado()), n(p.percentualCotaUsada()), n(p.percentualExtracota()), n(p.percentualForaDaReferencia()), n(p.naFila()),
+                        n(p.esperaNaFilaDias()), n(p.esperaAteAutorizacaoDias()))).toList()));
+        secoes.add(new RelatorioDto.Secao("Por origem", List.of("Procedimento", "Origem", "População adscrita", "Cota", "Cota por mil", "Solicitadas",
+                "Autorizadas", "Aguardando", "Saldo", "Referência"),
+                d.procedimentos().stream().flatMap(p -> p.origens().stream().map(o -> List.of(p.procedimentoNome(), o.unidadeNome(), n(o.populacaoAdscrita()),
+                        n(o.cota()), n(o.cotaPorMil()), n(o.solicitadas()), n(o.autorizadas()), n(o.aguardando()), n(o.saldo()), o.comReferencia() ? "Sim" : "Não"))).toList()));
+        secoes.add(new RelatorioDto.Secao("Alertas", List.of("Alerta"), d.alertas().stream().map(List::of).toList()));
+        secoes.add(new RelatorioDto.Secao("Lacunas das redes temáticas", List.of("Rede", "Lacuna"), d.lacunas().stream().map(l -> List.of(l.rede(), l.lacuna())).toList()));
+        return relatorio(TipoRelatorio.PACTUACAO_REDE, d.de(), d.ate(), d.abrangencia(), List.of(
+                        new RelatorioDto.Indicador("Oferta pactuada (%)", n(r.percentualPactuado())),
+                        new RelatorioDto.Indicador("Cota usada (%)", n(r.percentualCotaUsada())),
+                        new RelatorioDto.Indicador("Extracotas (%)", n(r.percentualExtracota())),
+                        new RelatorioDto.Indicador("Fora da referência (%)", n(r.percentualForaDaReferencia())),
+                        new RelatorioDto.Indicador("Cotas esgotadas com fila", n(r.cotasEsgotadasComFila())),
+                        new RelatorioDto.Indicador("Lacunas das redes", n(r.lacunasDasRedes()))), secoes,
+                List.of("A fila e a espera na fila são as de hoje; o resto, do período. A população é a adscrita às equipes; a cota ociosa só aparece em "
+                        + "competência fechada."));
+    }
+
+    private static String meta(AvaliacaoCampanhaDto.Meta m) {
+        return m.meta() == null ? "" : m.valor() + " de " + m.meta() + " (" + m.situacao().name() + ")";
     }
 
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────────
