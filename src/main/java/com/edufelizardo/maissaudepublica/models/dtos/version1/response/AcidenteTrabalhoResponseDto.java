@@ -26,6 +26,8 @@ public class AcidenteTrabalhoResponseDto implements Serializable {
     private boolean catEmitida;
     private String catUrl;
     private Integer diasAfastamento;
+    /** Notificado à vigilância (ADR-0207); só a marca, sem o conteúdo da notificação. */
+    private boolean notificadoVigilancia;
 
     public static AcidenteTrabalhoResponseDto fromAcidenteTrabalho(AcidenteTrabalho acidente) {
         return new AcidenteTrabalhoResponseDto(
@@ -36,7 +38,8 @@ public class AcidenteTrabalhoResponseDto implements Serializable {
                 acidente.getDescricao(),
                 acidente.isCatEmitida(),
                 acidente.getCatUrl(),
-                acidente.getDiasAfastamento()
+                acidente.getDiasAfastamento(),
+                false
         );
     }
 }

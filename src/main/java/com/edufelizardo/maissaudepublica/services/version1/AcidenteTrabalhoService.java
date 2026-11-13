@@ -22,6 +22,9 @@ public class AcidenteTrabalhoService {
     @Autowired
     private ProfissionalRepository profissionalRepository;
 
+    @Autowired
+    private SaudeTrabalhadorService saudeTrabalhadorService;
+
     public AcidenteTrabalhoResponseDto criar(AcidenteTrabalhoRequestDto dto) {
         Profissional profissional = profissionalRepository.findByMatricula(dto.getMatriculaProfissional())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -37,6 +40,7 @@ public class AcidenteTrabalhoService {
         List<AcidenteTrabalhoResponseDto> historico = acidenteTrabalhoRepository.findByProfissional_MatriculaOrderByDataHoraDesc(matricula)
                 .stream()
                 .map(AcidenteTrabalhoResponseDto::fromAcidenteTrabalho)
+                .peek(d -> d.setNotificadoVigilancia(saudeTrabalhadorService.notificado(d.getUuid())))
                 .collect(Collectors.toList());
         if (historico.isEmpty()) {
             throw new ResourceNotFoundException(

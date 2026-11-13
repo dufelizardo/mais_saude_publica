@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-13 (I6 da Imunização em developer; release 1.12.0)
+- **Atualizado em:** 2026-11-13 (V5a da Vigilância em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -49,7 +49,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
-| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 a V4 feitas (com a sanitária e a comunicação da violência); falta a V5 (trabalhador e integrações) |
+| 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 a V4 e V5a feitas (com a sanitária, a comunicação da violência e o bloco do trabalho); falta a V5b (investigação do trabalho, risco ocupacional e indicadores) |
 | 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 e I6 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas, ESAVI, remanejamento, alerta por lote e CRIE); SINASC e I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
@@ -85,7 +85,7 @@ P4 ✅ ──► SB5 ✅ (saúde bucal coletiva) · C3 ✅ (educação em saúde
 F1 ✅ ──► F2 ✅ ──► V2a ✅ (mapa dos casos) · E1 ✅ (área afetada) · Equipamentos com mapa real ✅
 F1 ✅ ──► F3a ✅ ──► F3b ✅ ──► V4a ✅ (vetores) ──► V4b ✅ (animais) ──► V4c ✅ (ambiental) · E4a ✅ (vulneráveis) · P2 por microárea ✅ · F4 ✅
 
-V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5
+V1 ✅ ──► V2a ✅ · SM3 (notificação de autoagressão ✅) · V5a ✅ ──► V5b
 V2a ✅ ──► V2b ✅ ──► E1 ✅ (surto como gatilho do evento emergencial)
 SB1 ✅ ──► SB2 ✅ ──► SB3a ✅ ──► SB3b ✅ ──► SB4a ✅ ──► SB4b ✅ ──► SB5 ✅
 SM1 ✅ ──► SM2 ✅ · SM3 ✅ (parcial) · SM4 ✅ ──► SM6 ✅
@@ -102,7 +102,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 | Pré-requisito ainda sem desenho | Fatias que espera |
 |---|---|
 | Documentos D2 (o resto) | C2 (arquivos dos materiais); os donos da VISA já entraram na V3a |
-| Integrações (20) | V5 (SINAN), C5 (SMS e push), sincronização com CNES |
+| Integrações (20) | SINAN, C5 (SMS e push), sincronização com CNES |
 
 ## 2. Domínios
 
@@ -487,7 +487,7 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 - [ ] Login e recuperação de senha pelo gov.br.
 - [ ] Os botões sem permissão aparecem por um instante ao abrir as telas (ADR-0079).
 - [ ] **Integrações** (não iniciadas): arquitetura de adapters e depois CNES, e-SUS APS e SISAB, SIGTAP, SISREG e
-  DATASUS. Do laboratório (domínio 10): equipamentos (LIS, HL7, ASTM), PACS, LACEN, BPA e o certificado ICP-Brasil no laudo.
+  DATASUS, e o SINAN (a notificação da Vigilância, que saiu da V5). Do laboratório (domínio 10): equipamentos (LIS, HL7, ASTM), PACS, LACEN, BPA e o certificado ICP-Brasil no laudo.
   Nenhuma integração impede fechar um domínio: cada fatia entrega o fluxo interno e deixa o encaixe previsto.
 - [ ] Teste de tela de Usuários & Perfis.
 
@@ -614,14 +614,22 @@ calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
   a comunicação como encaminhamento intersetorial com o motivo mínimo; o tipo Conselho de direitos; as pendentes para quem investiga; o
   indicador no relatório Vigilância do #19.
 
+- [x] **V5a · Saúde do trabalhador na notificação** ([ADR-0207](./adr/0207-vigilancia-saude-do-trabalhador.md)): agravos relacionados ao trabalho marcados no catálogo
+  (acidente grave com o CID Y96, material biológico compulsório com a ficha e os da vigilância sentinela: LER/DORT, PAIR, pneumoconioses,
+  dermatoses, câncer e transtorno mental); o bloco do trabalho obrigatório neles e opcional nos demais (ocupação pela CBO, situação,
+  empregador com CPF ou CNPJ e CNAE ligado ao estabelecimento da VISA, local e, no acidente, tipo, jornada, CAT e óbito); a correção pela
+  investigação; o acompanhamento sorológico do material biológico (6 semanas, 3 e 6 meses) com as etapas vencidas; o acidente do servidor
+  no RH ligado à notificação, a lista dos sem notificação para a vigilância da rede e a marca no RH; aba Saúde do trabalhador.
+
 **Falta:**
 - [ ] Sugestão de notificação por exame positivo (o catálogo de exames não liga exame a agravo).
 - [ ] A comunicação da violência contra a pessoa com deficiência (Lei 13.146/2015, art. 26): o cadastro do paciente não tem o dado.
 - [ ] O plano de amostragem mínimo da água e os demais parâmetros da portaria (agrotóxicos, metais).
 - [ ] A cobertura da vacinação antirrábica animal (precisa da população animal estimada).
 - [ ] O quarteirão como unidade de trabalho do agente de endemias.
-- [ ] **V5 · Saúde do Trabalhador e integrações:** evento do trabalho, risco ocupacional, investigação;
-  adaptadores, com o SINAN primeiro (depende do domínio 20, Integrações).
+- [ ] **V5b · Investigação do trabalho:** a visita ao local de trabalho, o nexo (confirmado, descartado ou inconclusivo), as medidas
+  com prazo, a denúncia à VISA e o encaminhamento intersetorial; o risco ocupacional por empregador; os indicadores no #19 e o bloco na
+  Sala de Situação.
 
 ### 24. Imunização
 

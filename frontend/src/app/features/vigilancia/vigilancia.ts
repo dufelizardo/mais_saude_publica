@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, catchError, of } from 'rxjs';
@@ -8,6 +8,9 @@ import { PacienteResponseDto } from '../../core/models/paciente';
 import { ErrorResponseDto } from '../../core/models/profissional';
 import { UnidadeSaudeResponseDto } from '../../core/models/unidade-saude';
 import {
+  AGRAVOS_ACIDENTE,
+  AGRAVO_ACIDENTE_GRAVE,
+  AcidenteSemNotificacaoDto,
   AgravoDto,
   BoletimVigilanciaDto,
   ContatoDto,
@@ -51,11 +54,15 @@ import { LinhaDoTempo } from './linha-do-tempo';
 import { MapaVigilancia } from './mapa-vigilancia';
 import { MedidasDeControle } from './medidas-de-controle';
 import { NovoSurto, Surtos } from './surtos';
+import { SaudeTrabalhador } from './saude-trabalhador';
+import { TrabalhoForm } from './trabalho-form';
+import { TrabalhoNotificacao } from './trabalho-notificacao';
 
-type Aba = 'notificacoes' | 'mapa' | 'surtos' | 'sugestoes' | 'semanas' | 'agravos';
+type Aba = 'notificacoes' | 'mapa' | 'surtos' | 'trabalhador' | 'sugestoes' | 'semanas' | 'agravos';
 type Gaveta =
   | { tipo: 'notificar'; prefixo: Partial<{ pacienteId: string; pacienteNome: string; unidadeId: string; agravoId: string; origem: OrigemNotificacao;
-      internacaoId: string; pedidoExameId: string; criseId: string; contatoId: string; contatoDe: string; doseIds: string[]; doseRotulo: string }> }
+      internacaoId: string; pedidoExameId: string; criseId: string; contatoId: string; contatoDe: string; doseIds: string[]; doseRotulo: string;
+      acidenteTrabalhoId: string; dataPrimeirosSintomas: string }> }
   | { tipo: 'notificacao'; id: string }
   | { tipo: 'agravo'; agravo: AgravoDto | null }
   | { tipo: 'ficha'; agravo: AgravoDto };
@@ -75,7 +82,8 @@ interface CampoEdicao {
  */
 @Component({
   selector: 'app-vigilancia',
-  imports: [ReactiveFormsModule, Drawer, MapaVigilancia, ContatosDaNotificacao, LocalDoCaso, Surtos, MedidasDeControle, LinhaDoTempo, AnimalAgressor, ComunicacaoViolencia],
+  imports: [ReactiveFormsModule, Drawer, MapaVigilancia, ContatosDaNotificacao, LocalDoCaso, Surtos, MedidasDeControle, LinhaDoTempo, AnimalAgressor, ComunicacaoViolencia,
+    SaudeTrabalhador, TrabalhoForm, TrabalhoNotificacao],
   templateUrl: './vigilancia.html',
 })
 export class Vigilancia {
@@ -150,9 +158,18 @@ export class Vigilancia {
   /** O código do agravo escolhido na notificação. */
   protected readonly codigoEscolhido = computed(() => this.agravos().find((a) => a.uuid === this.agravoEscolhido())?.codigo ?? '');
   protected readonly agravoVacinal = computed(() => this.codigoEscolhido() === AGRAVO_ESAVI || this.codigoEscolhido() === AGRAVO_ERRO_IMUNIZACAO);
+  /** Saúde do Trabalhador (ADR-0207): o bloco do trabalho, obrigatório no agravo marcado e opcional nos demais. */
+  protected readonly agravoTrabalho = computed(() => !!this.agravos().find((a) => a.uuid === this.agravoEscolhido())?.relacionadoAoTrabalho);
+  protected readonly agravoAcidente = computed(() => AGRAVOS_ACIDENTE.includes(this.codigoEscolhido()));
+  protected readonly agravoGrave = computed(() => this.codigoEscolhido() === AGRAVO_ACIDENTE_GRAVE);
+  protected readonly relacionadoTrabalho = signal(false);
+  protected readonly mostrarTrabalho = computed(() => this.agravoTrabalho() || this.relacionadoTrabalho());
+  protected readonly acidenteTrabalhoId = signal<string | null>(null);
+  protected readonly versaoTrabalhador = signal(0);
+  private readonly trabalhoForm = viewChild(TrabalhoForm);
   protected readonly agravoForm = this.fb.nonNullable.group({
     codigo: [''], nome: [''], descricao: [''], cids: [''], compulsorio: [true], periodicidade: ['SEMANAL' as PeriodicidadeNotificacao],
-    prazoEncerramentoDias: ['60'], periodoMonitoramentoContatoDias: [''], sensivel: [false], ativo: [true],
+    prazoEncerramentoDias: ['60'], periodoMonitoramentoContatoDias: [''], sensivel: [false], ativo: [true], relacionadoAoTrabalho: [false],
   });
   protected readonly criteriosEscolhidos = signal<Set<CriterioClassificacao>>(new Set());
   protected readonly negativaForm = this.fb.nonNullable.group({ unidadeId: [''] });
@@ -298,7 +315,7 @@ export class Vigilancia {
   protected abrirNotificar(prefixo: Extract<Gaveta, { tipo: 'notificar' }>['prefixo'] = {}): void {
     this.notificarForm.reset({
       pacienteId: prefixo.pacienteId ?? '', unidadeId: prefixo.unidadeId ?? this.unidadeFiltro(), agravoId: prefixo.agravoId ?? '',
-      origem: prefixo.origem ?? 'ATENDIMENTO', dataPrimeirosSintomas: '', dataNotificacao: '', localProvavel: '',
+      origem: prefixo.origem ?? 'ATENDIMENTO', dataPrimeirosSintomas: prefixo.dataPrimeirosSintomas ?? '', dataNotificacao: '', localProvavel: '',
       internacaoId: prefixo.internacaoId ?? '', pedidoExameId: prefixo.pedidoExameId ?? '', criseId: prefixo.criseId ?? '',
       contatoId: prefixo.contatoId ?? '',
     });
@@ -307,6 +324,8 @@ export class Vigilancia {
     this.doseRotulo.set(prefixo.doseRotulo ?? '');
     this.gravidade.set('');
     this.respostas.set({});
+    this.relacionadoTrabalho.set(false);
+    this.acidenteTrabalhoId.set(prefixo.acidenteTrabalhoId ?? null);
     this.buscaPaciente.set(prefixo.pacienteNome ?? '');
     if (!this.pacientes().length) this.pacienteService.listar().pipe(catchError(() => of([]))).subscribe((p) => this.pacientes.set(p));
     this.abrir({ tipo: 'notificar', prefixo });
@@ -318,6 +337,15 @@ export class Vigilancia {
       internacaoId: s.origem === 'INTERNACAO' ? s.referenciaId : undefined, pedidoExameId: s.origem === 'EXAME' ? s.referenciaId : undefined,
       criseId: s.origem === 'SAUDE_MENTAL' ? s.referenciaId : undefined,
       doseIds: s.origem === 'VACINACAO' ? [s.referenciaId] : undefined, doseRotulo: s.origem === 'VACINACAO' ? 'a dose sugerida' : undefined,
+    });
+  }
+
+  /** O acidente do servidor no RH sem notificação (ADR-0207): abre a notificação do acidente grave já ligada a ele. */
+  protected notificarAcidente(a: AcidenteSemNotificacaoDto): void {
+    this.abrirNotificar({
+      pacienteId: a.pacienteId ?? undefined, pacienteNome: a.profissionalNome,
+      agravoId: this.agravos().find((x) => x.codigo === AGRAVO_ACIDENTE_GRAVE)?.uuid, acidenteTrabalhoId: a.acidenteId,
+      dataPrimeirosSintomas: a.dataHora.substring(0, 10),
     });
   }
 
@@ -367,7 +395,7 @@ export class Vigilancia {
       compulsorio: agravo?.compulsorio ?? true, periodicidade: agravo?.periodicidade ?? 'SEMANAL',
       prazoEncerramentoDias: String(agravo?.prazoEncerramentoDias ?? 60),
       periodoMonitoramentoContatoDias: agravo?.periodoMonitoramentoContatoDias ? String(agravo.periodoMonitoramentoContatoDias) : '',
-      sensivel: agravo?.sensivel ?? false, ativo: agravo?.ativo ?? true,
+      sensivel: agravo?.sensivel ?? false, ativo: agravo?.ativo ?? true, relacionadoAoTrabalho: agravo?.relacionadoAoTrabalho ?? false,
     });
     this.criteriosEscolhidos.set(new Set(agravo?.criterios ?? ['CLINICO']));
     this.abrir({ tipo: 'agravo', agravo });
@@ -429,12 +457,15 @@ export class Vigilancia {
     if (!v.agravoId) erros['agravo'] = 'Escolha o agravo.';
     if (this.agravoVacinal() && !this.doseIds().length) erros['agravo'] = 'O ESAVI e o erro de imunização partem da dose: notifique pela caderneta do paciente.';
     if (this.codigoEscolhido() === AGRAVO_ESAVI && !this.gravidade()) erros['gravidade'] = 'Escolha a gravidade.';
+    if (this.agravoAcidente() && !v.dataPrimeirosSintomas) erros['dataPrimeirosSintomas'] = 'Informe a data do acidente.';
     for (const c of this.fichaEscolhida()) {
       const r = this.respostas()[c.chave];
       const vazio = r == null || r === '' || (Array.isArray(r) && !r.length);
       if (c.obrigatorio && vazio) erros['ficha-' + c.chave] = 'Responda este campo.';
     }
     if (!this.validar(erros)) return;
+    const trabalho = this.mostrarTrabalho() ? this.trabalhoForm() : undefined;
+    if (trabalho && !trabalho.validar()) return;
     const respostas: Record<string, unknown> = {};
     for (const [k, r] of Object.entries(this.respostas())) {
       if (r == null || r === '' || (Array.isArray(r) && !r.length)) continue;
@@ -447,7 +478,9 @@ export class Vigilancia {
       internacaoId: v.internacaoId || null, pedidoExameId: v.pedidoExameId || null, criseId: v.criseId || null, contatoId: v.contatoId || null,
       respostas, doseIds: this.agravoVacinal() ? this.doseIds() : [],
       gravidade: this.codigoEscolhido() === AGRAVO_ESAVI && this.gravidade() ? (this.gravidade() as GravidadeEsavi) : null,
+      trabalho: trabalho ? trabalho.valor() : null,
     }), (n) => {
+      this.versaoTrabalhador.update((x) => x + 1);
       this.mostrarToast('Notificação registrada', n.aviso ?? `${n.pacienteNome} · ${n.agravoNome}`);
       this.abrirNotificacao(n.uuid);
     });
@@ -533,7 +566,7 @@ export class Vigilancia {
       codigo: v.codigo.trim(), nome: v.nome.trim(), descricao: v.descricao.trim() || null,
       cids: v.cids.split(/[\s,;]+/).map((c) => c.trim().toUpperCase()).filter((c) => c), compulsorio: v.compulsorio, periodicidade: v.periodicidade,
       prazoEncerramentoDias: prazo, periodoMonitoramentoContatoDias: monitoramento, criterios: [...this.criteriosEscolhidos()], sensivel: v.sensivel,
-      ativo: v.ativo,
+      ativo: v.ativo, relacionadoAoTrabalho: v.relacionadoAoTrabalho,
     };
     this.enviar(agravo ? this.service.atualizarAgravo(agravo.uuid, dto) : this.service.criarAgravo(dto), (a) => {
       this.mostrarToast(agravo ? 'Agravo atualizado' : 'Agravo cadastrado', a.nome);
