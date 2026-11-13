@@ -47,7 +47,7 @@ Concluir Acao
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
 Nao Conformidade - Origem Indicador - Status Code 400
-    [Documentation]    The indicator origin waits for Q3.
+    [Documentation]    The indicator origin without the indicator and the month is 400 (ADR-0205).
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${unidade}=    Seed A Unidade De Saude Uuid
     ${matricula}=    Seed A Profissional Matricula

@@ -79,6 +79,7 @@ public class NaoConformidadeService {
     @Autowired private SetorRepository setorRepository;
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private IndicadoresQualidadeService indicadoresService;
 
     // ── Não conformidade ───────────────────────────────────────────────────────────────────────────
 
@@ -111,8 +112,9 @@ public class NaoConformidadeService {
         UnidadeDeSaude unidade = unidadeRepository.findById(dto.getUnidadeId()).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar uma unidade de saúde com o id " + dto.getUnidadeId() + " em nossos registros."));
         controleDeAcesso.exigir(GERIR, unidade);
-        if (dto.getOrigem() == OrigemNaoConformidade.INDICADOR) {
-            throw new ResourceBadRequestException("A origem indicador chega com os indicadores de qualidade (Q3).");
+        boolean pedeIndicador = dto.getOrigem() == OrigemNaoConformidade.INDICADOR;
+        if (pedeIndicador != (dto.getIndicador() != null && dto.getCompetencia() != null) || (!pedeIndicador && dto.getChecklistId() != null)) {
+            throw new ResourceBadRequestException("A origem indicador pede o indicador e a competência, e só ela.");
         }
         boolean pedeIncidente = dto.getOrigem() == OrigemNaoConformidade.INCIDENTE;
         boolean pedeIrregularidade = dto.getOrigem() == OrigemNaoConformidade.INSPECAO_SANITARIA;
@@ -145,6 +147,25 @@ public class NaoConformidadeService {
                 throw new ResourceConflictException("Esta irregularidade já tem não conformidade em aberto.");
             }
         }
+        LocalDate competencia = null;
+        com.edufelizardo.maissaudepublica.models.ChecklistProtocolo checklist = null;
+        if (pedeIndicador) {
+            boolean adesao = dto.getIndicador() == com.edufelizardo.maissaudepublica.models.enuns.IndicadorQualidade.ADESAO_PROTOCOLO;
+            if (adesao != (dto.getChecklistId() != null)) {
+                throw new ResourceBadRequestException("O indicador de adesão pede o protocolo, e só ele.");
+            }
+            checklist = adesao ? indicadoresService.checklistOu404(dto.getChecklistId()) : null;
+            competencia = dto.getCompetencia().withDayOfMonth(1);
+            if (competencia.isAfter(hoje())) {
+                throw new ResourceBadRequestException("A competência não pode ser futura.");
+            }
+            LocalDate comp = competencia;
+            UUID cid = checklist != null ? checklist.getUuid() : null;
+            if (todas.stream().anyMatch(x -> !FECHADAS.contains(x.getSituacao()) && x.getIndicador() == dto.getIndicador() && comp.equals(x.getCompetencia())
+                    && x.getUnidade().getUuid().equals(unidade.getUuid()) && java.util.Objects.equals(x.getChecklist() != null ? x.getChecklist().getUuid() : null, cid))) {
+                throw new ResourceConflictException("Este indicador já tem não conformidade em aberto nesta competência.");
+            }
+        }
         Setor setor = null;
         if (dto.getSetorId() != null) {
             setor = setorRepository.findById(dto.getSetorId()).orElseThrow(() -> new ResourceNotFoundException(
@@ -164,6 +185,9 @@ public class NaoConformidadeService {
         n.setOrigem(dto.getOrigem());
         n.setIncidente(incidente);
         n.setIrregularidade(irregularidade);
+        n.setIndicador(pedeIndicador ? dto.getIndicador() : null);
+        n.setCompetencia(competencia);
+        n.setChecklist(checklist);
         n.setDescricao(dto.getDescricao().trim());
         n.setCorrecaoImediata(limpo(dto.getCorrecaoImediata()));
         n.setGravidade(dto.getGravidade());
@@ -359,7 +383,7 @@ public class NaoConformidadeService {
                     && (visiveis.isEmpty() || visiveis.get().contains(i.getUnidade().getUuid()))) {
                 lista.add(new NaoConformidadeDtos.Sugestao(OrigemNaoConformidade.INCIDENTE, i.getUuid(), "Incidente " + i.getNumero(), i.getUnidade().getUuid(),
                         i.getUnidade().getNome(), i.getTipo().name() + (i.getDano() != null ? ", dano " + i.getDano().name() : ""),
-                        LocalDate.ofInstant(i.getOcorridoEm(), ZONA)));
+                        LocalDate.ofInstant(i.getOcorridoEm(), ZONA), null, null));
             }
         }
         for (IrregularidadeSanitaria r : irregularidadeRepository.findTodas()) {
@@ -367,7 +391,21 @@ public class NaoConformidadeService {
             if (u != null && r.getSituacao() == SituacaoIrregularidade.ABERTA && !irregularidades.contains(r.getUuid())
                     && (visiveis.isEmpty() || visiveis.get().contains(u.getUuid()))) {
                 lista.add(new NaoConformidadeDtos.Sugestao(OrigemNaoConformidade.INSPECAO_SANITARIA, r.getUuid(), "Irregularidade sanitária", u.getUuid(),
-                        u.getNome(), r.getDescricao(), r.getInspecao().getDataInspecao()));
+                        u.getNome(), r.getDescricao(), r.getInspecao().getDataInspecao(), null, null));
+            }
+        }
+        // O indicador fora da meta no mês fechado (ADR-0205), sem não conformidade da mesma competência.
+        for (Object[] f : indicadoresService.foraDaMeta(u -> visiveis.isEmpty() || visiveis.get().contains(u))) {
+            com.edufelizardo.maissaudepublica.models.MetaQualidade m = (com.edufelizardo.maissaudepublica.models.MetaQualidade) f[0];
+            LocalDate comp = ((java.time.YearMonth) f[1]).atDay(1);
+            UUID cid = m.getChecklist() != null ? m.getChecklist().getUuid() : null;
+            boolean jaTem = todas.stream().anyMatch(x -> x.getIndicador() == m.getIndicador() && comp.equals(x.getCompetencia())
+                    && x.getUnidade().getUuid().equals(m.getUnidade().getUuid()) && java.util.Objects.equals(x.getChecklist() != null ? x.getChecklist().getUuid() : null, cid));
+            if (!jaTem) {
+                String nome = m.getIndicador().nome() + (m.getChecklist() != null ? ": " + m.getChecklist().getNome() : "");
+                lista.add(new NaoConformidadeDtos.Sugestao(OrigemNaoConformidade.INDICADOR, m.getUuid(), nome, m.getUnidade().getUuid(), m.getUnidade().getNome(),
+                        nome + " em " + f[1] + ": " + ((java.math.BigDecimal) f[2]).toPlainString() + " " + m.getIndicador().medida() + ", meta " + m.getValor().toPlainString(),
+                        comp, m.getIndicador(), cid));
             }
         }
         return lista;
@@ -481,7 +519,8 @@ public class NaoConformidadeService {
                 s != null ? s.getUuid() : null, s != null ? s.getNome() : null, n.getOrigem(), i != null ? i.getUuid() : null, i != null ? i.getNumero() : null,
                 r != null ? r.getUuid() : null, r != null ? r.getDescricao() : null, n.getDescricao(), n.getCorrecaoImediata(), n.getGravidade(),
                 n.getIdentificadaEm(), n.getResponsavel().getMatricula(), n.getResponsavel().getNome(), n.getAnaliseCausa(), categorias, n.getSituacao(),
-                n.getCiclo(), n.getVerificacaoPrevista(), n.getEncerradaEm(), n.getMotivoCancelamento(), acoes.stream().filter(a -> atrasada(a, hoje)).count(),
+                n.getCiclo(), n.getVerificacaoPrevista(), n.getEncerradaEm(), n.getMotivoCancelamento(), n.getIndicador(), n.getCompetencia(),
+                n.getChecklist() != null ? n.getChecklist().getNome() : null, acoes.stream().filter(a -> atrasada(a, hoje)).count(),
                 acoes.stream().map(a -> dto(a, hoje)).toList(),
                 verificacoes.stream().map(v -> new NaoConformidadeDtos.Verificacao(v.getCiclo(), v.isEficaz(), v.getVerificadaEm(), v.getObservacao())).toList(),
                 n.getRegistradoEm());

@@ -31,7 +31,9 @@ public final class NaoConformidadeDtos {
                                   String irregularidadeDescricao, String descricao, String correcaoImediata, GravidadeNaoConformidade gravidade,
                                   LocalDate identificadaEm, String responsavelMatricula, String responsavelNome, String analiseCausa,
                                   List<CategoriaCausa> categoriasCausa, SituacaoNaoConformidade situacao, int ciclo, LocalDate verificacaoPrevista,
-                                  LocalDate encerradaEm, String motivoCancelamento, long acoesAtrasadas, List<Acao> acoes,
+                                  LocalDate encerradaEm, String motivoCancelamento,
+                                  com.edufelizardo.maissaudepublica.models.enuns.IndicadorQualidade indicador, LocalDate competencia,
+                                  String checklistNome, long acoesAtrasadas, List<Acao> acoes,
                                   List<Verificacao> verificacoes, Instant registradoEm) {
     }
 
@@ -40,7 +42,7 @@ public final class NaoConformidadeDtos {
 
     /** origem: INCIDENTE ou INSPECAO_SANITARIA; referenciaId: o incidente ou a irregularidade. */
     public record Sugestao(OrigemNaoConformidade origem, UUID referenciaId, String referencia, UUID unidadeId, String unidadeNome, String descricao,
-                           LocalDate data) {
+                           LocalDate data, com.edufelizardo.maissaudepublica.models.enuns.IndicadorQualidade indicador, UUID checklistId) {
     }
 
     public record Contagem(String codigo, long quantidade) {

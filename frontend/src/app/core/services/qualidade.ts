@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   GrauDano, IncidenteDto, MinhaAcaoDto, NaoConformidadeDto, NaturezaIncidente, PainelNcDto, PainelSegurancaDto, ProtocoloIncidenteDto, SituacaoIncidente,
-  SituacaoNaoConformidade, SugestaoNcDto, TipoIncidente, AcaoQualidadeDto,
+  SituacaoNaoConformidade, SugestaoNcDto, TipoIncidente, AcaoQualidadeDto, AuditoriaProtocoloDto, ChecklistDto, MetaQualidadeDto, PainelQualidadeDto,
 } from '../models/qualidade';
 
 /** Qualidade, fatia Q1: segurança do paciente (ADR-0203). */
@@ -83,5 +83,44 @@ export class QualidadeService {
 
   painelNc(): Observable<PainelNcDto> {
     return this.http.get<PainelNcDto>(`${this.api}/nao-conformidades/painel`);
+  }
+
+  // ── Indicadores de qualidade e auditoria de protocolos (ADR-0205) ──
+
+  indicadores(unidadeId: string | null, competencia: string | null): Observable<PainelQualidadeDto> {
+    let params = new HttpParams();
+    if (unidadeId) params = params.set('unidadeId', unidadeId);
+    if (competencia) params = params.set('competencia', competencia);
+    return this.http.get<PainelQualidadeDto>(`${this.api}/indicadores`, { params });
+  }
+
+  metas(unidadeId?: string | null): Observable<MetaQualidadeDto[]> {
+    const params = unidadeId ? new HttpParams().set('unidadeId', unidadeId) : new HttpParams();
+    return this.http.get<MetaQualidadeDto[]>(`${this.api}/metas`, { params });
+  }
+
+  definirMeta(dto: object): Observable<MetaQualidadeDto> {
+    return this.http.post<MetaQualidadeDto>(`${this.api}/meta`, dto);
+  }
+
+  checklists(): Observable<ChecklistDto[]> {
+    return this.http.get<ChecklistDto[]>(`${this.api}/checklists`);
+  }
+
+  criarChecklist(dto: object): Observable<ChecklistDto> {
+    return this.http.post<ChecklistDto>(`${this.api}/checklist`, dto);
+  }
+
+  novaVersaoChecklist(uuid: string, dto: object): Observable<ChecklistDto> {
+    return this.http.post<ChecklistDto>(`${this.api}/checklist/${uuid}/versao`, dto);
+  }
+
+  auditoriasProtocolo(unidadeId?: string | null): Observable<AuditoriaProtocoloDto[]> {
+    const params = unidadeId ? new HttpParams().set('unidadeId', unidadeId) : new HttpParams();
+    return this.http.get<AuditoriaProtocoloDto[]>(`${this.api}/auditorias-protocolo`, { params });
+  }
+
+  registrarAuditoria(dto: object): Observable<AuditoriaProtocoloDto> {
+    return this.http.post<AuditoriaProtocoloDto>(`${this.api}/auditoria-protocolo`, dto);
   }
 }
