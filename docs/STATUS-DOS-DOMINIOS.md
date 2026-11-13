@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
 
-**Resumo:** 31 itens mais Documentos: 22 ✅ · 6 🟡 · 3 ⬜ (e Documentos 🟡). As Integrações são a parte não
+**Resumo:** 31 itens mais Documentos: 25 ✅ · 3 🟡 · 3 ⬜ (e Documentos 🟡). As Integrações são a parte não
 iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -436,7 +436,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 19. Indicadores / BI
 
-**Estado:** 🟡. Desenhado na [ADR-0142](./adr/0142-indicadores-bi-e-gestao.md): camada de leitura, só agregados,
+**Estado:** ✅. Desenhado na [ADR-0142](./adr/0142-indicadores-bi-e-gestao.md): camada de leitura, só agregados,
 calculada na hora, com `INDICADOR.CONSULTAR` no escopo da unidade.
 
 **Temos:**
@@ -835,7 +835,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 29. Modelo Operacional dos Equipamentos
 
-**Estado:** 🟡 (camada transversal, não domínio de negócio). Desenhado na
+**Estado:** ✅ (camada transversal, não domínio de negócio). Desenhado na
 [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md), que aceita e completa a ADR-0053; matriz e detalhe em
 [`equipamentos/MODELO-OPERACIONAL.md`](./equipamentos/MODELO-OPERACIONAL.md).
 
