@@ -22,6 +22,13 @@ public interface LoteImunobiologicoRepository extends JpaRepository<LoteImunobio
 
     long countByCamara_UuidAndSituacao(UUID camaraId, SituacaoLoteImunobiologico situacao);
 
+    /** Os lotes do imunobiológico em todas as salas (ADR-0206): a suspensão na rede compara o número normalizado. */
+    @Query("select l from LoteImunobiologico l join fetch l.unidade where l.imunobiologico.uuid = ?1")
+    List<LoteImunobiologico> findDoImunobiologico(UUID imunobiologicoId);
+
+    @Query("select l from LoteImunobiologico l join fetch l.unidade where l.suspensaoRede.uuid = ?1")
+    List<LoteImunobiologico> findDaSuspensao(UUID suspensaoId);
+
     /** Trava o lote para a baixa (duas aplicações ao mesmo tempo não passam do saldo). */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select l from LoteImunobiologico l where l.uuid = ?1")

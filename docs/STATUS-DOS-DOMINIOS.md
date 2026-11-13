@@ -4,7 +4,7 @@
 próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marque a caixa, mova o item para
 "Temos" e mude o estado na tabela.
 
-- **Atualizado em:** 2026-11-12 (Q3 em developer, Qualidade completa; release 1.12.0)
+- **Atualizado em:** 2026-11-13 (I6 da Imunização em developer; release 1.12.0)
 - **Release em produção:** v1.12.0 (2026-11-08)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
@@ -50,7 +50,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 21 | [Território e Adscrição](#21-território-e-adscrição) | ✅ | F1 a F4 feitas; ligar o escopo territorial por rede |
 | 22 | [Programas, Ações e Linhas de Cuidado](#22-programas-ações-e-linhas-de-cuidado) | ✅ | P1 a P6 feitas; critérios clínicos dos elegíveis e linhas recorrentes |
 | 23 | [Vigilância em Saúde](#23-vigilância-em-saúde) | 🟡 | V1 a V4 feitas (com a sanitária e a comunicação da violência); falta a V5 (trabalhador e integrações) |
-| 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas e ESAVI); I5 |
+| 24 | [Imunização](#24-imunização) | 🟡 | I1 a I4 e I6 feitas (caderneta, Sala de Vacina, estoque, cadeia de frio, cobertura, campanhas, ESAVI, remanejamento, alerta por lote e CRIE); SINASC e I5 |
 | 25 | [Saúde Bucal](#25-saúde-bucal) | ✅ | SB1 a SB5 feitas; CPO-D e indicadores pela P6 e pelo BI |
 | 26 | [Saúde Mental](#26-saúde-mental) | ✅ | SM1 a SM6 feitas, com o SAMU acionado pela crise |
 | 27 | [Gestão de Emergências e Desastres](#27-gestão-de-emergências-e-desastres) | ✅ | E1 a E6 feitas (núcleo; contingência; coordenação; vulneráveis, deslocados, rede e Regulação; desmobilização e relatório; eventos especializados) |
@@ -652,13 +652,18 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   ESAVI pela causalidade da OMS e pela conduta sobre o esquema; a contraindicação vacinal na caderneta e no registro da
   dose (só com justificativa); a dose fora do calendário como sugestão de erro de imunização; "Notificar ESAVI" na
   caderneta e o ESAVI no bloco Vacinação da Sala de Situação.
+- [x] **I6 · Remanejamento, alerta de ESAVI por lote e CRIE** ([ADR-0206](./adr/0206-imunizacao-remanejamento-lote-rede-crie.md)): remanejamento entre salas de vacina
+  em duas etapas (envio pela coordenação da origem, doses em trânsito, recebimento com a temperatura da caixa, que fora de
+  2 a 8 °C põe o lote sob suspeita, recusa e cancelamento); alerta calculado pelo lote da rede (número normalizado, doses
+  do estoque e digitadas: dois ESAVI graves em 30 dias ou um A2); suspensão do lote na rede pela coordenação com
+  abrangência de rede, que alcança todas as salas, a entrada posterior e a dose digitada, até liberar ou inutilizar;
+  revogação da contraindicação pelo CRIE (`IMUNIZACAO.REAVALIAR`) com o parecer e o histórico na caderneta.
 
 **Falta:**
-- [ ] **Remanejamento de lote entre unidades,** pedido à rede de frio e termômetro automático (depois da I2;
-  ADR-0148).
+- [ ] **Pedido de imunobiológico à rede de frio** e termômetro automático (depois da I2; ADR-0148; o termômetro é
+  integração, domínio 20).
 - [ ] **Cobertura sobre os nascidos vivos (SINASC)** e de adolescentes, adultos e gestantes; cobertura vacinal nas
   metas programáticas (depois da I3; ADR-0149).
-- [ ] **Alerta de ESAVI por lote** e revogação da contraindicação pelo CRIE (depois da I4; ADR-0150).
 - [ ] **I5 · Integração com o SI-PNI/RNDS** (depende do domínio 20).
 
 ### 25. Saúde Bucal

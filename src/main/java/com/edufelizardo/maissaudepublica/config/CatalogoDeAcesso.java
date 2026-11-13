@@ -59,6 +59,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Imunização (ADR-0147): registrar a dose é da enfermagem (técnico e enfermeiro); o catálogo e o calendário, da gestão.
         PERMISSOES.put("VACINACAO.REGISTRAR", new Def("Registrar, retificar e anular doses de vacina e ver a sala de vacina", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("IMUNIZACAO.GERENCIAR", new Def("Manter o catálogo de imunobiológicos e o calendário vacinal", OPERACAO));
+        PERMISSOES.put("IMUNIZACAO.REAVALIAR", new Def("Revogar a contraindicação vacinal pela reavaliação no CRIE (ADR-0206)", ACESSO_AO_DADO_DE_SAUDE));
         PERMISSOES.put("PROGRAMA.GERENCIAR", new Def("Cadastrar programas de saúde, categorias e as unidades que os oferecem", OPERACAO));
         // Acompanhamento programático (ADR-0119): estar num programa revela diagnóstico.
         PERMISSOES.put("PROGRAMA.ACOMPANHAR", new Def("Inscrever pacientes em programas de saúde e acompanhar a situação", ACESSO_AO_DADO_DE_SAUDE));
@@ -223,7 +224,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "CONSULTA.REGISTRAR", "PROCEDIMENTO.REGISTRAR", "REGULACAO.SOLICITAR", "REGULACAO.CONSULTAR",
                         "EXAME.SOLICITAR", "INTERNACAO.CONSULTAR", "INTERNACAO.GERENCIAR", "INTERNACAO.ALTA", "INTERNACAO.SOLICITAR_VAGA", "AIH.SOLICITAR", "PRESCRICAO.HOSPITALAR",
                         // Acompanhamento programático (ADR-0119) e saúde mental (ADR-0120).
-                        "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR")));
+                        "PROGRAMA.ACOMPANHAR", "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
+                        // Reavaliação da contraindicação vacinal no CRIE (ADR-0206).
+                        "IMUNIZACAO.REAVALIAR")));
         PAPEIS.put("MEDICO_REGULADOR", new PapelPadrao("Médico regulador",
                 "Regula a fila da Central de Regulação do Acesso no seu escopo (ADR-0087).",
                 List.of("PACIENTE.CONSULTAR", "REGULACAO.CONSULTAR", "REGULACAO.REGULAR", "REDE.CONSULTAR")));
@@ -265,7 +268,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "SAUDE_MENTAL.ACOLHER", "SAUDE_MENTAL.ACOMPANHAR", "SAUDE_MENTAL.CRISE", "VIGILANCIA.NOTIFICAR",
                         "TERRITORIO.GERENCIAR", "TERRITORIO.CADASTRAR", "INDICADOR.CONSULTAR", "VACINACAO.REGISTRAR",
                         "IMUNIZACAO.GERENCIAR", "EMERGENCIA.REGISTRAR", "EMERGENCIA.COORDENAR", "ESTOQUE.CONSULTAR", "ESTOQUE.REQUISITAR",
-                        "TRANSPORTE.SOLICITAR")));
+                        "TRANSPORTE.SOLICITAR", "IMUNIZACAO.REAVALIAR")));
         // Agente comunitário de saúde (ADR-0127): a função já existia nas equipes (ADR-0103); faltava o papel de acesso.
         PAPEIS.put("AGENTE_COMUNITARIO_SAUDE", new PapelPadrao("Agente comunitário de saúde",
                 "Cadastro domiciliar e familiar da microárea e cadastro de pacientes.",

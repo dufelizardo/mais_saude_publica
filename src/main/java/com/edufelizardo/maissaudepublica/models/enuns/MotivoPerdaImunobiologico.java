@@ -9,5 +9,7 @@ public enum MotivoPerdaImunobiologico {
     TRANSPORTE,
     EXCURSAO_TEMPERATURA,
     FRASCO_ABERTO_VENCIDO,
+    /** Lote inutilizado na rede pelo alerta de ESAVI (ADR-0206). */
+    ESAVI_LOTE,
     OUTRO
 }

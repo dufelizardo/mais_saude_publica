@@ -139,7 +139,7 @@ class NaoConformidadeAutorizacaoControllerTest {
         assertThat(r.getResponse().getStatus()).isEqualTo(201);
         String id = JsonPath.read(corpo(r), "$.uuid");
         r = como(NSP, json(post(API + "nao-conformidade/" + id + "/acao"), "{\"descricao\": \"Reorganizar a escala\", \"justificativa\": \"Fila no pico.\", "
-                + "\"responsavelMatricula\": \"NCA-TEC\", \"prazo\": \"" + LocalDate.now().plusDays(7) + "\"}"));
+                + "\"responsavelMatricula\": \"NCA-TEC\", \"prazo\": \"" + LocalDate.now(java.time.ZoneId.of("America/Sao_Paulo")).plusDays(7) + "\"}"));
         String acao = JsonPath.read(corpo(r), "$.acoes[0].uuid");
 
         // O responsável vê e atualiza a própria ação; o colega, não.

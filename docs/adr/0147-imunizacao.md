@@ -4,7 +4,8 @@
 
 Aceita. **Desenho do domínio 24** (reservado pela [ADR-0110](./0110-vigilancia-em-saude.md)) e **I1 implementada**. As
 fatias I2 a I5 têm ADR própria quando entrarem: a I2 está na [ADR-0148](./0148-imunizacao-sala-de-vacina.md), a I3
-na [ADR-0149](./0149-imunizacao-cobertura-e-campanhas.md) e a I4 na [ADR-0150](./0150-imunizacao-esavi.md).
+na [ADR-0149](./0149-imunizacao-cobertura-e-campanhas.md), a I4 na [ADR-0150](./0150-imunizacao-esavi.md) e a I6 (itens internos
+que a I2 e a I4 deixaram) na [ADR-0206](./0206-imunizacao-remanejamento-lote-rede-crie.md).
 
 ## Contexto
 
@@ -49,6 +50,7 @@ na [ADR-0149](./0149-imunizacao-cobertura-e-campanhas.md) e a I4 na [ADR-0150](.
 | **I3** · cobertura e campanhas ✅ ([ADR-0149](./0149-imunizacao-cobertura-e-campanhas.md)) | dose da campanha no andamento real da meta; cobertura vacinal, homogeneidade e taxa de abandono por vacina, unidade e território; busca ativa por microárea; vacinação na Sala de Situação | I1, adscrição (#21) |
 | **I4** · ESAVI ✅ ([ADR-0150](./0150-imunizacao-esavi.md)) | evento supostamente atribuível à vacinação, notificado pela Vigilância e ligado à dose | I1, V1 |
 | **I5** · SI-PNI/RNDS | envio das doses ao Ministério | domínio 20 |
+| **I6** · remanejamento, alerta por lote e CRIE ✅ ([ADR-0206](./0206-imunizacao-remanejamento-lote-rede-crie.md)) | remanejamento entre salas em duas etapas; alerta de ESAVI pelo lote da rede e suspensão em todas as salas; revogação da contraindicação pelo CRIE | I2, I4 |
 
 ## Decisão — a fatia I1
 

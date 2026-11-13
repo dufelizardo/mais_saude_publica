@@ -60,6 +60,13 @@ public class MovimentacaoImunobiologico implements Serializable {
     @JoinColumn(name = "frasco_id", referencedColumnName = "uuid", updatable = false)
     private FrascoAberto frasco;
 
+    /** O remanejamento da saída, da entrada ou do estorno (ADR-0206). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "remanejamento_id", referencedColumnName = "uuid", updatable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private RemanejamentoImunobiologico remanejamento;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profissional_id", referencedColumnName = "uuid", updatable = false)
     private Profissional profissional;

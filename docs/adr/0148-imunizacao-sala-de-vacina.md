@@ -2,7 +2,8 @@
 
 ## Status
 
-Aceita e implementada. Segunda fatia do domínio 24, desenhado na [ADR-0147](./0147-imunizacao.md).
+Aceita e implementada. Segunda fatia do domínio 24, desenhado na [ADR-0147](./0147-imunizacao.md). O remanejamento entre
+unidades chegou com a I6 ([ADR-0206](./0206-imunizacao-remanejamento-lote-rede-crie.md)).
 
 ## Contexto
 
@@ -142,7 +143,7 @@ O registro da dose (`POST vacinacao`) ganha `loteEstoqueId`, e a dose devolve `l
 - **Ficam para depois:**
   - **o remanejamento entre unidades** (transferência de lote de uma sala para outra), que pede o recebimento na
     destinatária e cabe com a rede de frio municipal. Por ora, a saída é um ajuste na origem e a chegada uma entrada no
-    destino, cada uma com a justificativa;
+    destino, cada uma com a justificativa. Feito na I6 (ADR-0206);
   - **o pedido de imunobiológico** à rede de frio;
   - **o termômetro automático** (registrador de dados), que depende do domínio 20.
 - **O lote da Farmácia e o lote de vacina são livros separados,** como a ADR-0147 decidiu: vacina não é medicamento do

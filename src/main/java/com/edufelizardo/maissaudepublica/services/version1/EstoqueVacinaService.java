@@ -61,6 +61,7 @@ public class EstoqueVacinaService {
     @Autowired private UnidadeDeSaudeRepository unidadeRepository;
     @Autowired private UnidadeCapacidadeAssistencialRepository capacidadeRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.SuspensaoLoteRedeRepository suspensaoRepository;
 
     public boolean temSalaDeVacina(UUID unidadeId) {
         return capacidadeRepository.existsByUnidade_UuidAndCapacidade_CodigoAndFimIsNull(unidadeId, SALA_VACINA);
@@ -167,6 +168,7 @@ public class EstoqueVacinaService {
             l.setSituacao(SituacaoLoteImunobiologico.DISPONIVEL);
         }
         l.setDoses(l.getDoses() + dto.getDoses());
+        aplicarSuspensaoSeVigente(l);
         l = loteRepository.save(l);
         lancar(l, TipoMovimentacaoImunobiologico.ENTRADA, dto.getDoses(), null, texto(dto.getJustificativa()), null, null);
         ContextoAuditoria.registro(l.getUuid());
@@ -225,8 +227,9 @@ public class EstoqueVacinaService {
             throw new ResourceUnprocessableEntityException("O lote " + l.getNumeroLote() + " é de " + l.getImunobiologico().getSigla() + ".");
         }
         if (l.getSituacao() == SituacaoLoteImunobiologico.SOB_SUSPEITA) {
-            throw new ResourceUnprocessableEntityException("O lote " + l.getNumeroLote() + " está sob suspeita (excursão de temperatura): "
-                    + "não se aplica até a avaliação da coordenação.");
+            throw new ResourceUnprocessableEntityException("O lote " + l.getNumeroLote() + " está sob suspeita ("
+                    + (l.getMotivoSuspeita() == com.edufelizardo.maissaudepublica.models.enuns.MotivoSuspeitaLote.ESAVI_LOTE
+                    ? "suspenso na rede pelo alerta de ESAVI" : "excursão de temperatura") + "): não se aplica até a avaliação da coordenação.");
         }
         if (l.getSituacao() == SituacaoLoteImunobiologico.INUTILIZADO) {
             throw new ResourceUnprocessableEntityException("O lote " + l.getNumeroLote() + " foi inutilizado.");
@@ -300,6 +303,43 @@ public class EstoqueVacinaService {
         loteRepository.save(l);
     }
 
+    // ── Suspensão do lote na rede (ADR-0206) ───────────────────────────────────────────────────
+
+    /** O número do lote sem espaços e em maiúsculas: assim se comparam o lote do estoque e o digitado na dose. */
+    public static String normalizar(String numero) {
+        return numero == null ? null : numero.replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
+    }
+
+    public Optional<com.edufelizardo.maissaudepublica.models.SuspensaoLoteRede> suspensaoVigente(UUID imunobiologicoId, String numero) {
+        String n = normalizar(numero);
+        return n == null || n.isEmpty() ? Optional.empty() : suspensaoRepository.findFirstByImunobiologico_UuidAndNumeroLoteAndSituacao(imunobiologicoId, n,
+                com.edufelizardo.maissaudepublica.models.enuns.SituacaoSuspensaoLote.VIGENTE);
+    }
+
+    /** O lote alcançado pela suspensão: o disponível fica sob suspeita pelo ESAVI; o já suspeito por temperatura guarda esse motivo. */
+    public void aplicarSuspensao(LoteImunobiologico l, com.edufelizardo.maissaudepublica.models.SuspensaoLoteRede s) {
+        if (l.getSituacao() == SituacaoLoteImunobiologico.INUTILIZADO) {
+            return;
+        }
+        l.setSuspensaoRede(s);
+        if (l.getSituacao() == SituacaoLoteImunobiologico.DISPONIVEL) {
+            l.setSituacao(SituacaoLoteImunobiologico.SOB_SUSPEITA);
+            l.setMotivoSuspeita(com.edufelizardo.maissaudepublica.models.enuns.MotivoSuspeitaLote.ESAVI_LOTE);
+            l.setSobSuspeitaDesde(Instant.now());
+            l.setParecer(null);
+            l.setAvaliadoEm(null);
+            l.setAvaliadoPorCpf(null);
+        }
+    }
+
+    /** O lote que entra (compra ou remanejamento) com o número de um lote suspenso já chega sob suspeita. */
+    public void aplicarSuspensaoSeVigente(LoteImunobiologico l) {
+        if (l.getSuspensaoRede() != null && l.getSuspensaoRede().getSituacao() == com.edufelizardo.maissaudepublica.models.enuns.SituacaoSuspensaoLote.VIGENTE) {
+            return;
+        }
+        suspensaoVigente(l.getImunobiologico().getUuid(), l.getNumeroLote()).ifPresent(s -> aplicarSuspensao(l, s));
+    }
+
     // ── Apoio ──────────────────────────────────────────────────────────────────────────────────
 
     /** O frasco vencido se encerra; as doses que sobraram saem do lote como perda técnica. */
@@ -320,7 +360,13 @@ public class EstoqueVacinaService {
     /** Lançamento no livro, com o saldo depois. */
     void lancar(LoteImunobiologico l, TipoMovimentacaoImunobiologico tipo, int doses, MotivoPerdaImunobiologico motivo, String justificativa,
                 RegistroVacinacao registro, FrascoAberto frasco) {
+        lancar(l, tipo, doses, motivo, justificativa, registro, frasco, null);
+    }
+
+    void lancar(LoteImunobiologico l, TipoMovimentacaoImunobiologico tipo, int doses, MotivoPerdaImunobiologico motivo, String justificativa,
+                RegistroVacinacao registro, FrascoAberto frasco, com.edufelizardo.maissaudepublica.models.RemanejamentoImunobiologico remanejamento) {
         MovimentacaoImunobiologico m = new MovimentacaoImunobiologico();
+        m.setRemanejamento(remanejamento);
         m.setLote(l);
         m.setTipo(tipo);
         m.setDoses(doses);
@@ -380,7 +426,8 @@ public class EstoqueVacinaService {
         return new LoteImunobiologicoDto(l.getUuid(), l.getUnidade().getUuid(), i.getUuid(), i.getSigla(), i.getNome(), l.getNumeroLote(),
                 l.getFabricante(), l.getValidade(), l.getDoses(), c != null ? c.getUuid() : null, c != null ? c.getNome() : null, l.getSituacao(),
                 l.getSobSuspeitaDesde(), l.getParecer(), l.getValidade().isBefore(hoje),
-                !l.getValidade().isBefore(hoje) && !l.getValidade().isAfter(hoje.plusDays(30)), aplicavel(l, hoje));
+                !l.getValidade().isBefore(hoje) && !l.getValidade().isAfter(hoje.plusDays(30)), aplicavel(l, hoje), l.getMotivoSuspeita(),
+                l.getSuspensaoRede() != null && l.getSuspensaoRede().getSituacao() == com.edufelizardo.maissaudepublica.models.enuns.SituacaoSuspensaoLote.VIGENTE);
     }
 
     static FrascoAbertoDto dto(FrascoAberto f, LocalDateTime agora) {

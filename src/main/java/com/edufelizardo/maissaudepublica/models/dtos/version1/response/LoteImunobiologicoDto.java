@@ -38,4 +38,8 @@ public class LoteImunobiologicoDto implements Serializable {
     private boolean venceEm30Dias;
     /** Disponível, na validade e com saldo. */
     private boolean aplicavel;
+    /** Excursão de temperatura ou ESAVI do lote na rede (ADR-0206). */
+    private com.edufelizardo.maissaudepublica.models.enuns.MotivoSuspeitaLote motivoSuspeita;
+    /** A suspensão vigente na rede: só a coordenação da rede decide (ADR-0206). */
+    private boolean suspensoNaRede;
 }
