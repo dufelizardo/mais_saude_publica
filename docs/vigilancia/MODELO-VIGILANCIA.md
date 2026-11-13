@@ -246,7 +246,15 @@ Trabalhador → Evento relacionado ao trabalho → Notificação → Investigaç
 - **Acompanhamento sorológico** do material biológico: 6 semanas, 3 e 6 meses a partir do acidente, com a data realizada e as vencidas.
 - **Servidor:** o evento liga-se ao `AcidenteTrabalho` do RH do mesmo CPF; a lista dos acidentes sem notificação é da vigilância da rede;
   o RH vê só a marca "Notificado à vigilância".
-- **Falta (V5b):** `InvestigacaoTrabalho` (visita, nexo, medidas) e `RiscoOcupacional`, e os indicadores.
+
+**Implementado na V5b** ([ADR-0208](../adr/0208-vigilancia-investigacao-do-trabalho.md)):
+- **`InvestigacaoTrabalho`** (1:1 com a notificação com bloco): visita, achados e o nexo (em análise, confirmado, descartado,
+  inconclusivo) com a justificativa.
+- **`MedidaTrabalho`:** recomendada com prazo, verificada cumprida ou não; vencida no painel e na Sala de Situação.
+- **Escalonamento:** a denúncia sanitária do canal Vigilância contra o empregador (sem os dados do trabalhador) e o encaminhamento
+  intersetorial à fiscalização do trabalho.
+- **`RiscoOcupacional`** por empregador (tipo, agente, expostos; ativo ou controlado), pela investigação ou pelo cadastro.
+- **Indicadores** no relatório Vigilância (sem as de nexo descartado), por agravo, seção do CNAE e grande grupo da CBO.
 
 ## 8. Território
 
@@ -384,7 +392,7 @@ Assim o modelo dos sistemas externos não contamina o domínio interno.
 | **V4b** · animais ✅ ([ADR-0163](../adr/0163-vigilancia-zoonoses-animais.md)) | animal, observação do agressor, exames, vacinação antirrábica | V4a |
 | **V4c** · ambiental ✅ ([ADR-0164](../adr/0164-vigilancia-ambiental-agua-e-risco.md)) | qualidade da água, risco ambiental | V4a |
 | **V5a** · trabalhador na notificação ✅ ([ADR-0207](../adr/0207-vigilancia-saude-do-trabalhador.md)) | evento do trabalho, agravos do trabalho, acompanhamento sorológico, acidente do servidor | V1 |
-| **V5b** · investigação do trabalho | investigação do ambiente, nexo, medidas, risco ocupacional, indicadores | V5a |
+| **V5b** · investigação do trabalho ✅ ([ADR-0208](../adr/0208-vigilancia-investigacao-do-trabalho.md)) | investigação do ambiente, nexo, medidas, risco ocupacional, indicadores | V5a |
 
 **Fora do escopo agora:**
 - reproduzir o SINAN ou o SIVEP;

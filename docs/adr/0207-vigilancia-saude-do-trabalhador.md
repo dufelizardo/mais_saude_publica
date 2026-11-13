@@ -3,7 +3,8 @@
 ## Status
 
 Aceita e implementada. Primeira parte da fatia **V5** do domínio 23 ([ADR-0110](./0110-vigilancia-em-saude.md)). A V5b (investigação do
-ambiente de trabalho com o nexo, as medidas, o risco ocupacional por empregador e os indicadores) vem em ADR própria. O adaptador do SINAN
+ambiente de trabalho com o nexo, as medidas, o risco ocupacional por empregador e os indicadores) veio na
+[ADR-0208](./0208-vigilancia-investigacao-do-trabalho.md). O adaptador do SINAN
 sai da V5 e fica na lista do domínio 20 (Integrações), pela regra de que integração não impede fechar a fatia.
 
 ## Contexto

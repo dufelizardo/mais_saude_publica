@@ -221,8 +221,8 @@ real":
   ~~V2a (contatos, local e mapa)~~ — ADR-0130, ~~V2b (surto e medidas)~~ — ADR-0131, ~~V4a (controle de vetores)~~ —
   ADR-0162 (sem o quarteirão), ~~V4b (animais)~~ — ADR-0163 (sem a cobertura antirrábica), ~~V4c (água e risco)~~ — ADR-0164 (sem o plano de amostragem), ~~V3a (estabelecimento, licença, denúncia e inspeção)~~ — ADR-0199, ~~V3b (auto,
   processo e medidas)~~ — ADR-0200, ~~V3c (violência na rede intersetorial)~~ — ADR-0201 (sem a pessoa com deficiência, que pede o dado no
-  cadastro), ~~V5a (bloco do trabalho, material biológico e acidente do servidor)~~ — ADR-0207; falta a V5b (investigação do trabalho,
-  risco ocupacional e indicadores). O SINAN foi para o domínio 20.
+  cadastro), ~~V5a (bloco do trabalho, material biológico e acidente do servidor)~~ — ADR-0207, ~~V5b (investigação do trabalho, risco
+  ocupacional e indicadores)~~ — ADR-0208. Domínio completo; o SINAN foi para o domínio 20.
 - **#24 Imunização** — desenhado na ADR-0147; ~~I1 (fundação: catálogo, calendário, dose, caderneta e Sala de Vacina)~~
   — ADR-0147; ~~I2 (sala de vacina e cadeia de frio)~~ — ADR-0148 (sem o pedido à rede de frio e o termômetro
   automático); ~~I3 (cobertura e campanhas)~~ — ADR-0149 (sem o SINASC e sem a cobertura de adolescentes, adultos e

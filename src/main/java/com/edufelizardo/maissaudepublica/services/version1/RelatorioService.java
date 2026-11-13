@@ -5,6 +5,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ContagemP
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AvaliacaoCampanhaDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CoberturaRedeDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ComunicacaoViolenciaDtos;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.SaudeTrabalhadorDtos;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.CoberturaVacinalDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EsperaAtendimentoDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EstatisticaEsperaDto;
@@ -45,6 +46,7 @@ public class RelatorioService {
     @Autowired private AvaliacaoCampanhaService avaliacaoCampanhaService;
     @Autowired private CoberturaRedeService coberturaRedeService;
     @Autowired private ComunicacaoViolenciaService comunicacaoViolenciaService;
+    @Autowired private SaudeTrabalhadorService saudeTrabalhadorService;
     @Autowired private ProcessoSanitarioService processoSanitarioService;
     @Autowired private IndicadoresQualidadeService indicadoresQualidadeService;
 
@@ -188,14 +190,30 @@ public class RelatorioService {
         long obrigatorias = comunicacoes.stream().mapToLong(ComunicacaoViolenciaDtos.Resumo::obrigatorias).sum();
         long noPrazo = comunicacoes.stream().mapToLong(ComunicacaoViolenciaDtos.Resumo::noPrazo).sum();
         notas.add("Comunicação obrigatória da violência: Conselho Tutelar (ECA), pessoa idosa (Estatuto, art. 19) e mulher (Lei 13.931/2019), em 24 horas.");
+        // V5b (ADR-0208): a saúde do trabalhador, sem as de nexo descartado.
+        SaudeTrabalhadorDtos.Resumo t = saudeTrabalhadorService.resumo(d.getDe(), d.getAte(), unidadeId);
+        long comBloco = t.total() + t.nexoDescartado();
+        notas.add("Saúde do trabalhador: " + n(t.nexoDescartado()) + " notificação(ões) com nexo descartado fora das contagens; " + n(t.medidasVencidas())
+                + " medida(s) com o prazo vencido. Trabalhador da saúde: empregador da seção Q do CNAE ou ocupação da saúde na CBO.");
         return relatorio(TipoRelatorio.VIGILANCIA, d.getDe(), d.getAte(), d.getAbrangencia(), List.of(
                 new RelatorioDto.Indicador("Notificadas", n(d.getNotificadas())),
                 new RelatorioDto.Indicador("Confirmadas", n(d.getConfirmadas())),
                 new RelatorioDto.Indicador("Em aberto", n(d.getEmAberto())),
                 new RelatorioDto.Indicador("Encerradas no prazo (%)", n(d.getOportunidadeEncerramento())),
-                new RelatorioDto.Indicador("Comunicações de violência no prazo (%)", obrigatorias == 0 ? "" : n(Math.round(noPrazo * 1000.0 / obrigatorias) / 10.0))),
+                new RelatorioDto.Indicador("Comunicações de violência no prazo (%)", obrigatorias == 0 ? "" : n(Math.round(noPrazo * 1000.0 / obrigatorias) / 10.0)),
+                new RelatorioDto.Indicador("Relacionadas ao trabalho", n(t.total())),
+                new RelatorioDto.Indicador("Nexo do trabalho investigado (%)", comBloco == 0 ? "" : n(Math.round(t.nexoConcluido() * 1000.0 / comBloco) / 10.0)),
+                new RelatorioDto.Indicador("Acidentes de trabalho fatais", n(t.obitos())),
+                new RelatorioDto.Indicador("Trabalho com menores de 18 anos", n(t.menores())),
+                new RelatorioDto.Indicador("Material biológico em trabalhadores da saúde", n(t.biologicoSaude()))),
                 List.of(new RelatorioDto.Secao("Comunicações obrigatórias da violência", List.of("Destino", "Obrigatórias", "Feitas", "No prazo"),
                                 comunicacoes.stream().map(x -> List.of(x.destino(), n(x.obrigatorias()), n(x.feitas()), n(x.noPrazo()))).toList()),
+                        new RelatorioDto.Secao("Saúde do trabalhador por agravo", List.of("Agravo", "Notificadas", "Nexo confirmado", "Óbitos", "Menores de 18"),
+                                t.porAgravo().stream().map(x -> List.of(x.agravo(), n(x.notificadas()), n(x.nexoConfirmado()), n(x.obitos()), n(x.menores()))).toList()),
+                        new RelatorioDto.Secao("Saúde do trabalhador por seção do CNAE", List.of("Seção", "Notificações"),
+                                t.porCnae().stream().map(x -> List.of(x.rotulo(), n(x.total()))).toList()),
+                        new RelatorioDto.Secao("Saúde do trabalhador por grande grupo da CBO", List.of("Grande grupo", "Notificações"),
+                                t.porOcupacao().stream().map(x -> List.of(x.rotulo(), n(x.total()))).toList()),
                         new RelatorioDto.Secao("Por agravo", List.of("Agravo", "Notificadas", "Confirmadas", "Descartadas", "Em aberto", "Encerradas", "No prazo (%)"),
                                 d.getAgravos().stream().map(a -> List.of(a.getNome(), n(a.getNotificadas()), n(a.getConfirmadas()), n(a.getDescartadas()), n(a.getEmAberto()),
                                         n(a.getEncerradas()), n(a.getOportunidadeEncerramento()))).toList()),

@@ -4,6 +4,10 @@ import {
   AcidenteSemNotificacaoDto,
   ETAPAS_ACOMPANHAMENTO,
   PainelTrabalhadorDto,
+  RiscoOcupacionalDto,
+  TIPOS_MEDIDA_TRABALHO,
+  TIPOS_RISCO_OCUPACIONAL,
+  TipoRiscoOcupacional,
   SITUACOES_NOTIFICACAO,
   SITUACOES_TRABALHO,
 } from '../../core/models/vigilancia';
@@ -34,6 +38,19 @@ import { VigilanciaService } from '../../core/services/vigilancia';
           </ul>
         </section>
       }
+      @if (p.medidasVencidas.length) {
+        <section class="box box--warn" aria-label="Medidas do trabalho vencidas">
+          <strong>Medidas do trabalho com o prazo vencido</strong>
+          <ul class="eq-prof">
+            @for (m of p.medidasVencidas; track m.notificacaoId + m.descricao) {
+              <li class="mo-row">
+                <span><span class="cell-main">{{ tiposMedida[m.tipo] }} · {{ m.descricao }}</span><span class="cell-sub">{{ m.pacienteNome }} · {{ m.unidadeNome }} · prazo {{ data(m.prazo) }}</span></span>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="abrirNotificacao.emit(m.notificacaoId)" [attr.aria-label]="'Abrir notificação da medida: ' + m.descricao">Abrir</button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
       @if (p.notificacoes.length) {
         <div class="tbl-wrap">
           <table aria-label="Notificações relacionadas ao trabalho">
@@ -56,6 +73,40 @@ import { VigilanciaService } from '../../core/services/vigilancia';
       } @else { <p class="cell-sub">Nenhuma notificação relacionada ao trabalho neste filtro.</p> }
     }
     @if (podeInvestigar()) {
+      <h4 class="mo-grupo">Riscos ocupacionais</h4>
+      @if (riscos().length) {
+        <ul class="eq-prof" aria-label="Riscos ocupacionais">
+          @for (r of riscos(); track r.uuid) {
+            <li class="mo-row">
+              <span><span class="cell-main">{{ r.empregadorNome }} · {{ tiposRisco[r.tipo] }} · {{ r.agente }}</span>
+                <span class="cell-sub">@if (r.trabalhadoresExpostos != null) { {{ r.trabalhadoresExpostos }} expostos · }@if (r.local) { {{ r.local }} · }{{ r.situacao === 'ATIVO' ? 'ativo' : 'controlado' }}@if (r.motivoControle) { · {{ r.motivoControle }} }</span></span>
+              @if (r.situacao === 'ATIVO') {
+                @if (controlando() === r.uuid) {
+                  <span class="row-actions">
+                    <label class="sr-only" for="f-risco-motivo">Como o risco foi controlado</label>
+                    <input id="f-risco-motivo" type="text" maxlength="1000" placeholder="Como foi controlado" [value]="motivo()" (input)="motivo.set($any($event.target).value)" />
+                    <button type="button" class="btn btn--sm" [disabled]="!motivo().trim()" (click)="controlar(r)">Confirmar</button>
+                  </span>
+                } @else {
+                  <button type="button" class="link-btn" (click)="controlando.set(r.uuid); motivo.set('')" [attr.aria-label]="'Marcar como controlado: ' + r.agente">Controlado</button>
+                }
+              } @else { <span class="tag tag--ok">Controlado</span> }
+            </li>
+          }
+        </ul>
+      } @else { <p class="cell-sub">Nenhum risco ocupacional registrado.</p> }
+      <div class="dw-row">
+        <div class="dw-field"><label for="f-rn-empregador">Empregador</label>
+          <input id="f-rn-empregador" type="text" maxlength="200" [value]="novoEmpregador()" (input)="novoEmpregador.set($any($event.target).value)" /></div>
+        <div class="dw-field"><label for="f-rn-tipo">Tipo</label>
+          <select id="f-rn-tipo" [value]="novoTipo()" (change)="novoTipo.set($any($event.target).value)">
+            @for (t of listaTiposRisco; track t) { <option [value]="t">{{ tiposRisco[t] }}</option> }
+          </select></div>
+        <div class="dw-field"><label for="f-rn-agente">Agente</label>
+          <input id="f-rn-agente" type="text" maxlength="200" [value]="novoAgente()" (input)="novoAgente.set($any($event.target).value)" /></div>
+      </div>
+      <button type="button" class="btn btn--ghost btn--sm" [disabled]="!novoEmpregador().trim() || !novoAgente().trim()" (click)="registrarRisco()">Registrar o risco</button>
+
       <h4 class="mo-grupo">Acidentes de servidores sem notificação</h4>
       @if (semAcessoRede()) {
         <p class="cell-sub">Os acidentes dos servidores são da rede inteira: só a vigilância com acesso a todas as unidades vê esta lista.</p>
@@ -90,6 +141,16 @@ export class SaudeTrabalhador {
   protected readonly acidentes = signal<AcidenteSemNotificacaoDto[]>([]);
   protected readonly semAcessoRede = signal(false);
   protected readonly erro = signal<string | null>(null);
+  /** V5b (ADR-0208): as medidas vencidas e os riscos ocupacionais. */
+  protected readonly tiposMedida = TIPOS_MEDIDA_TRABALHO;
+  protected readonly tiposRisco = TIPOS_RISCO_OCUPACIONAL;
+  protected readonly listaTiposRisco = Object.keys(TIPOS_RISCO_OCUPACIONAL) as TipoRiscoOcupacional[];
+  protected readonly riscos = signal<RiscoOcupacionalDto[]>([]);
+  protected readonly controlando = signal<string | null>(null);
+  protected readonly motivo = signal('');
+  protected readonly novoEmpregador = signal('');
+  protected readonly novoTipo = signal<TipoRiscoOcupacional>('FISICO');
+  protected readonly novoAgente = signal('');
 
   constructor() {
     effect(() => {
@@ -107,6 +168,7 @@ export class SaudeTrabalhador {
       error: () => this.erro.set('Não foi possível carregar a saúde do trabalhador.'),
     });
     if (!investiga) return;
+    this.carregarRiscos();
     this.service.acidentesSemNotificacao().subscribe({
       next: (a) => {
         this.semAcessoRede.set(false);
@@ -116,6 +178,32 @@ export class SaudeTrabalhador {
         this.acidentes.set([]);
         this.semAcessoRede.set(e.status === 403);
       },
+    });
+  }
+
+  private carregarRiscos(): void {
+    this.service.riscosOcupacionais().subscribe({ next: (l) => this.riscos.set(l), error: () => this.riscos.set([]) });
+  }
+
+  protected registrarRisco(): void {
+    this.erro.set(null);
+    this.service.registrarRisco({ tipo: this.novoTipo(), agente: this.novoAgente().trim(), empregadorNome: this.novoEmpregador().trim() }).subscribe({
+      next: () => {
+        this.novoAgente.set('');
+        this.novoEmpregador.set('');
+        this.carregarRiscos();
+      },
+      error: (e: HttpErrorResponse) => this.erro.set((e.error as { message?: string } | null)?.message ?? 'Não foi possível registrar o risco.'),
+    });
+  }
+
+  protected controlar(r: RiscoOcupacionalDto): void {
+    this.service.controlarRisco(r.uuid, this.motivo().trim()).subscribe({
+      next: () => {
+        this.controlando.set(null);
+        this.carregarRiscos();
+      },
+      error: (e: HttpErrorResponse) => this.erro.set((e.error as { message?: string } | null)?.message ?? 'Não foi possível salvar.'),
     });
   }
 

@@ -791,7 +791,7 @@ public class VigilanciaSanitariaService {
     }
 
     /** O número do ano: 2026/000001. A licença e a denúncia têm séries próprias. */
-    private static String numero(int ano, Function<String, Long> contar) {
+    static String numero(int ano, Function<String, Long> contar) {
         String prefixo = ano + "/";
         return prefixo + String.format(Locale.ROOT, "%06d", contar.apply(prefixo) + 1);
     }

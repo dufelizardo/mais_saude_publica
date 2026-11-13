@@ -479,6 +479,8 @@ export interface TrabalhoDto {
   materialBiologico: boolean;
   acompanhamentos: AcompanhamentoSorologicoDto[];
   atualizadoEm?: string | null;
+  /** A investigação do ambiente de trabalho (ADR-0208). */
+  investigacao?: InvestigacaoTrabalhoDto | null;
 }
 
 export interface NotificacaoTrabalhoDto {
@@ -515,6 +517,130 @@ export interface PainelTrabalhadorDto {
   materialBiologico: number;
   notificacoes: NotificacaoTrabalhoDto[];
   acompanhamentos: AcompanhamentoPendenteDto[];
+  medidasVencidas: MedidaVencidaDto[];
+}
+
+// ── Investigação do trabalho (ADR-0208) ───────────────────────────────────────────────────────
+
+export type NexoTrabalho = 'EM_ANALISE' | 'CONFIRMADO' | 'DESCARTADO' | 'INCONCLUSIVO';
+export const NEXOS_TRABALHO: Record<NexoTrabalho, { rotulo: string; classe: string }> = {
+  EM_ANALISE: { rotulo: 'Nexo em análise', classe: 'info' },
+  CONFIRMADO: { rotulo: 'Nexo confirmado', classe: 'alert' },
+  DESCARTADO: { rotulo: 'Nexo descartado', classe: 'muted' },
+  INCONCLUSIVO: { rotulo: 'Nexo inconclusivo', classe: 'warn' },
+};
+export type TipoMedidaTrabalho =
+  | 'ADEQUACAO_DO_AMBIENTE' | 'PROTECAO_COLETIVA' | 'PROTECAO_INDIVIDUAL' | 'ORGANIZACAO_DO_TRABALHO' | 'CAPACITACAO'
+  | 'AFASTAMENTO_DA_EXPOSICAO' | 'VIGILANCIA_DOS_EXPOSTOS' | 'OUTRA';
+export const TIPOS_MEDIDA_TRABALHO: Record<TipoMedidaTrabalho, string> = {
+  ADEQUACAO_DO_AMBIENTE: 'Adequação do ambiente',
+  PROTECAO_COLETIVA: 'Proteção coletiva',
+  PROTECAO_INDIVIDUAL: 'Proteção individual',
+  ORGANIZACAO_DO_TRABALHO: 'Organização do trabalho',
+  CAPACITACAO: 'Capacitação',
+  AFASTAMENTO_DA_EXPOSICAO: 'Afastamento da exposição',
+  VIGILANCIA_DOS_EXPOSTOS: 'Vigilância dos expostos',
+  OUTRA: 'Outra',
+};
+export type SituacaoMedidaTrabalho = 'RECOMENDADA' | 'CUMPRIDA' | 'NAO_CUMPRIDA';
+export const SITUACOES_MEDIDA_TRABALHO: Record<SituacaoMedidaTrabalho, { rotulo: string; classe: string }> = {
+  RECOMENDADA: { rotulo: 'Recomendada', classe: 'info' },
+  CUMPRIDA: { rotulo: 'Cumprida', classe: 'ok' },
+  NAO_CUMPRIDA: { rotulo: 'Não cumprida', classe: 'alert' },
+};
+export type TipoRiscoOcupacional = 'FISICO' | 'QUIMICO' | 'BIOLOGICO' | 'ERGONOMICO' | 'ACIDENTE' | 'PSICOSSOCIAL';
+export const TIPOS_RISCO_OCUPACIONAL: Record<TipoRiscoOcupacional, string> = {
+  FISICO: 'Físico', QUIMICO: 'Químico', BIOLOGICO: 'Biológico', ERGONOMICO: 'Ergonômico', ACIDENTE: 'De acidente', PSICOSSOCIAL: 'Psicossocial',
+};
+export type SituacaoRiscoOcupacional = 'ATIVO' | 'CONTROLADO';
+
+export interface MedidaTrabalhoDto {
+  uuid: string;
+  tipo: TipoMedidaTrabalho;
+  descricao: string;
+  prazo: string;
+  situacao: SituacaoMedidaTrabalho;
+  vencida: boolean;
+  verificadaEm?: string | null;
+  observacao?: string | null;
+}
+
+export interface RiscoOcupacionalDto {
+  uuid: string;
+  tipo: TipoRiscoOcupacional;
+  agente: string;
+  descricao?: string | null;
+  empregadorDocumento?: string | null;
+  empregadorNome: string;
+  estabelecimentoId?: string | null;
+  local?: string | null;
+  trabalhadoresExpostos?: number | null;
+  situacao: SituacaoRiscoOcupacional;
+  controladoEm?: string | null;
+  motivoControle?: string | null;
+  notificacaoId?: string | null;
+}
+
+export interface EncaminhamentoTrabalhoDto {
+  uuid: string;
+  instituicaoNome: string;
+  motivo: string;
+  enviadoEm: string;
+  retornoEsperadoEm: string;
+  situacao: string;
+}
+
+export interface InvestigacaoTrabalhoDto {
+  uuid: string;
+  visitaEm?: string | null;
+  localVisitado?: string | null;
+  achados?: string | null;
+  nexo: NexoTrabalho;
+  justificativaNexo?: string | null;
+  nexoConcluidoEm?: string | null;
+  investigadorNome?: string | null;
+  denunciaProtocolo?: string | null;
+  denunciaSituacao?: string | null;
+  medidas: MedidaTrabalhoDto[];
+  riscos: RiscoOcupacionalDto[];
+  encaminhamentos: EncaminhamentoTrabalhoDto[];
+}
+
+export interface MedidaVencidaDto {
+  notificacaoId: string;
+  pacienteNome: string;
+  unidadeNome: string;
+  tipo: TipoMedidaTrabalho;
+  descricao: string;
+  prazo: string;
+}
+
+export interface AlertaSemanaTrabalhoDto {
+  agravoNome: string;
+  unidadeNome: string;
+  dataEvento: string;
+  obito: boolean;
+  empregadorNome?: string | null;
+}
+
+export interface SemanaTrabalhadorDto {
+  acidentes: number;
+  obitos: number;
+  investigacoesAbertas: number;
+  medidasVencidas: number;
+  riscosAtivos: number;
+  alertas: AlertaSemanaTrabalhoDto[];
+}
+
+export interface RiscoOcupacionalRequestDto {
+  tipo: TipoRiscoOcupacional;
+  agente: string;
+  descricao?: string | null;
+  empregadorDocumento?: string | null;
+  empregadorNome?: string | null;
+  local?: string | null;
+  trabalhadoresExpostos?: number | null;
+  notificacaoId?: string | null;
 }
 
 export interface AcidenteSemNotificacaoDto {
