@@ -245,6 +245,10 @@ export interface ContraindicacaoVacinalDto {
   desde: string;
   motivo: string;
   notificacaoId?: string | null;
+  /** Revogação pelo CRIE (ADR-0206): a revogada fica no histórico. */
+  uuid: string;
+  revogadaEm?: string | null;
+  parecerRevogacao?: string | null;
 }
 
 export interface VacinacaoDoDiaDto {
@@ -365,7 +369,8 @@ export function idadeTexto(meses: number | null | undefined): string {
 // ── Sala de vacina: estoque e cadeia de frio (ADR-0148) ──
 
 export type SituacaoLoteImunobiologico = 'DISPONIVEL' | 'SOB_SUSPEITA' | 'INUTILIZADO';
-export type TipoMovimentacaoImunobiologico = 'ENTRADA' | 'APLICACAO' | 'ESTORNO_APLICACAO' | 'PERDA_FISICA' | 'PERDA_TECNICA' | 'AJUSTE_INVENTARIO';
+export type TipoMovimentacaoImunobiologico = 'ENTRADA' | 'APLICACAO' | 'ESTORNO_APLICACAO' | 'PERDA_FISICA' | 'PERDA_TECNICA' | 'AJUSTE_INVENTARIO'
+  | 'REMANEJAMENTO_SAIDA' | 'REMANEJAMENTO_ENTRADA' | 'ESTORNO_REMANEJAMENTO';
 export type MotivoPerdaImunobiologico =
   | 'VENCIMENTO'
   | 'QUEBRA'
@@ -374,6 +379,7 @@ export type MotivoPerdaImunobiologico =
   | 'TRANSPORTE'
   | 'EXCURSAO_TEMPERATURA'
   | 'FRASCO_ABERTO_VENCIDO'
+  | 'ESAVI_LOTE'
   | 'OUTRO';
 export type TurnoLeituraTemperatura = 'MANHA' | 'TARDE';
 
@@ -390,6 +396,9 @@ export const TIPOS_MOVIMENTACAO: Record<TipoMovimentacaoImunobiologico, string> 
   PERDA_FISICA: 'Perda física',
   PERDA_TECNICA: 'Perda técnica',
   AJUSTE_INVENTARIO: 'Ajuste de inventário',
+  REMANEJAMENTO_SAIDA: 'Remanejamento (saída)',
+  REMANEJAMENTO_ENTRADA: 'Remanejamento (entrada)',
+  ESTORNO_REMANEJAMENTO: 'Remanejamento devolvido',
 };
 
 /** Os motivos que a equipe informa; a perda do frasco aberto vencido é apurada pelo sistema. */
@@ -423,6 +432,9 @@ export interface LoteImunobiologicoDto {
   vencido: boolean;
   venceEm30Dias: boolean;
   aplicavel: boolean;
+  /** Excursão de temperatura ou ESAVI do lote na rede (ADR-0206). */
+  motivoSuspeita?: MotivoSuspeitaLote | null;
+  suspensoNaRede?: boolean;
 }
 
 export interface FrascoAbertoDto {
@@ -535,4 +547,41 @@ export function prazoTexto(minutos: number): string {
 /** "2026-11-30" → "30/11/2026". */
 export function dataBr(iso: string | null | undefined): string {
   return iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '—';
+}
+
+// ── Remanejamento, alerta de ESAVI por lote e CRIE (ADR-0206) ──
+
+export type MotivoSuspeitaLote = 'EXCURSAO_TEMPERATURA' | 'ESAVI_LOTE';
+export type MotivoRemanejamento = 'EXCESSO' | 'VALIDADE_PROXIMA' | 'DESABASTECIMENTO' | 'OUTRO';
+export type SituacaoRemanejamento = 'ENVIADO' | 'RECEBIDO' | 'RECUSADO' | 'CANCELADO';
+export type SituacaoSuspensaoLote = 'VIGENTE' | 'LIBERADA' | 'INUTILIZADA';
+
+export const MOTIVOS_SUSPEITA: Record<MotivoSuspeitaLote, string> = { EXCURSAO_TEMPERATURA: 'Excursão de temperatura', ESAVI_LOTE: 'ESAVI do lote na rede' };
+export const MOTIVOS_REMANEJAMENTO: Record<MotivoRemanejamento, string> = {
+  EXCESSO: 'Excesso no estoque', VALIDADE_PROXIMA: 'Validade próxima', DESABASTECIMENTO: 'Desabastecimento do destino', OUTRO: 'Outro',
+};
+export const SITUACOES_REMANEJAMENTO: Record<SituacaoRemanejamento, { rotulo: string; classe: string }> = {
+  ENVIADO: { rotulo: 'Em trânsito', classe: 'warn' }, RECEBIDO: { rotulo: 'Recebido', classe: 'ok' },
+  RECUSADO: { rotulo: 'Recusado', classe: 'alert' }, CANCELADO: { rotulo: 'Cancelado', classe: 'muted' },
+};
+export const SITUACOES_SUSPENSAO: Record<SituacaoSuspensaoLote, { rotulo: string; classe: string }> = {
+  VIGENTE: { rotulo: 'Suspenso na rede', classe: 'alert' }, LIBERADA: { rotulo: 'Liberado', classe: 'ok' }, INUTILIZADA: { rotulo: 'Inutilizado', classe: 'muted' },
+};
+
+export interface RemanejamentoDto {
+  uuid: string; loteOrigemId: string; unidadeOrigemId: string; unidadeOrigemNome: string; unidadeDestinoId: string; unidadeDestinoNome: string;
+  imunobiologicoId: string; sigla: string; numeroLote: string; validade: string; doses: number; motivo: MotivoRemanejamento; observacao?: string | null;
+  situacao: SituacaoRemanejamento; enviadoEm: string; concluidoEm?: string | null; temperaturaChegada?: number | null; chegouForaDaFaixa: boolean;
+  motivoRecusa?: string | null; loteDestinoId?: string | null;
+}
+
+export interface SuspensaoLoteDto {
+  uuid: string; imunobiologicoId: string; sigla: string; numeroLote: string; sinal: string; motivo: string; situacao: SituacaoSuspensaoLote;
+  suspensaEm: string; decididaEm?: string | null; parecer?: string | null; lotesAlcancados: number;
+}
+
+export interface AlertaLoteDto {
+  imunobiologicoId: string; sigla: string; imunobiologicoNome: string; numeroLote: string; gravesEm30Dias: number; desvioDeQualidade: boolean;
+  sinal: string; notificacoes: { uuid: string; dataNotificacao: string; unidadeNome: string; gravidade?: string | null; causalidade?: string | null }[];
+  salasComEstoque: number; dosesEmEstoque: number; suspensao?: SuspensaoLoteDto | null;
 }

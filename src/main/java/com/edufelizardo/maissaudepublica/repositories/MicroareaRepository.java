@@ -12,5 +12,9 @@ public interface MicroareaRepository extends JpaRepository<Microarea, UUID> {
 
     List<Microarea> findByArea_UuidOrderByCodigoAsc(UUID areaId);
 
+    /** As microáreas dos territórios, para a cobertura da campanha (ADR-0196). */
+    @org.springframework.data.jpa.repository.Query("select m from Microarea m join fetch m.area a join fetch a.territorio where a.territorio.uuid in ?1")
+    List<Microarea> findDosTerritorios(java.util.Collection<UUID> territorioIds);
+
     Optional<Microarea> findByArea_UuidAndCodigoIgnoreCase(UUID areaId, String codigo);
 }

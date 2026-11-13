@@ -99,9 +99,11 @@ Sem rota nova; mudam as da Vigilância e da Imunização:
 
 - **O ESAVI não tem fluxo paralelo:** prazo, investigação, linha do tempo, boletim e sugestões são os da Vigilância.
 - **A contraindicação não tem fim por ora.** Ela vale até alguém registrar a dose com a justificativa. Revogar a
-  contraindicação (por reavaliação no CRIE) fica para depois, com a tela do CRIE.
+  contraindicação (por reavaliação no CRIE) fica para depois, com a tela do CRIE. Feito na I6
+  ([ADR-0206](./0206-imunizacao-remanejamento-lote-rede-crie.md)), com o histórico da revogada.
 - **Ficam para depois:**
-  - o alerta por lote (ESAVI graves no mesmo lote, ou causalidade A2), com o bloqueio do lote na rede de frio;
+  - o alerta por lote (ESAVI graves no mesmo lote, ou causalidade A2), com o bloqueio do lote na rede de frio. Feito na I6
+    (ADR-0206);
   - o envio do ESAVI ao Ministério (e-SUS Notifica / SI-PNI), com a I5 e o domínio 20.
 
 ## Testes

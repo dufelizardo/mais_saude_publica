@@ -13,6 +13,7 @@
     </div>
     <p class="cell-sub mono">Admissão {{ instante(i.admitidaEm) }}@if (i.altaEm) { · alta {{ instante(i.altaEm) }}@if (i.altaPorNome) { por {{ i.altaPorNome }} } }</p>
     @if (i.motivo) { <p class="rec__txt"><b>Motivo:</b> {{ i.motivo }}</p> }
+    @if (i.numeroAih) { <p class="cell-sub">AIH <span class="mono">{{ i.numeroAih }}</span></p> }
     @if (i.sumarioAlta) { <p class="rec__txt reg-texto"><b>Sumário de alta:</b> {{ i.sumarioAlta }}</p> }
     @if (i.eventos?.length) {
       <details class="int-mov">
@@ -24,6 +25,31 @@
         </ul>
       </details>
     }
+    <details class="int-mov" (toggle)="carregarPrescricoes(i.uuid, $any($event.target).open)">
+      <summary>Prescrições e checagens</summary>
+      @if (prescricoes()[i.uuid] === 'erro') {
+        <p class="cell-sub">Não foi possível carregar as prescrições.</p>
+      } @else if (!prescricoes()[i.uuid]) {
+        <p class="cell-sub">Carregando…</p>
+      } @else {
+        @for (p of listaDe(i.uuid); track p.uuid) {
+          <p class="cell-sub mono">{{ instante(p.inicio) }} a {{ instante(p.fimEfetivo) }} · {{ p.medicoNome }}</p>
+          <ul>
+            @for (it of p.itens; track it.uuid) {
+              <li>{{ it.resumo }}@if (it.suspensoEm) { (suspenso: {{ it.motivoSuspensao }}) }
+                @for (c of it.checagens; track c.uuid) {
+                  @if (!c.retificada) {
+                    <span class="cell-sub"> · {{ instante(c.realizadoEm) }} {{ c.resultado === 'FEITO' ? 'feito' : 'não feito' }}@if (c.aceitacao) { ({{ aceitacoes[c.aceitacao] }}) }@if (c.motivoNaoAdministracao) { ({{ motivosNaoAdm[c.motivoNaoAdministracao] }}) } por {{ c.profissionalNome }}</span>
+                  }
+                }
+              </li>
+            }
+          </ul>
+        } @empty {
+          <p class="cell-sub">Sem prescrição.</p>
+        }
+      }
+    </details>
     @if (i.status === 'INTERNADO') {
       <div><a class="btn btn--ghost btn--sm" routerLink="/assistencia/leitos" [queryParams]="{ aba: 'internacoes' }">Ver no mapa de leitos</a></div>
     }

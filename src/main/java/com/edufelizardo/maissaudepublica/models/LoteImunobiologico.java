@@ -67,4 +67,15 @@ public class LoteImunobiologico implements Serializable {
     private Instant avaliadoEm;
 
     private String avaliadoPorCpf;
+
+    /** Por que está sob suspeita: a excursão de temperatura ou o ESAVI do lote na rede (ADR-0206). */
+    @Enumerated(EnumType.STRING)
+    private com.edufelizardo.maissaudepublica.models.enuns.MotivoSuspeitaLote motivoSuspeita;
+
+    /** A suspensão do lote na rede que o alcançou (ADR-0206). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "suspensao_rede_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private SuspensaoLoteRede suspensaoRede;
 }

@@ -4,6 +4,7 @@ Resource    ../../imunizacao/vacinacao_flow.resource
 Resource    ../../imunizacao/sala_de_vacina_flow.resource
 Resource    ../../imunizacao/cobertura_vacinal_flow.resource
 Resource    ../../imunizacao/esavi_flow.resource
+Resource    ../../imunizacao/imunizacao_rede_flow.resource
 Resource    ../../../pom/ui/vigilancia/vigilancia_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -157,5 +158,62 @@ UI Vacina - Encerrar Esavi Com Contraindicacao
     Wait For Elements State    css=app-drawer >> text=Encerrada em    visible
     UI Vacina - Abrir Caderneta    ${dados}[paciente]
     Wait For Elements State    css=[aria-label="Contraindicações vacinais"] >> text=dT contraindicada por ESAVI    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vacina - Remanejar E Receber
+    [Documentation]    No Estoque da origem: remanejar 3 doses; na aba Remanejamentos do destino: receber com a temperatura (ADR-0206).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${origem}    ${destino}    ${lote}=    Duas Salas Com Lote
+    UI Vacina - Abrir Sala
+    Select Options By    id=f-sv-unidade    value    ${origem}[unidade]
+    Click    role=tab[name="Estoque"]
+    Click    role=button[name="Remanejar o lote ${lote}[numeroLote]"]
+    Select Options By    id=f-rem-destino    value    ${destino}[unidade]
+    Fill Text    id=f-rem-doses    3
+    Click    css=app-drawer >> role=button[name="Registrar"]
+    Wait For Elements State    css=table[aria-label="Lotes"] >> tr:has-text("${lote}[numeroLote]") >> td:nth-child(4) >> text="7"    visible
+    Select Options By    id=f-sv-unidade    value    ${destino}[unidade]
+    Click    role=tab[name="Remanejamentos"]
+    Click    role=button[name="Receber o lote ${lote}[numeroLote]"]
+    Fill Text    id=f-rec-temp    5
+    Click    css=app-drawer >> role=button[name="Receber"]
+    Wait For Elements State    css=table[aria-label="Histórico de remanejamentos"] >> tr:has-text("${lote}[numeroLote]") >> text=Recebido    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vacina - Suspender E Liberar Lote
+    [Documentation]    Na aba Alertas de lote: suspender o lote na rede e depois liberá-lo com o parecer (ADR-0206).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}=    Seed Sala De Vacina
+    ${l}=    Entrada De Lote    ${dados}[unidade]    DT
+    ${imuno}=    Id Do Imunobiologico    DT
+    ${numero}=    Set Variable    ${l.json()}[numeroLote]
+    UI Vacina - Abrir Sala
+    Click    role=tab[name="Alertas de lote"]
+    Clicar Botao    Suspender outro lote
+    Select Options By    id=f-al-imuno    value    ${imuno}
+    Fill Text    id=f-al-lote    ${numero}
+    Fill Text    id=f-al-motivo    Comunicado de desvio de qualidade do fabricante.
+    Click    css=app-drawer >> role=button[name="Suspender"]
+    Wait For Elements State    css=[aria-label="Lotes em alerta"] >> li:has-text("${numero}") >> text=Suspenso na rede    visible
+    Click    role=button[name="Decidir o lote ${numero}"]
+    Fill Text    id=f-al-parecer    Sem relação com o lote.
+    Click    css=app-drawer >> role=button[name="Registrar decisão"]
+    Wait For Elements State    css=[aria-label="Lotes em alerta"] >> li:has-text("${numero}")    detached
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Vacina - Revogar Contraindicacao
+    [Documentation]    Na caderneta: revogar a contraindicação com o parecer do CRIE; ela vai para o histórico (ADR-0206).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${dados}    ${dose}    ${notificacao}=    Esavi Notificado
+    Encerrar Com Contraindicacao    ${notificacao}
+    UI Vacina - Abrir Caderneta    ${dados}[paciente]
+    Click    role=button[name="Revogar a contraindicação de dT"]
+    Fill Text    id=f-vac-parecer    Reavaliada no CRIE: reação local, sem contraindicação.
+    Click    css=.vac-revogar >> role=button[name="Revogar"]
+    Wait For Elements State    css=[aria-label="Contraindicações revogadas"] >> text=revogada pelo CRIE    visible
+    Wait For Elements State    css=[aria-label="Contraindicações vacinais"]    detached
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

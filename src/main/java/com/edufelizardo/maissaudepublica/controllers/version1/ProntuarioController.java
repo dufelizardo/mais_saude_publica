@@ -9,6 +9,7 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcessoJus
 import com.edufelizardo.maissaudepublica.services.version1.VinculoAssistencialService;
 import jakarta.validation.Valid;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.ProntuarioResponseDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EvolucaoExameDto;
 import com.edufelizardo.maissaudepublica.services.version1.ProntuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -59,6 +60,22 @@ public class ProntuarioController {
     @ApiErrorResponsesBusca
     public ResponseEntity<ProntuarioResponseDto> findByPacienteId(@PathVariable UUID pacienteId) {
         return ResponseEntity.ok(service.buscarPorPacienteId(pacienteId));
+    }
+
+    @RequerPermissao({"PRONTUARIO.CONSULTAR"})
+    @AuditarLeitura
+    @GetMapping(value = "{pacienteId}/exame/{exameId}/evolucao", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Evolução de um exame numérico do paciente no tempo",
+            description = "ADR-0180. Só resultados liberados, o valor atual de cada pedido (o retificado sai marcado), da coleta mais "
+                    + "antiga para a mais recente, cada ponto com a faixa de referência que valeu nele. Mesmas regras de acesso do "
+                    + "prontuário (vínculo assistencial ou acesso justificado). Paciente ou exame inexistente, 404.",
+            tags = "Prontuário")
+    @ApiResponse(responseCode = "200", description = "Success:", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = EvolucaoExameDto.class))
+    })
+    @ApiErrorResponsesBusca
+    public ResponseEntity<EvolucaoExameDto> evolucaoDoExame(@PathVariable UUID pacienteId, @PathVariable UUID exameId) {
+        return ResponseEntity.ok(service.evolucaoDoExame(pacienteId, exameId));
     }
 
     @RequerPermissao({"PRONTUARIO.CONSULTAR"})

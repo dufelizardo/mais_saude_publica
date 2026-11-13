@@ -9,6 +9,7 @@ export type TipoInstituicaoExterna =
   | 'ACOLHIMENTO_INSTITUCIONAL'
   | 'ESCOLA'
   | 'CONSELHO_TUTELAR'
+  | 'CONSELHO_DE_DIREITOS'
   | 'DEFENSORIA_PUBLICA'
   | 'MINISTERIO_PUBLICO'
   | 'JUDICIARIO'
@@ -37,6 +38,7 @@ export const TIPOS_INSTITUICAO: Record<TipoInstituicaoExterna, { rotulo: string;
   ACOLHIMENTO_INSTITUCIONAL: { rotulo: 'Acolhimento institucional', setor: 'ASSISTENCIA_SOCIAL' },
   ESCOLA: { rotulo: 'Escola', setor: 'EDUCACAO' },
   CONSELHO_TUTELAR: { rotulo: 'Conselho Tutelar', setor: 'GARANTIA_DE_DIREITOS' },
+  CONSELHO_DE_DIREITOS: { rotulo: 'Conselho de direitos (pessoa idosa, mulher, pessoa com deficiência)', setor: 'GARANTIA_DE_DIREITOS' },
   DEFENSORIA_PUBLICA: { rotulo: 'Defensoria Pública', setor: 'GARANTIA_DE_DIREITOS' },
   MINISTERIO_PUBLICO: { rotulo: 'Ministério Público', setor: 'GARANTIA_DE_DIREITOS' },
   JUDICIARIO: { rotulo: 'Judiciário', setor: 'GARANTIA_DE_DIREITOS' },

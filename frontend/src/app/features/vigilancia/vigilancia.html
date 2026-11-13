@@ -68,6 +68,7 @@
     @if (podeNotificar() || podeInvestigar()) {
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'mapa'" (click)="aba.set('mapa')">Mapa</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'surtos'" (click)="aba.set('surtos')">Surtos <span class="cnt">{{ surtos()?.abertos ?? 0 }}</span></button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'trabalhador'" (click)="aba.set('trabalhador')">Saúde do trabalhador</button>
     }
     @if (podeNotificar()) {
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'sugestoes'" (click)="aba.set('sugestoes')">Sugestões <span class="cnt">{{ sugestoes().length }}</span></button>
@@ -78,6 +79,19 @@
   <div style="padding: var(--s-5);">
     @switch (aba()) {
       @case ('notificacoes') {
+        @if (comunicacoesPendentes().length) {
+          <section class="box box--warn" aria-label="Comunicações obrigatórias pendentes">
+            <strong>Comunicações obrigatórias da violência pendentes</strong>
+            <ul class="eq-prof">
+              @for (c of comunicacoesPendentes(); track c.notificacaoId) {
+                <li class="mo-row">
+                  <span><span class="cell-main">{{ c.pacienteNome }} · {{ c.destino }}</span><span class="cell-sub">{{ c.unidadeNome }} · notificada em {{ data(c.dataNotificacao) }} · prazo {{ dataHora(c.prazo) }}@if (c.vencida) { · <span class="tag tag--alert">Vencida</span> }</span></span>
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="abrirNotificacao(c.notificacaoId)" [attr.aria-label]="'Abrir notificação de ' + c.pacienteNome">Abrir</button>
+                </li>
+              }
+            </ul>
+          </section>
+        }
         @if (notificacoes()?.lista?.length) {
           <div class="tbl-wrap">
             <table aria-label="Notificações">
@@ -159,12 +173,16 @@
           [unidadePadrao]="unidadeFiltro()" [podeInvestigar]="podeInvestigar()" [podeRegistrarEmergencia]="pode('EMERGENCIA.REGISTRAR')" [novo]="novoSurto()" (abrirNotificacao)="abrirNotificacao($event)"
           (verNoMapa)="verSurtoNoMapa($event)" (alterado)="carregar()" />
       }
+      @case ('trabalhador') {
+        <app-saude-trabalhador [unidadeId]="unidadeFiltro()" [podeInvestigar]="podeInvestigar()" [versao]="versaoTrabalhador()"
+          (abrirNotificacao)="abrirNotificacao($event)" (notificarAcidente)="notificarAcidente($event)" />
+      }
       @case ('agravos') {
         <ul class="eq-prof" aria-label="Catálogo de agravos">
           @for (a of agravos(); track a.uuid) {
             <li class="mo-row">
               <span>
-                <span class="cell-main">{{ a.nome }}@if (a.sensivel) { <span class="tag tag--purple">Sensível</span> }@if (!a.ativo) { <span class="tag tag--muted">Inativo</span> } <span class="tag tag--info">{{ periodicidades[a.periodicidade] }}</span></span>
+                <span class="cell-main">{{ a.nome }}@if (a.sensivel) { <span class="tag tag--purple">Sensível</span> }@if (a.relacionadoAoTrabalho) { <span class="tag tag--info">Trabalho</span> }@if (!a.ativo) { <span class="tag tag--muted">Inativo</span> } <span class="tag tag--info">{{ periodicidades[a.periodicidade] }}</span></span>
                 <span class="cell-sub mono">{{ a.codigo }}@if (a.cids.length) { · {{ a.cids.slice(0, 6).join(', ') }}@if (a.cids.length > 6) { … } } · encerrar em {{ a.prazoEncerramentoDias }} dias@if (a.periodoMonitoramentoContatoDias) { · contatos por {{ a.periodoMonitoramentoContatoDias }} dias } · ficha {{ a.fichaVersao ? 'v' + a.fichaVersao : '—' }}</span>
               </span>
               @if (podeGerenciar()) {
@@ -231,8 +249,13 @@
                 </select>
               </div>
               <div class="dw-field">
-                <label for="f-dataPrimeirosSintomas">Primeiros sintomas<span class="opt">opcional</span></label>
-                <input id="f-dataPrimeirosSintomas" type="date" formControlName="dataPrimeirosSintomas" />
+                @if (agravoAcidente()) {
+                  <label for="f-dataPrimeirosSintomas">Data do acidente <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
+                } @else {
+                  <label for="f-dataPrimeirosSintomas">Primeiros sintomas<span class="opt">opcional</span></label>
+                }
+                <input id="f-dataPrimeirosSintomas" type="date" formControlName="dataPrimeirosSintomas" [attr.aria-invalid]="!!erroCampo('dataPrimeirosSintomas')" aria-describedby="e-dataPrimeirosSintomas" />
+                @if (erroCampo('dataPrimeirosSintomas')) { <p class="dw-err" id="e-dataPrimeirosSintomas">{{ erroCampo('dataPrimeirosSintomas') }}</p> }
               </div>
             </div>
             @if (agravoVacinal()) {
@@ -287,6 +310,11 @@
                 }
               </fieldset>
             }
+            @if (codigoEscolhido() && !agravoTrabalho()) {
+              <div class="dw-field"><label class="switch" for="f-relacionadoTrabalho"><span><b style="font-weight: 500;">Relacionado ao trabalho</b><span class="cell-sub">Inclui a ocupação, o empregador e o local do evento.</span></span>
+                <input type="checkbox" role="switch" id="f-relacionadoTrabalho" [checked]="relacionadoTrabalho()" (change)="relacionadoTrabalho.set($any($event.target).checked)" /></label></div>
+            }
+            @if (mostrarTrabalho()) { <app-trabalho-form [acidente]="agravoAcidente()" [grave]="agravoGrave()" [acidenteTrabalhoId]="acidenteTrabalhoId()" /> }
             @if (notificarForm.controls.criseId.value) { <div class="box box--info"><div>Notificação a partir da crise em saúde mental: a crise fica notificada.</div></div> }
           </div>
           <footer class="dw-foot">
@@ -337,6 +365,8 @@
               }
               <app-local-do-caso [notificacao]="n" [podeInvestigar]="podeInvestigar()" (atualizada)="notificacaoAtualizada($event)" />
               @if (n.agravoCodigo === 'ATENDIMENTO_ANTIRRABICO' && podeInvestigar()) { <app-animal-agressor [notificacaoId]="n.uuid" /> }
+              @if (n.agravoCodigo === 'VIOLENCIA_INTERPESSOAL_AUTOPROVOCADA') { <app-comunicacao-violencia [notificacaoId]="n.uuid" /> }
+              <app-trabalho-notificacao [notificacao]="n" [podeInvestigar]="podeInvestigar()" [podeNotificar]="podeNotificar()" (atualizada)="notificacaoAtualizada($event)" />
               @if (n.contatos.length || podeInvestigar()) {
                 <app-contatos-da-notificacao [notificacao]="n" [podeInvestigar]="podeInvestigar() && n.situacao !== 'ENCERRADA'"
                   (atualizada)="notificacaoAtualizada($event)" (notificar)="notificarContato(n, $event)" />
@@ -466,6 +496,7 @@
             </fieldset>
             <div class="dw-field"><label class="switch" for="f-compulsorio"><span><b style="font-weight: 500;">Notificação compulsória</b></span><input type="checkbox" role="switch" id="f-compulsorio" formControlName="compulsorio" /></label></div>
             <div class="dw-field"><label class="switch" for="f-sensivelAgravo"><span><b style="font-weight: 500;">Sensível</b><span class="cell-sub">O detalhe fica só para a vigilância e quem notificou.</span></span><input type="checkbox" role="switch" id="f-sensivelAgravo" formControlName="sensivel" /></label></div>
+            <div class="dw-field"><label class="switch" for="f-trabalhoAgravo"><span><b style="font-weight: 500;">Relacionado ao trabalho</b><span class="cell-sub">A notificação pede a ocupação e a situação no mercado de trabalho.</span></span><input type="checkbox" role="switch" id="f-trabalhoAgravo" formControlName="relacionadoAoTrabalho" /></label></div>
             <div class="dw-field"><label class="switch" for="f-ativoAgravo"><span><b style="font-weight: 500;">Ativo</b></span><input type="checkbox" role="switch" id="f-ativoAgravo" formControlName="ativo" /></label></div>
           </div>
           <footer class="dw-foot">

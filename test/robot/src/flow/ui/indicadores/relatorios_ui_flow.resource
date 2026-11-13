@@ -53,3 +53,49 @@ UI Relatorios - Periodo Invalido
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+
+UI Relatorios - Comunicacao E Educacao
+    [Documentation]    A categoria Comunicação e educação traz os dois relatórios da C6 (ADR-0196).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /relatorios
+    Click    css=.rel-chip:has-text("Comunicação e educação")
+    Wait For Elements State    css=.rel-item:has-text("Produção assistencial")    detached
+    Wait For Elements State    css=.rel-item:has-text("Campanhas de comunicação")    visible
+    Click    css=.rel-item:has-text("Educação em saúde")
+    Wait For Elements State    css=.rel-detalhe h2 >> text=Educação em saúde    visible
+    Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Ações educativas realizadas    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Relatorios - Gestao Da Rede
+    [Documentation]    A categoria Gestão da rede traz a pactuação e a cobertura (ADR-0198).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /relatorios
+    Click    css=.rel-chip:has-text("Gestão da rede")
+    Click    css=.rel-item:has-text("Pactuação e cobertura da rede")
+    Wait For Elements State    css=.rel-detalhe h2 >> text=Pactuação e cobertura da rede    visible
+    Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Oferta pactuada (%)    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Relatorios - Vigilancia Sanitaria
+    [Documentation]    A categoria Vigilância traz o relatório da vigilância sanitária (ADR-0200).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /relatorios
+    Click    css=.rel-chip:has-text("Vigilância")
+    Click    css=.rel-item:has-text("Vigilância sanitária")
+    Wait For Elements State    css=.rel-detalhe h2 >> text=Vigilância sanitária    visible
+    Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Interdições vigentes    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Relatorios - Qualidade
+    [Documentation]    A categoria Qualidade traz o relatório da qualidade do serviço (ADR-0205).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /relatorios
+    Click    css=.rel-chip:has-text("Qualidade")
+    Click    css=.rel-item:has-text("Qualidade do serviço")
+    Wait For Elements State    css=.rel-detalhe h2 >> text=Qualidade do serviço    visible
+    Wait For Elements State    css=[aria-label="Indicadores resumidos"] >> text=Não conformidades em aberto    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

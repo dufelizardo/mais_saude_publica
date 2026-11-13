@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Assistência - Laboratório
-Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094); recoleta, laudo e exames no prontuário e no atendimento (ADR-0095).
+Metadata    Test Suite Description        Valida a tela Laboratório: pedido pela gaveta, coleta, resultado com interpretação, liberação, rejeição de amostra, detalhe do pedido, catálogo e o link do atendimento (ADR-0094); recoleta, laudo e exames no prontuário e no atendimento (ADR-0095); faixas por sexo e idade e evolução do exame (ADR-0180); ciência, comunicação do crítico e entrega (ADR-0181); exames de imagem (ADR-0182); laudo em PDF, verificação e insumos (ADR-0183).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiLaboratorio    MaisSaudePublicaFrontend
@@ -103,5 +103,85 @@ CT-011 - Exame liberado no prontuário e no atendimento
     [Tags]    UI    UiLaboratorio
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - LABORATORIO - PRONTUARIO E ATENDIMENTO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-012 - Incluir faixa por sexo e idade no catálogo
+    [Documentation]    Aviso e rótulo da faixa na gaveta do exame.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - FAIXA POR SEXO E IDADE
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-013 - Evolução do exame no prontuário
+    [Documentation]    Gráfico e tabela com os dois resultados liberados.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - EVOLUCAO DO EXAME
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-014 - Ciência do resultado pela aba Para ciência
+    [Documentation]    Aviso e ciência gravada para quem pediu.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - CIENCIA DO RESULTADO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-015 - Comunicar valor crítico
+    [Documentation]    Gaveta da comunicação, aviso e registro de quem recebeu.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - COMUNICAR CRITICO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-016 - Entrega do resultado a um parente
+    [Documentation]    Gaveta da entrega com terceiro identificado.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - ENTREGA DO RESULTADO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-017 - Cadastrar exame de imagem no catálogo
+    [Documentation]    Categoria imagem e modalidade na gaveta do exame.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - EXAME DE IMAGEM NO CATALOGO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-018 - Realizar e laudar exame de imagem
+    [Documentation]    Abas Para realizar e Para laudar, com as gavetas.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - REALIZAR E LAUDAR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-019 - Baixar o laudo em PDF
+    [Documentation]    Aviso com o código e a emissão vigente no detalhe.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - LAUDO EM PDF
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-020 - Verificar o laudo na página pública
+    [Documentation]    Código válido e o hash do PDF, sem login.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - VERIFICAR LAUDO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-021 - Incluir insumo no exame do catálogo
+    [Documentation]    Material do estoque e quantidade na gaveta do exame.
+    [Tags]    UI    UiLaboratorio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - LABORATORIO - INSUMOS DO EXAME
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

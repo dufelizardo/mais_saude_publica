@@ -11,11 +11,11 @@ import java.util.UUID;
 
 /**
  * Contraindicação vacinal (ADR-0150): o paciente não recebe mais o imunobiológico sem a justificativa (a decisão do CRIE).
- * Nasce da conduta "contraindicar" no encerramento do ESAVI; uma por paciente e imunobiológico.
+ * Nasce da conduta "contraindicar" no encerramento do ESAVI; uma vigente por paciente e imunobiológico. O CRIE pode revogá-la
+ * com o parecer da reavaliação (ADR-0206); a revogada fica no histórico.
  */
 @Entity
-@Table(name = "TB_CONTRAINDICACAO_VACINAL", uniqueConstraints = @UniqueConstraint(name = "uk_contraindicacao_paciente_imunobiologico",
-        columnNames = {"paciente_id", "imunobiologico_id"}))
+@Table(name = "TB_CONTRAINDICACAO_VACINAL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -54,4 +54,15 @@ public class ContraindicacaoVacinal implements Serializable {
 
     @Column(updatable = false)
     private String registradoPorCpf;
+
+    private Instant revogadaEm;
+
+    private String revogadaPorCpf;
+
+    @Column(length = 1000)
+    private String parecerRevogacao;
+
+    public boolean vigente() {
+        return revogadaEm == null;
+    }
 }

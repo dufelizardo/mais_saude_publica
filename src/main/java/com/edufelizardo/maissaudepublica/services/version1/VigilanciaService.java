@@ -130,6 +130,10 @@ public class VigilanciaService {
     /** ESAVI e erro de imunização (ADR-0150). */
     @Autowired
     private EsaviService esaviService;
+
+    /** Saúde do Trabalhador (ADR-0207). */
+    @Autowired
+    private SaudeTrabalhadorService saudeTrabalhadorService;
     private static final Set<ClassificacaoCasoEpidemiologico> FINAIS = Set.of(ClassificacaoCasoEpidemiologico.CONFIRMADO,
             ClassificacaoCasoEpidemiologico.DESCARTADO, ClassificacaoCasoEpidemiologico.INCONCLUSIVO);
 
@@ -303,6 +307,7 @@ public class VigilanciaService {
             throw new ResourceBadRequestException("O agravo " + agravo.getNome() + " não tem ficha específica; envie a notificação sem respostas.");
         }
         esaviService.aplicarNaNotificacao(n, dto);
+        var trabalho = saudeTrabalhadorService.preparar(n, dto.getTrabalho());
         n.setSituacao(SituacaoNotificacao.NOTIFICADA);
         n.setPrazoEncerramento(data.plusDays(agravo.getPrazoEncerramentoDias()));
         n.setRegistradaEm(Instant.now());
@@ -311,6 +316,7 @@ public class VigilanciaService {
                 .anyMatch(x -> x.getAgravo().getUuid().equals(agravo.getUuid()) && x.getSituacao() != SituacaoNotificacao.ENCERRADA)
                 ? "O paciente já tem outra notificação de " + agravo.getNome() + " em aberto; confira se não é o mesmo caso." : null;
         n = notificacaoRepository.save(n);
+        saudeTrabalhadorService.gravar(trabalho, n);
         // O contato que adoeceu: a notificação dele fica ligada ao caso índice (ADR-0130).
         if (contato != null) {
             contato.setPaciente(paciente);
@@ -924,13 +930,15 @@ public class VigilanciaService {
         a.setSensivel(Boolean.TRUE.equals(dto.getSensivel()));
         a.setPeriodoMonitoramentoContatoDias(dto.getPeriodoMonitoramentoContatoDias());
         a.setAtivo(!Boolean.FALSE.equals(dto.getAtivo()));
+        a.setRelacionadoAoTrabalho(Boolean.TRUE.equals(dto.getRelacionadoAoTrabalho()));
     }
 
     private AgravoDto agravoDto(Agravo a) {
         Optional<FichaAgravo> f = fichaRepository.findFirstByAgravo_UuidOrderByVersaoDesc(a.getUuid());
         return new AgravoDto(a.getUuid(), a.getCodigo(), a.getNome(), a.getDescricao(), a.getCids().stream().sorted().toList(), a.isCompulsorio(),
                 a.getPeriodicidade(), a.getPrazoEncerramentoDias(), a.getCriterios().stream().sorted().toList(), a.isSensivel(), a.isAtivo(),
-                f.map(FichaAgravo::getVersao).orElse(null), f.map(this::campos).orElse(List.of()), a.getPeriodoMonitoramentoContatoDias());
+                f.map(FichaAgravo::getVersao).orElse(null), f.map(this::campos).orElse(List.of()), a.getPeriodoMonitoramentoContatoDias(),
+                a.isRelacionadoAoTrabalho());
     }
 
     private List<CampoFichaDto> campos(FichaAgravo f) {
@@ -961,7 +969,7 @@ public class VigilanciaService {
                 null, null, List.of(), n.getLatitude(), n.getLongitude(), n.getOrigemLocal(),
                 n.getMicroarea() != null ? n.getMicroarea().getCodigo() : null, n.getMicroarea() != null ? n.getMicroarea().getArea().getCodigo() : null,
                 List.of(), n.getSurto() != null ? n.getSurto().getUuid() : null, n.getSurto() != null ? n.getSurto().getNome() : null, List.of(),
-                List.of(), n.getGravidadeEsavi(), n.getCausalidadeEsavi(), n.getCondutaEsavi(), List.of());
+                List.of(), n.getGravidadeEsavi(), n.getCausalidadeEsavi(), n.getCondutaEsavi(), List.of(), null);
     }
 
     private NotificacaoDto detalhe(Notificacao n, boolean completo) {
@@ -971,6 +979,7 @@ public class VigilanciaService {
         }
         d.setLocalProvavel(n.getLocalProvavel());
         d.setDoses(esaviService.doses(n));
+        d.setTrabalho(saudeTrabalhadorService.dto(n));
         if (n.getFichaVersao() != null) {
             fichaRepository.findByAgravo_UuidAndVersao(n.getAgravo().getUuid(), n.getFichaVersao()).ifPresent(f -> d.setFicha(campos(f)));
             try {

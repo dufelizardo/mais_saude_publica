@@ -97,6 +97,19 @@ public class SolicitacaoRegulacao implements Serializable {
     @JoinColumn(name = "agendamento_id", referencedColumnName = "uuid")
     private Agendamento agendamento;
 
+    /** E4b (ADR-0194): a emergência que pediu prioridade; enquanto ela estiver aberta, sobe dentro da mesma cor. O regulador decide. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "emergencia_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Emergencia emergencia;
+
+    /** A marca da emergência vale enquanto ela está ativa ou em desmobilização. */
+    public boolean daEmergenciaAberta() {
+        return emergencia != null && (emergencia.getSituacao() == com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia.ATIVA
+                || emergencia.getSituacao() == com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia.EM_DESMOBILIZACAO);
+    }
+
     /** Retorno da executante para a unidade de origem. Dado de saúde. */
     @Column(length = 4000)
     private String contrarreferencia;
@@ -117,6 +130,12 @@ public class SolicitacaoRegulacao implements Serializable {
 
     @Column(length = 500)
     private String justificativaExtraCota;
+
+    /**
+     * Na autorização (ADR-0197): nulo sem referência da rede vigente para a solicitante; verdadeiro quando a executante escolhida não é a da
+     * referência. Guardado porque a referência muda com o tempo.
+     */
+    private Boolean foraDaReferencia;
 
     public SolicitacaoRegulacao(Paciente paciente, ProcedimentoRegulado procedimento, UnidadeDeSaude unidadeSolicitante,
                                 Profissional profissionalSolicitante, String cid, String justificativa,

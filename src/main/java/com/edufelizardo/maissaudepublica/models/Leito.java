@@ -57,4 +57,57 @@ public class Leito implements Serializable {
 
     @Column(nullable = false)
     private boolean ativo;
+
+    /** Quem o leito recebe pela idade (ADR-0184). */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private com.edufelizardo.maissaudepublica.models.enuns.FaixaEtariaLeito faixaEtaria;
+
+    /** Reserva da central de leitos (ADR-0184): até quando e para qual pedido. Vencida, o leito conta como livre. */
+    private java.time.Instant reservadoAte;
+
+    private java.util.UUID reservaSolicitacaoId;
+
+    /** Reserva para uma internação eletiva agendada (ADR-0185). */
+    private java.util.UUID reservaAgendamentoId;
+
+    /** Se a reserva do leito é deste pedido de leito ou deste agendamento eletivo. */
+    public boolean reservadoPara(java.util.UUID id) {
+        return id != null && situacao == SituacaoLeito.RESERVADO && (id.equals(reservaSolicitacaoId) || id.equals(reservaAgendamentoId));
+    }
+
+    /** Desfaz a reserva, de qualquer origem. */
+    public void limparReserva() {
+        reservadoAte = null;
+        reservaSolicitacaoId = null;
+        reservaAgendamentoId = null;
+    }
+
+    /** A faixa etária que o tipo do leito sugere (ADR-0184): a mesma regra da migração. */
+    public static com.edufelizardo.maissaudepublica.models.enuns.FaixaEtariaLeito faixaDoTipo(TipoLeito tipo) {
+        if (tipo == null) {
+            return com.edufelizardo.maissaudepublica.models.enuns.FaixaEtariaLeito.ADULTO;
+        }
+        return switch (tipo) {
+            case UTI_NEONATAL -> com.edufelizardo.maissaudepublica.models.enuns.FaixaEtariaLeito.NEONATAL;
+            case PEDIATRICO, UTI_PEDIATRICA -> com.edufelizardo.maissaudepublica.models.enuns.FaixaEtariaLeito.PEDIATRICO;
+            default -> com.edufelizardo.maissaudepublica.models.enuns.FaixaEtariaLeito.ADULTO;
+        };
+    }
+
+    /** Sem faixa informada, vale a do tipo. */
+    @PrePersist
+    void faixaPeloTipoSeFaltar() {
+        if (faixaEtaria == null) {
+            faixaEtaria = faixaDoTipo(tipo);
+        }
+    }
+
+    /** A situação considerando a reserva vencida como livre. */
+    public SituacaoLeito situacaoEm(java.time.Instant agora) {
+        if (situacao == SituacaoLeito.RESERVADO && reservadoAte != null && reservadoAte.isBefore(agora)) {
+            return SituacaoLeito.LIVRE;
+        }
+        return situacao;
+    }
 }

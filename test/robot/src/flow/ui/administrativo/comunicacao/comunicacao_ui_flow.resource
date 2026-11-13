@@ -4,6 +4,7 @@ Library     String
 Library     DateTime
 Resource    ../../../../pom/common/mais_saude_publica_ui_common.resource
 Resource    ../../../comunicacao/comunicacao_flow.resource
+Resource    ../../../comunicacao/avaliacao_campanha_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Tela Comunicação (ADR-0168) e os avisos na página pública.
@@ -114,3 +115,29 @@ UI Comunicacao - Planejar E Iniciar Campanha
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+
+UI Comunicacao - Avaliar Campanha
+    [Documentation]    Na campanha encerrada (ADR-0196): a seção Avaliação com a meta abaixo; sem resposta, a mensagem; registra e confere na API.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${campanha}    ${nome}=    Seed Campanha Com Metas    30    1
+    ${balanco}=    Create Dictionary    balanco=Encerrada pelo Robot
+    ${r}=    POST Acao Da Campanha    ${campanha}    encerramento    ${balanco}
+    Should Be Equal As Integers    ${r.status_code}    200
+    UI Comunicacao - Abrir
+    Click    css=#tab-campanhas
+    Clicar Botao    Detalhes de ${nome}
+    Wait For Elements State    css=app-drawer #h-avaliacao    visible
+    Wait For Elements State    css=app-drawer dl[aria-labelledby="h-avaliacao"] >> text=0 de 30 · abaixo    visible
+    Clicar Botao    Avaliar campanha
+    Enviar Gaveta
+    ${erro}=    Ler Erro Do Campo Da Gaveta    publicoAtingido
+    Should Contain    ${erro}    público-alvo
+    Select Options By    id=f-publicoAtingido    value    NAO
+    Preencher Campo Da Gaveta    conclusoesAvaliacao    A campanha não chegou às escolas.
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Avaliação registrada
+    ${d}=    GET Educacao Generico    comunicacao/campanha/${campanha}/avaliacao
+    Should Be Equal    ${d.json()}[avaliacao][publicoAtingido]    NAO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -14,5 +14,6 @@ public interface ContraindicacaoVacinalRepository extends JpaRepository<Contrain
     @Query("select c from ContraindicacaoVacinal c join fetch c.imunobiologico where c.paciente.uuid = ?1 order by c.desde")
     List<ContraindicacaoVacinal> findDoPaciente(UUID pacienteId);
 
-    Optional<ContraindicacaoVacinal> findByPaciente_UuidAndImunobiologico_Uuid(UUID pacienteId, UUID imunobiologicoId);
+    /** A vigente (não revogada, ADR-0206). */
+    Optional<ContraindicacaoVacinal> findByPaciente_UuidAndImunobiologico_UuidAndRevogadaEmIsNull(UUID pacienteId, UUID imunobiologicoId);
 }

@@ -53,6 +53,11 @@ public class SolicitacaoRegulacaoResumoDto implements Serializable {
     private String cotaBeneficiariaNome;
     private boolean extraCota;
     private String justificativaExtraCota;
+    /** ADR-0197: nulo sem referência da rede na autorização; verdadeiro quando foi para outra executante. */
+    private Boolean foraDaReferencia;
+    /** E4b (ADR-0194): a emergência que pediu prioridade, enquanto aberta. */
+    private UUID emergenciaId;
+    private String emergenciaNome;
 
     public static SolicitacaoRegulacaoResumoDto fromSolicitacao(SolicitacaoRegulacao s, Integer posicaoNaFila) {
         SolicitacaoRegulacaoResumoDto dto = new SolicitacaoRegulacaoResumoDto();
@@ -90,5 +95,10 @@ public class SolicitacaoRegulacaoResumoDto implements Serializable {
         dto.setCotaBeneficiariaNome(s.getCota() != null ? s.getCota().getBeneficiaria().getNome() : null);
         dto.setExtraCota(s.isExtraCota());
         dto.setJustificativaExtraCota(s.getJustificativaExtraCota());
+        dto.setForaDaReferencia(s.getForaDaReferencia());
+        if (s.daEmergenciaAberta()) {
+            dto.setEmergenciaId(s.getEmergencia().getUuid());
+            dto.setEmergenciaNome(s.getEmergencia().getNome());
+        }
     }
 }

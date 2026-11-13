@@ -45,4 +45,9 @@ public class CampanhaComunicacaoRequestDto implements Serializable {
     private List<UUID> conteudoGrupoIds;
     private UUID programaId;
     private UUID campanhaOperacionalId;
+    /** C6 (ADR-0196): as metas, opcionais. */
+    @Positive(message = "A meta de pessoas é maior que zero.")
+    private Integer metaPessoas;
+    @Positive(message = "A meta de ações é maior que zero.")
+    private Integer metaAcoes;
 }

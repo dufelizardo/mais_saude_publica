@@ -52,5 +52,9 @@ public class CadernetaVacinacaoDto implements Serializable {
         private LocalDate desde;
         private String motivo;
         private UUID notificacaoId;
+        /** Revogação pelo CRIE (ADR-0206); a revogada fica no histórico. */
+        private UUID uuid;
+        private java.time.Instant revogadaEm;
+        private String parecerRevogacao;
     }
 }

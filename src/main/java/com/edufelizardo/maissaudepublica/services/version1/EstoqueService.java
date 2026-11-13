@@ -71,6 +71,10 @@ public class EstoqueService {
     @Autowired private SetorRepository setorRepository;
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.ConsumoSemSaldoRepository consumoSemSaldoRepository;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.InventarioEstoqueRepository inventarioRepository;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.ReservaEstoqueRepository reservaRepository;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.EmergenciaRepository emergenciaRepository;
 
     // ── Catálogo ──────────────────────────────────────────────────────────────────────────────────
 
@@ -144,7 +148,7 @@ public class EstoqueService {
         minimoRepository.save(e);
         ContextoAuditoria.detalhe("Mínimo de " + m.getCodigo() + ": " + dto.getQuantidadeMinima() + ".");
         return item(m, loteRepository.findDaUnidade(u.getUuid()).stream().filter(l -> l.getMaterial().getUuid().equals(m.getUuid())).toList(),
-                e.getQuantidadeMinima(), LocalDate.now());
+                e.getQuantidadeMinima(), LocalDate.now(), reservado(u.getUuid(), m.getUuid(), null));
     }
 
     // ── Movimentação ──────────────────────────────────────────────────────────────────────────────
@@ -205,8 +209,13 @@ public class EstoqueService {
                 throw new ResourceUnprocessableEntityException("O setor " + setor.getNome() + " não é desta unidade.");
             }
         }
+        UUID emergenciaId = dto.getEmergenciaId();
+        if (emergenciaId != null) {
+            exigirEmergenciaParaConsumo(emergenciaId);
+        }
         LocalDate hoje = LocalDate.now();
         List<LoteMaterial> lotes = loteRepository.findDoMaterialNaUnidadeParaAtualizar(m.getUuid(), u.getUuid());
+        exigirForaDaReserva(m, u, lotes, dto.getQuantidade(), emergenciaId, hoje);
         List<LoteMaterial> usar;
         if (dto.getLoteId() != null) {
             LoteMaterial escolhido = lotes.stream().filter(l -> l.getUuid().equals(dto.getLoteId())).findFirst()
@@ -237,10 +246,63 @@ public class EstoqueService {
             MovimentacaoEstoque mov = lancar(l, TipoMovimentacaoEstoque.SAIDA_CONSUMO, -tirar, quem);
             mov.setSetor(setor);
             mov.setJustificativa(texto(dto.getJustificativa()));
+            mov.setEmergenciaId(emergenciaId);
             feitas.add(movimentacao(movimentacaoRepository.save(mov)));
             falta -= tirar;
         }
+        if (emergenciaId != null) {
+            abaterReserva(u.getUuid(), m.getUuid(), emergenciaId, dto.getQuantidade());
+            ContextoAuditoria.detalhe("Consumo extraordinário de " + dto.getQuantidade() + " " + m.getCodigo() + " na emergência.");
+        }
         return feitas;
+    }
+
+    /**
+     * Consumo lançado pelo sistema (ADR-0183): os insumos da coleta e da realização de exame. Sai pelo FEFO até onde houver saldo
+     * dentro da validade, sem exigir ESTOQUE.MOVIMENTAR de quem coleta; o que faltar vira alerta de consumo sem saldo, porque a
+     * coleta já aconteceu. Devolve a quantidade que faltou.
+     */
+    @Transactional
+    public int consumirPeloSistema(UnidadeDeSaude u, MaterialEstoque m, int quantidade, Profissional quem, String origem) {
+        LocalDate hoje = LocalDate.now();
+        List<LoteMaterial> usar = loteRepository.findDoMaterialNaUnidadeParaAtualizar(m.getUuid(), u.getUuid()).stream()
+                .filter(l -> l.getQuantidade() > 0 && !l.vencido(hoje)).toList();
+        int falta = quantidade;
+        for (LoteMaterial l : usar) {
+            if (falta == 0) {
+                break;
+            }
+            int tirar = Math.min(falta, l.getQuantidade());
+            MovimentacaoEstoque mov = lancar(l, TipoMovimentacaoEstoque.SAIDA_CONSUMO, -tirar, quem, true);
+            mov.setJustificativa(origem.length() > 500 ? origem.substring(0, 500) : origem);
+            movimentacaoRepository.save(mov);
+            falta -= tirar;
+        }
+        if (falta > 0) {
+            com.edufelizardo.maissaudepublica.models.ConsumoSemSaldo c = new com.edufelizardo.maissaudepublica.models.ConsumoSemSaldo();
+            c.setUnidade(u);
+            c.setMaterial(m);
+            c.setQuantidadeFaltante(falta);
+            c.setOrigem(origem.length() > 300 ? origem.substring(0, 300) : origem);
+            c.setProfissional(quem);
+            c.setOcorridoEm(Instant.now());
+            consumoSemSaldoRepository.save(c);
+        }
+        return falta;
+    }
+
+    /** O almoxarife conferiu o consumo sem saldo (acertou a entrada ou o inventário): sai do alerta. Já conferido: 422. */
+    @Transactional
+    public void conferirConsumoSemSaldo(UUID uuid) {
+        com.edufelizardo.maissaudepublica.models.ConsumoSemSaldo c = consumoSemSaldoRepository.findById(uuid).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar o consumo sem saldo " + uuid + " em nossos registros."));
+        controleDeAcesso.exigir(MOVIMENTAR, c.getUnidade());
+        if (c.getConferidoEm() != null) {
+            throw new ResourceUnprocessableEntityException("Este consumo sem saldo já foi conferido.");
+        }
+        c.setConferidoEm(Instant.now());
+        c.setConferidoPorCpf(UsuarioAutenticado.cpf());
+        consumoSemSaldoRepository.save(c);
     }
 
     @Transactional
@@ -248,6 +310,11 @@ public class EstoqueService {
         LoteMaterial l = loteParaMovimentar(dto.getLoteId());
         if (l.getQuantidade() < dto.getQuantidade()) {
             throw new ResourceUnprocessableEntityException("O lote tem " + l.getQuantidade() + "; a perda não pode ser de " + dto.getQuantidade() + ".");
+        }
+        LocalDate hoje = LocalDate.now();
+        if (!l.vencido(hoje)) {
+            exigirForaDaReserva(l.getMaterial(), l.getUnidade(), loteRepository.findDoMaterialNaUnidadeParaAtualizar(l.getMaterial().getUuid(),
+                    l.getUnidade().getUuid()), dto.getQuantidade(), null, hoje);
         }
         MovimentacaoEstoque mov = lancar(l, TipoMovimentacaoEstoque.PERDA, -dto.getQuantidade(), profissional(dto.getProfissionalMatricula()));
         mov.setMotivoPerda(dto.getMotivo());
@@ -278,10 +345,13 @@ public class EstoqueService {
                 .collect(Collectors.groupingBy(l -> l.getMaterial().getUuid()));
         Map<UUID, Integer> minimos = minimoRepository.findTodos().stream().filter(e -> e.getUnidade().getUuid().equals(u.getUuid()))
                 .collect(Collectors.toMap(e -> e.getMaterial().getUuid(), EstoqueMinimo::getQuantidadeMinima));
+        Map<UUID, Integer> reservas = reservaRepository.findAtivasDaUnidade(u.getUuid()).stream()
+                .collect(Collectors.groupingBy(r -> r.getMaterial().getUuid(), Collectors.summingInt(com.edufelizardo.maissaudepublica.models.ReservaEstoque::restante)));
         List<EstoqueDtos.ItemDeSaldo> itens = materialRepository.findAllByOrderByNomeAsc().stream()
-                .filter(m -> porMaterial.containsKey(m.getUuid()) || minimos.containsKey(m.getUuid()))
+                .filter(m -> porMaterial.containsKey(m.getUuid()) || minimos.containsKey(m.getUuid()) || reservas.containsKey(m.getUuid()))
                 .filter(m -> categoria == null || m.getCategoria() == categoria)
-                .map(m -> item(m, porMaterial.getOrDefault(m.getUuid(), List.of()), minimos.get(m.getUuid()), hoje)).toList();
+                .map(m -> item(m, porMaterial.getOrDefault(m.getUuid(), List.of()), minimos.get(m.getUuid()), hoje,
+                        reservas.getOrDefault(m.getUuid(), 0))).toList();
         List<EstoqueDtos.Vencimento> vencimentos = itens.stream()
                 .flatMap(i -> i.lotes().stream().filter(l -> l.diasParaVencer() != null && l.diasParaVencer() <= JANELA_DE_VENCIMENTO)
                         .map(l -> new EstoqueDtos.Vencimento(l.uuid(), i.materialId(), i.nome(), l.numeroLote(), l.validade(), l.quantidade(), l.diasParaVencer())))
@@ -289,7 +359,10 @@ public class EstoqueService {
         BigDecimal total = itens.stream().map(EstoqueDtos.ItemDeSaldo::valor).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
         return new EstoqueDtos.Saldo(u.getUuid(), u.getNome(), itens, (int) itens.stream().filter(EstoqueDtos.ItemDeSaldo::abaixoDoMinimo).count(),
                 (int) vencimentos.stream().filter(v -> v.diasParaVencer() >= 0).count(), (int) vencimentos.stream().filter(v -> v.diasParaVencer() < 0).count(),
-                total, vencimentos);
+                total, vencimentos, consumoSemSaldoRepository.findByUnidade_UuidAndConferidoEmIsNullOrderByOcorridoEmDesc(u.getUuid()).stream()
+                        .map(c -> new EstoqueDtos.ConsumoSemSaldo(c.getUuid(), c.getMaterial().getUuid(), c.getMaterial().getCodigo(), c.getMaterial().getNome(),
+                                c.getQuantidadeFaltante(), c.getOrigem(), c.getProfissional() != null ? c.getProfissional().getNome() : null, c.getOcorridoEm()))
+                        .toList());
     }
 
     /** O livro, mais recente primeiro: dos últimos dias (padrão 30, até 365). */
@@ -311,6 +384,19 @@ public class EstoqueService {
     // ── Apoio ─────────────────────────────────────────────────────────────────────────────────────
 
     private MovimentacaoEstoque lancar(LoteMaterial l, TipoMovimentacaoEstoque tipo, int variacao, Profissional quem) {
+        return lancar(l, tipo, variacao, quem, false);
+    }
+
+    /**
+     * Lança no livro. Com inventário aberto na unidade, a movimentação para (422), menos o consumo lançado pelo sistema e o próprio
+     * fechamento do inventário (ADR-0189), que passam {@code livre}.
+     */
+    MovimentacaoEstoque lancar(LoteMaterial l, TipoMovimentacaoEstoque tipo, int variacao, Profissional quem, boolean livre) {
+        if (!livre && inventarioRepository.existsByUnidade_UuidAndSituacao(l.getUnidade().getUuid(),
+                com.edufelizardo.maissaudepublica.models.enuns.SituacaoInventarioEstoque.ABERTO)) {
+            throw new ResourceUnprocessableEntityException("A unidade " + l.getUnidade().getNome()
+                    + " está com inventário aberto: a movimentação volta quando ele for fechado ou cancelado.");
+        }
         int saldo = l.getQuantidade() + variacao;
         if (saldo < 0) {
             throw new ResourceUnprocessableEntityException("O saldo do lote ficaria negativo.");
@@ -330,6 +416,84 @@ public class EstoqueService {
         return mov;
     }
 
+    // ── Reserva para a emergência (ES3, ADR-0191) ─────────────────────────────────────────────────
+
+    /** O reservado do material na unidade, somando as reservas ativas; {@code excetoEmergencia} tira as dessa emergência da conta. */
+    int reservado(UUID unidadeId, UUID materialId, UUID excetoEmergencia) {
+        return reservaRepository.findAtivas(unidadeId, materialId).stream()
+                .filter(r -> excetoEmergencia == null || !r.getEmergencia().getUuid().equals(excetoEmergencia))
+                .mapToInt(com.edufelizardo.maissaudepublica.models.ReservaEstoque::restante).sum();
+    }
+
+    /**
+     * A saída comum não tira do reservado (422): o saldo dentro da validade menos as reservas ativas (as da {@code emergenciaId}, se
+     * houver, ficam de fora da conta, porque a saída é dela).
+     */
+    void exigirForaDaReserva(MaterialEstoque m, UnidadeDeSaude u, List<LoteMaterial> lotes, int quantidade, UUID emergenciaId, LocalDate hoje) {
+        int reservado = reservado(u.getUuid(), m.getUuid(), emergenciaId);
+        if (reservado == 0) {
+            return;
+        }
+        int valido = lotes.stream().filter(l -> l.getQuantidade() > 0 && !l.vencido(hoje)).mapToInt(LoteMaterial::getQuantidade).sum();
+        int livre = Math.max(0, valido - reservado);
+        if (quantidade > livre) {
+            throw new ResourceUnprocessableEntityException(reservado + " de " + m.getNome() + " estão reservados para emergência nesta unidade; ficam livres "
+                    + livre + ", não dá para tirar " + quantidade + ".");
+        }
+    }
+
+    /** Abate das reservas ativas da emergência (as mais antigas primeiro) o que saiu por ela; a reserva usada inteira fica consumida. */
+    void abaterReserva(UUID unidadeId, UUID materialId, UUID emergenciaId, int quantidade) {
+        int falta = quantidade;
+        for (com.edufelizardo.maissaudepublica.models.ReservaEstoque r : reservaRepository.findAtivas(unidadeId, materialId)) {
+            if (falta == 0) {
+                break;
+            }
+            if (!r.getEmergencia().getUuid().equals(emergenciaId)) {
+                continue;
+            }
+            int usa = Math.min(falta, r.restante());
+            r.setConsumida(r.getConsumida() + usa);
+            if (r.restante() == 0) {
+                r.setSituacao(com.edufelizardo.maissaudepublica.models.enuns.SituacaoReservaEstoque.CONSUMIDA);
+                r.setLiberadaEm(Instant.now());
+            }
+            reservaRepository.save(r);
+            falta -= usa;
+        }
+    }
+
+    /** O consumo extraordinário vale com a emergência ativa ou em desmobilização (422). */
+    private void exigirEmergenciaParaConsumo(UUID emergenciaId) {
+        com.edufelizardo.maissaudepublica.models.Emergencia em = emergenciaRepository.findById(emergenciaId).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar a emergência " + emergenciaId + " em nossos registros."));
+        if (em.getSituacao() != com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia.ATIVA
+                && em.getSituacao() != com.edufelizardo.maissaudepublica.models.enuns.SituacaoEmergencia.EM_DESMOBILIZACAO) {
+            throw new ResourceUnprocessableEntityException("A emergência " + em.getNome() + " não está ativa: o consumo não entra nela.");
+        }
+    }
+
+    MovimentacaoEstoque salvar(MovimentacaoEstoque m) {
+        return movimentacaoRepository.save(m);
+    }
+
+    /** O lote do mesmo número (e validade) no destino, travado, ou um lote novo (ADR-0189). */
+    LoteMaterial loteDeEntrada(MaterialEstoque m, UnidadeDeSaude u, String numero, LocalDate validade, BigDecimal custo) {
+        List<LoteMaterial> existentes = loteRepository.findDoMaterialNaUnidadeParaAtualizar(m.getUuid(), u.getUuid());
+        LoteMaterial lote = existentes.stream().filter(l -> Objects.equals(normalizar(l.getNumeroLote()), normalizar(numero))).findFirst().orElse(null);
+        if (lote != null && !Objects.equals(lote.getValidade(), validade)) {
+            throw new ResourceUnprocessableEntityException("O lote " + numero + " já está no destino com a validade " + lote.getValidade() + ".");
+        }
+        if (lote == null) {
+            lote = loteRepository.save(new LoteMaterial(null, m, u, numero, validade, 0, custo, Instant.now()));
+        }
+        return lote;
+    }
+
+    Profissional profissionalPorMatricula(String matricula) {
+        return profissional(matricula);
+    }
+
     private LoteMaterial loteParaMovimentar(UUID loteId) {
         LoteMaterial l = loteRepository.findByIdParaAtualizar(loteId).orElseThrow(() -> new ResourceNotFoundException(
                 "Não foi possível encontrar o lote " + loteId + " em nossos registros."));
@@ -337,7 +501,7 @@ public class EstoqueService {
         return l;
     }
 
-    private EstoqueDtos.ItemDeSaldo item(MaterialEstoque m, List<LoteMaterial> lotes, Integer minimo, LocalDate hoje) {
+    private EstoqueDtos.ItemDeSaldo item(MaterialEstoque m, List<LoteMaterial> lotes, Integer minimo, LocalDate hoje, int reservado) {
         List<EstoqueDtos.Lote> comSaldo = lotes.stream().filter(l -> l.getQuantidade() > 0)
                 .sorted(Comparator.comparing(LoteMaterial::getValidade, Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(l -> new EstoqueDtos.Lote(l.getUuid(), l.getNumeroLote(), l.getValidade(), l.getQuantidade(), l.getCustoUnitario(), l.vencido(hoje),
@@ -346,8 +510,9 @@ public class EstoqueService {
         BigDecimal valor = comSaldo.stream().filter(l -> l.custoUnitario() != null)
                 .map(l -> l.custoUnitario().multiply(BigDecimal.valueOf(l.quantidade()))).reduce(null, (a, b) -> a == null ? b : a.add(b));
         LocalDate proxima = comSaldo.stream().map(EstoqueDtos.Lote::validade).filter(Objects::nonNull).min(Comparator.naturalOrder()).orElse(null);
+        int valido = comSaldo.stream().filter(l -> !l.vencido()).mapToInt(EstoqueDtos.Lote::quantidade).sum();
         return new EstoqueDtos.ItemDeSaldo(m.getUuid(), m.getCodigo(), m.getNome(), m.getCategoria(), m.getUnidadeMedida(), m.isControlaLote(), total,
-                minimo, minimo != null && total < minimo, proxima, valor, comSaldo);
+                minimo, minimo != null && total < minimo, proxima, valor, comSaldo, reservado, Math.max(0, valido - reservado));
     }
 
     private EstoqueDtos.Material material(MaterialEstoque m) {
@@ -360,7 +525,7 @@ public class EstoqueService {
         return new EstoqueDtos.Movimentacao(m.getUuid(), m.getTipo(), l.getMaterial().getUuid(), l.getMaterial().getCodigo(), l.getMaterial().getNome(),
                 l.getUnidade().getUuid(), l.getUnidade().getNome(), l.getUuid(), l.getNumeroLote(), l.getValidade(), m.getQuantidade(), m.getSaldoApos(),
                 m.getOrigem(), m.getDocumento(), m.getFornecedor(), m.getSetor() != null ? m.getSetor().getNome() : null, m.getMotivoPerda(),
-                m.getJustificativa(), m.getProfissional() != null ? m.getProfissional().getNome() : null, m.getRegistradoEm());
+                m.getJustificativa(), m.getProfissional() != null ? m.getProfissional().getNome() : null, m.getRegistradoEm(), m.getEmergenciaId());
     }
 
     /** Pela matrícula informada; sem ela, o profissional do login, se houver. */

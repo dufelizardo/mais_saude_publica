@@ -43,7 +43,11 @@
             <tr>
               <td>
                 <strong>{{ i.exameNome }}</strong>
-                <span class="laudo__sub">{{ materiais[i.material] }} · amostra {{ i.amostraCodigo ?? '—' }} · coletada em {{ coleta(i.amostraCodigo) }}</span>
+                @if (i.categoria === 'IMAGEM') {
+                  <span class="laudo__sub">{{ tipoDoExame(i) }}</span>
+                } @else {
+                  <span class="laudo__sub">{{ tipoDoExame(i) }} · amostra {{ i.amostraCodigo ?? '—' }} · coletada em {{ coleta(i.amostraCodigo) }}</span>
+                }
               </td>
               <td>
                 <strong class="laudo__valor">{{ valor(i.resultado) }}</strong>
@@ -51,13 +55,21 @@
                   <span class="laudo__sub" [class.laudo__fora]="it !== 'NORMAL'">{{ interpretacoes[it].rotulo }}</span>
                 }
                 @if (i.resultado?.observacao) { <span class="laudo__sub">{{ i.resultado?.observacao }}</span> }
+                @if (i.resultado?.laudoAchados) {
+                  @if (i.resultado?.laudoTecnica) { <span class="laudo__sub"><b>Técnica:</b> {{ i.resultado?.laudoTecnica }}</span> }
+                  <span class="laudo__sub laudo__achados"><b>Achados:</b> {{ i.resultado?.laudoAchados }}</span>
+                }
               </td>
-              <td>{{ faixa(i.resultado) }}</td>
+              <td>
+                {{ faixa(i.resultado) }}
+                @if (i.resultado?.faixaDescricao; as fd) { <span class="laudo__sub">{{ fd }}</span> }
+                @if (faixaCritica(i.resultado); as fc) { <span class="laudo__sub">{{ fc }}</span> }
+              </td>
             </tr>
             <tr class="laudo__assina">
               <td colspan="3">
-                Liberado por {{ i.resultado?.liberadoPorNome }} ({{ i.resultado?.liberadoPorMatricula }}) em {{ instante(i.resultado?.liberadoEm) }}
-                @if (i.resultado?.retificacaoDeId) { · <strong>Resultado retificado:</strong> {{ i.resultado?.motivoRetificacao }} }
+                {{ i.categoria === 'IMAGEM' ? 'Laudado' : 'Liberado' }} por {{ i.resultado?.liberadoPorNome }} ({{ i.resultado?.liberadoPorMatricula }}) em {{ instante(i.resultado?.liberadoEm) }}
+                @if (i.resultado?.retificacaoDeId) { · <strong>{{ i.categoria === 'IMAGEM' ? 'Adendo' : 'Resultado retificado' }}:</strong> {{ i.resultado?.motivoRetificacao }} }
               </td>
             </tr>
           }

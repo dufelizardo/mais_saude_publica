@@ -14,6 +14,7 @@ import {
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
 import { ImunizacaoService } from '../../../core/services/imunizacao';
+import { AuthService } from '../../../core/services/auth';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { RegistrarDose } from './registrar-dose';
@@ -52,10 +53,29 @@ import { RegistrarDose } from './registrar-dose';
         }
       </div>
 
-      @if (c.contraindicacoes.length) {
+      @if (vigentes().length) {
         <div class="box box--warn" role="status" aria-label="Contraindicações vacinais">
-          @for (x of c.contraindicacoes; track x.imunobiologicoId) {
-            <div><strong>{{ x.sigla }} contraindicada por ESAVI</strong> desde {{ data(x.desde) }}. Nova dose só com a justificativa (decisão do CRIE).</div>
+          @for (x of vigentes(); track x.uuid) {
+            <div class="vac-contra">
+              <span><strong>{{ x.sigla }} contraindicada por ESAVI</strong> desde {{ data(x.desde) }}. Nova dose só com a justificativa (decisão do CRIE).</span>
+              @if (podeReavaliar() && revogando() !== x.uuid) {
+                <button type="button" class="link-btn" (click)="revogando.set(x.uuid); parecer.set('')" [attr.aria-label]="'Revogar a contraindicação de ' + x.sigla">Revogar (CRIE)</button>
+              }
+            </div>
+            @if (revogando() === x.uuid) {
+              <div class="vac-revogar">
+                <div class="dw-field" style="margin: 0; flex: 1;"><label for="f-vac-parecer">Parecer da reavaliação no CRIE</label><input id="f-vac-parecer" type="text" maxlength="1000" [value]="parecer()" (input)="parecer.set($any($event.target).value)" /></div>
+                <button type="button" class="btn btn--sm" (click)="revogar(x.uuid)" [disabled]="revogandoEnvio()">Revogar</button>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="revogando.set(null)">Cancelar</button>
+              </div>
+            }
+          }
+        </div>
+      }
+      @if (revogadas().length) {
+        <div class="box box--info" role="status" aria-label="Contraindicações revogadas">
+          @for (x of revogadas(); track x.uuid) {
+            <div><strong>{{ x.sigla }}:</strong> contraindicação de {{ data(x.desde) }} revogada pelo CRIE em {{ data(x.revogadaEm) }}@if (x.parecerRevogacao) { · {{ x.parecerRevogacao }} }</div>
           }
         </div>
       }
@@ -136,6 +156,8 @@ import { RegistrarDose } from './registrar-dose';
     }
   `,
   styles: `
+    .vac-contra { display: flex; justify-content: space-between; gap: var(--s-3); align-items: center; }
+    .vac-revogar { display: flex; gap: var(--s-2); align-items: flex-end; flex-wrap: wrap; margin: var(--s-2) 0; }
     .vac-topo { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-4); }
     .vac-cab { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
     .vac-tabela table { min-width: 0; width: 100%; }
@@ -144,6 +166,7 @@ import { RegistrarDose } from './registrar-dose';
 export class CadernetaVacinacao {
   private readonly service = inject(ImunizacaoService);
   private readonly unidadeService = inject(UnidadeSaudeService);
+  private readonly authService = inject(AuthService);
 
   readonly pacienteId = input.required<string>();
   readonly pacienteNome = input('');
@@ -160,6 +183,13 @@ export class CadernetaVacinacao {
   protected readonly anulando = signal<RegistroVacinacaoDto | null>(null);
   protected readonly motivoAnulacao = signal('');
   protected readonly erro = signal<string | null>(null);
+  /** Revogação da contraindicação pelo CRIE (ADR-0206), para quem tem IMUNIZACAO.REAVALIAR. */
+  protected readonly podeReavaliar = signal(false);
+  protected readonly revogando = signal<string | null>(null);
+  protected readonly revogandoEnvio = signal(false);
+  protected readonly parecer = signal('');
+  protected readonly vigentes = computed(() => (this.caderneta()?.contraindicacoes ?? []).filter((x) => !x.revogadaEm));
+  protected readonly revogadas = computed(() => (this.caderneta()?.contraindicacoes ?? []).filter((x) => !!x.revogadaEm));
 
   protected readonly calendarioVisivel = computed(() => {
     const c = this.caderneta();
@@ -173,6 +203,28 @@ export class CadernetaVacinacao {
     effect(() => {
       const id = this.pacienteId();
       untracked(() => this.carregar(id));
+    });
+    this.authService.acessoDaInterface().pipe(catchError(() => of(null))).subscribe((a) =>
+      this.podeReavaliar.set(!!a && (!a.restrito || a.permissoes.has('IMUNIZACAO.REAVALIAR'))));
+  }
+
+  protected revogar(id: string): void {
+    if (!this.parecer().trim()) {
+      this.erro.set('Informe o parecer da reavaliação no CRIE.');
+      return;
+    }
+    this.revogandoEnvio.set(true);
+    this.service.revogarContraindicacao(id, this.parecer().trim()).subscribe({
+      next: (c) => {
+        this.revogandoEnvio.set(false);
+        this.revogando.set(null);
+        this.erro.set(null);
+        this.caderneta.set(c);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.revogandoEnvio.set(false);
+        this.erro.set(e.status === 403 ? 'A revogação é da reavaliação no CRIE (médico).' : (e.error as ErrorResponseDto | undefined)?.message ?? 'Não foi possível revogar.');
+      },
     });
   }
 

@@ -367,12 +367,16 @@
           <app-internacoes-paciente [internacoes]="prontuario()?.internacoes ?? []" />
         </section>
       }
+      @if (!prontuarioCarregando() && !prontuarioBloqueio()) {
+        <app-deslocamento-paciente [pacienteId]="p.uuid" />
+        <app-transportes-paciente [pacienteId]="p.uuid" />
+      }
       @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.ocorrenciasUrgencia?.length) {
         <section class="pront-exames" aria-labelledby="pront-urgencia-h">
           <h4 id="pront-urgencia-h">Ocorrências de urgência</h4>
           <ul class="eq-prof" aria-label="Ocorrências de urgência">
             @for (o of prontuario()?.ocorrenciasUrgencia ?? []; track o.uuid) {
-              <li class="mo-row"><span><span class="cell-main">{{ formatarData(o.recebidaEm) }} · {{ o.queixa }}</span><span class="cell-sub">Protocolo {{ o.protocolo }} · {{ o.centralNome }}@if (o.destinoNome) { → {{ o.destinoNome }} }@if (o.prioridade) { · {{ o.prioridade }} }</span>@if (o.conduta) { <span class="cell-sub">{{ o.conduta }}</span> }</span></li>
+              <li class="mo-row"><span><span class="cell-main">{{ formatarData(o.recebidaEm) }} · {{ o.queixa }}</span><span class="cell-sub">Protocolo {{ o.protocolo }} · {{ o.centralNome }}@if (o.destinoNome) { → {{ o.destinoNome }} }@if (o.prioridade) { · {{ o.prioridade }} }</span>@if (o.conduta) { <span class="cell-sub">{{ o.conduta }}</span> }</span>@if (o.tipoRecurso) { <button type="button" class="link-btn" [attr.aria-label]="'Ficha do APH da ocorrência ' + o.protocolo" (click)="baixarFichaAph(o.uuid, o.protocolo)">Ficha do APH</button> }</li>
             }
           </ul>
         </section>
@@ -380,7 +384,7 @@
       @if (!prontuarioCarregando() && !prontuarioBloqueio() && prontuario()?.exames?.length) {
         <section class="pront-exames" aria-labelledby="pront-exames-h">
           <h4 id="pront-exames-h">Exames laboratoriais</h4>
-          <app-exames-paciente [exames]="prontuario()?.exames ?? []" />
+          <app-exames-paciente [exames]="prontuario()?.exames ?? []" [pacienteId]="prontuario()?.pacienteUuid" />
         </section>
       }
       @if (prontuarioCarregando()) {
@@ -621,6 +625,7 @@
                 }
                 @if (pode('INTERNACAO.GERENCIAR')) {
                   <a class="btn btn--ghost btn--sm" routerLink="/assistencia/leitos" [queryParams]="{ acao: 'internar', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid, atendimentoId: a.uuid }">Internar</a>
+                  <a class="btn btn--ghost btn--sm" routerLink="/assistencia/leitos" [queryParams]="{ acao: 'vaga', pacienteId: a.pacienteUuid, unidadeId: a.unidadeUuid, atendimentoId: a.uuid }" [attr.aria-label]="'Pedir vaga de internação para ' + a.pacienteNome">Pedir vaga</a>
                 }
               </div>
 

@@ -75,6 +75,9 @@ public class EmergenciaDto implements Serializable {
     private List<MobilizacaoItem> mobilizacoes;
     private List<CapacidadeAtivada> capacidades;
     private List<UnidadeAfetada> unidadesAfetadas;
+    /** ES3 (ADR-0191): as reservas e o consumo extraordinário; T3 (ADR-0192): os veículos cedidos e a frota das unidades afetadas. */
+    private EstoqueEmergenciaDtos.Resumo estoque;
+    private FrotaEmergenciaDtos.Frota frota;
     /** A desmobilização (ADR-0159), quando iniciada, e o que falta para encerrar. */
     private DesmobilizacaoItem desmobilizacao;
     private List<String> pendencias;
@@ -86,6 +89,9 @@ public class EmergenciaDto implements Serializable {
     private UUID agravoId;
     private String agravoNome;
     private List<ExposicaoItem> exposicoes;
+    /** E4a (ADR-0193): a ocupação dos destinos dos deslocados (sem nomes) e quantos seguem fora de casa. */
+    private List<PessoasEmergenciaDtos.Abrigo> abrigos;
+    private int deslocadosEmAberto;
 
     /** Microárea do território afetado. */
     @Getter
@@ -266,6 +272,18 @@ public class EmergenciaDto implements Serializable {
         private StatusTransferenciaFarmacia transferenciaStatus;
         private boolean autorizaEscala;
         private String motivoCancelamento;
+        /** ES3 (ADR-0191): o material do insumo e o que o estoque fez (a requisição urgente ou a transferência ligada). */
+        private UUID materialId;
+        private String materialNome;
+        private UUID requisicaoEstoqueId;
+        private com.edufelizardo.maissaudepublica.models.enuns.SituacaoRequisicaoEstoque requisicaoEstoqueSituacao;
+        private UUID transferenciaEstoqueId;
+        private com.edufelizardo.maissaudepublica.models.enuns.SituacaoTransferenciaEstoque transferenciaEstoqueSituacao;
+        /** T3 (ADR-0192): os veículos cedidos pela frota ao pedido. */
+        private List<FrotaEmergenciaDtos.Cessao> cessoes;
+        /** E4b (ADR-0194): o medicamento do catálogo da Farmácia. */
+        private UUID medicamentoId;
+        private String medicamentoNome;
     }
 
     /** Capacidade emergencial ativada na emergência. */

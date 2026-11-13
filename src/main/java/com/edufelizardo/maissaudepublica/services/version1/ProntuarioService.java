@@ -43,7 +43,17 @@ import com.edufelizardo.maissaudepublica.repositories.EventoLeitoRepository;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.InternacaoResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.edufelizardo.maissaudepublica.config.ContextoAuditoria;
+import com.edufelizardo.maissaudepublica.models.ExameLaboratorial;
+import com.edufelizardo.maissaudepublica.models.ItemPedidoExame;
+import com.edufelizardo.maissaudepublica.models.ResultadoExame;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.EvolucaoExameDto;
+import com.edufelizardo.maissaudepublica.repositories.ExameLaboratorialRepository;
+import com.edufelizardo.maissaudepublica.repositories.ResultadoExameRepository;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -92,6 +102,12 @@ public class ProntuarioService {
     private ItemPedidoExameRepository itemPedidoExameRepository;
 
     @Autowired
+    private ExameLaboratorialRepository exameLaboratorialRepository;
+
+    @Autowired
+    private ResultadoExameRepository resultadoExameRepository;
+
+    @Autowired
     private InternacaoRepository internacaoRepository;
 
     @Autowired
@@ -123,6 +139,37 @@ public class ProntuarioService {
                 .collect(Collectors.toList()));
         response.setOcorrenciasUrgencia(ocorrenciaUrgenciaService.doPaciente(pacienteId));
         return response;
+    }
+
+    /**
+     * A evolução de um exame numérico do paciente (ADR-0180), com as mesmas regras de acesso do prontuário: vínculo
+     * assistencial ou acesso justificado. Só liberados, o valor atual de cada pedido, da coleta mais antiga para a mais nova.
+     */
+    @Transactional(readOnly = true)
+    public EvolucaoExameDto evolucaoDoExame(UUID pacienteId, UUID exameId) {
+        if (!pacienteRepository.existsById(pacienteId)) {
+            throw new ResourceNotFoundException("Não foi possível encontrar um paciente com o id " + pacienteId + " em nossos registros.");
+        }
+        ExameLaboratorial exame = exameLaboratorialRepository.findById(exameId).orElseThrow(() -> new ResourceNotFoundException(
+                "Não foi possível encontrar um exame com o id " + exameId + " em nossos registros."));
+        vinculoAssistencialService.exigirVinculo(pacienteId);
+        ContextoAuditoria.paciente(pacienteId);
+        List<ItemPedidoExame> itens = itemPedidoExameRepository.findLiberadosDoPaciente(pacienteId).stream()
+                .filter(i -> i.getExame().getUuid().equals(exameId) && i.getResultadoAtual().getValorNumerico() != null).toList();
+        List<UUID> retificacoes = itens.isEmpty() ? List.of()
+                : resultadoExameRepository.findByItem_UuidIn(itens.stream().map(ItemPedidoExame::getUuid).toList()).stream()
+                .filter(r -> r.getRetificacaoDe() != null).map(r -> r.getItem().getUuid()).distinct().toList();
+        List<EvolucaoExameDto.Ponto> pontos = itens.stream().map(i -> {
+                    ResultadoExame r = i.getResultadoAtual();
+                    Instant data = i.getAmostra() != null && i.getAmostra().getColetadaEm() != null
+                            ? i.getAmostra().getColetadaEm().atZone(ZoneId.systemDefault()).toInstant() : r.getLiberadoEm();
+                    return new EvolucaoExameDto.Ponto(i.getUuid(), i.getPedido().getUuid(), data, r.getValorNumerico(), r.getUnidadeMedida(),
+                            r.getReferenciaMinima(), r.getReferenciaMaxima(), r.getCriticoMinimo(), r.getCriticoMaximo(), r.getInterpretacao(),
+                            r.getFaixaDescricao(), retificacoes.contains(i.getUuid()));
+                })
+                .sorted(Comparator.comparing(EvolucaoExameDto.Ponto::getData, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
+        return new EvolucaoExameDto(exame.getUuid(), exame.getNome(), exame.getUnidadeMedida(), pontos);
     }
 
     /** Os exames laboratoriais do paciente, pedido mais recente primeiro (ADR-0095). */

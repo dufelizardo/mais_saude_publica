@@ -23,8 +23,10 @@ import { RegistrarDose } from '../vacinacao/registrar-dose';
 import { CadeiaDeFrio } from './cadeia-de-frio';
 import { CoberturaVacinal } from './cobertura-vacinal';
 import { EstoqueSalaVacina } from './estoque-sala-vacina';
+import { AlertasLote } from './alertas-lote';
+import { RemanejamentosSalaVacina } from './remanejamentos-sala-vacina';
 
-type Aba = 'dia' | 'atrasados' | 'cobertura' | 'estoque' | 'frio' | 'calendario';
+type Aba = 'dia' | 'atrasados' | 'cobertura' | 'estoque' | 'remanejamentos' | 'frio' | 'alertas' | 'calendario';
 
 /**
  * Sala de Vacina (ADR-0147): o registro das doses do dia na unidade, com a contagem por vacina; os adscritos com dose
@@ -34,7 +36,7 @@ type Aba = 'dia' | 'atrasados' | 'cobertura' | 'estoque' | 'frio' | 'calendario'
  */
 @Component({
   selector: 'app-sala-de-vacina',
-  imports: [RouterLink, RegistrarDose, EstoqueSalaVacina, CadeiaDeFrio, CoberturaVacinal, Drawer],
+  imports: [RouterLink, RegistrarDose, EstoqueSalaVacina, CadeiaDeFrio, CoberturaVacinal, Drawer, RemanejamentosSalaVacina, AlertasLote],
   template: `
     <header class="page-head">
       <div>
@@ -58,7 +60,9 @@ type Aba = 'dia' | 'atrasados' | 'cobertura' | 'estoque' | 'frio' | 'calendario'
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'atrasados'" (click)="aba.set('atrasados')">Atrasados</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'cobertura'" (click)="aba.set('cobertura')">Cobertura</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'estoque'" (click)="aba.set('estoque')">Estoque</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'remanejamentos'" (click)="aba.set('remanejamentos')">Remanejamentos</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'frio'" (click)="aba.set('frio')">Cadeia de frio</button>
+      <button type="button" role="tab" [attr.aria-selected]="aba() === 'alertas'" (click)="aba.set('alertas')">Alertas de lote</button>
       <button type="button" role="tab" [attr.aria-selected]="aba() === 'calendario'" (click)="aba.set('calendario')">Calendário vacinal</button>
     </div>
 
@@ -84,10 +88,14 @@ type Aba = 'dia' | 'atrasados' | 'cobertura' | 'estoque' | 'frio' | 'calendario'
       </section>
     } @else if (aba() === 'cobertura') {
       <app-cobertura-vacinal [unidadeId]="unidadeId()" />
+    } @else if (aba() === 'alertas') {
+      <app-alertas-lote />
     } @else if (!unidadeId()) {
       <p class="cell-sub">Escolha a unidade para ver as doses do dia, os atrasados, o estoque e a cadeia de frio.</p>
     } @else if (aba() === 'estoque') {
       <app-estoque-sala-vacina [unidadeId]="unidadeId()" [versao]="versao()" />
+    } @else if (aba() === 'remanejamentos') {
+      <app-remanejamentos-sala-vacina [unidadeId]="unidadeId()" [versao]="versao()" />
     } @else if (aba() === 'frio') {
       <app-cadeia-de-frio [unidadeId]="unidadeId()" [versao]="versao()" />
     } @else if (aba() === 'dia') {

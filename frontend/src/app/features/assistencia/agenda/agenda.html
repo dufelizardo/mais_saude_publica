@@ -327,6 +327,10 @@
           <footer class="dw-foot">
             <button type="button" class="btn btn--ghost" (click)="fecharGaveta()">Fechar</button>
             @if (pode('AGENDAMENTO.GERENCIAR') && (g.item.status === 'AGENDADO' || g.item.status === 'CONFIRMADO')) {
+              @if (pode('TRANSPORTE.SOLICITAR') && g.item.agendamentoId) {
+                <a class="btn btn--ghost" routerLink="/administrativo/frota"
+                  [queryParams]="{ pedir: 'CONSULTA', pacienteId: g.item.pacienteId, agendamentoId: g.item.agendamentoId }">Pedir transporte</a>
+              }
               <button type="button" class="btn btn--ghost" [disabled]="submitting()" (click)="cancelarMarcacao(g.item)">Cancelar marcação</button>
               <button type="button" class="btn" [disabled]="submitting()" (click)="registrarFalta(g.item)">Registrar falta</button>
             }

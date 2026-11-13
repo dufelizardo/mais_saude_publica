@@ -3,6 +3,10 @@ Library     String
 Resource    ../../../../pom/ui/assistencia/laboratorio/laboratorio_ui_pom.resource
 Resource    ../../../laboratorio/pedido_exame/pedido_exame_flow.resource
 Resource    ../../../atendimento/create_atendimento/create_atendimento_flow.resource
+Resource    ../../../laboratorio/faixa_referencia/faixa_referencia_flow.resource
+Resource    ../../../laboratorio/ciencia_entrega/ciencia_entrega_flow.resource
+Resource    ../../../laboratorio/exame_imagem/exame_imagem_flow.resource
+Resource    ../../../laboratorio/laudo_insumos/laudo_insumos_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Os dados de apoio (paciente, unidade, profissional, exame, pedido, coleta) são criados pela API; a ação sob
@@ -251,5 +255,210 @@ UI Laboratorio - Exames No Prontuario E No Atendimento
     Wait For Elements State    css=.pront-exames >> text=Acima da referência    visible    10s
     Clicar Botao    Abrir
     Wait For Elements State    css=app-drawer app-exames-paciente >> text=${exameNome}    visible    10s
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Incluir Faixa Por Sexo E Idade
+    [Documentation]    Inclui a faixa feminina adulta pela gaveta do exame do catálogo e vê o rótulo (ADR-0180).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${exameId}    ${nome}=    Seed A Exame Laboratorial
+    UI Laboratorio - Abrir Aba    catalogo
+    Clicar Botao    Editar ${nome}
+    Clicar Botao    + Faixa
+    Escolher Opcao Da Gaveta    faixaSexo    FEMININO
+    Preencher Campo Da Gaveta    faixaIdadeMinima    12
+    Preencher Campo Da Gaveta    faixaIdadeMaxima    60
+    Preencher Campo Da Gaveta    faixaRefMin    11.5
+    Preencher Campo Da Gaveta    faixaRefMax    15
+    Preencher Campo Da Gaveta    faixaCritMin    7
+    Clicar Botao    Incluir faixa
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Faixa incluída
+    Wait For Elements State    css=app-drawer .faixas__item >> text=Feminino, 12 a 59 anos    visible    10s
+    ${exame}=    GET Exame Laboratorial By Id    ${exameId}
+    Should Be Equal    ${exame.json()}[faixas][0][rotulo]    Feminino, 12 a 59 anos
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Evolucao Do Exame No Prontuario
+    [Documentation]    Dois resultados liberados do mesmo exame: o prontuário abre a evolução com o gráfico e a tabela (ADR-0180).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${exameId}    ${nome}    ${faixaId}=    Seed A Exame Com Faixa Feminina
+    ${pacienteId}    ${cpf}    ${cartaoSus}    ${pacienteNome}=    Seed A Paciente
+    ${unidadeId}=    Seed A Unidade De Saude Uuid
+    ${matricula}=    Seed A Profissional Matricula
+    Registrar Resultado Do Exame    ${pacienteId}    ${exameId}    ${unidadeId}    ${matricula}    ${10.2}    diasAtras=${30}
+    Registrar Resultado Do Exame    ${pacienteId}    ${exameId}    ${unidadeId}    ${matricula}    ${12.4}    diasAtras=${2}
+    Ir Para Rota Do Frontend    /assistencia/atendimentos?aba=pront&pacienteId=${pacienteId}
+    Wait For Elements State    css=.pront-exames >> text=Feminino, 12 a 59 anos >> nth=0    visible    10s
+    Clicar Botao    Evolução de ${nome}
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Evolução: ${nome}
+    Wait For Elements State    css=app-drawer svg.evo__svg    visible    10s
+    ${pontos}=    Get Element Count    css=app-drawer svg.evo__svg circle
+    Should Be Equal As Integers    ${pontos}    2
+    ${linhas}=    Get Element Count    css=app-drawer table.evo__tabela tbody tr
+    Should Be Equal As Integers    ${linhas}    2
+    Wait For Elements State    css=app-drawer table.evo__tabela >> text=Abaixo da referência    visible    10s
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Ciencia Pela Aba Para Ciencia
+    [Documentation]    Quem pediu vê o resultado liberado na aba Para ciência e registra a ciência (ADR-0181).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${unidadeId}=    Seed A Resultado Liberado
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    ciencia
+    Fill Text    id=f-matriculaCiencia    ${matricula}
+    Clicar Botao    Ver resultados
+    Clicar Botao    Registrar ciência de ${exameNome} de ${nomePaciente}
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Ciência registrada
+    ${detalhe}=    GET Get Pedido Exame By Id    ${pedidoId}
+    Should Be Equal    ${detalhe.json()}[itens][0][resultado][cienciaPorMatricula]    ${matricula}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Comunicar Critico Pela Aba
+    [Documentation]    O laboratório registra a comunicação do crítico pela aba Críticos a comunicar (ADR-0181).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${unidadeId}=    Seed A Resultado Liberado    ${5}
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    criticos
+    Clicar Botao    Comunicar crítico de ${exameNome} de ${nomePaciente}
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Comunicar valor crítico
+    Preencher Campo Da Gaveta    receptorNome    Dra. Plantonista
+    Escolher Opcao Da Gaveta    meio    TELEFONE
+    Preencher Campo Da Gaveta    matriculaComunicacao    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Comunicação registrada
+    ${detalhe}=    GET Get Pedido Exame By Id    ${pedidoId}
+    Should Be Equal    ${detalhe.json()}[comunicacoesCritico][0][receptorNome]    Dra. Plantonista
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Entrega Pelo Detalhe Do Pedido
+    [Documentation]    Registra a entrega a um parente pelo detalhe do pedido concluído (ADR-0181).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${unidadeId}=    Seed A Resultado Liberado
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    pedidos
+    Clicar Botao    Ver pedido de ${nomePaciente}
+    Clicar Botao    Registrar entrega
+    ${titulo}=    Ler Titulo Da Gaveta
+    Should Be Equal    ${titulo}    Registrar entrega
+    Click    css=app-drawer label >> text=Outra pessoa
+    Preencher Campo Da Gaveta    terceiroNome    Maria da Silva
+    Preencher Campo Da Gaveta    terceiroDocumento    RG 12.345.678-9
+    Preencher Campo Da Gaveta    terceiroParentesco    Mãe
+    Preencher Campo Da Gaveta    matriculaEntrega    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Entrega registrada
+    ${detalhe}=    GET Get Pedido Exame By Id    ${pedidoId}
+    Should Be Equal    ${detalhe.json()}[entregas][0][terceiroNome]    Maria da Silva
+    Should Be Equal    ${detalhe.json()}[entregas][0][unidadeId]    ${unidadeId}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Cadastrar Exame De Imagem Pela Gaveta
+    [Documentation]    Cadastra um exame de imagem no catálogo com a modalidade (ADR-0182).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${sufixo}=    Generate Random String    6    [LETTERS][NUMBERS]
+    ${nome}=    Set Variable    Robot UI USG ${sufixo}
+    UI Laboratorio - Abrir Aba    catalogo
+    Clicar Botao    + Exame
+    Preencher Campo Da Gaveta    nome    ${nome}
+    Click    css=app-drawer label >> text=Imagem
+    Escolher Opcao Da Gaveta    modalidade    ULTRASSONOGRAFIA
+    Preencher Campo Da Gaveta    preparo    Jejum de 8 horas.
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Exame cadastrado
+    Wait For Elements State    css=table >> text=Imagem · Ultrassonografia >> nth=0    visible    10s
+    ${lista}=    GET List Exame Laboratorial
+    ${exame}=    Evaluate    [e for e in $lista.json() if e['nome'] == $nome][0]
+    Should Be Equal    ${exame}[categoria]    IMAGEM
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Realizar E Laudar Pela Tela
+    [Documentation]    Realiza o exame na aba Para realizar e lauda na aba Para laudar (ADR-0182).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}    ${servico}=    Seed A Pedido De Imagem
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    realizar
+    Clicar Botao    Realizar ${exameNome} de ${nomePaciente}
+    Esperar Texto Aparecer    Retirar objetos metálicos.
+    Preencher Campo Da Gaveta    equipamento    Aparelho da sala 1
+    Preencher Campo Da Gaveta    matriculaRealizacao    ${matricula}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Exame realizado
+    UI Laboratorio - Status Do Item Deve Ser    ${pedidoId}    REALIZADO
+    UI Laboratorio - Abrir Aba    laudar
+    Clicar Botao    Laudar ${exameNome} de ${nomePaciente}
+    Preencher Campo Da Gaveta    achados    Opacidade em base direita.
+    Preencher Campo Da Gaveta    conclusao    Pneumonia em base direita.
+    Click    css=app-drawer label >> text=Com alterações
+    Preencher Campo Da Gaveta    matriculaLaudo    ${matricula}
+    Enviar Gaveta
+    ${laudado}=    Ler Aviso De Status
+    Should Contain    ${laudado}    Laudo liberado
+    ${detalhe}=    GET Get Pedido Exame By Id    ${pedidoId}
+    Should Be Equal    ${detalhe.json()}[itens][0][status]    LIBERADO
+    Should Be Equal    ${detalhe.json()}[itens][0][resultado][interpretacao]    ALTERADO
+    Should Be Equal    ${detalhe.json()}[realizacoes][0][equipamento]    Aparelho da sala 1
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Baixar Laudo Em PDF
+    [Documentation]    Baixa o laudo em PDF pelo detalhe do pedido e vê a emissão vigente com o código (ADR-0183).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}=    Seed A Pedido Liberado
+    ${nomePaciente}    ${exameNome}=    UI Laboratorio - Ler Pedido    ${pedidoId}
+    UI Laboratorio - Abrir Aba    pedidos
+    Clicar Botao    Ver pedido de ${nomePaciente}
+    Clicar Botao    Baixar laudo (PDF)
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Laudo em PDF emitido
+    Wait For Elements State    css=app-drawer >> text=Laudos emitidos    visible    10s
+    Wait For Elements State    css=app-drawer .badge >> text=Vigente    visible    10s
+    ${emissoes}=    GET Emissoes Laudo    ${pedidoId}
+    Should Contain    ${aviso}    ${emissoes.json()}[0][codigo]
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Verificar Laudo Na Pagina Publica
+    [Documentation]    A página pública confere o código do laudo, sem login (ADR-0183).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${pedidoId}    ${itemId}    ${matricula}=    Seed A Pedido Liberado
+    ${pdf}=    GET Laudo Pdf    ${pedidoId}
+    ${codigo}=    Set Variable    ${pdf.headers}[X-Codigo-Verificacao]
+    Ir Para Rota Do Frontend    /verificar-laudo?codigo=${codigo}
+    Esperar Texto Aparecer    Laudo autêntico e vigente
+    ${hash}=    Evaluate    hashlib.sha256($pdf.content).hexdigest()    modules=hashlib
+    Esperar Texto Aparecer    ${hash}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Laboratorio - Insumo Pela Gaveta Do Exame
+    [Documentation]    Inclui um insumo do estoque na gaveta do exame do catálogo (ADR-0183).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${material}    ${materialNome}=    Seed Material Estoque    ${False}
+    ${exameId}    ${nome}=    Seed A Exame Laboratorial
+    UI Laboratorio - Abrir Aba    catalogo
+    Clicar Botao    Editar ${nome}
+    Wait For Elements State    css=#f-insumoMaterial >> option[value="${material}"]    attached    10s
+    Escolher Opcao Da Gaveta    insumoMaterial    ${material}
+    Preencher Campo Da Gaveta    insumoQuantidade    2
+    Clicar Botao    Incluir insumo
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Insumo incluído
+    Wait For Elements State    css=app-drawer .faixas__item >> text=${materialNome}    visible    10s
+    ${exame}=    GET Exame Laboratorial By Id    ${exameId}
+    Should Be Equal As Integers    ${exame.json()}[insumos][0][quantidade]    2
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
