@@ -55,10 +55,16 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 
 - **`argocd-applicationset-controller` reiniciando sem parar:** mais de 4.000 reinícios em 21 dias. Não
   derruba nada, mas gasta CPU. Investigar ou desligar, se o ApplicationSet não for usado.
-- **O projeto `lonewolf` divide o servidor** (CPU e disco mecânico) e não estava na conta de capacidade
-  da ADR-0012.
-- **Disco mecânico de 5400 RPM:** depois do reinício de 2026-10-01, as APIs levaram até 13 tentativas
-  para subir. O `startupProbe` passou a 10 minutos. A troca por SSD continua recomendada.
+- **O projeto `lonewolf` divide o servidor** (CPU e disco) e não estava na conta de capacidade da ADR-0012.
+- ~~**Disco mecânico de 5400 RPM**~~ — trocado por SSD (ADR-0012). Depois do reinício de 2026-10-01, as APIs levaram até 13
+  tentativas para subir, e o `startupProbe` passou a 10 minutos (15 desde 2026-11-14).
+- **Incidente de 2026-11-14** ([registro](./incidentes/2026-11-14-api-fora-depois-da-v1-13-0.md), issue #489): depois da
+  v1.13.0, a API dos quatro ambientes ficou fora (login 502). O backend não cabia mais em 512Mi e meia CPU (corrigido na v1.13.1:
+  768Mi, `-Xmx448m`, até 1 CPU) e, depois de um reinício do servidor, o Postgres travou no `gosu` do entrypoint (corrigido na
+  v1.13.2: roda como o usuário postgres, com readiness por `pg_isready`).
+- [ ] **Alta disponibilidade (R1, ADR-0209, aprovada):** teste de orçamento de recursos no CI, memória pelo limite do pod,
+  subida mais rápida (CDS), produção com 2 réplicas e autoescala, prioridade de produção, imagem do Postgres com versão fixa e
+  aviso automático de queda. A trava das tarefas agendadas entre réplicas e a trava das rotinas de subida já estão prontas.
 - ~~**Migrações versionadas (Flyway)**~~ — feitas pela ADR-0090. Na próxima subida de cada ambiente, o
   Flyway marca o banco na V1 (esquema da v1.4.0) e aplica a V2. Mudança de esquema agora é migração.
 
