@@ -92,7 +92,11 @@ que gastaria comprando o SSD.
 Mitigações efetivamente usadas:
 - ✅ **ArgoCD Core** (sem Dex/SSO/notifications-controller/server) — reduz o footprint do control
   plane; acesso é só via `kubectl`/CLI local, sem UI web.
-- ✅ **`-Xmx384m`** (via `JAVA_TOOL_OPTIONS`) explícito em todos os Deployments do Spring Boot.
+- ✅ **`-Xmx384m`** (via `JAVA_TOOL_OPTIONS`) explícito em todos os Deployments do Spring Boot. **Revisto em 2026-11-14:** com a
+  v1.13.0 (274 repositórios, migrações até a V90) o backend não cabia mais em 512Mi com meia CPU: pico de 496 MiB, subida de 340 s, e no
+  servidor os quatro ambientes entravam em `CrashLoopBackOff` (código 137) e o login dava 502. Passou a `-Xmx448m`, limite de 768Mi
+  (pedido de 512Mi) e até 1 CPU, com a `startupProbe` de 15 minutos: pico de 519 MiB e subida de 166 s na mesma medição. Os quatro
+  backends somam 3 GiB de limite; os pedidos (2 GiB) cabem na memória real do servidor.
 - ❌ **Postgres compartilhado não foi necessário** — a medição real com os 4 ambientes rodando
   mostrou folga confortável (3,9 GB disponíveis); mitigação descartada, não precisou ser aplicada.
 
