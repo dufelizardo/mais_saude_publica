@@ -18,11 +18,24 @@ spec:
       labels:
         app: postgres
     spec:
+      # Roda direto como o usuário postgres (uid 70 na imagem alpine, o dono dos dados), e não como root: assim o
+      # docker-entrypoint não chama o gosu para trocar de usuário. Em 2026-11-14, depois de um reinício do servidor, o gosu
+      # ficou em laço (23 min de CPU como PID 1) sem nunca iniciar o banco, nos quatro ambientes: o pod aparecia Running,
+      # sem log, e a API recebia "connection refused" (ADR-0209).
+      securityContext:
+        runAsUser: 70
+        runAsGroup: 70
       containers:
         - name: postgres
           image: postgres:16-alpine
           ports:
             - containerPort: 5432
+          # Pronto só quando aceita conexão: sem isso, um banco travado aparecia como pronto (ADR-0209).
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-h", "127.0.0.1"]
+            periodSeconds: 10
+            timeoutSeconds: 5
           envFrom:
             - configMapRef:
                 name: db-config
