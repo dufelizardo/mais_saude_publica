@@ -19,7 +19,7 @@ configMapGenerator:
   - name: app-config
     literals:
       - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_TOOL_OPTIONS=-Xmx384m
+      - JAVA_TOOL_OPTIONS=-Xmx448m
       - DATABASE_URL=jdbc:postgresql://postgres:5432/saudepublica_homologacao
       - DATABASE_USERNAME=postgres
       # Exige login (ADR-0055); o secret app-secrets foi provisionado neste namespace.

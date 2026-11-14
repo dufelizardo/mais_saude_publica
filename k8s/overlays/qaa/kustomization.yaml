@@ -11,15 +11,15 @@ resources:
 
 images:
   - name: ghcr.io/dufelizardo/mais_saude_publica
-    newTag: 45d4220b8e48d6f549ef96ccddf79b554ac98ae9
+    newTag: 7e410849316435c779b788b27a1e1665c2352475
   - name: ghcr.io/dufelizardo/mais_saude_publica-frontend
-    newTag: 45d4220b8e48d6f549ef96ccddf79b554ac98ae9
+    newTag: 7e410849316435c779b788b27a1e1665c2352475
 
 configMapGenerator:
   - name: app-config
     literals:
       - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_TOOL_OPTIONS=-Xmx384m
+      - JAVA_TOOL_OPTIONS=-Xmx448m
       - DATABASE_URL=jdbc:postgresql://postgres:5432/saudepublica_qaa
       - DATABASE_USERNAME=postgres
       # Exige login (ADR-0055); o secret app-secrets foi provisionado neste namespace.
