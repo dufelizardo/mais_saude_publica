@@ -62,9 +62,13 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   v1.13.0, a API dos quatro ambientes ficou fora (login 502). O backend não cabia mais em 512Mi e meia CPU (corrigido na v1.13.1:
   768Mi, `-Xmx448m`, até 1 CPU) e, depois de um reinício do servidor, o Postgres travou no `gosu` do entrypoint (corrigido na
   v1.13.2: roda como o usuário postgres, com readiness por `pg_isready`).
-- [ ] **Alta disponibilidade (R1, ADR-0209, aprovada):** teste de orçamento de recursos no CI, memória pelo limite do pod,
-  subida mais rápida (CDS), produção com 2 réplicas e autoescala, prioridade de produção, imagem do Postgres com versão fixa e
-  aviso automático de queda. A trava das tarefas agendadas entre réplicas e a trava das rotinas de subida já estão prontas.
+- [x] **Alta disponibilidade (R1, [ADR-0209](./adr/0209-resiliencia-do-deploy.md)):** o CI barra a imagem que não cabe nos limites do Kubernetes (orçamento de
+  recursos); memória pelo limite do pod (`MaxRAMPercentage`); subida com CDS (137 s); produção com 2 réplicas da API, autoescala
+  até 3, `PodDisruptionBudget` e prioridade sobre os outros ambientes; trava das tarefas agendadas e das rotinas de subida entre
+  réplicas; Postgres com versão fixa; e o vigia, que abre uma issue quando a API ou o banco de um ambiente ficam fora por mais de
+  10 minutos.
+- [ ] **Criar o secret `alerta-github`** no namespace `mais-saude-prod`, para o vigia abrir as issues (sem ele, só o log). Ver o
+  [registro de incidentes](./incidentes/README.md).
 - ~~**Migrações versionadas (Flyway)**~~ — feitas pela ADR-0090. Na próxima subida de cada ambiente, o
   Flyway marca o banco na V1 (esquema da v1.4.0) e aplica a V2. Mudança de esquema agora é migração.
 

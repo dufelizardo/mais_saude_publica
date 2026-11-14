@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **324 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V90). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **325 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V91). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -216,3 +216,4 @@ listadas aqui pela migração que criou cada uma (até a V90). A fonte de verdad
 | V88 | `tb_suspensao_lote_rede`, `tb_remanejamento_imunobiologico` |
 | V89 | `tb_evento_trabalho` |
 | V90 | `tb_investigacao_trabalho`, `tb_medida_trabalho`, `tb_risco_ocupacional` |
+| V91 | `tb_trava_agendamento` |
