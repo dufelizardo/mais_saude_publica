@@ -917,7 +917,8 @@ aprovação e assinatura.
 **Infraestrutura e ações manuais** (detalhe em [`PENDENCIAS.md`](./PENDENCIAS.md)):
 - [ ] Apagar o secret `RENDER_DEPLOY_URL` e o serviço antigo no painel do Render.
 - [ ] Investigar o `argocd-applicationset-controller`, que reinicia sem parar.
-- [ ] Trocar o disco mecânico do servidor por SSD.
+- [x] Trocar o disco mecânico do servidor por SSD (feito; ADR-0012).
+- [ ] Alta disponibilidade (R1, ADR-0209), depois do [incidente de 2026-11-14](./incidentes/2026-11-14-api-fora-depois-da-v1-13-0.md).
 
 ## 4. Como manter este documento
 
