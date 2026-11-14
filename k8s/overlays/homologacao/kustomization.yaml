@@ -11,9 +11,9 @@ resources:
 
 images:
   - name: ghcr.io/dufelizardo/mais_saude_publica
-    newTag: homologacao
+    newTag: a587662013accc91a5244925fe567af84f8dd274
   - name: ghcr.io/dufelizardo/mais_saude_publica-frontend
-    newTag: homologacao
+    newTag: a587662013accc91a5244925fe567af84f8dd274
 
 configMapGenerator:
   - name: app-config
