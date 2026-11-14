@@ -247,6 +247,86 @@ jobs:
             front.log
             front-seguranca.log
 
+  orcamento-de-recursos:
+    # Orçamento de recursos (ADR-0209): a imagem de produção, construída pelo mesmo Dockerfile, sobe com os limites do
+    # Kubernetes (memória e CPU do k8s/base/deployment-app.yaml e o JAVA_TOOL_OPTIONS do overlay de prod). Reprova o PR se
+    # a API não ficar pronta em 7 minutos ou se o pico de memória passar de 85% do limite. Foi o que derrubou a v1.13.0
+    # (incidente de 2026-11-14): os testes rodavam sem os limites e não viam a aplicação crescer além deles.
+    needs: test
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: saudepublica
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Construir a imagem de produção
+        run: docker build -t msp-orcamento .
+
+      - name: Subir com os limites do Kubernetes e medir
+        run: |
+          set -euo pipefail
+          MEM=$(awk '/limits:/{f=1} f && /memory:/{print $2; exit}' k8s/base/deployment-app.yaml)
+          CPU=$(awk '/limits:/{f=1} f && /cpu:/{print $2; exit}' k8s/base/deployment-app.yaml)
+          OPCOES=$(grep -m1 'JAVA_TOOL_OPTIONS=' k8s/overlays/prod/kustomization.yaml | sed 's/.*JAVA_TOOL_OPTIONS=//')
+          MEM_MIB=${MEM%Mi}
+          case "$CPU" in *m) CPUS=$(awk "BEGIN{print ${CPU%m}/1000}") ;; *) CPUS=$CPU ;; esac
+          LIMITE_SUBIDA=420
+          LIMITE_MEMORIA=$((MEM_MIB * 85 / 100))
+          echo "Limites: ${MEM_MIB} MiB, ${CPUS} CPU, JAVA_TOOL_OPTIONS='${OPCOES}'; aceita até ${LIMITE_SUBIDA} s e ${LIMITE_MEMORIA} MiB."
+          docker run -d --name api --network host --memory="${MEM_MIB}m" --memory-swap="${MEM_MIB}m" --cpus="${CPUS}" \
+            -e JAVA_TOOL_OPTIONS="${OPCOES}" \
+            -e DATABASE_URL=jdbc:postgresql://localhost:5432/saudepublica -e DATABASE_USERNAME=postgres -e DATABASE_PASSWORD=postgres \
+            -e APP_SECURITY_JWT_SECRET=orcamento-de-recursos-orcamento-de-recursos-123456 \
+            msp-orcamento
+          INICIO=$(date +%s)
+          PRONTA=0
+          while [ $(( $(date +%s) - INICIO )) -lt $LIMITE_SUBIDA ]; do
+            if [ "$(docker inspect -f '{{.State.Running}}' api)" != "true" ]; then
+              echo "::error::A API parou durante a subida (OOMKilled=$(docker inspect -f '{{.State.OOMKilled}}' api))."; break
+            fi
+            if curl -sf http://localhost:8080/actuator/health/readiness > /dev/null; then PRONTA=1; break; fi
+            sleep 5
+          done
+          SUBIDA=$(( $(date +%s) - INICIO ))
+          PICO=$(docker exec api cat /sys/fs/cgroup/memory.peak 2>/dev/null | awk '{printf "%d", $1/1048576}' || echo 0)
+          docker logs api > api-orcamento.log 2>&1 || true
+          {
+            echo "### Orçamento de recursos (ADR-0209)"
+            echo ""
+            echo "| Medida | Valor | Limite |"
+            echo "|---|---|---|"
+            echo "| Subida até pronta | ${SUBIDA} s | ${LIMITE_SUBIDA} s |"
+            echo "| Pico de memória | ${PICO} MiB | ${LIMITE_MEMORIA} MiB (85% de ${MEM_MIB}) |"
+            echo "| CPU | ${CPUS} | |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Subida: ${SUBIDA} s; pico: ${PICO} MiB."
+          if [ "$PRONTA" != "1" ]; then echo "::error::A API não ficou pronta em ${LIMITE_SUBIDA} s com ${MEM_MIB} MiB e ${CPUS} CPU."; exit 1; fi
+          if [ "$PICO" -gt "$LIMITE_MEMORIA" ]; then echo "::error::Pico de ${PICO} MiB passou de 85% do limite (${LIMITE_MEMORIA} MiB): suba o limite antes de promover."; exit 1; fi
+
+      - name: Log da subida
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orcamento-de-recursos
+          path: api-orcamento.log
+          if-no-files-found: ignore
+
   robot-acceptance:
     needs: analyze
     if: github.event_name == 'pull_request' && contains(fromJson('["qaa","homologacao","main"]'), github.base_ref)

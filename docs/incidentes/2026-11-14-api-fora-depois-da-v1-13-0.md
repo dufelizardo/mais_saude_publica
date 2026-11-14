@@ -4,7 +4,7 @@
 - **Duração:** de 13/11, 15h33, até a v1.13.2 chegar a cada ambiente em 14/11 (dev às 14h45).
 - **Issue:** [#489](https://github.com/dufelizardo/mais_saude_publica/issues/489).
 - **Correções:** v1.13.1 (memória do backend) e v1.13.2 (Postgres sem `gosu`).
-- **Acompanhamento:** a resiliência do deploy (R1, ADR-0209).
+- **Acompanhamento:** a resiliência do deploy (R1, [ADR-0209](../adr/0209-resiliencia-do-deploy.md)), feita.
 
 ## Resumo
 
@@ -59,20 +59,20 @@ Conferido localmente: num volume inicializado como root e depois subido com `--u
 - Durante o ciclo de reinícios, o Deployment substituiu o ReplicaSet antigo pelo novo, que nunca ficava pronto.
 - Depois do reinício do servidor, o Postgres travado derrubou qualquer versão.
 
-## Alta disponibilidade: o que vem a seguir (R1, ADR-0209, aprovada)
+## Alta disponibilidade: o que veio depois (R1, [ADR-0209](../adr/0209-resiliencia-do-deploy.md))
 
-- [ ] **Teste de orçamento de recursos no CI:** rodar a imagem com os mesmos limites do Kubernetes e reprovar o PR se a subida passar do tempo máximo ou a memória passar de 85% do limite. Teria pego a v1.13.0 antes da promoção.
-- [ ] **Memória ajustada pelo limite do pod** (`-XX:MaxRAMPercentage`) e `ExitOnOutOfMemoryError`.
-- [ ] **Subida mais rápida** com Class Data Sharing na imagem Java.
-- [ ] **Produção com 2 réplicas e autoescala (HPA)**, `PodDisruptionBudget` e estratégia `RollingUpdate` com `maxUnavailable: 0` explícita.
+- [x] **Teste de orçamento de recursos no CI:** rodar a imagem com os mesmos limites do Kubernetes e reprovar o PR se a subida passar do tempo máximo ou a memória passar de 85% do limite. Teria pego a v1.13.0 antes da promoção.
+- [x] **Memória ajustada pelo limite do pod** (`-XX:MaxRAMPercentage`) e `ExitOnOutOfMemoryError`.
+- [x] **Subida mais rápida** com Class Data Sharing na imagem Java.
+- [x] **Produção com 2 réplicas e autoescala (HPA)**, `PodDisruptionBudget` e estratégia `RollingUpdate` com `maxUnavailable: 0` explícita.
   - Pré-requisito já pronto no worktree da R1: trava das tarefas agendadas entre réplicas (`tb_trava_agendamento`, V91) e trava das rotinas de subida (`pg_advisory_lock`).
-- [ ] **Prioridade de produção** (`PriorityClass`): se faltar memória, dev e QA saem antes.
-- [ ] **Imagem do Postgres com versão fixa**, em vez da etiqueta móvel `16-alpine`.
-- [ ] **Aviso automático** quando um backend ou um Postgres ficar fora por mais de alguns minutos (issue no GitHub, com um token no servidor).
-- [ ] Flyway com `ignore-migration-patterns=*:future` explícito, para a versão anterior sempre poder voltar a subir com o banco já migrado (o padrão atual do Flyway já faz isso; a configuração documenta e protege contra mudança de padrão).
+- [x] **Prioridade de produção** (`PriorityClass`): se faltar memória, dev e QA saem antes.
+- [x] **Imagem do Postgres com versão fixa**, em vez da etiqueta móvel `16-alpine`.
+- [x] **Aviso automático** quando um backend ou um Postgres ficar fora por mais de alguns minutos (issue no GitHub, com um token no servidor).
+- [x] Flyway com `ignore-migration-patterns=*:future` explícito, para a versão anterior sempre poder voltar a subir com o banco já migrado (o padrão atual do Flyway já faz isso; a configuração documenta e protege contra mudança de padrão).
 
 ## Referências
 
 - PRs: [#481](https://github.com/dufelizardo/mais_saude_publica/pull/481) (v1.13.0), #482 e #483 a #485 (v1.13.1), #486 e #487 a #488 (v1.13.2).
 - ADR-0012: infraestrutura do home-lab, com a nota da revisão de memória.
-- ADR-0209: resiliência do deploy (R1), em preparação.
+- [ADR-0209](../adr/0209-resiliencia-do-deploy.md): resiliência do deploy (R1).

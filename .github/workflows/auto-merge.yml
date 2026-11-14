@@ -75,8 +75,8 @@ jobs:
           # PR de promocao acabou de abrir) - nessa janela, "0 pendentes" significa "os checks do
           # commit certo ainda nem foram criados", nao "ja passaram". Consultar os check-runs do
           # SHA atual, resolvido a cada iteracao, elimina essa corrida: so conta como "tudo pronto"
-          # quando os 3 checks nomeados existem de fato para o commit que sera mergeado.
-          required_checks="test analyze robot-acceptance"
+          # quando os 4 checks nomeados existem de fato para o commit que sera mergeado.
+          required_checks="test analyze robot-acceptance orcamento-de-recursos"
           for i in $(seq 1 90); do
             sha=$(gh pr view "$pr" --json headRefOid --jq '.headRefOid')
             runs=$(gh api "repos/${GH_REPO}/commits/${sha}/check-runs" --jq '.check_runs')

@@ -27,7 +27,8 @@ spec:
         runAsGroup: 70
       containers:
         - name: postgres
-          image: postgres:16-alpine
+          # Versão fixa (ADR-0209): a etiqueta 16-alpine acompanhava a mais nova e mudava sem PR.
+          image: postgres:16.16-alpine3.24
           ports:
             - containerPort: 5432
           # Pronto só quando aceita conexão: sem isso, um banco travado aparecia como pronto (ADR-0209).

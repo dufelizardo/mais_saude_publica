@@ -1,0 +1,81 @@
+# Vigia dos ambientes (ADR-0209): de 5 em 5 minutos, avisa quando a API ou o banco de um ambiente fica fora por mais de 10
+# minutos, abrindo uma issue no GitHub; fecha a issue quando o serviço volta. O token é o secret opcional alerta-github
+# (chave token), criado à mão no servidor; sem ele, o vigia só escreve no log. Ver docs/incidentes/README.md.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vigia
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mais-saude-vigia
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: mais-saude-vigia
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mais-saude-vigia
+subjects:
+  - kind: ServiceAccount
+    name: vigia
+    namespace: mais-saude-prod
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vigia
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 120
+      template:
+        spec:
+          serviceAccountName: vigia
+          restartPolicy: Never
+          priorityClassName: mais-saude-producao
+          containers:
+            - name: vigia
+              image: python:3.13-alpine
+              command: ["python", "-u", "/app/vigia.py"]
+              env:
+                - name: VIGIA_NAMESPACES
+                  value: "mais-saude-dev mais-saude-qaa mais-saude-homolog mais-saude-prod"
+                - name: VIGIA_DEPLOYMENTS
+                  value: "app postgres"
+                - name: VIGIA_LIMITE_MINUTOS
+                  value: "10"
+                - name: GITHUB_REPOSITORIO
+                  value: "dufelizardo/mais_saude_publica"
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: alerta-github
+                      key: token
+                      optional: true
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi
+              volumeMounts:
+                - name: script
+                  mountPath: /app
+          volumes:
+            - name: script
+              configMap:
+                name: vigia
