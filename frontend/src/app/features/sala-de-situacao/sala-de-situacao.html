@@ -97,6 +97,20 @@
   }
 }
 
+@if (redeSemRetorno().length) {
+  <section class="ss-alertas" aria-label="Rede intersetorial sem retorno">
+    @for (i of redeSemRetorno().slice(0, 3); track i.instituicaoId) {
+      <article class="ss-alerta ss-alerta--media" [attr.aria-label]="'Encaminhamentos sem retorno: ' + i.nome">
+        <div>
+          <div class="ss-alerta__titulo">Sem retorno da rede intersetorial: {{ i.nome }}</div>
+          <div class="ss-alerta__detalhe">{{ i.semRetorno }} encaminhamentos em aberto depois do prazo · {{ i.emAberto }} em aberto@if (i.telefone) { · {{ i.telefone }} }</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/administrativo/instituicoes-externas" [queryParams]="{ aba: 'painel' }">Ver no painel</a>
+      </article>
+    }
+  </section>
+}
+
 @if (eventosPlanejados().length) {
   <section class="ss-alertas" aria-label="Eventos de massa planejados">
     @for (e of eventosPlanejados().slice(0, 3); track e.uuid) {

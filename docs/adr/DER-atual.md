@@ -126,7 +126,7 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 ## Inventário do esquema atual
 
 **Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **325 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V91). A fonte de verdade são as migrações, em
+listadas aqui pela migração que criou cada uma (até a V92). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -217,3 +217,4 @@ listadas aqui pela migração que criou cada uma (até a V91). A fonte de verdad
 | V89 | `tb_evento_trabalho` |
 | V90 | `tb_investigacao_trabalho`, `tb_medida_trabalho`, `tb_risco_ocupacional` |
 | V91 | `tb_trava_agendamento` |
+| V92 | (só o índice `(instituicao_id, situacao)` de `tb_encaminhamento_intersetorial`) |
