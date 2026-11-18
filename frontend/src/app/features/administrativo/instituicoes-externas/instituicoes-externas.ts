@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import {
@@ -13,17 +14,23 @@ import { ErrorResponseDto } from '../../../core/models/profissional';
 import { AuthService } from '../../../core/services/auth';
 import { IntersetorialidadeService } from '../../../core/services/intersetorialidade';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { proximaAba } from '../../../shared/formato';
+import { PainelIntersetorial } from './painel-intersetorial';
 
 type Gaveta = { instituicao: InstituicaoExternaDto | null } | null;
+type Aba = 'catalogo' | 'painel';
 
 /**
  * Instituições da rede intersetorial (ADR-0154): o catálogo único de instituições de outros setores (CRAS, CREAS,
  * escolas, Conselho Tutelar...) para onde os domínios encaminham. Ler é de quem está logado; manter, de
  * INTERSETORIAL.GERENCIAR. O sistema não implementa esses setores.
+ *
+ * A aba Painel (IS2, ADR-0211), de quem mantém a rede, mostra os encaminhamentos por instituição e a lista de cobrança
+ * dos que estão sem retorno; abre direto com ?aba=painel (o alerta da Sala de Situação).
  */
 @Component({
   selector: 'app-instituicoes-externas',
-  imports: [Drawer],
+  imports: [Drawer, PainelIntersetorial],
   template: `
     <header class="page-head">
       <div>
@@ -31,9 +38,22 @@ type Gaveta = { instituicao: InstituicaoExternaDto | null } | null;
         <p>Assistência social, educação, garantia de direitos e outros setores · para onde os casos são encaminhados</p>
       </div>
       <div class="page-actions">
-        @if (podeGerenciar()) { <button type="button" class="btn" (click)="abrir(null)">Nova instituição</button> }
+        @if (podeGerenciar() && aba() === 'catalogo') { <button type="button" class="btn" (click)="abrir(null)">Nova instituição</button> }
       </div>
     </header>
+
+    @if (podeGerenciar()) {
+      <div class="page-tabs" role="tablist" aria-label="Seções da rede intersetorial">
+        @for (a of abas; track a.id) {
+          <button type="button" role="tab" [id]="'tab-' + a.id" [attr.aria-controls]="'pn-' + a.id" [attr.aria-selected]="aba() === a.id" [tabIndex]="aba() === a.id ? 0 : -1" (click)="aba.set(a.id)" (keydown)="navegarAbas($event)">{{ a.rotulo }}</button>
+        }
+      </div>
+    }
+
+    @if (aba() === 'painel' && podeGerenciar()) {
+      <section id="pn-painel" role="tabpanel" aria-labelledby="tab-painel"><app-painel-intersetorial /></section>
+    } @else {
+    <section id="pn-catalogo" role="tabpanel" aria-labelledby="tab-catalogo">
 
     <div class="toolbar" role="region" aria-label="Filtros das instituições">
       <label class="search search--icon">
@@ -80,6 +100,8 @@ type Gaveta = { instituicao: InstituicaoExternaDto | null } | null;
         </tbody>
       </table>
     </div>
+    </section>
+    }
 
     @if (gaveta(); as g) {
       <app-drawer [titulo]="g.instituicao ? 'Editar instituição' : 'Nova instituição'" (fechar)="gaveta.set(null)">
@@ -143,6 +165,10 @@ type Gaveta = { instituicao: InstituicaoExternaDto | null } | null;
 export class InstituicoesExternas {
   private readonly service = inject(IntersetorialidadeService);
   private readonly authService = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
+
+  protected readonly abas: readonly { id: Aba; rotulo: string }[] = [{ id: 'catalogo', rotulo: 'Instituições' }, { id: 'painel', rotulo: 'Painel' }];
+  protected readonly aba = signal<Aba>(this.route.snapshot.queryParamMap.get('aba') === 'painel' ? 'painel' : 'catalogo');
 
   protected readonly setores = Object.keys(SETORES_INTERSETORIAIS) as SetorIntersetorial[];
   protected readonly rotuloSetor = SETORES_INTERSETORIAIS;
@@ -186,6 +212,11 @@ export class InstituicoesExternas {
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => this.acesso.set(a));
     this.carregar();
+  }
+
+  protected navegarAbas(event: KeyboardEvent): void {
+    const proxima = proximaAba(event, this.abas.map((a) => a.id), this.aba());
+    if (proxima) this.aba.set(proxima);
   }
 
   protected escolherSetor(s: SetorIntersetorial | ''): void {

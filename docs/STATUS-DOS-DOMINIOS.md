@@ -57,7 +57,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | ✅ | C1 a C4 e C6 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação em saúde; educação permanente; avaliação); a C5 (multicanal) no domínio 20 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
-| 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
+| 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ✅ | IS1 e IS2 feitas (catálogo, encaminhamento e painel da rede); guia para imprimir (Documentos) e CadÚnico/SUAS no domínio 20 |
 
 **Resumo:** 31 itens mais Documentos: 25 ✅ · 3 🟡 · 3 ⬜ (e Documentos 🟡). As Integrações são a parte não
 iniciada do domínio 20.
@@ -878,7 +878,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 31. Intersetorialidade e Proteção Social
 
-**Estado:** 🟡. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md); desenhado na
+**Estado:** ✅. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md); desenhado na
 [ADR-0154](./adr/0154-intersetorialidade.md).
 
 **Temos:**
@@ -887,11 +887,13 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   `INTERSETORIAL.GERENCIAR` (Gestor e Assistente social); encaminhamento com origem em qualquer domínio (enviado,
   recebido, concluído, recusado, cancelado; sem retorno derivado do prazo); tela Instituições da rede intersetorial.
   Primeiro uso: a Saúde Mental (SM6).
+- [x] **IS2 · Painel da rede** ([ADR-0211](./adr/0211-intersetorialidade-painel-da-rede.md)): por instituição, enviados, em aberto, sem retorno, concluídos,
+  recusados, taxa de resolução e tempo médio, com os enviados por origem; lista de cobrança sem paciente e sem motivo; aba
+  Painel na tela Rede intersetorial e alerta na Sala de Situação para a instituição com 3 ou mais sem retorno.
 
 **Falta:**
 - [x] O encaminhamento pelas Emergências (abrigos, ADR-0193) e pela Vigilância (a comunicação obrigatória da violência,
   [ADR-0201](./adr/0201-violencia-comunicacao-intersetorial.md), com o tipo Conselho de direitos).
-- [ ] O painel de encaminhamentos por instituição, para a gestão da rede intersetorial.
 - [ ] A guia de encaminhamento para imprimir (Documentos) e a integração com o CadÚnico e o prontuário SUAS
   (domínio 20, adiado).
 

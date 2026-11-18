@@ -32,6 +32,8 @@ import { AmostraAguaDto } from '../../core/models/vigilancia-ambiental';
 import { LinhaIndiceVetorial } from '../../core/models/controle-vetorial';
 import { EmergenciaDto, classeDoNivel } from '../../core/models/emergencia';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
+import { PainelInstituicaoDto } from '../../core/models/intersetorialidade';
+import { IntersetorialidadeService } from '../../core/services/intersetorialidade';
 
 type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
 
@@ -64,6 +66,9 @@ export class SalaDeSituacao {
   private readonly vigilanciaTrabalhoService = inject(VigilanciaService);
   /** A semana da saúde do trabalhador (ADR-0208): acidentes, óbitos, investigações, medidas vencidas e riscos ativos. */
   protected readonly semanaTrabalho = signal<SemanaTrabalhadorDto | null>(null);
+  private readonly intersetorialService = inject(IntersetorialidadeService);
+  /** As instituições com 3 ou mais encaminhamentos sem retorno (ADR-0211); sem INTERSETORIAL.GERENCIAR, nada. */
+  protected readonly redeSemRetorno = signal<PainelInstituicaoDto[]>([]);
   /** As emergências ativas (ADR-0156), no alto da tela; sem acesso, nada. */
   protected readonly emergencias = signal<EmergenciaDto[]>([]);
   /** Os eventos de massa planejados para os próximos 7 dias, ou já previstos e ainda sem operação (ADR-0160). */
@@ -351,6 +356,8 @@ export class SalaDeSituacao {
     const desde = `${mes.getFullYear()}-${String(mes.getMonth() + 1).padStart(2, '0')}-01`;
     this.sanitariaService.interdicoes().pipe(catchError(() => of([]))).subscribe((l) => this.interdicoes.set(l));
     this.vigilanciaTrabalhoService.semanaTrabalhador().pipe(catchError(() => of(null))).subscribe((s) => this.semanaTrabalho.set(s));
+    this.intersetorialService.painel().pipe(catchError(() => of(null)))
+      .subscribe((p) => this.redeSemRetorno.set((p?.instituicoes ?? []).filter((i) => i.semRetorno >= 3)));
     this.ambientalService.amostras({ naoConformes: true, desde }).pipe(catchError(() => of([])))
       .subscribe((l) => this.aguaForaDoPadrao.set(l.filter((a) => !a.medida)));
     this.vetorialService.indices().pipe(catchError(() => of(null))).subscribe((ix) => {

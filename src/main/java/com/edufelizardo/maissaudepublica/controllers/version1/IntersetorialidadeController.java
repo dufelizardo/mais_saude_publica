@@ -10,9 +10,13 @@ import com.edufelizardo.maissaudepublica.models.dtos.version1.request.MotivoSaud
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.RetornoEncaminhamentoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.AcompanhamentoSaudeMentalDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.InstituicaoExternaDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PainelIntersetorialDtos.CobrancaDto;
+import com.edufelizardo.maissaudepublica.models.dtos.version1.response.PainelIntersetorialDtos.PainelDto;
+import com.edufelizardo.maissaudepublica.models.enuns.DominioOrigemEncaminhamento;
 import com.edufelizardo.maissaudepublica.models.enuns.SetorIntersetorial;
 import com.edufelizardo.maissaudepublica.services.version1.InstituicaoExternaService;
 import com.edufelizardo.maissaudepublica.services.version1.IntersetorialSaudeMentalService;
+import com.edufelizardo.maissaudepublica.services.version1.PainelIntersetorialService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,13 +26,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "/api/v1/")
-@Tag(name = "Intersetorialidade", description = "O catálogo de instituições externas e o encaminhamento intersetorial do caso em saúde mental "
-        + "(ver docs/adr/0154-intersetorialidade.md e docs/adr/0155-saude-mental-intersetorialidade-e-indicadores.md).")
+@Tag(name = "Intersetorialidade", description = "O catálogo de instituições externas o encaminhamento intersetorial do caso em saúde mental "
+        + "e o painel da rede (ver docs/adr/0154-intersetorialidade.md e docs/adr/0155-saude-mental-intersetorialidade-e-indicadores.md e docs/adr/0211-intersetorialidade-painel-da-rede.md).")
 public class IntersetorialidadeController {
 
     private static final String TAG = "Intersetorialidade";
@@ -38,6 +43,9 @@ public class IntersetorialidadeController {
 
     @Autowired
     private IntersetorialSaudeMentalService saudeMentalService;
+
+    @Autowired
+    private PainelIntersetorialService painelService;
 
     @LiberadoParaAutenticados
     @GetMapping(value = "instituicoes-externas", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -71,6 +79,28 @@ public class IntersetorialidadeController {
     @ApiErrorResponsesMutacao
     public ResponseEntity<InstituicaoExternaDto> atualizar(@PathVariable UUID uuid, @Valid @RequestBody InstituicaoExternaRequestDto dto) {
         return ResponseEntity.ok(instituicaoService.atualizar(uuid, dto));
+    }
+
+    @RequerPermissao({"INTERSETORIAL.GERENCIAR"})
+    @GetMapping(value = "intersetorial/painel", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Painel da rede intersetorial", description = "Por instituição: enviados, concluídos, recusados, cancelados, taxa de "
+            + "resolução e tempo médio até o retorno dos enviados no período (padrão: 90 dias até hoje; máximo 366, senão 400); em aberto e sem "
+            + "retorno de hoje, de qualquer data. Sem paciente e sem motivo (ADR-0211).", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<PainelDto> painel(@RequestParam(required = false) LocalDate inicio, @RequestParam(required = false) LocalDate fim,
+                                            @RequestParam(required = false) SetorIntersetorial setor,
+                                            @RequestParam(required = false) DominioOrigemEncaminhamento origem,
+                                            @RequestParam(required = false) UUID unidade) {
+        return ResponseEntity.ok(painelService.painel(inicio, fim, setor, origem, unidade));
+    }
+
+    @RequerPermissao({"INTERSETORIAL.GERENCIAR"})
+    @GetMapping(value = "intersetorial/instituicao/{uuid}/sem-retorno", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Encaminhamentos sem retorno da instituição", description = "Para cobrar: número, origem, unidade, datas e dias de "
+            + "atraso, do mais atrasado ao menos. Sem paciente e sem motivo (ADR-0211).", tags = TAG)
+    @ApiErrorResponsesBusca
+    public ResponseEntity<CobrancaDto> semRetorno(@PathVariable UUID uuid) {
+        return ResponseEntity.ok(painelService.semRetorno(uuid));
     }
 
     @RequerPermissao({"SAUDE_MENTAL.ACOMPANHAR"})

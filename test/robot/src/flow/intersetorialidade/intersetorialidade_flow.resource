@@ -177,6 +177,64 @@ Indicadores - Saude Mental - Status Code 200
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+Painel - Sem Retorno Por Instituicao - Status Code 200
+    [Documentation]    The dashboard counts the referral past the deadline, without the patient or the reason.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${caso}    ${unidade}    ${equipe}    ${matricula}    ${paciente}    ${programa}=    Seed Caso Saude Mental
+    ${instituicao}=    Seed Instituicao Externa    CREAS Robot    ASSISTENCIA_SOCIAL    CREAS
+    ${r}=    Encaminhar Caso    ${caso}    ${instituicao}    20    -5
+    Should Be Equal As Integers    ${r.status_code}    201
+    ${params}=    Create Dictionary    unidade=${unidade}
+    ${painel}=    GET Painel Intersetorial    ${params}
+    Should Be Equal As Integers    ${painel.status_code}    200
+    Validate Object Schema    ${painel.json()}    ${PAINEL_INTERSETORIAL_SCHEMA}
+    Should Be Equal As Integers    ${painel.json()}[enviados]    1
+    Should Be Equal As Integers    ${painel.json()}[semRetorno]    1
+    Should Be Equal    ${painel.json()}[instituicoes][0][instituicaoId]    ${instituicao}
+    Should Be Equal As Integers    ${painel.json()}[instituicoes][0][enviadosPorOrigem][SAUDE_MENTAL]    1
+    Should Not Contain    ${painel.text}    ${paciente}
+    Should Not Contain    ${painel.text}    CadÚnico
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Painel - Lista De Cobranca - Status Code 200
+    [Documentation]    The follow-up list of the institution: number, dates and days late.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${caso}    ${unidade}    ${equipe}    ${matricula}    ${paciente}    ${programa}=    Seed Caso Saude Mental
+    ${instituicao}=    Seed Instituicao Externa    CT Robot    GARANTIA_DE_DIREITOS    CONSELHO_TUTELAR
+    ${r}=    Encaminhar Caso    ${caso}    ${instituicao}    20    -5
+    Should Be Equal As Integers    ${r.status_code}    201
+    ${c}=    GET Sem Retorno Da Instituicao    ${instituicao}
+    Should Be Equal As Integers    ${c.status_code}    200
+    Length Should Be    ${c.json()}[semRetorno]    1
+    ${e}=    Set Variable    ${c.json()}[semRetorno][0]
+    Validate Object Schema    ${e}    ${SEM_RETORNO_INTERSETORIAL_SCHEMA}
+    Should Be Equal As Integers    ${e}[diasDeAtraso]    5
+    Should Be Equal    ${e}[origem]    SAUDE_MENTAL
+    Should Not Contain    ${c.text}    ${paciente}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Painel - Periodo Invertido - Status Code 400
+    [Documentation]    The start of the period after the end.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${inicio}=    Evaluate    datetime.date.today().isoformat()    modules=datetime
+    ${fim}=    Evaluate    (datetime.date.today() - datetime.timedelta(days=1)).isoformat()    modules=datetime
+    ${params}=    Create Dictionary    inicio=${inicio}    fim=${fim}
+    ${r}=    GET Painel Intersetorial    ${params}
+    Should Be Equal As Integers    ${r.status_code}    400
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Painel - Instituicao Inexistente - Status Code 404
+    [Documentation]    The follow-up list of an unknown institution.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${uuid}=    Evaluate    str(uuid.uuid4())    modules=uuid
+    ${r}=    GET Sem Retorno Da Instituicao    ${uuid}
+    Should Be Equal As Integers    ${r.status_code}    404
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Intersetorialidade - By HTTP Status Code
     [Documentation]    Executes the IS1/SM6 scenario for the given HTTP status code.
     [Arguments]    ${meuHTTP}
@@ -191,6 +249,10 @@ Intersetorialidade - By HTTP Status Code
     ...    ELSE IF    '${meuHTTP}' == '400-retorno-sem-texto'    Encaminhamento - Retorno Sem Texto - Status Code 400
     ...    ELSE IF    '${meuHTTP}' == '200-sem-retorno'    Encaminhamento - Sem Retorno No Prazo - Status Code 200
     ...    ELSE IF    '${meuHTTP}' == '200-indicadores'    Indicadores - Saude Mental - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '200-painel'    Painel - Sem Retorno Por Instituicao - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '200-cobranca'    Painel - Lista De Cobranca - Status Code 200
+    ...    ELSE IF    '${meuHTTP}' == '400-periodo-invertido'    Painel - Periodo Invertido - Status Code 400
+    ...    ELSE IF    '${meuHTTP}' == '404-instituicao'    Painel - Instituicao Inexistente - Status Code 404
     ...    ELSE    Fail    HTTP status code '${meuHTTP}' is not supported for Intersetorialidade test scenario.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

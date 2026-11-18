@@ -218,8 +218,9 @@ real":
   referência estrutural)~~ — ADR-0197 (catálogo das redes editável só pela API); ~~GR3 (cobertura e indicadores de pactuação)~~ —
   ADR-0198; domínio completo. Ficam o teto financeiro (domínio 17) e SISREG/SIGTAP (domínio 20).
 - **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
-  ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir
-  (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
+  ADR-0154; ~~uso pela Vigilância e pelas Emergências~~ — ADRs 0193, 0201 e 0208; ~~IS2 (painel da rede e cobrança)~~ —
+  ADR-0211; domínio completo. Ficam a guia para imprimir (Documentos, D3) e a integração com o CadÚnico e o prontuário
+  SUAS (domínio 20).
 - **#28 Comunicação e Educação em Saúde** — desenhado na ADR-0114; ~~C1 (comunicação básica)~~ — ADR-0168 (e-mail só a
   profissionais, sem consentimento para a população); ~~C2 (campanhas)~~ — ADR-0174; ~~C3 (educação em saúde)~~ — ADR-0195;
   ~~C4 (educação permanente)~~ — ADR-0173; ~~C6 (avaliação)~~ — ADR-0196; domínio completo. Falta a C5 (multicanal), que depende de
