@@ -68,6 +68,18 @@ class ComprasControllerTest {
         String itens = "(select uuid from tb_item_solicitacao_compra where solicitacao_id in " + solicitacoes + ")";
         String fornecedores = "(select uuid from tb_fornecedor where razao_social like '" + prefixo + "%')";
         String materiais = "(select uuid from tb_material_estoque where nome like '" + prefixo + "%')";
+        // CP2 (ADR-0213): os instrumentos e as contratações dos fornecedores ou das solicitações do teste.
+        String contratacoes = "(select uuid from tb_contratacao where numero_processo like '" + prefixo + "%' or uuid in (select contratacao_id from "
+                + "tb_solicitacao_compra where unidade_id in " + unidades + "))";
+        String instrumentos = "(select uuid from tb_instrumento_contratual where contratacao_id in " + contratacoes + " or fornecedor_id in " + fornecedores + ")";
+        jdbc.update("delete from tb_aditivo_contratual where instrumento_id in " + instrumentos);
+        jdbc.update("delete from tb_item_instrumento where instrumento_id in " + instrumentos);
+        jdbc.update("delete from tb_instrumento_contratual where uuid in " + instrumentos);
+        jdbc.update("update tb_item_solicitacao_compra set item_contratacao_id = null where item_contratacao_id in (select uuid from tb_item_contratacao "
+                + "where contratacao_id in " + contratacoes + ")");
+        jdbc.update("update tb_solicitacao_compra set contratacao_id = null where contratacao_id in " + contratacoes);
+        jdbc.update("delete from tb_item_contratacao where contratacao_id in (select uuid from tb_contratacao where numero_processo like '" + prefixo + "%')");
+        jdbc.update("delete from tb_contratacao where numero_processo like '" + prefixo + "%'");
         jdbc.update("delete from tb_cotacao_compra where item_id in " + itens + " or fornecedor_id in " + fornecedores);
         jdbc.update("delete from tb_item_solicitacao_compra where solicitacao_id in " + solicitacoes);
         jdbc.update("delete from tb_solicitacao_compra where unidade_id in " + unidades);

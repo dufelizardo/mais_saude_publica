@@ -40,7 +40,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 11 | [Regulação](#11-regulação) | ✅ | RL1 e RL5 feitas (central de leitos, ficha do APH); SISREG, SIGTAP e telefonia do 192 no domínio 20 |
 | 12 | [Leitos / Internação](#12-leitos--internação) | ✅ | RL1 a RL4 feitas (central de leitos, eletiva e censo, laudo de AIH, prescrição e checagem); SIH e faturamento no domínio 20 |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ✅ | ES1 a ES3 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário; reserva e consumo nas emergências) |
-| 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | 🟡 | CP1 feita (fornecedores, solicitação e pesquisa de preços); CP2 (contrato e ata) e CP3 (entrega e recebimento) |
+| 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | 🟡 | CP1 e CP2 feitas (fornecedores, solicitação, pesquisa de preços, contratação, atas, contratos e aditivos); CP3 (entrega e recebimento) |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
@@ -371,9 +371,14 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
     sugestão pelo estoque mínimo;
   - pesquisa de preços com 3 cotações (ou justificativa) e o preço de referência na mediana;
   - tela Administrativo · Compras e o papel Compras.
+- [x] **CP2 · Contratação, atas e contratos** ([ADR-0213](./adr/0213-compras-contratacao-atas-e-contratos.md), V94):
+  - contratação das solicitações cotadas, com os itens iguais somados, o resultado por item (fornecedor regular, justificativa acima da
+    referência) e a homologação;
+  - ata de registro de preços ou contrato por fornecedor vencedor, com gestor e fiscal diferentes, saldo por item e alertas (vigência,
+    saldo abaixo de 20%, fornecedor irregular);
+  - aditivos de prazo, acréscimo, supressão (até 25%) e reequilíbrio; "meus contratos" para o gestor e o fiscal.
 
 **Falta:**
-- [ ] **CP2:** contratação, ata de registro de preços e contrato com saldo, gestor e fiscal, aditivos, alertas de vigência e de saldo.
 - [ ] **CP3:** ordem de fornecimento, recebimento provisório e definitivo com a entrada no Estoque e na Farmácia, ocorrências e painel.
 - [ ] PNCP, Compras.gov, SICAF e consulta de CNPJ (domínio 20); empenho e pagamento (domínio 17).
 

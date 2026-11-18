@@ -129,6 +129,7 @@ export interface SolicitacaoCompraDto {
   enviadaEm: string | null;
   analisadaEm: string | null;
   pesquisaConcluidaEm: string | null;
+  contratacaoId: string | null;
 }
 
 export interface SugestaoCompraDto {
@@ -156,4 +157,133 @@ export interface SolicitacaoCompraRequest {
   justificativa: string;
   prioridade: PrioridadeCompra;
   itens: ItemCompraRequest[];
+}
+
+// ── CP2: contratação, atas e contratos (ADR-0213) ──
+
+export type ModalidadeContratacao = 'PREGAO_ELETRONICO' | 'CONCORRENCIA' | 'DISPENSA' | 'INEXIGIBILIDADE' | 'ADESAO_ATA';
+export type SituacaoContratacao = 'EM_ANDAMENTO' | 'HOMOLOGADA' | 'CANCELADA';
+export type ResultadoItemContratacao = 'PENDENTE' | 'ADJUDICADO' | 'FRACASSADO' | 'DESERTO';
+export type TipoInstrumentoContratual = 'ATA_REGISTRO_PRECOS' | 'CONTRATO';
+export type TipoAditivoContratual = 'PRAZO' | 'ACRESCIMO' | 'SUPRESSAO' | 'REEQUILIBRIO';
+
+export const MODALIDADES: Record<ModalidadeContratacao, string> = {
+  PREGAO_ELETRONICO: 'Pregão eletrônico',
+  CONCORRENCIA: 'Concorrência',
+  DISPENSA: 'Dispensa',
+  INEXIGIBILIDADE: 'Inexigibilidade',
+  ADESAO_ATA: 'Adesão a ata',
+};
+
+export const SITUACOES_CONTRATACAO: Record<SituacaoContratacao, string> = {
+  EM_ANDAMENTO: 'Em andamento',
+  HOMOLOGADA: 'Homologada',
+  CANCELADA: 'Cancelada',
+};
+
+export const RESULTADOS_ITEM: Record<ResultadoItemContratacao, string> = {
+  PENDENTE: 'Pendente',
+  ADJUDICADO: 'Adjudicado',
+  FRACASSADO: 'Fracassado',
+  DESERTO: 'Deserto',
+};
+
+export const TIPOS_INSTRUMENTO: Record<TipoInstrumentoContratual, string> = {
+  ATA_REGISTRO_PRECOS: 'Ata de registro de preços',
+  CONTRATO: 'Contrato',
+};
+
+export const TIPOS_ADITIVO: Record<TipoAditivoContratual, string> = {
+  PRAZO: 'Prorrogação de prazo',
+  ACRESCIMO: 'Acréscimo de quantidade',
+  SUPRESSAO: 'Supressão de quantidade',
+  REEQUILIBRIO: 'Reequilíbrio de preço',
+};
+
+export interface ItemContratacaoDto {
+  uuid: string;
+  ordem: number;
+  tipo: TipoItemCompra;
+  descricao: string;
+  unidadeMedida: string;
+  quantidade: number;
+  precoReferencia: number | null;
+  resultado: ResultadoItemContratacao;
+  fornecedorId: string | null;
+  fornecedorNome: string | null;
+  precoUnitario: number | null;
+  justificativaPreco: string | null;
+  valor: number | null;
+}
+
+export interface ContratacaoDto {
+  uuid: string;
+  numeroProcesso: string;
+  modalidade: ModalidadeContratacao;
+  fundamentoLegal: string | null;
+  ataOrigem: string | null;
+  objeto: string;
+  situacao: SituacaoContratacao;
+  homologadaEm: string | null;
+  motivoCancelamento: string | null;
+  solicitacoes: { uuid: string; numero: string; unidadeNome: string }[];
+  itens: ItemContratacaoDto[];
+  valorReferencia: number;
+  valorAdjudicado: number;
+  instrumentos: { uuid: string; tipo: TipoInstrumentoContratual; numero: string; fornecedorNome: string }[];
+}
+
+export interface ItemInstrumentoDto {
+  uuid: string;
+  tipo: TipoItemCompra;
+  materialId: string | null;
+  medicamentoId: string | null;
+  descricao: string;
+  unidadeMedida: string;
+  quantidadeInicial: number;
+  quantidade: number;
+  saldo: number;
+  precoUnitario: number;
+  saldoBaixo: boolean;
+}
+
+export interface AditivoDto {
+  uuid: string;
+  numero: number;
+  tipo: TipoAditivoContratual;
+  fimAnterior: string | null;
+  novoFim: string | null;
+  itemId: string | null;
+  itemDescricao: string | null;
+  quantidade: number | null;
+  precoAnterior: number | null;
+  novoPreco: number | null;
+  justificativa: string;
+  assinadoEm: string;
+}
+
+export interface InstrumentoDto {
+  uuid: string;
+  tipo: TipoInstrumentoContratual;
+  numero: string;
+  contratacaoId: string;
+  numeroProcesso: string;
+  fornecedorId: string;
+  fornecedorNome: string;
+  inicio: string;
+  fim: string;
+  servicoContinuo: boolean;
+  vigente: boolean;
+  diasParaVencer: number;
+  valorInicial: number;
+  valorAtual: number;
+  percentualAcrescido: number;
+  percentualSuprimido: number;
+  gestorMatricula: string;
+  gestorNome: string;
+  fiscalMatricula: string;
+  fiscalNome: string;
+  itens: ItemInstrumentoDto[];
+  aditivos: AditivoDto[];
+  alertas: string[];
 }

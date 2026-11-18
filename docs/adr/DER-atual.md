@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **331 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V93). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **336 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V94). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -219,3 +219,4 @@ listadas aqui pela migração que criou cada uma (até a V93). A fonte de verdad
 | V91 | `tb_trava_agendamento` |
 | V92 | (só o índice `(instituicao_id, situacao)` de `tb_encaminhamento_intersetorial`) |
 | V93 | `tb_fornecedor`, `tb_certidao_fornecedor`, `tb_sancao_fornecedor`, `tb_solicitacao_compra`, `tb_item_solicitacao_compra`, `tb_cotacao_compra` |
+| V94 | `tb_contratacao`, `tb_item_contratacao`, `tb_instrumento_contratual`, `tb_item_instrumento`, `tb_aditivo_contratual` |

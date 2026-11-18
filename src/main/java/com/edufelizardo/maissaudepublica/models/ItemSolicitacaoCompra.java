@@ -68,4 +68,11 @@ public class ItemSolicitacaoCompra implements Serializable {
     /** Obrigatória quando o item fica com menos de 3 cotações. */
     @Column(length = 1000)
     private String justificativaCotacao;
+
+    /** O item da contratação que somou este (ADR-0213). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_contratacao_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private ItemContratacao itemContratacao;
 }
