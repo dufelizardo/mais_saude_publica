@@ -37,6 +37,21 @@ spec:
               command: ["pg_isready", "-U", "postgres", "-h", "127.0.0.1"]
             periodSeconds: 10
             timeoutSeconds: 5
+          # Reinicia o banco travado (ADR-0210). Em 2026-11-17 o Postgres do dev ficou 3 dias em "recovery mode" depois de um
+          # desligamento limpo, só marcado como não pronto: sem liveness, ninguém o reiniciava, e um rollout restart resolveu.
+          # O startupProbe dá até 15 min (90 x 10 s) para uma recuperação de verdade; depois, 2 min sem responder reinicia.
+          startupProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-h", "127.0.0.1"]
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 90
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "postgres", "-h", "127.0.0.1"]
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
           envFrom:
             - configMapRef:
                 name: db-config

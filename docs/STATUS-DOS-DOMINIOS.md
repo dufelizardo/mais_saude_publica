@@ -919,6 +919,7 @@ aprovação e assinatura.
 - [ ] Investigar o `argocd-applicationset-controller`, que reinicia sem parar.
 - [x] Trocar o disco mecânico do servidor por SSD (feito; ADR-0012).
 - [x] Alta disponibilidade (R1, [ADR-0209](./adr/0209-resiliencia-do-deploy.md)), depois do [incidente de 2026-11-14](./incidentes/2026-11-14-api-fora-depois-da-v1-13-0.md).
+- [x] O Postgres se reinicia sozinho quando trava ([ADR-0210](./adr/0210-postgres-se-reinicia-quando-trava.md)), depois do [incidente de 2026-11-17](./incidentes/2026-11-17-banco-do-dev-travado-em-recuperacao.md).
 - [ ] Criar o secret `alerta-github` no servidor, para o vigia avisar as quedas por issue.
 
 ## 4. Como manter este documento
