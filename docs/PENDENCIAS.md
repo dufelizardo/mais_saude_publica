@@ -67,6 +67,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   até 3, `PodDisruptionBudget` e prioridade sobre os outros ambientes; trava das tarefas agendadas e das rotinas de subida entre
   réplicas; Postgres com versão fixa; e o vigia, que abre uma issue quando a API ou o banco de um ambiente ficam fora por mais de
   10 minutos.
+- [x] **O Postgres se reinicia sozinho quando trava ([ADR-0210](./adr/0210-postgres-se-reinicia-quando-trava.md)):** depois do
+  [banco do dev travado em recuperação](./incidentes/2026-11-17-banco-do-dev-travado-em-recuperacao.md) por 3 dias.
+- [ ] **Causa das travas do Postgres no servidor** (o `gosu` em 14/11 e a recuperação em 17/11): em investigação.
 - [ ] **Criar o secret `alerta-github`** no namespace `mais-saude-prod`, para o vigia abrir as issues (sem ele, só o log). Ver o
   [registro de incidentes](./incidentes/README.md).
 - ~~**Migrações versionadas (Flyway)**~~ — feitas pela ADR-0090. Na próxima subida de cada ambiente, o
