@@ -50,8 +50,12 @@ public class RetencaoAuditoriaService {
 
     @Scheduled(cron = "${app.auditoria.retencao.cron:0 30 3 * * *}", zone = "America/Sao_Paulo")
     public void rotinaDiaria() {
-        aplicar();
+        // Uma réplica por dia (ADR-0209).
+        travaDeAgendamento.executar("auditoria-retencao", java.time.Duration.ofHours(1), this::aplicar);
     }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.edufelizardo.maissaudepublica.config.TravaDeAgendamento travaDeAgendamento;
 
     /** Apaga, em lotes, os eventos anteriores ao prazo. Devolve quantos apagou. */
     public long aplicar() {

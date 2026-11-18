@@ -1,11 +1,11 @@
 # Pendências e estado dos ambientes
 
-Documento vivo, com **o que falta** no projeto (revisto na release **v1.13.2**, 2026-11-14). Cada item aponta
+Documento vivo, com **o que falta** no projeto (revisto na release **v1.14.0**, 2026-11-14). Cada item aponta
 para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou abrir uma pendência.
 
 ## 1. Estado dos ambientes
 
-O código é o mesmo nos quatro ambientes (v1.13.2, promovida em 2026-11-14). O que muda é o que cada um liga no próprio overlay
+O código é o mesmo nos quatro ambientes (v1.14.0, promovida em 2026-11-14). O que muda é o que cada um liga no próprio overlay
 (`k8s/overlays/<ambiente>/kustomization.yaml`):
 
 | Recurso | `dev` | `qaa` | `homologacao` | `prod` |
@@ -55,10 +55,23 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 
 - **`argocd-applicationset-controller` reiniciando sem parar:** mais de 4.000 reinícios em 21 dias. Não
   derruba nada, mas gasta CPU. Investigar ou desligar, se o ApplicationSet não for usado.
-- **O projeto `lonewolf` divide o servidor** (CPU e disco mecânico) e não estava na conta de capacidade
-  da ADR-0012.
-- **Disco mecânico de 5400 RPM:** depois do reinício de 2026-10-01, as APIs levaram até 13 tentativas
-  para subir. O `startupProbe` passou a 10 minutos. A troca por SSD continua recomendada.
+- **O projeto `lonewolf` divide o servidor** (CPU e disco) e não estava na conta de capacidade da ADR-0012.
+- ~~**Disco mecânico de 5400 RPM**~~ — trocado por SSD (ADR-0012). Depois do reinício de 2026-10-01, as APIs levaram até 13
+  tentativas para subir, e o `startupProbe` passou a 10 minutos (15 desde 2026-11-14).
+- **Incidente de 2026-11-14** ([registro](./incidentes/2026-11-14-api-fora-depois-da-v1-13-0.md), issue #489): depois da
+  v1.13.0, a API dos quatro ambientes ficou fora (login 502). O backend não cabia mais em 512Mi e meia CPU (corrigido na v1.13.1:
+  768Mi, `-Xmx448m`, até 1 CPU) e, depois de um reinício do servidor, o Postgres travou no `gosu` do entrypoint (corrigido na
+  v1.13.2: roda como o usuário postgres, com readiness por `pg_isready`).
+- [x] **Alta disponibilidade (R1, [ADR-0209](./adr/0209-resiliencia-do-deploy.md)):** o CI barra a imagem que não cabe nos limites do Kubernetes (orçamento de
+  recursos); memória pelo limite do pod (`MaxRAMPercentage`); subida com CDS (137 s); produção com 2 réplicas da API, autoescala
+  até 3, `PodDisruptionBudget` e prioridade sobre os outros ambientes; trava das tarefas agendadas e das rotinas de subida entre
+  réplicas; Postgres com versão fixa; e o vigia, que abre uma issue quando a API ou o banco de um ambiente ficam fora por mais de
+  10 minutos.
+- [x] **O Postgres se reinicia sozinho quando trava ([ADR-0210](./adr/0210-postgres-se-reinicia-quando-trava.md)):** depois do
+  [banco do dev travado em recuperação](./incidentes/2026-11-17-banco-do-dev-travado-em-recuperacao.md) por 3 dias.
+- [ ] **Causa das travas do Postgres no servidor** (o `gosu` em 14/11 e a recuperação em 17/11): em investigação.
+- [ ] **Criar o secret `alerta-github`** no namespace `mais-saude-prod`, para o vigia abrir as issues (sem ele, só o log). Ver o
+  [registro de incidentes](./incidentes/README.md).
 - ~~**Migrações versionadas (Flyway)**~~ — feitas pela ADR-0090. Na próxima subida de cada ambiente, o
   Flyway marca o banco na V1 (esquema da v1.4.0) e aplica a V2. Mudança de esquema agora é migração.
 
