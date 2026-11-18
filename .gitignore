@@ -40,3 +40,7 @@ playwright-log.txt
 test/robot/results-ui/
 test/robot/results-ui-seguranca/
 frontend/proxy-seguranca.json
+
+# Python
+__pycache__/
+*.pyc

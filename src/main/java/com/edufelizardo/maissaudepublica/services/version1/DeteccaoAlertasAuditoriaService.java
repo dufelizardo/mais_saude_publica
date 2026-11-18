@@ -82,10 +82,14 @@ public class DeteccaoAlertasAuditoriaService {
     @Autowired
     private AvisoAlertasAuditoria aviso;
 
+    @Autowired
+    private com.edufelizardo.maissaudepublica.config.TravaDeAgendamento travaDeAgendamento;
+
     @Scheduled(cron = "${app.auditoria.alertas.cron:0 */5 * * * *}", zone = "America/Sao_Paulo")
     public void rotina() {
         try {
-            detectar(Instant.now());
+            // Uma réplica por vez (ADR-0209); a trava dura menos que o intervalo de 5 minutos.
+            travaDeAgendamento.executar("auditoria-alertas", java.time.Duration.ofMinutes(4), () -> detectar(Instant.now()));
         } catch (RuntimeException ex) {
             log.warn("Detecção de alertas da auditoria falhou: {}", ex.getMessage());
         }

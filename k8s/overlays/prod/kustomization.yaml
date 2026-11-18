@@ -8,6 +8,9 @@ resources:
   - frontend-deployment.yaml
   - frontend-service.yaml
   - frontend-ingress.yaml
+  # Alta disponibilidade e aviso de queda (ADR-0209).
+  - alta-disponibilidade.yaml
+  - vigia.yaml
 
 images:
   - name: ghcr.io/dufelizardo/mais_saude_publica
@@ -19,12 +22,15 @@ configMapGenerator:
   - name: app-config
     literals:
       - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_TOOL_OPTIONS=-Xmx448m
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=58 -XX:+ExitOnOutOfMemoryError
       - DATABASE_URL=jdbc:postgresql://postgres:5432/saudepublica
       - DATABASE_USERNAME=postgres
       # Exige login (ADR-0055); o secret app-secrets foi provisionado neste namespace.
       # A exigência de permissão segue desligada: ver docs/acesso/GUIA-LIGAR-AUTORIZACAO.md.
       - APP_SECURITY_ENABLED=true
+  - name: vigia
+    files:
+      - vigia/vigia.py
   - name: mdns-config
     literals:
       # Nome amigável na rede local (ADR-0169).
@@ -35,6 +41,33 @@ configMapGenerator:
       - POSTGRES_USER=postgres
 
 patches:
+  # A quantidade de réplicas da API é do autoscaler (alta-disponibilidade.yaml), não do manifest; e produção tem prioridade.
+  - target:
+      kind: Deployment
+      name: app
+    patch: |-
+      - op: remove
+        path: /spec/replicas
+      - op: add
+        path: /spec/template/spec/priorityClassName
+        value: mais-saude-producao
+  - target:
+      kind: Deployment
+      name: postgres
+    patch: |-
+      - op: add
+        path: /spec/template/spec/priorityClassName
+        value: mais-saude-producao
+  - target:
+      kind: Deployment
+      name: frontend
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: add
+        path: /spec/template/spec/priorityClassName
+        value: mais-saude-producao
   - target:
       kind: Ingress
       name: app

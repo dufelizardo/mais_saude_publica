@@ -96,7 +96,9 @@ Mitigações efetivamente usadas:
   v1.13.0 (274 repositórios, migrações até a V90) o backend não cabia mais em 512Mi com meia CPU: pico de 496 MiB, subida de 340 s, e no
   servidor os quatro ambientes entravam em `CrashLoopBackOff` (código 137) e o login dava 502. Passou a `-Xmx448m`, limite de 768Mi
   (pedido de 512Mi) e até 1 CPU, com a `startupProbe` de 15 minutos: pico de 519 MiB e subida de 166 s na mesma medição. Os quatro
-  backends somam 3 GiB de limite; os pedidos (2 GiB) cabem na memória real do servidor.
+  backends somam 3 GiB de limite; os pedidos (2 GiB) cabem na memória real do servidor. **Desde a ADR-0209**, a memória vai por
+  `-XX:MaxRAMPercentage=58` (o heap acompanha o limite), o CI mede cada imagem com esses limites, e produção roda 2 réplicas da API
+  com prioridade sobre os outros ambientes.
 - ❌ **Postgres compartilhado não foi necessário** — a medição real com os 4 ambientes rodando
   mostrou folga confortável (3,9 GB disponíveis); mitigação descartada, não precisou ser aplicada.
 

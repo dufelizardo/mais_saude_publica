@@ -11,15 +11,15 @@ resources:
 
 images:
   - name: ghcr.io/dufelizardo/mais_saude_publica
-    newTag: c2f03beade40d4152795e8d71e07f49ab45d818e
+    newTag: be33349f82e03344d76cd78639742016ec3b2c48
   - name: ghcr.io/dufelizardo/mais_saude_publica-frontend
-    newTag: c2f03beade40d4152795e8d71e07f49ab45d818e
+    newTag: be33349f82e03344d76cd78639742016ec3b2c48
 
 configMapGenerator:
   - name: app-config
     literals:
       - SPRING_PROFILES_ACTIVE=prod
-      - JAVA_TOOL_OPTIONS=-Xmx448m
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=58 -XX:+ExitOnOutOfMemoryError
       - DATABASE_URL=jdbc:postgresql://postgres:5432/saudepublica_homologacao
       - DATABASE_USERNAME=postgres
       # Exige login (ADR-0055); o secret app-secrets foi provisionado neste namespace.

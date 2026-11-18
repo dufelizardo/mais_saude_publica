@@ -9,6 +9,7 @@
 | [`STATUS-DOS-DOMINIOS.md`](./STATUS-DOS-DOMINIOS.md) | **o que cada domínio já tem e o que falta**, com a ordem e as dependências das fatias; o registro vivo do andamento |
 | [`MAPA-DE-DOMINIOS.md`](./MAPA-DE-DOMINIOS.md) | os 31 itens da plataforma (mais Documentos): responsabilidade, entidades e estado de cada um; mapa fechado pela [ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md) |
 | [`PENDENCIAS.md`](./PENDENCIAS.md) | estado dos ambientes (o que está ligado em `dev`, `qaa`, `homologacao` e `prod`), ações manuais, infraestrutura e roadmap |
+| [`incidentes/`](./incidentes/README.md) | **registro dos incidentes dos ambientes**: causa, correção e acompanhamento |
 | [`adr/README.md`](./adr/README.md) | índice de todas as decisões de arquitetura (ADRs) |
 | [`MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`](./MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md) | levantamento dos equipamentos de saúde (base CNES) e sua correspondência no sistema |
 

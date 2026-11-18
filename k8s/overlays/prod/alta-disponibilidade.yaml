@@ -1,0 +1,42 @@
+# Alta disponibilidade de produção (ADR-0209).
+#
+# Prioridade: se o servidor ficar sem memória, o Kubernetes tira primeiro os pods sem prioridade (dev, QA e homologação).
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: mais-saude-producao
+value: 100000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Produção do Mais Saúde Pública: sai por último quando o servidor aperta (ADR-0209)."
+---
+# Duas réplicas da API no mínimo, até três pela CPU: uma réplica reiniciando não tira o sistema do ar.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app
+  minReplicas: 2
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+---
+# Manutenção do servidor (drain) nunca tira as duas réplicas ao mesmo tempo.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: mais-saude-app
