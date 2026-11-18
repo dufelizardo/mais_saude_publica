@@ -40,7 +40,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 11 | [Regulação](#11-regulação) | ✅ | RL1 e RL5 feitas (central de leitos, ficha do APH); SISREG, SIGTAP e telefonia do 192 no domínio 20 |
 | 12 | [Leitos / Internação](#12-leitos--internação) | ✅ | RL1 a RL4 feitas (central de leitos, eletiva e censo, laudo de AIH, prescrição e checagem); SIH e faturamento no domínio 20 |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ✅ | ES1 a ES3 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário; reserva e consumo nas emergências) |
-| 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
+| 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | 🟡 | CP1 feita (fornecedores, solicitação e pesquisa de preços); CP2 (contrato e ata) e CP3 (entrega e recebimento) |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ✅ | IS1 e IS2 feitas (catálogo, encaminhamento e painel da rede); guia para imprimir (Documentos) e CadÚnico/SUAS no domínio 20 |
 
-**Resumo:** 31 itens mais Documentos: 25 ✅ · 3 🟡 · 3 ⬜ (e Documentos 🟡). As Integrações são a parte não
+**Resumo:** 31 itens mais Documentos: 25 ✅ · 4 🟡 · 2 ⬜ (e Documentos 🟡). As Integrações são a parte não
 iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -361,11 +361,21 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 14. Compras / Contratos / Fornecedores
 
-**Estado:** ⬜. Hoje só existem os rótulos `COMPRAS` e `CONTRATOS` reservados (ADRs 0032 e 0037).
+**Estado:** 🟡. Desenho do domínio na [ADR-0212](./adr/0212-compras-fornecedores-e-solicitacoes.md); detalhe em [`compras/MODELO-COMPRAS.md`](./compras/MODELO-COMPRAS.md).
+
+**Temos:**
+- [x] **CP1 · Fornecedores, solicitação e pesquisa de preços** ([ADR-0212](./adr/0212-compras-fornecedores-e-solicitacoes.md), V93):
+  - fornecedor com CPF ou CNPJ conferido, certidões de regularidade e sanções do art. 156, com a situação derivada (regular, certidão
+    pendente, impedido);
+  - solicitação de compra (DFD) da unidade com material, medicamento ou serviço, envio, análise (aprovar, devolver, rejeitar) e a
+    sugestão pelo estoque mínimo;
+  - pesquisa de preços com 3 cotações (ou justificativa) e o preço de referência na mediana;
+  - tela Administrativo · Compras e o papel Compras.
 
 **Falta:**
-- [ ] Desenho (ADR): fornecedor, solicitação de compra, cotação, contrato, item contratado, entrega.
-- [ ] Implementação.
+- [ ] **CP2:** contratação, ata de registro de preços e contrato com saldo, gestor e fiscal, aditivos, alertas de vigência e de saldo.
+- [ ] **CP3:** ordem de fornecimento, recebimento provisório e definitivo com a entrada no Estoque e na Farmácia, ocorrências e painel.
+- [ ] PNCP, Compras.gov, SICAF e consulta de CNPJ (domínio 20); empenho e pagamento (domínio 17).
 
 ### 15. Patrimônio / Manutenção
 

@@ -132,6 +132,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/estoque/estoque').then((m) => m.Estoque),
         data: { breadcrumb: 'Estoque e almoxarifado', area: 'Administrativo' },
       },
+      // Compras: solicitações, pesquisa de preços e fornecedores (ADR-0212).
+      {
+        path: 'administrativo/compras',
+        loadComponent: () => import('./features/administrativo/compras/compras').then((m) => m.Compras),
+        data: { breadcrumb: 'Compras', area: 'Administrativo' },
+      },
       // Frota e transporte (ADR-0178).
       {
         path: 'administrativo/frota',
