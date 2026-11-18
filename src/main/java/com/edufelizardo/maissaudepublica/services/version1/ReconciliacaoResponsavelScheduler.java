@@ -24,7 +24,19 @@ public class ReconciliacaoResponsavelScheduler {
     @Autowired
     private ProfissionalRepository profissionalRepository;
 
+    @Autowired
+    private com.edufelizardo.maissaudepublica.config.TravaDeAgendamento travaDeAgendamento;
+
+    @Autowired
+    private org.springframework.transaction.support.TransactionTemplate transacao;
+
+    /** De hora em hora, numa réplica só (ADR-0209). */
     @Scheduled(cron = "${reconciliacao.responsavel.cron:0 0 * * * *}")
+    public void rotina() {
+        travaDeAgendamento.executar("reconciliacao-responsavel", java.time.Duration.ofMinutes(30),
+                () -> transacao.executeWithoutResult(s -> reconciliar()));
+    }
+
     @Transactional
     public void reconciliar() {
         for (UnidadeDeSaude unidade : unidadeDeSaudeRepository.findAll()) {

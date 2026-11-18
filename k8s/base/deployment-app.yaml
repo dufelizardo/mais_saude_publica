@@ -6,6 +6,12 @@ metadata:
     app: mais-saude-app
 spec:
   replicas: 1
+  # A versão no ar só sai quando a nova fica pronta (ADR-0209): com uma réplica, sobe uma a mais e nunca fica nenhuma.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: mais-saude-app

@@ -25,6 +25,8 @@ import java.time.Instant;
  * local/CI/ambientes recém-criados). Nunca sobrescreve um {@code Usuario} já existente com esse CPF.
  */
 @Component
+// Depois do catálogo de acesso e dos ajustes da Farmácia (0 a 3), dentro da trava de subida (ADR-0209).
+@org.springframework.core.annotation.Order(10)
 @Slf4j
 public class AdministradorPlataformaBootstrap implements ApplicationRunner {
 
