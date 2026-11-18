@@ -82,7 +82,7 @@ public class ComprasService {
     private static final Set<SituacaoSolicitacaoCompra> EDITAVEIS = EnumSet.of(SituacaoSolicitacaoCompra.RASCUNHO, SituacaoSolicitacaoCompra.DEVOLVIDA);
     private static final Set<SituacaoSolicitacaoCompra> EM_COTACAO = EnumSet.of(SituacaoSolicitacaoCompra.APROVADA, SituacaoSolicitacaoCompra.EM_COTACAO);
     private static final Set<SituacaoSolicitacaoCompra> FECHADAS = EnumSet.of(SituacaoSolicitacaoCompra.REJEITADA, SituacaoSolicitacaoCompra.COTADA,
-            SituacaoSolicitacaoCompra.CANCELADA);
+            SituacaoSolicitacaoCompra.CONTRATADA, SituacaoSolicitacaoCompra.CANCELADA);
     private static final Set<TipoSancaoFornecedor> IMPEDEM = EnumSet.of(TipoSancaoFornecedor.IMPEDIMENTO, TipoSancaoFornecedor.INIDONEIDADE);
 
     @Autowired private FornecedorRepository fornecedorRepository;
@@ -610,6 +610,11 @@ public class ComprasService {
                 "Não foi possível encontrar a solicitação de compra " + id + " em nossos registros."));
     }
 
+    /** A situação do fornecedor (regular, impedido, certidões pendentes), para a contratação (ADR-0213), sem conferir o acesso. */
+    ComprasDtos.Fornecedor situacao(Fornecedor f) {
+        return dto(f);
+    }
+
     private ComprasDtos.Fornecedor dto(Fornecedor f) {
         return dto(f, certidaoRepository.findByFornecedor_UuidOrderByValidaAteDesc(f.getUuid()), sancaoRepository.findByFornecedor_UuidOrderByInicioDesc(f.getUuid()));
     }
@@ -654,7 +659,8 @@ public class ComprasService {
             return new ComprasDtos.Solicitacao(s.getUuid(), s.getNumero(), s.getUnidade().getUuid(), s.getUnidade().getNome(),
                     s.getSetor() != null ? s.getSetor().getUuid() : null, s.getSetor() != null ? s.getSetor().getNome() : null, s.getJustificativa(),
                     s.getPrioridade(), s.getSituacao(), s.getMotivo(), doPedido, temValor ? total.setScale(2, RoundingMode.HALF_UP) : null, s.getRegistradoEm(),
-                    s.getEnviadaEm(), s.getAnalisadaEm(), s.getPesquisaConcluidaEm());
+                    s.getEnviadaEm(), s.getAnalisadaEm(), s.getPesquisaConcluidaEm(), s.getContratacao() != null
+                    && s.getContratacao().getSituacao() != com.edufelizardo.maissaudepublica.models.enuns.SituacaoContratacao.CANCELADA ? s.getContratacao().getUuid() : null);
         }).toList();
     }
 

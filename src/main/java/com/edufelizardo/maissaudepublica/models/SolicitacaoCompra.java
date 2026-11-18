@@ -65,6 +65,13 @@ public class SolicitacaoCompra implements Serializable {
 
     private Instant pesquisaConcluidaEm;
 
+    /** A contratação em que a solicitação cotada entrou (ADR-0213). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "contratacao_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Contratacao contratacao;
+
     @Column(nullable = false, updatable = false)
     private Instant registradoEm;
 

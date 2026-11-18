@@ -2,11 +2,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  ContratacaoDto, InstrumentoDto, ModalidadeContratacao, ResultadoItemContratacao, SituacaoContratacao, TipoAditivoContratual, TipoInstrumentoContratual,
   DecisaoSolicitacaoCompra, FonteCotacao, FornecedorDto, SituacaoSolicitacaoCompra, SolicitacaoCompraDto, SolicitacaoCompraRequest, SugestaoCompraDto,
   TipoCertidaoFornecedor, TipoSancaoFornecedor,
 } from '../models/compras';
 
-/** Compras, fatia CP1 (ADR-0212). */
+/** Compras: CP1 (ADR-0212) e CP2, contratação e contratos (ADR-0213). */
 @Injectable({ providedIn: 'root' })
 export class ComprasService {
   private readonly http = inject(HttpClient);
@@ -88,5 +89,52 @@ export class ComprasService {
 
   concluirPesquisa(uuid: string, justificativas: { itemId: string; justificativa: string }[]): Observable<SolicitacaoCompraDto> {
     return this.http.post<SolicitacaoCompraDto>(`${this.api}/solicitacao/${uuid}/pesquisa`, { justificativas });
+  }
+
+  // ── CP2 (ADR-0213) ──
+
+  contratacoes(situacao?: SituacaoContratacao): Observable<ContratacaoDto[]> {
+    const params = situacao ? new HttpParams().set('situacao', situacao) : new HttpParams();
+    return this.http.get<ContratacaoDto[]>(`${this.api}/contratacoes`, { params });
+  }
+
+  contratacao(uuid: string): Observable<ContratacaoDto> {
+    return this.http.get<ContratacaoDto>(`${this.api}/contratacao/${uuid}`);
+  }
+
+  abrirContratacao(dto: { numeroProcesso: string; modalidade: ModalidadeContratacao; objeto: string; fundamentoLegal: string | null;
+    ataOrigem: string | null; solicitacaoIds: string[] }): Observable<ContratacaoDto> {
+    return this.http.post<ContratacaoDto>(`${this.api}/contratacao`, dto);
+  }
+
+  resultado(itemId: string, dto: { resultado: ResultadoItemContratacao; fornecedorId: string | null; precoUnitario: number | null;
+    justificativaPreco: string | null }): Observable<ContratacaoDto> {
+    return this.http.post<ContratacaoDto>(`${this.api}/item-contratacao/${itemId}/resultado`, dto);
+  }
+
+  homologar(uuid: string, instrumentos: { fornecedorId: string; tipo: TipoInstrumentoContratual; numero: string; inicio: string; fim: string;
+    servicoContinuo: boolean; gestorMatricula: string; fiscalMatricula: string }[]): Observable<ContratacaoDto> {
+    return this.http.post<ContratacaoDto>(`${this.api}/contratacao/${uuid}/homologacao`, { instrumentos });
+  }
+
+  cancelarContratacao(uuid: string, motivo: string): Observable<ContratacaoDto> {
+    return this.http.post<ContratacaoDto>(`${this.api}/contratacao/${uuid}/cancelamento`, { motivo });
+  }
+
+  instrumentos(): Observable<InstrumentoDto[]> {
+    return this.http.get<InstrumentoDto[]>(`${this.api}/instrumentos`);
+  }
+
+  meusContratos(): Observable<InstrumentoDto[]> {
+    return this.http.get<InstrumentoDto[]>(`${this.api}/meus-contratos`);
+  }
+
+  instrumento(uuid: string): Observable<InstrumentoDto> {
+    return this.http.get<InstrumentoDto>(`${this.api}/instrumento/${uuid}`);
+  }
+
+  aditivo(uuid: string, dto: { tipo: TipoAditivoContratual; novoFim: string | null; itemId: string | null; quantidade: number | null;
+    novoPreco: number | null; justificativa: string; assinadoEm: string }): Observable<InstrumentoDto> {
+    return this.http.post<InstrumentoDto>(`${this.api}/instrumento/${uuid}/aditivo`, dto);
   }
 }

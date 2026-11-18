@@ -30,8 +30,9 @@ import { MedicamentoService } from '../../../core/services/medicamento';
 import { SetorService } from '../../../core/services/setor';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { ContratosCompras } from './contratos-compras';
 
-type Aba = 'solicitacoes' | 'fornecedores';
+type Aba = 'solicitacoes' | 'fornecedores' | 'contratacoes' | 'contratos';
 
 /** Uma linha do editor de itens da solicitação. */
 interface LinhaItem {
@@ -48,11 +49,12 @@ const GERENCIAR = 'COMPRAS.GERENCIAR';
 
 /**
  * Compras, fatia CP1 (ADR-0212): a unidade monta a solicitação de compra (DFD), com a sugestão pelo estoque mínimo, e envia; o setor de
- * compras analisa, pesquisa os preços (mediana de ao menos 3 cotações) e mantém os fornecedores com as certidões e as sanções.
+ * compras analisa, pesquisa os preços (mediana de ao menos 3 cotações) e mantém os fornecedores com as certidões e as sanções. As abas
+ * Contratações e Contratos (CP2, ADR-0213) ficam no componente {@link ContratosCompras}; quem só gere ou fiscaliza contrato vê só a última.
  */
 @Component({
   selector: 'app-compras',
-  imports: [Drawer],
+  imports: [Drawer, ContratosCompras],
   template: `
     <header class="page-head">
       <div>
@@ -66,13 +68,19 @@ const GERENCIAR = 'COMPRAS.GERENCIAR';
     </header>
 
     <div class="tabs" role="tablist" aria-label="Seções de compras">
-      <button type="button" role="tab" id="tab-solicitacoes" [attr.aria-selected]="aba() === 'solicitacoes'" (click)="aba.set('solicitacoes')">Solicitações @if (paraAgir()) { <span class="cnt">{{ paraAgir() }}</span> }</button>
-      <button type="button" role="tab" id="tab-fornecedores" [attr.aria-selected]="aba() === 'fornecedores'" (click)="abrirFornecedores()">Fornecedores</button>
+      @if (compraOuPede()) {
+        <button type="button" role="tab" id="tab-solicitacoes" [attr.aria-selected]="aba() === 'solicitacoes'" (click)="aba.set('solicitacoes')">Solicitações @if (paraAgir()) { <span class="cnt">{{ paraAgir() }}</span> }</button>
+        <button type="button" role="tab" id="tab-fornecedores" [attr.aria-selected]="aba() === 'fornecedores'" (click)="abrirFornecedores()">Fornecedores</button>
+      }
+      @if (pode(GERENCIAR)) { <button type="button" role="tab" id="tab-contratacoes" [attr.aria-selected]="aba() === 'contratacoes'" (click)="aba.set('contratacoes')">Contratações</button> }
+      <button type="button" role="tab" id="tab-contratos" [attr.aria-selected]="aba() === 'contratos'" (click)="aba.set('contratos')">Contratos</button>
     </div>
 
     @if (erro()) { <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div> }
 
     @switch (aba()) {
+      @case ('contratacoes') { <app-contratos-compras aba="contratacoes" /> }
+      @case ('contratos') { <app-contratos-compras aba="contratos" /> }
       @case ('solicitacoes') {
         <div class="cp-cab">
           <div class="dw-field" style="margin: 0;"><label for="f-cp-filtro">Situação</label>
@@ -449,6 +457,10 @@ export class Compras {
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => {
       this.acesso.set(a);
+      if (!this.compraOuPede()) {
+        this.aba.set('contratos');
+        return;
+      }
       this.carregar();
       if (this.pode(GERENCIAR)) this.carregarFornecedores();
     });
@@ -456,6 +468,11 @@ export class Compras {
     this.setorService.listar().pipe(catchError(() => of([]))).subscribe((l) => this.setores.set(l));
     this.estoqueService.materiais(true).pipe(catchError(() => of([]))).subscribe((l) => this.materiais.set(l));
     this.medicamentoService.listar().pipe(catchError(() => of([]))).subscribe((l) => this.medicamentos.set(l.filter((m) => m.ativo)));
+  }
+
+  /** Quem pede ou compra; o gestor e o fiscal sem essas permissões veem só a aba Contratos. */
+  protected compraOuPede(): boolean {
+    return this.pode(SOLICITAR) || this.pode(GERENCIAR);
   }
 
   protected pode(permissao: string): boolean {

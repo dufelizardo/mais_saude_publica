@@ -47,7 +47,8 @@ public final class ComprasDtos {
 
     public record Solicitacao(UUID uuid, String numero, UUID unidadeId, String unidadeNome, UUID setorId, String setorNome, String justificativa,
                               PrioridadeCompra prioridade, SituacaoSolicitacaoCompra situacao, String motivo, List<Item> itens,
-                              BigDecimal valorEstimado, Instant registradoEm, Instant enviadaEm, Instant analisadaEm, Instant pesquisaConcluidaEm) {
+                              BigDecimal valorEstimado, Instant registradoEm, Instant enviadaEm, Instant analisadaEm, Instant pesquisaConcluidaEm,
+                              UUID contratacaoId) {
     }
 
     /** Material abaixo do mínimo na unidade, ainda sem solicitação em andamento; a sugestão repõe até o dobro do mínimo. */

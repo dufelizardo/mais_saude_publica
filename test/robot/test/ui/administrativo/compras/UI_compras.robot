@@ -5,12 +5,12 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Compras
-Metadata    Test Suite Description        Valida a tela Compras: menu, solicitação, pesquisa de preços e fornecedor (ADR-0212).
+Metadata    Test Suite Description        Valida a tela Compras: menu, solicitação, pesquisa de preços, fornecedor, contratação e aditivo (ADRs 0212 e 0213).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiCompras    MaisSaudePublicaFrontend
 Metadata    Test Suite Created On         2026-11-18
-Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Test Suite Last Modified      2026-11-18
 Metadata    Project                       Layered Keyword Driven Framework (LKDF)
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -47,5 +47,21 @@ CT-004 - Fornecedor e certidão
     [Tags]    UI    UiCompras
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - COMPRAS - FORNECEDOR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-005 - Contratação e homologação
+    [Documentation]    Abre, adjudica e homologa a ata.
+    [Tags]    UI    UiCompras
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - COMPRAS - CONTRATACAO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-006 - Aditivo de contrato
+    [Documentation]    Acréscimo pela gaveta do contrato.
+    [Tags]    UI    UiCompras
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - COMPRAS - ADITIVO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
