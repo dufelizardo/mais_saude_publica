@@ -170,6 +170,13 @@
               </a>
             }
 
+            @if (podeVer('/administrativo/compras')) {
+              <a routerLink="/administrativo/compras" routerLinkActive #rlaCompras="routerLinkActive" [attr.aria-current]="rlaCompras.isActive ? 'page' : null" class="nav-item">
+                <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"></circle><circle cx="18" cy="20" r="1.5"></circle><path d="M2 3h3l2.7 12.4a1.5 1.5 0 0 0 1.5 1.1h8.6a1.5 1.5 0 0 0 1.5-1.1L21 7H6.2"></path></svg>
+                <span class="nav-item__label">Compras</span>
+              </a>
+            }
+
             @if (podeVer('/administrativo/frota')) {
               <a routerLink="/administrativo/frota" routerLinkActive #rlaFrota="routerLinkActive" [attr.aria-current]="rlaFrota.isActive ? 'page' : null" class="nav-item">
                 <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="6" width="15" height="10" rx="1"></rect><path d="M16 9h4l3 3v4h-7"></path><circle cx="5.5" cy="18" r="2"></circle><circle cx="18.5" cy="18" r="2"></circle></svg>

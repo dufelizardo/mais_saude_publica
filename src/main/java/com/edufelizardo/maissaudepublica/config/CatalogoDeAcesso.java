@@ -112,6 +112,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("ESTOQUE.REQUISITAR", new Def("Pedir materiais ao almoxarifado central para a unidade", OPERACAO));
         PERMISSOES.put("ESTOQUE.ATENDER", new Def("Atender e negar as requisições na central de abastecimento", OPERACAO));
         PERMISSOES.put("ESTOQUE.GERENCIAR", new Def("Manter o catálogo de materiais e o estoque mínimo", OPERACAO));
+        // Compras (ADR-0212): a unidade pede; o setor de compras, central, analisa, cota e mantém os fornecedores.
+        PERMISSOES.put("COMPRAS.SOLICITAR", new Def("Pedir compras para a unidade (documento de formalização da demanda)", OPERACAO));
+        PERMISSOES.put("COMPRAS.GERENCIAR", new Def("Analisar as solicitações de compra, pesquisar preços e manter os fornecedores", OPERACAO));
         // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.
         PERMISSOES.put("TRANSPORTE.CONSULTAR", new Def("Consultar a frota, a situação dos veículos e os plantões", OPERACAO));
         PERMISSOES.put("TRANSPORTE.GERENCIAR", new Def("Cadastrar veículos, registrar manutenção e montar os plantões das viaturas", OPERACAO));
@@ -209,7 +212,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR",
                         "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
                         "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR", "TFD.AUTORIZAR",
-                        "VISA.GERENCIAR", "QUALIDADE.GERIR")));
+                        "VISA.GERENCIAR", "QUALIDADE.GERIR", "COMPRAS.SOLICITAR", "COMPRAS.GERENCIAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -350,11 +353,15 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Estoque e almoxarifado (ADR-0177).
         PAPEIS.put("ALMOXARIFE", new PapelPadrao("Almoxarife",
                 "Entrada, saída por consumo, perda e ajuste de materiais e insumos gerais (ADR-0177).",
-                List.of("ESTOQUE.CONSULTAR", "ESTOQUE.MOVIMENTAR", "ESTOQUE.REQUISITAR", "ESTOQUE.ATENDER")));
+                List.of("ESTOQUE.CONSULTAR", "ESTOQUE.MOVIMENTAR", "ESTOQUE.REQUISITAR", "ESTOQUE.ATENDER", "COMPRAS.SOLICITAR")));
+        // Compras (ADR-0212): o setor de compras da secretaria.
+        PAPEIS.put("COMPRAS", new PapelPadrao("Compras",
+                "Analisa as solicitações de compra, pesquisa preços e mantém o cadastro de fornecedores (Lei 14.133/2021).",
+                List.of("COMPRAS.GERENCIAR", "ESTOQUE.CONSULTAR")));
         PAPEIS.put("FARMACEUTICO", new PapelPadrao("Farmacêutico",
                 "Estoque, dispensação e transferências; lê a prescrição.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "FARMACIA.CONSULTAR", "FARMACIA.GERENCIAR_ESTOQUE",
-                        "FARMACIA.DISPENSAR", "FARMACIA.TRANSFERIR")));
+                        "FARMACIA.DISPENSAR", "FARMACIA.TRANSFERIR", "COMPRAS.SOLICITAR")));
         // Segurança do paciente (ADR-0203): todo papel da rede notifica incidente; o administrador da plataforma não atua no cuidado.
         PAPEIS.replaceAll((codigo, p) -> codigo.equals(ADMINISTRADOR_PLATAFORMA) || p.permissoes().contains("QUALIDADE.NOTIFICAR") ? p
                 : new PapelPadrao(p.nome(), p.descricao(), java.util.stream.Stream.concat(p.permissoes().stream(), java.util.stream.Stream.of("QUALIDADE.NOTIFICAR")).toList()));
