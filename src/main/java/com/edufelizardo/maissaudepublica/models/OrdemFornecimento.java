@@ -41,9 +41,16 @@ public class OrdemFornecimento implements Serializable {
     @EqualsAndHashCode.Exclude
     private UnidadeDeSaude unidade;
 
-    /** O número do empenho, em texto; o empenho em si é do Financeiro (domínio 17). */
+    /** O número do empenho, em texto: o do empenho escolhido, ou o digitado nas ordens sem empenho lançado (ADR-0218). */
     @Column(length = 60)
     private String empenho;
+
+    /** O empenho do Financeiro (ADR-0218), quando lançado. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "empenho_id", referencedColumnName = "uuid", updatable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Empenho empenhoRef;
 
     @Column(nullable = false, updatable = false)
     private LocalDate emitidaEm;

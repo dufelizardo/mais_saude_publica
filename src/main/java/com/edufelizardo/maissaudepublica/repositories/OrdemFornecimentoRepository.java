@@ -15,4 +15,7 @@ public interface OrdemFornecimentoRepository extends JpaRepository<OrdemFornecim
     List<OrdemFornecimento> findTodas();
 
     long countByNumeroStartingWith(String prefixo);
+
+    @Query("select o from OrdemFornecimento o where o.empenhoRef.uuid in :empenhos")
+    List<OrdemFornecimento> findDosEmpenhos(@Param("empenhos") Collection<UUID> empenhos);
 }

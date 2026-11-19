@@ -43,7 +43,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ✅ | CP1 a CP3 feitas (fornecedores, solicitação, pesquisa de preços, contratação, atas, contratos, aditivos, ordem, recebimento, ocorrências e painel); PNCP e NF-e no domínio 20 |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ✅ | PM1 a PM3 feitas (bens, tombamento, responsável, transferência, bem comprado a tombar; manutenção; inventário, baixa, valor contábil e painel); etiqueta pela D3 |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
-| 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
+| 17 | [Financeiro](#17-financeiro) | 🟡 | F1 feita (dotação, empenho e a ordem de fornecimento com o empenho); F2 (liquidação e pagamento) e F3 (custos) |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | ✅ | Auditoria feita; Qualidade completa: Q1 (segurança do paciente), Q2 (não conformidades e planos) e Q3 (indicadores com metas e auditoria de protocolos) |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ✅ | IS1 e IS2 feitas (catálogo, encaminhamento e painel da rede); guia para imprimir (Documentos) e CadÚnico/SUAS no domínio 20 |
 
-**Resumo:** 31 itens mais Documentos: 27 ✅ · 3 🟡 · 1 ⬜ (e Documentos 🟡). As Integrações são a parte não
+**Resumo:** 31 itens mais Documentos: 27 ✅ · 4 🟡 · 0 ⬜ (e Documentos 🟡). As Integrações são a parte não
 iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -435,13 +435,19 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 17. Financeiro
 
-**Estado:** ⬜
+**Estado:** 🟡. Desenho na [ADR-0218](./adr/0218-financeiro-dotacao-e-empenho.md): acompanhamento ao lado do SIAFIC (Decreto 10.540/2020); detalhe em
+[`financeiro/MODELO-FINANCEIRO.md`](./financeiro/MODELO-FINANCEIRO.md).
+
+**Temos:**
+- **F1 · Dotação e empenho** ([ADR-0218](./adr/0218-financeiro-dotacao-e-empenho.md), V99):
+  - a dotação com o programa, a natureza e a fonte, as suplementações e as anulações, o autorizado e o disponível;
+  - o empenho com o número do SIAFIC, o fornecedor e o contrato, os reforços e as anulações;
+  - a ordem de fornecimento de Compras que escolhe o empenho e consome o saldo dele; o papel Financeiro.
 
 **Falta:**
-- [ ] **Decisão:** sistema financeiro completo, ou só registro e acompanhamento integrado a um ERP externo. A
-  tendência registrada no MAPA é a segunda.
-- [ ] Desenho (ADR): orçamento, empenho, despesa, centro de custo.
-- [ ] Implementação.
+- [ ] **F2:** liquidação pelo atesto, retenções, pagamento, restos a pagar, diárias do TFD, painel da execução e ordem cronológica.
+- [ ] **F3:** centros de custo, apuração mensal do custo por unidade, custo por atendimento, teto da PPI.
+- [ ] Importação do SIAFIC e SIOPS (domínio 20).
 
 ### 18. Qualidade / Segurança / Auditoria
 

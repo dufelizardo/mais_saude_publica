@@ -206,7 +206,7 @@ real":
     abastecimento no almoxarifado central; conceder o papel **Almoxarife** quando a autorização for ligada;
   - #14 Compras — desenhado na ADR-0212; ~~CP1 (fornecedores, solicitação e pesquisa de preços)~~ — ADR-0212; ~~CP2 (contratação, atas, contratos e aditivos)~~ — ADR-0213; ~~CP3 (ordem de fornecimento, recebimento, ocorrências e painel; "Meus contratos" no menu)~~ — ADR-0214; domínio completo; NF-e (XML) e PNCP no domínio 20; conceder o papel **Compras** quando a autorização for ligada;
   - #15 Patrimônio — desenhado na ADR-0215; ~~PM1 (bens, tombamento, responsável, transferência e bem comprado a tombar)~~ — ADR-0215; ~~PM2 (planos, chamados e ordens de serviço)~~ — ADR-0216; ~~PM3 (inventário, baixa, painel e alerta de equipamento parado)~~ — ADR-0217; domínio completo; termo de baixa e relatório do inventário em PDF (D2); etiqueta pela D3 de Documentos; certificado de calibração como anexo (D2); conceder os papéis **Patrimônio** e **Manutenção** quando a autorização for ligada;
-  - #17 Financeiro;
+  - #17 Financeiro — desenhado na ADR-0218 (acompanhamento ao lado do SIAFIC); ~~F1 (dotação e empenho)~~ — ADR-0218; F2 (liquidação, pagamento, restos a pagar, diárias do TFD, painel) e F3 (custos); conceder o papel **Financeiro** quando a autorização for ligada;
   - #18 Qualidade — desenhada na ADR-0202; ~~Q1 (segurança do paciente)~~ — ADR-0203 (Notivisa à mão, sem feriados no prazo mensal);
     ~~Q2 (não conformidades e planos de ação)~~ — ADR-0204 (evidência em texto, sem anexo); ~~Q3 (indicadores com metas e auditoria de protocolos)~~ — ADR-0205 (sem IRAS, sem meta por setor); Qualidade completa;
   - #19 Indicadores e BI — desenhado na ADR-0142; ~~BI1 (produção assistencial e Sala de Situação)~~ — ADR-0143;

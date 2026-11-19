@@ -141,7 +141,7 @@ export class ComprasService {
 
   // ── CP3 (ADR-0214) ──
 
-  emitirOrdem(instrumentoId: string, dto: { unidadeId: string; empenho: string | null; prazoDias: number | null;
+  emitirOrdem(instrumentoId: string, dto: { unidadeId: string; empenho: string | null; empenhoId?: string | null; prazoDias: number | null;
     itens: { itemInstrumentoId: string; quantidade: number }[] }): Observable<OrdemDto> {
     return this.http.post<OrdemDto>(`${this.api}/instrumento/${instrumentoId}/ordem`, dto);
   }

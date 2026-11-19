@@ -96,6 +96,14 @@ class ComprasControllerTest {
         jdbc.update("delete from tb_recebimento_compra where ordem_id in " + ordens);
         jdbc.update("delete from tb_item_ordem_fornecimento where ordem_id in " + ordens);
         jdbc.update("delete from tb_ordem_fornecimento where uuid in " + ordens);
+        // F1 (ADR-0218): os empenhos dos fornecedores ou das dotações do teste, e as dotações pela descrição.
+        String dotacoes = "(select uuid from tb_dotacao_orcamentaria where descricao like '" + prefixo + "%')";
+        String empenhos = "(select uuid from tb_empenho where fornecedor_id in " + fornecedores + " or dotacao_id in " + dotacoes + ")";
+        jdbc.update("update tb_ordem_fornecimento set empenho_id = null where empenho_id in " + empenhos);
+        jdbc.update("delete from tb_movimento_empenho where empenho_id in " + empenhos);
+        jdbc.update("delete from tb_empenho where uuid in " + empenhos);
+        jdbc.update("delete from tb_alteracao_dotacao where dotacao_id in " + dotacoes);
+        jdbc.update("delete from tb_dotacao_orcamentaria where uuid in " + dotacoes);
         jdbc.update("delete from tb_movimentacao_farmacia where lote_id in (select uuid from tb_lote where unidade_id in " + unidades + ")");
         jdbc.update("delete from tb_lote where unidade_id in " + unidades);
         jdbc.update("update tb_movimentacao_estoque set fornecedor_id = null where fornecedor_id in " + fornecedores);

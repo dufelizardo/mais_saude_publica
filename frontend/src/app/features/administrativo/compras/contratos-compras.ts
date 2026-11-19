@@ -28,6 +28,8 @@ import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { AuthService } from '../../../core/services/auth';
 import { ComprasService } from '../../../core/services/compras';
+import { FinanceiroService } from '../../../core/services/financeiro';
+import { EmpenhoDto } from '../../../core/models/financeiro';
 import { Drawer } from '../../../shared/drawer/drawer';
 
 const GERENCIAR = 'COMPRAS.GERENCIAR';
@@ -270,7 +272,16 @@ const GERENCIAR = 'COMPRAS.GERENCIAR';
                     <option value="" [selected]="!f()['ofUnidade']">Escolha…</option>
                     @for (u of unidades(); track u.uuid) { <option [value]="u.uuid" [selected]="f()['ofUnidade'] === u.uuid">{{ u.nome }}</option> }
                   </select></div>
-                <div class="dw-field"><label for="f-of-empenho">Empenho<span class="opt">opcional</span></label><input id="f-of-empenho" type="text" maxlength="60" [value]="f()['ofEmpenho'] ?? ''" (input)="set('ofEmpenho', $event)" /></div>
+                @if (empenhos().length) {
+                  <div class="dw-field" style="flex: 2;"><label for="f-of-empenho-id">Empenho</label>
+                    <select id="f-of-empenho-id" (change)="set('ofEmpenhoId', $event)">
+                      <option value="" [selected]="!f()['ofEmpenhoId']">— digitar o número —</option>
+                      @for (e of empenhos(); track e.uuid) { <option [value]="e.uuid" [selected]="f()['ofEmpenhoId'] === e.uuid">{{ e.numero }} · saldo {{ moeda(e.saldo) }}</option> }
+                    </select></div>
+                }
+                @if (!f()['ofEmpenhoId']) {
+                  <div class="dw-field"><label for="f-of-empenho">Número do empenho<span class="opt">opcional</span></label><input id="f-of-empenho" type="text" maxlength="60" [value]="f()['ofEmpenho'] ?? ''" (input)="set('ofEmpenho', $event)" /></div>
+                }
                 <div class="dw-field" style="max-width: 120px;"><label for="f-of-prazo">Prazo (dias)</label><input id="f-of-prazo" type="number" min="1" max="365" [value]="f()['ofPrazo'] ?? '30'" (input)="set('ofPrazo', $event)" /></div>
               </div>
               @for (x of i.itens; track x.uuid; let k = $index) {
@@ -386,6 +397,9 @@ export class ContratosCompras {
   readonly aba = input.required<'contratacoes' | 'contratos'>();
 
   private readonly service = inject(ComprasService);
+  private readonly financeiroService = inject(FinanceiroService);
+  /** Os empenhos com saldo do fornecedor do contrato aberto (ADR-0218), para a ordem de fornecimento. */
+  protected readonly empenhos = signal<EmpenhoDto[]>([]);
   private readonly authService = inject(AuthService);
   private readonly unidadeService = inject(UnidadeSaudeService);
 
@@ -570,6 +584,8 @@ export class ContratosCompras {
     this.instrumento.set(i);
     this.ordens.set([]);
     this.service.ordensDo(i.uuid).subscribe({ next: (l) => this.ordens.set(l), error: () => this.ordens.set([]) });
+    this.empenhos.set([]);
+    if (this.gerencia()) this.financeiroService.disponiveis(i.uuid).subscribe({ next: (l) => this.empenhos.set(l), error: () => this.empenhos.set([]) });
     if (this.gerencia() && !this.unidades().length) this.unidadeService.listar().subscribe((l) => this.unidades.set(l));
   }
 
@@ -582,7 +598,8 @@ export class ContratosCompras {
       this.erroGaveta.set('Informe a unidade de entrega e a quantidade de ao menos um item.');
       return;
     }
-    this.executarOrdem(this.service.emitirOrdem(i.uuid, { unidadeId: c['ofUnidade'], empenho: (c['ofEmpenho'] ?? '').trim() || null,
+    this.executarOrdem(this.service.emitirOrdem(i.uuid, { unidadeId: c['ofUnidade'], empenhoId: c['ofEmpenhoId'] || null,
+      empenho: c['ofEmpenhoId'] ? null : (c['ofEmpenho'] ?? '').trim() || null,
       prazoDias: Number(c['ofPrazo'] || 30), itens }));
   }
 
