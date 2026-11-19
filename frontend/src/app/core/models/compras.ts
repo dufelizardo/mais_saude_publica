@@ -389,6 +389,8 @@ export interface OrdemDto {
   itens: ItemOrdemDto[];
   recebimentos: RecebimentoDto[];
   ocorrencias: OcorrenciaDto[];
+  /** O empenho do Financeiro (ADR-0218), quando a ordem foi emitida com ele. */
+  empenhoId: string | null;
 }
 
 export interface PainelComprasDto {

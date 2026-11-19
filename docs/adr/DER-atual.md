@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **352 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V98). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **356 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V99). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -224,3 +224,4 @@ listadas aqui pela migração que criou cada uma (até a V98). A fonte de verdad
 | V96 | `tb_bem_patrimonial`, `tb_responsavel_bem`, `tb_transferencia_bem` (e o tipo `BEM_PERMANENTE` nos itens de compra) |
 | V97 | `tb_plano_manutencao`, `tb_ordem_servico_manutencao`, `tb_peca_ordem_servico` |
 | V98 | `tb_inventario_patrimonio`, `tb_membro_inventario`, `tb_item_inventario`, `tb_achado_inventario`, `tb_baixa_bem` |
+| V99 | `tb_dotacao_orcamentaria`, `tb_alteracao_dotacao`, `tb_empenho`, `tb_movimento_empenho` (e `empenho_id` em `tb_ordem_fornecimento`) |

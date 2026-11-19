@@ -21,7 +21,8 @@ CP2, na [ADR-0213](./0213-compras-contratacao-atas-e-contratos.md)). Com ela, o 
 ### Ordem de fornecimento
 
 1. **Emissão.** O setor de compras (`COMPRAS.GERENCIAR`) emite a ordem contra a ata ou o contrato **vigente** (422 fora da vigência).
-   - **Dados:** a unidade de entrega, o número do empenho em texto (o empenho é do domínio 17) e o prazo de entrega. O prazo vai de 1 a
+   - **Dados:** a unidade de entrega, o número do empenho em texto e o prazo de entrega. Desde a
+     [ADR-0218](./0218-financeiro-dotacao-e-empenho.md), o empenho do Financeiro pode ser escolhido e a ordem consome o saldo dele. O prazo vai de 1 a
      365 dias e é de 30 sem informar.
    - **Itens:** são do instrumento (422) e não se repetem (400).
    - **Saldo:** cada quantidade fica dentro do saldo (422), que é **reservado na emissão**. Duas ordens não usam o mesmo saldo.

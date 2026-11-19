@@ -94,13 +94,15 @@ public class EntregasService {
     @Autowired private LoteService loteService;
     @Autowired private ComprasService comprasService;
     @Autowired private PatrimonioService patrimonioService;
+    @Autowired private FinanceiroService financeiroService;
     @Autowired private ControleDeAcesso controleDeAcesso;
 
     // ── Ordem de fornecimento ──────────────────────────────────────────────────────────────────────
 
     /**
      * Emite a ordem contra a ata ou o contrato vigente (422): itens do instrumento (422), sem repetir (400), dentro do saldo (422), que fica
-     * reservado. Prazo de 1 a 365 dias, 30 sem informar.
+     * reservado. Prazo de 1 a 365 dias, 30 sem informar. O empenho do Financeiro, quando informado, é do fornecedor e tem saldo para a
+     * ordem (422, ADR-0218); sem ele, vale o número em texto.
      */
     @Transactional
     public EntregasDtos.Ordem emitir(UUID instrumentoId, OrdemFornecimentoRequestDto dto) {
@@ -129,11 +131,19 @@ public class EntregasService {
             }
         }
         int prazo = dto.getPrazoDias() != null ? dto.getPrazoDias() : PRAZO_PADRAO;
+        com.edufelizardo.maissaudepublica.models.Empenho empenho = null;
+        if (dto.getEmpenhoId() != null) {
+            java.math.BigDecimal valor = dto.getItens().stream()
+                    .map(i -> doInstrumento.get(i.getItemInstrumentoId()).getPrecoUnitario().multiply(java.math.BigDecimal.valueOf(i.getQuantidade())))
+                    .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+            empenho = financeiroService.comprometer(dto.getEmpenhoId(), ins, valor);
+        }
         OrdemFornecimento o = new OrdemFornecimento();
         o.setNumero(numero(hoje));
         o.setInstrumento(ins);
         o.setUnidade(unidade);
-        o.setEmpenho(limpo(dto.getEmpenho()));
+        o.setEmpenho(empenho != null ? empenho.getNumero() : limpo(dto.getEmpenho()));
+        o.setEmpenhoRef(empenho);
         o.setEmitidaEm(hoje);
         o.setPrazoDias(prazo);
         o.setPrazoEm(hoje.plusDays(prazo));
@@ -584,7 +594,8 @@ public class EntregasService {
             return new EntregasDtos.Ordem(o.getUuid(), o.getNumero(), o.getInstrumento().getUuid(), o.getInstrumento().getNumero(), f.getUuid(), f.getRazaoSocial(),
                     o.getUnidade().getUuid(), o.getUnidade().getNome(), o.getEmpenho(), o.getEmitidaEm(), o.getPrazoEm(), atrasada,
                     atrasada ? ChronoUnit.DAYS.between(o.getPrazoEm(), hoje) : 0, o.getSituacao(), o.getMotivoCancelamento(), valor, itensDto, recs,
-                    ocorrencias.getOrDefault(o.getUuid(), List.of()).stream().map(EntregasService::ocorrenciaDto).toList());
+                    ocorrencias.getOrDefault(o.getUuid(), List.of()).stream().map(EntregasService::ocorrenciaDto).toList(),
+                    o.getEmpenhoRef() != null ? o.getEmpenhoRef().getUuid() : null);
         }).toList();
     }
 

@@ -120,6 +120,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("PATRIMONIO.GERENCIAR", new Def("Cadastrar e tombar bens, trocar o responsável e transferir entre unidades", OPERACAO));
         // Baixa de alto valor (ADR-0217): a confirmação é da gestão, não de quem pede.
         PERMISSOES.put("PATRIMONIO.CONFIRMAR_BAIXA", new Def("Confirmar ou recusar a baixa de bem acima do valor de alçada", OPERACAO));
+        // Financeiro (ADR-0218): a dotação e o empenho do Fundo Municipal de Saúde, espelhados do SIAFIC.
+        PERMISSOES.put("FINANCEIRO.CONSULTAR", new Def("Consultar as dotações, os empenhos e a execução do Fundo Municipal de Saúde", OPERACAO));
+        PERMISSOES.put("FINANCEIRO.GERENCIAR", new Def("Registrar as dotações, as alterações, os empenhos, os reforços e as anulações", OPERACAO));
         // Manutenção (ADR-0216): os planos, a triagem e a execução das ordens de serviço.
         PERMISSOES.put("MANUTENCAO.EXECUTAR", new Def("Manter os planos de manutenção e triar, executar e concluir as ordens de serviço", OPERACAO));
         // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.
@@ -221,7 +224,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR", "TFD.AUTORIZAR",
                         "VISA.GERENCIAR", "QUALIDADE.GERIR", "COMPRAS.SOLICITAR", "COMPRAS.GERENCIAR", "PATRIMONIO.CONSULTAR",
                         "PATRIMONIO.GERENCIAR", "MANUTENCAO.EXECUTAR",
-                        "PATRIMONIO.CONFIRMAR_BAIXA")));
+                        "PATRIMONIO.CONFIRMAR_BAIXA", "FINANCEIRO.CONSULTAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -366,7 +369,11 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Compras (ADR-0212): o setor de compras da secretaria.
         PAPEIS.put("COMPRAS", new PapelPadrao("Compras",
                 "Analisa as solicitações de compra, pesquisa preços e mantém o cadastro de fornecedores (Lei 14.133/2021).",
-                List.of("COMPRAS.GERENCIAR", "ESTOQUE.CONSULTAR")));
+                List.of("COMPRAS.GERENCIAR", "ESTOQUE.CONSULTAR", "FINANCEIRO.CONSULTAR")));
+        // Financeiro (ADR-0218): o setor financeiro do Fundo Municipal de Saúde.
+        PAPEIS.put("FINANCEIRO", new PapelPadrao("Financeiro",
+                "Registra as dotações e os empenhos do Fundo Municipal de Saúde, espelhados do SIAFIC, e acompanha a execução (Lei 4.320/1964).",
+                List.of("FINANCEIRO.CONSULTAR", "FINANCEIRO.GERENCIAR", "COMPRAS.GERENCIAR")));
         // Patrimônio (ADR-0215): o setor de patrimônio da secretaria.
         PAPEIS.put("PATRIMONIO", new PapelPadrao("Patrimônio",
                 "Cadastra e tomba os bens, mantém os termos de responsabilidade e conduz as transferências entre unidades.",

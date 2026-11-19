@@ -43,7 +43,7 @@ public final class EntregasDtos {
     public record Ordem(UUID uuid, String numero, UUID instrumentoId, String instrumentoNumero, UUID fornecedorId, String fornecedorNome,
                         UUID unidadeId, String unidadeNome, String empenho, LocalDate emitidaEm, LocalDate prazoEm, boolean atrasada, long diasDeAtraso,
                         SituacaoOrdemFornecimento situacao, String motivoCancelamento, BigDecimal valor, List<ItemOrdem> itens,
-                        List<Recebimento> recebimentos, List<Ocorrencia> ocorrencias) {
+                        List<Recebimento> recebimentos, List<Ocorrencia> ocorrencias, UUID empenhoId) {
     }
 
     /** O desempenho do fornecedor nas entregas definitivas do período. */

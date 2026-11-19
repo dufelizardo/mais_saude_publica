@@ -144,6 +144,12 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/patrimonio/patrimonio').then((m) => m.Patrimonio),
         data: { breadcrumb: 'Patrimônio', area: 'Administrativo' },
       },
+      // Financeiro: dotações e empenhos do Fundo Municipal de Saúde (ADR-0218).
+      {
+        path: 'administrativo/financeiro',
+        loadComponent: () => import('./features/administrativo/financeiro/financeiro').then((m) => m.Financeiro),
+        data: { breadcrumb: 'Financeiro', area: 'Administrativo' },
+      },
       // Frota e transporte (ADR-0178).
       {
         path: 'administrativo/frota',

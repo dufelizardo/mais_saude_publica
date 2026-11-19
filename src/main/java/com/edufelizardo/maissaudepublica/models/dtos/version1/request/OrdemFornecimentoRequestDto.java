@@ -25,6 +25,8 @@ public class OrdemFornecimentoRequestDto implements Serializable {
     private UUID unidadeId;
     @Size(max = 60, message = "O empenho vai até 60 caracteres.")
     private String empenho;
+    /** O empenho do Financeiro (ADR-0218); quando informado, o número em texto vem dele. */
+    private UUID empenhoId;
     @Min(value = 1, message = "O prazo é de ao menos 1 dia.")
     @Max(value = 365, message = "O prazo vai até 365 dias.")
     private Integer prazoDias;

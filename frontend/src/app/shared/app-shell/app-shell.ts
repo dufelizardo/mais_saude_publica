@@ -37,6 +37,8 @@ const MENU: Record<string, string[]> = {
   '/administrativo/estoque': ['ESTOQUE.CONSULTAR', 'ESTOQUE.MOVIMENTAR', 'ESTOQUE.GERENCIAR', 'ESTOQUE.REQUISITAR', 'ESTOQUE.ATENDER'],
   // Compras (ADR-0212): quem pede e quem compra.
   '/administrativo/compras': ['COMPRAS.SOLICITAR', 'COMPRAS.GERENCIAR'],
+  // Financeiro (ADR-0218).
+  '/administrativo/financeiro': ['FINANCEIRO.CONSULTAR', 'FINANCEIRO.GERENCIAR'],
   // Patrimônio (ADR-0215).
   '/administrativo/patrimonio': ['PATRIMONIO.CONSULTAR', 'PATRIMONIO.GERENCIAR', 'MANUTENCAO.EXECUTAR'],
   '/administrativo/frota': ['TRANSPORTE.CONSULTAR', 'TRANSPORTE.GERENCIAR', 'TRANSPORTE.SOLICITAR', 'TFD.AUTORIZAR'],
