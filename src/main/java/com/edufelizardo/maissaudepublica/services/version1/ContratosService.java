@@ -83,6 +83,7 @@ public class ContratosService {
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private ComprasService comprasService;
     @Autowired private ControleDeAcesso controleDeAcesso;
+    @Autowired private com.edufelizardo.maissaudepublica.repositories.OrdemFornecimentoRepository ordemRepository;
 
     // ── Contratação ────────────────────────────────────────────────────────────────────────────────
 
@@ -534,6 +535,9 @@ public class ContratosService {
         Map<UUID, List<ItemInstrumento>> itens = itemInstrumentoRepository.findDosInstrumentos(ids).stream().collect(Collectors.groupingBy(i -> i.getInstrumento().getUuid()));
         Map<UUID, List<AditivoContratual>> aditivos = aditivoRepository.findDosInstrumentos(ids).stream().collect(Collectors.groupingBy(a -> a.getInstrumento().getUuid()));
         Map<UUID, ComprasDtos.Fornecedor> situacoes = new HashMap<>();
+        Map<UUID, Long> ordensAbertas = ordemRepository.findTodas().stream().filter(o -> o.getSituacao() == com.edufelizardo.maissaudepublica.models.enuns.SituacaoOrdemFornecimento.EMITIDA
+                || o.getSituacao() == com.edufelizardo.maissaudepublica.models.enuns.SituacaoOrdemFornecimento.PARCIAL)
+                .collect(Collectors.groupingBy(o -> o.getInstrumento().getUuid(), Collectors.counting()));
         LocalDate hoje = hoje();
         return lista.stream().map(ins -> {
             List<ItemInstrumento> doIns = itens.getOrDefault(ins.getUuid(), List.of()).stream()
@@ -576,7 +580,8 @@ public class ContratosService {
             return new ContratosDtos.Instrumento(ins.getUuid(), ins.getTipo(), ins.getNumero(), ins.getContratacao().getUuid(),
                     ins.getContratacao().getNumeroProcesso(), ins.getFornecedor().getUuid(), ins.getFornecedor().getRazaoSocial(), ins.getInicio(), ins.getFim(),
                     ins.isServicoContinuo(), vigente, dias, ins.getValorInicial(), atual, acrescido, suprimido, ins.getGestor().getMatricula(),
-                    ins.getGestor().getNome(), ins.getFiscal().getMatricula(), ins.getFiscal().getNome(), itensDto, aditivosDto, alertas);
+                    ins.getGestor().getNome(), ins.getFiscal().getMatricula(), ins.getFiscal().getNome(), itensDto, aditivosDto, alertas,
+                    ordensAbertas.getOrDefault(ins.getUuid(), 0L));
         }).toList();
     }
 

@@ -31,8 +31,10 @@ import { SetorService } from '../../../core/services/setor';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { ContratosCompras } from './contratos-compras';
+import { PainelCompras } from './painel-compras';
+import { ActivatedRoute } from '@angular/router';
 
-type Aba = 'solicitacoes' | 'fornecedores' | 'contratacoes' | 'contratos';
+type Aba = 'solicitacoes' | 'fornecedores' | 'contratacoes' | 'contratos' | 'painel';
 
 /** Uma linha do editor de itens da solicitação. */
 interface LinhaItem {
@@ -54,7 +56,7 @@ const GERENCIAR = 'COMPRAS.GERENCIAR';
  */
 @Component({
   selector: 'app-compras',
-  imports: [Drawer, ContratosCompras],
+  imports: [Drawer, ContratosCompras, PainelCompras],
   template: `
     <header class="page-head">
       <div>
@@ -74,6 +76,7 @@ const GERENCIAR = 'COMPRAS.GERENCIAR';
       }
       @if (pode(GERENCIAR)) { <button type="button" role="tab" id="tab-contratacoes" [attr.aria-selected]="aba() === 'contratacoes'" (click)="aba.set('contratacoes')">Contratações</button> }
       <button type="button" role="tab" id="tab-contratos" [attr.aria-selected]="aba() === 'contratos'" (click)="aba.set('contratos')">Contratos</button>
+      @if (pode(GERENCIAR)) { <button type="button" role="tab" id="tab-painel" [attr.aria-selected]="aba() === 'painel'" (click)="aba.set('painel')">Painel</button> }
     </div>
 
     @if (erro()) { <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div> }
@@ -81,6 +84,7 @@ const GERENCIAR = 'COMPRAS.GERENCIAR';
     @switch (aba()) {
       @case ('contratacoes') { <app-contratos-compras aba="contratacoes" /> }
       @case ('contratos') { <app-contratos-compras aba="contratos" /> }
+      @case ('painel') { <app-painel-compras /> }
       @case ('solicitacoes') {
         <div class="cp-cab">
           <div class="dw-field" style="margin: 0;"><label for="f-cp-filtro">Situação</label>
@@ -412,6 +416,8 @@ export class Compras {
   private readonly setorService = inject(SetorService);
   private readonly estoqueService = inject(EstoqueService);
   private readonly medicamentoService = inject(MedicamentoService);
+  /** A aba pedida na rota (?aba=contratos, ?aba=painel), como no atalho "Meus contratos" e no alerta da Sala de Situação (ADR-0214). */
+  private readonly abaDaRota = inject(ActivatedRoute).snapshot.queryParamMap.get('aba');
 
   protected readonly SOLICITAR = SOLICITAR;
   protected readonly GERENCIAR = GERENCIAR;
@@ -461,6 +467,9 @@ export class Compras {
         this.aba.set('contratos');
         return;
       }
+      const pedida = this.abaDaRota as Aba | null;
+      if (pedida && ['solicitacoes', 'fornecedores', 'contratos'].includes(pedida)) this.aba.set(pedida);
+      if (pedida && ['contratacoes', 'painel'].includes(pedida) && this.pode(GERENCIAR)) this.aba.set(pedida);
       this.carregar();
       if (this.pode(GERENCIAR)) this.carregarFornecedores();
     });
@@ -818,9 +827,9 @@ function linhaVazia(): LinhaItem {
   return { tipo: 'MATERIAL', materialId: '', medicamentoId: '', descricao: '', unidadeMedida: '', quantidade: '1' };
 }
 
+/** Hoje no fuso de São Paulo, o dia que o servidor usa nas validações de data (o navegador pode estar em outro fuso). */
 function hojeIso(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
 }
 
 function mensagem(e: HttpErrorResponse): string {

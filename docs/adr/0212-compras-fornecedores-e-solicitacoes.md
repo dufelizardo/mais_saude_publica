@@ -3,7 +3,7 @@
 ## Status
 
 Aceita. O desenho do domínio 14 está aceito; a fatia CP1 (fornecedores, solicitação de compra e pesquisa de preços) está implementada.
-A CP2 está na [ADR-0213](./0213-compras-contratacao-atas-e-contratos.md); a CP3 ganha a própria ADR.
+A CP2 está na [ADR-0213](./0213-compras-contratacao-atas-e-contratos.md) e a CP3 na [ADR-0214](./0214-compras-ordens-recebimento-e-painel.md); o domínio está completo.
 
 ## Contexto
 

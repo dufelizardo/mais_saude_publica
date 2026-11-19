@@ -72,6 +72,16 @@ class ComprasControllerTest {
         String contratacoes = "(select uuid from tb_contratacao where numero_processo like '" + prefixo + "%' or uuid in (select contratacao_id from "
                 + "tb_solicitacao_compra where unidade_id in " + unidades + "))";
         String instrumentos = "(select uuid from tb_instrumento_contratual where contratacao_id in " + contratacoes + " or fornecedor_id in " + fornecedores + ")";
+        // CP3 (ADR-0214): as ordens dos instrumentos, os recebimentos e as ocorrências; a entrada na Farmácia das unidades do teste.
+        String ordens = "(select uuid from tb_ordem_fornecimento where instrumento_id in " + instrumentos + ")";
+        jdbc.update("delete from tb_ocorrencia_fornecedor where ordem_id in " + ordens + " or fornecedor_id in " + fornecedores);
+        jdbc.update("delete from tb_item_recebimento_compra where recebimento_id in (select uuid from tb_recebimento_compra where ordem_id in " + ordens + ")");
+        jdbc.update("delete from tb_recebimento_compra where ordem_id in " + ordens);
+        jdbc.update("delete from tb_item_ordem_fornecimento where ordem_id in " + ordens);
+        jdbc.update("delete from tb_ordem_fornecimento where uuid in " + ordens);
+        jdbc.update("delete from tb_movimentacao_farmacia where lote_id in (select uuid from tb_lote where unidade_id in " + unidades + ")");
+        jdbc.update("delete from tb_lote where unidade_id in " + unidades);
+        jdbc.update("update tb_movimentacao_estoque set fornecedor_id = null where fornecedor_id in " + fornecedores);
         jdbc.update("delete from tb_aditivo_contratual where instrumento_id in " + instrumentos);
         jdbc.update("delete from tb_item_instrumento where instrumento_id in " + instrumentos);
         jdbc.update("delete from tb_instrumento_contratual where uuid in " + instrumentos);
@@ -90,6 +100,7 @@ class ComprasControllerTest {
         jdbc.update("delete from tb_lote_material where material_id in " + materiais);
         jdbc.update("delete from tb_estoque_minimo where material_id in " + materiais);
         jdbc.update("delete from tb_material_estoque where nome like '" + prefixo + "%'");
+        jdbc.update("delete from tb_medicamento where nome like '" + prefixo + "%'");
         jdbc.update("delete from tb_setor where unidade_id in " + unidades);
         jdbc.update("delete from tb_unidade_de_saude where nome like '" + prefixo + "%'");
     }

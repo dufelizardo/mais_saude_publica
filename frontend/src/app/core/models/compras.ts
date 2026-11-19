@@ -286,4 +286,121 @@ export interface InstrumentoDto {
   itens: ItemInstrumentoDto[];
   aditivos: AditivoDto[];
   alertas: string[];
+  ordensEmAberto: number;
+}
+
+// ── CP3: ordens de fornecimento, recebimento, ocorrências e painel (ADR-0214) ──
+
+export type SituacaoOrdemFornecimento = 'EMITIDA' | 'PARCIAL' | 'RECEBIDA' | 'CANCELADA';
+export type SituacaoRecebimentoCompra = 'PROVISORIO' | 'DEFINITIVO';
+export type TipoOcorrenciaFornecedor = 'ATRASO' | 'ENTREGA_PARCIAL' | 'FORA_ESPECIFICACAO' | 'OUTRA';
+export type SituacaoOcorrenciaFornecedor = 'ABERTA' | 'ENCERRADA' | 'SANCIONADA';
+
+export const SITUACOES_ORDEM: Record<SituacaoOrdemFornecimento, string> = {
+  EMITIDA: 'Emitida',
+  PARCIAL: 'Parcialmente recebida',
+  RECEBIDA: 'Recebida',
+  CANCELADA: 'Cancelada',
+};
+
+export const TIPOS_OCORRENCIA: Record<TipoOcorrenciaFornecedor, string> = {
+  ATRASO: 'Atraso',
+  ENTREGA_PARCIAL: 'Entrega parcial',
+  FORA_ESPECIFICACAO: 'Fora da especificação',
+  OUTRA: 'Outra',
+};
+
+export const SITUACOES_OCORRENCIA: Record<SituacaoOcorrenciaFornecedor, string> = {
+  ABERTA: 'Aberta',
+  ENCERRADA: 'Encerrada',
+  SANCIONADA: 'Sancionada',
+};
+
+export interface ItemOrdemDto {
+  uuid: string;
+  itemInstrumentoId: string;
+  tipo: TipoItemCompra;
+  descricao: string;
+  unidadeMedida: string;
+  quantidade: number;
+  aceita: number;
+  emRecebimento: number;
+  pendente: number;
+  precoUnitario: number;
+  pedeLote: boolean;
+}
+
+export interface ItemRecebimentoDto {
+  uuid: string;
+  itemOrdemId: string;
+  descricao: string;
+  entregue: number;
+  aceita: number | null;
+  recusada: number | null;
+  motivoRecusa: string | null;
+  numeroLote: string | null;
+  validade: string | null;
+}
+
+export interface RecebimentoDto {
+  uuid: string;
+  notaFiscal: string;
+  notaEmitidaEm: string;
+  recebidoEm: string;
+  situacao: SituacaoRecebimentoCompra;
+  definitivoEm: string | null;
+  observacao: string | null;
+  itens: ItemRecebimentoDto[];
+}
+
+export interface OcorrenciaDto {
+  uuid: string;
+  fornecedorId: string;
+  fornecedorNome: string;
+  ordemId: string | null;
+  ordemNumero: string | null;
+  tipo: TipoOcorrenciaFornecedor;
+  descricao: string;
+  registradaEm: string;
+  situacao: SituacaoOcorrenciaFornecedor;
+  resposta: string | null;
+  encerradaEm: string | null;
+  sancaoId: string | null;
+}
+
+export interface OrdemDto {
+  uuid: string;
+  numero: string;
+  instrumentoId: string;
+  instrumentoNumero: string;
+  fornecedorId: string;
+  fornecedorNome: string;
+  unidadeId: string;
+  unidadeNome: string;
+  empenho: string | null;
+  emitidaEm: string;
+  prazoEm: string;
+  atrasada: boolean;
+  diasDeAtraso: number;
+  situacao: SituacaoOrdemFornecimento;
+  motivoCancelamento: string | null;
+  valor: number;
+  itens: ItemOrdemDto[];
+  recebimentos: RecebimentoDto[];
+  ocorrencias: OcorrenciaDto[];
+}
+
+export interface PainelComprasDto {
+  inicio: string;
+  fim: string;
+  solicitacoesPorSituacao: Partial<Record<SituacaoSolicitacaoCompra, number>>;
+  valorContratado: number;
+  ordensEmAberto: number;
+  ordensEmAtraso: number;
+  contratosVencendo: number;
+  itensComSaldoBaixo: number;
+  ocorrenciasAbertas: number;
+  atrasadas: { ordemId: string; numero: string; fornecedorNome: string; unidadeNome: string; prazoEm: string; diasDeAtraso: number }[];
+  fornecedores: { fornecedorId: string; fornecedorNome: string; ordens: number; entregas: number; percentualNoPrazo: number | null;
+    prazoMedioDias: number | null; quantidadeRecusada: number; ocorrencias: number }[];
 }

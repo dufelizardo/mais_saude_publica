@@ -156,8 +156,17 @@ public class EstoqueService {
     /** Entra no lote do mesmo número (sem controle de lote, no saldo único) ou abre um lote novo. */
     @Transactional
     public EstoqueDtos.Movimentacao entrada(EntradaEstoqueRequestDto dto) {
+        controleDeAcesso.exigir(MOVIMENTAR, unidade(dto.getUnidadeId()));
+        return entradaConferida(dto, null);
+    }
+
+    /**
+     * A entrada sem conferir a permissão de quem lança: o recebimento definitivo de Compras (ADR-0214), atestado pelo fiscal do contrato,
+     * que não precisa de ESTOQUE.MOVIMENTAR. Liga o fornecedor cadastrado, quando houver.
+     */
+    @Transactional
+    EstoqueDtos.Movimentacao entradaConferida(EntradaEstoqueRequestDto dto, com.edufelizardo.maissaudepublica.models.Fornecedor fornecedor) {
         UnidadeDeSaude u = unidade(dto.getUnidadeId());
-        controleDeAcesso.exigir(MOVIMENTAR, u);
         MaterialEstoque m = materialPorId(dto.getMaterialId());
         if (!m.isAtivo()) {
             throw new ResourceUnprocessableEntityException("O material " + m.getNome() + " está inativo no catálogo.");
@@ -192,6 +201,7 @@ public class EstoqueService {
         mov.setOrigem(dto.getOrigem());
         mov.setDocumento(texto(dto.getDocumento()));
         mov.setFornecedor(texto(dto.getFornecedor()));
+        mov.setFornecedorCadastro(fornecedor);
         return movimentacao(movimentacaoRepository.save(mov));
     }
 

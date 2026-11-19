@@ -10,6 +10,7 @@ import {
 import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
 import { AlertaAuditoriaService } from '../../core/services/alerta-auditoria';
+import { ComprasService } from '../../core/services/compras';
 import { AcessoDaInterface, UsuarioAtualResponseDto } from '../../core/models/auth';
 
 const RH = ['RH.CONSULTAR', 'RH.GERENCIAR'];
@@ -119,11 +120,24 @@ export class AppShell {
    */
   protected readonly gruposExpandidos = signal<ReadonlySet<string>>(new Set());
 
+  private readonly comprasService = inject(ComprasService);
+  /**
+   * Os contratos em que a pessoa é gestora ou fiscal (ADR-0214), para quem não vê Compras pelo menu: o item "Meus contratos" aparece só
+   * para essas pessoas, com o número de ordens à espera de entrega.
+   */
+  protected readonly meusContratos = signal<{ contratos: number; ordens: number } | null>(null);
+
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.usuario.set(u));
     this.authService.acessoDaInterface().subscribe((a) => {
       this.acesso.set(a);
       if (this.podeVer('/administracao/auditoria')) this.alertaService.atualizarContador();
+      if (a.restrito && !this.podeVer('/administrativo/compras')) {
+        this.comprasService.meusContratos().subscribe({
+          next: (l) => this.meusContratos.set(l.length ? { contratos: l.length, ordens: l.reduce((t, i) => t + i.ordensEmAberto, 0) } : null),
+          error: () => this.meusContratos.set(null),
+        });
+      }
     });
     this.atualizarBreadcrumb();
     this.router.events.pipe(filter((evento) => evento instanceof NavigationEnd)).subscribe(() => {

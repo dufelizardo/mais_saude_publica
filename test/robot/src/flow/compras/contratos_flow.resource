@@ -14,7 +14,7 @@ Seed Fornecedor Regular
     [Documentation]    A supplier with the five valid certificates; returns its uuid.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${id}    ${nome}=    Seed Fornecedor
-    ${hoje}=    Get Current Date    result_format=%Y-%m-%d
+    ${hoje}=    Hoje Em Brasilia
     ${validade}=    Get Current Date    increment=180 days    result_format=%Y-%m-%d
     FOR    ${tipo}    IN    FEDERAL    FGTS    TRABALHISTA    ESTADUAL    MUNICIPAL
         ${payload}=    Create Dictionary    tipo=${tipo}    emitidaEm=${hoje}    validaAte=${validade}
@@ -56,7 +56,7 @@ Instrumento Payload
     [Arguments]    ${fornecedor}    ${tipo}    ${dias}    ${gestor}    ${fiscal}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${sufixo}=    Generate Random String    8    [UPPER][NUMBERS]
-    ${inicio}=    Get Current Date    result_format=%Y-%m-%d
+    ${inicio}=    Hoje Em Brasilia
     ${fim}=    Get Current Date    increment=${dias} days    result_format=%Y-%m-%d
     ${i}=    Create Dictionary    fornecedorId=${fornecedor}    tipo=${tipo}    numero=Robot ${sufixo}    inicio=${inicio}    fim=${fim}
     ...    servicoContinuo=${False}    gestorMatricula=${gestor}    fiscalMatricula=${fiscal}
@@ -133,7 +133,7 @@ Contratos - Aditivos Do Contrato - Status Code 201
     ${ct}=    Seed Instrumento    CONTRATO
     ${r}=    GET Instrumento    ${ct}
     ${item}=    Set Variable    ${r.json()}[itens][0][uuid]
-    ${hoje}=    Get Current Date    result_format=%Y-%m-%d
+    ${hoje}=    Hoje Em Brasilia
     ${payload}=    Create Dictionary    tipo=ACRESCIMO    itemId=${item}    quantidade=${12}    justificativa=Mais demanda.    assinadoEm=${hoje}
     ${r}=    POST Aditivo Instrumento    ${ct}    ${payload}
     Should Be Equal As Integers    ${r.status_code}    201
@@ -150,7 +150,7 @@ Contratos - Aditivos Da Ata - Status Code 422
     ${ata}=    Seed Instrumento    ATA_REGISTRO_PRECOS
     ${r}=    GET Instrumento    ${ata}
     ${item}=    Set Variable    ${r.json()}[itens][0][uuid]
-    ${hoje}=    Get Current Date    result_format=%Y-%m-%d
+    ${hoje}=    Hoje Em Brasilia
     ${payload}=    Create Dictionary    tipo=ACRESCIMO    itemId=${item}    quantidade=${5}    justificativa=Mais.    assinadoEm=${hoje}
     ${r}=    POST Aditivo Instrumento    ${ata}    ${payload}
     Should Be Equal As Integers    ${r.status_code}    422

@@ -34,6 +34,8 @@ import { EmergenciaDto, classeDoNivel } from '../../core/models/emergencia';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
 import { PainelInstituicaoDto } from '../../core/models/intersetorialidade';
 import { IntersetorialidadeService } from '../../core/services/intersetorialidade';
+import { ComprasService } from '../../core/services/compras';
+import { PainelComprasDto } from '../../core/models/compras';
 
 type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
 
@@ -69,6 +71,9 @@ export class SalaDeSituacao {
   private readonly intersetorialService = inject(IntersetorialidadeService);
   /** As instituições com 3 ou mais encaminhamentos sem retorno (ADR-0211); sem INTERSETORIAL.GERENCIAR, nada. */
   protected readonly redeSemRetorno = signal<PainelInstituicaoDto[]>([]);
+  private readonly comprasService = inject(ComprasService);
+  /** As ordens de fornecimento atrasadas há mais de 10 dias (ADR-0214); sem COMPRAS.GERENCIAR, nada. */
+  protected readonly ordensAtrasadas = signal<PainelComprasDto['atrasadas']>([]);
   /** As emergências ativas (ADR-0156), no alto da tela; sem acesso, nada. */
   protected readonly emergencias = signal<EmergenciaDto[]>([]);
   /** Os eventos de massa planejados para os próximos 7 dias, ou já previstos e ainda sem operação (ADR-0160). */
@@ -358,6 +363,8 @@ export class SalaDeSituacao {
     this.vigilanciaTrabalhoService.semanaTrabalhador().pipe(catchError(() => of(null))).subscribe((s) => this.semanaTrabalho.set(s));
     this.intersetorialService.painel().pipe(catchError(() => of(null)))
       .subscribe((p) => this.redeSemRetorno.set((p?.instituicoes ?? []).filter((i) => i.semRetorno >= 3)));
+    this.comprasService.painel().pipe(catchError(() => of(null)))
+      .subscribe((p) => this.ordensAtrasadas.set((p?.atrasadas ?? []).filter((o) => o.diasDeAtraso > 10)));
     this.ambientalService.amostras({ naoConformes: true, desde }).pipe(catchError(() => of([])))
       .subscribe((l) => this.aguaForaDoPadrao.set(l.filter((a) => !a.medida)));
     this.vetorialService.indices().pipe(catchError(() => of(null))).subscribe((ix) => {
