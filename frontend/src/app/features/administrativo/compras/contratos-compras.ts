@@ -17,7 +17,14 @@ import {
   TIPOS_INSTRUMENTO,
   TipoAditivoContratual,
   TipoInstrumentoContratual,
+  OrdemDto,
+  RecebimentoDto,
+  SITUACOES_ORDEM,
+  TIPOS_OCORRENCIA,
+  TipoOcorrenciaFornecedor,
 } from '../../../core/models/compras';
+import { UnidadeSaudeResponseDto } from '../../../core/models/unidade-saude';
+import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { ErrorResponseDto } from '../../../core/models/profissional';
 import { AuthService } from '../../../core/services/auth';
 import { ComprasService } from '../../../core/services/compras';
@@ -28,7 +35,7 @@ const GERENCIAR = 'COMPRAS.GERENCIAR';
 /**
  * Compras, fatia CP2 (ADR-0213): a aba Contratações (abrir das solicitações cotadas, resultado por item, homologação com a ata ou o
  * contrato de cada vencedor) e a aba Contratos (atas e contratos com saldo, aditivos e alertas; quem não compra vê só os que fiscaliza
- * ou gere).
+ * ou gere). A gaveta do contrato traz as ordens de fornecimento, e a da ordem, o recebimento e as ocorrências (CP3, ADR-0214).
  */
 @Component({
   selector: 'app-contratos-compras',
@@ -247,6 +254,116 @@ const GERENCIAR = 'COMPRAS.GERENCIAR';
               <div class="row-actions"><button type="button" class="btn btn--sm" (click)="aditar(i)" [disabled]="enviando()">Registrar aditivo</button></div>
             </fieldset>
           }
+
+          <h3 class="mo-grupo ct-titulo">Ordens de fornecimento</h3>
+          <ul class="ct-lista" aria-label="Ordens de fornecimento">
+            @for (o of ordens(); track o.uuid) {
+              <li><span><button type="button" class="link-btn" (click)="abrirOrdem(o.uuid)" [attr.aria-label]="'Abrir ordem ' + o.numero">{{ o.numero }}</button> <span class="cell-sub">{{ o.unidadeNome }} · prazo {{ data(o.prazoEm) }} · {{ moeda(o.valor) }}</span></span>
+                <span [class]="'tag tag--' + (o.atrasada ? 'alert' : o.situacao === 'RECEBIDA' ? 'ok' : o.situacao === 'CANCELADA' ? '' : 'warn')">{{ situacoesOrdem[o.situacao] }}{{ o.atrasada ? ' · ' + o.diasDeAtraso + ' dia(s) de atraso' : '' }}</span></li>
+            } @empty { <li class="cell-sub">Nenhuma ordem.</li> }
+          </ul>
+          @if (gerencia() && i.vigente) {
+            <fieldset class="ct-grupo"><legend>Nova ordem de fornecimento</legend>
+              <div class="dw-row">
+                <div class="dw-field" style="flex: 2;"><label for="f-of-unidade">Unidade de entrega</label>
+                  <select id="f-of-unidade" (change)="set('ofUnidade', $event)">
+                    <option value="" [selected]="!f()['ofUnidade']">Escolha…</option>
+                    @for (u of unidades(); track u.uuid) { <option [value]="u.uuid" [selected]="f()['ofUnidade'] === u.uuid">{{ u.nome }}</option> }
+                  </select></div>
+                <div class="dw-field"><label for="f-of-empenho">Empenho<span class="opt">opcional</span></label><input id="f-of-empenho" type="text" maxlength="60" [value]="f()['ofEmpenho'] ?? ''" (input)="set('ofEmpenho', $event)" /></div>
+                <div class="dw-field" style="max-width: 120px;"><label for="f-of-prazo">Prazo (dias)</label><input id="f-of-prazo" type="number" min="1" max="365" [value]="f()['ofPrazo'] ?? '30'" (input)="set('ofPrazo', $event)" /></div>
+              </div>
+              @for (x of i.itens; track x.uuid; let k = $index) {
+                <div class="dw-field" style="margin: 0;"><label [for]="'f-of-qtd-' + k">{{ x.descricao }} (saldo {{ x.saldo }})</label><input [id]="'f-of-qtd-' + k" type="number" min="0" [max]="x.saldo" [value]="f()['ofQtd-' + x.uuid] ?? ''" (input)="set('ofQtd-' + x.uuid, $event)" /></div>
+              }
+              <div class="row-actions"><button type="button" class="btn btn--sm" (click)="emitirOrdem(i)" [disabled]="enviando()">Emitir ordem</button></div>
+            </fieldset>
+          }
+        </div>
+      </app-drawer>
+    }
+
+    @if (ordem(); as o) {
+      <app-drawer [titulo]="'Ordem ' + o.numero" (fechar)="ordem.set(null)">
+        <div class="dw-body">
+          @if (erroGaveta()) { <div class="box box--err" role="alert"><strong>{{ erroGaveta() }}</strong></div> }
+          <dl class="ro">
+            <div><dt>Situação</dt><dd>{{ situacoesOrdem[o.situacao] }}@if (o.atrasada) { · {{ o.diasDeAtraso }} dia(s) de atraso }@if (o.motivoCancelamento) { · {{ o.motivoCancelamento }} }</dd></div>
+            <div><dt>Fornecedor</dt><dd>{{ o.fornecedorNome }} · {{ o.instrumentoNumero }}</dd></div>
+            <div><dt>Entrega</dt><dd>{{ o.unidadeNome }} · prazo {{ data(o.prazoEm) }}</dd></div>
+            <div><dt>Valor</dt><dd>{{ moeda(o.valor) }}@if (o.empenho) { · empenho {{ o.empenho }} }</dd></div>
+          </dl>
+          <div class="tbl-wrap">
+            <table class="ct-tabela" aria-label="Itens da ordem">
+              <thead><tr><th scope="col">Item</th><th scope="col">Pedido</th><th scope="col">Aceito</th><th scope="col">Em recebimento</th><th scope="col">Falta</th></tr></thead>
+              <tbody>@for (x of o.itens; track x.uuid) { <tr><td>{{ x.descricao }}</td><td class="mono">{{ x.quantidade }}</td><td class="mono">{{ x.aceita }}</td><td class="mono">{{ x.emRecebimento }}</td><td class="mono">{{ x.pendente }}</td></tr> }</tbody>
+            </table>
+          </div>
+
+          @if (ordemAberta(o)) {
+            <fieldset class="ct-grupo"><legend>Receber entrega (provisório)</legend>
+              <div class="dw-row">
+                <div class="dw-field"><label for="f-rc-nota">Nota fiscal</label><input id="f-rc-nota" type="text" maxlength="60" [value]="f()['rcNota'] ?? ''" (input)="set('rcNota', $event)" /></div>
+                <div class="dw-field"><label for="f-rc-data">Data da nota</label><input id="f-rc-data" type="date" [value]="f()['rcData'] ?? ''" (input)="set('rcData', $event)" /></div>
+              </div>
+              @for (x of o.itens; track x.uuid; let k = $index) {
+                @if (x.pendente > 0) {
+                  <div class="dw-row">
+                    <div class="dw-field" style="flex: 2;"><label [for]="'f-rc-qtd-' + k">{{ x.descricao }} (falta {{ x.pendente }})</label><input [id]="'f-rc-qtd-' + k" type="number" min="0" [max]="x.pendente" [value]="f()['rcQtd-' + x.uuid] ?? ''" (input)="set('rcQtd-' + x.uuid, $event)" /></div>
+                    @if (x.pedeLote) {
+                      <div class="dw-field"><label [for]="'f-rc-lote-' + k">Lote</label><input [id]="'f-rc-lote-' + k" type="text" maxlength="60" [value]="f()['rcLote-' + x.uuid] ?? ''" (input)="set('rcLote-' + x.uuid, $event)" /></div>
+                      <div class="dw-field"><label [for]="'f-rc-val-' + k">Validade</label><input [id]="'f-rc-val-' + k" type="date" [value]="f()['rcVal-' + x.uuid] ?? ''" (input)="set('rcVal-' + x.uuid, $event)" /></div>
+                    }
+                  </div>
+                }
+              }
+              <div class="row-actions"><button type="button" class="btn btn--sm" (click)="receber(o)" [disabled]="enviando()">Registrar recebimento provisório</button></div>
+            </fieldset>
+          }
+
+          <h3 class="mo-grupo ct-titulo">Recebimentos</h3>
+          <ul class="ct-itens" aria-label="Recebimentos">
+            @for (r of o.recebimentos; track r.uuid; let ri = $index) {
+              <li>
+                <span><strong>NF {{ r.notaFiscal }}</strong> <span class="cell-sub">recebida em {{ data(r.recebidoEm) }}@if (r.definitivoEm) { · definitivo em {{ data(r.definitivoEm) }} }</span> <span [class]="'tag tag--' + (r.situacao === 'DEFINITIVO' ? 'ok' : 'warn')">{{ r.situacao === 'DEFINITIVO' ? 'Definitivo' : 'Provisório' }}</span></span>
+                @for (x of r.itens; track x.uuid; let k = $index) {
+                  <span class="cell-sub">{{ x.descricao }}: {{ x.entregue }} entregue(s)@if (x.numeroLote) { · lote {{ x.numeroLote }} até {{ data(x.validade ?? '') }} }@if (x.aceita != null) { · {{ x.aceita }} aceito(s)@if (x.recusada) { · {{ x.recusada }} recusado(s): {{ x.motivoRecusa }} } }</span>
+                  @if (r.situacao === 'PROVISORIO') {
+                    <div class="dw-row">
+                      <div class="dw-field"><label [for]="'f-df-' + ri + '-' + k">Aceito de {{ x.descricao }}</label><input [id]="'f-df-' + ri + '-' + k" type="number" min="0" [max]="x.entregue" [value]="f()['dfAc-' + x.uuid] ?? x.entregue" (input)="set('dfAc-' + x.uuid, $event)" /></div>
+                      <div class="dw-field" style="flex: 2;"><label [for]="'f-dm-' + ri + '-' + k">Motivo da recusa</label><input [id]="'f-dm-' + ri + '-' + k" type="text" maxlength="500" [value]="f()['dfMo-' + x.uuid] ?? ''" (input)="set('dfMo-' + x.uuid, $event)" /></div>
+                    </div>
+                  }
+                }
+                @if (r.situacao === 'PROVISORIO') { <div class="row-actions"><button type="button" class="btn btn--sm" (click)="definitivo(r)" [disabled]="enviando()">Confirmar recebimento definitivo</button></div> }
+              </li>
+            } @empty { <li class="cell-sub">Nenhum recebimento.</li> }
+          </ul>
+
+          <h3 class="mo-grupo ct-titulo">Ocorrências</h3>
+          <ul class="ct-lista" aria-label="Ocorrências da ordem">
+            @for (x of o.ocorrencias; track x.uuid) { <li><span>{{ tiposOcorrencia[x.tipo] }} <span class="cell-sub">{{ data(x.registradaEm) }} · {{ x.descricao }}</span></span><span class="cell-sub">{{ x.situacao === 'ABERTA' ? 'Aberta' : x.situacao === 'ENCERRADA' ? 'Encerrada' : 'Sancionada' }}</span></li> }
+            @empty { <li class="cell-sub">Nenhuma ocorrência.</li> }
+          </ul>
+          <fieldset class="ct-grupo"><legend>Nova ocorrência</legend>
+            <div class="dw-row">
+              <div class="dw-field"><label for="f-oc-tipo">Tipo</label>
+                <select id="f-oc-tipo" (change)="set('ocTipo', $event)">
+                  @for (t of listaOcorrencias; track t) { <option [value]="t" [selected]="f()['ocTipo'] === t">{{ tiposOcorrencia[t] }}</option> }
+                </select></div>
+              <div class="dw-field" style="flex: 2;"><label for="f-oc-desc">Descrição</label><input id="f-oc-desc" type="text" maxlength="1000" [value]="f()['ocDesc'] ?? ''" (input)="set('ocDesc', $event)" /></div>
+            </div>
+            <div class="row-actions"><button type="button" class="btn btn--ghost btn--sm" (click)="registrarOcorrencia(o)" [disabled]="enviando()">Registrar ocorrência</button></div>
+          </fieldset>
+
+          @if (gerencia() && ordemAberta(o)) {
+            <h3 class="mo-grupo ct-titulo">Cancelar</h3>
+            <div class="ct-linha">
+              <div class="dw-field" style="margin: 0; flex: 1;"><label for="f-of-cancel">Motivo</label><input id="f-of-cancel" type="text" maxlength="500" [value]="f()['ofCancel'] ?? ''" (input)="set('ofCancel', $event)" /></div>
+              <button type="button" class="btn btn--ghost btn--sm" (click)="cancelarOrdem(o)" [disabled]="enviando()">Cancelar ordem</button>
+            </div>
+          }
+          <div class="row-actions ct-acoes"><button type="button" class="btn btn--ghost btn--sm" (click)="abrirInstrumento(o.instrumentoId)">Voltar ao contrato</button></div>
         </div>
       </app-drawer>
     }
@@ -270,6 +387,7 @@ export class ContratosCompras {
 
   private readonly service = inject(ComprasService);
   private readonly authService = inject(AuthService);
+  private readonly unidadeService = inject(UnidadeSaudeService);
 
   protected readonly modalidades = MODALIDADES;
   protected readonly listaModalidades = Object.keys(MODALIDADES) as ModalidadeContratacao[];
@@ -279,6 +397,12 @@ export class ContratosCompras {
   protected readonly tiposInstrumento = TIPOS_INSTRUMENTO;
   protected readonly listaInstrumentos = Object.keys(TIPOS_INSTRUMENTO) as TipoInstrumentoContratual[];
   protected readonly tiposAditivo = TIPOS_ADITIVO;
+  protected readonly situacoesOrdem = SITUACOES_ORDEM;
+  protected readonly tiposOcorrencia = TIPOS_OCORRENCIA;
+  protected readonly listaOcorrencias = (Object.keys(TIPOS_OCORRENCIA) as TipoOcorrenciaFornecedor[]).filter((t) => t !== 'ATRASO');
+  protected readonly ordens = signal<OrdemDto[]>([]);
+  protected readonly ordem = signal<OrdemDto | null>(null);
+  protected readonly unidades = signal<UnidadeSaudeResponseDto[]>([]);
 
   private readonly acesso = signal<AcessoDaInterface>({ restrito: false, permissoes: new Set() });
   protected readonly erro = signal<string | null>(null);
@@ -326,6 +450,7 @@ export class ContratosCompras {
     this.abrindo.set(false);
     this.contratacao.set(null);
     this.instrumento.set(null);
+    this.ordem.set(null);
   }
 
   // ── Contratação ──
@@ -441,8 +566,98 @@ export class ContratosCompras {
 
   private mostrarInstrumento(i: InstrumentoDto): void {
     this.fechar();
-    this.f.set({ adTipo: 'PRAZO', adAssinado: hojeIso(), adItem: i.itens[0]?.uuid ?? '' });
+    this.f.set({ adTipo: 'PRAZO', adAssinado: hojeIso(), adItem: i.itens[0]?.uuid ?? '', ofPrazo: '30' });
     this.instrumento.set(i);
+    this.ordens.set([]);
+    this.service.ordensDo(i.uuid).subscribe({ next: (l) => this.ordens.set(l), error: () => this.ordens.set([]) });
+    if (this.gerencia() && !this.unidades().length) this.unidadeService.listar().subscribe((l) => this.unidades.set(l));
+  }
+
+  // ── Ordens de fornecimento e recebimento (CP3, ADR-0214) ──
+
+  protected emitirOrdem(i: InstrumentoDto): void {
+    const c = this.f();
+    const itens = i.itens.map((x) => ({ itemInstrumentoId: x.uuid, quantidade: Number(c['ofQtd-' + x.uuid] || 0) })).filter((x) => x.quantidade > 0);
+    if (!c['ofUnidade'] || !itens.length) {
+      this.erroGaveta.set('Informe a unidade de entrega e a quantidade de ao menos um item.');
+      return;
+    }
+    this.executarOrdem(this.service.emitirOrdem(i.uuid, { unidadeId: c['ofUnidade'], empenho: (c['ofEmpenho'] ?? '').trim() || null,
+      prazoDias: Number(c['ofPrazo'] || 30), itens }));
+  }
+
+  protected abrirOrdem(id: string): void {
+    this.service.ordem(id).subscribe({ next: (o) => this.mostrarOrdem(o), error: (x: HttpErrorResponse) => this.erroGaveta.set(mensagem(x)) });
+  }
+
+  private mostrarOrdem(o: OrdemDto): void {
+    this.fechar();
+    this.f.set({ rcData: hojeIso(), ocTipo: 'ENTREGA_PARCIAL' });
+    this.ordem.set(o);
+  }
+
+  protected ordemAberta(o: OrdemDto): boolean {
+    return o.situacao === 'EMITIDA' || o.situacao === 'PARCIAL';
+  }
+
+  protected receber(o: OrdemDto): void {
+    const c = this.f();
+    const itens = o.itens.filter((x) => Number(c['rcQtd-' + x.uuid] || 0) > 0).map((x) => ({ itemOrdemId: x.uuid, quantidade: Number(c['rcQtd-' + x.uuid]),
+      numeroLote: x.pedeLote ? (c['rcLote-' + x.uuid] ?? '').trim() || null : null, validade: x.pedeLote ? c['rcVal-' + x.uuid] || null : null }));
+    if (!(c['rcNota'] ?? '').trim() || !c['rcData'] || !itens.length) {
+      this.erroGaveta.set('Informe a nota fiscal, a data e a quantidade entregue de ao menos um item.');
+      return;
+    }
+    if (itens.some((x) => o.itens.find((i) => i.uuid === x.itemOrdemId)?.pedeLote && (!x.numeroLote || !x.validade))) {
+      this.erroGaveta.set('Informe o lote e a validade dos itens que pedem.');
+      return;
+    }
+    this.executarOrdem(this.service.receber(o.uuid, { notaFiscal: c['rcNota'].trim(), notaEmitidaEm: c['rcData'], observacao: null, itens }));
+  }
+
+  protected definitivo(r: RecebimentoDto): void {
+    const c = this.f();
+    const itens = r.itens.map((x) => ({ itemRecebimentoId: x.uuid, quantidadeAceita: Number(c['dfAc-' + x.uuid] ?? x.entregue),
+      motivoRecusa: (c['dfMo-' + x.uuid] ?? '').trim() || null }));
+    if (itens.some((x, k) => x.quantidadeAceita < r.itens[k].entregue && !x.motivoRecusa)) {
+      this.erroGaveta.set('Informe o motivo da recusa.');
+      return;
+    }
+    this.executarOrdem(this.service.definitivo(r.uuid, itens));
+  }
+
+  protected registrarOcorrencia(o: OrdemDto): void {
+    const desc = (this.f()['ocDesc'] ?? '').trim();
+    if (!desc) {
+      this.erroGaveta.set('Descreva a ocorrência.');
+      return;
+    }
+    this.executarOrdem(this.service.registrarOcorrencia(o.uuid, this.f()['ocTipo'] as TipoOcorrenciaFornecedor, desc));
+  }
+
+  protected cancelarOrdem(o: OrdemDto): void {
+    const motivo = (this.f()['ofCancel'] ?? '').trim();
+    if (!motivo) {
+      this.erroGaveta.set('Informe o motivo do cancelamento.');
+      return;
+    }
+    this.executarOrdem(this.service.cancelarOrdem(o.uuid, motivo));
+  }
+
+  private executarOrdem(req: Observable<OrdemDto>): void {
+    this.enviando.set(true);
+    this.erroGaveta.set(null);
+    req.subscribe({
+      next: (o) => {
+        this.enviando.set(false);
+        this.mostrarOrdem(o);
+        this.carregar();
+      },
+      error: (x: HttpErrorResponse) => {
+        this.enviando.set(false);
+        this.erroGaveta.set(mensagem(x));
+      },
+    });
   }
 
   protected tiposAditivoDe(i: InstrumentoDto): TipoAditivoContratual[] {

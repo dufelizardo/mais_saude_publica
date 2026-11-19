@@ -84,8 +84,8 @@ Aceita e implementada. Segunda fatia do domínio 14, cujo desenho está na [ADR-
 - **A CP3 começa do saldo:** a ordem de fornecimento baixa o saldo do item, e o recebimento definitivo dá entrada no Estoque ou na
   Farmácia.
 - **O fiscal sem permissão de Compras não vê o item no menu.** O menu é por permissão, não por designação. Ele abre os próprios contratos
-  pela rota de Compras, em que só aparece a aba Contratos. Um atalho em "Meu dia" fica para quando a CP3 trouxer o recebimento, que é
-  tarefa do fiscal.
+  pela rota de Compras, em que só aparece a aba Contratos. A CP3 ([ADR-0214](./0214-compras-ordens-recebimento-e-painel.md)) pôs o item "Meus
+  contratos" no menu para essas pessoas.
 - **Fora daqui:** empenho e atualização monetária (domínio 17); publicação no PNCP (domínio 20).
 
 ## Testes

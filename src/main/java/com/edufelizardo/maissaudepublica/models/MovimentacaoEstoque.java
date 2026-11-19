@@ -57,6 +57,13 @@ public class MovimentacaoEstoque implements Serializable {
     @Column(length = 150, updatable = false)
     private String fornecedor;
 
+    /** O fornecedor cadastrado, na entrada pelo recebimento de Compras (ADR-0214). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "fornecedor_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Fornecedor fornecedorCadastro;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "setor_id", referencedColumnName = "uuid", updatable = false)
     @ToString.Exclude

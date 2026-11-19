@@ -97,6 +97,20 @@
   }
 }
 
+@if (ordensAtrasadas().length) {
+  <section class="ss-alertas" aria-label="Entregas de compras atrasadas">
+    @for (o of ordensAtrasadas().slice(0, 3); track o.ordemId) {
+      <article class="ss-alerta ss-alerta--media" [attr.aria-label]="'Ordem de fornecimento atrasada: ' + o.numero">
+        <div>
+          <div class="ss-alerta__titulo">Entrega atrasada: ordem {{ o.numero }}</div>
+          <div class="ss-alerta__detalhe">{{ o.fornecedorNome }} · {{ o.unidadeNome }} · {{ o.diasDeAtraso }} dias depois do prazo</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/administrativo/compras" [queryParams]="{ aba: 'painel' }">Ver no painel</a>
+      </article>
+    }
+  </section>
+}
+
 @if (redeSemRetorno().length) {
   <section class="ss-alertas" aria-label="Rede intersetorial sem retorno">
     @for (i of redeSemRetorno().slice(0, 3); track i.instituicaoId) {

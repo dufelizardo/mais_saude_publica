@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Compras
-Metadata    Test Suite Description        Valida a tela Compras: menu, solicitação, pesquisa de preços, fornecedor, contratação e aditivo (ADRs 0212 e 0213).
+Metadata    Test Suite Description        Valida a tela Compras: menu, solicitação, pesquisa de preços, fornecedor, contratação, aditivo, ordem, recebimento e painel (ADRs 0212 a 0214).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiCompras    MaisSaudePublicaFrontend
@@ -63,5 +63,21 @@ CT-006 - Aditivo de contrato
     [Tags]    UI    UiCompras
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - COMPRAS - ADITIVO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-007 - Ordem e recebimento
+    [Documentation]    Emite a ordem, recebe e confirma o definitivo.
+    [Tags]    UI    UiCompras
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - COMPRAS - ORDEM E RECEBIMENTO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-008 - Painel de Compras
+    [Documentation]    O resumo e o desempenho dos fornecedores.
+    [Tags]    UI    UiCompras
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - COMPRAS - PAINEL
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -47,12 +47,13 @@ public final class ContratosDtos {
 
     /**
      * A ata ou o contrato. {@code diasParaVencer} negativo: vencido. Os percentuais são os acréscimos e as supressões sobre o valor inicial
-     * (art. 125). {@code alertas}: vigência, saldo e situação do fornecedor.
+     * (art. 125). {@code alertas}: vigência, saldo e situação do fornecedor. {@code ordensEmAberto}: ordens de fornecimento à espera de
+     * entrega (ADR-0214).
      */
     public record Instrumento(UUID uuid, TipoInstrumentoContratual tipo, String numero, UUID contratacaoId, String numeroProcesso,
                               UUID fornecedorId, String fornecedorNome, LocalDate inicio, LocalDate fim, boolean servicoContinuo, boolean vigente,
                               long diasParaVencer, BigDecimal valorInicial, BigDecimal valorAtual, BigDecimal percentualAcrescido,
                               BigDecimal percentualSuprimido, String gestorMatricula, String gestorNome, String fiscalMatricula, String fiscalNome,
-                              List<ItemInstrumento> itens, List<Aditivo> aditivos, List<String> alertas) {
+                              List<ItemInstrumento> itens, List<Aditivo> aditivos, List<String> alertas, long ordensEmAberto) {
     }
 }

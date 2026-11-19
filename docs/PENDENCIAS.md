@@ -204,7 +204,7 @@ real":
   - #13 Estoque — ~~ES1 (catálogo, lotes, livro, mínimo e alertas)~~ — ADR-0177; ~~ES2 (central, requisição, transferência,
     inventário)~~ — ADR-0189; ~~ES3 (reserva e consumo nas emergências)~~ — ADR-0191; ponto de reposição automático; incluir a capacidade Central de
     abastecimento no almoxarifado central; conceder o papel **Almoxarife** quando a autorização for ligada;
-  - #14 Compras — desenhado na ADR-0212; ~~CP1 (fornecedores, solicitação e pesquisa de preços)~~ — ADR-0212; ~~CP2 (contratação, atas, contratos e aditivos)~~ — ADR-0213; falta a CP3 (ordem de fornecimento, recebimento e painel); atalho de "meus contratos" para o fiscal sem permissão de Compras; conceder o papel **Compras** quando a autorização for ligada;
+  - #14 Compras — desenhado na ADR-0212; ~~CP1 (fornecedores, solicitação e pesquisa de preços)~~ — ADR-0212; ~~CP2 (contratação, atas, contratos e aditivos)~~ — ADR-0213; ~~CP3 (ordem de fornecimento, recebimento, ocorrências e painel; "Meus contratos" no menu)~~ — ADR-0214; domínio completo; NF-e (XML) e PNCP no domínio 20; conceder o papel **Compras** quando a autorização for ligada;
   - #15 Patrimônio;
   - #17 Financeiro;
   - #18 Qualidade — desenhada na ADR-0202; ~~Q1 (segurança do paciente)~~ — ADR-0203 (Notivisa à mão, sem feriados no prazo mensal);

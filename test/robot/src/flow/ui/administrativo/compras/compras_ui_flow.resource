@@ -3,9 +3,10 @@ Library     String
 Resource    ../../../../pom/ui/administrativo/compras/compras_ui_pom.resource
 Resource    ../../../compras/compras_flow.resource
 Resource    ../../../compras/contratos_flow.resource
+Resource    ../../../compras/entregas_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
-    Jornadas da tela Compras (ADRs 0212 e 0213); as bases vêm pela API.
+    Jornadas da tela Compras (ADRs 0212 a 0214); as bases vêm pela API.
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 UI Compras - Pelo Menu
@@ -128,5 +129,38 @@ UI Compras - Aditivo De Contrato
     Click    css=app-drawer button >> text=Registrar aditivo
     Wait For Elements State    css=[aria-label="Aditivos"] >> text=/Acréscimo de quantidade/    visible
     Wait For Elements State    css=table[aria-label="Itens e saldos"] >> text=inicial 50    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Compras - Ordem E Recebimento
+    [Documentation]    Pela tela: emite a ordem no contrato, recebe a entrega e confirma o definitivo.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${ct}=    Seed Instrumento    CONTRATO
+    ${r}=    GET Instrumento    ${ct}
+    ${unidade}=    Seed A Unidade De Saude Uuid
+    UI Compras - Abrir Tela
+    Click    role=tab[name="Contratos"]
+    Click    css=button[aria-label="Abrir ${r.json()}[numero]"]
+    Select Options By    id=f-of-unidade    value    ${unidade}
+    Fill Text    id=f-of-qtd-0    10
+    Click    css=app-drawer button >> text=Emitir ordem
+    Wait For Elements State    css=#drawer-titulo >> text=/Ordem \\d{4}\\/\\d{6}/    visible
+    Fill Text    id=f-rc-nota    NF UI 1
+    Fill Text    id=f-rc-qtd-0    10
+    Click    css=app-drawer button >> text=Registrar recebimento provisório
+    Wait For Elements State    css=[aria-label="Recebimentos"] >> text=Provisório    visible
+    Click    css=app-drawer button >> text=Confirmar recebimento definitivo
+    Wait For Elements State    css=app-drawer dl >> text=/Recebida/    visible
+    Wait For Elements State    css=[aria-label="Recebimentos"] >> text=Definitivo    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Compras - Painel
+    [Documentation]    A aba Painel mostra o resumo e o desempenho dos fornecedores.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Seed Ordem
+    Ir Para Rota Do Frontend    /administrativo/compras?aba=painel
+    Wait For Elements State    css=section[aria-label="Resumo de Compras"] >> text=Ordens em aberto    visible
+    Wait For Elements State    css=table[aria-label="Desempenho dos fornecedores"]    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

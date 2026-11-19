@@ -2,12 +2,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  OcorrenciaDto, OrdemDto, PainelComprasDto, SituacaoOcorrenciaFornecedor, TipoOcorrenciaFornecedor,
   ContratacaoDto, InstrumentoDto, ModalidadeContratacao, ResultadoItemContratacao, SituacaoContratacao, TipoAditivoContratual, TipoInstrumentoContratual,
   DecisaoSolicitacaoCompra, FonteCotacao, FornecedorDto, SituacaoSolicitacaoCompra, SolicitacaoCompraDto, SolicitacaoCompraRequest, SugestaoCompraDto,
   TipoCertidaoFornecedor, TipoSancaoFornecedor,
 } from '../models/compras';
 
-/** Compras: CP1 (ADR-0212) e CP2, contratação e contratos (ADR-0213). */
+/** Compras: CP1 (ADR-0212), CP2 contratação e contratos (ADR-0213) e CP3 entregas e painel (ADR-0214). */
 @Injectable({ providedIn: 'root' })
 export class ComprasService {
   private readonly http = inject(HttpClient);
@@ -136,5 +137,55 @@ export class ComprasService {
   aditivo(uuid: string, dto: { tipo: TipoAditivoContratual; novoFim: string | null; itemId: string | null; quantidade: number | null;
     novoPreco: number | null; justificativa: string; assinadoEm: string }): Observable<InstrumentoDto> {
     return this.http.post<InstrumentoDto>(`${this.api}/instrumento/${uuid}/aditivo`, dto);
+  }
+
+  // ── CP3 (ADR-0214) ──
+
+  emitirOrdem(instrumentoId: string, dto: { unidadeId: string; empenho: string | null; prazoDias: number | null;
+    itens: { itemInstrumentoId: string; quantidade: number }[] }): Observable<OrdemDto> {
+    return this.http.post<OrdemDto>(`${this.api}/instrumento/${instrumentoId}/ordem`, dto);
+  }
+
+  ordensDo(instrumentoId: string): Observable<OrdemDto[]> {
+    return this.http.get<OrdemDto[]>(`${this.api}/instrumento/${instrumentoId}/ordens`);
+  }
+
+  ordem(uuid: string): Observable<OrdemDto> {
+    return this.http.get<OrdemDto>(`${this.api}/ordem/${uuid}`);
+  }
+
+  cancelarOrdem(uuid: string, motivo: string): Observable<OrdemDto> {
+    return this.http.post<OrdemDto>(`${this.api}/ordem/${uuid}/cancelamento`, { motivo });
+  }
+
+  receber(ordemId: string, dto: { notaFiscal: string; notaEmitidaEm: string; observacao: string | null;
+    itens: { itemOrdemId: string; quantidade: number; numeroLote: string | null; validade: string | null }[] }): Observable<OrdemDto> {
+    return this.http.post<OrdemDto>(`${this.api}/ordem/${ordemId}/recebimento`, dto);
+  }
+
+  definitivo(recebimentoId: string, itens: { itemRecebimentoId: string; quantidadeAceita: number; motivoRecusa: string | null }[]): Observable<OrdemDto> {
+    return this.http.post<OrdemDto>(`${this.api}/recebimento/${recebimentoId}/definitivo`, { itens });
+  }
+
+  registrarOcorrencia(ordemId: string, tipo: TipoOcorrenciaFornecedor, descricao: string): Observable<OrdemDto> {
+    return this.http.post<OrdemDto>(`${this.api}/ordem/${ordemId}/ocorrencia`, { tipo, descricao });
+  }
+
+  ocorrencias(situacao?: SituacaoOcorrenciaFornecedor): Observable<OcorrenciaDto[]> {
+    const params = situacao ? new HttpParams().set('situacao', situacao) : new HttpParams();
+    return this.http.get<OcorrenciaDto[]>(`${this.api}/ocorrencias`, { params });
+  }
+
+  encerrarOcorrencia(uuid: string, motivo: string): Observable<OcorrenciaDto> {
+    return this.http.post<OcorrenciaDto>(`${this.api}/ocorrencia/${uuid}/encerramento`, { motivo });
+  }
+
+  sancionarOcorrencia(uuid: string, dto: { tipo: TipoSancaoFornecedor; inicio: string; fim: string | null; valor: number | null; motivo: string;
+    processo: string | null }): Observable<OcorrenciaDto> {
+    return this.http.post<OcorrenciaDto>(`${this.api}/ocorrencia/${uuid}/sancao`, dto);
+  }
+
+  painel(): Observable<PainelComprasDto> {
+    return this.http.get<PainelComprasDto>(`${this.api}/painel`);
   }
 }
