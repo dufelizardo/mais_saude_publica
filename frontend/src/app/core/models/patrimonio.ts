@@ -78,6 +78,8 @@ export interface BemDto {
   veiculoPlaca: string | null;
   transferenciaPendente: TransferenciaBemDto | null;
   observacao: string | null;
+  /** Depreciação linear da classe, só para leitura (ADR-0217). */
+  valorContabil: number | null;
 }
 
 export interface ResponsavelBemDto {
@@ -92,6 +94,7 @@ export interface DetalheBemDto {
   bem: BemDto;
   responsaveis: ResponsavelBemDto[];
   transferencias: TransferenciaBemDto[];
+  baixa: BaixaBemDto | null;
 }
 
 export interface BemRequest {
@@ -204,6 +207,7 @@ export interface ResumoManutencaoDto {
   paradas: number;
   planosVencendo: PlanoManutencaoDto[];
   calibracoesVencidas: PlanoManutencaoDto[];
+  equipamentosParados: OrdemServicoDto[];
 }
 
 export interface ContratoServicoDto {
@@ -219,4 +223,96 @@ export interface ConclusaoOrdemServicoRequest {
   certificado: string | null;
   calibracaoValidaAte: string | null;
   pecas: { materialId: string | null; descricao: string | null; quantidade: number; custoUnitario: number | null }[];
+}
+
+// ── Inventário, baixa e painel, fatia PM3 (ADR-0217) ──
+
+export type MotivoBaixaBem = 'INSERVIVEL' | 'EXTRAVIO' | 'FURTO_ROUBO' | 'DOACAO' | 'ALIENACAO' | 'DEVOLUCAO_CESSAO';
+export type SituacaoBaixaBem = 'PENDENTE' | 'CONFIRMADA' | 'RECUSADA';
+export type ResultadoConferencia = 'ENCONTRADO' | 'NAO_ENCONTRADO' | 'OUTRO_LOCAL';
+export type ConservacaoBem = 'BOM' | 'REGULAR' | 'RUIM' | 'INSERVIVEL';
+export type AcaoInventario = 'SETOR_CORRIGIDO' | 'TRANSFERENCIA' | 'BAIXA_SUGERIDA';
+
+export const MOTIVOS_BAIXA: Record<MotivoBaixaBem, string> = {
+  INSERVIVEL: 'Inservível',
+  EXTRAVIO: 'Extravio',
+  FURTO_ROUBO: 'Furto ou roubo',
+  DOACAO: 'Doação a terceiro',
+  ALIENACAO: 'Alienação',
+  DEVOLUCAO_CESSAO: 'Devolução da cessão',
+};
+export const SITUACOES_BAIXA: Record<SituacaoBaixaBem, string> = { PENDENTE: 'À espera da confirmação', CONFIRMADA: 'Confirmada', RECUSADA: 'Recusada' };
+export const RESULTADOS_CONFERENCIA: Record<ResultadoConferencia, string> = { ENCONTRADO: 'Encontrado', NAO_ENCONTRADO: 'Não encontrado', OUTRO_LOCAL: 'Em outro local' };
+export const CONSERVACOES: Record<ConservacaoBem, string> = { BOM: 'Bom', REGULAR: 'Regular', RUIM: 'Ruim', INSERVIVEL: 'Inservível' };
+export const ACOES_INVENTARIO: Record<AcaoInventario, string> = {
+  SETOR_CORRIGIDO: 'Setor corrigido',
+  TRANSFERENCIA: 'Transferência aberta',
+  BAIXA_SUGERIDA: 'Baixa sugerida',
+};
+
+export interface BaixaBemDto {
+  uuid: string;
+  bemId: string;
+  numeroTombamento: string | null;
+  bemDescricao: string;
+  unidadeNome: string;
+  motivo: MotivoBaixaBem;
+  processo: string;
+  boletimOcorrencia: string | null;
+  dataBaixa: string;
+  observacao: string | null;
+  valorAquisicao: number | null;
+  valorContabil: number | null;
+  situacao: SituacaoBaixaBem;
+  resolvidaEm: string | null;
+  motivoRecusa: string | null;
+}
+
+export interface ItemInventarioDto {
+  uuid: string;
+  bemId: string;
+  numeroTombamento: string | null;
+  bemDescricao: string;
+  setorEsperadoNome: string | null;
+  resultado: ResultadoConferencia | null;
+  conservacao: ConservacaoBem | null;
+  setorEncontradoNome: string | null;
+  unidadeEncontradaNome: string | null;
+  observacao: string | null;
+  conferidoEm: string | null;
+  acao: AcaoInventario | null;
+}
+
+export interface InventarioDto {
+  uuid: string;
+  numero: string;
+  unidadeId: string;
+  unidadeNome: string;
+  situacao: 'ABERTO' | 'FECHADO';
+  abertoEm: string;
+  fechadoEm: string | null;
+  observacao: string | null;
+  membros: { matricula: string; nome: string }[];
+  total: number;
+  conferidos: number;
+  naoEncontrados: number;
+  outroLocal: number;
+  inserviveis: number;
+  itens: ItemInventarioDto[];
+  achados: { uuid: string; descricao: string; local: string | null }[];
+}
+
+export interface PainelPatrimonioDto {
+  bens: number;
+  valorAquisicao: number;
+  valorContabil: number;
+  ociosos: number;
+  aTombar: number;
+  inventariosAbertos: number;
+  baixasNoAno: number;
+  baixasPendentes: BaixaBemDto[];
+  porUnidade: { unidadeId: string; unidadeNome: string; bens: number; valorAquisicao: number; valorContabil: number; ultimoInventario: string | null;
+    semInventarioHa12Meses: boolean }[];
+  porClasse: { classe: ClasseBem; bens: number; valorAquisicao: number; valorContabil: number }[];
+  manutencao: { bemId: string; numeroTombamento: string | null; descricao: string; unidadeNome: string; custo: number; diasParado: number }[];
 }

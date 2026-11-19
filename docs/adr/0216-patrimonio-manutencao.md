@@ -91,7 +91,8 @@ Aceita e implementada. Segunda fatia do domínio 15; o desenho está na [ADR-021
 - **O bem e o veículo têm o histórico de manutenção** com o custo e o tempo parado, que a PM3 leva ao painel.
 - **A frota deixa de depender da marcação à mão** quando o veículo é um bem: a ordem de serviço põe e tira o veículo da manutenção.
 - **Pendências:**
-  - o alerta de equipamento parado na Sala de Situação e o painel consolidado ficam para a PM3;
+  - o alerta de equipamento parado na Sala de Situação e o painel consolidado vieram na PM3
+    ([ADR-0217](./0217-patrimonio-inventario-baixa-e-painel.md));
   - a liquidação do contrato de serviço é do domínio 17;
   - o certificado de calibração fica em texto até a D2 de Documentos.
 

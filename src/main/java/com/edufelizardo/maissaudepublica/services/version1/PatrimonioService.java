@@ -45,6 +45,8 @@ public class PatrimonioService {
     @Autowired private SetorRepository setorRepository;
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private VeiculoRepository veiculoRepository;
+    @Autowired private InventarioPatrimonioRepository inventarioRepository;
+    @Autowired private BaixaBemRepository baixaRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
 
     // ── Consulta ───────────────────────────────────────────────────────────────────────────────────
@@ -283,6 +285,7 @@ public class PatrimonioService {
         if (pendente(b).isPresent()) {
             throw new ResourceConflictException("O bem já tem uma transferência à espera do aceite.");
         }
+        exigirSemInventario(b.getUnidade());
         TransferenciaBem t = new TransferenciaBem();
         t.setBem(b);
         t.setOrigem(b.getUnidade());
@@ -304,6 +307,7 @@ public class PatrimonioService {
         controleDeAcesso.exigir(GERENCIAR, t.getDestino());
         BemPatrimonial b = t.getBem();
         ContextoAuditoria.registro(b.getUuid());
+        exigirSemInventario(t.getDestino());
         Setor setor = setor(dto.getSetorId(), t.getDestino());
         Profissional p = profissional(dto.getResponsavelMatricula());
         LocalDate hoje = hoje();
@@ -340,6 +344,39 @@ public class PatrimonioService {
         ContextoAuditoria.registro(t.getBem().getUuid());
         resolver(t, SituacaoTransferenciaBem.CANCELADA, null, hoje());
         return detalhe(t.getBem());
+    }
+
+    /** Com inventário aberto na unidade, os bens não entram nem saem dela (ADR-0217): 422. */
+    private void exigirSemInventario(UnidadeDeSaude u) {
+        if (inventarioRepository.existsByUnidade_UuidAndSituacao(u.getUuid(), com.edufelizardo.maissaudepublica.models.enuns.SituacaoInventarioPatrimonio.ABERTO)) {
+            throw new ResourceUnprocessableEntityException("A unidade " + u.getNome() + " está com inventário aberto: a transferência espera o fechamento.");
+        }
+    }
+
+    /**
+     * O valor contábil estimado (ADR-0217, MCASP): depreciação linear pela vida útil da classe, até o valor residual de 10%. Sem valor,
+     * data ou classe, nada. Só para leitura: o lançamento contábil é do domínio 17.
+     */
+    public static BigDecimal valorContabil(BemPatrimonial b, LocalDate hoje) {
+        if (b.getValorAquisicao() == null || b.getDataAquisicao() == null || b.getClasse() == null) {
+            return null;
+        }
+        int vidaAnos = switch (b.getClasse()) {
+            case INFORMATICA, VEICULO -> 5;
+            default -> 10;
+        };
+        long meses = Math.max(0, java.time.temporal.ChronoUnit.MONTHS.between(b.getDataAquisicao(), hoje));
+        BigDecimal valor = b.getValorAquisicao();
+        BigDecimal residual = valor.multiply(new BigDecimal("0.10"));
+        BigDecimal fracao = BigDecimal.valueOf(Math.min(meses, vidaAnos * 12L)).divide(BigDecimal.valueOf(vidaAnos * 12L), 10, java.math.RoundingMode.HALF_UP);
+        return valor.subtract(valor.subtract(residual).multiply(fracao)).setScale(2, java.math.RoundingMode.HALF_UP);
+    }
+
+    public static PatrimonioDtos.Baixa dto(BaixaBem x) {
+        BemPatrimonial b = x.getBem();
+        return new PatrimonioDtos.Baixa(x.getUuid(), b.getUuid(), b.getNumeroTombamento(), b.getDescricao(), b.getUnidade().getNome(), x.getMotivo(),
+                x.getProcesso(), x.getBoletimOcorrencia(), x.getDataBaixa(), x.getObservacao(), b.getValorAquisicao(), x.getValorContabil(), x.getSituacao(),
+                x.getResolvidaEm(), x.getMotivoRecusa());
     }
 
     // ── Auxiliares ─────────────────────────────────────────────────────────────────────────────────
@@ -436,7 +473,8 @@ public class PatrimonioService {
                 .map(r -> new PatrimonioDtos.Responsavel(r.getUuid(), r.getProfissional().getMatricula(), r.getProfissional().getNome(), r.getDesde(), r.getAte()))
                 .toList();
         List<PatrimonioDtos.Transferencia> transferencias = transferenciaRepository.findDosBens(List.of(b.getUuid())).stream().map(PatrimonioService::dto).toList();
-        return new PatrimonioDtos.Detalhe(dtos(List.of(completo)).get(0), responsaveis, transferencias);
+        PatrimonioDtos.Baixa baixa = baixaRepository.findDoBem(b.getUuid()).stream().findFirst().map(PatrimonioService::dto).orElse(null);
+        return new PatrimonioDtos.Detalhe(dtos(List.of(completo)).get(0), responsaveis, transferencias, baixa);
     }
 
     private List<PatrimonioDtos.Bem> dtos(List<BemPatrimonial> bens) {
@@ -459,7 +497,7 @@ public class PatrimonioService {
                     b.getFornecedor() != null ? b.getFornecedor().getRazaoSocial() : null, b.getTombadoEm(),
                     r != null ? r.getProfissional().getMatricula() : null, r != null ? r.getProfissional().getNome() : null, r != null ? r.getDesde() : null,
                     b.getVeiculo() != null ? b.getVeiculo().getUuid() : null, b.getVeiculo() != null ? b.getVeiculo().getPlaca() : null,
-                    t != null ? dto(t) : null, b.getObservacao());
+                    t != null ? dto(t) : null, b.getObservacao(), valorContabil(b, hoje()));
         }).toList();
     }
 

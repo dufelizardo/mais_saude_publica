@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Patrimonio
-Metadata    Test Suite Description        Valida a tela Patrimônio: menu, cadastro, transferência com aceite, tombamento do bem comprado (ADR-0215), chamado e ordem de serviço (ADR-0216).
+Metadata    Test Suite Description        Valida a tela Patrimônio: menu, cadastro, transferência com aceite, tombamento do bem comprado (ADR-0215), chamado e ordem de serviço (ADR-0216), inventário, baixa e painel (ADR-0217).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiPatrimonio    MaisSaudePublicaFrontend
@@ -63,6 +63,22 @@ CT-006 - Ordem de serviço
     [Tags]    UI    UiPatrimonio
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - PATRIMONIO - ORDEM DE SERVICO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-007 - Inventário
+    [Documentation]    Abre com a comissão, confere o bem e fecha.
+    [Tags]    UI    UiPatrimonio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - PATRIMONIO - INVENTARIO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-008 - Baixa e painel
+    [Documentation]    A ficha baixa o bem e o painel abre.
+    [Tags]    UI    UiPatrimonio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - PATRIMONIO - BAIXA E PAINEL
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

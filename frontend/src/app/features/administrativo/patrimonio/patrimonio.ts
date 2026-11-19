@@ -6,6 +6,9 @@ import { AcessoDaInterface } from '../../../core/models/auth';
 import {
   BemDto,
   CLASSES_BEM,
+  MOTIVOS_BAIXA,
+  MotivoBaixaBem,
+  SITUACOES_BAIXA,
   ClasseBem,
   DetalheBemDto,
   ORIGENS_BEM,
@@ -25,14 +28,17 @@ import { SetorService } from '../../../core/services/setor';
 import { TransporteService } from '../../../core/services/transporte';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { InventarioPatrimonio } from './inventario-patrimonio';
 import { ManutencaoPatrimonio } from './manutencao-patrimonio';
+import { PainelPatrimonio } from './painel-patrimonio';
 
-type Aba = 'bens' | 'tombar' | 'transferencias' | 'manutencao' | 'meus';
+type Aba = 'bens' | 'tombar' | 'transferencias' | 'manutencao' | 'inventarios' | 'painel' | 'meus';
 type Gaveta = 'cadastro' | 'tombamento' | 'aceite' | 'recusa' | null;
 
 const CONSULTAR = 'PATRIMONIO.CONSULTAR';
 const GERENCIAR = 'PATRIMONIO.GERENCIAR';
 const EXECUTAR = 'MANUTENCAO.EXECUTAR';
+const CONFIRMAR_BAIXA = 'PATRIMONIO.CONFIRMAR_BAIXA';
 
 /**
  * Patrimônio, fatia PM1 (ADR-0215): os bens tombados com o responsável, os bens comprados à espera do tombamento, as transferências entre
@@ -41,7 +47,7 @@ const EXECUTAR = 'MANUTENCAO.EXECUTAR';
  */
 @Component({
   selector: 'app-patrimonio',
-  imports: [Drawer, ManutencaoPatrimonio],
+  imports: [Drawer, ManutencaoPatrimonio, InventarioPatrimonio, PainelPatrimonio],
   template: `
     <header class="page-head">
       <div>
@@ -59,6 +65,8 @@ const EXECUTAR = 'MANUTENCAO.EXECUTAR';
         <button type="button" role="tab" id="tab-tombar" [attr.aria-selected]="aba() === 'tombar'" (click)="irPara('tombar')">A tombar @if (aTombar().length) { <span class="cnt">{{ aTombar().length }}</span> }</button>
         <button type="button" role="tab" id="tab-transferencias" [attr.aria-selected]="aba() === 'transferencias'" (click)="irPara('transferencias')">Transferências @if (pendentes()) { <span class="cnt">{{ pendentes() }}</span> }</button>
       }
+      @if (vePatrimonio() || meusInventarios()) { <button type="button" role="tab" id="tab-inventarios" [attr.aria-selected]="aba() === 'inventarios'" (click)="irPara('inventarios')">Inventários</button> }
+      @if (vePatrimonio()) { <button type="button" role="tab" id="tab-painel" [attr.aria-selected]="aba() === 'painel'" (click)="irPara('painel')">Painel</button> }
       @if (pode(EXECUTAR)) { <button type="button" role="tab" id="tab-manutencao" [attr.aria-selected]="aba() === 'manutencao'" (click)="irPara('manutencao')">Manutenção</button> }
       <button type="button" role="tab" id="tab-meus" [attr.aria-selected]="aba() === 'meus'" (click)="irPara('meus')">Meus bens</button>
     </div>
@@ -150,6 +158,8 @@ const EXECUTAR = 'MANUTENCAO.EXECUTAR';
         </div>
       }
       @case ('manutencao') { <app-manutencao-patrimonio modo="painel" [podeExecutar]="true" /> }
+      @case ('inventarios') { <app-inventario-patrimonio [podeGerenciar]="vePatrimonio() && pode(GERENCIAR)" [meus]="!vePatrimonio()" [unidades]="unidades()" [setores]="todosSetores()" /> }
+      @case ('painel') { <app-painel-patrimonio [podeConfirmar]="pode(CONFIRMAR_BAIXA)" /> }
       @case ('meus') {
         <p class="cell-sub">Os bens sob a sua responsabilidade pelo termo assinado.</p>
         <div class="tbl-wrap card">
@@ -289,6 +299,8 @@ const EXECUTAR = 'MANUTENCAO.EXECUTAR';
             <div><dt>Unidade</dt><dd>{{ d.bem.unidadeNome }}@if (d.bem.setorNome) { · {{ d.bem.setorNome }} }</dd></div>
             <div><dt>Responsável</dt><dd>{{ d.bem.responsavelNome ?? '—' }}@if (d.bem.responsavelMatricula) { <span class="cell-sub">matrícula {{ d.bem.responsavelMatricula }}</span> }</dd></div>
             <div><dt>Aquisição</dt><dd>{{ origens[d.bem.origem] }}@if (d.bem.dataAquisicao) { · {{ data(d.bem.dataAquisicao) }} }@if (d.bem.valorAquisicao != null) { · {{ moeda(d.bem.valorAquisicao) }} }@if (d.bem.documento) { · {{ d.bem.documento }} }@if (d.bem.fornecedorNome) { · {{ d.bem.fornecedorNome }} }</dd></div>
+            @if (d.bem.valorContabil != null) { <div><dt>Valor contábil</dt><dd>{{ moeda(d.bem.valorContabil) }} <span class="cell-sub">estimado pela depreciação linear da classe</span></dd></div> }
+            @if (d.baixa; as x) { <div><dt>Baixa</dt><dd>{{ motivosBaixa[x.motivo] }} · processo {{ x.processo }} · {{ data(x.dataBaixa) }} · {{ situacoesBaixa[x.situacao] }}@if (x.motivoRecusa) { ({{ x.motivoRecusa }}) }</dd></div> }
             @if (d.bem.veiculoPlaca) { <div><dt>Veículo da frota</dt><dd class="mono">{{ d.bem.veiculoPlaca }}</dd></div> }
             @if (d.bem.observacao) { <div><dt>Observação</dt><dd>{{ d.bem.observacao }}</dd></div> }
           </dl>
@@ -325,6 +337,22 @@ const EXECUTAR = 'MANUTENCAO.EXECUTAR';
                 <button type="button" class="btn btn--ghost btn--sm" (click)="vincularVeiculo(d.bem)" [disabled]="enviando()">Ligar</button>
               </div>
             }
+          }
+
+          @if (pode(GERENCIAR) && ativo(d.bem) && d.baixa?.situacao !== 'PENDENTE') {
+            <h3 class="mo-grupo pt-titulo">Baixa</h3>
+            <div class="pt-linha">
+              <div class="dw-field"><label for="f-pt-bx-motivo">Motivo</label>
+                <select id="f-pt-bx-motivo" (change)="set('bxMotivo', $event)">
+                  <option value="">Escolha…</option>
+                  @for (m of listaMotivosBaixa; track m) { <option [value]="m">{{ motivosBaixa[m] }}</option> }
+                </select></div>
+              <div class="dw-field"><label for="f-pt-bx-processo">Processo</label><input id="f-pt-bx-processo" type="text" maxlength="60" (input)="set('bxProcesso', $event)" /></div>
+              <div class="dw-field"><label for="f-pt-bx-data">Data</label><input id="f-pt-bx-data" type="date" [max]="hoje" [value]="f()['bxData'] ?? hoje" (input)="set('bxData', $event)" /></div>
+              @if (f()['bxMotivo'] === 'FURTO_ROUBO') { <div class="dw-field"><label for="f-pt-bx-bo">Boletim de ocorrência</label><input id="f-pt-bx-bo" type="text" maxlength="60" (input)="set('bxBoletim', $event)" /></div> }
+              <button type="button" class="btn btn--ghost btn--sm" (click)="pedirBaixa(d.bem)" [disabled]="enviando()">Pedir baixa</button>
+            </div>
+            <p class="cell-sub">Acima de R$ 10.000,00, a baixa espera a confirmação da gestão.</p>
           }
 
           @for (id of [d.bem.uuid]; track id) {
@@ -371,6 +399,10 @@ export class Patrimonio {
 
   protected readonly GERENCIAR = GERENCIAR;
   protected readonly EXECUTAR = EXECUTAR;
+  protected readonly CONFIRMAR_BAIXA = CONFIRMAR_BAIXA;
+  protected readonly motivosBaixa = MOTIVOS_BAIXA;
+  protected readonly listaMotivosBaixa = Object.keys(MOTIVOS_BAIXA) as MotivoBaixaBem[];
+  protected readonly situacoesBaixa = SITUACOES_BAIXA;
   protected readonly classes = CLASSES_BEM;
   protected readonly listaClasses = Object.keys(CLASSES_BEM) as ClasseBem[];
   protected readonly situacoes = SITUACOES_BEM;
@@ -399,22 +431,29 @@ export class Patrimonio {
   protected readonly alvo = signal<BemDto | null>(null);
   protected readonly transferencia = signal<TransferenciaBemDto | null>(null);
   protected readonly detalhe = signal<DetalheBemDto | null>(null);
+  /** Inventários em que a pessoa é da comissão (ADR-0217), para quem não vê o Patrimônio pela permissão. */
+  protected readonly meusInventarios = signal(0);
+  protected readonly todosSetores = computed(() => this.setores());
 
   protected readonly pendentes = computed(() => this.transferencias().filter((t) => t.situacao === 'PENDENTE').length);
 
   constructor() {
     this.authService.acessoDaInterface().subscribe((a) => {
       this.acesso.set(a);
+      this.unidadeService.listar().pipe(catchError(() => of([]))).subscribe((l) => this.unidades.set(l));
+      this.setorService.listar().pipe(catchError(() => of([]))).subscribe((l) => this.setores.set(l));
       if (!this.vePatrimonio()) {
-        this.irPara('meus');
+        this.service.meusInventarios().pipe(catchError(() => of([]))).subscribe((l) => {
+          this.meusInventarios.set(l.length);
+          this.irPara(this.abaDaRota === 'inventarios' && l.length ? 'inventarios' : 'meus');
+        });
         return;
       }
+      if (this.abaDaRota === 'inventarios' || this.abaDaRota === 'painel') this.aba.set(this.abaDaRota as Aba);
       if (this.abaDaRota === 'manutencao' && this.pode(EXECUTAR)) this.aba.set('manutencao');
       this.carregar();
       this.carregarATombar();
       this.carregarTransferencias();
-      this.unidadeService.listar().pipe(catchError(() => of([]))).subscribe((l) => this.unidades.set(l));
-      this.setorService.listar().pipe(catchError(() => of([]))).subscribe((l) => this.setores.set(l));
     });
   }
 
@@ -532,6 +571,29 @@ export class Patrimonio {
 
   protected ativo(b: BemDto): boolean {
     return b.situacao === 'EM_USO' || b.situacao === 'OCIOSO';
+  }
+
+  protected pedirBaixa(b: BemDto): void {
+    const v = this.f();
+    if (!v['bxMotivo'] || !v['bxProcesso']?.trim()) {
+      this.erroGaveta.set('Escolha o motivo e informe o processo da baixa.');
+      return;
+    }
+    this.enviando.set(true);
+    this.erroGaveta.set(null);
+    this.service.pedirBaixa(b.uuid, { motivo: v['bxMotivo'] as MotivoBaixaBem, processo: v['bxProcesso'].trim(), boletimOcorrencia: v['bxBoletim']?.trim() || null,
+      dataBaixa: v['bxData'] || this.hoje, observacao: null }).subscribe({
+      next: (x) => {
+        this.enviando.set(false);
+        this.aviso.set(x.situacao === 'PENDENTE' ? `Baixa de ${b.numeroTombamento} à espera da confirmação da gestão.` : `Bem ${b.numeroTombamento} baixado.`);
+        this.abrir(b.uuid);
+        this.carregar();
+      },
+      error: (x: HttpErrorResponse) => {
+        this.enviando.set(false);
+        this.erroGaveta.set(mensagem(x));
+      },
+    });
   }
 
   protected trocarResponsavel(b: BemDto): void {

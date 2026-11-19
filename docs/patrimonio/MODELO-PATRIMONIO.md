@@ -9,7 +9,7 @@ atualizado em cada fatia.
 |-------|----------|--------|
 | PM1 | Bem, tombamento, termo de responsabilidade, transferência em duas etapas, bem permanente comprado a tombar, veículo da frota, "Meus bens" | ✅ ADR-0215, V96 |
 | PM2 | Plano preventivo e calibração, chamado corretivo, ordem de serviço interna ou por contrato, peças pelo Estoque | ✅ ADR-0216, V97 |
-| PM3 | Inventário anual com comissão, baixa, depreciação para leitura, painel e alerta na Sala de Situação | ⏳ |
+| PM3 | Inventário anual com comissão, baixa, depreciação para leitura, painel e alerta na Sala de Situação | ✅ ADR-0217, V98 |
 
 ## Entidades (PM1)
 
@@ -34,6 +34,19 @@ OrdemServicoManutencao   numero (AAAA/000001) · bem · plano · tipo (+ CORRETI
   └── PecaOrdemServico   material (do Estoque) ou descricao · quantidade · custoUnitario
 ```
 
+## Entidades (PM3)
+
+```text
+InventarioPatrimonio   numero (AAAA/000001) · unidade · situacao: ABERTO · FECHADO · abertoEm · fechadoEm
+  ├── MembroInventario  profissional (três, diferentes)
+  ├── ItemInventario    bem · setorEsperado · resultado: ENCONTRADO · NAO_ENCONTRADO · OUTRO_LOCAL
+  │                     conservacao: BOM · REGULAR · RUIM · INSERVIVEL · setorEncontrado · unidadeEncontrada
+  │                     acao: SETOR_CORRIGIDO · TRANSFERENCIA · BAIXA_SUGERIDA
+  └── AchadoInventario  descricao · local (o bem a mais)
+BaixaBem   bem · motivo: INSERVIVEL · EXTRAVIO · FURTO_ROUBO · DOACAO · ALIENACAO · DEVOLUCAO_CESSAO · processo · boletimOcorrencia
+           dataBaixa · valorContabil · situacao: PENDENTE · CONFIRMADA · RECUSADA
+```
+
 ## Regras
 
 - **Tombamento:**
@@ -50,6 +63,16 @@ OrdemServicoManutencao   numero (AAAA/000001) · bem · plano · tipo (+ CORRETI
 - **Veículo:** só o bem da classe veículo, com um veículo da mesma unidade, e um veículo por bem.
 - **Plano:** um ativo por tipo; a ordem do plano vencido nasce na leitura, uma por vencimento; a conclusão e o cancelamento contam a
   próxima data a partir de hoje.
+- **Inventário:**
+  - comissão de três; um aberto por unidade; enquanto aberto, os bens da unidade não são transferidos;
+  - a comissão confere com o login; o fechamento, com tudo conferido, corrige o setor, abre a transferência para a outra unidade e
+    sugere a baixa do não encontrado e do inservível.
+- **Baixa:**
+  - motivo, processo e data; o furto pede o boletim;
+  - sem ordem de serviço aberta nem transferência pendente;
+  - acima de R$ 10 mil, a gestão confirma, e quem pediu não confirma;
+  - o bem baixado encerra o termo, desativa os planos e inativa o veículo.
+- **Valor contábil:** linear, 5 anos para informática e veículo e 10 para as outras classes, residual de 10%; só para leitura.
 - **Chamado:** qualquer pessoa logada abre, do bem tombado e em operação; quem abriu acompanha em "Meus chamados".
 - **Ordem de serviço:**
   - a triagem dá a prioridade;
@@ -65,7 +88,8 @@ OrdemServicoManutencao   numero (AAAA/000001) · bem · plano · tipo (+ CORRETI
 | `PATRIMONIO.CONSULTAR` | Patrimônio, Gestor | Ver os bens e as transferências das unidades no escopo |
 | `PATRIMONIO.GERENCIAR` | Patrimônio, Gestor | Cadastrar, tombar, corrigir, trocar o responsável, mudar o uso, transferir, aceitar e ligar o veículo |
 | `MANUTENCAO.EXECUTAR` | Manutenção, Gestor | Planos, triagem, execução, conclusão e cancelamento das ordens; resumo e contratos de serviço |
-| (login) | Todos | "Meus bens", a ficha dos próprios bens, o chamado e "Meus chamados" |
+| `PATRIMONIO.CONFIRMAR_BAIXA` | Gestor | Confirmar ou recusar a baixa acima de R$ 10 mil |
+| (login) | Todos | "Meus bens", a ficha dos próprios bens, o chamado, "Meus chamados" e, na comissão, "Meus inventários" e a conferência |
 
 ## Tela
 
@@ -78,5 +102,9 @@ Tela **Patrimônio** (Administrativo):
 - **Manutenção** (com `MANUTENCAO.EXECUTAR`): o resumo, os planos vencendo, as calibrações vencidas e as ordens, com a gaveta da
   ordem (triagem, início, conclusão com as peças, cancelamento). Na ficha do bem: o chamado, os planos, as ordens, o custo e os dias
   parado.
+- **Inventários:** a lista, a abertura com a comissão e a gaveta com a conferência item a item, os achados e o fechamento.
+- **Painel:** os bens e os valores por unidade e por classe, os inventários, as baixas, a manutenção dos bens que mais custaram e as baixas
+  à espera da confirmação.
+- **Ficha do bem:** o valor contábil, a baixa e o pedido de baixa.
 - **Meus bens:** os bens sob a responsabilidade de quem está logado e "Meus chamados". Quem não tem permissão de Patrimônio vê só esta aba, e o menu
   ganha o item "Meus bens" quando há algum.

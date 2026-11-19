@@ -41,7 +41,11 @@ public final class ManutencaoDtos {
                         boolean calibracaoVencida) {
     }
 
-    /** {@code planosVencendo}: vencem nos próximos 30 dias ou já venceram. {@code calibracoesVencidas}: certificado vencido ou plano vencido. */
-    public record Resumo(long abertas, long emExecucao, long paradas, List<Plano> planosVencendo, List<Plano> calibracoesVencidas) {
+    /**
+     * {@code planosVencendo}: vencem nos próximos 30 dias ou já venceram. {@code calibracoesVencidas}: certificado vencido ou plano vencido.
+     * {@code equipamentosParados}: ordens abertas de equipamento médico-hospitalar parado há mais de 7 dias (ADR-0217, Sala de Situação).
+     */
+    public record Resumo(long abertas, long emExecucao, long paradas, List<Plano> planosVencendo, List<Plano> calibracoesVencidas,
+                         List<Ordem> equipamentosParados) {
     }
 }

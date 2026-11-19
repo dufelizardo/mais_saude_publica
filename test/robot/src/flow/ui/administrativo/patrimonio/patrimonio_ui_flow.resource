@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../../pom/ui/administrativo/patrimonio/patrimonio_ui_pom.resource
 Resource    ../../../patrimonio/manutencao_flow.resource
+Resource    ../../../patrimonio/inventario_flow.resource
 Resource    ../../../patrimonio/patrimonio_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -113,6 +114,50 @@ UI Patrimonio - Ordem De Servico
     Fill Text    id=f-mn-mao    50
     Click    css=app-drawer button >> text=Concluir
     Wait For Elements State    css=app-drawer dl >> text=Concluída    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Patrimonio - Inventario
+    [Documentation]    Pela tela: abre o inventário com a comissão, confere o bem e fecha.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${bem}    ${unidade}    ${matricula}=    Seed Bem Patrimonial
+    ${r}=    GET Bem Patrimonial    ${bem}
+    ${numero}=    Set Variable    ${r.json()}[bem][numeroTombamento]
+    ${comissao}=    Comissao Inventario
+    UI Patrimonio - Abrir Tela
+    Click    role=tab[name="Inventários"]
+    Clicar Botao    Abrir inventário
+    Select Options By    id=f-iv-unidade    value    ${unidade}
+    Fill Text    id=f-iv-membro-1    ${comissao}[0]
+    Fill Text    id=f-iv-membro-2    ${comissao}[1]
+    Fill Text    id=f-iv-membro-3    ${comissao}[2]
+    Enviar Gaveta
+    Wait For Elements State    css=#drawer-titulo >> text=/Inventário \\d{4}\\/\\d{6}/    visible
+    Click    css=button[aria-label="Conferir ${numero}"]
+    Select Options By    id=f-iv-conservacao    value    BOM
+    Click    css=app-drawer button >> text=Registrar
+    Wait For Elements State    css=[aria-label="Bens do inventário"] >> text=/Encontrado · Bom/    visible
+    Click    css=app-drawer button >> text=Fechar inventário
+    Wait For Elements State    css=app-drawer dl >> text=/Fechado em/    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Patrimonio - Baixa E Painel
+    [Documentation]    Pela tela: a ficha baixa o bem e o painel abre.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${bem}    ${unidade}    ${matricula}=    Seed Bem Patrimonial
+    ${r}=    GET Bem Patrimonial    ${bem}
+    ${numero}=    Set Variable    ${r.json()}[bem][numeroTombamento]
+    UI Patrimonio - Abrir Tela
+    UI Patrimonio - Filtrar Unidade    ${unidade}
+    Click    css=button[aria-label="Abrir bem ${numero}"]
+    Select Options By    id=f-pt-bx-motivo    value    INSERVIVEL
+    Fill Text    id=f-pt-bx-processo    PA 31/2026
+    Click    css=app-drawer button >> text=Pedir baixa
+    Wait For Elements State    css=app-drawer dl >> text=/processo PA 31\\/2026/    visible
+    Click    css=app-drawer button[aria-label="Fechar"]
+    Click    role=tab[name="Painel"]
+    Wait For Elements State    css=[aria-label="Resumo do patrimônio"] >> text=bens tombados    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

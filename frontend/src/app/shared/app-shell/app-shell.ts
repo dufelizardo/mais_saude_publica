@@ -133,6 +133,8 @@ export class AppShell {
   private readonly patrimonioService = inject(PatrimonioService);
   /** Os bens sob a responsabilidade da pessoa (ADR-0215), para quem não vê Patrimônio pelo menu: o item "Meus bens" aparece só se houver algum. */
   protected readonly meusBens = signal<number>(0);
+  /** Os inventários abertos em que a pessoa é da comissão (ADR-0217): o item "Meus inventários" aparece só se houver algum. */
+  protected readonly meusInventarios = signal<number>(0);
 
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.usuario.set(u));
@@ -147,6 +149,10 @@ export class AppShell {
       }
       if (a.restrito && !this.podeVer('/administrativo/patrimonio')) {
         this.patrimonioService.meusBens().subscribe({ next: (l) => this.meusBens.set(l.length), error: () => this.meusBens.set(0) });
+        this.patrimonioService.meusInventarios().subscribe({
+          next: (l) => this.meusInventarios.set(l.filter((i) => i.situacao === 'ABERTO').length),
+          error: () => this.meusInventarios.set(0),
+        });
       }
     });
     this.atualizarBreadcrumb();

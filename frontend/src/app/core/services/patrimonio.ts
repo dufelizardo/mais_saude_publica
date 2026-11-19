@@ -2,11 +2,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  BemDto, BemRequest, ClasseBem, ConclusaoOrdemServicoRequest, ContratoServicoDto, DetalheBemDto, ExecucaoManutencao, ManutencaoDoBemDto, OrdemServicoDto,
+  BaixaBemDto, BemDto, BemRequest, ClasseBem, ConservacaoBem, InventarioDto, MotivoBaixaBem, PainelPatrimonioDto, ResultadoConferencia, ConclusaoOrdemServicoRequest, ContratoServicoDto, DetalheBemDto, ExecucaoManutencao, ManutencaoDoBemDto, OrdemServicoDto,
   PrioridadeManutencao, ResumoManutencaoDto, SituacaoBem, SituacaoOrdemServico, TipoManutencao, TransferenciaBemDto,
 } from '../models/patrimonio';
 
-/** Patrimônio: PM1 bens e transferências (ADR-0215) e PM2 manutenção (ADR-0216). */
+/** Patrimônio: PM1 bens e transferências (ADR-0215), PM2 manutenção (ADR-0216) e PM3 inventário, baixa e painel (ADR-0217). */
 @Injectable({ providedIn: 'root' })
 export class PatrimonioService {
   private readonly http = inject(HttpClient);
@@ -124,5 +124,53 @@ export class PatrimonioService {
 
   cancelarOrdem(uuid: string, motivo: string): Observable<OrdemServicoDto> {
     return this.http.post<OrdemServicoDto>(`${this.api}/ordem-servico/${uuid}/cancelamento`, { motivo });
+  }
+
+  // ── Inventário, baixa e painel (ADR-0217) ──
+
+  inventarios(unidadeId?: string): Observable<InventarioDto[]> {
+    return this.http.get<InventarioDto[]>(`${this.api}/inventarios`, { params: unidadeId ? { unidadeId } : {} });
+  }
+
+  meusInventarios(): Observable<InventarioDto[]> {
+    return this.http.get<InventarioDto[]>(`${this.api}/meus-inventarios`);
+  }
+
+  inventario(uuid: string): Observable<InventarioDto> {
+    return this.http.get<InventarioDto>(`${this.api}/inventario/${uuid}`);
+  }
+
+  abrirInventario(unidadeId: string, membrosMatriculas: string[], observacao: string | null): Observable<InventarioDto> {
+    return this.http.post<InventarioDto>(`${this.api}/inventario`, { unidadeId, membrosMatriculas, observacao });
+  }
+
+  conferir(itemId: string, dto: { resultado: ResultadoConferencia; conservacao: ConservacaoBem | null; setorId: string | null; unidadeId: string | null;
+    observacao: string | null }): Observable<InventarioDto> {
+    return this.http.post<InventarioDto>(`${this.api}/inventario-item/${itemId}/conferencia`, dto);
+  }
+
+  registrarAchado(inventarioId: string, descricao: string, local: string | null): Observable<InventarioDto> {
+    return this.http.post<InventarioDto>(`${this.api}/inventario/${inventarioId}/achado`, { descricao, local });
+  }
+
+  fecharInventario(inventarioId: string): Observable<InventarioDto> {
+    return this.http.post<InventarioDto>(`${this.api}/inventario/${inventarioId}/fechamento`, {});
+  }
+
+  pedirBaixa(bemId: string, dto: { motivo: MotivoBaixaBem; processo: string; boletimOcorrencia: string | null; dataBaixa: string;
+    observacao: string | null }): Observable<BaixaBemDto> {
+    return this.http.post<BaixaBemDto>(`${this.api}/bem/${bemId}/baixa`, dto);
+  }
+
+  confirmarBaixa(baixaId: string): Observable<BaixaBemDto> {
+    return this.http.post<BaixaBemDto>(`${this.api}/baixa/${baixaId}/confirmacao`, {});
+  }
+
+  recusarBaixa(baixaId: string, motivo: string): Observable<BaixaBemDto> {
+    return this.http.post<BaixaBemDto>(`${this.api}/baixa/${baixaId}/recusa`, { motivo });
+  }
+
+  painel(): Observable<PainelPatrimonioDto> {
+    return this.http.get<PainelPatrimonioDto>(`${this.api}/painel`);
   }
 }
