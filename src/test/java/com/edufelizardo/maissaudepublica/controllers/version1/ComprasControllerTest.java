@@ -76,6 +76,11 @@ class ComprasControllerTest {
         String ordens = "(select uuid from tb_ordem_fornecimento where instrumento_id in " + instrumentos + ")";
         // PM1 (ADR-0215): os bens das unidades do teste ou dos fornecedores do teste, com os responsáveis e as transferências.
         String bens = "(select uuid from tb_bem_patrimonial where unidade_id in " + unidades + " or fornecedor_id in " + fornecedores + ")";
+        // F2 (ADR-0219): as liquidações dos empenhos, dos recebimentos e das ordens de serviço do teste, e as diárias dos credores do teste.
+        jdbc.update("delete from tb_liquidacao where empenho_id in (select uuid from tb_empenho where fornecedor_id in " + fornecedores + " or dotacao_id in "
+                + "(select uuid from tb_dotacao_orcamentaria where descricao like '" + prefixo + "%')) or recebimento_id in (select uuid from tb_recebimento_compra "
+                + "where ordem_id in " + ordens + ") or ordem_servico_id in (select uuid from tb_ordem_servico_manutencao where bem_id in " + bens + ")");
+        jdbc.update("delete from tb_diaria_tfd where credor_id in " + fornecedores);
         // PM3 (ADR-0217): os inventários das unidades e as baixas dos bens.
         String inventarios = "(select uuid from tb_inventario_patrimonio where unidade_id in " + unidades + ")";
         jdbc.update("delete from tb_item_inventario where inventario_id in " + inventarios + " or bem_id in " + bens);

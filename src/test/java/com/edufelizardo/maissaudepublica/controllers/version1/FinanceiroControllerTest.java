@@ -86,8 +86,12 @@ class FinanceiroControllerTest {
     }
 
     static String dotacao(int exercicio, String programa, String natureza, String valor, String prefixo) {
+        return dotacao(exercicio, programa, natureza, valor, prefixo, "BLOCO_MANUTENCAO");
+    }
+
+    static String dotacao(int exercicio, String programa, String natureza, String valor, String prefixo, String fonte) {
         return ("{\"exercicio\": %d, \"programaTrabalho\": \"%s\", \"descricao\": \"%sAtenção básica\", \"naturezaDespesa\": \"%s\", "
-                + "\"fonte\": \"BLOCO_MANUTENCAO\", \"fonteCodigo\": \"1.600\", \"valorInicial\": %s}").formatted(exercicio, programa, prefixo, natureza, valor);
+                + "\"fonte\": \"%s\", \"fonteCodigo\": \"1.600\", \"valorInicial\": %s}").formatted(exercicio, programa, prefixo, natureza, fonte, valor);
     }
 
     private static double numero(String json, String caminho) {

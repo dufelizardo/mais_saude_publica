@@ -20,8 +20,9 @@ import { AuthService } from '../../../core/services/auth';
 import { ComprasService } from '../../../core/services/compras';
 import { FinanceiroService } from '../../../core/services/financeiro';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { AbaLiquidacao, LiquidacaoFinanceiro } from './liquidacao-financeiro';
 
-type Aba = 'dotacoes' | 'empenhos';
+type Aba = 'dotacoes' | 'empenhos' | AbaLiquidacao;
 type Gaveta = 'dotacao' | 'empenho' | null;
 
 const GERENCIAR = 'FINANCEIRO.GERENCIAR';
@@ -33,7 +34,7 @@ const GERENCIAR = 'FINANCEIRO.GERENCIAR';
  */
 @Component({
   selector: 'app-financeiro',
-  imports: [Drawer],
+  imports: [Drawer, LiquidacaoFinanceiro],
   template: `
     <header class="page-head">
       <div>
@@ -53,6 +54,10 @@ const GERENCIAR = 'FINANCEIRO.GERENCIAR';
     <div class="tabs" role="tablist" aria-label="Seções do financeiro">
       <button type="button" role="tab" id="tab-dotacoes" [attr.aria-selected]="aba() === 'dotacoes'" (click)="aba.set('dotacoes')">Dotações</button>
       <button type="button" role="tab" id="tab-empenhos" [attr.aria-selected]="aba() === 'empenhos'" (click)="aba.set('empenhos')">Empenhos</button>
+      <button type="button" role="tab" id="tab-liquidar" [attr.aria-selected]="aba() === 'liquidar'" (click)="aba.set('liquidar')">A liquidar</button>
+      <button type="button" role="tab" id="tab-liquidacoes" [attr.aria-selected]="aba() === 'liquidacoes'" (click)="aba.set('liquidacoes')">Liquidações</button>
+      <button type="button" role="tab" id="tab-restos" [attr.aria-selected]="aba() === 'restos'" (click)="aba.set('restos')">Restos a pagar</button>
+      <button type="button" role="tab" id="tab-execucao" [attr.aria-selected]="aba() === 'execucao'" (click)="aba.set('execucao')">Execução</button>
     </div>
 
     @if (erro()) { <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div> }
@@ -81,6 +86,8 @@ const GERENCIAR = 'FINANCEIRO.GERENCIAR';
           </tbody>
         </table>
       </div>
+    } @else if (aba() !== 'empenhos') {
+      <app-liquidacao-financeiro [aba]="$any(aba())" [exercicio]="exercicio()" [podeGerenciar]="pode(GERENCIAR)" [empenhos]="todosEmpenhos()" />
     } @else {
       <div class="tbl-wrap card">
         <table class="fn-tabela" aria-label="Empenhos">
@@ -272,6 +279,8 @@ export class Financeiro {
   protected readonly f = signal<Record<string, string>>({});
   protected readonly dotacoes = signal<DotacaoDto[]>([]);
   protected readonly empenhos = signal<EmpenhoDto[]>([]);
+  /** Todos os exercícios, para a liquidação dos restos a pagar (ADR-0219). */
+  protected readonly todosEmpenhos = signal<EmpenhoDto[]>([]);
   protected readonly fornecedores = signal<FornecedorDto[]>([]);
   private readonly instrumentos = signal<InstrumentoDto[]>([]);
   protected readonly gaveta = signal<Gaveta>(null);
@@ -301,6 +310,7 @@ export class Financeiro {
   protected carregar(): void {
     this.service.dotacoes(this.exercicio()).subscribe({ next: (l) => this.dotacoes.set(l), error: (x: HttpErrorResponse) => this.erro.set(mensagem(x)) });
     this.service.empenhos(this.exercicio()).subscribe({ next: (l) => this.empenhos.set(l), error: (x: HttpErrorResponse) => this.erro.set(mensagem(x)) });
+    this.service.empenhos().pipe(catchError(() => of([]))).subscribe((l) => this.todosEmpenhos.set(l));
   }
 
   protected set(chave: string, ev: Event): void {

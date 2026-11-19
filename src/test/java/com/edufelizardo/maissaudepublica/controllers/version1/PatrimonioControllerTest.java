@@ -85,6 +85,8 @@ class PatrimonioControllerTest {
     static void limparDados(JdbcTemplate jdbc, String prefixo) {
         String unidades = "(select uuid from tb_unidade_de_saude where nome like '" + prefixo + "%')";
         String bens = "(select uuid from tb_bem_patrimonial where unidade_id in " + unidades + ")";
+        // F2 (ADR-0219): a liquidação das ordens de serviço dos bens do teste.
+        jdbc.update("delete from tb_liquidacao where ordem_servico_id in (select uuid from tb_ordem_servico_manutencao where bem_id in " + bens + ")");
         // PM3 (ADR-0217): os inventários das unidades e as baixas dos bens.
         String inventarios = "(select uuid from tb_inventario_patrimonio where unidade_id in " + unidades + ")";
         jdbc.update("delete from tb_item_inventario where inventario_id in " + inventarios + " or bem_id in " + bens);

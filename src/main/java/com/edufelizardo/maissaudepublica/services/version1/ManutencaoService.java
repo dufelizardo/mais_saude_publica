@@ -459,6 +459,11 @@ public class ManutencaoService {
         return controleDeAcesso.filtrar(ordens, o -> Stream.of(o.getBem().getUnidade()), EXECUTAR);
     }
 
+    /** As ordens com o custo, para a liquidação do Financeiro (ADR-0219); quem chama já conferiu o acesso. */
+    List<ManutencaoDtos.Ordem> dtosDe(List<OrdemServicoManutencao> ordens) {
+        return dtos(ordens);
+    }
+
     private List<ManutencaoDtos.Ordem> dtos(List<OrdemServicoManutencao> ordens) {
         if (ordens.isEmpty()) {
             return List.of();

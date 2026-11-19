@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Financeiro
-Metadata    Test Suite Description        Valida a tela Financeiro: menu, dotação e empenho (ADR-0218).
+Metadata    Test Suite Description        Valida a tela Financeiro: menu, dotação e empenho (ADR-0218), liquidação, pagamento e diárias do TFD (ADR-0219).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiFinanceiro    MaisSaudePublicaFrontend
@@ -39,6 +39,22 @@ CT-003 - Registrar empenho
     [Tags]    UI    UiFinanceiro
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - FINANCEIRO - EMPENHO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-004 - Liquidar e pagar
+    [Documentation]    Liquida o recebimento da fila, paga e abre a execução.
+    [Tags]    UI    UiFinanceiro
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - FINANCEIRO - LIQUIDAR E PAGAR
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-005 - Diárias do TFD
+    [Documentation]    Concede a diária na solicitação de TFD autorizada.
+    [Tags]    UI    UiFinanceiro
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - FINANCEIRO - DIARIAS DO TFD
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

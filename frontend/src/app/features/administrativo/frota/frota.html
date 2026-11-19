@@ -178,6 +178,9 @@
                   <button type="button" class="link-btn" (click)="autorizar(s)" [attr.aria-label]="'Autorizar o TFD de ' + s.pacienteNome">Autorizar</button>
                   <button type="button" class="link-btn" (click)="abrirMotivo('negarTfd', s)" [attr.aria-label]="'Negar o TFD de ' + s.pacienteNome">Negar</button>
                 }
+                @if (s.motivo === 'TFD' && (s.situacao === 'AUTORIZADA' || s.situacao === 'PROGRAMADA' || s.situacao === 'REALIZADA') && pode('TFD.AUTORIZAR')) {
+                  <button type="button" class="link-btn" (click)="diariasDe.set(s)" [attr.aria-label]="'Diárias do TFD de ' + s.pacienteNome">Diárias</button>
+                }
                 @if (cancelavel(s) && pode('TRANSPORTE.SOLICITAR')) {
                   <button type="button" class="link-btn" (click)="abrirMotivo('cancelarSolicitacao', s)" [attr.aria-label]="'Cancelar o transporte de ' + s.pacienteNome">Cancelar</button>
                 }
@@ -727,3 +730,5 @@
     <div>{{ t.titulo }}<small>{{ t.detalhe }}</small></div>
   </div>
 }
+
+@if (diariasDe(); as s) { <app-diarias-tfd [solicitacao]="s" (fechar)="diariasDe.set(null)" /> }
