@@ -1,6 +1,7 @@
 *** Settings ***
 Library     String
 Resource    ../../../../pom/ui/administrativo/patrimonio/patrimonio_ui_pom.resource
+Resource    ../../../patrimonio/manutencao_flow.resource
 Resource    ../../../patrimonio/patrimonio_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -79,6 +80,39 @@ UI Patrimonio - Tombamento
     Fill Text    id=f-pt-tb-responsavel    ${matricula}
     Enviar Gaveta
     Wait For Elements State    css=[role=status] >> text=/Bem tombado com o número \\d{4}\\/\\d{6}/    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Patrimonio - Chamado Pela Ficha
+    [Documentation]    Pela tela: a ficha do bem abre o chamado.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${bem}    ${unidade}    ${matricula}=    Seed Bem Patrimonial
+    ${r}=    GET Bem Patrimonial    ${bem}
+    ${numero}=    Set Variable    ${r.json()}[bem][numeroTombamento]
+    UI Patrimonio - Abrir Tela
+    UI Patrimonio - Filtrar Unidade    ${unidade}
+    Click    css=button[aria-label="Abrir bem ${numero}"]
+    Fill Text    id=f-mn-defeito    Tela piscando.
+    Click    css=app-drawer button >> text=Abrir chamado
+    Wait For Elements State    css=app-drawer [role=status] >> text=/Chamado \\d{4}\\/\\d{6} aberto/    visible
+    Wait For Elements State    css=[aria-label="Ordens de serviço do bem"] >> text=Corretiva    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Patrimonio - Ordem De Servico
+    [Documentation]    Pela tela: a aba Manutenção inicia e conclui a ordem do chamado.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${os}    ${numero}    ${bem}    ${unidade}=    Seed Chamado
+    UI Patrimonio - Abrir Tela
+    Click    role=tab[name="Manutenção"]
+    Click    css=button[aria-label="Abrir ordem ${numero}"]
+    Fill Text    id=f-mn-tecnico    Equipe de eletrônica
+    Click    css=app-drawer button >> text=Iniciar
+    Wait For Elements State    css=app-drawer dl >> text=Em execução    visible
+    Fill Text    id=f-mn-servico    Troca do capacitor.
+    Fill Text    id=f-mn-mao    50
+    Click    css=app-drawer button >> text=Concluir
+    Wait For Elements State    css=app-drawer dl >> text=Concluída    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

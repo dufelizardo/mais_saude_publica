@@ -38,7 +38,7 @@ const MENU: Record<string, string[]> = {
   // Compras (ADR-0212): quem pede e quem compra.
   '/administrativo/compras': ['COMPRAS.SOLICITAR', 'COMPRAS.GERENCIAR'],
   // Patrimônio (ADR-0215).
-  '/administrativo/patrimonio': ['PATRIMONIO.CONSULTAR', 'PATRIMONIO.GERENCIAR'],
+  '/administrativo/patrimonio': ['PATRIMONIO.CONSULTAR', 'PATRIMONIO.GERENCIAR', 'MANUTENCAO.EXECUTAR'],
   '/administrativo/frota': ['TRANSPORTE.CONSULTAR', 'TRANSPORTE.GERENCIAR', 'TRANSPORTE.SOLICITAR', 'TFD.AUTORIZAR'],
   '/administrativo/ppi': ['REDE.CONSULTAR', 'REDE.GERENCIAR'],
   // Território (ADR-0125): o recorte geográfico é aberto a quem está logado.

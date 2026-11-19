@@ -2,8 +2,8 @@
 
 ## Status
 
-Aceita e implementada (PM1). Desenho do domínio 15 e primeira fatia; a PM2 (manutenção) e a PM3 (inventário, baixa e painel) ganham
-ADRs próprias.
+Aceita e implementada (PM1). Desenho do domínio 15 e primeira fatia. A PM2 (manutenção) está na
+[ADR-0216](./0216-patrimonio-manutencao.md); a PM3 (inventário, baixa e painel) ganha ADR própria.
 
 ## Contexto
 
