@@ -122,7 +122,7 @@ o Financeiro fica completo.
 - **Primeiro número de custo do SUS municipal na plataforma:**
   - o custo por atendimento e por paciente-dia por unidade;
   - a comparação entre unidades do mesmo tipo.
-- **Pendências:**
+- **Pendências** (o rateio, a lotação por setor e a unidade mista foram feitos na F4, [ADR-0221](./0221-financeiro-rateio-pngc.md)):
   - o rateio do PNGC (apoio e administração para os produtivos);
   - o teto financeiro da PPI pela tabela SIGTAP (domínio 20);
   - o envio ao ApuraSUS;

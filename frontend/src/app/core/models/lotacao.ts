@@ -2,6 +2,8 @@ export interface LotacaoRequestDto {
   matriculaProfissional: string;
   unidadeId: string;
   cargoId: string;
+  /** O setor da unidade, opcional (ADR-0221): a folha vai ao centro de custo do setor. */
+  setorId?: string;
   jornadaSemanalHoras?: number;
   dataInicio: string;
   motivo?: string;
@@ -12,6 +14,7 @@ export interface LotacaoResponseDto {
   profissionalMatricula: string;
   profissionalNome: string;
   unidadeNome: string;
+  setorNome?: string | null;
   cargoNome: string;
   categoriaNome: string;
   jornadaSemanalHoras?: number;

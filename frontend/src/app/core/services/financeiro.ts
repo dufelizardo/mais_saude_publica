@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  ApuracaoCustoDto, ApuracaoCustoResumoDto, CentroCustoDto, IndicadoresCustoDto, TipoCentroCusto,
+  ApuracaoCustoDto, ApuracaoCustoResumoDto, CentroCustoDto, CriterioRateio, IndicadoresCustoDto, TipoCentroCusto,
   BeneficiarioDiariaTfd, DiariaTfdDto, DotacaoDto, EmpenhoDto, ExecucaoDto, FonteRecursoSaude, LiquidacaoDto, OrigemLiquidacao, PendenciaLiquidacaoDto,
   RestoAPagarDto, TipoAlteracaoDotacao, TipoEmpenho, TipoMovimentoEmpenho,
 } from '../models/financeiro';
@@ -91,11 +91,13 @@ export class FinanceiroService {
     return this.http.get<CentroCustoDto[]>(`${this.api}/centros-custo`);
   }
 
-  criarCentroCusto(dto: { setorId: string; nome: string | null; tipo: TipoCentroCusto | null }): Observable<CentroCustoDto> {
+  criarCentroCusto(dto: { setorId: string; nome: string | null; tipo: TipoCentroCusto | null; criterioRateio: CriterioRateio | null;
+    areaM2: number | null }): Observable<CentroCustoDto> {
     return this.http.post<CentroCustoDto>(`${this.api}/centro-custo`, dto);
   }
 
-  alterarCentroCusto(uuid: string, dto: { nome: string; tipo: TipoCentroCusto; ativo: boolean }): Observable<CentroCustoDto> {
+  alterarCentroCusto(uuid: string, dto: { nome: string; tipo: TipoCentroCusto; ativo: boolean; criterioRateio: CriterioRateio | null;
+    areaM2: number | null }): Observable<CentroCustoDto> {
     return this.http.put<CentroCustoDto>(`${this.api}/centro-custo/${uuid}`, dto);
   }
 

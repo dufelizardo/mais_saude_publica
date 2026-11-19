@@ -2,12 +2,12 @@
 Resource    ../../src/scenario/financeiro/custos_scenario.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - Custos
-Metadata    Test Suite Description        Centros de custo, apuração mensal e indicadores de custo (ADR-0220).
+Metadata    Test Suite Description        Centros de custo, apuração mensal, rateio do PNGC e indicadores de custo (ADR-0220, ADR-0221).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               POST    PUT    GET    Custos    MaisSaudePublicaAPI
 Metadata    Test Suite Created On         2026-11-19
-Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Test Suite Last Modified      2026-11-19
 Metadata    Project                       Layered Keyword Driven Framework (LKDF)
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -28,5 +28,14 @@ CT-002 - Validate Apuracao Da Competencia - HTTP 422 400 200 E 404
     [Tags]    Custos    HTTP422    HTTP400    HTTP200    HTTP404
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     CUSTOS    APURACAO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-003 - Validate Rateio E Lotacao No Setor - HTTP 201 200 422 E 400
+    [Documentation]    O critério padrão e o informado, o produtivo sem critério 422, a área negativa 400, a lotação no setor da unidade 201 e
+    ...    no de outra unidade 422, e a apuração com o não rateado.
+    [Tags]    Custos    Rateio    HTTP201    HTTP200    HTTP422    HTTP400
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    CUSTOS    RATEIO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

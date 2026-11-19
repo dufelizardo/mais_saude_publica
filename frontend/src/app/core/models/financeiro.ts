@@ -153,11 +153,20 @@ export interface ExecucaoDto {
 export type TipoCentroCusto = 'PRODUTIVO' | 'APOIO' | 'ADMINISTRATIVO';
 export type CategoriaCusto = 'PESSOAL' | 'MATERIAL_CONSUMO' | 'MEDICAMENTOS' | 'SERVICOS_TERCEIROS' | 'MANUTENCAO' | 'DEPRECIACAO' | 'DIARIAS_TFD' | 'OUTRAS';
 export type SituacaoApuracaoCusto = 'ABERTA' | 'FECHADA';
+export type CriterioRateio = 'PESSOAS' | 'CUSTO_DIRETO' | 'AREA' | 'REQUISICOES';
 
 export const TIPOS_CENTRO_CUSTO: Record<TipoCentroCusto, string> = {
   PRODUTIVO: 'Produtivo',
   APOIO: 'Apoio',
   ADMINISTRATIVO: 'Administrativo',
+};
+
+/** As bases do rateio do PNGC (ADR-0221). */
+export const CRITERIOS_RATEIO: Record<CriterioRateio, string> = {
+  PESSOAS: 'Pessoas (horas lotadas)',
+  CUSTO_DIRETO: 'Custo direto',
+  AREA: 'Área (m²)',
+  REQUISICOES: 'Requisições ao Estoque',
 };
 
 export const CATEGORIAS_CUSTO: Record<CategoriaCusto, string> = {
@@ -182,6 +191,9 @@ export interface CentroCustoDto {
   setorNome: string | null;
   geral: boolean;
   ativo: boolean;
+  /** O critério aplicado (o informado ou o padrão do tipo); nulo no produtivo. */
+  criterioRateio: CriterioRateio | null;
+  areaM2: number | null;
 }
 
 export interface ApuracaoCustoResumoDto {
@@ -204,9 +216,27 @@ export interface ApuracaoCustoDto {
   centros: {
     centroId: string; codigo: string; nome: string; tipo: TipoCentroCusto; unidadeId: string; unidadeNome: string; setorNome: string | null;
     valores: Partial<Record<CategoriaCusto, number>>; total: number;
+    /** O rateio (ADR-0221): o total é o direto; o final, direto + recebido - enviado. */
+    recebido: number; enviado: number; custoFinal: number; internacao: boolean;
   }[];
+  /** O custo de apoio e administração sem destino na unidade; nulo na apuração feita antes do rateio. */
+  naoRateado: number | null;
+  rateios: RateioCustoDto[];
   apuradaEm: string;
   fechadaEm: string | null;
+}
+
+export interface RateioCustoDto {
+  ordem: number;
+  unidadeNome: string;
+  origemId: string;
+  origemCodigo: string;
+  origemNome: string;
+  destinoId: string;
+  destinoCodigo: string;
+  destinoNome: string;
+  criterio: CriterioRateio;
+  valor: number;
 }
 
 export interface IndicadorCustoUnidadeDto {

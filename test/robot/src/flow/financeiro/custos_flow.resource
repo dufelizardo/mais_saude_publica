@@ -4,9 +4,11 @@ Library     Collections
 Library     DateTime
 Resource    ../../pom/financeiro/custos_pom.resource
 Resource    ../setor/create_setor/create_setor_flow.resource
+Resource    ../cargo/create_cargo/create_cargo_flow.resource
+Resource    ../profissional/get_profissional_by_matricula/get_profissional_by_matricula_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
-    Os centros de custo, a apuração da competência e os indicadores de custo (ADR-0220).
+    Os centros de custo, a apuração da competência e os indicadores de custo (ADR-0220); o rateio do PNGC e a lotação no setor (ADR-0221).
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 Centro Geral Ativo
@@ -91,6 +93,59 @@ Custos - Apuracao - Status Code 422 400 200 E 404
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+Custos - Rateio - Status Code 201 200 422 E 400
+    [Documentation]    The administrative center takes PESSOAS by default and AREA when informed; the productive one has no criterion (422);
+    ...    a negative area is 400; the posting goes to a sector of the unit (201), not of another unit (422); the calculation has the
+    ...    unallocated amount and the allocation lines.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${adm}    ${codigo}    ${unidade}=    Seed A Setor    ADMINISTRATIVO
+    ${sufixo}=    Generate Random String    8    [LETTERS][NUMBERS]
+    ${payload}=    Build Setor Payload    ${unidade}    Robot Enfermagem ${sufixo}    ROBOT-E${sufixo}    ASSISTENCIAL
+    ${r}=    POST Create Setor    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    201
+    ${enf}=    Buscar Setor Uuid Por Codigo    ROBOT-E${sufixo}
+    ${payload}=    Create Dictionary    setorId=${adm}
+    ${r}=    POST Centro Custo    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    201
+    Should Be Equal    ${r.json()}[criterioRateio]    PESSOAS
+    ${cAdm}=    Set Variable    ${r.json()}[uuid]
+    ${payload}=    Create Dictionary    setorId=${enf}    areaM2=${120}
+    ${r}=    POST Centro Custo    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    201
+    Should Be Equal    ${r.json()}[criterioRateio]    ${None}
+    ${cEnf}=    Set Variable    ${r.json()}[uuid]
+    ${payload}=    Create Dictionary    nome=Administração    tipo=ADMINISTRATIVO    ativo=${True}    criterioRateio=AREA    areaM2=${30}
+    ${r}=    PUT Centro Custo    ${cAdm}    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    200
+    Should Be Equal    ${r.json()}[criterioRateio]    AREA
+    ${payload}=    Create Dictionary    nome=Enfermagem    tipo=PRODUTIVO    ativo=${True}    criterioRateio=AREA
+    ${r}=    PUT Centro Custo    ${cEnf}    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    422
+    ${payload}=    Create Dictionary    nome=Enfermagem    tipo=PRODUTIVO    ativo=${True}    areaM2=${-1}
+    ${r}=    PUT Centro Custo    ${cEnf}    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    400
+    # A lotação no setor da unidade; o setor de outra unidade não.
+    ${outro}    ${codigoOutro}    ${outraUnidade}=    Seed A Setor    APOIO
+    ${matricula}=    Seed A Profissional Matricula
+    ${cargo}=    Seed A Cargo Uuid
+    ${inicio}=    Get Current Date    increment=-30 days    result_format=%Y-%m-%d
+    ${payload}=    Create Dictionary    matriculaProfissional=${matricula}    unidadeId=${unidade}    cargoId=${cargo}    setorId=${outro}
+    ...    jornadaSemanalHoras=${40}    dataInicio=${inicio}    motivo=Admissão
+    ${r}=    POST Lotacao Com Setor    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    422
+    Set To Dictionary    ${payload}    setorId=${adm}
+    ${r}=    POST Lotacao Com Setor    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    201
+    # A apuração traz o não rateado e as linhas do rateio.
+    ${c}=    Competencia Livre
+    ${payload}=    Create Dictionary    competencia=${c}
+    ${r}=    POST Apuracao Custo    ${payload}
+    Should Be Equal As Integers    ${r.status_code}    200
+    Should Not Be Equal    ${r.json()}[naoRateado]    ${None}
+    Dictionary Should Contain Key    ${r.json()}    rateios
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Custos - By Cenario
     [Documentation]    Executes the cost scenario for the given case.
     [Arguments]    ${caso}
@@ -99,6 +154,8 @@ Custos - By Cenario
         Custos - Centros - Status Code 201 409 404 E 422
     ELSE IF    '${caso}' == 'APURACAO'
         Custos - Apuracao - Status Code 422 400 200 E 404
+    ELSE IF    '${caso}' == 'RATEIO'
+        Custos - Rateio - Status Code 201 200 422 E 400
     ELSE
         Fail    Caso '${caso}' não suportado no cenário Custos.
     END
