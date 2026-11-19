@@ -9,7 +9,7 @@ lançamento contábil, o SIOPS e a aplicação mínima ficam no SIAFIC do munic�
 |-------|----------|--------|
 | F1 | Dotação com suplementação e anulação; empenho com reforço e anulação; ordem de fornecimento com o empenho | ✅ ADR-0218, V99 |
 | F2 | Liquidação pelo atesto, retenções, pagamento, restos a pagar, diárias do TFD, painel da execução e ordem cronológica | ✅ ADR-0219, V100 |
-| F3 | Centros de custo, apuração mensal do custo por unidade, custo por atendimento, teto da PPI | ⏳ |
+| F3 | Centros de custo, apuração mensal do custo por unidade, custo por atendimento e por paciente-dia (o teto da PPI foi para o domínio 20) | ✅ ADR-0220, V101 |
 
 ## Entidades (F1)
 
@@ -32,6 +32,17 @@ Liquidacao   empenho · origem: RECEBIMENTO · ORDEM_SERVICO · DIARIA_TFD · AV
 DiariaTfd    solicitacao (TFD autorizado, ADR-0190) · beneficiario: PACIENTE · ACOMPANHANTE · credor (pessoa física) · dias · valorDiaria · valorTotal
 ```
 
+## Entidades (F3)
+
+```text
+CentroCusto             unidade · setor (vazio no geral, um por unidade) · codigo (CC-00001) · nome · tipo: PRODUTIVO · APOIO · ADMINISTRATIVO · ativo
+ApuracaoCusto           competencia (AAAA-MM, única) · situacao: ABERTA · FECHADA · naoAlocado · saidasSemCusto · apuradaEm · fechadaEm
+  ├── LinhaApuracaoCusto     centro · categoria: PESSOAL · MATERIAL_CONSUMO · MEDICAMENTOS · SERVICOS_TERCEIROS · MANUTENCAO
+  │                          · DEPRECIACAO · DIARIAS_TFD · OUTRAS · valor
+  └── ProducaoApuracaoCusto  unidade · atendimentos · pacientesDia
+Liquidacao.centroCusto  na avulsa
+```
+
 ## Regras
 
 - **Dotação:**
@@ -48,13 +59,20 @@ DiariaTfd    solicitacao (TFD autorizado, ADR-0190) · beneficiario: PACIENTE ·
 - **Pagamento:** a ordem bancária; pagar antes de outra vencida da mesma fonte pede a justificativa (Lei 14.133/2021, art. 141).
 - **Diária do TFD:** da solicitação autorizada; o credor pessoa física (pelo cadastro ou pelo CPF); uma por beneficiário.
 - **Restos a pagar:** processados (liquidado não pago) e não processados (não liquidado), dos exercícios anteriores.
+- **Centro de custo:** o geral de cada unidade ativa nasce na leitura e não se desativa; o do setor, um por setor, com o nome e o tipo
+  do setor quando não informados. O custo com setor vai ao centro ativo do setor; sem setor (ou com o centro inativo), ao geral.
+- **Apuração:** do mês encerrado; pessoal pela lotação vigente, consumo do Estoque pelo custo do lote, medicamento pelo preço do contrato
+  do lote recebido, a parte de serviço das liquidações, a manutenção interna, a depreciação linear, as diárias do TFD e as avulsas.
+  A saída sem preço fica fora do total e é contada; o que não acha centro fica não alocado. Aberta, refeita; fechada, não muda.
+- **Indicadores:** o custo por atendimento e por paciente-dia; acima da média do tipo de unidade a partir de 30%.
 
 ## Acesso
 
 | Permissão | Papéis padrão | O que libera |
 |-----------|---------------|--------------|
 | `FINANCEIRO.CONSULTAR` | Financeiro, Gestor, Compras | Ver as dotações e os empenhos |
-| `FINANCEIRO.GERENCIAR` | Financeiro | Registrar as dotações, as alterações, os empenhos, os reforços e as anulações; liquidar e pagar |
+| `FINANCEIRO.GERENCIAR` | Financeiro | Registrar as dotações, as alterações, os empenhos, os reforços e as anulações; liquidar e pagar; os centros de custo, apurar e fechar |
+| `INDICADOR.CONSULTAR` | Gestor, coordenações | Os indicadores de custo, nas unidades do acesso |
 | `TFD.AUTORIZAR` | Comissão de TFD | Conceder e ver as diárias do TFD |
 
 ## Tela
@@ -66,5 +84,7 @@ Tela **Financeiro** (Administrativo):
 - **Empenhos:** a lista e a gaveta com as ordens de fornecimento, os reforços e as anulações.
 - **A liquidar, Liquidações, Restos a pagar e Execução:** a fila com a liquidação (e a avulsa), o pagamento, os restos e a execução por
   dotação e por fonte.
+- **Custos:** a competência com apurar, refazer e fechar; o custo por unidade e por centro; os centros de custo. A avulsa escolhe o centro.
+- **Sala de Situação:** o cartão Custo por unidade da competência anterior.
 - **Compras:** a nova ordem de fornecimento escolhe o empenho com saldo do fornecedor.
 - **Frota:** a solicitação de TFD autorizada concede as diárias.

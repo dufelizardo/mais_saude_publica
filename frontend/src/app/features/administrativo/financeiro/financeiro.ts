@@ -20,9 +20,10 @@ import { AuthService } from '../../../core/services/auth';
 import { ComprasService } from '../../../core/services/compras';
 import { FinanceiroService } from '../../../core/services/financeiro';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { CustosFinanceiro } from './custos-financeiro';
 import { AbaLiquidacao, LiquidacaoFinanceiro } from './liquidacao-financeiro';
 
-type Aba = 'dotacoes' | 'empenhos' | AbaLiquidacao;
+type Aba = 'dotacoes' | 'empenhos' | AbaLiquidacao | 'custos';
 type Gaveta = 'dotacao' | 'empenho' | null;
 
 const GERENCIAR = 'FINANCEIRO.GERENCIAR';
@@ -34,7 +35,7 @@ const GERENCIAR = 'FINANCEIRO.GERENCIAR';
  */
 @Component({
   selector: 'app-financeiro',
-  imports: [Drawer, LiquidacaoFinanceiro],
+  imports: [Drawer, LiquidacaoFinanceiro, CustosFinanceiro],
   template: `
     <header class="page-head">
       <div>
@@ -58,6 +59,7 @@ const GERENCIAR = 'FINANCEIRO.GERENCIAR';
       <button type="button" role="tab" id="tab-liquidacoes" [attr.aria-selected]="aba() === 'liquidacoes'" (click)="aba.set('liquidacoes')">Liquidações</button>
       <button type="button" role="tab" id="tab-restos" [attr.aria-selected]="aba() === 'restos'" (click)="aba.set('restos')">Restos a pagar</button>
       <button type="button" role="tab" id="tab-execucao" [attr.aria-selected]="aba() === 'execucao'" (click)="aba.set('execucao')">Execução</button>
+      <button type="button" role="tab" id="tab-custos" [attr.aria-selected]="aba() === 'custos'" (click)="aba.set('custos')">Custos</button>
     </div>
 
     @if (erro()) { <div class="box box--err" role="alert"><strong>{{ erro() }}</strong></div> }
@@ -86,6 +88,8 @@ const GERENCIAR = 'FINANCEIRO.GERENCIAR';
           </tbody>
         </table>
       </div>
+    } @else if (aba() === 'custos') {
+      <app-custos-financeiro [podeGerenciar]="pode(GERENCIAR)" />
     } @else if (aba() !== 'empenhos') {
       <app-liquidacao-financeiro [aba]="$any(aba())" [exercicio]="exercicio()" [podeGerenciar]="pode(GERENCIAR)" [empenhos]="todosEmpenhos()" />
     } @else {

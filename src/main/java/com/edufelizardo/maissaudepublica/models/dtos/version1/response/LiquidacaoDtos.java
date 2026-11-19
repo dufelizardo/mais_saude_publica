@@ -23,7 +23,8 @@ public final class LiquidacaoDtos {
     public record Liquidacao(UUID uuid, OrigemLiquidacao origem, UUID origemId, String descricao, UUID empenhoId, String empenhoNumero, String fornecedorNome,
                              FonteRecursoSaude fonte, String notaFiscal, LocalDate notaEmitidaEm, BigDecimal valorBruto, BigDecimal iss, BigDecimal irrf,
                              BigDecimal inss, BigDecimal outrasRetencoes, BigDecimal valorLiquido, LocalDate liquidadaEm, LocalDate vencimento,
-                             boolean vencida, boolean paga, LocalDate pagaEm, String ordemBancaria, String justificativa, String justificativaForaDeOrdem) {
+                             boolean vencida, boolean paga, LocalDate pagaEm, String ordemBancaria, String justificativa, String justificativaForaDeOrdem,
+                             String centroCusto) {
     }
 
     public record Diaria(UUID uuid, UUID solicitacaoId, String pacienteNome, String destino, BeneficiarioDiariaTfd beneficiario, String beneficiarioNome,

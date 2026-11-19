@@ -53,4 +53,6 @@ public class LiquidacaoRequestDto implements Serializable {
     /** Na avulsa: a matrícula de quem atestou o serviço. */
     @Size(max = 30, message = "A matrícula vai até 30 caracteres.")
     private String atestadoPorMatricula;
+    /** Na avulsa: o centro de custo que recebe a despesa na apuração (ADR-0220). */
+    private UUID centroCustoId;
 }

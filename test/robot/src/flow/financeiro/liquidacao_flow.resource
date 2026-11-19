@@ -5,6 +5,7 @@ Library     DateTime
 Resource    ../../pom/financeiro/liquidacao_pom.resource
 Resource    ./financeiro_flow.resource
 Resource    ../transporte/transporte_eletivo_flow.resource
+Resource    ./custos_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     A fila a liquidar, a liquidação, o pagamento com a ordem cronológica, as diárias do TFD e a execução (ADR-0219).
@@ -80,7 +81,8 @@ Liquidacao - Ordem Cronologica - Status Code 422 E 200
     ${quem}=    Seed A Profissional Matricula
     ${antes}=    Get Current Date    UTC    - 5 days    result_format=%Y-%m-%d
     ${hoje}=    Hoje Em Brasilia
-    ${payload}=    Create Dictionary    origem=AVULSA    empenhoId=${empenho}    valorBruto=${40}    vencimento=${antes}    justificativa=Energia.    atestadoPorMatricula=${quem}
+    ${centro}=    Centro Geral Ativo
+    ${payload}=    Create Dictionary    origem=AVULSA    empenhoId=${empenho}    valorBruto=${40}    vencimento=${antes}    justificativa=Energia.    atestadoPorMatricula=${quem}    centroCustoId=${centro}
     ${r}=    POST Liquidacao    ${payload}
     Should Be Equal As Integers    ${r.status_code}    201
     Set To Dictionary    ${payload}    valorBruto=${60}    vencimento=${hoje}

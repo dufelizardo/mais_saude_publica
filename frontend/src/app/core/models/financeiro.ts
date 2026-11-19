@@ -108,6 +108,8 @@ export interface LiquidacaoDto {
   ordemBancaria: string | null;
   justificativa: string | null;
   justificativaForaDeOrdem: string | null;
+  /** Na avulsa: o centro de custo (ADR-0220). */
+  centroCusto: string | null;
 }
 
 export interface DiariaTfdDto {
@@ -145,3 +147,85 @@ export interface ExecucaoDto {
   vencidasValor: number;
   prazoMedioPagamentoDias: number | null;
 }
+
+// ── Centros de custo, apuração e indicadores de custo, fatia F3 (ADR-0220) ──
+
+export type TipoCentroCusto = 'PRODUTIVO' | 'APOIO' | 'ADMINISTRATIVO';
+export type CategoriaCusto = 'PESSOAL' | 'MATERIAL_CONSUMO' | 'MEDICAMENTOS' | 'SERVICOS_TERCEIROS' | 'MANUTENCAO' | 'DEPRECIACAO' | 'DIARIAS_TFD' | 'OUTRAS';
+export type SituacaoApuracaoCusto = 'ABERTA' | 'FECHADA';
+
+export const TIPOS_CENTRO_CUSTO: Record<TipoCentroCusto, string> = {
+  PRODUTIVO: 'Produtivo',
+  APOIO: 'Apoio',
+  ADMINISTRATIVO: 'Administrativo',
+};
+
+export const CATEGORIAS_CUSTO: Record<CategoriaCusto, string> = {
+  PESSOAL: 'Pessoal',
+  MATERIAL_CONSUMO: 'Material',
+  MEDICAMENTOS: 'Medicamentos',
+  SERVICOS_TERCEIROS: 'Serviços',
+  MANUTENCAO: 'Manutenção',
+  DEPRECIACAO: 'Depreciação',
+  DIARIAS_TFD: 'Diárias TFD',
+  OUTRAS: 'Outras',
+};
+
+export interface CentroCustoDto {
+  uuid: string;
+  codigo: string;
+  nome: string;
+  tipo: TipoCentroCusto;
+  unidadeId: string;
+  unidadeNome: string;
+  setorId: string | null;
+  setorNome: string | null;
+  geral: boolean;
+  ativo: boolean;
+}
+
+export interface ApuracaoCustoResumoDto {
+  uuid: string;
+  competencia: string;
+  situacao: SituacaoApuracaoCusto;
+  total: number;
+  apuradaEm: string;
+  fechadaEm: string | null;
+}
+
+export interface ApuracaoCustoDto {
+  uuid: string;
+  competencia: string;
+  situacao: SituacaoApuracaoCusto;
+  total: number;
+  naoAlocado: number;
+  saidasSemCusto: number;
+  porCategoria: Partial<Record<CategoriaCusto, number>>;
+  centros: {
+    centroId: string; codigo: string; nome: string; tipo: TipoCentroCusto; unidadeId: string; unidadeNome: string; setorNome: string | null;
+    valores: Partial<Record<CategoriaCusto, number>>; total: number;
+  }[];
+  apuradaEm: string;
+  fechadaEm: string | null;
+}
+
+export interface IndicadorCustoUnidadeDto {
+  unidadeId: string;
+  unidadeNome: string;
+  tipoUnidade: string | null;
+  total: number;
+  porCategoria: Partial<Record<CategoriaCusto, number>>;
+  atendimentos: number;
+  pacientesDia: number;
+  custoPorAtendimento: number | null;
+  custoPorPacienteDia: number | null;
+  mediaDoTipo: number | null;
+  acimaDaMedia: boolean;
+}
+
+export interface IndicadoresCustoDto {
+  competencia: string;
+  situacao: SituacaoApuracaoCusto;
+  unidades: IndicadorCustoUnidadeDto[];
+}
+
