@@ -2,8 +2,8 @@
 
 ## Status
 
-Aceita e implementada (F1). Desenho do domínio 17 e primeira fatia. A F2 (liquidação, pagamento e acompanhamento) e a F3 (centros de
-custo e apuração) ganham ADRs próprias.
+Aceita e implementada (F1). Desenho do domínio 17 e primeira fatia. A F2 (liquidação, pagamento e acompanhamento) está na
+[ADR-0219](./0219-financeiro-liquidacao-e-pagamento.md); a F3 (centros de custo e apuração) ganha ADR própria.
 
 ## Contexto
 

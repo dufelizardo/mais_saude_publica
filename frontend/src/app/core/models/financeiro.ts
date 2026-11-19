@@ -55,3 +55,93 @@ export interface EmpenhoDto {
   movimentos: { uuid: string; tipo: TipoMovimentoEmpenho; valor: number; data: string; motivo: string }[];
   ordens: { uuid: string; numero: string; situacao: string; valor: number }[];
 }
+
+// ── Liquidação, pagamento, diárias do TFD e execução, fatia F2 (ADR-0219) ──
+
+export type OrigemLiquidacao = 'RECEBIMENTO' | 'ORDEM_SERVICO' | 'DIARIA_TFD' | 'AVULSA';
+export type BeneficiarioDiariaTfd = 'PACIENTE' | 'ACOMPANHANTE';
+
+export const ORIGENS_LIQUIDACAO: Record<OrigemLiquidacao, string> = {
+  RECEBIMENTO: 'Recebimento de compra',
+  ORDEM_SERVICO: 'Ordem de serviço',
+  DIARIA_TFD: 'Diária do TFD',
+  AVULSA: 'Avulsa',
+};
+
+export interface PendenciaLiquidacaoDto {
+  origem: OrigemLiquidacao;
+  origemId: string;
+  descricao: string;
+  fornecedorId: string;
+  fornecedorNome: string;
+  instrumentoId: string | null;
+  instrumentoNumero: string | null;
+  empenhoId: string | null;
+  empenhoNumero: string | null;
+  valor: number;
+  atestadoEm: string | null;
+  unidadeNome: string | null;
+}
+
+export interface LiquidacaoDto {
+  uuid: string;
+  origem: OrigemLiquidacao;
+  origemId: string | null;
+  descricao: string;
+  empenhoId: string;
+  empenhoNumero: string;
+  fornecedorNome: string;
+  fonte: FonteRecursoSaude;
+  notaFiscal: string | null;
+  notaEmitidaEm: string | null;
+  valorBruto: number;
+  iss: number;
+  irrf: number;
+  inss: number;
+  outrasRetencoes: number;
+  valorLiquido: number;
+  liquidadaEm: string;
+  vencimento: string;
+  vencida: boolean;
+  paga: boolean;
+  pagaEm: string | null;
+  ordemBancaria: string | null;
+  justificativa: string | null;
+  justificativaForaDeOrdem: string | null;
+}
+
+export interface DiariaTfdDto {
+  uuid: string;
+  solicitacaoId: string;
+  pacienteNome: string;
+  destino: string | null;
+  beneficiario: BeneficiarioDiariaTfd;
+  beneficiarioNome: string;
+  credorId: string;
+  credorNome: string;
+  dias: number;
+  valorDiaria: number;
+  valorTotal: number;
+  concedidaEm: string;
+  liquidada: boolean;
+}
+
+export interface RestoAPagarDto {
+  empenhoId: string;
+  numero: string;
+  exercicio: number;
+  fornecedorNome: string;
+  processado: number;
+  naoProcessado: number;
+}
+
+export interface ExecucaoDto {
+  exercicio: number;
+  dotacoes: { dotacaoId: string; rotulo: string; fonte: FonteRecursoSaude; autorizado: number; empenhado: number; liquidado: number; pago: number }[];
+  fontes: { fonte: FonteRecursoSaude; autorizado: number; empenhado: number; liquidado: number; pago: number }[];
+  aLiquidarQuantidade: number;
+  aLiquidarValor: number;
+  vencidasQuantidade: number;
+  vencidasValor: number;
+  prazoMedioPagamentoDias: number | null;
+}

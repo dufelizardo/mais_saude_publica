@@ -278,7 +278,7 @@ public class FinanceiroService {
     }
 
     /** O valor atual de cada empenho: o inicial mais os reforços menos as anulações. */
-    private Map<UUID, BigDecimal> valoresAtuais(List<Empenho> empenhos) {
+    Map<UUID, BigDecimal> valoresAtuais(List<Empenho> empenhos) {
         Map<UUID, BigDecimal> atual = new HashMap<>();
         empenhos.forEach(e -> atual.put(e.getUuid(), e.getValor()));
         if (!empenhos.isEmpty()) {

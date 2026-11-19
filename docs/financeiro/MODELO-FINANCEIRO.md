@@ -8,7 +8,7 @@ lançamento contábil, o SIOPS e a aplicação mínima ficam no SIAFIC do munic�
 | Fatia | Conteúdo | Estado |
 |-------|----------|--------|
 | F1 | Dotação com suplementação e anulação; empenho com reforço e anulação; ordem de fornecimento com o empenho | ✅ ADR-0218, V99 |
-| F2 | Liquidação pelo atesto, retenções, pagamento, restos a pagar, diárias do TFD, painel da execução e ordem cronológica | ⏳ |
+| F2 | Liquidação pelo atesto, retenções, pagamento, restos a pagar, diárias do TFD, painel da execução e ordem cronológica | ✅ ADR-0219, V100 |
 | F3 | Centros de custo, apuração mensal do custo por unidade, custo por atendimento, teto da PPI | ⏳ |
 
 ## Entidades (F1)
@@ -23,6 +23,15 @@ Empenho               numero (do SIAFIC, único no exercício) · exercicio · t
 OrdemFornecimento.empenhoRef (ADR-0214): a ordem consome o saldo do empenho
 ```
 
+## Entidades (F2)
+
+```text
+Liquidacao   empenho · origem: RECEBIMENTO · ORDEM_SERVICO · DIARIA_TFD · AVULSA (o atesto, único por liquidação)
+             notaFiscal · valorBruto · iss · irrf · inss · outrasRetencoes · valorLiquido · liquidadaEm · vencimento
+             justificativa e atestadoPorCpf (avulsa) · pagaEm · ordemBancaria · justificativaForaDeOrdem
+DiariaTfd    solicitacao (TFD autorizado, ADR-0190) · beneficiario: PACIENTE · ACOMPANHANTE · credor (pessoa física) · dias · valorDiaria · valorTotal
+```
+
 ## Regras
 
 - **Dotação:**
@@ -34,13 +43,19 @@ OrdemFornecimento.empenhoRef (ADR-0214): a ordem consome o saldo do empenho
   - o valor e o reforço cabem no disponível da dotação; a anulação vai até o saldo do empenho.
 - **Saldo do empenho:** o valor atual menos o comprometido nas ordens de fornecimento (a cancelada conta só o aceito).
 - **Ordem de fornecimento:** com o empenho, só do mesmo fornecedor e dentro do saldo; sem ele, o número em texto, como antes.
+- **Liquidação:** do atesto (o empenho da ordem, ou do mesmo credor e contrato), até o valor do atesto e o saldo a liquidar do empenho;
+  as retenções até o bruto; a avulsa com a justificativa e quem atestou.
+- **Pagamento:** a ordem bancária; pagar antes de outra vencida da mesma fonte pede a justificativa (Lei 14.133/2021, art. 141).
+- **Diária do TFD:** da solicitação autorizada; o credor pessoa física (pelo cadastro ou pelo CPF); uma por beneficiário.
+- **Restos a pagar:** processados (liquidado não pago) e não processados (não liquidado), dos exercícios anteriores.
 
 ## Acesso
 
 | Permissão | Papéis padrão | O que libera |
 |-----------|---------------|--------------|
 | `FINANCEIRO.CONSULTAR` | Financeiro, Gestor, Compras | Ver as dotações e os empenhos |
-| `FINANCEIRO.GERENCIAR` | Financeiro | Registrar as dotações, as alterações, os empenhos, os reforços e as anulações |
+| `FINANCEIRO.GERENCIAR` | Financeiro | Registrar as dotações, as alterações, os empenhos, os reforços e as anulações; liquidar e pagar |
+| `TFD.AUTORIZAR` | Comissão de TFD | Conceder e ver as diárias do TFD |
 
 ## Tela
 
@@ -49,4 +64,7 @@ Tela **Financeiro** (Administrativo):
 - **Cabeçalho:** o exercício e o resumo (autorizado, empenhado, disponível).
 - **Dotações:** a lista e a gaveta com as alterações.
 - **Empenhos:** a lista e a gaveta com as ordens de fornecimento, os reforços e as anulações.
+- **A liquidar, Liquidações, Restos a pagar e Execução:** a fila com a liquidação (e a avulsa), o pagamento, os restos e a execução por
+  dotação e por fonte.
 - **Compras:** a nova ordem de fornecimento escolhe o empenho com saldo do fornecedor.
+- **Frota:** a solicitação de TFD autorizada concede as diárias.

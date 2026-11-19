@@ -43,7 +43,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ✅ | CP1 a CP3 feitas (fornecedores, solicitação, pesquisa de preços, contratação, atas, contratos, aditivos, ordem, recebimento, ocorrências e painel); PNCP e NF-e no domínio 20 |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ✅ | PM1 a PM3 feitas (bens, tombamento, responsável, transferência, bem comprado a tombar; manutenção; inventário, baixa, valor contábil e painel); etiqueta pela D3 |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
-| 17 | [Financeiro](#17-financeiro) | 🟡 | F1 feita (dotação, empenho e a ordem de fornecimento com o empenho); F2 (liquidação e pagamento) e F3 (custos) |
+| 17 | [Financeiro](#17-financeiro) | 🟡 | F1 e F2 feitas (dotação, empenho, liquidação pelo atesto, pagamento, diárias do TFD, restos a pagar e execução); F3 (custos) |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | ✅ | Auditoria feita; Qualidade completa: Q1 (segurança do paciente), Q2 (não conformidades e planos) e Q3 (indicadores com metas e auditoria de protocolos) |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
@@ -431,7 +431,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 **Falta:**
 - [x] **T3:** veículos cedidos às emergências ([ADR-0192](./adr/0192-transporte-nas-emergencias.md)).
 - [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (vínculo feito na PM1, ADR-0215; a ordem de serviço da PM2, ADR-0216, põe e tira o veículo da manutenção); ajuda de custo e diárias do
-  TFD (domínio 17); roteirização.
+  TFD (feitas na F2 do Financeiro, ADR-0219); roteirização.
 
 ### 17. Financeiro
 
@@ -443,9 +443,12 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   - a dotação com o programa, a natureza e a fonte, as suplementações e as anulações, o autorizado e o disponível;
   - o empenho com o número do SIAFIC, o fornecedor e o contrato, os reforços e as anulações;
   - a ordem de fornecimento de Compras que escolhe o empenho e consome o saldo dele; o papel Financeiro.
+- **F2 · Liquidação e pagamento** ([ADR-0219](./adr/0219-financeiro-liquidacao-e-pagamento.md), V100):
+  - a fila a liquidar dos atestos (recebimento definitivo, ordem de serviço por contrato, diária do TFD) e a liquidação avulsa;
+  - as retenções, o líquido e o vencimento; o pagamento com a ordem bancária e a ordem cronológica por fonte;
+  - as diárias do TFD com o credor pessoa física; os restos a pagar e a execução do exercício.
 
 **Falta:**
-- [ ] **F2:** liquidação pelo atesto, retenções, pagamento, restos a pagar, diárias do TFD, painel da execução e ordem cronológica.
 - [ ] **F3:** centros de custo, apuração mensal do custo por unidade, custo por atendimento, teto da PPI.
 - [ ] Importação do SIAFIC e SIOPS (domínio 20).
 

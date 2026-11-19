@@ -2,6 +2,7 @@
 Library     String
 Resource    ../../../../pom/ui/administrativo/financeiro/financeiro_ui_pom.resource
 Resource    ../../../financeiro/financeiro_flow.resource
+Resource    ../../../financeiro/liquidacao_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Financeiro (ADR-0218); as bases vêm pela API.
@@ -54,6 +55,44 @@ UI Financeiro - Registrar Empenho
     Wait For Elements State    css=[role=status] >> text=Empenho UI${n} registrado.    visible
     Click    css=button[aria-label="Abrir empenho UI${n}"]
     Wait For Elements State    css=app-drawer dl >> text=/R\\$\\s*1\\.200,00/    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Financeiro - Liquidar E Pagar
+    [Documentation]    Pela tela: liquida o recebimento da fila, paga a liquidação e abre a execução.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${rec}    ${empenho}    ${numero}=    Seed Recebimento Liquidavel
+    UI Financeiro - Abrir Tela
+    Click    role=tab[name="A liquidar"]
+    Click    css=button[aria-label^="Liquidar Ordem ${numero}"]
+    Fill Text    id=f-lq-iss    3
+    Enviar Gaveta
+    Wait For Elements State    css=[role=status] >> text=/Liquidado: Ordem ${numero}/    visible
+    Click    role=tab[name="Liquidações"]
+    Click    css=button[aria-label^="Pagar Ordem ${numero}"]
+    Fill Text    id=f-pg-ob    OB-UI
+    Fill Text    id=f-pg-justificativa    Pagamento pela tela.
+    Enviar Gaveta
+    Wait For Elements State    css=[role=status] >> text=/Pago: Ordem ${numero}/    visible
+    Click    role=tab[name="Execução"]
+    Wait For Elements State    css=table[aria-label="Execução por fonte"]    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Frota - Diarias Do Tfd
+    [Documentation]    Pela tela: a solicitação de TFD autorizada concede a diária ao paciente.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${id}    ${cpfPaciente}    ${nome}=    Seed Tfd Autorizado
+    ${cpf}=    Gerar CPF
+    Ir Para Rota Do Frontend    /administrativo/frota
+    Wait For Elements State    css=h1 >> text=Frota e transporte    visible
+    Clicar Aba    Solicitações
+    Click    css=button[aria-label="Diárias do TFD de ${nome}"]
+    Fill Text    id=f-dt-cpf    ${cpf}
+    Fill Text    id=f-dt-dias    3
+    Fill Text    id=f-dt-valor    24.75
+    Enviar Gaveta
+    Wait For Elements State    css=app-drawer [role=status] >> text=/Diária de R\\$\\s*74,25 concedida/    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
