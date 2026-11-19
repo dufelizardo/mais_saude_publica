@@ -31,6 +31,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -104,6 +105,11 @@ class LiquidacaoControllerTest {
         return resposta.getContentAsString(StandardCharsets.UTF_8);
     }
 
+    /** O centro geral da UBS do teste, para a avulsa (ADR-0220). */
+    private String centro() throws Exception {
+        return ((List<?>) JsonPath.read(ler(API + "centros-custo"), "$[?(@.unidadeId == '" + ubs.getUuid() + "' && @.geral == true)].uuid")).get(0).toString();
+    }
+
     private static double numero(String json, String caminho) {
         Object v = JsonPath.read(json, caminho);
         return v instanceof List<?> l ? ((Number) l.get(0)).doubleValue() : ((Number) v).doubleValue();
@@ -161,7 +167,11 @@ class LiquidacaoControllerTest {
         // Avulsa: pede a justificativa e quem atestou; vence antes da outra e trava o pagamento fora da ordem cronológica.
         String avulsa = "{\"origem\": \"AVULSA\", \"empenhoId\": \"" + outro + "\", \"valorBruto\": 50, \"vencimento\": \"%s\"%s}";
         enviar(post(API + "liquidacao"), avulsa.formatted(hoje.plusDays(10), ""), 400);
-        String a = enviar(post(API + "liquidacao"), avulsa.formatted(hoje, ", \"justificativa\": \"Conta de energia.\", \"atestadoPorMatricula\": \"LIQ-FISCAL\""), 201);
+        String semCentro = ", \"justificativa\": \"Conta de energia.\", \"atestadoPorMatricula\": \"LIQ-FISCAL\"";
+        enviar(post(API + "liquidacao"), avulsa.formatted(hoje, semCentro), 400);
+        enviar(post(API + "liquidacao"), avulsa.formatted(hoje, semCentro + ", \"centroCustoId\": \"" + UUID.randomUUID() + "\""), 404);
+        String a = enviar(post(API + "liquidacao"), avulsa.formatted(hoje, semCentro + ", \"centroCustoId\": \"" + centro() + "\""), 201);
+        assertThat((String) JsonPath.read(a, "$.centroCusto")).contains("Geral");
         String pagamento = "{\"data\": \"%s\", \"ordemBancaria\": \"2026OB0001\"%s}";
         enviar(post(API + "liquidacao/" + id + "/pagamento"), pagamento.formatted(hoje.plusDays(1), ""), 400);
         enviar(post(API + "liquidacao/" + id + "/pagamento"), pagamento.formatted(hoje, ""), 422);
@@ -182,7 +192,7 @@ class LiquidacaoControllerTest {
         String emp = r[1], dot = r[2], forn = r[3];
         String outro = empenhar(dot, forn, null, "LQ0003", "300");
         String avulsa = "{\"origem\": \"AVULSA\", \"empenhoId\": \"" + outro + "\", \"valorBruto\": %s, \"vencimento\": \"%s\", \"justificativa\": \"Serviço.\", "
-                + "\"atestadoPorMatricula\": \"LIQ-FISCAL\"}";
+                + "\"atestadoPorMatricula\": \"LIQ-FISCAL\", \"centroCustoId\": \"" + centro() + "\"}";
         enviar(post(API + "liquidacao"), avulsa.formatted("40", hoje.minusDays(5)), 201);
         String nova = JsonPath.read(enviar(post(API + "liquidacao"), avulsa.formatted("60", hoje), 201), "$.uuid");
         enviar(post(API + "liquidacao/" + nova + "/pagamento"), "{\"data\": \"" + hoje + "\", \"ordemBancaria\": \"OB2\"}", 422);

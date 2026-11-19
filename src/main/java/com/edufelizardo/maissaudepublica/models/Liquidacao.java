@@ -94,6 +94,13 @@ public class Liquidacao implements Serializable {
     @Column(updatable = false)
     private String atestadoPorCpf;
 
+    /** Na avulsa: o centro de custo que recebe a despesa na apuração (ADR-0220). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "centro_custo_id", referencedColumnName = "uuid", updatable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private CentroCusto centroCusto;
+
     private LocalDate pagaEm;
 
     @Column(length = 60)

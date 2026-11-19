@@ -2,11 +2,15 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  ApuracaoCustoDto, ApuracaoCustoResumoDto, CentroCustoDto, IndicadoresCustoDto, TipoCentroCusto,
   BeneficiarioDiariaTfd, DiariaTfdDto, DotacaoDto, EmpenhoDto, ExecucaoDto, FonteRecursoSaude, LiquidacaoDto, OrigemLiquidacao, PendenciaLiquidacaoDto,
   RestoAPagarDto, TipoAlteracaoDotacao, TipoEmpenho, TipoMovimentoEmpenho,
 } from '../models/financeiro';
 
-/** Financeiro: F1 dotação e empenho (ADR-0218) e F2 liquidação, pagamento, diárias do TFD e execução (ADR-0219). */
+/**
+ * Financeiro: F1 dotação e empenho (ADR-0218), F2 liquidação, pagamento, diárias do TFD e execução (ADR-0219) e F3 centros de custo e
+ * apuração (ADR-0220).
+ */
 @Injectable({ providedIn: 'root' })
 export class FinanceiroService {
   private readonly http = inject(HttpClient);
@@ -58,7 +62,7 @@ export class FinanceiroService {
 
   liquidar(dto: { origem: OrigemLiquidacao; origemId: string | null; empenhoId: string; notaFiscal: string | null; notaEmitidaEm: string | null;
     valorBruto: number; iss: number | null; irrf: number | null; inss: number | null; outrasRetencoes: number | null; vencimento: string | null;
-    justificativa: string | null; atestadoPorMatricula: string | null }): Observable<LiquidacaoDto> {
+    justificativa: string | null; atestadoPorMatricula: string | null; centroCustoId: string | null }): Observable<LiquidacaoDto> {
     return this.http.post<LiquidacaoDto>(`${this.api}/liquidacao`, dto);
   }
 
@@ -81,5 +85,37 @@ export class FinanceiroService {
 
   execucao(exercicio?: number): Observable<ExecucaoDto> {
     return this.http.get<ExecucaoDto>(`${this.api}/execucao`, { params: exercicio ? { exercicio } : {} });
+  }
+
+  centrosCusto(): Observable<CentroCustoDto[]> {
+    return this.http.get<CentroCustoDto[]>(`${this.api}/centros-custo`);
+  }
+
+  criarCentroCusto(dto: { setorId: string; nome: string | null; tipo: TipoCentroCusto | null }): Observable<CentroCustoDto> {
+    return this.http.post<CentroCustoDto>(`${this.api}/centro-custo`, dto);
+  }
+
+  alterarCentroCusto(uuid: string, dto: { nome: string; tipo: TipoCentroCusto; ativo: boolean }): Observable<CentroCustoDto> {
+    return this.http.put<CentroCustoDto>(`${this.api}/centro-custo/${uuid}`, dto);
+  }
+
+  apuracoesCusto(): Observable<ApuracaoCustoResumoDto[]> {
+    return this.http.get<ApuracaoCustoResumoDto[]>(`${this.api}/apuracoes-custo`);
+  }
+
+  apuracaoCusto(competencia: string): Observable<ApuracaoCustoDto> {
+    return this.http.get<ApuracaoCustoDto>(`${this.api}/apuracao-custo`, { params: { competencia } });
+  }
+
+  apurarCusto(competencia: string): Observable<ApuracaoCustoDto> {
+    return this.http.post<ApuracaoCustoDto>(`${this.api}/apuracao-custo`, { competencia });
+  }
+
+  fecharApuracaoCusto(uuid: string): Observable<ApuracaoCustoDto> {
+    return this.http.post<ApuracaoCustoDto>(`${this.api}/apuracao-custo/${uuid}/fechamento`, {});
+  }
+
+  indicadoresCusto(competencia: string): Observable<IndicadoresCustoDto> {
+    return this.http.get<IndicadoresCustoDto>(`${this.api}/indicadores-custo`, { params: { competencia } });
   }
 }

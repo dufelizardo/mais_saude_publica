@@ -43,7 +43,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ✅ | CP1 a CP3 feitas (fornecedores, solicitação, pesquisa de preços, contratação, atas, contratos, aditivos, ordem, recebimento, ocorrências e painel); PNCP e NF-e no domínio 20 |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ✅ | PM1 a PM3 feitas (bens, tombamento, responsável, transferência, bem comprado a tombar; manutenção; inventário, baixa, valor contábil e painel); etiqueta pela D3 |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
-| 17 | [Financeiro](#17-financeiro) | 🟡 | F1 e F2 feitas (dotação, empenho, liquidação pelo atesto, pagamento, diárias do TFD, restos a pagar e execução); F3 (custos) |
+| 17 | [Financeiro](#17-financeiro) | ✅ | F1, F2 e F3 feitas (dotação, empenho, liquidação, pagamento, diárias do TFD, restos a pagar, execução, centros de custo e apuração mensal); SIAFIC, SIOPS e o teto da PPI no domínio 20 |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | ✅ | Auditoria feita; Qualidade completa: Q1 (segurança do paciente), Q2 (não conformidades e planos) e Q3 (indicadores com metas e auditoria de protocolos) |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ✅ | IS1 e IS2 feitas (catálogo, encaminhamento e painel da rede); guia para imprimir (Documentos) e CadÚnico/SUAS no domínio 20 |
 
-**Resumo:** 31 itens mais Documentos: 27 ✅ · 4 🟡 · 0 ⬜ (e Documentos 🟡). As Integrações são a parte não
+**Resumo:** 31 itens mais Documentos: 28 ✅ · 3 🟡 · 0 ⬜ (e Documentos 🟡). As Integrações são a parte não
 iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -435,7 +435,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 17. Financeiro
 
-**Estado:** 🟡. Desenho na [ADR-0218](./adr/0218-financeiro-dotacao-e-empenho.md): acompanhamento ao lado do SIAFIC (Decreto 10.540/2020); detalhe em
+**Estado:** ✅. Desenho na [ADR-0218](./adr/0218-financeiro-dotacao-e-empenho.md): acompanhamento ao lado do SIAFIC (Decreto 10.540/2020); detalhe em
 [`financeiro/MODELO-FINANCEIRO.md`](./financeiro/MODELO-FINANCEIRO.md).
 
 **Temos:**
@@ -447,9 +447,15 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   - a fila a liquidar dos atestos (recebimento definitivo, ordem de serviço por contrato, diária do TFD) e a liquidação avulsa;
   - as retenções, o líquido e o vencimento; o pagamento com a ordem bancária e a ordem cronológica por fonte;
   - as diárias do TFD com o credor pessoa física; os restos a pagar e a execução do exercício.
+- **F3 · Centros de custo e apuração** ([ADR-0220](./adr/0220-financeiro-centros-de-custo-e-apuracao.md), V101):
+  - o centro geral de cada unidade e o do setor, produtivo, de apoio ou administrativo (PNGC);
+  - a apuração mensal por competência: pessoal pela lotação, consumo do Estoque e da Farmácia, serviços liquidados, manutenção,
+    depreciação, diárias do TFD e as avulsas pelo centro; aberta, refeita; fechada, fotografia;
+  - o custo por atendimento e por paciente-dia contra a média do tipo de unidade, na aba Custos e na Sala de Situação.
 
 **Falta:**
-- [ ] **F3:** centros de custo, apuração mensal do custo por unidade, custo por atendimento, teto da PPI.
+- [ ] Rateio dos centros de apoio e administrativos para os produtivos (segunda etapa do PNGC); lotação por setor no RH.
+- [ ] Teto financeiro da PPI pela tabela SIGTAP e envio ao ApuraSUS (domínio 20).
 - [ ] Importação do SIAFIC e SIOPS (domínio 20).
 
 ### 18. Qualidade / Segurança / Auditoria

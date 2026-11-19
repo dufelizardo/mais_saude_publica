@@ -52,6 +52,7 @@ public class LiquidacaoService {
     @Autowired private ProfissionalRepository profissionalRepository;
     @Autowired private FinanceiroService financeiroService;
     @Autowired private ManutencaoService manutencaoService;
+    @Autowired private CustosService custosService;
     @Autowired private ControleDeAcesso controleDeAcesso;
 
     // ── A liquidar ─────────────────────────────────────────────────────────────────────────────────
@@ -180,6 +181,10 @@ public class LiquidacaoService {
                 if (limpo(dto.getJustificativa()) == null || limpo(dto.getAtestadoPorMatricula()) == null) {
                     throw new ResourceBadRequestException("Sem atesto na plataforma, informe a justificativa e a matrícula de quem atestou.");
                 }
+                if (dto.getCentroCustoId() == null) {
+                    throw new ResourceBadRequestException("Na liquidação avulsa, informe o centro de custo (ADR-0220).");
+                }
+                l.setCentroCusto(custosService.ativo(dto.getCentroCustoId()));
                 String m = dto.getAtestadoPorMatricula().trim();
                 Profissional p = profissionalRepository.findByMatricula(m).orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar o profissional de matrícula " + m + " em nossos registros."));
@@ -449,7 +454,8 @@ public class LiquidacaoService {
         return new LiquidacaoDtos.Liquidacao(l.getUuid(), l.getOrigem(), origemId, descricao, e.getUuid(), e.getNumero(), e.getFornecedor().getRazaoSocial(),
                 e.getDotacao().getFonte(), l.getNotaFiscal(), l.getNotaEmitidaEm(), l.getValorBruto(), l.getIss(), l.getIrrf(), l.getInss(), l.getOutrasRetencoes(),
                 l.getValorLiquido(), l.getLiquidadaEm(), l.getVencimento(), l.getPagaEm() == null && l.getVencimento().isBefore(hoje), l.getPagaEm() != null,
-                l.getPagaEm(), l.getOrdemBancaria(), l.getJustificativa(), l.getJustificativaForaDeOrdem());
+                l.getPagaEm(), l.getOrdemBancaria(), l.getJustificativa(), l.getJustificativaForaDeOrdem(),
+                l.getCentroCusto() == null ? null : l.getCentroCusto().getCodigo() + " · " + l.getCentroCusto().getNome());
     }
 
     private static LiquidacaoDtos.Diaria dto(DiariaTfd d, boolean liquidada) {

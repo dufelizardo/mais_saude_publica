@@ -79,7 +79,8 @@ Aceita e implementada. Segunda fatia do domínio 17; o desenho está na [ADR-021
 
 - **A despesa da saúde fica completa na plataforma:** da dotação ao empenho, ao atesto, à liquidação e ao pagamento, cada passo com o
   documento de origem.
-- **A F3 parte das liquidações** para apurar o custo dos contratos por unidade.
+- **A F3 parte das liquidações** para apurar o custo dos contratos por unidade ([ADR-0220](./0220-financeiro-centros-de-custo-e-apuracao.md)),
+  e a avulsa passa a pedir o centro de custo.
 - **Pendências:**
   - a importação das ordens bancárias e dos empenhos do SIAFIC e o SIOPS (domínio 20);
   - a tabela de valores das diárias como cadastro (hoje o valor é informado na concessão).

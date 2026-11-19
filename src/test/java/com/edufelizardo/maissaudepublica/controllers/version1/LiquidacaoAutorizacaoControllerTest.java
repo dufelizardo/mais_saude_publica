@@ -129,6 +129,24 @@ class LiquidacaoAutorizacaoControllerTest {
         return r.getResponse().getContentAsString(StandardCharsets.UTF_8);
     }
 
+    /**
+     * Custos (ADR-0220): só o Financeiro cria centro e apura; o gestor consulta os centros e os indicadores; o Compras não apura; o profissional
+     * sem permissão, 403; sem login, 401.
+     */
+    @Test
+    void custosSoPeloFinanceiro() throws Exception {
+        String apurar = "{\"competencia\": \"" + hoje.withDayOfMonth(1).minusMonths(1).toString().substring(0, 7) + "\"}";
+        assertThat(codigo(GESTOR, get(API + "centros-custo"), "")).isEqualTo(200);
+        assertThat(codigo(GESTOR, post(API + "centro-custo"), "{\"setorId\": \"" + ubs.getUuid() + "\"}")).isEqualTo(403);
+        assertThat(codigo(GESTOR, post(API + "apuracao-custo"), apurar)).isEqualTo(403);
+        assertThat(codigo(COMPRAS, post(API + "apuracao-custo"), apurar)).isEqualTo(403);
+        assertThat(codigo(OUTRO, get(API + "indicadores-custo?competencia=1990-01"), "")).isEqualTo(403);
+        assertThat(codigo(GESTOR, get(API + "indicadores-custo?competencia=1990-01"), "")).isEqualTo(404);
+        assertThat(codigo(FINANCEIRO, post(API + "centro-custo"), "{\"setorId\": \"" + ubs.getUuid() + "\"}")).isEqualTo(404);
+        assertThat(codigo(FINANCEIRO, post(API + "apuracao-custo"), "{\"competencia\": \"1990-13\"}")).isEqualTo(400);
+        assertThat(mockMvc.perform(get(API + "centros-custo")).andReturn().getResponse().getStatus()).isEqualTo(401);
+    }
+
     @Test
     void liquidacaoSoPeloFinanceiro() throws Exception {
         String liq = "{\"origem\": \"AVULSA\", \"empenhoId\": \"" + ubs.getUuid() + "\", \"valorBruto\": 10}";

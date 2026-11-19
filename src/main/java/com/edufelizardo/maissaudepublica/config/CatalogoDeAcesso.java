@@ -122,7 +122,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PERMISSOES.put("PATRIMONIO.CONFIRMAR_BAIXA", new Def("Confirmar ou recusar a baixa de bem acima do valor de alçada", OPERACAO));
         // Financeiro (ADR-0218): a dotação e o empenho do Fundo Municipal de Saúde, espelhados do SIAFIC.
         PERMISSOES.put("FINANCEIRO.CONSULTAR", new Def("Consultar as dotações, os empenhos e a execução do Fundo Municipal de Saúde", OPERACAO));
-        PERMISSOES.put("FINANCEIRO.GERENCIAR", new Def("Registrar as dotações, as alterações, os empenhos, os reforços e as anulações", OPERACAO));
+        PERMISSOES.put("FINANCEIRO.GERENCIAR", new Def("Registrar as dotações, os empenhos, as liquidações, os pagamentos, os centros de custo e a apuração de custos", OPERACAO));
         // Manutenção (ADR-0216): os planos, a triagem e a execução das ordens de serviço.
         PERMISSOES.put("MANUTENCAO.EXECUTAR", new Def("Manter os planos de manutenção e triar, executar e concluir as ordens de serviço", OPERACAO));
         // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.

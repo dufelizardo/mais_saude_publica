@@ -3,6 +3,7 @@ Library     String
 Resource    ../../../../pom/ui/administrativo/financeiro/financeiro_ui_pom.resource
 Resource    ../../../financeiro/financeiro_flow.resource
 Resource    ../../../financeiro/liquidacao_flow.resource
+Resource    ../../../financeiro/custos_flow.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
     Jornadas da tela Financeiro (ADR-0218); as bases vêm pela API.
@@ -96,3 +97,25 @@ UI Frota - Diarias Do Tfd
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 
+UI Financeiro - Custos
+    [Documentation]    Pela tela: a aba Custos apura a competência anterior (se aberta) e cria o centro de um setor.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${setor}    ${codigo}    ${unidade}=    Seed A Setor    ASSISTENCIAL
+    UI Financeiro - Abrir Tela
+    Click    role=tab[name="Custos"]
+    Wait For Elements State    css=table[aria-label="Centros de custo"]    visible
+    ${apurar}=    Get Element Count    css=app-custos-financeiro button.btn >> text=/Apurar|Refazer a apuração/
+    IF    ${apurar} > 0
+        Click    css=app-custos-financeiro button.btn >> text=/Apurar|Refazer a apuração/
+        Wait For Elements State    css=[role=status] >> text=/apurada/    visible
+    END
+    Wait For Elements State    css=table[aria-label="Custo por centro"]    visible
+    Clicar Botao    Novo centro do setor
+    Wait For Elements State    css=#f-cc-setor option[value="${setor}"]    attached
+    Select Options By    id=f-cc-setor    value    ${setor}
+    Fill Text    id=f-cc-nome    Robot UI Centro ${codigo}
+    Enviar Gaveta
+    Wait For Elements State    css=[role=status] >> text=/Robot UI Centro ${codigo} criado/    visible
+    Wait For Elements State    css=table[aria-label="Centros de custo"] >> text=Robot UI Centro ${codigo}    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

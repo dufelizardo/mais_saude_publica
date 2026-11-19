@@ -489,5 +489,19 @@
       }
     </section>
   </div>
+  @if (custos(); as cu) {
+    <div class="ss-row">
+      <section class="card ss-card" aria-label="Custo por unidade">
+        <div class="ss-card__head"><div><h2 class="ss-card__title">Custo por unidade</h2><p class="ss-card__sub">Competência {{ cu.competencia }} · {{ cu.situacao === 'FECHADA' ? 'fechada' : 'aberta' }} · custo por atendimento contra a média do tipo</p></div></div>
+        <ul class="eq-prof" aria-label="Custo por unidade">
+          @for (u of cu.unidades.slice(0, 8); track u.unidadeId) {
+            <li class="mo-row"><span><span class="cell-main">{{ u.unidadeNome }}</span><span class="cell-sub">{{ moeda(u.total) }}@if (u.atendimentos) { · {{ numero(u.atendimentos) }} atendimento(s) }</span></span>
+              <span class="mono">@if (u.custoPorAtendimento !== null) { {{ moeda(u.custoPorAtendimento) }} por atendimento } @else { — }
+                @if (u.acimaDaMedia) { <span class="tag tag--alert">acima da média</span> }</span></li>
+          } @empty { <li class="cell-sub">Nenhum custo apurado nas unidades do seu acesso.</li> }
+        </ul>
+      </section>
+    </div>
+  }
   <p class="cell-sub ss-fonte">Fonte: atendimentos, agenda, escala, programas, vigilância e vacinação do Mais Saúde Pública, calculados na hora · só agregados, sem paciente · a exportação entra na auditoria.</p>
 }

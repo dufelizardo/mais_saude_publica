@@ -1,7 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, inject, signal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import {
+  CentroCustoDto,
   EmpenhoDto,
   ExecucaoDto,
   FONTES,
@@ -143,6 +144,11 @@ export type AbaLiquidacao = 'liquidar' | 'liquidacoes' | 'restos' | 'execucao';
             @if (!pendencia()) {
               <div class="dw-field"><label for="f-lq-justificativa">Justificativa (sem atesto na plataforma) <span class="req" aria-hidden="true">*</span></label><input id="f-lq-justificativa" type="text" maxlength="500" (input)="set('justificativa', $event)" /></div>
               <div class="dw-field"><label for="f-lq-atestado">Matrícula de quem atestou <span class="req" aria-hidden="true">*</span></label><input id="f-lq-atestado" type="text" maxlength="30" (input)="set('atestado', $event)" /></div>
+              <div class="dw-field"><label for="f-lq-centro">Centro de custo <span class="req" aria-hidden="true">*</span></label>
+                <select id="f-lq-centro" (change)="set('centroCustoId', $event)">
+                  <option value="">Escolha…</option>
+                  @for (c of centros(); track c.uuid) { <option [value]="c.uuid">{{ c.codigo }} · {{ c.nome }} · {{ c.unidadeNome }}</option> }
+                </select></div>
             }
           </div>
           <div class="dw-foot"><button type="button" class="btn btn--ghost" (click)="gaveta.set(null)">Cancelar</button><button type="submit" class="btn" [disabled]="enviando()">Liquidar</button></div>
@@ -204,6 +210,8 @@ export class LiquidacaoFinanceiro implements OnChanges {
   protected readonly gaveta = signal<'liquidar' | 'pagar' | null>(null);
   protected readonly pendencia = signal<PendenciaLiquidacaoDto | null>(null);
   protected readonly liquidacao = signal<LiquidacaoDto | null>(null);
+  /** Os centros ativos, para a avulsa (ADR-0220). */
+  protected readonly centros = signal<CentroCustoDto[]>([]);
 
   ngOnChanges(): void {
     this.carregar();
@@ -238,6 +246,7 @@ export class LiquidacaoFinanceiro implements OnChanges {
   protected avulsa(): void {
     this.pendencia.set(null);
     this.f.set({});
+    this.service.centrosCusto().pipe(catchError(() => of([]))).subscribe((l) => this.centros.set(l.filter((c) => c.ativo)));
     this.erroGaveta.set(null);
     this.gaveta.set('liquidar');
   }
@@ -249,11 +258,15 @@ export class LiquidacaoFinanceiro implements OnChanges {
       this.erroGaveta.set('Escolha o empenho e informe o valor bruto.');
       return;
     }
+    if (!p && !v['centroCustoId']) {
+      this.erroGaveta.set('Na avulsa, escolha o centro de custo.');
+      return;
+    }
     const n = (k: string) => (v[k] ? Number(v[k]) : null);
     this.executar(this.service.liquidar({ origem: (p?.origem ?? 'AVULSA') as OrigemLiquidacao, origemId: p?.origemId ?? null, empenhoId: v['empenhoId'],
       notaFiscal: v['nota']?.trim() || null, notaEmitidaEm: null, valorBruto: Number(v['bruto']), iss: n('iss'), irrf: n('irrf'), inss: n('inss'),
       outrasRetencoes: n('outras'), vencimento: v['vencimento'] || null, justificativa: v['justificativa']?.trim() || null,
-      atestadoPorMatricula: v['atestado']?.trim() || null }), (l) => this.aviso.set(`Liquidado: ${l.descricao}, líquido ${this.moeda(l.valorLiquido)}.`));
+      atestadoPorMatricula: v['atestado']?.trim() || null, centroCustoId: p ? null : v['centroCustoId'] || null }), (l) => this.aviso.set(`Liquidado: ${l.descricao}, líquido ${this.moeda(l.valorLiquido)}.`));
   }
 
   protected abrirPagamento(l: LiquidacaoDto): void {
