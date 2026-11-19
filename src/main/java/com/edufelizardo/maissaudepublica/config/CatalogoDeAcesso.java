@@ -118,6 +118,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Patrimônio (ADR-0215): o bem tombado, o responsável e a transferência entre unidades.
         PERMISSOES.put("PATRIMONIO.CONSULTAR", new Def("Consultar os bens patrimoniais, os responsáveis e as transferências", OPERACAO));
         PERMISSOES.put("PATRIMONIO.GERENCIAR", new Def("Cadastrar e tombar bens, trocar o responsável e transferir entre unidades", OPERACAO));
+        // Baixa de alto valor (ADR-0217): a confirmação é da gestão, não de quem pede.
+        PERMISSOES.put("PATRIMONIO.CONFIRMAR_BAIXA", new Def("Confirmar ou recusar a baixa de bem acima do valor de alçada", OPERACAO));
         // Manutenção (ADR-0216): os planos, a triagem e a execução das ordens de serviço.
         PERMISSOES.put("MANUTENCAO.EXECUTAR", new Def("Manter os planos de manutenção e triar, executar e concluir as ordens de serviço", OPERACAO));
         // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.
@@ -218,7 +220,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
                         "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR", "TFD.AUTORIZAR",
                         "VISA.GERENCIAR", "QUALIDADE.GERIR", "COMPRAS.SOLICITAR", "COMPRAS.GERENCIAR", "PATRIMONIO.CONSULTAR",
-                        "PATRIMONIO.GERENCIAR", "MANUTENCAO.EXECUTAR")));
+                        "PATRIMONIO.GERENCIAR", "MANUTENCAO.EXECUTAR",
+                        "PATRIMONIO.CONFIRMAR_BAIXA")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",

@@ -97,6 +97,19 @@
   }
 }
 
+@if (equipamentosParados().length) {
+  <section class="ss-alertas" aria-label="Equipamentos parados">
+    @for (o of equipamentosParados().slice(0, 3); track o.uuid) {
+      <article class="ss-alerta ss-alerta--media" [attr.aria-label]="'Equipamento parado: ' + o.numeroTombamento">
+        <div>
+          <div class="ss-alerta__titulo">Equipamento parado: {{ o.bemDescricao }}</div>
+          <div class="ss-alerta__detalhe">{{ o.numeroTombamento }} · {{ o.unidadeNome }} · {{ o.diasParado }} dias parado · ordem {{ o.numero }}</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/administrativo/patrimonio" [queryParams]="{ aba: 'manutencao' }">Ver na manutenção</a>
+      </article>
+    }
+  </section>
+}
 @if (ordensAtrasadas().length) {
   <section class="ss-alertas" aria-label="Entregas de compras atrasadas">
     @for (o of ordensAtrasadas().slice(0, 3); track o.ordemId) {

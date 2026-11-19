@@ -41,7 +41,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 12 | [Leitos / Internação](#12-leitos--internação) | ✅ | RL1 a RL4 feitas (central de leitos, eletiva e censo, laudo de AIH, prescrição e checagem); SIH e faturamento no domínio 20 |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ✅ | ES1 a ES3 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário; reserva e consumo nas emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ✅ | CP1 a CP3 feitas (fornecedores, solicitação, pesquisa de preços, contratação, atas, contratos, aditivos, ordem, recebimento, ocorrências e painel); PNCP e NF-e no domínio 20 |
-| 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | 🟡 | PM1 e PM2 feitas (bens, tombamento, responsável, transferência, bem comprado a tombar; planos, chamados e ordens de serviço); PM3 (inventário, baixa e painel) |
+| 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ✅ | PM1 a PM3 feitas (bens, tombamento, responsável, transferência, bem comprado a tombar; manutenção; inventário, baixa, valor contábil e painel); etiqueta pela D3 |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | ✅ | Auditoria feita; Qualidade completa: Q1 (segurança do paciente), Q2 (não conformidades e planos) e Q3 (indicadores com metas e auditoria de protocolos) |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ✅ | IS1 e IS2 feitas (catálogo, encaminhamento e painel da rede); guia para imprimir (Documentos) e CadÚnico/SUAS no domínio 20 |
 
-**Resumo:** 31 itens mais Documentos: 26 ✅ · 4 🟡 · 1 ⬜ (e Documentos 🟡). As Integrações são a parte não
+**Resumo:** 31 itens mais Documentos: 27 ✅ · 3 🟡 · 1 ⬜ (e Documentos 🟡). As Integrações são a parte não
 iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -388,7 +388,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 15. Patrimônio / Manutenção
 
-**Estado:** 🟡. Desenho do domínio na [ADR-0215](./adr/0215-patrimonio-bens-tombamento-e-transferencia.md); detalhe em [`patrimonio/MODELO-PATRIMONIO.md`](./patrimonio/MODELO-PATRIMONIO.md).
+**Estado:** ✅. Desenho do domínio na [ADR-0215](./adr/0215-patrimonio-bens-tombamento-e-transferencia.md); detalhe em [`patrimonio/MODELO-PATRIMONIO.md`](./patrimonio/MODELO-PATRIMONIO.md).
 
 **Temos:**
 - **PM1 · Bens, tombamento e transferência** ([ADR-0215](./adr/0215-patrimonio-bens-tombamento-e-transferencia.md), V96):
@@ -403,9 +403,13 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   - a ordem de serviço com a triagem, a execução interna ou por contrato de serviço, o bem e o veículo em manutenção, as peças pelo
     Estoque, o custo, o tempo parado e o certificado de calibração;
   - o resumo com os planos vencendo e as calibrações vencidas, e o papel Manutenção.
+- **PM3 · Inventário, baixa e painel** ([ADR-0217](./adr/0217-patrimonio-inventario-baixa-e-painel.md), V98):
+  - o inventário anual com a comissão, a conferência, os achados a mais e o fechamento que corrige o setor, abre a transferência e
+    sugere a baixa; "Meus inventários" para a comissão;
+  - a baixa com o motivo, o processo e a confirmação da gestão acima de R$ 10 mil;
+  - o valor contábil estimado, o painel e o alerta de equipamento parado na Sala de Situação.
 
 **Falta:**
-- [ ] **PM3:** inventário anual com comissão, baixa, depreciação para leitura, painel e alerta na Sala de Situação.
 - [ ] Etiqueta com código de barras (D3 de Documentos); o aparelho do exame de imagem ligado ao bem; o lançamento contábil (domínio 17).
 
 ### 16. Transporte Sanitário

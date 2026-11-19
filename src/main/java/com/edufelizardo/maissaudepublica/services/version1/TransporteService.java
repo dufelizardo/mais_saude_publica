@@ -341,6 +341,20 @@ public class TransporteService {
         }
     }
 
+    /** O bem do veículo foi baixado (ADR-0217): o veículo fica inativo; em serviço não sai (422). */
+    @Transactional
+    public void inativarPelaBaixa(Veiculo v, String motivo) {
+        Veiculo atual = travar(v.getUuid());
+        if (atual.getSituacao() == SituacaoVeiculo.EM_SERVICO) {
+            throw new ResourceUnprocessableEntityException("O veículo " + atual.getPrefixo() + " está em serviço; a baixa espera o fim da ocorrência, viagem ou emergência.");
+        }
+        if (atual.getSituacao() != SituacaoVeiculo.INATIVO) {
+            atual.setSituacao(SituacaoVeiculo.INATIVO);
+            veiculoRepository.save(atual);
+            registrarSituacao(atual, motivo);
+        }
+    }
+
     // ── Apoio ─────────────────────────────────────────────────────────────────────────────────────
 
     /** A composição mínima: USB, condutor e técnico; USA, condutor, enfermeiro e médico; motolância, técnico ou enfermeiro. */

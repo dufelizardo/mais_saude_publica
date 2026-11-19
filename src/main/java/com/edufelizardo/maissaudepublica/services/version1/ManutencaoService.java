@@ -34,6 +34,8 @@ public class ManutencaoService {
 
     public static final String EXECUTAR = "MANUTENCAO.EXECUTAR";
     static final int DIAS_VENCENDO = 30;
+    /** O equipamento médico parado há mais que isto vai para a Sala de Situação (ADR-0217). */
+    static final int DIAS_PARADO_ALERTA = 7;
     private static final ZoneId ZONA = ZoneId.of("America/Sao_Paulo");
     private static final Set<SituacaoOrdemServico> EM_ABERTO = EnumSet.of(SituacaoOrdemServico.ABERTA, SituacaoOrdemServico.EM_EXECUCAO);
     private static final Set<SituacaoBem> EM_OPERACAO = EnumSet.of(SituacaoBem.EM_USO, SituacaoBem.OCIOSO, SituacaoBem.EM_MANUTENCAO);
@@ -183,7 +185,9 @@ public class ManutencaoService {
                 .map(p -> dto(p, hoje)).toList();
         return new ManutencaoDtos.Resumo(ordens.stream().filter(o -> o.getSituacao() == SituacaoOrdemServico.ABERTA).count(),
                 ordens.stream().filter(o -> o.getSituacao() == SituacaoOrdemServico.EM_EXECUCAO).count(),
-                ordens.stream().filter(o -> EM_ABERTO.contains(o.getSituacao()) && o.getParadoDesde() != null).count(), vencendo, calibracoes);
+                ordens.stream().filter(o -> EM_ABERTO.contains(o.getSituacao()) && o.getParadoDesde() != null).count(), vencendo, calibracoes,
+                dtos(ordens.stream().filter(o -> EM_ABERTO.contains(o.getSituacao()) && o.getParadoDesde() != null
+                        && o.getBem().getClasse() == ClasseBem.EQUIPAMENTO_MEDICO_HOSPITALAR && o.getParadoDesde().isBefore(hoje.minusDays(DIAS_PARADO_ALERTA))).toList()));
     }
 
     /** As atas e os contratos vigentes com item de serviço, para quem executa escolher a execução por contrato sem a permissão de Compras. */
@@ -200,6 +204,11 @@ public class ManutencaoService {
                 .filter(i -> i.getItemContratacao().getTipo() == TipoItemCompra.SERVICO).map(i -> i.getInstrumento().getUuid()).collect(Collectors.toSet());
         return vigentes.stream().filter(i -> comServico.contains(i.getUuid()))
                 .map(i -> new ManutencaoDtos.ContratoServico(i.getUuid(), i.getNumero(), i.getFornecedor().getRazaoSocial(), i.getFim())).toList();
+    }
+
+    /** As ordens dos bens informados, para o painel do Patrimônio (ADR-0217); quem chama já conferiu o acesso. */
+    List<ManutencaoDtos.Ordem> ordensDosBens(Set<UUID> bens) {
+        return bens.isEmpty() ? List.of() : dtos(ordemRepository.findTodas().stream().filter(o -> bens.contains(o.getBem().getUuid())).toList());
     }
 
     // ── Ordem de serviço ───────────────────────────────────────────────────────────────────────────
