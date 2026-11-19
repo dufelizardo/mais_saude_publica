@@ -51,7 +51,7 @@ Entregas - Recebimento - Status Code 200
     [Documentation]    Provisional and definitive receipt with a refusal: partial order, occurrence and stock entry.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${ordem}    ${item}    ${unidade}=    Seed Ordem
-    ${hoje}=    Get Current Date    result_format=%Y-%m-%d
+    ${hoje}=    Hoje Em Brasilia
     ${i}=    Create Dictionary    itemOrdemId=${item}    quantidade=${20}
     ${itens}=    Create List    ${i}
     ${payload}=    Create Dictionary    notaFiscal=NF 77    notaEmitidaEm=${hoje}    itens=${itens}

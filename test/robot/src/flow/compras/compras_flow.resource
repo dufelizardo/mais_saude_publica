@@ -11,6 +11,14 @@ Resource    ../setor/create_setor/create_setor_flow.resource
     O fornecedor, a solicitação de compra e a pesquisa de preços (ADR-0212).
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
+Hoje Em Brasilia
+    [Documentation]    Today in America/Sao_Paulo (UTC-3, no daylight saving since 2019), the day the server uses; the runner may be in UTC.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${hoje}=    Get Current Date    UTC    - 3 hours    result_format=%Y-%m-%d
+    RETURN    ${hoje}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
 Gerar CNPJ
     [Documentation]    A random CNPJ with valid check digits.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -63,7 +71,7 @@ Cotar Item
     [Documentation]    Registers a quote from a site with the given price.
     [Arguments]    ${item}    ${preco}    ${referencia}=loja.exemplo
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
-    ${hoje}=    Get Current Date    result_format=%Y-%m-%d
+    ${hoje}=    Hoje Em Brasilia
     ${payload}=    Create Dictionary    fonte=SITE    referencia=${referencia}    precoUnitario=${preco}    cotadoEm=${hoje}
     ${r}=    POST Cotacao Item Compra    ${item}    ${payload}
     Should Be Equal As Integers    ${r.status_code}    201
@@ -90,7 +98,7 @@ Compras - Fornecedor Certidoes E Impedimento - Status Code 201
     [Documentation]    Five valid certificates make it regular; an impediment makes it impeded.
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     ${id}    ${nome}=    Seed Fornecedor
-    ${hoje}=    Get Current Date    result_format=%Y-%m-%d
+    ${hoje}=    Hoje Em Brasilia
     ${validade}=    Get Current Date    increment=90 days    result_format=%Y-%m-%d
     FOR    ${tipo}    IN    FEDERAL    FGTS    TRABALHISTA    ESTADUAL    MUNICIPAL
         ${payload}=    Create Dictionary    tipo=${tipo}    emitidaEm=${hoje}    validaAte=${validade}

@@ -202,9 +202,9 @@ export class PainelCompras {
   }
 }
 
+/** Hoje no fuso de São Paulo, o dia que o servidor usa nas validações de data (o navegador pode estar em outro fuso). */
 function hojeIso(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
 }
 
 function mensagem(e: HttpErrorResponse): string {
