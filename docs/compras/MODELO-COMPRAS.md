@@ -11,6 +11,8 @@ portal de compras, fora do sistema. Empenho e pagamento ficam no domínio 17.
 | CP2 | Contratação, ata de registro de preços e contrato com saldo, gestor e fiscal, aditivos, alertas | ✅ ADR-0213, V94 |
 | CP3 | Ordem de fornecimento, recebimento provisório e definitivo (entrada no Estoque e na Farmácia), ocorrências, painel | ✅ ADR-0214, V95 |
 
+O tipo de item `BEM_PERMANENTE` veio com o Patrimônio ([ADR-0215](../adr/0215-patrimonio-bens-tombamento-e-transferencia.md)): é descrito em texto, como o serviço, e cada unidade aceita no recebimento definitivo nasce como bem a tombar.
+
 ## Entidades (CP1)
 
 ```text

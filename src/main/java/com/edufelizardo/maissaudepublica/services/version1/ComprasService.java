@@ -540,8 +540,8 @@ public class ComprasService {
     }
 
     /**
-     * O material pede o material ativo do catálogo e herda a unidade de medida; o medicamento pede o medicamento ativo; o serviço pede a
-     * descrição e a unidade de medida (400). O mesmo material ou medicamento não se repete (400).
+     * O material pede o material ativo do catálogo e herda a unidade de medida; o medicamento pede o medicamento ativo; o serviço e o bem
+     * permanente (ADR-0215) pedem a descrição e a unidade de medida (400). O mesmo material ou medicamento não se repete (400).
      */
     private void gravarItens(SolicitacaoCompra s, List<SolicitacaoCompraRequestDto.Item> itens) {
         Set<UUID> vistos = new HashSet<>();
@@ -580,7 +580,7 @@ public class ComprasService {
                 descricao = descricao != null ? nome + " — " + descricao : nome;
                 medida = medida != null ? medida : "UNIDADE";
             } else if (descricao == null || medida == null) {
-                throw new ResourceBadRequestException("Item " + ordem + ": o serviço pede a descrição e a unidade de medida.");
+                throw new ResourceBadRequestException("Item " + ordem + ": o serviço e o bem permanente pedem a descrição e a unidade de medida.");
             }
             UUID chave = material ? dto.getMaterialId() : dto.getMedicamentoId();
             if (chave != null && !vistos.add(chave)) {

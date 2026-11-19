@@ -184,8 +184,8 @@ const GERENCIAR = 'COMPRAS.GERENCIAR';
                           </select></div>
                       }
                       @default {
-                        <div class="dw-field" style="flex: 2;"><label [for]="'f-cp-descricao-' + i">Serviço</label><input [id]="'f-cp-descricao-' + i" type="text" maxlength="500" [value]="l.descricao" (input)="mudarLinha(i, 'descricao', $event)" /></div>
-                        <div class="dw-field"><label [for]="'f-cp-medida-' + i">Unidade de medida</label><input [id]="'f-cp-medida-' + i" type="text" maxlength="30" placeholder="serviço, mês…" [value]="l.unidadeMedida" (input)="mudarLinha(i, 'unidadeMedida', $event)" /></div>
+                        <div class="dw-field" style="flex: 2;"><label [for]="'f-cp-descricao-' + i">{{ l.tipo === 'SERVICO' ? 'Serviço' : 'Bem (vai a tombar no Patrimônio)' }}</label><input [id]="'f-cp-descricao-' + i" type="text" maxlength="500" [value]="l.descricao" (input)="mudarLinha(i, 'descricao', $event)" /></div>
+                        <div class="dw-field"><label [for]="'f-cp-medida-' + i">Unidade de medida</label><input [id]="'f-cp-medida-' + i" type="text" maxlength="30" [placeholder]="l.tipo === 'SERVICO' ? 'serviço, mês…' : 'unidade'" [value]="l.unidadeMedida" (input)="mudarLinha(i, 'unidadeMedida', $event)" /></div>
                       }
                     }
                     <div class="dw-field" style="max-width: 110px;"><label [for]="'f-cp-qtd-' + i">Quantidade</label><input [id]="'f-cp-qtd-' + i" type="number" min="1" [value]="l.quantidade" (input)="mudarLinha(i, 'quantidade', $event)" /></div>
@@ -530,7 +530,7 @@ export class Compras {
     this.fecharGavetas();
     this.f.set({ unidadeId: s.unidadeId, setorId: s.setorId ?? '', prioridade: s.prioridade, justificativa: s.justificativa });
     this.linhas.set(s.itens.map((i) => ({ tipo: i.tipo, materialId: i.materialId ?? '', medicamentoId: i.medicamentoId ?? '',
-      descricao: i.tipo === 'SERVICO' ? i.descricao : '', unidadeMedida: i.tipo === 'SERVICO' ? i.unidadeMedida.toLowerCase() : '', quantidade: String(i.quantidade) })));
+      descricao: descrito(i.tipo) ? i.descricao : '', unidadeMedida: descrito(i.tipo) ? i.unidadeMedida.toLowerCase() : '', quantidade: String(i.quantidade) })));
     this.editandoId.set(s.uuid);
     this.editando.set(true);
   }
@@ -574,13 +574,13 @@ export class Compras {
     for (const l of this.linhas()) {
       const quantidade = Number(l.quantidade);
       const sem = (l.tipo === 'MATERIAL' && !l.materialId) || (l.tipo === 'MEDICAMENTO' && !l.medicamentoId)
-        || (l.tipo === 'SERVICO' && (!l.descricao.trim() || !l.unidadeMedida.trim()));
+        || (descrito(l.tipo) && (!l.descricao.trim() || !l.unidadeMedida.trim()));
       if (sem || !(quantidade >= 1)) {
         this.erroGaveta.set('Complete cada item: o produto (ou o serviço e a unidade de medida) e a quantidade.');
         return;
       }
       itens.push({ tipo: l.tipo, materialId: l.tipo === 'MATERIAL' ? l.materialId : null, medicamentoId: l.tipo === 'MEDICAMENTO' ? l.medicamentoId : null,
-        descricao: l.tipo === 'SERVICO' ? l.descricao.trim() : null, unidadeMedida: l.tipo === 'SERVICO' ? l.unidadeMedida.trim() : null, quantidade });
+        descricao: descrito(l.tipo) ? l.descricao.trim() : null, unidadeMedida: descrito(l.tipo) ? l.unidadeMedida.trim() : null, quantidade });
     }
     if (!itens.length) {
       this.erroGaveta.set('Informe ao menos um item.');
@@ -821,6 +821,11 @@ export class Compras {
     const [a, m, d] = iso.slice(0, 10).split('-');
     return `${d}/${m}/${a}`;
   }
+}
+
+/** O serviço e o bem permanente (ADR-0215) se descrevem em texto, com a unidade de medida. */
+function descrito(t: TipoItemCompra): boolean {
+  return t === 'SERVICO' || t === 'BEM_PERMANENTE';
 }
 
 function linhaVazia(): LinhaItem {

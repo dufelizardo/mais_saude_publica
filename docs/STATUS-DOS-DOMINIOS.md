@@ -41,7 +41,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 12 | [Leitos / Internação](#12-leitos--internação) | ✅ | RL1 a RL4 feitas (central de leitos, eletiva e censo, laudo de AIH, prescrição e checagem); SIH e faturamento no domínio 20 |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ✅ | ES1 a ES3 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário; reserva e consumo nas emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ✅ | CP1 a CP3 feitas (fornecedores, solicitação, pesquisa de preços, contratação, atas, contratos, aditivos, ordem, recebimento, ocorrências e painel); PNCP e NF-e no domínio 20 |
-| 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
+| 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | 🟡 | PM1 feita (bens, tombamento, responsável, transferência, bem comprado a tombar); PM2 (manutenção) e PM3 (inventário, baixa e painel) |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | ✅ | Auditoria feita; Qualidade completa: Q1 (segurança do paciente), Q2 (não conformidades e planos) e Q3 (indicadores com metas e auditoria de protocolos) |
@@ -59,7 +59,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
 | 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ✅ | IS1 e IS2 feitas (catálogo, encaminhamento e painel da rede); guia para imprimir (Documentos) e CadÚnico/SUAS no domínio 20 |
 
-**Resumo:** 31 itens mais Documentos: 26 ✅ · 3 🟡 · 2 ⬜ (e Documentos 🟡). As Integrações são a parte não
+**Resumo:** 31 itens mais Documentos: 26 ✅ · 4 🟡 · 1 ⬜ (e Documentos 🟡). As Integrações são a parte não
 iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -388,11 +388,20 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 15. Patrimônio / Manutenção
 
-**Estado:** ⬜. Hoje só existe o rótulo `PATRIMONIO` reservado.
+**Estado:** 🟡. Desenho do domínio na [ADR-0215](./adr/0215-patrimonio-bens-tombamento-e-transferencia.md); detalhe em [`patrimonio/MODELO-PATRIMONIO.md`](./patrimonio/MODELO-PATRIMONIO.md).
+
+**Temos:**
+- **PM1 · Bens, tombamento e transferência** ([ADR-0215](./adr/0215-patrimonio-bens-tombamento-e-transferencia.md), V96):
+  - o bem com a classe, a identificação, a unidade e o setor, tombado com o número do ano;
+  - o termo de responsabilidade com histórico; o uso (em uso ou ocioso);
+  - a transferência entre unidades com o aceite ou a recusa do destino;
+  - o bem permanente comprado, que nasce a tombar no recebimento definitivo de Compras;
+  - o vínculo com o veículo da frota, "Meus bens" e o papel Patrimônio.
 
 **Falta:**
-- [ ] Desenho (ADR): bem (equipamento, veículo, mobiliário), tombamento, localização, manutenção.
-- [ ] Implementação.
+- [ ] **PM2:** plano preventivo e calibração, chamado corretivo, ordem de serviço interna ou por contrato, peças pelo Estoque.
+- [ ] **PM3:** inventário anual com comissão, baixa, depreciação para leitura, painel e alerta na Sala de Situação.
+- [ ] Etiqueta com código de barras (D3 de Documentos); o aparelho do exame de imagem ligado ao bem; o lançamento contábil (domínio 17).
 
 ### 16. Transporte Sanitário
 
@@ -412,7 +421,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 **Falta:**
 - [x] **T3:** veículos cedidos às emergências ([ADR-0192](./adr/0192-transporte-nas-emergencias.md)).
-- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (domínio 15); ajuda de custo e diárias do
+- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (vínculo feito na PM1, ADR-0215; a manutenção pela PM2); ajuda de custo e diárias do
   TFD (domínio 17); roteirização.
 
 ### 17. Financeiro

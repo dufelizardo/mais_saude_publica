@@ -11,6 +11,7 @@ import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
 import { AlertaAuditoriaService } from '../../core/services/alerta-auditoria';
 import { ComprasService } from '../../core/services/compras';
+import { PatrimonioService } from '../../core/services/patrimonio';
 import { AcessoDaInterface, UsuarioAtualResponseDto } from '../../core/models/auth';
 
 const RH = ['RH.CONSULTAR', 'RH.GERENCIAR'];
@@ -36,6 +37,8 @@ const MENU: Record<string, string[]> = {
   '/administrativo/estoque': ['ESTOQUE.CONSULTAR', 'ESTOQUE.MOVIMENTAR', 'ESTOQUE.GERENCIAR', 'ESTOQUE.REQUISITAR', 'ESTOQUE.ATENDER'],
   // Compras (ADR-0212): quem pede e quem compra.
   '/administrativo/compras': ['COMPRAS.SOLICITAR', 'COMPRAS.GERENCIAR'],
+  // Patrimônio (ADR-0215).
+  '/administrativo/patrimonio': ['PATRIMONIO.CONSULTAR', 'PATRIMONIO.GERENCIAR'],
   '/administrativo/frota': ['TRANSPORTE.CONSULTAR', 'TRANSPORTE.GERENCIAR', 'TRANSPORTE.SOLICITAR', 'TFD.AUTORIZAR'],
   '/administrativo/ppi': ['REDE.CONSULTAR', 'REDE.GERENCIAR'],
   // Território (ADR-0125): o recorte geográfico é aberto a quem está logado.
@@ -127,6 +130,10 @@ export class AppShell {
    */
   protected readonly meusContratos = signal<{ contratos: number; ordens: number } | null>(null);
 
+  private readonly patrimonioService = inject(PatrimonioService);
+  /** Os bens sob a responsabilidade da pessoa (ADR-0215), para quem não vê Patrimônio pelo menu: o item "Meus bens" aparece só se houver algum. */
+  protected readonly meusBens = signal<number>(0);
+
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.usuario.set(u));
     this.authService.acessoDaInterface().subscribe((a) => {
@@ -137,6 +144,9 @@ export class AppShell {
           next: (l) => this.meusContratos.set(l.length ? { contratos: l.length, ordens: l.reduce((t, i) => t + i.ordensEmAberto, 0) } : null),
           error: () => this.meusContratos.set(null),
         });
+      }
+      if (a.restrito && !this.podeVer('/administrativo/patrimonio')) {
+        this.patrimonioService.meusBens().subscribe({ next: (l) => this.meusBens.set(l.length), error: () => this.meusBens.set(0) });
       }
     });
     this.atualizarBreadcrumb();

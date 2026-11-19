@@ -474,6 +474,7 @@ public class ContratosService {
             case MATERIAL -> "M:" + i.getMaterial().getUuid();
             case MEDICAMENTO -> "F:" + i.getMedicamento().getUuid();
             case SERVICO -> "S:" + i.getDescricao().trim().toLowerCase(Locale.ROOT) + "|" + i.getUnidadeMedida();
+            case BEM_PERMANENTE -> "B:" + i.getDescricao().trim().toLowerCase(Locale.ROOT) + "|" + i.getUnidadeMedida();
         };
     }
 
