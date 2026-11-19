@@ -497,6 +497,7 @@
           @for (u of cu.unidades.slice(0, 8); track u.unidadeId) {
             <li class="mo-row"><span><span class="cell-main">{{ u.unidadeNome }}</span><span class="cell-sub">{{ moeda(u.total) }}@if (u.atendimentos) { · {{ numero(u.atendimentos) }} atendimento(s) }</span></span>
               <span class="mono">@if (u.custoPorAtendimento !== null) { {{ moeda(u.custoPorAtendimento) }} por atendimento } @else { — }
+                @if (u.custoPorPacienteDia !== null) { · {{ moeda(u.custoPorPacienteDia) }} por paciente-dia }
                 @if (u.acimaDaMedia) { <span class="tag tag--alert">acima da média</span> }</span></li>
           } @empty { <li class="cell-sub">Nenhum custo apurado nas unidades do seu acesso.</li> }
         </ul>

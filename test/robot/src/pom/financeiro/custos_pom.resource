@@ -2,7 +2,7 @@
 Resource    ../common/mais_saude_publica_common.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
-    Financeiro, fatia F3 (ADR-0220): centros de custo, apuração mensal e indicadores de custo.
+    Financeiro, fatias F3 (ADR-0220) e F4 (ADR-0221): centros de custo, apuração mensal, rateio e indicadores de custo.
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 GET Centros Custo
@@ -70,6 +70,16 @@ GET Indicadores Custo
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     Get Mais Saude Publica Session
     ${response}=    GET On Session    msp_session    ${BASE_URL}/financeiro/indicadores-custo    params=competencia=${competencia}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+POST Lotacao Com Setor
+    [Documentation]    Creates a posting (lotação) with an optional sector of the unit (ADR-0221).
+    [Arguments]    ${payload}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Get Mais Saude Publica Session
+    ${response}=    POST On Session    msp_session    ${BASE_URL}/lotacao/    json=${payload}    expected_status=ANY
     RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

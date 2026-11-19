@@ -35,6 +35,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 /**
  * Liquidação com login e autorização ligados (ADR-0219): só o papel Financeiro liquida (o gestor e o Compras, 403); o gestor consulta a
@@ -143,6 +144,10 @@ class LiquidacaoAutorizacaoControllerTest {
         assertThat(codigo(OUTRO, get(API + "indicadores-custo?competencia=1990-01"), "")).isEqualTo(403);
         assertThat(codigo(GESTOR, get(API + "indicadores-custo?competencia=1990-01"), "")).isEqualTo(404);
         assertThat(codigo(FINANCEIRO, post(API + "centro-custo"), "{\"setorId\": \"" + ubs.getUuid() + "\"}")).isEqualTo(404);
+        String criterio = "{\"nome\": \"Limpeza\", \"tipo\": \"APOIO\", \"ativo\": true, \"criterioRateio\": \"AREA\", \"areaM2\": 50}";
+        assertThat(codigo(GESTOR, put(API + "centro-custo/" + ubs.getUuid()), criterio)).isEqualTo(403);
+        assertThat(codigo(COMPRAS, put(API + "centro-custo/" + ubs.getUuid()), criterio)).isEqualTo(403);
+        assertThat(codigo(FINANCEIRO, put(API + "centro-custo/" + ubs.getUuid()), criterio)).isEqualTo(404);
         assertThat(codigo(FINANCEIRO, post(API + "apuracao-custo"), "{\"competencia\": \"1990-13\"}")).isEqualTo(400);
         assertThat(mockMvc.perform(get(API + "centros-custo")).andReturn().getResponse().getStatus()).isEqualTo(401);
     }

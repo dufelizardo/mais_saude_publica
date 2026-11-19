@@ -43,7 +43,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ✅ | CP1 a CP3 feitas (fornecedores, solicitação, pesquisa de preços, contratação, atas, contratos, aditivos, ordem, recebimento, ocorrências e painel); PNCP e NF-e no domínio 20 |
 | 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ✅ | PM1 a PM3 feitas (bens, tombamento, responsável, transferência, bem comprado a tombar; manutenção; inventário, baixa, valor contábil e painel); etiqueta pela D3 |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
-| 17 | [Financeiro](#17-financeiro) | ✅ | F1, F2 e F3 feitas (dotação, empenho, liquidação, pagamento, diárias do TFD, restos a pagar, execução, centros de custo e apuração mensal); SIAFIC, SIOPS e o teto da PPI no domínio 20 |
+| 17 | [Financeiro](#17-financeiro) | ✅ | F1 a F4 feitas (dotação, empenho, liquidação, pagamento, diárias do TFD, restos a pagar, execução, centros de custo, apuração mensal e rateio do PNGC); SIAFIC, SIOPS e o teto da PPI no domínio 20 |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | ✅ | Auditoria feita; Qualidade completa: Q1 (segurança do paciente), Q2 (não conformidades e planos) e Q3 (indicadores com metas e auditoria de protocolos) |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
@@ -452,9 +452,13 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   - a apuração mensal por competência: pessoal pela lotação, consumo do Estoque e da Farmácia, serviços liquidados, manutenção,
     depreciação, diárias do TFD e as avulsas pelo centro; aberta, refeita; fechada, fotografia;
   - o custo por atendimento e por paciente-dia contra a média do tipo de unidade, na aba Custos e na Sala de Situação.
+- **F4 · Rateio do PNGC** ([ADR-0221](./adr/0221-financeiro-rateio-pngc.md), V102):
+  - o rateio em degraus dos administrativos e de apoio para os produtivos da unidade, pelo critério do centro (pessoas, custo direto,
+    área, requisições), com o não rateado;
+  - a lotação por setor no RH, que leva a folha ao centro do setor;
+  - a unidade mista: a internação ao paciente-dia, o resto ao atendimento.
 
 **Falta:**
-- [ ] Rateio dos centros de apoio e administrativos para os produtivos (segunda etapa do PNGC); lotação por setor no RH.
 - [ ] Teto financeiro da PPI pela tabela SIGTAP e envio ao ApuraSUS (domínio 20).
 - [ ] Importação do SIAFIC e SIOPS (domínio 20).
 

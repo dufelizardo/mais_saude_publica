@@ -4,8 +4,10 @@ import { Observable, catchError, of } from 'rxjs';
 import {
   ApuracaoCustoDto,
   CATEGORIAS_CUSTO,
+  CRITERIOS_RATEIO,
   CategoriaCusto,
   CentroCustoDto,
+  CriterioRateio,
   IndicadoresCustoDto,
   TIPOS_CENTRO_CUSTO,
   TipoCentroCusto,
@@ -17,8 +19,8 @@ import { SetorService } from '../../../core/services/setor';
 import { Drawer } from '../../../shared/drawer/drawer';
 
 /**
- * Financeiro, fatia F3 (ADR-0220): a apuração de custos da competência por centro e categoria, os indicadores por unidade (custo por
- * atendimento e por paciente-dia contra a média do tipo) e os centros de custo.
+ * Financeiro, fatias F3 (ADR-0220) e F4 (ADR-0221): a apuração de custos da competência por centro e categoria, com o rateio em degraus do
+ * PNGC; os indicadores por unidade (custo por atendimento e por paciente-dia contra a média do tipo) e os centros de custo, com o critério.
  */
 @Component({
   selector: 'app-custos-financeiro',
@@ -41,6 +43,8 @@ import { Drawer } from '../../../shared/drawer/drawer';
         <div class="card cu-num"><span class="cu-num__v">{{ moeda(a.total) }}</span><span class="cell-sub">custo apurado · {{ a.situacao === 'FECHADA' ? 'fechada' : 'aberta' }}</span></div>
         <div class="card cu-num"><span class="cu-num__v">{{ moeda(a.naoAlocado) }}</span><span class="cell-sub">sem centro (folha sem lotação, avulsa antiga)</span></div>
         <div class="card cu-num"><span class="cu-num__v">{{ a.saidasSemCusto }}</span><span class="cell-sub">saídas sem preço, fora do total</span></div>
+        <div class="card cu-num">@if (a.naoRateado !== null) { <span class="cu-num__v">{{ moeda(a.naoRateado) }}</span><span class="cell-sub">apoio e administração sem destino no rateio</span> }
+          @else { <span class="cu-num__v">—</span><span class="cell-sub">apurada antes do rateio; refaça para ratear</span> }</div>
       </div>
 
       <h3 class="mo-grupo cu-titulo">Por unidade</h3>
@@ -68,18 +72,43 @@ import { Drawer } from '../../../shared/drawer/drawer';
       <h3 class="mo-grupo cu-titulo">Por centro de custo</h3>
       <div class="tbl-wrap card">
         <table class="cu-tabela cu-larga" aria-label="Custo por centro">
-          <thead><tr><th scope="col">Centro</th>@for (c of categorias; track c) { <th scope="col">{{ rotulos[c] }}</th> }<th scope="col">Total</th></tr></thead>
+          <thead><tr><th scope="col">Centro</th>@for (c of categorias; track c) { <th scope="col">{{ rotulos[c] }}</th> }<th scope="col">Direto</th><th scope="col">Recebido</th><th scope="col">Enviado</th><th scope="col">Final</th></tr></thead>
           <tbody>
             @for (l of a.centros; track l.centroId) {
               <tr>
-                <td><span class="cell-main">{{ l.codigo }} · {{ l.nome }}</span><span class="cell-sub">{{ l.unidadeNome }}@if (l.setorNome) { · {{ l.setorNome }} }</span></td>
+                <td><span class="cell-main">{{ l.codigo }} · {{ l.nome }}</span><span class="cell-sub">{{ l.unidadeNome }}@if (l.setorNome) { · {{ l.setorNome }} } · {{ tipos[l.tipo] }}@if (l.internacao) { · internação }</span></td>
                 @for (c of categorias; track c) { <td class="mono">{{ l.valores[c] ? moeda(l.valores[c]!) : '—' }}</td> }
-                <td class="mono"><strong>{{ moeda(l.total) }}</strong></td>
+                <td class="mono">{{ moeda(l.total) }}</td>
+                <td class="mono">{{ l.recebido ? moeda(l.recebido) : '—' }}</td>
+                <td class="mono">{{ l.enviado ? moeda(l.enviado) : '—' }}</td>
+                <td class="mono"><strong>{{ moeda(l.custoFinal) }}</strong></td>
               </tr>
-            } @empty { <tr><td [attr.colspan]="categorias.length + 2" class="cell-sub">Nenhum custo na competência.</td></tr> }
+            } @empty { <tr><td [attr.colspan]="categorias.length + 5" class="cell-sub">Nenhum custo na competência.</td></tr> }
           </tbody>
         </table>
       </div>
+
+      @if (a.rateios.length) {
+        <h3 class="mo-grupo cu-titulo">Rateio</h3>
+        <p class="cell-sub">Em degraus, pelo PNGC: os administrativos e depois os de apoio mandam o que têm aos que ainda não ratearam e aos produtivos da unidade.</p>
+        <div class="tbl-wrap card">
+          <table class="cu-tabela" aria-label="Rateio">
+            <thead><tr><th scope="col">Unidade</th><th scope="col">Degrau</th><th scope="col">De</th><th scope="col">Para</th><th scope="col">Critério</th><th scope="col">Valor</th></tr></thead>
+            <tbody>
+              @for (r of a.rateios; track r.origemId + r.destinoId) {
+                <tr>
+                  <td>{{ r.unidadeNome }}</td>
+                  <td class="mono">{{ r.ordem }}</td>
+                  <td>{{ r.origemCodigo }} · {{ r.origemNome }}</td>
+                  <td>{{ r.destinoCodigo }} · {{ r.destinoNome }}</td>
+                  <td>{{ criterios[r.criterio] }}</td>
+                  <td class="mono">{{ moeda(r.valor) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
     } @else if (carregado()) {
       <p class="cell-sub">A competência {{ competencia() }} ainda não foi apurada.</p>
     }
@@ -90,16 +119,17 @@ import { Drawer } from '../../../shared/drawer/drawer';
     </div>
     <div class="tbl-wrap card">
       <table class="cu-tabela" aria-label="Centros de custo">
-        <thead><tr><th scope="col">Centro</th><th scope="col">Unidade e setor</th><th scope="col">Tipo</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
+        <thead><tr><th scope="col">Centro</th><th scope="col">Unidade e setor</th><th scope="col">Tipo</th><th scope="col">Rateio</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
         <tbody>
           @for (c of centros(); track c.uuid) {
             <tr>
               <td><span class="cell-main">{{ c.codigo }} · {{ c.nome }}</span>@if (!c.ativo) { <span class="tag">inativo</span> }</td>
               <td>{{ c.unidadeNome }}<span class="cell-sub">{{ c.geral ? 'geral da unidade' : c.setorNome }}</span></td>
               <td>{{ tipos[c.tipo] }}</td>
+              <td>{{ c.criterioRateio ? criterios[c.criterioRateio] : 'recebe' }}@if (c.areaM2) { <span class="cell-sub">{{ c.areaM2 }} m²</span> }</td>
               <td class="row-actions">@if (podeGerenciar) { <button type="button" class="link-btn" (click)="editar(c)" [attr.aria-label]="'Alterar ' + c.codigo">Alterar</button> }</td>
             </tr>
-          } @empty { <tr><td colspan="4" class="cell-sub">Nenhum centro de custo.</td></tr> }
+          } @empty { <tr><td colspan="5" class="cell-sub">Nenhum centro de custo.</td></tr> }
         </tbody>
       </table>
     </div>
@@ -123,6 +153,15 @@ import { Drawer } from '../../../shared/drawer/drawer';
                 @if (!centro()) { <option value="">Pelo setor</option> }
                 @for (t of tiposLista; track t) { <option [value]="t" [selected]="f()['tipo'] === t">{{ tipos[t] }}</option> }
               </select></div>
+            @if (f()['tipo'] !== 'PRODUTIVO') {
+              <div class="dw-field"><label for="f-cc-criterio">Critério do rateio <span class="opt">sem informar, pessoas no administrativo e custo direto no apoio</span></label>
+                <select id="f-cc-criterio" (change)="set('criterioRateio', $event)">
+                  <option value="">Padrão do tipo</option>
+                  @for (k of criteriosLista; track k) { <option [value]="k" [selected]="f()['criterioRateio'] === k">{{ criterios[k] }}</option> }
+                </select></div>
+            }
+            <div class="dw-field"><label for="f-cc-area">Área (m²) <span class="opt">base do critério área</span></label>
+              <input id="f-cc-area" type="number" min="0.01" step="0.01" [value]="f()['areaM2'] ?? ''" (input)="set('areaM2', $event)" /></div>
             @if (centro() && !centro()!.geral) {
               <label class="dw-check"><input id="f-cc-ativo" type="checkbox" [checked]="f()['ativo'] !== 'false'" (change)="marcar($event)" /> Ativo</label>
             }
@@ -154,6 +193,8 @@ export class CustosFinanceiro implements OnInit {
   protected readonly rotulos = CATEGORIAS_CUSTO;
   protected readonly tipos = TIPOS_CENTRO_CUSTO;
   protected readonly tiposLista = Object.keys(TIPOS_CENTRO_CUSTO) as TipoCentroCusto[];
+  protected readonly criterios = CRITERIOS_RATEIO;
+  protected readonly criteriosLista = Object.keys(CRITERIOS_RATEIO) as CriterioRateio[];
   /** A apuração é do mês encerrado: o anterior ao de hoje. */
   protected readonly ultimoMes = mesAnterior();
 
@@ -227,7 +268,7 @@ export class CustosFinanceiro implements OnInit {
 
   protected editar(c: CentroCustoDto): void {
     this.centro.set(c);
-    this.f.set({ nome: c.nome, tipo: c.tipo, ativo: String(c.ativo) });
+    this.f.set({ nome: c.nome, tipo: c.tipo, ativo: String(c.ativo), criterioRateio: c.criterioRateio ?? '', areaM2: c.areaM2 != null ? String(c.areaM2) : '' });
     this.erroGaveta.set(null);
     this.gaveta.set(true);
   }
@@ -243,12 +284,19 @@ export class CustosFinanceiro implements OnInit {
   protected salvar(): void {
     const v = this.f();
     const c = this.centro();
+    const area = v['areaM2'] ? Number(v['areaM2']) : null;
+    if (area !== null && !(area > 0)) {
+      this.erroGaveta.set('A área é maior que zero.');
+      return;
+    }
+    const criterioRateio = v['tipo'] === 'PRODUTIVO' ? null : ((v['criterioRateio'] || null) as CriterioRateio | null);
     if (c) {
       if (!v['nome']?.trim()) {
         this.erroGaveta.set('Informe o nome.');
         return;
       }
-      this.executar(this.service.alterarCentroCusto(c.uuid, { nome: v['nome'].trim(), tipo: v['tipo'] as TipoCentroCusto, ativo: v['ativo'] !== 'false' }),
+      this.executar(this.service.alterarCentroCusto(c.uuid, { nome: v['nome'].trim(), tipo: v['tipo'] as TipoCentroCusto, ativo: v['ativo'] !== 'false',
+        criterioRateio, areaM2: area }),
         (x) => this.aviso.set(`Centro ${x.codigo} alterado.`), true);
       return;
     }
@@ -256,7 +304,8 @@ export class CustosFinanceiro implements OnInit {
       this.erroGaveta.set('Escolha o setor.');
       return;
     }
-    this.executar(this.service.criarCentroCusto({ setorId: v['setorId'], nome: v['nome']?.trim() || null, tipo: (v['tipo'] || null) as TipoCentroCusto | null }),
+    this.executar(this.service.criarCentroCusto({ setorId: v['setorId'], nome: v['nome']?.trim() || null, tipo: (v['tipo'] || null) as TipoCentroCusto | null,
+      criterioRateio, areaM2: area }),
       (x) => this.aviso.set(`Centro ${x.codigo} · ${x.nome} criado.`), true);
   }
 

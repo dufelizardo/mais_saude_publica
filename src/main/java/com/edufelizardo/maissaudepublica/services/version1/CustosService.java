@@ -24,10 +24,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Financeiro, fatia F3 (ADR-0220): os centros de custo por unidade e por setor, no padrão do Programa Nacional de Gestão de Custos, e a apuração
+ * Financeiro, fatias F3 (ADR-0220) e F4 (ADR-0221): os centros de custo por unidade e por setor, no padrão do Programa Nacional de Gestão de Custos, e a apuração
  * mensal por competência, só com o que a plataforma já registra: a folha do RH pela lotação, o consumo do Estoque e da Farmácia, as liquidações
  * de serviço, a manutenção interna, a depreciação dos bens e as diárias do TFD. Aberta, a apuração é refeita; fechada, vira fotografia. Os
- * indicadores dão o custo por atendimento e por paciente-dia, contra a média das unidades do mesmo tipo.
+ * indicadores dão o custo por atendimento e por paciente-dia, contra a média das unidades do mesmo tipo. A F4 rateia, em degraus, o custo dos
+ * centros administrativos e de apoio para os produtivos da mesma unidade, e separa a internação do ambulatório na unidade mista.
  */
 @Service
 public class CustosService {
@@ -45,6 +46,8 @@ public class CustosService {
     @Autowired private ApuracaoCustoRepository apuracaoRepository;
     @Autowired private LinhaApuracaoCustoRepository linhaRepository;
     @Autowired private ProducaoApuracaoCustoRepository producaoRepository;
+    @Autowired private CustoCentroApuracaoRepository custoCentroRepository;
+    @Autowired private RateioApuracaoCustoRepository rateioRepository;
     @Autowired private UnidadeDeSaudeRepository unidadeRepository;
     @Autowired private SetorRepository setorRepository;
     @Autowired private ControleDeAcesso controleDeAcesso;
@@ -72,10 +75,14 @@ public class CustosService {
         }
         String nome = limpo(dto.nome());
         CentroCusto c = novo(s.getUnidade(), s, nome != null ? nome : s.getNome(), dto.tipo() != null ? dto.tipo() : tipo(s.getTipo()));
+        rateio(c, dto.criterioRateio(), dto.areaM2());
         return dto(centroRepository.save(c));
     }
 
-    /** O nome, o tipo e se está ativo (404); o geral não se desativa (422), porque recebe o custo sem setor. */
+    /**
+     * O nome, o tipo, se está ativo, o critério e a área (404); o geral não se desativa (422), porque recebe o custo sem setor; o produtivo não
+     * tem critério de rateio (422).
+     */
     @Transactional
     public CustosDtos.Centro atualizar(UUID id, CustosRequestDtos.AtualizacaoCentro dto) {
         controleDeAcesso.exigirAlguma(GERENCIAR);
@@ -87,6 +94,7 @@ public class CustosService {
         c.setNome(dto.nome().trim());
         c.setTipo(dto.tipo());
         c.setAtivo(dto.ativo());
+        rateio(c, dto.criterioRateio(), dto.areaM2());
         return dto(c);
     }
 
@@ -108,7 +116,7 @@ public class CustosService {
 
     /**
      * Apura a competência já encerrada (400 no formato, 422 no mês corrente ou futuro): cria, ou refaz a aberta (422 se fechada). Cada custo vai
-     * ao centro do setor de onde saiu, quando o setor tem centro ativo, ou ao geral da unidade.
+     * ao centro do setor de onde saiu, quando o setor tem centro ativo, ou ao geral da unidade; depois, o rateio em degraus (ADR-0221).
      */
     @Transactional
     public CustosDtos.Apuracao apurar(String competencia) {
@@ -128,6 +136,8 @@ public class CustosService {
         } else {
             linhaRepository.apagarDaApuracao(a.getUuid());
             producaoRepository.apagarDaApuracao(a.getUuid());
+            custoCentroRepository.apagarDaApuracao(a.getUuid());
+            rateioRepository.apagarDaApuracao(a.getUuid());
         }
         garantirGerais();
         Apurador ap = new Apurador(centroRepository.findTodos());
@@ -141,6 +151,8 @@ public class CustosService {
         outras(ap, mes);
         a.setNaoAlocado(ap.naoAlocado.setScale(2, RoundingMode.HALF_UP));
         a.setSaidasSemCusto(ap.semCusto);
+        Rateador r = ratear(ap, mes);
+        a.setNaoRateado(r.naoRateado);
         a.setApuradaEm(Instant.now());
         a.setApuradaPorCpf(UsuarioAutenticado.cpf());
         ApuracaoCusto salva = apuracaoRepository.save(a);
@@ -157,6 +169,7 @@ public class CustosService {
                 }
             }
         }
+        r.salvar(salva, custoCentroRepository, rateioRepository);
         producao(salva, mes);
         linhaRepository.flush();
         return dto(salva);
@@ -194,6 +207,12 @@ public class CustosService {
             unidades.put(u.getUuid(), u);
             porUnidade.computeIfAbsent(u.getUuid(), k -> new EnumMap<>(CategoriaCusto.class)).merge(l.getCategoria(), l.getValor(), BigDecimal::add);
         }
+        Map<UUID, BigDecimal> internacao = new HashMap<>();
+        for (CustoCentroApuracao c : custoCentroRepository.findDaApuracao(a.getUuid())) {
+            if (c.isInternacao()) {
+                internacao.merge(c.getCentro().getUnidade().getUuid(), c.getDireto().add(c.getRecebido()).subtract(c.getEnviado()), BigDecimal::add);
+            }
+        }
         Map<UUID, ProducaoApuracaoCusto> producao = new HashMap<>();
         for (ProducaoApuracaoCusto p : producaoRepository.findDaApuracao(a.getUuid())) {
             producao.put(p.getUnidade().getUuid(), p);
@@ -205,7 +224,13 @@ public class CustosService {
             ProducaoApuracaoCusto p = producao.get(id);
             int atend = p == null ? 0 : p.getAtendimentos();
             int pd = p == null ? 0 : p.getPacientesDia();
-            base.add(new Object[]{u, total, atend, pd, dividir(total, atend), dividir(total, pd)});
+            BigDecimal deInternacao = internacao.get(id);
+            if (deInternacao == null) {
+                base.add(new Object[]{u, total, atend, pd, dividir(total, atend), dividir(total, pd)});
+            } else {
+                // A unidade mista (ADR-0221): a internação vai ao paciente-dia; o resto, ao atendimento.
+                base.add(new Object[]{u, total, atend, pd, dividir(total.subtract(deInternacao), atend), dividir(deInternacao, pd)});
+            }
         }
         Map<TipoUnidadeDeSaude, BigDecimal> medias = base.stream().filter(x -> x[4] != null && ((UnidadeDeSaude) x[0]).getTipo() != null)
                 .collect(Collectors.groupingBy(x -> ((UnidadeDeSaude) x[0]).getTipo(), Collectors.collectingAndThen(Collectors.toList(), l -> dividir(
@@ -228,13 +253,14 @@ public class CustosService {
 
     // ── As fontes da apuração ──────────────────────────────────────────────────────────────────────
 
-    /** A folha da competência (MM/AAAA no RH) pela lotação vigente no mês; sem lotação, não alocado. */
+    /** A folha da competência (MM/AAAA no RH) pela lotação vigente no mês, no setor da lotação (ADR-0221); sem lotação, não alocado. */
     private void pessoal(Apurador ap, YearMonth mes) {
         String rh = String.format("%02d/%d", mes.getMonthValue(), mes.getYear());
-        jdbc.query("select f.total, (select l.unidade_id from tb_lotacao l where l.profissional_id = f.profissional_id and l.data_inicio <= ? "
-                        + "and (l.data_fim is null or l.data_fim >= ?) order by l.data_inicio desc limit 1) from tb_folha_pagamento f where f.competencia in (?, ?)",
+        jdbc.query("select f.total, l.unidade_id, l.setor_id from tb_folha_pagamento f left join lateral (select x.unidade_id, x.setor_id from tb_lotacao x "
+                        + "where x.profissional_id = f.profissional_id and x.data_inicio <= ? and (x.data_fim is null or x.data_fim >= ?) "
+                        + "order by x.data_inicio desc limit 1) l on true where f.competencia in (?, ?)",
                 rs -> {
-                    ap.lancar((UUID) rs.getObject(2), null, CategoriaCusto.PESSOAL, rs.getBigDecimal(1));
+                    ap.lancar((UUID) rs.getObject(2), (UUID) rs.getObject(3), CategoriaCusto.PESSOAL, rs.getBigDecimal(1));
                 }, mes.atEndOfMonth(), mes.atDay(1), rh, mes.toString());
     }
 
@@ -388,8 +414,11 @@ public class CustosService {
         }
 
         void lancar(UUID unidadeId, UUID setorId, CategoriaCusto categoria, BigDecimal valor) {
-            UUID centro = setorId != null && porSetor.containsKey(setorId) ? porSetor.get(setorId) : unidadeId == null ? null : geral.get(unidadeId);
-            noCentro(centro, categoria, valor);
+            noCentro(centroDe(unidadeId, setorId), categoria, valor);
+        }
+
+        UUID centroDe(UUID unidadeId, UUID setorId) {
+            return setorId != null && porSetor.containsKey(setorId) ? porSetor.get(setorId) : unidadeId == null ? null : geral.get(unidadeId);
         }
 
         void noCentro(UUID centro, CategoriaCusto categoria, BigDecimal valor) {
@@ -401,6 +430,148 @@ public class CustosService {
                 return;
             }
             valores.computeIfAbsent(centro, k -> new EnumMap<>(CategoriaCusto.class)).merge(categoria, valor, BigDecimal::add);
+        }
+    }
+
+    // ── O rateio em degraus (ADR-0221) ───────────────────────────────────────────────────────────────
+
+    /**
+     * O rateio do PNGC em cada unidade: os administrativos, depois os de apoio, na ordem do código, mandam o que têm (o direto e o recebido) aos
+     * centros ativos da unidade que ainda não ratearam e aos produtivos, pela base do critério; base zero, pelo custo direto; sem destino, o custo
+     * fica e é contado como não rateado. Quem já rateou não recebe de volta.
+     */
+    private Rateador ratear(Apurador ap, YearMonth mes) {
+        Map<UUID, BigDecimal> horas = new HashMap<>();
+        jdbc.query("select unidade_id, setor_id, coalesce(jornada_semanal_horas, 40) from tb_lotacao where data_inicio <= ? and (data_fim is null or data_fim >= ?)",
+                rs -> {
+                    UUID c = ap.centroDe((UUID) rs.getObject(1), (UUID) rs.getObject(2));
+                    if (c != null) {
+                        horas.merge(c, BigDecimal.valueOf(rs.getInt(3)), BigDecimal::add);
+                    }
+                }, mes.atEndOfMonth(), mes.atDay(1));
+        Map<UUID, BigDecimal> requisicoes = new HashMap<>();
+        jdbc.query("select l.unidade_id, m.setor_id, count(*) from tb_movimentacao_estoque m join tb_lote_material l on l.uuid = m.lote_id "
+                        + "where m.tipo = 'SAIDA_CONSUMO' and m.registrado_em >= ? and m.registrado_em < ? group by l.unidade_id, m.setor_id",
+                rs -> {
+                    UUID c = ap.centroDe((UUID) rs.getObject(1), (UUID) rs.getObject(2));
+                    if (c != null) {
+                        requisicoes.merge(c, BigDecimal.valueOf(rs.getLong(3)), BigDecimal::add);
+                    }
+                }, inicio(mes), inicio(mes.plusMonths(1)));
+        Set<UUID> setoresComLeito = new HashSet<>(jdbc.queryForList("select distinct setor_id from tb_leito where ativo and setor_id is not null", UUID.class));
+        Rateador r = new Rateador();
+        Map<UUID, List<CentroCusto>> porUnidade = new HashMap<>();
+        for (CentroCusto c : ap.centros.values()) {
+            BigDecimal direto = ap.valores.getOrDefault(c.getUuid(), new EnumMap<>(CategoriaCusto.class)).values().stream()
+                    .map(v -> v.setScale(2, RoundingMode.HALF_UP)).reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (c.isAtivo() || direto.signum() != 0) {
+                r.direto.put(c.getUuid(), direto);
+                r.centros.put(c.getUuid(), c);
+                porUnidade.computeIfAbsent(c.getUnidade().getUuid(), k -> new ArrayList<>()).add(c);
+            }
+        }
+        for (List<CentroCusto> lista : porUnidade.values()) {
+            List<CentroCusto> sequencia = lista.stream().filter(c -> c.getTipo() != TipoCentroCusto.PRODUTIVO)
+                    .sorted(Comparator.comparing((CentroCusto c) -> c.getTipo() == TipoCentroCusto.ADMINISTRATIVO ? 0 : 1).thenComparing(CentroCusto::getCodigo))
+                    .toList();
+            Set<UUID> rateados = new HashSet<>();
+            int ordem = 0;
+            for (CentroCusto origem : sequencia) {
+                ordem++;
+                rateados.add(origem.getUuid());
+                BigDecimal valor = r.saldo(origem.getUuid());
+                if (valor.signum() <= 0) {
+                    continue;
+                }
+                List<CentroCusto> destinos = lista.stream().filter(d -> d.isAtivo() && !rateados.contains(d.getUuid()))
+                        .sorted(Comparator.comparing(CentroCusto::getCodigo)).toList();
+                CriterioRateio criterio = criterio(origem);
+                Map<UUID, BigDecimal> base = base(criterio, destinos, r.direto, horas, requisicoes);
+                if (soma(base).signum() == 0 && criterio != CriterioRateio.CUSTO_DIRETO) {
+                    criterio = CriterioRateio.CUSTO_DIRETO;
+                    base = base(criterio, destinos, r.direto, horas, requisicoes);
+                }
+                Map<UUID, BigDecimal> pesos = base;
+                BigDecimal total = soma(pesos);
+                if (total.signum() == 0) {
+                    continue;
+                }
+                List<UUID> comBase = destinos.stream().map(CentroCusto::getUuid).filter(id -> pesos.get(id).signum() > 0).toList();
+                BigDecimal distribuido = BigDecimal.ZERO;
+                for (int i = 0; i < comBase.size(); i++) {
+                    UUID d = comBase.get(i);
+                    BigDecimal parte = i == comBase.size() - 1 ? valor.subtract(distribuido)
+                            : valor.multiply(pesos.get(d)).divide(total, 2, RoundingMode.HALF_UP);
+                    distribuido = distribuido.add(parte);
+                    r.mandar(origem, r.centros.get(d), ordem, criterio, parte);
+                }
+            }
+            for (CentroCusto c : sequencia) {
+                r.naoRateado = r.naoRateado.add(r.saldo(c.getUuid()));
+            }
+            for (CentroCusto c : lista) {
+                if (c.getTipo() == TipoCentroCusto.PRODUTIVO && c.getSetor() != null && setoresComLeito.contains(c.getSetor().getUuid())) {
+                    r.internacao.add(c.getUuid());
+                }
+            }
+        }
+        return r;
+    }
+
+    private static Map<UUID, BigDecimal> base(CriterioRateio criterio, List<CentroCusto> destinos, Map<UUID, BigDecimal> direto, Map<UUID, BigDecimal> horas,
+                                              Map<UUID, BigDecimal> requisicoes) {
+        Map<UUID, BigDecimal> m = new LinkedHashMap<>();
+        for (CentroCusto d : destinos) {
+            BigDecimal v = switch (criterio) {
+                case PESSOAS -> horas.get(d.getUuid());
+                case CUSTO_DIRETO -> direto.get(d.getUuid());
+                case AREA -> d.getAreaM2();
+                case REQUISICOES -> requisicoes.get(d.getUuid());
+            };
+            m.put(d.getUuid(), v == null || v.signum() < 0 ? BigDecimal.ZERO : v);
+        }
+        return m;
+    }
+
+    private static BigDecimal soma(Map<UUID, BigDecimal> m) {
+        return m.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /** O acumulador do rateio: o direto, o recebido e o enviado de cada centro, as linhas e o não rateado. */
+    private static final class Rateador {
+        final Map<UUID, CentroCusto> centros = new HashMap<>();
+        final Map<UUID, BigDecimal> direto = new HashMap<>();
+        final Map<UUID, BigDecimal> recebido = new HashMap<>();
+        final Map<UUID, BigDecimal> enviado = new HashMap<>();
+        final Set<UUID> internacao = new HashSet<>();
+        final List<Object[]> linhas = new ArrayList<>();
+        BigDecimal naoRateado = BigDecimal.ZERO;
+
+        BigDecimal saldo(UUID c) {
+            return direto.getOrDefault(c, BigDecimal.ZERO).add(recebido.getOrDefault(c, BigDecimal.ZERO)).subtract(enviado.getOrDefault(c, BigDecimal.ZERO));
+        }
+
+        void mandar(CentroCusto origem, CentroCusto destino, int ordem, CriterioRateio criterio, BigDecimal valor) {
+            if (valor.signum() == 0) {
+                return;
+            }
+            enviado.merge(origem.getUuid(), valor, BigDecimal::add);
+            recebido.merge(destino.getUuid(), valor, BigDecimal::add);
+            linhas.add(new Object[]{origem, destino, ordem, criterio, valor});
+        }
+
+        void salvar(ApuracaoCusto a, CustoCentroApuracaoRepository custos, RateioApuracaoCustoRepository rateios) {
+            for (CentroCusto c : centros.values()) {
+                BigDecimal d = direto.getOrDefault(c.getUuid(), BigDecimal.ZERO);
+                BigDecimal rec = recebido.getOrDefault(c.getUuid(), BigDecimal.ZERO);
+                BigDecimal env = enviado.getOrDefault(c.getUuid(), BigDecimal.ZERO);
+                if (d.signum() != 0 || rec.signum() != 0 || env.signum() != 0) {
+                    custos.save(new CustoCentroApuracao(null, a, c, d, rec, env, internacao.contains(c.getUuid())));
+                }
+            }
+            for (Object[] l : linhas) {
+                rateios.save(new RateioApuracaoCusto(null, a, (CentroCusto) l[0], (CentroCusto) l[1], (int) l[2], (CriterioRateio) l[3], (BigDecimal) l[4]));
+            }
         }
     }
 
@@ -518,22 +689,56 @@ public class CustosService {
             porCentro.computeIfAbsent(l.getCentro().getUuid(), k -> new EnumMap<>(CategoriaCusto.class)).merge(l.getCategoria(), l.getValor(), BigDecimal::add);
             porCategoria.merge(l.getCategoria(), l.getValor(), BigDecimal::add);
         }
+        Map<UUID, CustoCentroApuracao> resumo = new HashMap<>();
+        for (CustoCentroApuracao c : custoCentroRepository.findDaApuracao(a.getUuid())) {
+            resumo.put(c.getCentro().getUuid(), c);
+            centros.putIfAbsent(c.getCentro().getUuid(), c.getCentro());
+            porCentro.putIfAbsent(c.getCentro().getUuid(), new EnumMap<>(CategoriaCusto.class));
+        }
         List<CustosDtos.LinhaCentro> linhas = porCentro.entrySet().stream().map(e -> {
                     CentroCusto c = centros.get(e.getKey());
+                    CustoCentroApuracao r = resumo.get(e.getKey());
+                    BigDecimal direto = e.getValue().values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+                    BigDecimal recebido = r == null ? BigDecimal.ZERO : r.getRecebido();
+                    BigDecimal enviado = r == null ? BigDecimal.ZERO : r.getEnviado();
                     return new CustosDtos.LinhaCentro(c.getUuid(), c.getCodigo(), c.getNome(), c.getTipo(), c.getUnidade().getUuid(), c.getUnidade().getNome(),
-                            c.getSetor() == null ? null : c.getSetor().getNome(), ordenado(e.getValue()),
-                            e.getValue().values().stream().reduce(BigDecimal.ZERO, BigDecimal::add));
+                            c.getSetor() == null ? null : c.getSetor().getNome(), ordenado(e.getValue()), direto, recebido, enviado,
+                            direto.add(recebido).subtract(enviado), r != null && r.isInternacao());
                 })
                 .sorted(Comparator.comparing(CustosDtos.LinhaCentro::unidadeNome).thenComparing(CustosDtos.LinhaCentro::codigo))
                 .toList();
+        List<CustosDtos.Rateio> rateios = rateioRepository.findDaApuracao(a.getUuid()).stream().map(r -> new CustosDtos.Rateio(r.getOrdem(),
+                r.getOrigem().getUnidade().getNome(), r.getOrigem().getUuid(), r.getOrigem().getCodigo(), r.getOrigem().getNome(), r.getDestino().getUuid(),
+                r.getDestino().getCodigo(), r.getDestino().getNome(), r.getCriterio(), r.getValor()))
+                .sorted(Comparator.comparing(CustosDtos.Rateio::unidadeNome).thenComparingInt(CustosDtos.Rateio::ordem).thenComparing(CustosDtos.Rateio::destinoCodigo))
+                .toList();
         BigDecimal total = porCategoria.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new CustosDtos.Apuracao(a.getUuid(), a.getCompetencia(), a.getSituacao(), total, a.getNaoAlocado(), a.getSaidasSemCusto(), ordenado(porCategoria),
-                linhas, a.getApuradaEm(), a.getFechadaEm());
+        return new CustosDtos.Apuracao(a.getUuid(), a.getCompetencia(), a.getSituacao(), total, a.getNaoAlocado(), a.getSaidasSemCusto(), a.getNaoRateado(),
+                ordenado(porCategoria), linhas, rateios, a.getApuradaEm(), a.getFechadaEm());
     }
 
     private static CustosDtos.Centro dto(CentroCusto c) {
         return new CustosDtos.Centro(c.getUuid(), c.getCodigo(), c.getNome(), c.getTipo(), c.getUnidade().getUuid(), c.getUnidade().getNome(),
-                c.getSetor() == null ? null : c.getSetor().getUuid(), c.getSetor() == null ? null : c.getSetor().getNome(), c.getSetor() == null, c.isAtivo());
+                c.getSetor() == null ? null : c.getSetor().getUuid(), c.getSetor() == null ? null : c.getSetor().getNome(), c.getSetor() == null, c.isAtivo(),
+                criterio(c), c.getAreaM2());
+    }
+
+    /** O critério e a área do centro; o produtivo não rateia (422). */
+    private static void rateio(CentroCusto c, CriterioRateio criterio, BigDecimal areaM2) {
+        if (criterio != null && c.getTipo() == TipoCentroCusto.PRODUTIVO) {
+            throw new ResourceUnprocessableEntityException("O centro produtivo recebe o rateio e não tem critério.");
+        }
+        c.setCriterioRateio(c.getTipo() == TipoCentroCusto.PRODUTIVO ? null : criterio);
+        c.setAreaM2(areaM2);
+    }
+
+    /** O critério aplicado: o informado ou o padrão do tipo (pessoas no administrativo, custo direto no apoio); nulo no produtivo. */
+    static CriterioRateio criterio(CentroCusto c) {
+        return switch (c.getTipo()) {
+            case PRODUTIVO -> null;
+            case ADMINISTRATIVO -> c.getCriterioRateio() != null ? c.getCriterioRateio() : CriterioRateio.PESSOAS;
+            case APOIO -> c.getCriterioRateio() != null ? c.getCriterioRateio() : CriterioRateio.CUSTO_DIRETO;
+        };
     }
 
     private static String limpo(String s) {

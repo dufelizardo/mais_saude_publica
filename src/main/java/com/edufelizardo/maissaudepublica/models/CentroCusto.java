@@ -50,6 +50,14 @@ public class CentroCusto implements Serializable {
     @Column(nullable = false)
     private TipoCentroCusto tipo;
 
+    /** O critério do rateio (ADR-0221); nulo, o padrão do tipo: pessoas no administrativo, custo direto no apoio. */
+    @Enumerated(EnumType.STRING)
+    private CriterioRateio criterioRateio;
+
+    /** A área em m², base do critério AREA. */
+    @Column(name = "area_m2", precision = 10, scale = 2)
+    private BigDecimal areaM2;
+
     private boolean ativo;
 
     @Column(nullable = false, updatable = false)

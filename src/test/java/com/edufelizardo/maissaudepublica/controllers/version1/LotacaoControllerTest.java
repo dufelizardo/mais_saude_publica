@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -63,6 +64,9 @@ class LotacaoControllerTest {
     @Autowired
     private CategoriaSalarialRepository categoriaSalarialRepository;
 
+    @Autowired
+    private JdbcTemplate jdbc;
+
     /**
      * IDs rastreados na criação das fixtures, em vez de re-buscar depois e filtrar por campo de
      * relacionamento LAZY (ex.: {@code cargo.getCategoria().getNome()} fora de uma requisição HTTP
@@ -81,6 +85,7 @@ class LotacaoControllerTest {
         profissionalRepository.deleteAllById(profissionalIdsCriados);
         cargoRepository.deleteAllById(cargoIdsCriados);
         categoriaSalarialRepository.deleteAllById(categoriaIdsCriadas);
+        jdbc.update("delete from tb_setor where codigo like 'LOT-%'");
         unidadeDeSaudeRepository.deleteAllById(unidadeIdsCriadas);
     }
 
@@ -222,5 +227,35 @@ class LotacaoControllerTest {
 
         mockMvc.perform(get(BASE_URL + "profissional/" + profissional.getMatricula() + "/atual"))
                 .andExpect(status().isNotFound());
+    }
+
+    /** O setor da lotação (ADR-0221): o da própria unidade e ativo; o de outra unidade ou inativo dá 422; o inexistente, 404. */
+    @Test
+    void deveLotarNoSetorDaUnidade() throws Exception {
+        Profissional profissional = criarProfissionalFixture("SETOR");
+        UnidadeDeSaude unidade = criarUnidadeFixture("Setor");
+        UnidadeDeSaude outra = criarUnidadeFixture("Outra Setor");
+        Cargo cargo = criarCargoFixture("SETOR");
+        UUID setor = UUID.randomUUID(), deOutra = UUID.randomUUID(), inativo = UUID.randomUUID();
+        jdbc.update("insert into tb_setor (uuid, unidade_id, nome, codigo, tipo, ativo) values (?, ?, 'Recepção', 'LOT-REC', 'ADMINISTRATIVO', true)", setor, unidade.getUuid());
+        jdbc.update("insert into tb_setor (uuid, unidade_id, nome, codigo, tipo, ativo) values (?, ?, 'Farmácia', 'LOT-FAR', 'APOIO', true)", deOutra, outra.getUuid());
+        jdbc.update("insert into tb_setor (uuid, unidade_id, nome, codigo, tipo, ativo) values (?, ?, 'Antigo', 'LOT-ANT', 'APOIO', false)", inativo, unidade.getUuid());
+        String corpo = """
+                {"matriculaProfissional": "%s", "unidadeId": "%s", "cargoId": "%s", "setorId": "%s", "jornadaSemanalHoras": 40, "dataInicio": "2026-01-01"}
+                """;
+        for (UUID invalido : List.of(deOutra, inativo)) {
+            mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON)
+                            .content(corpo.formatted(profissional.getMatricula(), unidade.getUuid(), cargo.getUuid(), invalido)))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON)
+                        .content(corpo.formatted(profissional.getMatricula(), unidade.getUuid(), cargo.getUuid(), UUID.randomUUID())))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(post(BASE_URL).contentType(MediaType.APPLICATION_JSON)
+                        .content(corpo.formatted(profissional.getMatricula(), unidade.getUuid(), cargo.getUuid(), setor)))
+                .andExpect(status().isCreated());
+        mockMvc.perform(get(BASE_URL + "profissional/" + profissional.getMatricula() + "/atual"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.setorNome").value("Recepção"));
     }
 }

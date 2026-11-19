@@ -119,3 +119,34 @@ UI Financeiro - Custos
     Wait For Elements State    css=table[aria-label="Centros de custo"] >> text=Robot UI Centro ${codigo}    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Financeiro - Rateio
+    [Documentation]    Pela tela: o centro do setor administrativo com o critério área e a área; a tabela mostra o critério e a apuração o
+    ...    não rateado (ou o aviso da apuração antiga) e as colunas do rateio (ADR-0221).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${setor}    ${codigo}    ${unidade}=    Seed A Setor    ADMINISTRATIVO
+    UI Financeiro - Abrir Tela
+    Click    role=tab[name="Custos"]
+    Wait For Elements State    css=table[aria-label="Centros de custo"]    visible
+    Clicar Botao    Novo centro do setor
+    Wait For Elements State    css=#f-cc-setor option[value="${setor}"]    attached
+    Select Options By    id=f-cc-setor    value    ${setor}
+    Fill Text    id=f-cc-nome    Robot UI Rateio ${codigo}
+    Select Options By    id=f-cc-criterio    value    AREA
+    Fill Text    id=f-cc-area    42
+    Enviar Gaveta
+    Wait For Elements State    css=[role=status] >> text=/Robot UI Rateio ${codigo} criado/    visible
+    Wait For Elements State    css=table[aria-label="Centros de custo"] tr:has-text("Robot UI Rateio ${codigo}") >> text=Área (m²)    visible
+    Wait For Elements State    css=table[aria-label="Centros de custo"] tr:has-text("Robot UI Rateio ${codigo}") >> text=42 m²    visible
+    ${apurar}=    Get Element Count    css=app-custos-financeiro button.btn >> text=/Apurar|Refazer a apuração/
+    IF    ${apurar} > 0
+        Click    css=app-custos-financeiro button.btn >> text=/Apurar|Refazer a apuração/
+        Wait For Elements State    css=[role=status] >> text=/apurada/    visible
+        Wait For Elements State    css=app-custos-financeiro >> text=apoio e administração sem destino no rateio    visible
+    ELSE
+        Wait For Elements State    css=app-custos-financeiro >> text=/sem destino no rateio|apurada antes do rateio/    visible
+    END
+    Wait For Elements State    css=table[aria-label="Custo por centro"] th >> text=Recebido    visible
+    Wait For Elements State    css=table[aria-label="Custo por centro"] th >> text=Final    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

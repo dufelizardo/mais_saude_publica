@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **362 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V101). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **364 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V102). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -227,3 +227,4 @@ listadas aqui pela migração que criou cada uma (até a V101). A fonte de verda
 | V99 | `tb_dotacao_orcamentaria`, `tb_alteracao_dotacao`, `tb_empenho`, `tb_movimento_empenho` (e `empenho_id` em `tb_ordem_fornecimento`) |
 | V100 | `tb_liquidacao`, `tb_diaria_tfd` |
 | V101 | `tb_centro_custo`, `tb_apuracao_custo`, `tb_linha_apuracao_custo`, `tb_producao_apuracao_custo` (e `centro_custo_id` em `tb_liquidacao`) |
+| V102 | `tb_custo_centro_apuracao`, `tb_rateio_apuracao_custo` (e `setor_id` em `tb_lotacao`, `criterio_rateio` e `area_m2` em `tb_centro_custo`, `nao_rateado` em `tb_apuracao_custo`) |

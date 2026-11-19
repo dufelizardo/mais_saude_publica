@@ -39,6 +39,10 @@ public class ApuracaoCusto implements Serializable {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal naoAlocado;
 
+    /** O custo dos centros administrativos e de apoio sem destino na unidade (ADR-0221); nulo na apuração feita antes do rateio. */
+    @Column(precision = 15, scale = 2)
+    private BigDecimal naoRateado;
+
     /** As saídas sem preço: o lote do Estoque sem custo e o medicamento que não veio de um recebimento de Compras. */
     @Column(nullable = false)
     private Integer saidasSemCusto;

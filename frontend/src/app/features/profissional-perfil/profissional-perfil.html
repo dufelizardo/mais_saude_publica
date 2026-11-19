@@ -159,7 +159,7 @@
         @if (lotacaoVigente(); as v) {
           <div class="perfil-destaque">
             <span class="perfil-destaque__lbl">Lotação vigente</span>
-            <strong>{{ v.cargoNome }} · {{ v.unidadeNome }}</strong>
+            <strong>{{ v.cargoNome }} · {{ v.unidadeNome }}@if (v.setorNome) { · {{ v.setorNome }} }</strong>
             <span class="cell-sub">{{ v.categoriaNome }} · desde {{ v.dataInicio | date: 'dd/MM/yyyy' }}@if (v.jornadaSemanalHoras) { · {{ v.jornadaSemanalHoras }}h/semana }</span>
           </div>
         }
@@ -174,7 +174,7 @@
               <tbody>
                 @for (item of lotacaoHistorico(); track item.uuid) {
                   <tr>
-                    <td class="cell-main">{{ item.unidadeNome }}</td>
+                    <td class="cell-main">{{ item.unidadeNome }}@if (item.setorNome) { <span class="cell-sub">{{ item.setorNome }}</span> }</td>
                     <td>{{ item.cargoNome }}</td>
                     <td class="mono">{{ item.dataInicio | date: 'dd/MM/yyyy' }}@if (item.dataFim) { a {{ item.dataFim | date: 'dd/MM/yyyy' }} } @else { em diante }</td>
                     <td>{{ item.motivo || '—' }}</td>
@@ -364,6 +364,13 @@
                 @for (unidade of unidades(); track unidade.uuid) { <option [value]="unidade.uuid">{{ unidade.nome }}</option> }
               </select>
               @if (transferenciaForm.controls.unidadeId.invalid && transferenciaForm.controls.unidadeId.touched) { <p class="dw-err" id="e-unidadeId">Unidade é obrigatória.</p> }
+            </div>
+            <div class="dw-field">
+              <label for="f-setorId">Setor <span class="opt">opcional; a folha vai ao centro de custo do setor</span></label>
+              <select id="f-setorId" formControlName="setorId">
+                <option value="">Sem setor</option>
+                @for (s of setoresDaUnidade(); track s.uuid) { <option [value]="s.uuid">{{ s.nome }}</option> }
+              </select>
             </div>
             <div class="dw-field">
               <label for="f-cargoId">Cargo <span class="req" aria-hidden="true">*</span><span class="sr-only"> (obrigatório)</span></label>
