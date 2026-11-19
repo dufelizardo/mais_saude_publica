@@ -41,7 +41,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 12 | [Leitos / Internação](#12-leitos--internação) | ✅ | RL1 a RL4 feitas (central de leitos, eletiva e censo, laudo de AIH, prescrição e checagem); SIH e faturamento no domínio 20 |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ✅ | ES1 a ES3 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário; reserva e consumo nas emergências) |
 | 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ✅ | CP1 a CP3 feitas (fornecedores, solicitação, pesquisa de preços, contratação, atas, contratos, aditivos, ordem, recebimento, ocorrências e painel); PNCP e NF-e no domínio 20 |
-| 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | 🟡 | PM1 feita (bens, tombamento, responsável, transferência, bem comprado a tombar); PM2 (manutenção) e PM3 (inventário, baixa e painel) |
+| 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | 🟡 | PM1 e PM2 feitas (bens, tombamento, responsável, transferência, bem comprado a tombar; planos, chamados e ordens de serviço); PM3 (inventário, baixa e painel) |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
 | 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | ✅ | Auditoria feita; Qualidade completa: Q1 (segurança do paciente), Q2 (não conformidades e planos) e Q3 (indicadores com metas e auditoria de protocolos) |
@@ -397,9 +397,14 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
   - a transferência entre unidades com o aceite ou a recusa do destino;
   - o bem permanente comprado, que nasce a tombar no recebimento definitivo de Compras;
   - o vínculo com o veículo da frota, "Meus bens" e o papel Patrimônio.
+- **PM2 · Manutenção** ([ADR-0216](./adr/0216-patrimonio-manutencao.md), V97):
+  - o plano (preventiva, calibração, segurança elétrica), com a ordem gerada na leitura quando vence;
+  - o chamado corretivo por qualquer pessoa logada, com "Meus chamados";
+  - a ordem de serviço com a triagem, a execução interna ou por contrato de serviço, o bem e o veículo em manutenção, as peças pelo
+    Estoque, o custo, o tempo parado e o certificado de calibração;
+  - o resumo com os planos vencendo e as calibrações vencidas, e o papel Manutenção.
 
 **Falta:**
-- [ ] **PM2:** plano preventivo e calibração, chamado corretivo, ordem de serviço interna ou por contrato, peças pelo Estoque.
 - [ ] **PM3:** inventário anual com comissão, baixa, depreciação para leitura, painel e alerta na Sala de Situação.
 - [ ] Etiqueta com código de barras (D3 de Documentos); o aparelho do exame de imagem ligado ao bem; o lançamento contábil (domínio 17).
 
@@ -421,7 +426,7 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 **Falta:**
 - [x] **T3:** veículos cedidos às emergências ([ADR-0192](./adr/0192-transporte-nas-emergencias.md)).
-- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (vínculo feito na PM1, ADR-0215; a manutenção pela PM2); ajuda de custo e diárias do
+- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (vínculo feito na PM1, ADR-0215; a ordem de serviço da PM2, ADR-0216, põe e tira o veículo da manutenção); ajuda de custo e diárias do
   TFD (domínio 17); roteirização.
 
 ### 17. Financeiro

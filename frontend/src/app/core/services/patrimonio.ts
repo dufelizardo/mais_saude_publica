@@ -1,9 +1,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BemDto, BemRequest, ClasseBem, DetalheBemDto, SituacaoBem, TransferenciaBemDto } from '../models/patrimonio';
+import {
+  BemDto, BemRequest, ClasseBem, ConclusaoOrdemServicoRequest, ContratoServicoDto, DetalheBemDto, ExecucaoManutencao, ManutencaoDoBemDto, OrdemServicoDto,
+  PrioridadeManutencao, ResumoManutencaoDto, SituacaoBem, SituacaoOrdemServico, TipoManutencao, TransferenciaBemDto,
+} from '../models/patrimonio';
 
-/** Patrimônio, fatia PM1 (ADR-0215). */
+/** Patrimônio: PM1 bens e transferências (ADR-0215) e PM2 manutenção (ADR-0216). */
 @Injectable({ providedIn: 'root' })
 export class PatrimonioService {
   private readonly http = inject(HttpClient);
@@ -67,5 +70,59 @@ export class PatrimonioService {
 
   cancelar(transferenciaId: string): Observable<DetalheBemDto> {
     return this.http.post<DetalheBemDto>(`${this.api}/transferencia/${transferenciaId}/cancelamento`, {});
+  }
+
+  // ── Manutenção (ADR-0216) ──
+
+  manutencaoDoBem(uuid: string): Observable<ManutencaoDoBemDto> {
+    return this.http.get<ManutencaoDoBemDto>(`${this.api}/bem/${uuid}/manutencao`);
+  }
+
+  criarPlano(uuid: string, dto: { tipo: TipoManutencao; periodicidadeDias: number; ultimaExecucao: string | null; descricao: string | null }): Observable<ManutencaoDoBemDto> {
+    return this.http.post<ManutencaoDoBemDto>(`${this.api}/bem/${uuid}/plano`, dto);
+  }
+
+  desativarPlano(planoId: string): Observable<ManutencaoDoBemDto> {
+    return this.http.post<ManutencaoDoBemDto>(`${this.api}/plano/${planoId}/desativacao`, {});
+  }
+
+  abrirChamado(uuid: string, defeito: string, bemParado: boolean): Observable<OrdemServicoDto> {
+    return this.http.post<OrdemServicoDto>(`${this.api}/bem/${uuid}/chamado`, { defeito, bemParado });
+  }
+
+  meusChamados(): Observable<OrdemServicoDto[]> {
+    return this.http.get<OrdemServicoDto[]>(`${this.api}/meus-chamados`);
+  }
+
+  ordensServico(situacao?: SituacaoOrdemServico): Observable<OrdemServicoDto[]> {
+    return this.http.get<OrdemServicoDto[]>(`${this.api}/ordens-servico`, { params: situacao ? { situacao } : {} });
+  }
+
+  resumoManutencao(): Observable<ResumoManutencaoDto> {
+    return this.http.get<ResumoManutencaoDto>(`${this.api}/manutencao/resumo`);
+  }
+
+  contratosDeServico(): Observable<ContratoServicoDto[]> {
+    return this.http.get<ContratoServicoDto[]>(`${this.api}/manutencao/contratos-servico`);
+  }
+
+  ordemServico(uuid: string): Observable<OrdemServicoDto> {
+    return this.http.get<OrdemServicoDto>(`${this.api}/ordem-servico/${uuid}`);
+  }
+
+  triar(uuid: string, prioridade: PrioridadeManutencao): Observable<OrdemServicoDto> {
+    return this.http.post<OrdemServicoDto>(`${this.api}/ordem-servico/${uuid}/triagem`, { prioridade });
+  }
+
+  iniciar(uuid: string, execucao: ExecucaoManutencao, instrumentoId: string | null, tecnico: string | null): Observable<OrdemServicoDto> {
+    return this.http.post<OrdemServicoDto>(`${this.api}/ordem-servico/${uuid}/inicio`, { execucao, instrumentoId, tecnico });
+  }
+
+  concluir(uuid: string, dto: ConclusaoOrdemServicoRequest): Observable<OrdemServicoDto> {
+    return this.http.post<OrdemServicoDto>(`${this.api}/ordem-servico/${uuid}/conclusao`, dto);
+  }
+
+  cancelarOrdem(uuid: string, motivo: string): Observable<OrdemServicoDto> {
+    return this.http.post<OrdemServicoDto>(`${this.api}/ordem-servico/${uuid}/cancelamento`, { motivo });
   }
 }

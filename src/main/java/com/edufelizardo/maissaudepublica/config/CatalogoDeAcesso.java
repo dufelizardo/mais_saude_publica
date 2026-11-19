@@ -118,6 +118,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Patrimônio (ADR-0215): o bem tombado, o responsável e a transferência entre unidades.
         PERMISSOES.put("PATRIMONIO.CONSULTAR", new Def("Consultar os bens patrimoniais, os responsáveis e as transferências", OPERACAO));
         PERMISSOES.put("PATRIMONIO.GERENCIAR", new Def("Cadastrar e tombar bens, trocar o responsável e transferir entre unidades", OPERACAO));
+        // Manutenção (ADR-0216): os planos, a triagem e a execução das ordens de serviço.
+        PERMISSOES.put("MANUTENCAO.EXECUTAR", new Def("Manter os planos de manutenção e triar, executar e concluir as ordens de serviço", OPERACAO));
         // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.
         PERMISSOES.put("TRANSPORTE.CONSULTAR", new Def("Consultar a frota, a situação dos veículos e os plantões", OPERACAO));
         PERMISSOES.put("TRANSPORTE.GERENCIAR", new Def("Cadastrar veículos, registrar manutenção e montar os plantões das viaturas", OPERACAO));
@@ -216,7 +218,7 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
                         "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR", "TFD.AUTORIZAR",
                         "VISA.GERENCIAR", "QUALIDADE.GERIR", "COMPRAS.SOLICITAR", "COMPRAS.GERENCIAR", "PATRIMONIO.CONSULTAR",
-                        "PATRIMONIO.GERENCIAR")));
+                        "PATRIMONIO.GERENCIAR", "MANUTENCAO.EXECUTAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -366,6 +368,10 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("PATRIMONIO", new PapelPadrao("Patrimônio",
                 "Cadastra e tomba os bens, mantém os termos de responsabilidade e conduz as transferências entre unidades.",
                 List.of("PATRIMONIO.CONSULTAR", "PATRIMONIO.GERENCIAR", "TRANSPORTE.CONSULTAR")));
+        // Manutenção (ADR-0216): a equipe que mantém os equipamentos e os bens da rede.
+        PAPEIS.put("MANUTENCAO", new PapelPadrao("Manutenção",
+                "Mantém os planos de manutenção, faz a triagem dos chamados e executa e conclui as ordens de serviço (RDC 509/2021).",
+                List.of("MANUTENCAO.EXECUTAR", "PATRIMONIO.CONSULTAR", "ESTOQUE.CONSULTAR")));
         PAPEIS.put("FARMACEUTICO", new PapelPadrao("Farmacêutico",
                 "Estoque, dispensação e transferências; lê a prescrição.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "FARMACIA.CONSULTAR", "FARMACIA.GERENCIAR_ESTOQUE",

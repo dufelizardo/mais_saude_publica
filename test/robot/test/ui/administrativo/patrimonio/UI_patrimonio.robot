@@ -5,7 +5,7 @@ Suite Setup       UI - ABRIR SISTEMA
 Suite Teardown    UI - FECHAR SISTEMA
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - UI Patrimonio
-Metadata    Test Suite Description        Valida a tela Patrimônio: menu, cadastro, transferência com aceite e tombamento do bem comprado (ADR-0215).
+Metadata    Test Suite Description        Valida a tela Patrimônio: menu, cadastro, transferência com aceite, tombamento do bem comprado (ADR-0215), chamado e ordem de serviço (ADR-0216).
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               UI    UiPatrimonio    MaisSaudePublicaFrontend
@@ -47,6 +47,22 @@ CT-004 - Tombamento do bem comprado
     [Tags]    UI    UiPatrimonio
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     UI - PATRIMONIO - TOMBAMENTO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-005 - Chamado pela ficha
+    [Documentation]    A ficha do bem abre o chamado corretivo.
+    [Tags]    UI    UiPatrimonio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - PATRIMONIO - CHAMADO
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-006 - Ordem de serviço
+    [Documentation]    A aba Manutenção inicia e conclui a ordem do chamado.
+    [Tags]    UI    UiPatrimonio
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    UI - PATRIMONIO - ORDEM DE SERVICO
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 

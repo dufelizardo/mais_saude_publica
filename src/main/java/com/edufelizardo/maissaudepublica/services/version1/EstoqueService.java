@@ -268,6 +268,34 @@ public class EstoqueService {
     }
 
     /**
+     * Peças usadas na manutenção (ADR-0216): saem pelo FEFO da unidade do bem, sem ESTOQUE.MOVIMENTAR de quem conclui a ordem de serviço
+     * (a conferência é a da manutenção). Respeita a reserva das emergências; sem saldo dentro da validade, 422.
+     */
+    @Transactional
+    void saidaPelaManutencao(UnidadeDeSaude u, MaterialEstoque m, int quantidade, Profissional quem, String origem) {
+        LocalDate hoje = LocalDate.now();
+        List<LoteMaterial> lotes = loteRepository.findDoMaterialNaUnidadeParaAtualizar(m.getUuid(), u.getUuid());
+        exigirForaDaReserva(m, u, lotes, quantidade, null, hoje);
+        List<LoteMaterial> usar = lotes.stream().filter(l -> l.getQuantidade() > 0 && !l.vencido(hoje)).toList();
+        int disponivel = usar.stream().mapToInt(LoteMaterial::getQuantidade).sum();
+        if (disponivel < quantidade) {
+            throw new ResourceUnprocessableEntityException("Há " + disponivel + " de " + m.getNome() + " dentro da validade em " + u.getNome()
+                    + "; a ordem pede " + quantidade + ".");
+        }
+        int falta = quantidade;
+        for (LoteMaterial l : usar) {
+            if (falta == 0) {
+                break;
+            }
+            int tirar = Math.min(falta, l.getQuantidade());
+            MovimentacaoEstoque mov = lancar(l, TipoMovimentacaoEstoque.SAIDA_CONSUMO, -tirar, quem);
+            mov.setJustificativa(origem.length() > 500 ? origem.substring(0, 500) : origem);
+            movimentacaoRepository.save(mov);
+            falta -= tirar;
+        }
+    }
+
+    /**
      * Consumo lançado pelo sistema (ADR-0183): os insumos da coleta e da realização de exame. Sai pelo FEFO até onde houver saldo
      * dentro da validade, sem exigir ESTOQUE.MOVIMENTAR de quem coleta; o que faltar vira alerta de consumo sem saldo, porque a
      * coleta já aconteceu. Devolve a quantidade que faltou.

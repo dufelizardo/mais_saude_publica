@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, catchError, of } from 'rxjs';
 import { AcessoDaInterface } from '../../../core/models/auth';
 import {
@@ -24,20 +25,23 @@ import { SetorService } from '../../../core/services/setor';
 import { TransporteService } from '../../../core/services/transporte';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
 import { Drawer } from '../../../shared/drawer/drawer';
+import { ManutencaoPatrimonio } from './manutencao-patrimonio';
 
-type Aba = 'bens' | 'tombar' | 'transferencias' | 'meus';
+type Aba = 'bens' | 'tombar' | 'transferencias' | 'manutencao' | 'meus';
 type Gaveta = 'cadastro' | 'tombamento' | 'aceite' | 'recusa' | null;
 
 const CONSULTAR = 'PATRIMONIO.CONSULTAR';
 const GERENCIAR = 'PATRIMONIO.GERENCIAR';
+const EXECUTAR = 'MANUTENCAO.EXECUTAR';
 
 /**
  * Patrimônio, fatia PM1 (ADR-0215): os bens tombados com o responsável, os bens comprados à espera do tombamento, as transferências entre
- * unidades em duas etapas e "Meus bens". Quem não tem permissão de Patrimônio vê só os próprios bens.
+ * unidades em duas etapas e "Meus bens". Quem não tem permissão de Patrimônio vê só os próprios bens. A PM2 (ADR-0216) acrescenta a aba
+ * Manutenção, a manutenção na ficha do bem (com o chamado) e "Meus chamados", pelo componente {@link ManutencaoPatrimonio}.
  */
 @Component({
   selector: 'app-patrimonio',
-  imports: [Drawer],
+  imports: [Drawer, ManutencaoPatrimonio],
   template: `
     <header class="page-head">
       <div>
@@ -55,6 +59,7 @@ const GERENCIAR = 'PATRIMONIO.GERENCIAR';
         <button type="button" role="tab" id="tab-tombar" [attr.aria-selected]="aba() === 'tombar'" (click)="irPara('tombar')">A tombar @if (aTombar().length) { <span class="cnt">{{ aTombar().length }}</span> }</button>
         <button type="button" role="tab" id="tab-transferencias" [attr.aria-selected]="aba() === 'transferencias'" (click)="irPara('transferencias')">Transferências @if (pendentes()) { <span class="cnt">{{ pendentes() }}</span> }</button>
       }
+      @if (pode(EXECUTAR)) { <button type="button" role="tab" id="tab-manutencao" [attr.aria-selected]="aba() === 'manutencao'" (click)="irPara('manutencao')">Manutenção</button> }
       <button type="button" role="tab" id="tab-meus" [attr.aria-selected]="aba() === 'meus'" (click)="irPara('meus')">Meus bens</button>
     </div>
 
@@ -144,6 +149,7 @@ const GERENCIAR = 'PATRIMONIO.GERENCIAR';
           </table>
         </div>
       }
+      @case ('manutencao') { <app-manutencao-patrimonio modo="painel" [podeExecutar]="true" /> }
       @case ('meus') {
         <p class="cell-sub">Os bens sob a sua responsabilidade pelo termo assinado.</p>
         <div class="tbl-wrap card">
@@ -162,6 +168,7 @@ const GERENCIAR = 'PATRIMONIO.GERENCIAR';
             </tbody>
           </table>
         </div>
+        <app-manutencao-patrimonio modo="meus" />
       }
     }
 
@@ -320,6 +327,11 @@ const GERENCIAR = 'PATRIMONIO.GERENCIAR';
             }
           }
 
+          @for (id of [d.bem.uuid]; track id) {
+            <app-manutencao-patrimonio modo="bem" [bemId]="id" [podeExecutar]="pode(EXECUTAR)"
+              [podeAbrirChamado]="d.bem.situacao === 'EM_USO' || d.bem.situacao === 'OCIOSO' || d.bem.situacao === 'EM_MANUTENCAO'" />
+          }
+
           <h3 class="mo-grupo pt-titulo">Responsáveis</h3>
           <ul class="pt-lista" aria-label="Histórico de responsáveis">
             @for (r of d.responsaveis; track r.uuid) {
@@ -358,6 +370,7 @@ export class Patrimonio {
   private readonly transporteService = inject(TransporteService);
 
   protected readonly GERENCIAR = GERENCIAR;
+  protected readonly EXECUTAR = EXECUTAR;
   protected readonly classes = CLASSES_BEM;
   protected readonly listaClasses = Object.keys(CLASSES_BEM) as ClasseBem[];
   protected readonly situacoes = SITUACOES_BEM;
@@ -396,6 +409,7 @@ export class Patrimonio {
         this.irPara('meus');
         return;
       }
+      if (this.abaDaRota === 'manutencao' && this.pode(EXECUTAR)) this.aba.set('manutencao');
       this.carregar();
       this.carregarATombar();
       this.carregarTransferencias();
@@ -407,6 +421,9 @@ export class Patrimonio {
   protected vePatrimonio(): boolean {
     return this.pode(CONSULTAR) || this.pode(GERENCIAR);
   }
+
+  /** A aba pedida na rota (?aba=manutencao), como no alerta da Sala de Situação. */
+  private readonly abaDaRota = inject(ActivatedRoute).snapshot.queryParamMap.get('aba');
 
   protected pode(permissao: string): boolean {
     const a = this.acesso();
