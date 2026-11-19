@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **341 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V95). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **344 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V96). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -221,3 +221,4 @@ listadas aqui pela migração que criou cada uma (até a V95). A fonte de verdad
 | V93 | `tb_fornecedor`, `tb_certidao_fornecedor`, `tb_sancao_fornecedor`, `tb_solicitacao_compra`, `tb_item_solicitacao_compra`, `tb_cotacao_compra` |
 | V94 | `tb_contratacao`, `tb_item_contratacao`, `tb_instrumento_contratual`, `tb_item_instrumento`, `tb_aditivo_contratual` |
 | V95 | `tb_ordem_fornecimento`, `tb_item_ordem_fornecimento`, `tb_recebimento_compra`, `tb_item_recebimento_compra`, `tb_ocorrencia_fornecedor` (e `fornecedor_id` em `tb_movimentacao_estoque`) |
+| V96 | `tb_bem_patrimonial`, `tb_responsavel_bem`, `tb_transferencia_bem` (e o tipo `BEM_PERMANENTE` nos itens de compra) |

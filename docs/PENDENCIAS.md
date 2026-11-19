@@ -205,7 +205,7 @@ real":
     inventário)~~ — ADR-0189; ~~ES3 (reserva e consumo nas emergências)~~ — ADR-0191; ponto de reposição automático; incluir a capacidade Central de
     abastecimento no almoxarifado central; conceder o papel **Almoxarife** quando a autorização for ligada;
   - #14 Compras — desenhado na ADR-0212; ~~CP1 (fornecedores, solicitação e pesquisa de preços)~~ — ADR-0212; ~~CP2 (contratação, atas, contratos e aditivos)~~ — ADR-0213; ~~CP3 (ordem de fornecimento, recebimento, ocorrências e painel; "Meus contratos" no menu)~~ — ADR-0214; domínio completo; NF-e (XML) e PNCP no domínio 20; conceder o papel **Compras** quando a autorização for ligada;
-  - #15 Patrimônio;
+  - #15 Patrimônio — desenhado na ADR-0215; ~~PM1 (bens, tombamento, responsável, transferência e bem comprado a tombar)~~ — ADR-0215; PM2 (manutenção) e PM3 (inventário, baixa e painel); etiqueta pela D3 de Documentos; conceder o papel **Patrimônio** quando a autorização for ligada;
   - #17 Financeiro;
   - #18 Qualidade — desenhada na ADR-0202; ~~Q1 (segurança do paciente)~~ — ADR-0203 (Notivisa à mão, sem feriados no prazo mensal);
     ~~Q2 (não conformidades e planos de ação)~~ — ADR-0204 (evidência em texto, sem anexo); ~~Q3 (indicadores com metas e auditoria de protocolos)~~ — ADR-0205 (sem IRAS, sem meta por setor); Qualidade completa;

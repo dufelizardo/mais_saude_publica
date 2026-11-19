@@ -115,6 +115,9 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         // Compras (ADR-0212): a unidade pede; o setor de compras, central, analisa, cota e mantém os fornecedores.
         PERMISSOES.put("COMPRAS.SOLICITAR", new Def("Pedir compras para a unidade (documento de formalização da demanda)", OPERACAO));
         PERMISSOES.put("COMPRAS.GERENCIAR", new Def("Analisar as solicitações de compra, pesquisar preços e manter os fornecedores", OPERACAO));
+        // Patrimônio (ADR-0215): o bem tombado, o responsável e a transferência entre unidades.
+        PERMISSOES.put("PATRIMONIO.CONSULTAR", new Def("Consultar os bens patrimoniais, os responsáveis e as transferências", OPERACAO));
+        PERMISSOES.put("PATRIMONIO.GERENCIAR", new Def("Cadastrar e tombar bens, trocar o responsável e transferir entre unidades", OPERACAO));
         // Transporte (ADR-0178): a frota, a situação dos veículos e o plantão das viaturas.
         PERMISSOES.put("TRANSPORTE.CONSULTAR", new Def("Consultar a frota, a situação dos veículos e os plantões", OPERACAO));
         PERMISSOES.put("TRANSPORTE.GERENCIAR", new Def("Cadastrar veículos, registrar manutenção e montar os plantões das viaturas", OPERACAO));
@@ -212,7 +215,8 @@ public class CatalogoDeAcesso implements ApplicationRunner {
                         "CONTEUDO.REVISAR", "LEITO.AUTORIZAR", "URGENCIA.CONSULTAR",
                         "ESTOQUE.CONSULTAR", "ESTOQUE.GERENCIAR",
                         "TRANSPORTE.CONSULTAR", "TRANSPORTE.GERENCIAR", "REDE.CONSULTAR", "REDE.GERENCIAR", "AIH.NUMERAR", "TFD.AUTORIZAR",
-                        "VISA.GERENCIAR", "QUALIDADE.GERIR", "COMPRAS.SOLICITAR", "COMPRAS.GERENCIAR")));
+                        "VISA.GERENCIAR", "QUALIDADE.GERIR", "COMPRAS.SOLICITAR", "COMPRAS.GERENCIAR", "PATRIMONIO.CONSULTAR",
+                        "PATRIMONIO.GERENCIAR")));
         PAPEIS.put("RECEPCAO", new PapelPadrao("Recepção",
                 "Cadastro de pacientes, agenda e abertura de atendimentos.",
                 List.of("DOCUMENTO.ANEXAR", "PACIENTE.CONSULTAR", "PACIENTE.CADASTRAR", "AGENDAMENTO.GERENCIAR", "ATENDIMENTO.GERENCIAR",
@@ -358,6 +362,10 @@ public class CatalogoDeAcesso implements ApplicationRunner {
         PAPEIS.put("COMPRAS", new PapelPadrao("Compras",
                 "Analisa as solicitações de compra, pesquisa preços e mantém o cadastro de fornecedores (Lei 14.133/2021).",
                 List.of("COMPRAS.GERENCIAR", "ESTOQUE.CONSULTAR")));
+        // Patrimônio (ADR-0215): o setor de patrimônio da secretaria.
+        PAPEIS.put("PATRIMONIO", new PapelPadrao("Patrimônio",
+                "Cadastra e tomba os bens, mantém os termos de responsabilidade e conduz as transferências entre unidades.",
+                List.of("PATRIMONIO.CONSULTAR", "PATRIMONIO.GERENCIAR", "TRANSPORTE.CONSULTAR")));
         PAPEIS.put("FARMACEUTICO", new PapelPadrao("Farmacêutico",
                 "Estoque, dispensação e transferências; lê a prescrição.",
                 List.of("PACIENTE.CONSULTAR", "PRONTUARIO.CONSULTAR", "FARMACIA.CONSULTAR", "FARMACIA.GERENCIAR_ESTOQUE",

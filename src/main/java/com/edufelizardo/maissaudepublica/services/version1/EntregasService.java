@@ -93,6 +93,7 @@ public class EntregasService {
     @Autowired private EstoqueService estoqueService;
     @Autowired private LoteService loteService;
     @Autowired private ComprasService comprasService;
+    @Autowired private PatrimonioService patrimonioService;
     @Autowired private ControleDeAcesso controleDeAcesso;
 
     // ── Ordem de fornecimento ──────────────────────────────────────────────────────────────────────
@@ -242,7 +243,7 @@ public class EntregasService {
     /**
      * O recebimento definitivo (art. 140, I, b) do provisório (422): o aceito de cada item entregue, todos e só eles (400), até o entregue
      * (400); o recusado pede o motivo (400) e vira ocorrência de item fora da especificação. O aceito entra no Estoque (material, com o
-     * fornecedor e o preço do contrato) ou na Farmácia (medicamento) da unidade da ordem; o serviço fica atestado.
+     * fornecedor e o preço do contrato) ou na Farmácia (medicamento) da unidade da ordem; o bem permanente nasce a tombar no Patrimônio (ADR-0215); o serviço fica atestado.
      */
     @Transactional
     public EntregasDtos.Ordem definitivo(UUID recebimentoId, RecebimentoDefinitivoRequestDto dto) {
@@ -322,6 +323,8 @@ public class EntregasService {
             l.setValidade(i.getValidade());
             l.setQuantidade(quantidade);
             loteService.criarPeloRecebimento(l);
+        } else if (ic.getTipo() == TipoItemCompra.BEM_PERMANENTE) {
+            patrimonioService.incorporarPeloRecebimento(o, r, i, ic.getDescricao(), ii.getPrecoUnitario(), f, quantidade);
         }
     }
 

@@ -4,7 +4,7 @@ export type TipoCertidaoFornecedor = 'FEDERAL' | 'FGTS' | 'TRABALHISTA' | 'ESTAD
 export type TipoSancaoFornecedor = 'ADVERTENCIA' | 'MULTA' | 'IMPEDIMENTO' | 'INIDONEIDADE';
 export type PrioridadeCompra = 'NORMAL' | 'URGENTE';
 export type SituacaoSolicitacaoCompra = 'RASCUNHO' | 'ENVIADA' | 'DEVOLVIDA' | 'APROVADA' | 'REJEITADA' | 'EM_COTACAO' | 'COTADA' | 'CANCELADA';
-export type TipoItemCompra = 'MATERIAL' | 'MEDICAMENTO' | 'SERVICO';
+export type TipoItemCompra = 'MATERIAL' | 'MEDICAMENTO' | 'SERVICO' | 'BEM_PERMANENTE';
 export type FonteCotacao = 'FORNECEDOR' | 'CONTRATACAO_PUBLICA' | 'SITE' | 'OUTRA';
 export type DecisaoSolicitacaoCompra = 'APROVAR' | 'DEVOLVER' | 'REJEITAR';
 
@@ -38,6 +38,7 @@ export const TIPOS_ITEM: Record<TipoItemCompra, string> = {
   MATERIAL: 'Material',
   MEDICAMENTO: 'Medicamento',
   SERVICO: 'Serviço',
+  BEM_PERMANENTE: 'Bem permanente',
 };
 
 export const FONTES_COTACAO: Record<FonteCotacao, string> = {
