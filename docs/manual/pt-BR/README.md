@@ -9,6 +9,7 @@ gestão. Ele explica as telas pela ordem do menu.
 
 1. [Primeiros passos](./00-primeiros-passos.md): entrar, a senha, o menu, o perfil e a unidade, como as telas funcionam e as
    mensagens mais comuns.
+2. [Pacientes](./01-pacientes.md): buscar, cadastrar e editar; o painel com resumo, histórico, programas, vacinação e anexos; a equipe de referência e o acesso com justificativa.
 
 As áreas do menu entram nas próximas versões do manual, começando pela Assistência (Pacientes, Agenda, Atendimentos,
 Enfermagem e Farmácia).
