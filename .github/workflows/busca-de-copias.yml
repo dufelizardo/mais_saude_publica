@@ -1,0 +1,26 @@
+name: Busca de cópias
+
+# Toda segunda-feira, procura os marcadores do projeto na busca de código do GitHub e abre uma issue com o rótulo
+# "copia-detectada" quando algum aparece fora deste repositório (ADR-0223). Os marcadores ficam na variável CANARIOS do
+# repositório, não no código. Só acha cópias públicas.
+on:
+  schedule:
+    - cron: '0 10 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  buscar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Buscar os marcadores
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANARIOS: ${{ vars.CANARIOS }}
+        run: python3 .github/scripts/buscar_copias.py --issue

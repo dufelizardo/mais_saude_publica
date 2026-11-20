@@ -50,6 +50,9 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - [ ] Apagar o serviço antigo no painel do **Render**, se ainda existir.
 - [x] Provisionar `app-secrets` nos namespaces de `qaa`, `homologacao` e `prod` (item 2.1).
 - [ ] Escolher e contratar o provedor SMTP (item 2.5).
+- [ ] **Licença** ([ADR-0223](./adr/0223-busca-de-copias.md)): preencher o aviso de autoria (`Copyright (C) <ano> <nome>`) e o
+  campo da licença no `pom.xml` e no `package.json`; decidir se continua na GPL-3.0 ou passa à AGPL-3.0.
+- [ ] **Google Alerts** com o nome do produto e os marcadores da variável `CANARIOS` (a busca no GitHub já é automática).
 
 ## 4. Infraestrutura do home-lab (ADR-0012)
 
