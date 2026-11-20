@@ -12,6 +12,7 @@ the application, in Portuguese, followed by a translation.
    the most common messages.
 2. [Patients](./01-pacientes.md): searching, registering and editing; the panel with summary, history, programmes, vaccination and attachments; the reference team and access with justification.
 3. [Schedule](./02-agenda.md): a professional's schedule at a unit: booking, fit-ins, no-shows, recurring blocks and block-outs.
+4. [Encounters](./03-atendimentos.md): walk-in, triage, consultation, procedure, medication check, progress note, amendment and the health record.
 
 The menu areas come in the next versions of the manual, starting with Care (*Assistência*): Patients, Schedule, Encounters,
 Nursing and Pharmacy.

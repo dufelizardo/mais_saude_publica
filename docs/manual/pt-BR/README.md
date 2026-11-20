@@ -11,6 +11,7 @@ gestão. Ele explica as telas pela ordem do menu.
    mensagens mais comuns.
 2. [Pacientes](./01-pacientes.md): buscar, cadastrar e editar; o painel com resumo, histórico, programas, vacinação e anexos; a equipe de referência e o acesso com justificativa.
 3. [Agenda](./02-agenda.md): a agenda de um profissional numa unidade: marcar, encaixe, falta, blocos recorrentes e bloqueios.
+4. [Atendimentos](./03-atendimentos.md): acolhimento, triagem, consulta, procedimento, checagem de medicação, evolução, retificação e o prontuário.
 
 As áreas do menu entram nas próximas versões do manual, começando pela Assistência (Pacientes, Agenda, Atendimentos,
 Enfermagem e Farmácia).
