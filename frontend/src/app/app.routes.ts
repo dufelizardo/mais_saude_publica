@@ -132,6 +132,24 @@ export const routes: Routes = [
         loadComponent: () => import('./features/administrativo/estoque/estoque').then((m) => m.Estoque),
         data: { breadcrumb: 'Estoque e almoxarifado', area: 'Administrativo' },
       },
+      // Compras: solicitações, pesquisa de preços e fornecedores (ADR-0212).
+      {
+        path: 'administrativo/compras',
+        loadComponent: () => import('./features/administrativo/compras/compras').then((m) => m.Compras),
+        data: { breadcrumb: 'Compras', area: 'Administrativo' },
+      },
+      // Patrimônio: bens, tombamento, responsáveis e transferências (ADR-0215). A rota só pede o login: "Meus bens" é de todos.
+      {
+        path: 'administrativo/patrimonio',
+        loadComponent: () => import('./features/administrativo/patrimonio/patrimonio').then((m) => m.Patrimonio),
+        data: { breadcrumb: 'Patrimônio', area: 'Administrativo' },
+      },
+      // Financeiro: dotações e empenhos do Fundo Municipal de Saúde (ADR-0218).
+      {
+        path: 'administrativo/financeiro',
+        loadComponent: () => import('./features/administrativo/financeiro/financeiro').then((m) => m.Financeiro),
+        data: { breadcrumb: 'Financeiro', area: 'Administrativo' },
+      },
       // Frota e transporte (ADR-0178).
       {
         path: 'administrativo/frota',

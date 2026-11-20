@@ -34,12 +34,15 @@ correspondente está na ADR indicada.
 | Gestão de Emergências e Desastres | [`emergencias/MODELO-EMERGENCIAS.md`](./emergencias/MODELO-EMERGENCIAS.md) | [0113](./adr/0113-emergencias-e-desastres.md), 0156 a 0161, [0193](./adr/0193-emergencias-vulneraveis-e-deslocados.md), [0194](./adr/0194-emergencias-redistribuicao-e-regulacao.md) | funcionando (E1 a E6) |
 | Comunicação e Educação em Saúde | [`comunicacao/MODELO-COMUNICACAO.md`](./comunicacao/MODELO-COMUNICACAO.md) | [0114](./adr/0114-comunicacao-e-educacao-em-saude.md), 0168, 0173, 0174, 0195, [0196](./adr/0196-avaliacao-da-comunicacao.md) | sim (C1 a C4 e C6; a C5 depende de Integrações) |
 | Estoque e Almoxarifado | [`estoque/MODELO-ESTOQUE.md`](./estoque/MODELO-ESTOQUE.md) | [0177](./adr/0177-estoque-e-almoxarifado.md), [0189](./adr/0189-estoque-central-requisicao-inventario.md), [0191](./adr/0191-estoque-nas-emergencias.md) | funcionando (ES1 a ES3) |
+| Compras, Contratos e Fornecedores | [`compras/MODELO-COMPRAS.md`](./compras/MODELO-COMPRAS.md) | [0212](./adr/0212-compras-fornecedores-e-solicitacoes.md), [0213](./adr/0213-compras-contratacao-atas-e-contratos.md), [0214](./adr/0214-compras-ordens-recebimento-e-painel.md) | funcionando (CP1 a CP3) |
+| Patrimônio e Manutenção | [`patrimonio/MODELO-PATRIMONIO.md`](./patrimonio/MODELO-PATRIMONIO.md) | [0215](./adr/0215-patrimonio-bens-tombamento-e-transferencia.md), [0216](./adr/0216-patrimonio-manutencao.md), [0217](./adr/0217-patrimonio-inventario-baixa-e-painel.md) | funcionando (PM1 a PM3) |
+| Financeiro | [`financeiro/MODELO-FINANCEIRO.md`](./financeiro/MODELO-FINANCEIRO.md) | [0218](./adr/0218-financeiro-dotacao-e-empenho.md), [0219](./adr/0219-financeiro-liquidacao-e-pagamento.md), [0220](./adr/0220-financeiro-centros-de-custo-e-apuracao.md), [0221](./adr/0221-financeiro-rateio-pngc.md) | funcionando (F1 a F4) |
 | Transporte Sanitário | [`transporte/MODELO-TRANSPORTE.md`](./transporte/MODELO-TRANSPORTE.md) | [0178](./adr/0178-transporte-sanitario.md), [0190](./adr/0190-transporte-eletivo-e-tfd.md), [0192](./adr/0192-transporte-nas-emergencias.md) | funcionando (T1 a T3) |
 | Qualidade do serviço | [`qualidade/MODELO-QUALIDADE.md`](./qualidade/MODELO-QUALIDADE.md) | [0202](./adr/0202-qualidade-do-servico.md), [0203](./adr/0203-seguranca-do-paciente.md), [0204](./adr/0204-nao-conformidades-e-planos-de-acao.md), [0205](./adr/0205-indicadores-de-qualidade-e-auditoria-de-protocolos.md) | sim (Q1, Q2 e Q3) |
 | Gestão da Rede de Atenção | [`rede/MODELO-REDE.md`](./rede/MODELO-REDE.md) | [0179](./adr/0179-gestao-da-rede-de-atencao.md), 0197, [0198](./adr/0198-cobertura-da-rede.md) | sim (GR1 a GR3) |
 
 Estão documentados nas próprias ADRs: Laboratório e imagem (0093 a 0095, 0180 a 0183), Regulação do acesso (0087 a 0089), de urgência (0176, 0188) e de leitos (0184), Leitos e
-Internação (0098 a 0100, 0171, 0184 a 0187), Imunização (0147 a 0150, 0206), Indicadores e BI (0142 a 0146, 0167, 0175), Intersetorialidade (0154) e
+Internação (0098 a 0100, 0171, 0184 a 0187), Imunização (0147 a 0150, 0206), Indicadores e BI (0142 a 0146, 0167, 0175), Intersetorialidade (0154, 0211) e
 Documentos (0172).
 
 ## Acesso, segurança e frontend

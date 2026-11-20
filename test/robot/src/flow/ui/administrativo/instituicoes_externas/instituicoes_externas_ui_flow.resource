@@ -2,9 +2,10 @@
 Library     String
 Resource    ../../../../pom/ui/administrativo/instituicoes_externas/instituicoes_externas_ui_pom.resource
 Resource    ../../../intersetorialidade/intersetorialidade_flow.resource
+Resource    ../../../../pom/ui/indicadores/sala_de_situacao_ui_pom.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
-    Jornadas da tela Instituições da rede intersetorial (ADR-0154).
+    Jornadas da tela Instituições da rede intersetorial (ADR-0154) e do painel da rede (ADR-0211).
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Keywords ***
 UI Instituicoes Externas - Tela Abre
@@ -47,5 +48,51 @@ UI Instituicoes Externas - Inativar
     Wait For Elements State    css=table[aria-label="Instituições externas"] >> text=${nome}    detached
     Click    role=button[name="Com as inativas"]
     Wait For Elements State    css=table[aria-label="Instituições externas"] >> tr:has-text("${nome}") >> text=Inativa    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+Seed Encaminhamento Sem Retorno
+    [Documentation]    Um caso de saúde mental encaminhado há 20 dias, com o prazo vencido há 5; devolve a unidade.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    [Arguments]    ${instituicao}
+    ${caso}    ${unidade}    ${equipe}    ${matricula}    ${paciente}    ${programa}=    Seed Caso Saude Mental
+    ${r}=    Encaminhar Caso    ${caso}    ${instituicao}    20    -5
+    Should Be Equal As Integers    ${r.status_code}    201
+    RETURN    ${unidade}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Instituicoes Externas - Painel E Cobranca
+    [Documentation]    A aba Painel mostra a instituição com o encaminhamento sem retorno; "Cobrar" abre a lista com o atraso.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${instituicao}=    Seed Instituicao Externa    CREAS Painel    ASSISTENCIA_SOCIAL    CREAS
+    ${unidade}=    Seed Encaminhamento Sem Retorno    ${instituicao}
+    ${i}=    GET Instituicoes Externas    ${None}
+    ${nome}=    Evaluate    [x["nome"] for x in $i.json() if x["uuid"] == $instituicao][0]
+    UI Instituicoes Externas - Abrir Tela
+    Click    role=tab[name="Painel"]
+    Select Options By    css=select[aria-label="Unidade que encaminhou"]    value    ${unidade}
+    Wait For Elements State    css=table[aria-label="Encaminhamentos por instituição"] >> tr:has-text("${nome}")    visible
+    Wait For Elements State    css=section[aria-label="Resumo da rede intersetorial"] >> text=Sem retorno    visible
+    Click    role=button[name="Cobrar ${nome}"]
+    Wait For Elements State    css=table[aria-label="Encaminhamentos sem retorno"] >> text=5 dias    visible
+    Wait For Elements State    css=app-drawer >> text=Não confirmou o recebimento    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Instituicoes Externas - Alerta Na Sala De Situacao
+    [Documentation]    Com 3 encaminhamentos sem retorno, a instituição vira alerta na Sala de Situação, que leva ao painel.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${instituicao}=    Seed Instituicao Externa    CT Alerta    GARANTIA_DE_DIREITOS    CONSELHO_TUTELAR
+    FOR    ${n}    IN RANGE    3
+        Seed Encaminhamento Sem Retorno    ${instituicao}
+    END
+    ${i}=    GET Instituicoes Externas    ${None}
+    ${nome}=    Evaluate    [x["nome"] for x in $i.json() if x["uuid"] == $instituicao][0]
+    UI Sala - Abrir
+    ${alerta}=    Set Variable    css=article[aria-label="Encaminhamentos sem retorno: ${nome}"]
+    Wait For Elements State    ${alerta}    visible
+    Click    ${alerta} >> text=Ver no painel
+    Wait For Elements State    role=tab[name="Painel"][selected]    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

@@ -311,6 +311,50 @@ public class TransporteService {
         }
     }
 
+    /**
+     * O veículo do bem em manutenção (ADR-0216): em serviço não entra (422); disponível passa a manutenção; já em manutenção ou inativo,
+     * fica como está. Devolve se mudou.
+     */
+    @Transactional
+    public boolean entrarEmManutencao(Veiculo v, String motivo) {
+        Veiculo atual = travar(v.getUuid());
+        if (atual.getSituacao() == SituacaoVeiculo.EM_SERVICO) {
+            throw new ResourceUnprocessableEntityException("O veículo " + atual.getPrefixo() + " está em serviço; espere o fim da ocorrência, viagem ou emergência.");
+        }
+        if (atual.getSituacao() != SituacaoVeiculo.DISPONIVEL) {
+            return false;
+        }
+        atual.setSituacao(SituacaoVeiculo.MANUTENCAO);
+        veiculoRepository.save(atual);
+        registrarSituacao(atual, motivo);
+        return true;
+    }
+
+    /** O fim da manutenção do bem (ADR-0216): o veículo em manutenção volta a disponível; noutra situação, fica como está. */
+    @Transactional
+    public void sairDaManutencao(Veiculo v, String motivo) {
+        Veiculo atual = travar(v.getUuid());
+        if (atual.getSituacao() == SituacaoVeiculo.MANUTENCAO) {
+            atual.setSituacao(SituacaoVeiculo.DISPONIVEL);
+            veiculoRepository.save(atual);
+            registrarSituacao(atual, motivo);
+        }
+    }
+
+    /** O bem do veículo foi baixado (ADR-0217): o veículo fica inativo; em serviço não sai (422). */
+    @Transactional
+    public void inativarPelaBaixa(Veiculo v, String motivo) {
+        Veiculo atual = travar(v.getUuid());
+        if (atual.getSituacao() == SituacaoVeiculo.EM_SERVICO) {
+            throw new ResourceUnprocessableEntityException("O veículo " + atual.getPrefixo() + " está em serviço; a baixa espera o fim da ocorrência, viagem ou emergência.");
+        }
+        if (atual.getSituacao() != SituacaoVeiculo.INATIVO) {
+            atual.setSituacao(SituacaoVeiculo.INATIVO);
+            veiculoRepository.save(atual);
+            registrarSituacao(atual, motivo);
+        }
+    }
+
     // ── Apoio ─────────────────────────────────────────────────────────────────────────────────────
 
     /** A composição mínima: USB, condutor e técnico; USA, condutor, enfermeiro e médico; motolância, técnico ou enfermeiro. */

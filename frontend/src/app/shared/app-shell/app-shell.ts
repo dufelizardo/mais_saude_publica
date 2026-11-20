@@ -10,6 +10,8 @@ import {
 import { filter } from 'rxjs';
 import { AuthService } from '../../core/services/auth';
 import { AlertaAuditoriaService } from '../../core/services/alerta-auditoria';
+import { ComprasService } from '../../core/services/compras';
+import { PatrimonioService } from '../../core/services/patrimonio';
 import { AcessoDaInterface, UsuarioAtualResponseDto } from '../../core/models/auth';
 
 const RH = ['RH.CONSULTAR', 'RH.GERENCIAR'];
@@ -33,6 +35,12 @@ const MENU: Record<string, string[]> = {
   // Coordenações e gerência (ADR-0175): a estrutura e os indicadores da regional.
   '/administrativo/coordenacoes': [...ADMINISTRATIVO, 'INDICADOR.CONSULTAR'],
   '/administrativo/estoque': ['ESTOQUE.CONSULTAR', 'ESTOQUE.MOVIMENTAR', 'ESTOQUE.GERENCIAR', 'ESTOQUE.REQUISITAR', 'ESTOQUE.ATENDER'],
+  // Compras (ADR-0212): quem pede e quem compra.
+  '/administrativo/compras': ['COMPRAS.SOLICITAR', 'COMPRAS.GERENCIAR'],
+  // Financeiro (ADR-0218).
+  '/administrativo/financeiro': ['FINANCEIRO.CONSULTAR', 'FINANCEIRO.GERENCIAR'],
+  // Patrimônio (ADR-0215).
+  '/administrativo/patrimonio': ['PATRIMONIO.CONSULTAR', 'PATRIMONIO.GERENCIAR', 'MANUTENCAO.EXECUTAR'],
   '/administrativo/frota': ['TRANSPORTE.CONSULTAR', 'TRANSPORTE.GERENCIAR', 'TRANSPORTE.SOLICITAR', 'TFD.AUTORIZAR'],
   '/administrativo/ppi': ['REDE.CONSULTAR', 'REDE.GERENCIAR'],
   // Território (ADR-0125): o recorte geográfico é aberto a quem está logado.
@@ -117,11 +125,37 @@ export class AppShell {
    */
   protected readonly gruposExpandidos = signal<ReadonlySet<string>>(new Set());
 
+  private readonly comprasService = inject(ComprasService);
+  /**
+   * Os contratos em que a pessoa é gestora ou fiscal (ADR-0214), para quem não vê Compras pelo menu: o item "Meus contratos" aparece só
+   * para essas pessoas, com o número de ordens à espera de entrega.
+   */
+  protected readonly meusContratos = signal<{ contratos: number; ordens: number } | null>(null);
+
+  private readonly patrimonioService = inject(PatrimonioService);
+  /** Os bens sob a responsabilidade da pessoa (ADR-0215), para quem não vê Patrimônio pelo menu: o item "Meus bens" aparece só se houver algum. */
+  protected readonly meusBens = signal<number>(0);
+  /** Os inventários abertos em que a pessoa é da comissão (ADR-0217): o item "Meus inventários" aparece só se houver algum. */
+  protected readonly meusInventarios = signal<number>(0);
+
   constructor() {
     this.authService.usuarioAtual().subscribe((u) => this.usuario.set(u));
     this.authService.acessoDaInterface().subscribe((a) => {
       this.acesso.set(a);
       if (this.podeVer('/administracao/auditoria')) this.alertaService.atualizarContador();
+      if (a.restrito && !this.podeVer('/administrativo/compras')) {
+        this.comprasService.meusContratos().subscribe({
+          next: (l) => this.meusContratos.set(l.length ? { contratos: l.length, ordens: l.reduce((t, i) => t + i.ordensEmAberto, 0) } : null),
+          error: () => this.meusContratos.set(null),
+        });
+      }
+      if (a.restrito && !this.podeVer('/administrativo/patrimonio')) {
+        this.patrimonioService.meusBens().subscribe({ next: (l) => this.meusBens.set(l.length), error: () => this.meusBens.set(0) });
+        this.patrimonioService.meusInventarios().subscribe({
+          next: (l) => this.meusInventarios.set(l.filter((i) => i.situacao === 'ABERTO').length),
+          error: () => this.meusInventarios.set(0),
+        });
+      }
     });
     this.atualizarBreadcrumb();
     this.router.events.pipe(filter((evento) => evento instanceof NavigationEnd)).subscribe(() => {

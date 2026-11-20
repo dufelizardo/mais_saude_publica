@@ -5,7 +5,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 "Temos" e mude o estado na tabela.
 
 - **Atualizado em:** 2026-11-14 (release 1.14.0: alta disponibilidade, ADR-0209)
-- **Release em produção:** v1.14.0 (2026-11-14)
+- **Release em produção:** v1.15.0 (2026-11-19)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
 - **Fontes:**
@@ -40,10 +40,10 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 11 | [Regulação](#11-regulação) | ✅ | RL1 e RL5 feitas (central de leitos, ficha do APH); SISREG, SIGTAP e telefonia do 192 no domínio 20 |
 | 12 | [Leitos / Internação](#12-leitos--internação) | ✅ | RL1 a RL4 feitas (central de leitos, eletiva e censo, laudo de AIH, prescrição e checagem); SIH e faturamento no domínio 20 |
 | 13 | [Estoque / Almoxarifado](#13-estoque--almoxarifado) | ✅ | ES1 a ES3 feitas (catálogo, lotes, livro, alertas; central, requisição, transferência, inventário; reserva e consumo nas emergências) |
-| 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ⬜ | domínio inteiro |
-| 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ⬜ | domínio inteiro |
+| 14 | [Compras / Contratos / Fornecedores](#14-compras--contratos--fornecedores) | ✅ | CP1 a CP3 feitas (fornecedores, solicitação, pesquisa de preços, contratação, atas, contratos, aditivos, ordem, recebimento, ocorrências e painel); PNCP e NF-e no domínio 20 |
+| 15 | [Patrimônio / Manutenção](#15-patrimônio--manutenção) | ✅ | PM1 a PM3 feitas (bens, tombamento, responsável, transferência, bem comprado a tombar; manutenção; inventário, baixa, valor contábil e painel); etiqueta pela D3 |
 | 16 | [Transporte Sanitário](#16-transporte-sanitário) | ✅ | T1 a T3 feitas (frota, plantão, viatura no SAMU; transporte eletivo, TFD, viagens e quilometragem; veículos cedidos às emergências) |
-| 17 | [Financeiro](#17-financeiro) | ⬜ | decidir o escopo e implementar |
+| 17 | [Financeiro](#17-financeiro) | ✅ | F1 a F4 feitas (dotação, empenho, liquidação, pagamento, diárias do TFD, restos a pagar, execução, centros de custo, apuração mensal e rateio do PNGC); SIAFIC, SIOPS e o teto da PPI no domínio 20 |
 | 18 | [Qualidade / Segurança / Auditoria](#18-qualidade--segurança--auditoria) | ✅ | Auditoria feita; Qualidade completa: Q1 (segurança do paciente), Q2 (não conformidades e planos) e Q3 (indicadores com metas e auditoria de protocolos) |
 | 19 | [Indicadores / BI](#19-indicadores--bi) | ✅ | BI1 a BI5 feitas (Sala de Situação, relatórios, coordenações e gerência) |
 | 20 | [Integrações / Identidade / Segurança / Governo](#20-integrações--identidade--segurança--governo) | 🟡 | ligar a exigência de permissão; integrações |
@@ -57,9 +57,9 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 | 28 | [Comunicação e Educação em Saúde](#28-comunicação-e-educação-em-saúde) | ✅ | C1 a C4 e C6 feitas (comunicado, conteúdo, portal e e-mail; campanhas e materiais; educação em saúde; educação permanente; avaliação); a C5 (multicanal) no domínio 20 |
 | 29 | [Modelo Operacional dos Equipamentos](#29-modelo-operacional-dos-equipamentos) (camada) | ✅ | MO1 a MO4 feitas |
 | 30 | [Gestão da Rede de Atenção](#30-gestão-da-rede-de-atenção) | ✅ | GR1 a GR3 feitas (PPI; redes temáticas e referência; cobertura e indicadores de pactuação); teto financeiro (17) e SISREG (20) |
-| 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | 🟡 | IS1 feita (catálogo e encaminhamento); uso pela Vigilância e pelas Emergências |
+| 31 | [Intersetorialidade e Proteção Social](#31-intersetorialidade-e-proteção-social) | ✅ | IS1 e IS2 feitas (catálogo, encaminhamento e painel da rede); guia para imprimir (Documentos) e CadÚnico/SUAS no domínio 20 |
 
-**Resumo:** 31 itens mais Documentos: 25 ✅ · 3 🟡 · 3 ⬜ (e Documentos 🟡). As Integrações são a parte não
+**Resumo:** 31 itens mais Documentos: 28 ✅ · 3 🟡 · 0 ⬜ (e Documentos 🟡). As Integrações são a parte não
 iniciada do domínio 20.
 
 ### Ordem e dependências das fatias
@@ -361,19 +361,56 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 ### 14. Compras / Contratos / Fornecedores
 
-**Estado:** ⬜. Hoje só existem os rótulos `COMPRAS` e `CONTRATOS` reservados (ADRs 0032 e 0037).
+**Estado:** ✅. Desenho do domínio na [ADR-0212](./adr/0212-compras-fornecedores-e-solicitacoes.md); detalhe em [`compras/MODELO-COMPRAS.md`](./compras/MODELO-COMPRAS.md).
+
+**Temos:**
+- [x] **CP1 · Fornecedores, solicitação e pesquisa de preços** ([ADR-0212](./adr/0212-compras-fornecedores-e-solicitacoes.md), V93):
+  - fornecedor com CPF ou CNPJ conferido, certidões de regularidade e sanções do art. 156, com a situação derivada (regular, certidão
+    pendente, impedido);
+  - solicitação de compra (DFD) da unidade com material, medicamento ou serviço, envio, análise (aprovar, devolver, rejeitar) e a
+    sugestão pelo estoque mínimo;
+  - pesquisa de preços com 3 cotações (ou justificativa) e o preço de referência na mediana;
+  - tela Administrativo · Compras e o papel Compras.
+- [x] **CP2 · Contratação, atas e contratos** ([ADR-0213](./adr/0213-compras-contratacao-atas-e-contratos.md), V94):
+  - contratação das solicitações cotadas, com os itens iguais somados, o resultado por item (fornecedor regular, justificativa acima da
+    referência) e a homologação;
+  - ata de registro de preços ou contrato por fornecedor vencedor, com gestor e fiscal diferentes, saldo por item e alertas (vigência,
+    saldo abaixo de 20%, fornecedor irregular);
+  - aditivos de prazo, acréscimo, supressão (até 25%) e reequilíbrio; "meus contratos" para o gestor e o fiscal.
+- [x] **CP3 · Ordem, recebimento e painel** ([ADR-0214](./adr/0214-compras-ordens-recebimento-e-painel.md), V95):
+  - ordem de fornecimento que reserva o saldo; recebimento provisório (nota, lote, validade) e definitivo pelo fiscal, com a entrada no
+    Estoque (fornecedor ligado, custo do contrato) e na Farmácia;
+  - ocorrências (atraso automático, recusa, outras) encerradas ou convertidas em sanção;
+  - painel com o desempenho dos fornecedores, alerta na Sala de Situação e "Meus contratos" no menu para o gestor e o fiscal.
 
 **Falta:**
-- [ ] Desenho (ADR): fornecedor, solicitação de compra, cotação, contrato, item contratado, entrega.
-- [ ] Implementação.
+- [ ] PNCP, Compras.gov, SICAF e consulta de CNPJ (domínio 20); empenho e pagamento (domínio 17).
 
 ### 15. Patrimônio / Manutenção
 
-**Estado:** ⬜. Hoje só existe o rótulo `PATRIMONIO` reservado.
+**Estado:** ✅. Desenho do domínio na [ADR-0215](./adr/0215-patrimonio-bens-tombamento-e-transferencia.md); detalhe em [`patrimonio/MODELO-PATRIMONIO.md`](./patrimonio/MODELO-PATRIMONIO.md).
+
+**Temos:**
+- **PM1 · Bens, tombamento e transferência** ([ADR-0215](./adr/0215-patrimonio-bens-tombamento-e-transferencia.md), V96):
+  - o bem com a classe, a identificação, a unidade e o setor, tombado com o número do ano;
+  - o termo de responsabilidade com histórico; o uso (em uso ou ocioso);
+  - a transferência entre unidades com o aceite ou a recusa do destino;
+  - o bem permanente comprado, que nasce a tombar no recebimento definitivo de Compras;
+  - o vínculo com o veículo da frota, "Meus bens" e o papel Patrimônio.
+- **PM2 · Manutenção** ([ADR-0216](./adr/0216-patrimonio-manutencao.md), V97):
+  - o plano (preventiva, calibração, segurança elétrica), com a ordem gerada na leitura quando vence;
+  - o chamado corretivo por qualquer pessoa logada, com "Meus chamados";
+  - a ordem de serviço com a triagem, a execução interna ou por contrato de serviço, o bem e o veículo em manutenção, as peças pelo
+    Estoque, o custo, o tempo parado e o certificado de calibração;
+  - o resumo com os planos vencendo e as calibrações vencidas, e o papel Manutenção.
+- **PM3 · Inventário, baixa e painel** ([ADR-0217](./adr/0217-patrimonio-inventario-baixa-e-painel.md), V98):
+  - o inventário anual com a comissão, a conferência, os achados a mais e o fechamento que corrige o setor, abre a transferência e
+    sugere a baixa; "Meus inventários" para a comissão;
+  - a baixa com o motivo, o processo e a confirmação da gestão acima de R$ 10 mil;
+  - o valor contábil estimado, o painel e o alerta de equipamento parado na Sala de Situação.
 
 **Falta:**
-- [ ] Desenho (ADR): bem (equipamento, veículo, mobiliário), tombamento, localização, manutenção.
-- [ ] Implementação.
+- [ ] Etiqueta com código de barras (D3 de Documentos); o aparelho do exame de imagem ligado ao bem; o lançamento contábil (domínio 17).
 
 ### 16. Transporte Sanitário
 
@@ -393,18 +430,37 @@ I1 ✅ ──► I2 ✅ · I3 ✅ (vacinação na Sala de Situação) · I4 ✅ 
 
 **Falta:**
 - [x] **T3:** veículos cedidos às emergências ([ADR-0192](./adr/0192-transporte-nas-emergencias.md)).
-- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (domínio 15); ajuda de custo e diárias do
-  TFD (domínio 17); roteirização.
+- [ ] Plantão ligado à escala geral; combustível, custos, GPS; o veículo como bem patrimonial (vínculo feito na PM1, ADR-0215; a ordem de serviço da PM2, ADR-0216, põe e tira o veículo da manutenção); ajuda de custo e diárias do
+  TFD (feitas na F2 do Financeiro, ADR-0219); roteirização.
 
 ### 17. Financeiro
 
-**Estado:** ⬜
+**Estado:** ✅. Desenho na [ADR-0218](./adr/0218-financeiro-dotacao-e-empenho.md): acompanhamento ao lado do SIAFIC (Decreto 10.540/2020); detalhe em
+[`financeiro/MODELO-FINANCEIRO.md`](./financeiro/MODELO-FINANCEIRO.md).
+
+**Temos:**
+- **F1 · Dotação e empenho** ([ADR-0218](./adr/0218-financeiro-dotacao-e-empenho.md), V99):
+  - a dotação com o programa, a natureza e a fonte, as suplementações e as anulações, o autorizado e o disponível;
+  - o empenho com o número do SIAFIC, o fornecedor e o contrato, os reforços e as anulações;
+  - a ordem de fornecimento de Compras que escolhe o empenho e consome o saldo dele; o papel Financeiro.
+- **F2 · Liquidação e pagamento** ([ADR-0219](./adr/0219-financeiro-liquidacao-e-pagamento.md), V100):
+  - a fila a liquidar dos atestos (recebimento definitivo, ordem de serviço por contrato, diária do TFD) e a liquidação avulsa;
+  - as retenções, o líquido e o vencimento; o pagamento com a ordem bancária e a ordem cronológica por fonte;
+  - as diárias do TFD com o credor pessoa física; os restos a pagar e a execução do exercício.
+- **F3 · Centros de custo e apuração** ([ADR-0220](./adr/0220-financeiro-centros-de-custo-e-apuracao.md), V101):
+  - o centro geral de cada unidade e o do setor, produtivo, de apoio ou administrativo (PNGC);
+  - a apuração mensal por competência: pessoal pela lotação, consumo do Estoque e da Farmácia, serviços liquidados, manutenção,
+    depreciação, diárias do TFD e as avulsas pelo centro; aberta, refeita; fechada, fotografia;
+  - o custo por atendimento e por paciente-dia contra a média do tipo de unidade, na aba Custos e na Sala de Situação.
+- **F4 · Rateio do PNGC** ([ADR-0221](./adr/0221-financeiro-rateio-pngc.md), V102):
+  - o rateio em degraus dos administrativos e de apoio para os produtivos da unidade, pelo critério do centro (pessoas, custo direto,
+    área, requisições), com o não rateado;
+  - a lotação por setor no RH, que leva a folha ao centro do setor;
+  - a unidade mista: a internação ao paciente-dia, o resto ao atendimento.
 
 **Falta:**
-- [ ] **Decisão:** sistema financeiro completo, ou só registro e acompanhamento integrado a um ERP externo. A
-  tendência registrada no MAPA é a segunda.
-- [ ] Desenho (ADR): orçamento, empenho, despesa, centro de custo.
-- [ ] Implementação.
+- [ ] Teto financeiro da PPI pela tabela SIGTAP e envio ao ApuraSUS (domínio 20).
+- [ ] Importação do SIAFIC e SIOPS (domínio 20).
 
 ### 18. Qualidade / Segurança / Auditoria
 
@@ -878,7 +934,7 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
 
 ### 31. Intersetorialidade e Proteção Social
 
-**Estado:** 🟡. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md); desenhado na
+**Estado:** ✅. Reservado pela [ADR-0115](./adr/0115-modelo-operacional-dos-equipamentos.md); desenhado na
 [ADR-0154](./adr/0154-intersetorialidade.md).
 
 **Temos:**
@@ -887,11 +943,13 @@ aplicada como registro clínico com retificação, estoque de vacinas da própri
   `INTERSETORIAL.GERENCIAR` (Gestor e Assistente social); encaminhamento com origem em qualquer domínio (enviado,
   recebido, concluído, recusado, cancelado; sem retorno derivado do prazo); tela Instituições da rede intersetorial.
   Primeiro uso: a Saúde Mental (SM6).
+- [x] **IS2 · Painel da rede** ([ADR-0211](./adr/0211-intersetorialidade-painel-da-rede.md)): por instituição, enviados, em aberto, sem retorno, concluídos,
+  recusados, taxa de resolução e tempo médio, com os enviados por origem; lista de cobrança sem paciente e sem motivo; aba
+  Painel na tela Rede intersetorial e alerta na Sala de Situação para a instituição com 3 ou mais sem retorno.
 
 **Falta:**
 - [x] O encaminhamento pelas Emergências (abrigos, ADR-0193) e pela Vigilância (a comunicação obrigatória da violência,
   [ADR-0201](./adr/0201-violencia-comunicacao-intersetorial.md), com o tipo Conselho de direitos).
-- [ ] O painel de encaminhamentos por instituição, para a gestão da rede intersetorial.
 - [ ] A guia de encaminhamento para imprimir (Documentos) e a integração com o CadÚnico e o prontuário SUAS
   (domínio 20, adiado).
 

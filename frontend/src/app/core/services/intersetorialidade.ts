@@ -1,10 +1,20 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { InstituicaoExternaDto, InstituicaoExternaRequestDto, SetorIntersetorial } from '../models/intersetorialidade';
+import {
+  CobrancaIntersetorialDto,
+  DominioOrigemEncaminhamento,
+  InstituicaoExternaDto,
+  InstituicaoExternaRequestDto,
+  PainelIntersetorialDto,
+  SetorIntersetorial,
+} from '../models/intersetorialidade';
 import { AcompanhamentoSaudeMentalDto } from '../models/saude-mental';
 
-/** O catálogo de instituições externas (ADR-0154) e o encaminhamento intersetorial do caso em saúde mental (ADR-0155). */
+/**
+ * O catálogo de instituições externas (ADR-0154), o encaminhamento intersetorial do caso em saúde mental (ADR-0155) e o
+ * painel da rede (ADR-0211).
+ */
 @Injectable({ providedIn: 'root' })
 export class IntersetorialidadeService {
   private readonly http = inject(HttpClient);
@@ -39,6 +49,18 @@ export class IntersetorialidadeService {
 
   cancelar(casoId: string, encaminhamentoId: string, motivo: string): Observable<AcompanhamentoSaudeMentalDto> {
     return this.http.post<AcompanhamentoSaudeMentalDto>(`${this.base(casoId, encaminhamentoId)}/cancelamento`, { motivo });
+  }
+
+  /** O painel da rede intersetorial (IS2): sem datas, os últimos 90 dias. */
+  painel(filtro: { inicio?: string; fim?: string; setor?: SetorIntersetorial | ''; origem?: DominioOrigemEncaminhamento | ''; unidade?: string } = {}): Observable<PainelIntersetorialDto> {
+    let params = new HttpParams();
+    for (const [k, v] of Object.entries(filtro)) if (v) params = params.set(k, v);
+    return this.http.get<PainelIntersetorialDto>(`${this.api}/intersetorial/painel`, { params });
+  }
+
+  /** Os encaminhamentos sem retorno da instituição, para cobrar. */
+  semRetorno(instituicaoId: string): Observable<CobrancaIntersetorialDto> {
+    return this.http.get<CobrancaIntersetorialDto>(`${this.api}/intersetorial/instituicao/${instituicaoId}/sem-retorno`);
   }
 
   private base(casoId: string, encaminhamentoId: string): string {

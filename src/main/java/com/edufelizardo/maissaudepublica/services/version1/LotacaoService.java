@@ -1,15 +1,18 @@
 package com.edufelizardo.maissaudepublica.services.version1;
 
 import com.edufelizardo.maissaudepublica.exceptions.ResourceNotFoundException;
+import com.edufelizardo.maissaudepublica.exceptions.ResourceUnprocessableEntityException;
 import com.edufelizardo.maissaudepublica.models.Cargo;
 import com.edufelizardo.maissaudepublica.models.Lotacao;
 import com.edufelizardo.maissaudepublica.models.Profissional;
+import com.edufelizardo.maissaudepublica.models.Setor;
 import com.edufelizardo.maissaudepublica.models.UnidadeDeSaude;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.request.LotacaoRequestDto;
 import com.edufelizardo.maissaudepublica.models.dtos.version1.response.LotacaoResponseDto;
 import com.edufelizardo.maissaudepublica.repositories.CargoRepository;
 import com.edufelizardo.maissaudepublica.repositories.LotacaoRepository;
 import com.edufelizardo.maissaudepublica.repositories.ProfissionalRepository;
+import com.edufelizardo.maissaudepublica.repositories.SetorRepository;
 import com.edufelizardo.maissaudepublica.repositories.UnidadeDeSaudeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,6 +41,9 @@ public class LotacaoService {
     @Autowired
     private CargoService cargoService;
 
+    @Autowired
+    private SetorRepository setorRepository;
+
     @Transactional
     public LotacaoResponseDto criar(LotacaoRequestDto dto) {
         Profissional profissional = profissionalRepository.findByMatricula(dto.getMatriculaProfissional())
@@ -47,6 +53,14 @@ public class LotacaoService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Não foi possível encontrar uma unidade de saúde com o id " + dto.getUnidadeId() + " em nossos registros."));
         Cargo cargo = cargoService.buscarEntidadePorId(dto.getCargoId());
+        Setor setor = null;
+        if (dto.getSetorId() != null) {
+            setor = setorRepository.findById(dto.getSetorId()).orElseThrow(() -> new ResourceNotFoundException(
+                    "Não foi possível encontrar o setor " + dto.getSetorId() + " em nossos registros."));
+            if (!setor.getUnidade().getUuid().equals(unidade.getUuid()) || !setor.isAtivo()) {
+                throw new ResourceUnprocessableEntityException("O setor " + setor.getNome() + " precisa estar ativo e ser da unidade da lotação.");
+            }
+        }
 
         lotacaoRepository.findByProfissional_MatriculaAndDataFimIsNull(dto.getMatriculaProfissional())
                 .ifPresent(vigente -> {
@@ -56,6 +70,7 @@ public class LotacaoService {
 
         Lotacao lotacao = new Lotacao(profissional, unidade, cargo, dto.getJornadaSemanalHoras(),
                 dto.getDataInicio(), dto.getMotivo());
+        lotacao.setSetor(setor);
         lotacao = lotacaoRepository.save(lotacao);
         return LotacaoResponseDto.fromLotacao(lotacao);
     }

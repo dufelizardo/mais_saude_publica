@@ -43,6 +43,13 @@ public class Lotacao implements Serializable {
     @JoinColumn(name = "cargo_id", referencedColumnName = "uuid", nullable = false)
     private Cargo cargo;
 
+    /** O setor da unidade, opcional (ADR-0221): com ele, a folha vai ao centro de custo do setor. Trocar de setor é uma nova lotação. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "setor_id", referencedColumnName = "uuid")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Setor setor;
+
     private Integer jornadaSemanalHoras;
 
     @NotNull

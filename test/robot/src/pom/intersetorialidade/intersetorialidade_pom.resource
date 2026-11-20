@@ -74,3 +74,23 @@ GET Indicadores Do Programa
     RETURN    ${response}
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+GET Painel Intersetorial
+    [Documentation]    The intersectoral network dashboard (IS2, ADR-0211).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    [Arguments]    ${params}
+    Get Mais Saude Publica Session
+    ${response}=    GET On Session    msp_session    ${BASE_URL}/intersetorial/painel    params=${params}    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+GET Sem Retorno Da Instituicao
+    [Documentation]    The referrals of the institution without return, to follow up.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    [Arguments]    ${instituicao}
+    Get Mais Saude Publica Session
+    ${response}=    GET On Session    msp_session    ${BASE_URL}/intersetorial/instituicao/${instituicao}/sem-retorno    expected_status=ANY
+    RETURN    ${response}
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

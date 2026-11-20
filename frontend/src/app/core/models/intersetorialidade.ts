@@ -100,3 +100,64 @@ export interface EncaminhamentoIntersetorialDto {
   motivoCancelamento: string | null;
   profissionalNome: string | null;
 }
+
+// ── Painel da rede intersetorial (IS2, ADR-0211): sem paciente e sem motivo ──
+
+export type DominioOrigemEncaminhamento = 'SAUDE_MENTAL' | 'EMERGENCIAS' | 'VIGILANCIA';
+
+export const ORIGENS_ENCAMINHAMENTO: Record<DominioOrigemEncaminhamento, string> = {
+  SAUDE_MENTAL: 'Saúde Mental',
+  EMERGENCIAS: 'Emergências',
+  VIGILANCIA: 'Vigilância',
+};
+
+export interface PainelInstituicaoDto {
+  instituicaoId: string;
+  nome: string;
+  setor: SetorIntersetorial;
+  tipo: TipoInstituicaoExterna;
+  telefone: string | null;
+  responsavel: string | null;
+  ativa: boolean;
+  enviados: number;
+  emAberto: number;
+  semRetorno: number;
+  concluidos: number;
+  recusados: number;
+  cancelados: number;
+  taxaResolucao: number | null;
+  tempoMedioRetornoDias: number | null;
+  enviadosPorOrigem: Partial<Record<DominioOrigemEncaminhamento, number>>;
+}
+
+/** Enviados, concluídos, recusados, cancelados, taxa e tempo médio: do período. Em aberto e sem retorno: de hoje. */
+export interface PainelIntersetorialDto {
+  inicio: string;
+  fim: string;
+  enviados: number;
+  emAberto: number;
+  semRetorno: number;
+  concluidos: number;
+  recusados: number;
+  cancelados: number;
+  taxaResolucao: number | null;
+  tempoMedioRetornoDias: number | null;
+  instituicoes: PainelInstituicaoDto[];
+}
+
+export interface SemRetornoIntersetorialDto {
+  encaminhamentoId: string;
+  numero: string;
+  origem: DominioOrigemEncaminhamento;
+  unidadeNome: string;
+  situacao: 'ENVIADO' | 'RECEBIDO';
+  enviadoEm: string;
+  recebidoEm: string | null;
+  retornoEsperadoEm: string;
+  diasDeAtraso: number;
+}
+
+export interface CobrancaIntersetorialDto {
+  instituicao: InstituicaoExternaDto;
+  semRetorno: SemRetornoIntersetorialDto[];
+}

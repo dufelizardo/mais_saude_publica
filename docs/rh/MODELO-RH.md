@@ -145,13 +145,14 @@ proporcional é calculado uma vez por cargo e propaga automaticamente pra quem e
 | `profissional` | FK → `Profissional` | Pela `matricula`, não pelo `cpf` — cada ficha tem sua própria lotação (ADR-0017: recontratação = ficha nova) |
 | `unidade` | FK → `UnidadeDeSaude` | Onde o profissional efetivamente trabalha |
 | `cargo` | FK → `Cargo` | Não é mais texto livre — é daqui que o salário vigente é derivado (via `TabelaSalarial`) |
+| `setor` | FK → `Setor`, opcional | Da mesma unidade e ativo; leva a folha ao centro de custo do setor ([ADR-0221](../adr/0221-financeiro-rateio-pngc.md)) |
 | `jornadaSemanalHoras` | Integer, opcional | Alimenta `RegistroPonto` (fase 2) e validação de carga horária |
 | `dataInicio` | LocalDate | |
 | `dataFim` | LocalDate, nullable | `null` = lotação vigente |
 | `motivo` | String | "Admissão", "Transferência", "Promoção", "Mudança de cargo" |
 
 **Regra de integridade**: no máximo uma `Lotacao` com `dataFim = null` por `Profissional` (ficha) por
-vez. Transferir unidade **ou** trocar de cargo (com ou sem trocar de unidade) = fechar a vigente
+vez. Transferir unidade, trocar de setor **ou** trocar de cargo (com ou sem trocar de unidade) = fechar a vigente
 (`dataFim = hoje`) + criar uma nova. Não existe update de `unidade`/`cargo` numa `Lotacao`
 existente — isso apagaria a história de onde/como a pessoa já trabalhou.
 

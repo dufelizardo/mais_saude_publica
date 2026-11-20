@@ -60,9 +60,23 @@ public class LoteService {
      */
     @Transactional
     public EntradaDeLote criar(LoteRequestDto dto) {
+        return criar(dto, true);
+    }
+
+    /** A entrada sem conferir a permissão de quem lança: o recebimento definitivo de Compras (ADR-0214), atestado pelo fiscal do contrato. */
+    @Transactional
+    EntradaDeLote criarPeloRecebimento(LoteRequestDto dto) {
+        return criar(dto, false);
+    }
+
+    private EntradaDeLote criar(LoteRequestDto dto, boolean conferir) {
         Medicamento medicamento = buscarMedicamentoPorId(dto.getMedicamentoId());
         UnidadeDeSaude unidade = travarUnidade(dto.getUnidadeId());
-        controleDeAcesso.exigir("FARMACIA.GERENCIAR_ESTOQUE", unidade);
+        if (conferir) {
+            controleDeAcesso.exigir("FARMACIA.GERENCIAR_ESTOQUE", unidade);
+        } else {
+            com.edufelizardo.maissaudepublica.config.ContextoAuditoria.unidade(unidade);
+        }
         Profissional responsavel = buscarProfissionalSeInformado(dto.getProfissionalMatricula());
 
         UUID existenteId = loteRepository.findIdsDaRemessaNaUnidade(medicamento.getUuid(), unidade.getUuid(),

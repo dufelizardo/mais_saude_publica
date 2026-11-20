@@ -2,12 +2,12 @@
 Resource    ../../src/scenario/intersetorialidade/intersetorialidade_scenario.resource
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 Metadata    Test Suite - Intersetorialidade
-Metadata    Test Suite Description        This test suite validates the external institutions catalog, the intersectoral referral of the mental health case and the Mental Health indicators (ADRs 0154 and 0155) of the Mais Saúde Pública API.
+Metadata    Test Suite Description        This test suite validates the external institutions catalog, the intersectoral referral of the mental health case, the Mental Health indicators and the intersectoral network dashboard (ADRs 0154, 0155 and 0211) of the Mais Saúde Pública API.
 Metadata    Test Suite Owner              Eduardo Felizardo
 Metadata    Test Suite Version            1.0
 Metadata    Test Suite Tags               Intersetorialidade    MaisSaudePublicaAPI
 Metadata    Test Suite Created On         2026-10-28
-Metadata    Test Suite Last Modified      XXXX-XX-XX
+Metadata    Test Suite Last Modified      2026-11-18
 Metadata    Project                       Layered Keyword Driven Framework (LKDF)
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 *** Comments ***
@@ -92,5 +92,37 @@ CT-010 - Validate Intersetorialidade - HTTP 200 (Indicadores - Saude Mental)
     [Tags]    Intersetorialidade    HTTP200
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
     INTERSETORIALIDADE    200-indicadores
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-011 - Validate Intersetorialidade - HTTP 200 (Painel - Sem Retorno Por Instituicao)
+    [Documentation]    Painel - Sem Retorno Por Instituicao.
+    [Tags]    Intersetorialidade    HTTP200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    INTERSETORIALIDADE    200-painel
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-012 - Validate Intersetorialidade - HTTP 200 (Painel - Lista De Cobranca)
+    [Documentation]    Painel - Lista De Cobranca.
+    [Tags]    Intersetorialidade    HTTP200
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    INTERSETORIALIDADE    200-cobranca
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-013 - Validate Intersetorialidade - HTTP 400 (Painel - Periodo Invertido)
+    [Documentation]    Painel - Periodo Invertido.
+    [Tags]    Intersetorialidade    HTTP400
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    INTERSETORIALIDADE    400-periodo-invertido
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+CT-014 - Validate Intersetorialidade - HTTP 404 (Painel - Instituicao Inexistente)
+    [Documentation]    Painel - Instituicao Inexistente.
+    [Tags]    Intersetorialidade    HTTP404
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    INTERSETORIALIDADE    404-instituicao
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

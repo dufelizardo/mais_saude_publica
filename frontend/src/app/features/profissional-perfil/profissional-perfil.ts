@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, of } from 'rxjs';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ProfissionalResponseDto, ErrorResponseDto } from '../../core/models/profissional';
 import { LotacaoResponseDto } from '../../core/models/lotacao';
@@ -35,6 +35,8 @@ import { CalculoRescisaoResponseDto, TipoDesligamento } from '../../core/models/
 import { ProfissionalService } from '../../core/services/profissional';
 import { CepService } from '../../core/services/cep';
 import { LotacaoService } from '../../core/services/lotacao';
+import { SetorResponseDto } from '../../core/models/setor';
+import { SetorService } from '../../core/services/setor';
 import { AjusteIndividualService } from '../../core/services/ajuste-individual';
 import { AdesaoBeneficioService } from '../../core/services/adesao-beneficio';
 import { TipoBeneficioService } from '../../core/services/tipo-beneficio';
@@ -105,6 +107,9 @@ export class ProfissionalPerfil {
   private readonly profissionalService = inject(ProfissionalService);
   private readonly cepService = inject(CepService);
   private readonly lotacaoService = inject(LotacaoService);
+  private readonly setorService = inject(SetorService);
+  /** Os setores ativos, para a lotação no setor (ADR-0221). */
+  protected readonly setores = signal<SetorResponseDto[]>([]);
   private readonly ajusteIndividualService = inject(AjusteIndividualService);
   private readonly adesaoBeneficioService = inject(AdesaoBeneficioService);
   private readonly tipoBeneficioService = inject(TipoBeneficioService);
@@ -266,6 +271,7 @@ export class ProfissionalPerfil {
   protected readonly transferenciaForm = this.fb.nonNullable.group({
     unidadeId: ['', [Validators.required]],
     cargoId: ['', [Validators.required]],
+    setorId: [''],
     jornadaSemanalHoras: [''],
     dataInicio: ['', [Validators.required]],
     motivo: ['Transferência', [Validators.required]],
@@ -650,9 +656,16 @@ export class ProfissionalPerfil {
   }
 
   protected abrirTransferencia(): void {
-    this.transferenciaForm.reset({ unidadeId: '', cargoId: '', jornadaSemanalHoras: '', dataInicio: hojeIso(), motivo: 'Transferência' });
+    this.transferenciaForm.reset({ unidadeId: '', cargoId: '', setorId: '', jornadaSemanalHoras: '', dataInicio: hojeIso(), motivo: 'Transferência' });
+    this.setorService.listar().pipe(catchError(() => of([]))).subscribe((l) => this.setores.set(l.filter((s) => s.ativo)));
     this.transferenciaErrorMessage.set(null);
     this.gaveta.set('transferencia');
+  }
+
+  /** Os setores da unidade escolhida na transferência. */
+  protected setoresDaUnidade(): SetorResponseDto[] {
+    const u = this.transferenciaForm.controls.unidadeId.value;
+    return this.setores().filter((s) => s.unidadeUuid === u);
   }
 
   protected abrirAjuste(): void {
@@ -803,6 +816,7 @@ export class ProfissionalPerfil {
         matriculaProfissional: profissional.matricula,
         unidadeId: raw.unidadeId,
         cargoId: raw.cargoId,
+        setorId: this.setoresDaUnidade().some((s) => s.uuid === raw.setorId) ? raw.setorId : undefined,
         jornadaSemanalHoras: raw.jornadaSemanalHoras ? Number(raw.jornadaSemanalHoras) : undefined,
         dataInicio: raw.dataInicio,
         motivo: raw.motivo,

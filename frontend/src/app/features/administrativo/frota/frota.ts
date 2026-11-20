@@ -36,6 +36,7 @@ import { PacienteService } from '../../../core/services/paciente';
 import { ProfissionalService } from '../../../core/services/profissional';
 import { TransporteService } from '../../../core/services/transporte';
 import { UnidadeSaudeService } from '../../../core/services/unidade-saude';
+import { DiariasTfd } from './diarias-tfd';
 import { Drawer } from '../../../shared/drawer/drawer';
 import { proximaAba } from '../../../shared/formato';
 
@@ -69,10 +70,13 @@ function hojeIso(dias = 0): string {
  */
 @Component({
   selector: 'app-frota',
-  imports: [ReactiveFormsModule, Drawer],
+  imports: [ReactiveFormsModule, Drawer, DiariasTfd],
   templateUrl: './frota.html',
 })
 export class Frota {
+  /** A solicitação de TFD com a gaveta das diárias aberta (ADR-0219). */
+  protected readonly diariasDe = signal<SolicitacaoTransporteDto | null>(null);
+
   private readonly fb = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);

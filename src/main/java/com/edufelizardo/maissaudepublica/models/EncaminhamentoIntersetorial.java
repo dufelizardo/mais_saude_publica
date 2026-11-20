@@ -19,7 +19,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "TB_ENCAMINHAMENTO_INTERSETORIAL", indexes = {
         @Index(name = "ix_encaminhamento_intersetorial_origem", columnList = "dominio_origem, origem_id"),
-        @Index(name = "ix_encaminhamento_intersetorial_enviado", columnList = "dominio_origem, enviado_em")
+        @Index(name = "ix_encaminhamento_intersetorial_enviado", columnList = "dominio_origem, enviado_em"),
+        @Index(name = "ix_encaminhamento_intersetorial_instituicao", columnList = "instituicao_id, situacao")
 })
 @Getter
 @Setter
