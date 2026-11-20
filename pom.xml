@@ -15,10 +15,18 @@
 	<description>Sistema exemplo de um sistema de saúde</description>
 	<url/>
 	<licenses>
-		<license/>
+		<license>
+			<name>GNU General Public License v3.0 only</name>
+			<url>https://www.gnu.org/licenses/gpl-3.0.html</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<id>dufelizardo</id>
+			<name>Eduardo Felizardo Cândido</name>
+			<url>https://github.com/dufelizardo</url>
+		</developer>
 	</developers>
 	<scm>
 		<connection/>

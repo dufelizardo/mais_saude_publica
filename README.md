@@ -109,3 +109,12 @@ Decisões de arquitetura e roadmap técnico: [docs/adr/](docs/adr/README.md).
 
 O que falta e o estado de cada ambiente (o que está ligado ou desligado): [docs/PENDENCIAS.md](docs/PENDENCIAS.md).
 O que cada domínio já tem e o que falta, para decidir os próximos passos: [docs/STATUS-DOS-DOMINIOS.md](docs/STATUS-DOS-DOMINIOS.md).
+
+## Licença
+
+Copyright (C) 2023-2026 Eduardo Felizardo Cândido.
+
+Software livre sob a [GNU General Public License v3.0](LICENSE) (GPL-3.0-only): pode ser usado, estudado, copiado, modificado e
+redistribuído, inclusive comercialmente. Quem redistribuir, modificado ou não, precisa manter a mesma licença, o aviso de autoria
+do [`NOTICE`](NOTICE) e publicar o código-fonte correspondente. O registro está na
+[ADR-0224](docs/adr/0224-licenca-e-aviso-de-autoria.md).
