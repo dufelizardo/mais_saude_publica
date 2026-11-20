@@ -1,6 +1,6 @@
 # Pendências e estado dos ambientes
 
-Documento vivo, com **o que falta** no projeto (revisto na release **v1.15.0**, 2026-11-19). Cada item aponta
+Documento vivo, com **o que falta** no projeto (revisto na release **v1.15.1**, 2026-11-20). Cada item aponta
 para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou abrir uma pendência.
 
 ## 1. Estado dos ambientes
