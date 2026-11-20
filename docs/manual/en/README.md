@@ -16,6 +16,7 @@ the application, in Portuguese, followed by a translation.
 5. [Pharmacy](./04-farmacia.md): medicines, batch entry, dispensing, loss and adjustment, transfers between units and the stock ledger.
 6. [Regulation](./05-regulacao.md): requesting, the priority queue, regulating with slot and PPI, completing, booking, counter-referral and the catalogue.
 7. [Emergency 192](./06-urgencia-192.md): the call, medical regulation, the ambulance, destination and vaga zero, the APH form and closure.
+8. [Laboratory and imaging](./07-laboratorio-e-imagem.md): order, collection, analysis and release, performance and report, critical values, acknowledgement, hand-over, PDF report and the catalogue.
 
 The menu areas come in the next versions of the manual, starting with Care (*Assistência*): Patients, Schedule, Encounters,
 Nursing and Pharmacy.
