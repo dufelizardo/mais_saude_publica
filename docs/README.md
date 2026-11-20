@@ -11,6 +11,7 @@
 | [`PENDENCIAS.md`](./PENDENCIAS.md) | estado dos ambientes (o que está ligado em `dev`, `qaa`, `homologacao` e `prod`), ações manuais, infraestrutura e roadmap |
 | [`incidentes/`](./incidentes/README.md) | **registro dos incidentes dos ambientes**: causa, correção e acompanhamento |
 | [`adr/README.md`](./adr/README.md) | índice de todas as decisões de arquitetura (ADRs) |
+| [`manual/`](./manual/README.md) | **manual do usuário** em português e inglês, pela ordem do menu ([ADR-0222](./adr/0222-manual-do-usuario-bilingue.md)) |
 | [`MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md`](./MAPA-DE-EQUIPAMENTOS-DE-SAUDE.md) | levantamento dos equipamentos de saúde (base CNES) e sua correspondência no sistema |
 
 ## Modelos de domínio
@@ -65,4 +66,5 @@ Documentos (0172).
 - **Domínio desenhado** ganha um documento vivo na própria pasta e uma linha nesta tabela.
 - **Toda entrega** atualiza o [`STATUS-DOS-DOMINIOS.md`](./STATUS-DOS-DOMINIOS.md) no mesmo PR: marca a caixa,
   move o item para "Temos" e ajusta o estado.
+- **Tela coberta pelo manual** que muda atualiza o [`manual/`](./manual/README.md) nas duas línguas no mesmo PR.
 - **Domínio novo** só pelos cinco passos da [ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md).

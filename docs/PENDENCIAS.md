@@ -1,6 +1,6 @@
 # Pendências e estado dos ambientes
 
-Documento vivo, com **o que falta** no projeto (revisto na release **v1.15.0**, 2026-11-19). Cada item aponta
+Documento vivo, com **o que falta** no projeto (revisto na release **v1.15.1**, 2026-11-20). Cada item aponta
 para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou abrir uma pendência.
 
 ## 1. Estado dos ambientes
@@ -174,6 +174,11 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
   georreferenciadas, cadastro domiciliar), indicadores do Previne/PMAQ, programas e sincronização com o CNES. Programas vinculados à equipe vêm pela
   fatia P2 de Programas (ADR-0109).
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
+
+### Manual do usuário
+- ~~As áreas do menu nas duas línguas~~ — feitas na M2 ([ADR-0222](./adr/0222-manual-do-usuario-bilingue.md)): 37 módulos, do
+  alto do menu à Administração.
+- As capturas de tela geradas pelos testes Robot de interface, em `docs/manual/img/`.
 
 ### Testes
 - **Cobertura Robot de interface das demais telas**, deixada para o final (ADR-0077): Necessidades de
