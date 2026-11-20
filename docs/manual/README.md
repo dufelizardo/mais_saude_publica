@@ -20,3 +20,5 @@ The rules are in [ADR-0222](../adr/0222-manual-do-usuario-bilingue.md) (in Portu
 - each file starts with the title and the line with the release version it describes, the same in both languages;
 - a pull request that changes a screen already covered updates the text in both languages;
 - CI checks all of this with `.github/scripts/verificar_manual.py`.
+
+<!-- origem: msp-3da0e6daa6 -->
