@@ -18,6 +18,7 @@ the application, in Portuguese, followed by a translation.
 7. [Emergency 192](./06-urgencia-192.md): the call, medical regulation, the ambulance, destination and vaga zero, the APH form and closure.
 8. [Laboratory and imaging](./07-laboratorio-e-imagem.md): order, collection, analysis and release, performance and report, critical values, acknowledgement, hand-over, PDF report and the catalogue.
 9. [Beds](./08-leitos.md): map, admission, bed change, discharge, prescription and times, electives, AIH, census, bed centre and register.
+10. [Health programmes](./09-programas-de-saude.md): programmes, enrolment and eligible people, follow-up, programmed actions, campaigns, care pathways and indicators.
 
 The menu areas come in the next versions of the manual, starting with Care (*Assistência*): Patients, Schedule, Encounters,
 Nursing and Pharmacy.
