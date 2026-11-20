@@ -13,6 +13,7 @@ gestão. Ele explica as telas pela ordem do menu.
 3. [Agenda](./02-agenda.md): a agenda de um profissional numa unidade: marcar, encaixe, falta, blocos recorrentes e bloqueios.
 4. [Atendimentos](./03-atendimentos.md): acolhimento, triagem, consulta, procedimento, checagem de medicação, evolução, retificação e o prontuário.
 5. [Farmácia](./04-farmacia.md): medicamentos, entrada de lote, dispensação, perda e ajuste, transferência entre unidades e o livro de estoque.
+6. [Regulação](./05-regulacao.md): solicitar, a fila por prioridade, regular com vaga e PPI, complementar, agendar, contrarreferência e o catálogo.
 
 As áreas do menu entram nas próximas versões do manual, começando pela Assistência (Pacientes, Agenda, Atendimentos,
 Enfermagem e Farmácia).
