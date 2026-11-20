@@ -5,7 +5,7 @@ próximos passos. **Atualize no mesmo PR** que entregar ou descobrir algo: marqu
 "Temos" e mude o estado na tabela.
 
 - **Atualizado em:** 2026-11-14 (release 1.14.0: alta disponibilidade, ADR-0209)
-- **Release em produção:** v1.14.0 (2026-11-14)
+- **Release em produção:** v1.15.0 (2026-11-19)
 - **Marco:** o mapa está fechado em cobertura funcional ([ADR-0116](./adr/0116-marco-mapa-de-dominios-fechado.md)): 31
   itens mais Documentos. Domínio novo só pelos cinco passos da ADR-0116. Completo como mapa, não como produto.
 - **Fontes:**
