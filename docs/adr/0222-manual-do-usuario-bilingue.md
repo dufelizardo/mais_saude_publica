@@ -2,8 +2,11 @@
 
 ## Status
 
-Aceita e implementada. Primeira fatia (M1) do manual do usuário: a estrutura, as regras e os primeiros passos. As áreas vêm nas
-fatias seguintes (M2 em diante).
+Aceita e implementada.
+
+- **M1:** a estrutura, as regras e os primeiros passos.
+- **M2:** as áreas do menu, 37 módulos nas duas línguas, com o sumário na ordem do menu. Os módulos 01 a 12 saíram um por PR; os
+  demais, com o fechamento, num PR só, porque o texto já estava pronto e a CI de cada PR não testa documentação.
 
 ## Contexto
 
@@ -52,7 +55,7 @@ fatias seguintes (M2 em diante).
 
 - **O usuário final ganha um texto de apoio** versionado com o código e publicado na wiki.
 - **Cada mudança de tela coberta pelo manual custa também o texto** nas duas línguas.
-- **Pendências:** as áreas (M2 em diante) e as capturas automáticas.
+- **Pendências:** as capturas de tela automáticas.
 
 ## Testes
 

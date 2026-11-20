@@ -8,23 +8,75 @@ the application, in Portuguese, followed by a translation.
 
 ## Contents
 
-1. [Getting started](./00-primeiros-passos.md): signing in, the password, the menu, the profile and the unit, how screens work and
-   the most common messages.
-2. [Patients](./01-pacientes.md): searching, registering and editing; the panel with summary, history, programmes, vaccination and attachments; the reference team and access with justification.
-3. [Schedule](./02-agenda.md): a professional's schedule at a unit: booking, fit-ins, no-shows, recurring blocks and block-outs.
-4. [Encounters](./03-atendimentos.md): walk-in, triage, consultation, procedure, medication check, progress note, amendment and the health record.
-5. [Pharmacy](./04-farmacia.md): medicines, batch entry, dispensing, loss and adjustment, transfers between units and the stock ledger.
-6. [Regulation](./05-regulacao.md): requesting, the priority queue, regulating with slot and PPI, completing, booking, counter-referral and the catalogue.
-7. [Emergency 192](./06-urgencia-192.md): the call, medical regulation, the ambulance, destination and vaga zero, the APH form and closure.
-8. [Laboratory and imaging](./07-laboratorio-e-imagem.md): order, collection, analysis and release, performance and report, critical values, acknowledgement, hand-over, PDF report and the catalogue.
-9. [Beds](./08-leitos.md): map, admission, bed change, discharge, prescription and times, electives, AIH, census, bed centre and register.
-10. [Health programmes](./09-programas-de-saude.md): programmes, enrolment and eligible people, follow-up, programmed actions, campaigns, care pathways and indicators.
-11. [Vaccination room](./10-sala-de-vacina.md): recording and transcribing doses, the card, overdue people, coverage, stock, reallocations, cold chain and batch alerts.
-12. [Mental health](./11-saude-mental.md): reception, cases, assessment and PTS, interventions, support network, risk, crisis, sharing, transfer and RAPS.
-13. [Epidemiological surveillance](./12-vigilancia-epidemiologica.md): reporting, investigating and closing, outbreaks, map, suggestions, negative reporting, worker health and violence.
+**Start here:** [Getting started](./00-primeiros-passos.md): signing in, the password, the menu, the profile and the unit, how
+screens work and the most common messages.
 
-The menu areas come in the next versions of the manual, starting with Care (*Assistência*): Patients, Schedule, Encounters,
-Nursing and Pharmacy.
+### At the top of the menu
+
+- [Situation Room](./16-sala-de-situacao.md): the management dashboard, with production, waiting, roster, programmes, surveillance,
+  vaccination and cost.
+- [Reports](./17-relatorios.md): ready-made management reports, to print or export.
+- [Quality](./18-qualidade.md): patient safety, non-conformities and quality indicators.
+
+The **Meus contratos** (my contracts), **Meus bens** (my assets) and **Meus inventários** (my inventories) items are covered in
+[Procurement](./31-compras.md) and [Assets](./32-patrimonio.md).
+
+### Human resources (*Recursos Humanos*)
+
+- [Professionals](./19-profissionais.md): the staff list, registration, termination and the profile with its 13 tabs.
+- [Teams and rosters](./20-equipes-e-escalas.md): health teams and the weekly roster with on-call shifts.
+- [Jobs, salaries and benefits](./21-cargos-salarios-e-beneficios.md): the salary table, length-of-service bonus and benefits.
+- [Development and recruitment](./22-desenvolvimento-e-recrutamento.md): trainings, competencies, appraisal cycles, vacancies and
+  candidates.
+- [Payroll](./23-folha-de-pagamento.md): the payroll view by month.
+
+### Administration of the network (*Administrativo*)
+
+- [Sectors and administrative model](./24-setores-e-modelo-administrativo.md): sectors, responsibilities, the model by unit type
+  and staffing needs.
+- [Health facilities and operating model](./25-equipamentos-e-modelo-operacional.md): the network of units, the unit record and the
+  profile and capability catalogue.
+- [Territory](./26-territorio.md): areas and micro-areas with team and community health worker, properties, households and
+  families.
+- [Intersectoral network](./27-rede-intersetorial.md): institutions outside health and the referral dashboard.
+- [Communication](./28-comunicacao.md): notices, educational content, channels and campaigns.
+- [Coordination and management](./29-coordenacoes-e-gerencia.md): the organisation chart, who is responsible and regional
+  indicators.
+- [Stock and stores](./30-estoque-e-almoxarifado.md): entries, consumption, requisitions, transfers, inventory and alerts.
+- [Procurement](./31-compras.md): purchase request, price survey, contracting, contracts, orders, receipt and suppliers.
+- [Assets](./32-patrimonio.md): tagging, transfer, maintenance, inventory and write-off.
+- [Finance](./33-financeiro.md): allocations, commitments, liquidation, payment, execution and costs with allocation.
+- [Fleet and transport](./34-frota-e-transporte.md): transport requests, TFD, trips, vehicles and duty rosters.
+- [Network and agreements](./35-rede-e-pactuacao.md): the PPI, referrals, coverage and thematic networks.
+
+### Care (*Assistência*)
+
+- [Patients](./01-pacientes.md): searching, registering and editing; the patient panel, reference team and attachments.
+- [Schedule](./02-agenda.md): booking, fit-ins, no-shows, recurring blocks and block-outs.
+- [Encounters](./03-atendimentos.md): walk-in, triage, consultation, procedure, medication check, progress note and health
+  record.
+- [Pharmacy](./04-farmacia.md): batch entry, dispensing, loss and adjustment, transfer and stock ledger.
+- [Regulation](./05-regulacao.md): requesting, the queue, regulating with slot and PPI, booking and counter-referral.
+- [Emergency 192](./06-urgencia-192.md): the call, medical regulation, the ambulance, vaga zero and the APH form.
+- [Laboratory and imaging](./07-laboratorio-e-imagem.md): order, collection, release, report, critical values and PDF report.
+- [Beds](./08-leitos.md): map, admission, discharge, prescription, electives, AIH, census and bed centre.
+- [Health programmes](./09-programas-de-saude.md): enrolment, follow-up, actions, campaigns, care pathways and indicators.
+- [Vaccination room](./10-sala-de-vacina.md): doses, the card, overdue people, coverage, stock, cold chain and batch alerts.
+- [Mental health](./11-saude-mental.md): reception, cases, PTS, risk, crisis, sharing and RAPS.
+
+### Surveillance (*Vigilância*)
+
+- [Epidemiological surveillance](./12-vigilancia-epidemiologica.md): reporting, investigating, outbreaks, negative reporting,
+  worker health and violence.
+- [Zoonoses and vectors](./13-zoonoses-e-vetores.md): inspections, breeding sites, indices, animals, rabies vaccination, water and
+  risks.
+- [Health inspection](./14-vigilancia-sanitaria.md): establishments, licences, inspections, complaints and administrative process.
+- [Emergencies and disasters](./15-emergencias.md): event, emergency, response, affected people and after-action report.
+
+### System administration (*Administração*)
+
+- [Users and profiles](./36-usuarios-e-perfis.md): accounts, temporary password, access per unit and profiles.
+- [Audit](./37-auditoria.md): the trail of reads and changes, exporting and alerts.
 
 ## How each screen is described
 

@@ -176,8 +176,8 @@ O passo a passo está em [`acesso/GUIA-LIGAR-AUTORIZACAO.md`](./acesso/GUIA-LIGA
 - As telas refeitas não foram conferidas visualmente por quem implementou (ADRs 0074 a 0076).
 
 ### Manual do usuário
-- As áreas do menu, uma por PR, nas duas línguas (M2 em diante, [ADR-0222](./adr/0222-manual-do-usuario-bilingue.md)): Assistência
-  primeiro (Pacientes, Agenda, Atendimentos, Enfermagem, Farmácia), depois Regulação, cuidados, Vigilância e gestão.
+- ~~As áreas do menu nas duas línguas~~ — feitas na M2 ([ADR-0222](./adr/0222-manual-do-usuario-bilingue.md)): 37 módulos, do
+  alto do menu à Administração.
 - As capturas de tela geradas pelos testes Robot de interface, em `docs/manual/img/`.
 
 ### Testes
