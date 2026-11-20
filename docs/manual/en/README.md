@@ -21,6 +21,7 @@ the application, in Portuguese, followed by a translation.
 10. [Health programmes](./09-programas-de-saude.md): programmes, enrolment and eligible people, follow-up, programmed actions, campaigns, care pathways and indicators.
 11. [Vaccination room](./10-sala-de-vacina.md): recording and transcribing doses, the card, overdue people, coverage, stock, reallocations, cold chain and batch alerts.
 12. [Mental health](./11-saude-mental.md): reception, cases, assessment and PTS, interventions, support network, risk, crisis, sharing, transfer and RAPS.
+13. [Epidemiological surveillance](./12-vigilancia-epidemiologica.md): reporting, investigating and closing, outbreaks, map, suggestions, negative reporting, worker health and violence.
 
 The menu areas come in the next versions of the manual, starting with Care (*Assistência*): Patients, Schedule, Encounters,
 Nursing and Pharmacy.

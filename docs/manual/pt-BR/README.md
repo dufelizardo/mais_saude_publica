@@ -20,6 +20,7 @@ gestão. Ele explica as telas pela ordem do menu.
 10. [Programas de Saúde](./09-programas-de-saude.md): programas, inscrição e elegíveis, acompanhamento, ações programáticas, campanhas, linhas de cuidado e indicadores.
 11. [Sala de Vacina](./10-sala-de-vacina.md): registrar e transcrever doses, caderneta, atrasados, cobertura, estoque, remanejamentos, cadeia de frio e alertas de lote.
 12. [Saúde Mental](./11-saude-mental.md): acolhimento, casos, avaliação e PTS, intervenções, rede de apoio, risco, crise, compartilhamento, transferência e RAPS.
+13. [Vigilância epidemiológica](./12-vigilancia-epidemiologica.md): notificar, investigar e encerrar, surtos, mapa, sugestões, notificação negativa, saúde do trabalhador e violência.
 
 As áreas do menu entram nas próximas versões do manual, começando pela Assistência (Pacientes, Agenda, Atendimentos,
 Enfermagem e Farmácia).
