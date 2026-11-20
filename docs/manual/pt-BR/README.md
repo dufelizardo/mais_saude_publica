@@ -14,6 +14,7 @@ gestão. Ele explica as telas pela ordem do menu.
 4. [Atendimentos](./03-atendimentos.md): acolhimento, triagem, consulta, procedimento, checagem de medicação, evolução, retificação e o prontuário.
 5. [Farmácia](./04-farmacia.md): medicamentos, entrada de lote, dispensação, perda e ajuste, transferência entre unidades e o livro de estoque.
 6. [Regulação](./05-regulacao.md): solicitar, a fila por prioridade, regular com vaga e PPI, complementar, agendar, contrarreferência e o catálogo.
+7. [Urgência 192](./06-urgencia-192.md): o chamado, a regulação médica, a viatura, o destino e a vaga zero, a ficha do APH e o encerramento.
 
 As áreas do menu entram nas próximas versões do manual, começando pela Assistência (Pacientes, Agenda, Atendimentos,
 Enfermagem e Farmácia).
