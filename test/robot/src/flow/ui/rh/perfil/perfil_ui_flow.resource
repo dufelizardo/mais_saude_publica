@@ -2,6 +2,8 @@
 Library     String
 Resource    ../../../../pom/ui/rh/perfil/perfil_ui_pom.resource
 Resource    ../../../profissional/create_profissional/create_profissional_flow.resource
+Resource    ../../../setor/create_setor/create_setor_flow.resource
+Resource    ../../../cargo/create_cargo/create_cargo_flow.resource
 Resource    ../../../treinamento/update_treinamento/update_treinamento_flow.resource
 Resource    ../../../tipo_beneficio/update_tipo_beneficio/update_tipo_beneficio_flow.resource
 Resource    ../../../ciclo_avaliacao/update_ciclo_avaliacao/update_ciclo_avaliacao_flow.resource
@@ -208,5 +210,27 @@ UI Perfil - Profissional Ativo Nao Oferece Calculo De Rescisao
     Esperar Texto Aparecer    Nenhum cálculo de rescisão registrado
     ${n}=    Contar Botoes Com Nome    + Registrar cálculo de rescisão
     Should Be Equal As Integers    ${n}    0
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Perfil - Transferir Para Um Setor Pela Gaveta
+    [Documentation]    A transferência escolhe a unidade e um setor dela (ADR-0221); a lotação vigente mostra o setor.
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    ${setor}    ${codigo}    ${unidade}=    Seed A Setor    ASSISTENCIAL
+    ${cargo}=    Seed A Cargo Uuid
+    ${cpf}=    UI Perfil - Semear Profissional Com Cpf Formatado
+    UI Perfil - Abrir Perfil Pelo Cpf    ${cpf}
+    Clicar Aba    Lotação
+    Clicar Botao    + Registrar transferência
+    Wait For Elements State    css=#f-unidadeId option[value="${unidade}"]    attached
+    Escolher Opcao Da Gaveta    unidadeId    ${unidade}
+    Wait For Elements State    css=#f-setorId option[value="${setor}"]    attached
+    Escolher Opcao Da Gaveta    setorId    ${setor}
+    Wait For Elements State    css=#f-cargoId option[value="${cargo}"]    attached
+    Escolher Opcao Da Gaveta    cargoId    ${cargo}
+    Enviar Gaveta
+    ${aviso}=    Ler Aviso De Status
+    Should Contain    ${aviso}    Transferência registrada
+    Wait For Elements State    css=.perfil-destaque >> text=/Robot Teste Setor/    visible
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

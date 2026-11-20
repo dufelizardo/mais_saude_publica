@@ -125,8 +125,8 @@ para o critério de quando um novo tipo de equipamento deve (ou não) virar um 9
 
 ## Inventário do esquema atual
 
-**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **325 tabelas**,
-listadas aqui pela migração que criou cada uma (até a V91). A fonte de verdade são as migrações, em
+**Revisto em 2026-11-08.** Os diagramas acima descrevem só o núcleo e param em 2026-09-26. O esquema completo tem **364 tabelas**,
+listadas aqui pela migração que criou cada uma (até a V102). A fonte de verdade são as migrações, em
 `src/main/resources/db/migration`, e as ADRs de cada fatia.
 
 | Migração | Tabelas |
@@ -217,3 +217,14 @@ listadas aqui pela migração que criou cada uma (até a V91). A fonte de verdad
 | V89 | `tb_evento_trabalho` |
 | V90 | `tb_investigacao_trabalho`, `tb_medida_trabalho`, `tb_risco_ocupacional` |
 | V91 | `tb_trava_agendamento` |
+| V92 | (só o índice `(instituicao_id, situacao)` de `tb_encaminhamento_intersetorial`) |
+| V93 | `tb_fornecedor`, `tb_certidao_fornecedor`, `tb_sancao_fornecedor`, `tb_solicitacao_compra`, `tb_item_solicitacao_compra`, `tb_cotacao_compra` |
+| V94 | `tb_contratacao`, `tb_item_contratacao`, `tb_instrumento_contratual`, `tb_item_instrumento`, `tb_aditivo_contratual` |
+| V95 | `tb_ordem_fornecimento`, `tb_item_ordem_fornecimento`, `tb_recebimento_compra`, `tb_item_recebimento_compra`, `tb_ocorrencia_fornecedor` (e `fornecedor_id` em `tb_movimentacao_estoque`) |
+| V96 | `tb_bem_patrimonial`, `tb_responsavel_bem`, `tb_transferencia_bem` (e o tipo `BEM_PERMANENTE` nos itens de compra) |
+| V97 | `tb_plano_manutencao`, `tb_ordem_servico_manutencao`, `tb_peca_ordem_servico` |
+| V98 | `tb_inventario_patrimonio`, `tb_membro_inventario`, `tb_item_inventario`, `tb_achado_inventario`, `tb_baixa_bem` |
+| V99 | `tb_dotacao_orcamentaria`, `tb_alteracao_dotacao`, `tb_empenho`, `tb_movimento_empenho` (e `empenho_id` em `tb_ordem_fornecimento`) |
+| V100 | `tb_liquidacao`, `tb_diaria_tfd` |
+| V101 | `tb_centro_custo`, `tb_apuracao_custo`, `tb_linha_apuracao_custo`, `tb_producao_apuracao_custo` (e `centro_custo_id` em `tb_liquidacao`) |
+| V102 | `tb_custo_centro_apuracao`, `tb_rateio_apuracao_custo` (e `setor_id` em `tb_lotacao`, `criterio_rateio` e `area_m2` em `tb_centro_custo`, `nao_rateado` em `tb_apuracao_custo`) |

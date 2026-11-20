@@ -156,8 +156,17 @@ public class EstoqueService {
     /** Entra no lote do mesmo número (sem controle de lote, no saldo único) ou abre um lote novo. */
     @Transactional
     public EstoqueDtos.Movimentacao entrada(EntradaEstoqueRequestDto dto) {
+        controleDeAcesso.exigir(MOVIMENTAR, unidade(dto.getUnidadeId()));
+        return entradaConferida(dto, null);
+    }
+
+    /**
+     * A entrada sem conferir a permissão de quem lança: o recebimento definitivo de Compras (ADR-0214), atestado pelo fiscal do contrato,
+     * que não precisa de ESTOQUE.MOVIMENTAR. Liga o fornecedor cadastrado, quando houver.
+     */
+    @Transactional
+    EstoqueDtos.Movimentacao entradaConferida(EntradaEstoqueRequestDto dto, com.edufelizardo.maissaudepublica.models.Fornecedor fornecedor) {
         UnidadeDeSaude u = unidade(dto.getUnidadeId());
-        controleDeAcesso.exigir(MOVIMENTAR, u);
         MaterialEstoque m = materialPorId(dto.getMaterialId());
         if (!m.isAtivo()) {
             throw new ResourceUnprocessableEntityException("O material " + m.getNome() + " está inativo no catálogo.");
@@ -192,6 +201,7 @@ public class EstoqueService {
         mov.setOrigem(dto.getOrigem());
         mov.setDocumento(texto(dto.getDocumento()));
         mov.setFornecedor(texto(dto.getFornecedor()));
+        mov.setFornecedorCadastro(fornecedor);
         return movimentacao(movimentacaoRepository.save(mov));
     }
 
@@ -255,6 +265,34 @@ public class EstoqueService {
             ContextoAuditoria.detalhe("Consumo extraordinário de " + dto.getQuantidade() + " " + m.getCodigo() + " na emergência.");
         }
         return feitas;
+    }
+
+    /**
+     * Peças usadas na manutenção (ADR-0216): saem pelo FEFO da unidade do bem, sem ESTOQUE.MOVIMENTAR de quem conclui a ordem de serviço
+     * (a conferência é a da manutenção). Respeita a reserva das emergências; sem saldo dentro da validade, 422.
+     */
+    @Transactional
+    void saidaPelaManutencao(UnidadeDeSaude u, MaterialEstoque m, int quantidade, Profissional quem, String origem) {
+        LocalDate hoje = LocalDate.now();
+        List<LoteMaterial> lotes = loteRepository.findDoMaterialNaUnidadeParaAtualizar(m.getUuid(), u.getUuid());
+        exigirForaDaReserva(m, u, lotes, quantidade, null, hoje);
+        List<LoteMaterial> usar = lotes.stream().filter(l -> l.getQuantidade() > 0 && !l.vencido(hoje)).toList();
+        int disponivel = usar.stream().mapToInt(LoteMaterial::getQuantidade).sum();
+        if (disponivel < quantidade) {
+            throw new ResourceUnprocessableEntityException("Há " + disponivel + " de " + m.getNome() + " dentro da validade em " + u.getNome()
+                    + "; a ordem pede " + quantidade + ".");
+        }
+        int falta = quantidade;
+        for (LoteMaterial l : usar) {
+            if (falta == 0) {
+                break;
+            }
+            int tirar = Math.min(falta, l.getQuantidade());
+            MovimentacaoEstoque mov = lancar(l, TipoMovimentacaoEstoque.SAIDA_CONSUMO, -tirar, quem);
+            mov.setJustificativa(origem.length() > 500 ? origem.substring(0, 500) : origem);
+            movimentacaoRepository.save(mov);
+            falta -= tirar;
+        }
     }
 
     /**

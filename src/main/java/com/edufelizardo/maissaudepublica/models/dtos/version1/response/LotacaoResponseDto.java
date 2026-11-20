@@ -22,6 +22,7 @@ public class LotacaoResponseDto implements Serializable {
     private String profissionalMatricula;
     private String profissionalNome;
     private String unidadeNome;
+    private String setorNome;
     private String cargoNome;
     private String categoriaNome;
     private Integer jornadaSemanalHoras;
@@ -35,6 +36,7 @@ public class LotacaoResponseDto implements Serializable {
                 lotacao.getProfissional().getMatricula(),
                 lotacao.getProfissional().getNome(),
                 lotacao.getUnidade().getNome(),
+                lotacao.getSetor() == null ? null : lotacao.getSetor().getNome(),
                 lotacao.getCargo().getNome(),
                 lotacao.getCargo().getCategoria().getNome(),
                 lotacao.getJornadaSemanalHoras(),

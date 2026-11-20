@@ -1,6 +1,6 @@
 # Pendências e estado dos ambientes
 
-Documento vivo, com **o que falta** no projeto (revisto na release **v1.14.0**, 2026-11-14). Cada item aponta
+Documento vivo, com **o que falta** no projeto (revisto na release **v1.15.0**, 2026-11-19). Cada item aponta
 para a ADR ou o guia onde está o detalhe. Atualize este arquivo ao fechar ou abrir uma pendência.
 
 ## 1. Estado dos ambientes
@@ -195,7 +195,7 @@ real":
   - ~~#12 Leitos e internação~~ — ADRs 0098 a 0100;
   - #16 Transporte sanitário — ~~T1 (frota, plantão, viatura no SAMU)~~ — ADR-0178; ~~T2 (transporte eletivo e TFD)~~ — ADR-0190;
     ~~T3 (veículos nas emergências)~~ — ADR-0192; conceder o papel **Coordenador de frota**, o **Comissão de TFD** e `TRANSPORTE.SOLICITAR` às
-    recepções quando a autorização for ligada; ajuda de custo e diárias do TFD (financeiro);
+    recepções quando a autorização for ligada; ~~ajuda de custo e diárias do TFD~~ (ADR-0219);
   - ~~agenda do profissional~~ — feita pelas ADRs 0091 e 0092. Faltam visão Mês, exportação, atividades
     coletivas e equipe (programas pela ADR-0132; especialidade pela ADR-0134);
   - ~~escalas~~ — ADRs 0105 a 0107 (com as equipes, ADRs 0103 e 0104);
@@ -204,9 +204,9 @@ real":
   - #13 Estoque — ~~ES1 (catálogo, lotes, livro, mínimo e alertas)~~ — ADR-0177; ~~ES2 (central, requisição, transferência,
     inventário)~~ — ADR-0189; ~~ES3 (reserva e consumo nas emergências)~~ — ADR-0191; ponto de reposição automático; incluir a capacidade Central de
     abastecimento no almoxarifado central; conceder o papel **Almoxarife** quando a autorização for ligada;
-  - #14 Compras;
-  - #15 Patrimônio;
-  - #17 Financeiro;
+  - #14 Compras — desenhado na ADR-0212; ~~CP1 (fornecedores, solicitação e pesquisa de preços)~~ — ADR-0212; ~~CP2 (contratação, atas, contratos e aditivos)~~ — ADR-0213; ~~CP3 (ordem de fornecimento, recebimento, ocorrências e painel; "Meus contratos" no menu)~~ — ADR-0214; domínio completo; NF-e (XML) e PNCP no domínio 20; conceder o papel **Compras** quando a autorização for ligada;
+  - #15 Patrimônio — desenhado na ADR-0215; ~~PM1 (bens, tombamento, responsável, transferência e bem comprado a tombar)~~ — ADR-0215; ~~PM2 (planos, chamados e ordens de serviço)~~ — ADR-0216; ~~PM3 (inventário, baixa, painel e alerta de equipamento parado)~~ — ADR-0217; domínio completo; termo de baixa e relatório do inventário em PDF (D2); etiqueta pela D3 de Documentos; certificado de calibração como anexo (D2); conceder os papéis **Patrimônio** e **Manutenção** quando a autorização for ligada;
+  - #17 Financeiro — desenhado na ADR-0218 (acompanhamento ao lado do SIAFIC); ~~F1 (dotação e empenho)~~ — ADR-0218; ~~F2 (liquidação, pagamento, restos a pagar, diárias do TFD, execução)~~ — ADR-0219; ~~F3 (centros de custo e apuração)~~ — ADR-0220; ~~rateio do PNGC e lotação por setor no RH~~ — ADR-0221; pacientes-dia por setor quando o censo for por setor; teto financeiro da PPI pela SIGTAP e ApuraSUS (domínio 20); tabela de valores das diárias como cadastro; conceder o papel **Financeiro** quando a autorização for ligada;
   - #18 Qualidade — desenhada na ADR-0202; ~~Q1 (segurança do paciente)~~ — ADR-0203 (Notivisa à mão, sem feriados no prazo mensal);
     ~~Q2 (não conformidades e planos de ação)~~ — ADR-0204 (evidência em texto, sem anexo); ~~Q3 (indicadores com metas e auditoria de protocolos)~~ — ADR-0205 (sem IRAS, sem meta por setor); Qualidade completa;
   - #19 Indicadores e BI — desenhado na ADR-0142; ~~BI1 (produção assistencial e Sala de Situação)~~ — ADR-0143;
@@ -218,8 +218,9 @@ real":
   referência estrutural)~~ — ADR-0197 (catálogo das redes editável só pela API); ~~GR3 (cobertura e indicadores de pactuação)~~ —
   ADR-0198; domínio completo. Ficam o teto financeiro (domínio 17) e SISREG/SIGTAP (domínio 20).
 - **#31 Intersetorialidade e Proteção Social** — desenhado na ADR-0154; ~~IS1 (catálogo e encaminhamento)~~ —
-  ADR-0154. Faltam o uso pela Vigilância e pelas Emergências, o painel por instituição, a guia para imprimir
-  (Documentos) e a integração com o CadÚnico e o prontuário SUAS (domínio 20).
+  ADR-0154; ~~uso pela Vigilância e pelas Emergências~~ — ADRs 0193, 0201 e 0208; ~~IS2 (painel da rede e cobrança)~~ —
+  ADR-0211; domínio completo. Ficam a guia para imprimir (Documentos, D3) e a integração com o CadÚnico e o prontuário
+  SUAS (domínio 20).
 - **#28 Comunicação e Educação em Saúde** — desenhado na ADR-0114; ~~C1 (comunicação básica)~~ — ADR-0168 (e-mail só a
   profissionais, sem consentimento para a população); ~~C2 (campanhas)~~ — ADR-0174; ~~C3 (educação em saúde)~~ — ADR-0195;
   ~~C4 (educação permanente)~~ — ADR-0173; ~~C6 (avaliação)~~ — ADR-0196; domínio completo. Falta a C5 (multicanal), que depende de

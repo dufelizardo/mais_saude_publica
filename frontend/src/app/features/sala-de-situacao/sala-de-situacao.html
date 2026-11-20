@@ -97,6 +97,47 @@
   }
 }
 
+@if (equipamentosParados().length) {
+  <section class="ss-alertas" aria-label="Equipamentos parados">
+    @for (o of equipamentosParados().slice(0, 3); track o.uuid) {
+      <article class="ss-alerta ss-alerta--media" [attr.aria-label]="'Equipamento parado: ' + o.numeroTombamento">
+        <div>
+          <div class="ss-alerta__titulo">Equipamento parado: {{ o.bemDescricao }}</div>
+          <div class="ss-alerta__detalhe">{{ o.numeroTombamento }} · {{ o.unidadeNome }} · {{ o.diasParado }} dias parado · ordem {{ o.numero }}</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/administrativo/patrimonio" [queryParams]="{ aba: 'manutencao' }">Ver na manutenção</a>
+      </article>
+    }
+  </section>
+}
+@if (ordensAtrasadas().length) {
+  <section class="ss-alertas" aria-label="Entregas de compras atrasadas">
+    @for (o of ordensAtrasadas().slice(0, 3); track o.ordemId) {
+      <article class="ss-alerta ss-alerta--media" [attr.aria-label]="'Ordem de fornecimento atrasada: ' + o.numero">
+        <div>
+          <div class="ss-alerta__titulo">Entrega atrasada: ordem {{ o.numero }}</div>
+          <div class="ss-alerta__detalhe">{{ o.fornecedorNome }} · {{ o.unidadeNome }} · {{ o.diasDeAtraso }} dias depois do prazo</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/administrativo/compras" [queryParams]="{ aba: 'painel' }">Ver no painel</a>
+      </article>
+    }
+  </section>
+}
+
+@if (redeSemRetorno().length) {
+  <section class="ss-alertas" aria-label="Rede intersetorial sem retorno">
+    @for (i of redeSemRetorno().slice(0, 3); track i.instituicaoId) {
+      <article class="ss-alerta ss-alerta--media" [attr.aria-label]="'Encaminhamentos sem retorno: ' + i.nome">
+        <div>
+          <div class="ss-alerta__titulo">Sem retorno da rede intersetorial: {{ i.nome }}</div>
+          <div class="ss-alerta__detalhe">{{ i.semRetorno }} encaminhamentos em aberto depois do prazo · {{ i.emAberto }} em aberto@if (i.telefone) { · {{ i.telefone }} }</div>
+        </div>
+        <a class="btn btn--ghost btn--sm" routerLink="/administrativo/instituicoes-externas" [queryParams]="{ aba: 'painel' }">Ver no painel</a>
+      </article>
+    }
+  </section>
+}
+
 @if (eventosPlanejados().length) {
   <section class="ss-alertas" aria-label="Eventos de massa planejados">
     @for (e of eventosPlanejados().slice(0, 3); track e.uuid) {
@@ -448,5 +489,20 @@
       }
     </section>
   </div>
+  @if (custos(); as cu) {
+    <div class="ss-row">
+      <section class="card ss-card" aria-label="Custo por unidade">
+        <div class="ss-card__head"><div><h2 class="ss-card__title">Custo por unidade</h2><p class="ss-card__sub">Competência {{ cu.competencia }} · {{ cu.situacao === 'FECHADA' ? 'fechada' : 'aberta' }} · custo por atendimento contra a média do tipo</p></div></div>
+        <ul class="eq-prof" aria-label="Custo por unidade">
+          @for (u of cu.unidades.slice(0, 8); track u.unidadeId) {
+            <li class="mo-row"><span><span class="cell-main">{{ u.unidadeNome }}</span><span class="cell-sub">{{ moeda(u.total) }}@if (u.atendimentos) { · {{ numero(u.atendimentos) }} atendimento(s) }</span></span>
+              <span class="mono">@if (u.custoPorAtendimento !== null) { {{ moeda(u.custoPorAtendimento) }} por atendimento } @else { — }
+                @if (u.custoPorPacienteDia !== null) { · {{ moeda(u.custoPorPacienteDia) }} por paciente-dia }
+                @if (u.acimaDaMedia) { <span class="tag tag--alert">acima da média</span> }</span></li>
+          } @empty { <li class="cell-sub">Nenhum custo apurado nas unidades do seu acesso.</li> }
+        </ul>
+      </section>
+    </div>
+  }
   <p class="cell-sub ss-fonte">Fonte: atendimentos, agenda, escala, programas, vigilância e vacinação do Mais Saúde Pública, calculados na hora · só agregados, sem paciente · a exportação entra na auditoria.</p>
 }
