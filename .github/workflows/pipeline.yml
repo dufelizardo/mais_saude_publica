@@ -58,6 +58,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # O manual do usuário nas duas línguas, com a versão e os links (ADR-0222).
+      - name: Verificar o manual do usuário
+        run: python3 .github/scripts/verificar_manual.py
+
       - name: Set up JDK 17
         uses: actions/setup-java@v5
         with:
