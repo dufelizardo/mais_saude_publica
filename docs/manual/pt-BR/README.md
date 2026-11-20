@@ -16,6 +16,7 @@ gestão. Ele explica as telas pela ordem do menu.
 6. [Regulação](./05-regulacao.md): solicitar, a fila por prioridade, regular com vaga e PPI, complementar, agendar, contrarreferência e o catálogo.
 7. [Urgência 192](./06-urgencia-192.md): o chamado, a regulação médica, a viatura, o destino e a vaga zero, a ficha do APH e o encerramento.
 8. [Laboratório e imagem](./07-laboratorio-e-imagem.md): pedido, coleta, análise e liberação, realização e laudo, críticos, ciência, entrega, laudo em PDF e o catálogo.
+9. [Leitos](./08-leitos.md): mapa, internação, troca de leito, alta, prescrição e horários, eletivas, AIH, censo, central de leitos e cadastro.
 
 As áreas do menu entram nas próximas versões do manual, começando pela Assistência (Pacientes, Agenda, Atendimentos,
 Enfermagem e Farmácia).
