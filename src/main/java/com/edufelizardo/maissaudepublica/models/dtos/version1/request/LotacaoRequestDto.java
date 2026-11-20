@@ -27,6 +27,9 @@ public class LotacaoRequestDto implements Serializable {
     @NotNull
     private UUID cargoId;
 
+    /** O setor da unidade, opcional (ADR-0221). */
+    private UUID setorId;
+
     private Integer jornadaSemanalHoras;
 
     @NotNull

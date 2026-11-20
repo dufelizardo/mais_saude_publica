@@ -32,6 +32,14 @@ import { AmostraAguaDto } from '../../core/models/vigilancia-ambiental';
 import { LinhaIndiceVetorial } from '../../core/models/controle-vetorial';
 import { EmergenciaDto, classeDoNivel } from '../../core/models/emergencia';
 import { UnidadeSaudeService } from '../../core/services/unidade-saude';
+import { PainelInstituicaoDto } from '../../core/models/intersetorialidade';
+import { IntersetorialidadeService } from '../../core/services/intersetorialidade';
+import { ComprasService } from '../../core/services/compras';
+import { PatrimonioService } from '../../core/services/patrimonio';
+import { OrdemServicoDto } from '../../core/models/patrimonio';
+import { PainelComprasDto } from '../../core/models/compras';
+import { IndicadoresCustoDto } from '../../core/models/financeiro';
+import { FinanceiroService } from '../../core/services/financeiro';
 
 type Preset = 'HOJE' | 'SEMANA' | 'MES' | 'ANO' | 'PERIODO';
 
@@ -64,6 +72,18 @@ export class SalaDeSituacao {
   private readonly vigilanciaTrabalhoService = inject(VigilanciaService);
   /** A semana da saúde do trabalhador (ADR-0208): acidentes, óbitos, investigações, medidas vencidas e riscos ativos. */
   protected readonly semanaTrabalho = signal<SemanaTrabalhadorDto | null>(null);
+  private readonly intersetorialService = inject(IntersetorialidadeService);
+  /** As instituições com 3 ou mais encaminhamentos sem retorno (ADR-0211); sem INTERSETORIAL.GERENCIAR, nada. */
+  protected readonly redeSemRetorno = signal<PainelInstituicaoDto[]>([]);
+  private readonly comprasService = inject(ComprasService);
+  /** As ordens de fornecimento atrasadas há mais de 10 dias (ADR-0214); sem COMPRAS.GERENCIAR, nada. */
+  protected readonly ordensAtrasadas = signal<PainelComprasDto['atrasadas']>([]);
+  private readonly patrimonioService = inject(PatrimonioService);
+  private readonly financeiroService = inject(FinanceiroService);
+  /** O custo por unidade da última competência apurada (F3 do Financeiro, ADR-0220); sem apuração ou sem acesso, o cartão some. */
+  protected readonly custos = signal<IndicadoresCustoDto | null>(null);
+  /** Equipamento médico parado há mais de 7 dias (ADR-0217); sem MANUTENCAO.EXECUTAR, nada. */
+  protected readonly equipamentosParados = signal<OrdemServicoDto[]>([]);
   /** As emergências ativas (ADR-0156), no alto da tela; sem acesso, nada. */
   protected readonly emergencias = signal<EmergenciaDto[]>([]);
   /** Os eventos de massa planejados para os próximos 7 dias, ou já previstos e ainda sem operação (ADR-0160). */
@@ -214,6 +234,10 @@ export class SalaDeSituacao {
     return 'ss-delta ' + ((v > 0) === subirEhBom ? 'ss-delta--up' : 'ss-delta--down');
   }
 
+  protected moeda(v: number): string {
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
   protected numero(v: number | null | undefined): string {
     return v == null ? '—' : Number(v).toLocaleString('pt-BR');
   }
@@ -351,6 +375,13 @@ export class SalaDeSituacao {
     const desde = `${mes.getFullYear()}-${String(mes.getMonth() + 1).padStart(2, '0')}-01`;
     this.sanitariaService.interdicoes().pipe(catchError(() => of([]))).subscribe((l) => this.interdicoes.set(l));
     this.vigilanciaTrabalhoService.semanaTrabalhador().pipe(catchError(() => of(null))).subscribe((s) => this.semanaTrabalho.set(s));
+    this.intersetorialService.painel().pipe(catchError(() => of(null)))
+      .subscribe((p) => this.redeSemRetorno.set((p?.instituicoes ?? []).filter((i) => i.semRetorno >= 3)));
+    this.comprasService.painel().pipe(catchError(() => of(null)))
+      .subscribe((p) => this.ordensAtrasadas.set((p?.atrasadas ?? []).filter((o) => o.diasDeAtraso > 10)));
+    this.patrimonioService.resumoManutencao().pipe(catchError(() => of(null)))
+      .subscribe((r) => this.equipamentosParados.set(r?.equipamentosParados ?? []));
+    this.financeiroService.indicadoresCusto(competenciaAnterior()).pipe(catchError(() => of(null))).subscribe((c) => this.custos.set(c));
     this.ambientalService.amostras({ naoConformes: true, desde }).pipe(catchError(() => of([])))
       .subscribe((l) => this.aguaForaDoPadrao.set(l.filter((a) => !a.medida)));
     this.vetorialService.indices().pipe(catchError(() => of(null))).subscribe((ix) => {
@@ -378,4 +409,10 @@ function hojeIso(): string {
 
 function inicioDoMes(): string {
   return hojeIso().slice(0, 8) + '01';
+}
+
+/** O mês encerrado mais recente em Brasília, AAAA-MM: a competência da apuração de custos. */
+function competenciaAnterior(): string {
+  const [a, m] = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }).split('-').map(Number);
+  return m === 1 ? `${a - 1}-12` : `${a}-${String(m - 1).padStart(2, '0')}`;
 }

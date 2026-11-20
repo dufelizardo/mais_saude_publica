@@ -11,3 +11,11 @@ UI Instituicoes Externas - Abrir Tela
     Ir Para Rota Do Frontend    /administrativo/instituicoes-externas
     # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
 # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+UI Instituicoes Externas - Abrir Painel
+    [Documentation]    Abre a tela direto na aba Painel (IS2, ADR-0211).
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+    Ir Para Rota Do Frontend    /administrativo/instituicoes-externas?aba=painel
+    Wait For Elements State    role=tab[name="Painel"][selected]    visible
+    # ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
