@@ -15,3 +15,4 @@
 - [ ] `docs/STATUS-DOS-DOMINIOS.md` atualizado (caixa marcada, item em "Temos", estado do domínio)
 - [ ] `docs/PENDENCIAS.md` e o modelo do domínio, quando houver mudança de escopo
 - [ ] Migração Flyway nova, se mudou o esquema
+- [ ] Manual do usuário (`docs/manual/pt-BR` e `docs/manual/en`) atualizado nas duas línguas, quando a tela já está coberta (ADR-0222)
