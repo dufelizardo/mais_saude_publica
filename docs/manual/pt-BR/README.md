@@ -18,6 +18,7 @@ gestão. Ele explica as telas pela ordem do menu.
 8. [Laboratório e imagem](./07-laboratorio-e-imagem.md): pedido, coleta, análise e liberação, realização e laudo, críticos, ciência, entrega, laudo em PDF e o catálogo.
 9. [Leitos](./08-leitos.md): mapa, internação, troca de leito, alta, prescrição e horários, eletivas, AIH, censo, central de leitos e cadastro.
 10. [Programas de Saúde](./09-programas-de-saude.md): programas, inscrição e elegíveis, acompanhamento, ações programáticas, campanhas, linhas de cuidado e indicadores.
+11. [Sala de Vacina](./10-sala-de-vacina.md): registrar e transcrever doses, caderneta, atrasados, cobertura, estoque, remanejamentos, cadeia de frio e alertas de lote.
 
 As áreas do menu entram nas próximas versões do manual, começando pela Assistência (Pacientes, Agenda, Atendimentos,
 Enfermagem e Farmácia).
